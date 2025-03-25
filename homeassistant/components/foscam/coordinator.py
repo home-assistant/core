@@ -34,24 +34,29 @@ class FoscamCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.session = session
 
+    def gather_all_configs(self):
+        """Get all Foscam configurations."""
+        configs = {}
+
+        ret, dev_info = self.session.get_dev_info()
+        configs["dev_info"] = dev_info
+
+        ret, all_info = self.session.get_product_all_info()
+        configs["product_info"] = all_info
+
+        ret, infra_led_config = self.session.get_infra_led_config()
+        configs["is_openIr"] = infra_led_config["mode"]
+
+        ret, mirror_flip_setting = self.session.get_mirror_and_flip_setting()
+        configs["is_Flip"] = mirror_flip_setting["isFlip"]
+        configs["is_Mirror"] = mirror_flip_setting["isMirror"]
+
+        ret, sleep_setting = self.session.is_asleep()
+        configs["is_asleep"] = {"supported": ret == 0, "status": sleep_setting}
+        return configs
+
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from API endpoint."""
 
         async with asyncio.timeout(30):
-            data = {}
-            ret, dev_info = await self.hass.async_add_executor_job(
-                self.session.get_dev_info
-            )
-            if ret == 0:
-                data["dev_info"] = dev_info
-
-            all_info = await self.hass.async_add_executor_job(
-                self.session.get_product_all_info
-            )
-            data["product_info"] = all_info[1]
-
-            ret, is_asleep = await self.hass.async_add_executor_job(
-                self.session.is_asleep
-            )
-            data["is_asleep"] = {"supported": ret == 0, "status": is_asleep}
-            return data
+            return await self.hass.async_add_executor_job(self.gather_all_configs)
