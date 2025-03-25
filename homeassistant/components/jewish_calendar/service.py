@@ -49,7 +49,6 @@ def async_setup_services(hass: HomeAssistant) -> None:
         omer = Omer(date=hebrew_date, nusach=nusach, language=language)
         return {
             "message": str(omer.count_str()),
-            "hebrew_date": str(hebrew_date),
             "weeks": omer.week,
             "days": omer.day,
             "total_days": omer.total_days,
