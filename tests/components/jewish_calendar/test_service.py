@@ -14,24 +14,18 @@ from tests.common import MockConfigEntry
 @pytest.mark.parametrize(
     ("test_date", "nusach", "language", "expected"),
     [
-        pytest.param(
-            dt.date(2025, 3, 20),
-            "sfarad",
-            "hebrew",
-            "",
-            id="no_blessing",
-        ),
+        pytest.param(dt.date(2025, 3, 20), "sfarad", "he", "", id="no_blessing"),
         pytest.param(
             dt.date(2025, 5, 20),
             "ashkenaz",
-            "hebrew",
+            "he",
             "היום שבעה ושלושים יום שהם חמישה שבועות ושני ימים בעומר",
             id="ahskenaz-hebrew",
         ),
         pytest.param(
             dt.date(2025, 5, 20),
             "sfarad",
-            "english",
+            "en",
             "Today is the thirty-seventh day, which are five weeks and two days of the Omer",
             id="sefarad-english",
         ),

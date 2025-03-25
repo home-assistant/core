@@ -17,6 +17,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_CANDLE_LIGHT_MINUTES,
@@ -32,6 +33,13 @@ from .service import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Jewish Calendar service."""
+    async_setup_services(hass)
+
+    return True
 
 
 async def async_setup_entry(
@@ -68,7 +76,6 @@ async def async_setup_entry(
     )
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-    async_setup_services(hass, config_entry)
 
     async def update_listener(
         hass: HomeAssistant, config_entry: JewishCalendarConfigEntry

@@ -4,37 +4,48 @@ import datetime
 
 from hdate import HebrewDate
 from hdate.omer import Nusach, Omer
+from hdate.translator import Language
 import voluptuous as vol
 
+from homeassistant.const import CONF_LANGUAGE
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
     ServiceResponse,
     SupportsResponse,
 )
+from homeassistant.helpers import config_validation as cv
 
-from . import JewishCalendarConfigEntry
 from .const import DOMAIN
 
 OMER_SCHEMA = vol.Schema(
     {
         vol.Required("date", default=datetime.date.today): datetime.date,
-        vol.Required("nusach", default="sfarad"): str,
-        vol.Required("language"): str,
+        vol.Required("nusach", default="sfarad"): vol.In(
+            [nusach.name.lower() for nusach in Nusach]
+        ),
+        vol.Required(CONF_LANGUAGE, default="he"): cv.language,
     }
 )
 
 
-def async_setup_services(
-    hass: HomeAssistant, config_entry: JewishCalendarConfigEntry
-) -> None:
+def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the Jewish Calendar services."""
 
     async def get_omer_count(call: ServiceCall) -> ServiceResponse:
         """Return the Omer blessing for a given date."""
         hebrew_date = HebrewDate.from_gdate(call.data["date"])
         nusach = Nusach[call.data["nusach"].upper()]
-        language = call.data.get("language", config_entry.runtime_data.language)
+        _language = call.data[CONF_LANGUAGE]
+
+        # Currently Omer only supports Hebrew, English, and French and requires
+        # the full language name
+        language: Language = "hebrew"
+        if _language == "en":
+            language = "english"
+        elif _language == "fr":
+            language = "french"
+
         omer = Omer(date=hebrew_date, nusach=nusach, language=language)
         return {
             "message": str(omer.count_str()),
