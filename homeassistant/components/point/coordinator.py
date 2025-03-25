@@ -54,8 +54,6 @@ class PointDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]
                     callback(device_id)
             self._known_devices.update(new_devices)
 
-        state: dict[str, dict[str, Any]] = {}
-
         for device in self.point.devices:
             last_updated = parse_datetime(device.last_update)
             if (
@@ -64,8 +62,8 @@ class PointDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]
                 or self.device_updates[device.device_id] < last_updated
             ):
                 self.device_updates[device.device_id] = last_updated or fromtimestamp(0)
-                state[device.device_id] = {
+                self.data[device.device_id] = {
                     k: await device.sensor(k)
                     for k in ("temperature", "humidity", "sound_pressure")
                 }
-        return state
+        return self.data
