@@ -1,17 +1,29 @@
 from datetime import datetime, timedelta
+import logging
+
 import voluptuous as vol
+
 from homeassistant import config_entries
 from homeassistant.core import callback
+
 from .api import authenticate, signup
-from homeassistant.helpers.system_info import async_get_system_info
-import uuid
-import logging
+from .frp_helpers import fetch_and_update_frp_config, start_frpc, stop_frpc
 
 _LOGGER = logging.getLogger(__name__)
 
 
 class EzloOptionsFlowHandler(config_entries.OptionsFlow):
     """Handles the options flow for Ezlo HA Cloud integration."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry):
+        """Initialize options flow."""
+        # self.config_entry = config_entry  # Add this line
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Register options flow steps."""
+        return EzloOptionsFlowHandler(config_entry)
 
     async def async_step_init(self, user_input=None):
         """Check login status and show the correct UI."""
@@ -94,7 +106,7 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
         return await self.async_step_init()
 
     async def async_step_login(self, user_input=None):
-        """Handles login authentication form with HA instance id, pass empty if id missing."""
+        """Handles login authentication form with HA instance UUID or empty ID if missing."""
         errors = {}
 
         if user_input is not None:
@@ -103,29 +115,57 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
 
             system_uuid = await self.hass.helpers.instance_id.async_get()
             _LOGGER.info(
-                f"Retrieved system id from instance_id.async_get: {system_uuid}"
+                f"Retrieved system UUID from instance_id.async_get: {system_uuid}"
             )
 
             if not system_uuid:
                 system_uuid = ""
-                _LOGGER.warning("Home Assistant instance id missing!")
+                _LOGGER.warning("Home Assistant UUID missing!")
 
             auth_response = await self.hass.async_add_executor_job(
                 authenticate, username, password, system_uuid
             )
 
             if auth_response.get("success"):
+                user_info = auth_response.get("user", {})
+                _LOGGER.info("user info from login: %s", user_info)
                 expiry_time = datetime.now() + timedelta(seconds=3600)
 
                 new_data = self.config_entry.data.copy()
-                new_data["auth_token"] = auth_response["token"]
-                new_data["user"] = {"name": username, "email": ""}
-                new_data["is_logged_in"] = True
-                new_data["token_expiry"] = expiry_time.timestamp()
+                new_data.update(
+                    {
+                        "auth_token": auth_response["token"],
+                        "user": {
+                            "uuid": user_info.get("uuid"),
+                            "name": user_info.get("username", username),
+                            "email": user_info.get("email", ""),
+                            "ezlo_id": user_info.get("id", ""),
+                        },
+                        "is_logged_in": True,
+                        "token_expiry": expiry_time.timestamp(),
+                    }
+                )
+                # new_data["auth_token"] = auth_response["token"]
+                # new_data["user"] = {"name": username, "email": ""}
+                # new_data["is_logged_in"] = True
+                # new_data["token_expiry"] = expiry_time.timestamp()
 
                 self.hass.config_entries.async_update_entry(
                     self.config_entry, data=new_data
                 )
+
+                # UPDAT THE CONFIG TOML AND START THE FRPC CLIENT.
+                try:
+                    await fetch_and_update_frp_config(
+                        hass=self.hass,
+                        uuid=user_info.get("uuid"),
+                        token=auth_response["token"],
+                    )
+
+                    await start_frpc(hass=self.hass, config_entry=self.config_entry)
+                except Exception as err:
+                    _LOGGER.error("Failed to fetch the server details: %s", err)
+                    raise err
 
                 self.hass.async_create_task(
                     self.hass.config_entries.async_reload(self.config_entry.entry_id)
@@ -147,7 +187,7 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
         )
 
     async def async_step_logout(self, user_input=None):
-        """Handles manual logout action."""
+        """Handle manual logout action."""
         new_data = self.config_entry.data.copy()
         new_data["is_logged_in"] = False
         new_data["auth_token"] = None
@@ -156,11 +196,13 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
 
         self.hass.config_entries.async_update_entry(self.config_entry, data=new_data)
 
+        await stop_frpc(self.hass, self.hass.config_entries)
+
         # Show logout success message only for manual logout
         return self.async_abort(reason="logged_out")
 
     async def async_step_signup(self, user_input=None):
-        """Handles signup form with HA instance id, pass empty if id missing."""
+        """Handle signup form."""
         errors = {}
 
         if user_input is not None:
@@ -168,18 +210,9 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
             email = user_input["email"]
             password = user_input["password"]
 
-            system_uuid = await self.hass.helpers.instance_id.async_get()
-            _LOGGER.info(
-                f"Retrieved system id from instance_id.async_get: {system_uuid}"
-            )
-
-            if not system_uuid:
-                system_uuid = ""
-                _LOGGER.warning("Home Assistant instance id missing!")
-
             # Call signup API
             signup_response = await self.hass.async_add_executor_job(
-                signup, username, email, password, system_uuid
+                signup, username, email, password
             )
 
             if signup_response.get("success"):
@@ -198,9 +231,3 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
             ),
             errors=errors,
         )
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(config_entry):
-        """Register options flow steps."""
-        return EzloOptionsFlowHandler(config_entry)

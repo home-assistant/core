@@ -1,9 +1,11 @@
 import logging
 import requests
 
+from .const import EZLO_API_URI
+
 _LOGGER = logging.getLogger(__name__)
 
-API_BASE_URL = "http://host.docker.internal:8080/api/auth"
+API_BASE_URL = f"{EZLO_API_URI}/api/auth"
 
 
 def authenticate(username, password, uuid):
@@ -22,19 +24,23 @@ def authenticate(username, password, uuid):
         response = requests.post(f"{API_BASE_URL}/login", json=payload, timeout=10)
         response_data = response.json()
 
-        if response.status_code == 200 and response_data.get("status") == 1:
+        _LOGGER.info(f"login response: {response_data}")
+
+        if response.status_code == 200:
             _LOGGER.info("Authentication successful!")
 
-            token = response_data["data"]["token"]
-            expiry_time = response_data["data"]["expires"]
+            token = response_data["token"]
+            uuid = response_data["uuid"]
+            # expiry_time = response_data["expires"]
 
             return {
                 "success": True,
                 "token": token,
-                "expires_at": expiry_time,
+                # "expires_at": expiry_time,
                 "user": {
                     "username": username,
                     "oem_id": 1,
+                    "uuid": uuid,
                 },
             }
 
@@ -46,17 +52,15 @@ def authenticate(username, password, uuid):
         return {"success": False, "error": "API connection failed"}
 
 
-def signup(username, email, password, uuid):
+def signup(username, email, password):
     """Sends signup request to Ezlo API and returns the response."""
     _LOGGER.info("Sending signup request to Ezlo API...")
-    _LOGGER.info(f"Sending login request with UUID: {uuid}")
 
     payload = {
         "username": username,
         "password": password,
         "email": email,
-        "uuid": "ad58a0a0-3517-11ed-890c-31443f0b6e4c",  # Required as per cURL request
-        "ha_instance_id": uuid,
+        "uuid": "ad58a0a0-3517-11ed-890c-31443f0b6e4c",
     }
 
     try:
