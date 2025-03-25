@@ -523,6 +523,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
     "input.power": SensorEntityDescription(
         key="input.power",
         translation_key="input_power",
+        native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
         device_class=SensorDeviceClass.APPARENT_POWER,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
