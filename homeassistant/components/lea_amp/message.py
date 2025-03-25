@@ -39,17 +39,13 @@ class LeaMessage:
 M = TypeVar("M", bound=LeaMessage)
 
 
-class GetNumOfInputsMessage(LeaMessage):
+def GetNumOfInputsMessage():
     """Get Num of inputs."""
 
-    command = "numInputs"
     request_type = "get "
     ext1 = "/amp/deviceInfo/numInputs"
-    ext2 = ""
 
-    def __init__(self) -> None:
-        """Init."""
-        super().__init__(self.as_dict("", ""))
+    return request_type + ext1 + " " + "\n"
 
 
 class ZoneEnabledMsg(LeaMessage):
