@@ -195,6 +195,11 @@
     "type": "BinarySensor",
     "category": "Info"
   },
+  "overloaded": {
+    "value": false,
+    "type": "BinarySensor",
+    "category": "Info"
+  },
   "battery_low": {
     "value": false,
     "type": "BinarySensor",
@@ -284,6 +289,12 @@
     "minimum_value": -10,
     "maximum_value": 10
   },
+  "power_protection_threshold": {
+    "value": 100,
+    "type": "Number",
+    "category": "Config",
+    "minimum_value": 0
+  },
   "target_temperature": {
     "value": false,
     "type": "Number",
@@ -330,6 +341,61 @@
       "Connection 2"
     ]
   },
+  "clean_time": {
+    "type": "Sensor",
+    "category": "Info",
+    "value": 12,
+    "timedelta_type": "minutes"
+  },
+  "clean_area": {
+    "type": "Sensor",
+    "category": "Info",
+    "value": 2,
+    "unit": 1,
+    "unit_enum_type": "CleanAreaUnit"
+  },
+  "clean_progress": {
+    "type": "Sensor",
+    "category": "Info",
+    "value": 30,
+    "unit": "%"
+  },
+  "total_clean_time": {
+    "type": "Sensor",
+    "category": "Debug",
+    "value": 120,
+    "timedelta_type": "minutes"
+  },
+  "total_clean_area": {
+    "type": "Sensor",
+    "category": "Debug",
+    "value": 2,
+    "unit": 1,
+    "unit_enum_type": "CleanAreaUnit"
+  },
+  "last_clean_time": {
+    "type": "Sensor",
+    "category": "Debug",
+    "value": 60,
+    "timedelta_type": "minutes"
+  },
+  "last_clean_area": {
+    "type": "Sensor",
+    "category": "Debug",
+    "value": 2,
+    "unit": 1,
+    "unit_enum_type": "CleanAreaUnit"
+  },
+  "last_clean_timestamp": {
+    "type": "Sensor",
+    "category": "Debug",
+    "value": "2024-06-24 10:03:11.046643+01:00"
+  },
+  "total_clean_count": {
+    "type": "Sensor",
+    "category": "Debug",
+    "value": 12
+  },
   "alarm_volume": {
     "value": "normal",
     "type": "Choice",
@@ -370,5 +436,116 @@
     "value": 10,
     "type": "Number",
     "category": "Config"
+  },
+  "clean_count": {
+    "value": 1,
+    "type": "Number",
+    "category": "Config"
+  },
+  "carpet_boost": {
+    "value": true,
+    "type": "Switch",
+    "category": "Config"
+  },
+  "vacuum_error": {
+    "value": 0,
+    "type": "Sensor",
+    "category": "Info",
+    "enum_type": "CleanErrorCode"
+  },
+  "pair": {
+    "value": "<Action>",
+    "type": "Action",
+    "category": "Config"
+  },
+  "unpair": {
+    "value": "<Action>",
+    "type": "Action",
+    "category": "Debug"
+  },
+  "main_brush_reset": {
+    "value": "<Action>",
+    "type": "Action",
+    "category": "Debug"
+  },
+  "side_brush_reset": {
+    "value": "<Action>",
+    "type": "Action",
+    "category": "Debug"
+  },
+  "sensor_reset": {
+    "value": "<Action>",
+    "type": "Action",
+    "category": "Debug"
+  },
+  "filter_reset": {
+    "value": "<Action>",
+    "type": "Action",
+    "category": "Debug"
+  },
+  "charging_contacts_reset": {
+    "value": "<Action>",
+    "type": "Action",
+    "category": "Debug"
+  },
+  "main_brush_remaining": {
+    "value": 360,
+    "type": "Sensor",
+    "category": "Debug",
+    "timedelta_type": "minutes"
+  },
+  "main_brush_used": {
+    "value": 360,
+    "type": "Sensor",
+    "category": "Debug",
+    "timedelta_type": "minutes"
+  },
+  "side_brush_remaining": {
+    "value": 360,
+    "type": "Sensor",
+    "category": "Debug",
+    "timedelta_type": "minutes"
+  },
+  "side_brush_used": {
+    "value": 360,
+    "type": "Sensor",
+    "category": "Debug",
+    "timedelta_type": "minutes"
+  },
+  "filter_remaining": {
+    "value": 360,
+    "type": "Sensor",
+    "category": "Debug",
+    "timedelta_type": "minutes"
+  },
+  "filter_used": {
+    "value": 360,
+    "type": "Sensor",
+    "category": "Debug",
+    "timedelta_type": "minutes"
+  },
+  "sensor_remaining": {
+    "value": 360,
+    "type": "Sensor",
+    "category": "Debug",
+    "timedelta_type": "minutes"
+  },
+  "sensor_used": {
+    "value": 360,
+    "type": "Sensor",
+    "category": "Debug",
+    "timedelta_type": "minutes"
+  },
+  "charging_contacts_remaining": {
+    "value": 360,
+    "type": "Sensor",
+    "category": "Debug",
+    "timedelta_type": "minutes"
+  },
+  "charging_contacts_used": {
+    "value": 360,
+    "type": "Sensor",
+    "category": "Debug",
+    "timedelta_type": "minutes"
   }
 }

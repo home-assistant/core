@@ -28,7 +28,7 @@ from homeassistant.const import (
     CONF_TOKEN,
 )
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service_info.ssdp import ATTR_UPNP_SERIAL, SsdpServiceInfo
 
 from . import create_hyperion_client

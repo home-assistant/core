@@ -3,6 +3,7 @@
 from abc import abstractmethod
 from typing import Any
 
+from propcache.api import cached_property
 from tesla_fleet_api import EnergySpecific, VehicleSpecific
 from tesla_fleet_api.const import Scope
 from teslemetry_stream import Signal
@@ -23,18 +24,33 @@ from .helpers import wake_up_vehicle
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
 
+class TeslemetryRootEntity(Entity):
+    """Parent class for all Teslemetry entities."""
+
+    _attr_has_entity_name = True
+    scoped: bool
+    api: VehicleSpecific | EnergySpecific
+
+    def raise_for_scope(self, scope: Scope):
+        """Raise an error if a scope is not available."""
+        if not self.scoped:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="missing_scope",
+                translation_placeholders={"scope": scope},
+            )
+
+
 class TeslemetryEntity(
+    TeslemetryRootEntity,
     CoordinatorEntity[
         TeslemetryVehicleDataCoordinator
         | TeslemetryEnergyHistoryCoordinator
         | TeslemetryEnergySiteLiveCoordinator
         | TeslemetryEnergySiteInfoCoordinator
-    ]
+    ],
 ):
-    """Parent class for all Teslemetry entities."""
-
-    _attr_has_entity_name = True
-    scoped: bool
+    """Parent class for all Teslemetry Coordinator entities."""
 
     def __init__(
         self,
@@ -83,15 +99,6 @@ class TeslemetryEntity(
     @abstractmethod
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
-
-    def raise_for_scope(self, scope: Scope):
-        """Raise an error if a scope is not available."""
-        if not self.scoped:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="missing_scope",
-                translation_placeholders={"scope": scope},
-            )
 
 
 class TeslemetryVehicleEntity(TeslemetryEntity):
@@ -239,13 +246,11 @@ class TeslemetryWallConnectorEntity(TeslemetryEntity):
         )
 
 
-class TeslemetryVehicleStreamEntity(Entity):
+class TeslemetryVehicleStreamEntity(TeslemetryRootEntity):
     """Parent class for Teslemetry Vehicle Stream entities."""
 
-    _attr_has_entity_name = True
-
     def __init__(
-        self, data: TeslemetryVehicleData, key: str, streaming_key: Signal
+        self, data: TeslemetryVehicleData, key: str, streaming_key: Signal | None = None
     ) -> None:
         """Initialize common aspects of a Teslemetry entity."""
         self.streaming_key = streaming_key
@@ -263,17 +268,18 @@ class TeslemetryVehicleStreamEntity(Entity):
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
-        self.async_on_remove(
-            self.stream.async_add_listener(
-                self._handle_stream_update,
-                {"vin": self.vin, "data": {self.streaming_key: None}},
+        if self.streaming_key:
+            self.async_on_remove(
+                self.stream.async_add_listener(
+                    self._handle_stream_update,
+                    {"vin": self.vin, "data": {self.streaming_key: None}},
+                )
             )
-        )
-        self.vehicle.config_entry.async_create_background_task(
-            self.hass,
-            self.add_field(self.streaming_key),
-            f"Adding field {self.streaming_key.value} to {self.vehicle.vin}",
-        )
+            self.vehicle.config_entry.async_create_background_task(
+                self.hass,
+                self.add_field(self.streaming_key),
+                f"Adding field {self.streaming_key.value} to {self.vehicle.vin}",
+            )
 
     def _handle_stream_update(self, data: dict[str, Any]) -> None:
         """Handle updated data from the stream."""
@@ -283,3 +289,8 @@ class TeslemetryVehicleStreamEntity(Entity):
     def _async_value_from_stream(self, value: Any) -> None:
         """Update the entity with the latest value from the stream."""
         raise NotImplementedError
+
+    @cached_property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self.stream.connected

@@ -56,8 +56,8 @@ from homeassistant.exceptions import (
     TemplateError,
 )
 from homeassistant.loader import IntegrationNotFound, async_get_integration
+from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
-import homeassistant.util.dt as dt_util
 
 from . import config_validation as cv, entity_registry as er
 from .sun import get_astral_event_date
@@ -884,10 +884,8 @@ def time(
 
         condition_trace_update_result(weekday=weekday, now_weekday=now_weekday)
         if (
-            isinstance(weekday, str)
-            and weekday != now_weekday
-            or now_weekday not in weekday
-        ):
+            isinstance(weekday, str) and weekday != now_weekday
+        ) or now_weekday not in weekday:
             return False
 
     return True

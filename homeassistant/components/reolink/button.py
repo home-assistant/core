@@ -19,7 +19,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
-    AddEntitiesCallback,
+    AddConfigEntryEntitiesCallback,
     async_get_current_platform,
 )
 
@@ -138,6 +138,7 @@ BUTTON_ENTITIES = (
 HOST_BUTTON_ENTITIES = (
     ReolinkHostButtonEntityDescription(
         key="reboot",
+        always_available=True,
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -150,7 +151,7 @@ HOST_BUTTON_ENTITIES = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ReolinkConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Reolink button entities."""
     reolink_data: ReolinkData = config_entry.runtime_data
@@ -218,7 +219,7 @@ class ReolinkButtonEntity(ReolinkChannelCoordinatorEntity, ButtonEntity):
 
 
 class ReolinkHostButtonEntity(ReolinkHostCoordinatorEntity, ButtonEntity):
-    """Base button entity class for Reolink IP cameras."""
+    """Base button entity class for Reolink hosts."""
 
     entity_description: ReolinkHostButtonEntityDescription
 

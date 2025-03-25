@@ -10,7 +10,9 @@
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of your Enphase Envoy gateway."
+          "host": "The hostname or IP address of your Enphase Envoy gateway.",
+          "username": "Installer or Enphase Cloud username",
+          "password": "Blank or Enphase Cloud password"
         }
       },
       "reconfigure": {
@@ -21,7 +23,9 @@
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "host": "[%key:component::enphase_envoy::config::step::user::data_description::host%]"
+          "host": "[%key:component::enphase_envoy::config::step::user::data_description::host%]",
+          "username": "[%key:component::enphase_envoy::config::step::user::data_description::username%]",
+          "password": "[%key:component::enphase_envoy::config::step::user::data_description::password%]"
         }
       },
       "reauth_confirm": {
@@ -29,6 +33,10 @@
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "[%key:component::enphase_envoy::config::step::user::data_description::username%]",
+          "password": "[%key:component::enphase_envoy::config::step::user::data_description::password%]"
         }
       }
     },
@@ -49,8 +57,12 @@
       "init": {
         "title": "Envoy {serial} {host} options",
         "data": {
-          "diagnostics_include_fixtures": "Include test fixture data in diagnostic report. Use when requested to provide test data for troubleshooting or development activies. With this option enabled the diagnostic report may take more time to download. When report is created best disable this option again.",
+          "diagnostics_include_fixtures": "Include test fixture data in diagnostic report. Use when requested to provide test data for troubleshooting or development activities. With this option enabled the diagnostic report may take more time to download. When report is created best disable this option again.",
           "disable_keep_alive": "Always use a new connection when requesting data from the Envoy. May resolve communication issues with some Envoy firmwares."
+        },
+        "data_description": {
+          "diagnostics_include_fixtures": "Include fixtures in diagnostics report",
+          "disable_keep_alive": "May resolve communication issues with some Envoy firmwares."
         }
       }
     }
@@ -175,13 +187,13 @@
         "name": "Lifetime energy consumption {phase_name}"
       },
       "balanced_net_consumption": {
-        "name": "balanced net power consumption"
+        "name": "Balanced net power consumption"
       },
       "lifetime_balanced_net_consumption": {
         "name": "Lifetime balanced net energy consumption"
       },
       "balanced_net_consumption_phase": {
-        "name": "balanced net power consumption {phase_name}"
+        "name": "Balanced net power consumption {phase_name}"
       },
       "lifetime_balanced_net_consumption_phase": {
         "name": "Lifetime balanced net energy consumption {phase_name}"
@@ -205,7 +217,7 @@
         "name": "Net consumption CT current"
       },
       "net_ct_powerfactor": {
-        "name": "Powerfactor net consumption CT"
+        "name": "Power factor net consumption CT"
       },
       "net_ct_metering_status": {
         "name": "Metering status net consumption CT"
@@ -223,7 +235,7 @@
         "name": "Production CT current"
       },
       "production_ct_powerfactor": {
-        "name": "powerfactor production CT"
+        "name": "Power factor production CT"
       },
       "production_ct_metering_status": {
         "name": "Metering status production CT"
@@ -250,7 +262,7 @@
         "name": "Storage CT current"
       },
       "storage_ct_powerfactor": {
-        "name": "Powerfactor storage CT"
+        "name": "Power factor storage CT"
       },
       "storage_ct_metering_status": {
         "name": "Metering status storage CT"
@@ -277,7 +289,7 @@
         "name": "Net consumption CT current {phase_name}"
       },
       "net_ct_powerfactor_phase": {
-        "name": "Powerfactor net consumption CT {phase_name}"
+        "name": "Power factor net consumption CT {phase_name}"
       },
       "net_ct_metering_status_phase": {
         "name": "Metering status net consumption CT {phase_name}"
@@ -295,7 +307,7 @@
         "name": "Production CT current {phase_name}"
       },
       "production_ct_powerfactor_phase": {
-        "name": "Powerfactor production CT {phase_name}"
+        "name": "Power factor production CT {phase_name}"
       },
       "production_ct_metering_status_phase": {
         "name": "Metering status production CT {phase_name}"
@@ -322,7 +334,7 @@
         "name": "Storage CT current {phase_name}"
       },
       "storage_ct_powerfactor_phase": {
-        "name": "Powerfactor storage CT {phase_name}"
+        "name": "Power factor storage CT {phase_name}"
       },
       "storage_ct_metering_status_phase": {
         "name": "Metering status storage CT {phase_name}"
@@ -348,9 +360,9 @@
       "acb_battery_state": {
         "name": "Battery state",
         "state": {
-          "discharging": "Discharging",
+          "discharging": "[%key:common::state::discharging%]",
           "idle": "[%key:common::state::idle%]",
-          "charging": "Charging",
+          "charging": "[%key:common::state::charging%]",
           "full": "Full"
         }
       },
@@ -388,6 +400,9 @@
     },
     "envoy_error": {
       "message": "Error communicating with Envoy API on {host}: {args}"
+    },
+    "action_error": {
+      "message": "Failed to execute {action} for {entity}, host: {host}: {args}"
     }
   }
 }

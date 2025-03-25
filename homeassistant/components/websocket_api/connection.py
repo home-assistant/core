@@ -40,17 +40,17 @@ class ActiveConnection:
     """Handle an active websocket client connection."""
 
     __slots__ = (
-        "logger",
-        "hass",
-        "send_message",
-        "user",
-        "refresh_token_id",
-        "subscriptions",
-        "last_id",
-        "can_coalesce",
-        "supported_features",
-        "handlers",
         "binary_handlers",
+        "can_coalesce",
+        "handlers",
+        "hass",
+        "last_id",
+        "logger",
+        "refresh_token_id",
+        "send_message",
+        "subscriptions",
+        "supported_features",
+        "user",
     )
 
     def __init__(

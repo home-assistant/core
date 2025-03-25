@@ -6,11 +6,13 @@
     "azure_devops",
     "azure_event_hub",
     "azure_service_bus",
+    "azure_storage",
     "microsoft_face_detect",
     "microsoft_face_identify",
     "microsoft_face",
     "microsoft",
     "msteams",
+    "onedrive",
     "xbox"
   ]
 }
