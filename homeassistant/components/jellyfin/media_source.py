@@ -19,7 +19,6 @@ from homeassistant.components.media_source import (
 )
 from homeassistant.core import HomeAssistant
 
-from . import JellyfinConfigEntry
 from .const import (
     COLLECTION_TYPE_MOVIES,
     COLLECTION_TYPE_MUSIC,
@@ -48,6 +47,7 @@ from .const import (
     PLAYABLE_ITEM_TYPES,
     SUPPORTED_COLLECTION_TYPES,
 )
+from .coordinator import JellyfinConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,9 +56,9 @@ async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
     """Set up Jellyfin media source."""
     # Currently only a single Jellyfin server is supported
     entry: JellyfinConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
-    jellyfin_data = entry.runtime_data
+    coordinator = entry.runtime_data
 
-    return JellyfinSource(hass, jellyfin_data.jellyfin_client, entry)
+    return JellyfinSource(hass, coordinator.api_client, entry)
 
 
 class JellyfinSource(MediaSource):

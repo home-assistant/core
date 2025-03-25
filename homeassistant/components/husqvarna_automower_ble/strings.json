@@ -1,0 +1,21 @@
+{
+  "config": {
+    "flow_title": "{name} ({address})",
+    "step": {
+      "user": {
+        "data": {
+          "address": "Device BLE address"
+        }
+      },
+      "confirm": {
+        "description": "Do you want to set up {name}? Make sure the mower is in pairing mode"
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_devices_found": "Ensure the mower is in pairing mode and try again. It can take a few attempts.",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  }
+}

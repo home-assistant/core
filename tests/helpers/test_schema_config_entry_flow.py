@@ -648,6 +648,10 @@ async def test_options_flow_state(hass: HomeAssistant) -> None:
     options_handler = hass.config_entries.options._progress[result["flow_id"]]
     assert options_handler._common_handler.flow_state == {"idx": None}
 
+    # Ensure that self.options and self._common_handler.options refer to the
+    # same mutable copy of the options
+    assert options_handler.options is options_handler._common_handler.options
+
     # In step 1, flow state is updated with user input
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], {"option1": "blublu"}

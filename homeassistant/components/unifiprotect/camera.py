@@ -16,7 +16,7 @@ from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity
 
 from .const import (
@@ -90,7 +90,7 @@ def _get_camera_channels(
                 is_default = False
 
         # no RTSP enabled use first channel with no stream
-        if is_default:
+        if is_default and not camera.is_third_party_camera:
             _create_rtsp_repair(hass, entry, data, camera)
             yield camera, camera.channels[0], True
         else:
@@ -138,7 +138,7 @@ def _async_camera_entities(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: UFPConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Discover cameras on a UniFi Protect NVR."""
     data = entry.runtime_data
@@ -156,7 +156,8 @@ async def async_setup_entry(
     async_add_entities(_async_camera_entities(hass, entry, data))
 
 
-_EMPTY_CAMERA_FEATURES = CameraEntityFeature(0)
+_DISABLE_FEATURE = CameraEntityFeature(0)
+_ENABLE_FEATURE = CameraEntityFeature.STREAM
 
 
 class ProtectCamera(ProtectDeviceEntity, Camera):
@@ -195,24 +196,22 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
             self._attr_name = f"{camera_name} (insecure)"
         # only the default (first) channel is enabled by default
         self._attr_entity_registry_enabled_default = is_default and secure
+        # Set the stream source before finishing the init
+        # because async_added_to_hass is too late and camera
+        # integration uses async_internal_added_to_hass to access
+        # the stream source which is called before async_added_to_hass
+        self._async_set_stream_source()
 
     @callback
     def _async_set_stream_source(self) -> None:
-        disable_stream = self._disable_stream
         channel = self.channel
-
-        if not channel.is_rtsp_enabled:
-            disable_stream = False
-
-        rtsp_url = channel.rtsps_url if self._secure else channel.rtsp_url
-
-        # _async_set_stream_source called by __init__
-        # pylint: disable-next=attribute-defined-outside-init
-        self._stream_source = None if disable_stream else rtsp_url
-        if self._stream_source:
-            self._attr_supported_features = CameraEntityFeature.STREAM
-        else:
-            self._attr_supported_features = _EMPTY_CAMERA_FEATURES
+        enable_stream = not self._disable_stream and channel.is_rtsp_enabled
+        # SRTP disabled because go2rtc does not support it
+        # https://github.com/AlexxIT/go2rtc/#source-rtsp
+        rtsp_url = channel.rtsps_no_srtp_url if self._secure else channel.rtsp_url
+        source = rtsp_url if enable_stream else None
+        self._attr_supported_features = _ENABLE_FEATURE if source else _DISABLE_FEATURE
+        self._stream_source = source
 
     @callback
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:

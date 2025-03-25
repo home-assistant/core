@@ -5,43 +5,60 @@ from __future__ import annotations
 import asyncio
 from collections import OrderedDict
 from collections.abc import Callable, Mapping
+from copy import deepcopy
+from dataclasses import dataclass
+from enum import IntEnum
 import logging
 import queue
 from ssl import PROTOCOL_TLS_CLIENT, SSLContext, SSLError
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
+from uuid import uuid4
 
-from cryptography.hazmat.primitives.serialization import load_pem_private_key
-from cryptography.x509 import load_pem_x509_certificate
+from cryptography.hazmat.primitives.serialization import (
+    Encoding,
+    NoEncryption,
+    PrivateFormat,
+    load_der_private_key,
+    load_pem_private_key,
+)
+from cryptography.x509 import load_der_x509_certificate, load_pem_x509_certificate
 import voluptuous as vol
 
 from homeassistant.components.file_upload import process_uploaded_file
-from homeassistant.components.hassio import (
-    AddonError,
-    AddonManager,
-    AddonState,
-    HassioServiceInfo,
-    is_hassio,
-)
+from homeassistant.components.hassio import AddonError, AddonManager, AddonState
 from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
+    ConfigSubentryFlow,
     OptionsFlow,
+    SubentryFlowResult,
 )
 from homeassistant.const import (
+    ATTR_CONFIGURATION_URL,
+    ATTR_HW_VERSION,
+    ATTR_MODEL,
+    ATTR_MODEL_ID,
+    ATTR_NAME,
+    ATTR_SW_VERSION,
     CONF_CLIENT_ID,
+    CONF_DEVICE,
     CONF_DISCOVERY,
     CONF_HOST,
+    CONF_NAME,
     CONF_PASSWORD,
     CONF_PAYLOAD,
+    CONF_PLATFORM,
     CONF_PORT,
     CONF_PROTOCOL,
     CONF_USERNAME,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.selector import (
     BooleanSelector,
@@ -51,13 +68,17 @@ from homeassistant.helpers.selector import (
     NumberSelectorConfig,
     NumberSelectorMode,
     SelectOptionDict,
+    Selector,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
+    TemplateSelector,
+    TemplateSelectorConfig,
     TextSelector,
     TextSelectorConfig,
     TextSelectorType,
 )
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
 from .addon import get_addon_manager
@@ -67,22 +88,35 @@ from .const import (
     ATTR_QOS,
     ATTR_RETAIN,
     ATTR_TOPIC,
+    CONF_AVAILABILITY_TEMPLATE,
+    CONF_AVAILABILITY_TOPIC,
     CONF_BIRTH_MESSAGE,
     CONF_BROKER,
     CONF_CERTIFICATE,
     CONF_CLIENT_CERT,
     CONF_CLIENT_KEY,
+    CONF_COMMAND_TEMPLATE,
+    CONF_COMMAND_TOPIC,
     CONF_DISCOVERY_PREFIX,
+    CONF_ENTITY_PICTURE,
     CONF_KEEPALIVE,
+    CONF_PAYLOAD_AVAILABLE,
+    CONF_PAYLOAD_NOT_AVAILABLE,
+    CONF_QOS,
+    CONF_RETAIN,
     CONF_TLS_INSECURE,
     CONF_TRANSPORT,
     CONF_WILL_MESSAGE,
     CONF_WS_HEADERS,
     CONF_WS_PATH,
+    CONFIG_ENTRY_MINOR_VERSION,
+    CONFIG_ENTRY_VERSION,
     DEFAULT_BIRTH,
     DEFAULT_DISCOVERY,
     DEFAULT_ENCODING,
     DEFAULT_KEEPALIVE,
+    DEFAULT_PAYLOAD_AVAILABLE,
+    DEFAULT_PAYLOAD_NOT_AVAILABLE,
     DEFAULT_PORT,
     DEFAULT_PREFIX,
     DEFAULT_PROTOCOL,
@@ -93,18 +127,25 @@ from .const import (
     SUPPORTED_PROTOCOLS,
     TRANSPORT_TCP,
     TRANSPORT_WEBSOCKETS,
+    Platform,
 )
+from .models import MqttAvailabilityData, MqttDeviceData, MqttSubentryData
 from .util import (
     async_create_certificate_temp_files,
     get_file_path,
     valid_birth_will,
     valid_publish_topic,
+    valid_qos_schema,
+    valid_subscribe_topic,
+    valid_subscribe_topic_template,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 ADDON_SETUP_TIMEOUT = 5
 ADDON_SETUP_TIMEOUT_ROUNDS = 5
+
+CONF_CLIENT_KEY_PASSWORD = "client_key_password"
 
 MQTT_TIMEOUT = 5
 
@@ -120,10 +161,10 @@ PORT_SELECTOR = vol.All(
     vol.Coerce(int),
 )
 PASSWORD_SELECTOR = TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD))
-QOS_SELECTOR = vol.All(
-    NumberSelector(NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=0, max=2)),
-    vol.Coerce(int),
+QOS_SELECTOR = NumberSelector(
+    NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=0, max=2)
 )
+QOS_DATA_SCHEMA = vol.All(QOS_SELECTOR, valid_qos_schema)
 KEEPALIVE_SELECTOR = vol.All(
     NumberSelector(
         NumberSelectorConfig(
@@ -166,12 +207,86 @@ BROKER_VERIFICATION_SELECTOR = SelectSelector(
 
 # mime configuration from https://pki-tutorial.readthedocs.io/en/latest/mime.html
 CA_CERT_UPLOAD_SELECTOR = FileSelector(
-    FileSelectorConfig(accept=".crt,application/x-x509-ca-cert")
+    FileSelectorConfig(accept=".pem,.crt,.cer,.der,application/x-x509-ca-cert")
 )
 CERT_UPLOAD_SELECTOR = FileSelector(
-    FileSelectorConfig(accept=".crt,application/x-x509-user-cert")
+    FileSelectorConfig(accept=".pem,.crt,.cer,.der,application/x-x509-user-cert")
 )
-KEY_UPLOAD_SELECTOR = FileSelector(FileSelectorConfig(accept=".key,application/pkcs8"))
+KEY_UPLOAD_SELECTOR = FileSelector(
+    FileSelectorConfig(accept=".pem,.key,.der,.pk8,application/pkcs8")
+)
+
+# Subentry selectors
+SUBENTRY_PLATFORMS = [Platform.NOTIFY]
+SUBENTRY_PLATFORM_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        options=[platform.value for platform in SUBENTRY_PLATFORMS],
+        mode=SelectSelectorMode.DROPDOWN,
+        translation_key=CONF_PLATFORM,
+    )
+)
+
+TEMPLATE_SELECTOR = TemplateSelector(TemplateSelectorConfig())
+
+SUBENTRY_AVAILABILITY_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_AVAILABILITY_TOPIC): TEXT_SELECTOR,
+        vol.Optional(CONF_AVAILABILITY_TEMPLATE): TEMPLATE_SELECTOR,
+        vol.Optional(
+            CONF_PAYLOAD_AVAILABLE, default=DEFAULT_PAYLOAD_AVAILABLE
+        ): TEXT_SELECTOR,
+        vol.Optional(
+            CONF_PAYLOAD_NOT_AVAILABLE, default=DEFAULT_PAYLOAD_NOT_AVAILABLE
+        ): TEXT_SELECTOR,
+    }
+)
+
+
+@dataclass(frozen=True)
+class PlatformField:
+    """Stores a platform config field schema, required flag and validator."""
+
+    selector: Selector
+    required: bool
+    validator: Callable[..., Any]
+    error: str | None = None
+    default: str | int | vol.Undefined = vol.UNDEFINED
+    exclude_from_reconfig: bool = False
+
+
+COMMON_ENTITY_FIELDS = {
+    CONF_PLATFORM: PlatformField(
+        SUBENTRY_PLATFORM_SELECTOR, True, str, exclude_from_reconfig=True
+    ),
+    CONF_NAME: PlatformField(TEXT_SELECTOR, False, str, exclude_from_reconfig=True),
+    CONF_ENTITY_PICTURE: PlatformField(TEXT_SELECTOR, False, cv.url, "invalid_url"),
+}
+
+COMMON_MQTT_FIELDS = {
+    CONF_QOS: PlatformField(QOS_SELECTOR, False, valid_qos_schema, default=0),
+    CONF_RETAIN: PlatformField(BOOLEAN_SELECTOR, False, bool),
+}
+PLATFORM_MQTT_FIELDS = {
+    Platform.NOTIFY.value: {
+        CONF_COMMAND_TOPIC: PlatformField(
+            TEXT_SELECTOR, True, valid_publish_topic, "invalid_publish_topic"
+        ),
+        CONF_COMMAND_TEMPLATE: PlatformField(
+            TEMPLATE_SELECTOR, False, cv.template, "invalid_template"
+        ),
+    },
+}
+
+MQTT_DEVICE_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_NAME): TEXT_SELECTOR,
+        vol.Optional(ATTR_SW_VERSION): TEXT_SELECTOR,
+        vol.Optional(ATTR_HW_VERSION): TEXT_SELECTOR,
+        vol.Optional(ATTR_MODEL): TEXT_SELECTOR,
+        vol.Optional(ATTR_MODEL_ID): TEXT_SELECTOR,
+        vol.Optional(ATTR_CONFIGURATION_URL): TEXT_SELECTOR,
+    }
+)
 
 REAUTH_SCHEMA = vol.Schema(
     {
@@ -205,12 +320,64 @@ def update_password_from_user_input(
     return substituted_used_data
 
 
+@callback
+def validate_field(
+    field: str,
+    validator: Callable[..., Any],
+    user_input: dict[str, Any] | None,
+    errors: dict[str, str],
+    error: str,
+) -> None:
+    """Validate a single field."""
+    if user_input is None or field not in user_input:
+        return
+    try:
+        validator(user_input[field])
+    except (ValueError, vol.Invalid):
+        errors[field] = error
+
+
+@callback
+def validate_user_input(
+    user_input: dict[str, Any],
+    data_schema_fields: dict[str, PlatformField],
+    errors: dict[str, str],
+) -> None:
+    """Validate user input."""
+    for field, value in user_input.items():
+        validator = data_schema_fields[field].validator
+        try:
+            validator(value)
+        except (ValueError, vol.Invalid):
+            errors[field] = data_schema_fields[field].error or "invalid_input"
+
+
+@callback
+def data_schema_from_fields(
+    data_schema_fields: dict[str, PlatformField],
+    reconfig: bool,
+) -> vol.Schema:
+    """Generate data schema from platform fields."""
+    return vol.Schema(
+        {
+            vol.Required(field_name, default=field_details.default)
+            if field_details.required
+            else vol.Optional(
+                field_name, default=field_details.default
+            ): field_details.selector
+            for field_name, field_details in data_schema_fields.items()
+            if not field_details.exclude_from_reconfig or not reconfig
+        }
+    )
+
+
 class FlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
-    VERSION = 1
+    # Can be bumped to version 2.1 with HA Core 2026.1.0
+    VERSION = CONFIG_ENTRY_VERSION  # 1
+    MINOR_VERSION = CONFIG_ENTRY_MINOR_VERSION  # 2
 
-    entry: ConfigEntry | None
     _hassio_discovery: dict[str, Any] | None = None
     _addon_manager: AddonManager
 
@@ -219,13 +386,21 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         self.install_task: asyncio.Task | None = None
         self.start_task: asyncio.Task | None = None
 
+    @classmethod
+    @callback
+    def async_get_supported_subentry_types(
+        cls, config_entry: ConfigEntry
+    ) -> dict[str, type[ConfigSubentryFlow]]:
+        """Return subentries supported by this handler."""
+        return {CONF_DEVICE: MQTTSubentryFlowHandler}
+
     @staticmethod
     @callback
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> MQTTOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return MQTTOptionsFlowHandler(config_entry)
+        return MQTTOptionsFlowHandler()
 
     async def _async_install_addon(self) -> None:
         """Install the Mosquitto Mqtt broker add-on."""
@@ -336,16 +511,15 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 break
         else:
             raise AddonError(
-                f"Failed to correctly start {addon_manager.addon_name} add-on"
+                translation_domain=DOMAIN,
+                translation_key="addon_start_failed",
+                translation_placeholders={"addon": addon_manager.addon_name},
             )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         if is_hassio(self.hass):
             # Offer to set up broker add-on if supervisor is available
             self._addon_manager = get_addon_manager(self.hass)
@@ -401,7 +575,6 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle re-authentication with MQTT broker."""
-        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         if is_hassio(self.hass):
             # Check if entry setup matches the add-on discovery config
             addon_manager = get_addon_manager(self.hass)
@@ -440,18 +613,18 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         """Confirm re-authentication with MQTT broker."""
         errors: dict[str, str] = {}
 
-        assert self.entry is not None
+        reauth_entry = self._get_reauth_entry()
         if user_input:
             substituted_used_data = update_password_from_user_input(
-                self.entry.data.get(CONF_PASSWORD), user_input
+                reauth_entry.data.get(CONF_PASSWORD), user_input
             )
-            new_entry_data = {**self.entry.data, **substituted_used_data}
+            new_entry_data = {**reauth_entry.data, **substituted_used_data}
             if await self.hass.async_add_executor_job(
                 try_connection,
                 new_entry_data,
             ):
                 return self.async_update_reload_and_abort(
-                    self.entry, data=new_entry_data
+                    reauth_entry, data=new_entry_data
                 )
 
             errors["base"] = "invalid_auth"
@@ -459,7 +632,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         schema = self.add_suggested_values_to_schema(
             REAUTH_SCHEMA,
             {
-                CONF_USERNAME: self.entry.data.get(CONF_USERNAME),
+                CONF_USERNAME: reauth_entry.data.get(CONF_USERNAME),
                 CONF_PASSWORD: PWD_NOT_CHANGED,
             },
         )
@@ -476,21 +649,32 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         fields: OrderedDict[Any, Any] = OrderedDict()
         validated_user_input: dict[str, Any] = {}
+        if is_reconfigure := (self.source == SOURCE_RECONFIGURE):
+            reconfigure_entry = self._get_reconfigure_entry()
         if await async_get_broker_settings(
             self,
             fields,
-            None,
+            reconfigure_entry.data if is_reconfigure else None,
             user_input,
             validated_user_input,
             errors,
         ):
+            if is_reconfigure:
+                validated_user_input = update_password_from_user_input(
+                    reconfigure_entry.data.get(CONF_PASSWORD), validated_user_input
+                )
+
             can_connect = await self.hass.async_add_executor_job(
                 try_connection,
                 validated_user_input,
             )
 
             if can_connect:
-                validated_user_input[CONF_DISCOVERY] = DEFAULT_DISCOVERY
+                if is_reconfigure:
+                    return self.async_update_reload_and_abort(
+                        reconfigure_entry,
+                        data=validated_user_input,
+                    )
                 return self.async_create_entry(
                     title=validated_user_input[CONF_BROKER],
                     data=validated_user_input,
@@ -501,6 +685,12 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="broker", data_schema=vol.Schema(fields), errors=errors
         )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a reconfiguration flow initialized by the user."""
+        return await self.async_step_broker()
 
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
@@ -552,60 +742,17 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 class MQTTOptionsFlowHandler(OptionsFlow):
     """Handle MQTT options."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize MQTT options flow."""
-        self.config_entry = config_entry
-        self.broker_config: dict[str, str | int] = {}
-        self.options = config_entry.options
-
     async def async_step_init(self, user_input: None = None) -> ConfigFlowResult:
         """Manage the MQTT options."""
-        return await self.async_step_broker()
-
-    async def async_step_broker(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Manage the MQTT broker configuration."""
-        errors: dict[str, str] = {}
-        fields: OrderedDict[Any, Any] = OrderedDict()
-        validated_user_input: dict[str, Any] = {}
-        if await async_get_broker_settings(
-            self,
-            fields,
-            self.config_entry.data,
-            user_input,
-            validated_user_input,
-            errors,
-        ):
-            self.broker_config.update(
-                update_password_from_user_input(
-                    self.config_entry.data.get(CONF_PASSWORD), validated_user_input
-                ),
-            )
-            can_connect = await self.hass.async_add_executor_job(
-                try_connection,
-                self.broker_config,
-            )
-
-            if can_connect:
-                return await self.async_step_options()
-
-            errors["base"] = "cannot_connect"
-
-        return self.async_show_form(
-            step_id="broker",
-            data_schema=vol.Schema(fields),
-            errors=errors,
-            last_step=False,
-        )
+        return await self.async_step_options()
 
     async def async_step_options(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the MQTT options."""
         errors = {}
-        current_config = self.config_entry.data
-        options_config: dict[str, Any] = {}
+
+        options_config: dict[str, Any] = dict(self.config_entry.options)
         bad_input: bool = False
 
         def _birth_will(birt_or_will: str) -> dict[str, Any]:
@@ -664,26 +811,18 @@ class MQTTOptionsFlowHandler(OptionsFlow):
                 options_config[CONF_WILL_MESSAGE] = {}
 
             if not bad_input:
-                updated_config = {}
-                updated_config.update(self.broker_config)
-                updated_config.update(options_config)
-                self.hass.config_entries.async_update_entry(
-                    self.config_entry,
-                    data=updated_config,
-                    title=str(self.broker_config[CONF_BROKER]),
-                )
-                return self.async_create_entry(title="", data={})
+                return self.async_create_entry(data=options_config)
 
         birth = {
             **DEFAULT_BIRTH,
-            **current_config.get(CONF_BIRTH_MESSAGE, {}),
+            **options_config.get(CONF_BIRTH_MESSAGE, {}),
         }
         will = {
             **DEFAULT_WILL,
-            **current_config.get(CONF_WILL_MESSAGE, {}),
+            **options_config.get(CONF_WILL_MESSAGE, {}),
         }
-        discovery = current_config.get(CONF_DISCOVERY, DEFAULT_DISCOVERY)
-        discovery_prefix = current_config.get(CONF_DISCOVERY_PREFIX, DEFAULT_PREFIX)
+        discovery = options_config.get(CONF_DISCOVERY, DEFAULT_DISCOVERY)
+        discovery_prefix = options_config.get(CONF_DISCOVERY_PREFIX, DEFAULT_PREFIX)
 
         # build form
         fields: OrderedDict[vol.Marker, Any] = OrderedDict()
@@ -696,8 +835,8 @@ class MQTTOptionsFlowHandler(OptionsFlow):
         fields[
             vol.Optional(
                 "birth_enable",
-                default=CONF_BIRTH_MESSAGE not in current_config
-                or current_config[CONF_BIRTH_MESSAGE] != {},
+                default=CONF_BIRTH_MESSAGE not in options_config
+                or options_config[CONF_BIRTH_MESSAGE] != {},
             )
         ] = BOOLEAN_SELECTOR
         fields[
@@ -710,7 +849,7 @@ class MQTTOptionsFlowHandler(OptionsFlow):
                 "birth_payload", description={"suggested_value": birth[CONF_PAYLOAD]}
             )
         ] = TEXT_SELECTOR
-        fields[vol.Optional("birth_qos", default=birth[ATTR_QOS])] = QOS_SELECTOR
+        fields[vol.Optional("birth_qos", default=birth[ATTR_QOS])] = QOS_DATA_SCHEMA
         fields[vol.Optional("birth_retain", default=birth[ATTR_RETAIN])] = (
             BOOLEAN_SELECTOR
         )
@@ -719,8 +858,8 @@ class MQTTOptionsFlowHandler(OptionsFlow):
         fields[
             vol.Optional(
                 "will_enable",
-                default=CONF_WILL_MESSAGE not in current_config
-                or current_config[CONF_WILL_MESSAGE] != {},
+                default=CONF_WILL_MESSAGE not in options_config
+                or options_config[CONF_WILL_MESSAGE] != {},
             )
         ] = BOOLEAN_SELECTOR
         fields[
@@ -733,7 +872,7 @@ class MQTTOptionsFlowHandler(OptionsFlow):
                 "will_payload", description={"suggested_value": will[CONF_PAYLOAD]}
             )
         ] = TEXT_SELECTOR
-        fields[vol.Optional("will_qos", default=will[ATTR_QOS])] = QOS_SELECTOR
+        fields[vol.Optional("will_qos", default=will[ATTR_QOS])] = QOS_DATA_SCHEMA
         fields[vol.Optional("will_retain", default=will[ATTR_RETAIN])] = (
             BOOLEAN_SELECTOR
         )
@@ -746,7 +885,408 @@ class MQTTOptionsFlowHandler(OptionsFlow):
         )
 
 
-async def async_get_broker_settings(
+class MQTTSubentryFlowHandler(ConfigSubentryFlow):
+    """Handle MQTT subentry flow."""
+
+    _subentry_data: MqttSubentryData
+    _component_id: str | None = None
+
+    @callback
+    def update_component_fields(
+        self, data_schema: vol.Schema, user_input: dict[str, Any]
+    ) -> None:
+        """Update the componment fields."""
+        if TYPE_CHECKING:
+            assert self._component_id is not None
+        component_data = self._subentry_data["components"][self._component_id]
+        # Remove the fields from the component data if they are not in the user input
+        for field in [
+            form_field
+            for form_field in data_schema.schema
+            if form_field in component_data and form_field not in user_input
+        ]:
+            component_data.pop(field)
+        component_data.update(user_input)
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Add a subentry."""
+        self._subentry_data = MqttSubentryData(device=MqttDeviceData(), components={})
+        return await self.async_step_device()
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Reconfigure a subentry."""
+        reconfigure_subentry = self._get_reconfigure_subentry()
+        self._subentry_data = cast(
+            MqttSubentryData, deepcopy(dict(reconfigure_subentry.data))
+        )
+        return await self.async_step_summary_menu()
+
+    async def async_step_device(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Add a new MQTT device."""
+        errors: dict[str, str] = {}
+        validate_field("configuration_url", cv.url, user_input, errors, "invalid_url")
+        if not errors and user_input is not None:
+            self._subentry_data[CONF_DEVICE] = cast(MqttDeviceData, user_input)
+            if self.source == SOURCE_RECONFIGURE:
+                return await self.async_step_summary_menu()
+            return await self.async_step_entity()
+
+        data_schema = self.add_suggested_values_to_schema(
+            MQTT_DEVICE_SCHEMA,
+            self._subentry_data[CONF_DEVICE] if user_input is None else user_input,
+        )
+        return self.async_show_form(
+            step_id=CONF_DEVICE,
+            data_schema=data_schema,
+            errors=errors,
+            last_step=False,
+        )
+
+    async def async_step_entity(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Add or edit an mqtt entity."""
+        errors: dict[str, str] = {}
+        data_schema_fields = COMMON_ENTITY_FIELDS
+        entity_name_label: str = ""
+        platform_label: str = ""
+        if reconfig := (self._component_id is not None):
+            name: str | None = self._subentry_data["components"][
+                self._component_id
+            ].get(CONF_NAME)
+            platform_label = f"{self._subentry_data['components'][self._component_id][CONF_PLATFORM]} "
+            entity_name_label = f" ({name})" if name is not None else ""
+        data_schema = data_schema_from_fields(data_schema_fields, reconfig=reconfig)
+        if user_input is not None:
+            validate_user_input(user_input, data_schema_fields, errors)
+            if not errors:
+                if self._component_id is None:
+                    self._component_id = uuid4().hex
+                self._subentry_data["components"].setdefault(self._component_id, {})
+                self.update_component_fields(data_schema, user_input)
+                return await self.async_step_mqtt_platform_config()
+            data_schema = self.add_suggested_values_to_schema(data_schema, user_input)
+        elif self.source == SOURCE_RECONFIGURE and self._component_id is not None:
+            data_schema = self.add_suggested_values_to_schema(
+                data_schema, self._subentry_data["components"][self._component_id]
+            )
+        device_name = self._subentry_data[CONF_DEVICE][CONF_NAME]
+        return self.async_show_form(
+            step_id="entity",
+            data_schema=data_schema,
+            description_placeholders={
+                "mqtt_device": device_name,
+                "entity_name_label": entity_name_label,
+                "platform_label": platform_label,
+            },
+            errors=errors,
+            last_step=False,
+        )
+
+    def _show_update_or_delete_form(self, step_id: str) -> SubentryFlowResult:
+        """Help selecting an entity to update or delete."""
+        device_name = self._subentry_data[CONF_DEVICE][CONF_NAME]
+        entities = [
+            SelectOptionDict(
+                value=key, label=f"{device_name} {component.get(CONF_NAME, '-')}"
+            )
+            for key, component in self._subentry_data["components"].items()
+        ]
+        data_schema = vol.Schema(
+            {
+                vol.Required("component"): SelectSelector(
+                    SelectSelectorConfig(
+                        options=entities,
+                        mode=SelectSelectorMode.LIST,
+                    )
+                )
+            }
+        )
+        return self.async_show_form(
+            step_id=step_id, data_schema=data_schema, last_step=False
+        )
+
+    async def async_step_update_entity(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Select the entity to update."""
+        if user_input:
+            self._component_id = user_input["component"]
+            return await self.async_step_entity()
+        if len(self._subentry_data["components"]) == 1:
+            # Return first key
+            self._component_id = next(iter(self._subentry_data["components"]))
+            return await self.async_step_entity()
+        return self._show_update_or_delete_form("update_entity")
+
+    async def async_step_delete_entity(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Select the entity to delete."""
+        if user_input:
+            del self._subentry_data["components"][user_input["component"]]
+            return await self.async_step_summary_menu()
+        return self._show_update_or_delete_form("delete_entity")
+
+    async def async_step_mqtt_platform_config(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Configure entity platform MQTT details."""
+        errors: dict[str, str] = {}
+        if TYPE_CHECKING:
+            assert self._component_id is not None
+        platform = self._subentry_data["components"][self._component_id][CONF_PLATFORM]
+        data_schema_fields = PLATFORM_MQTT_FIELDS[platform] | COMMON_MQTT_FIELDS
+        data_schema = data_schema_from_fields(
+            data_schema_fields, reconfig=self._component_id is not None
+        )
+        if user_input is not None:
+            # Test entity fields against the validator
+            validate_user_input(user_input, data_schema_fields, errors)
+            if not errors:
+                self.update_component_fields(data_schema, user_input)
+                self._component_id = None
+                if self.source == SOURCE_RECONFIGURE:
+                    return await self.async_step_summary_menu()
+                return self._async_create_subentry()
+
+            data_schema = self.add_suggested_values_to_schema(data_schema, user_input)
+        else:
+            data_schema = self.add_suggested_values_to_schema(
+                data_schema, self._subentry_data["components"][self._component_id]
+            )
+        device_name = self._subentry_data[CONF_DEVICE][CONF_NAME]
+        entity_name: str | None
+        if entity_name := self._subentry_data["components"][self._component_id].get(
+            CONF_NAME
+        ):
+            full_entity_name: str = f"{device_name} {entity_name}"
+        else:
+            full_entity_name = device_name
+        return self.async_show_form(
+            step_id="mqtt_platform_config",
+            data_schema=data_schema,
+            description_placeholders={
+                "mqtt_device": device_name,
+                CONF_PLATFORM: platform,
+                "entity": full_entity_name,
+            },
+            errors=errors,
+            last_step=False,
+        )
+
+    @callback
+    def _async_create_subentry(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Create a subentry for a new MQTT device."""
+        device_name = self._subentry_data[CONF_DEVICE][CONF_NAME]
+        component: dict[str, Any] = next(
+            iter(self._subentry_data["components"].values())
+        )
+        platform = component[CONF_PLATFORM]
+        entity_name: str | None
+        if entity_name := component.get(CONF_NAME):
+            full_entity_name: str = f"{device_name} {entity_name}"
+        else:
+            full_entity_name = device_name
+
+        return self.async_create_entry(
+            data=self._subentry_data,
+            title=self._subentry_data[CONF_DEVICE][CONF_NAME],
+            description_placeholders={
+                "entity": full_entity_name,
+                CONF_PLATFORM: platform,
+            },
+        )
+
+    async def async_step_availability(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Configure availability options."""
+        errors: dict[str, str] = {}
+        validate_field(
+            "availability_topic",
+            valid_subscribe_topic,
+            user_input,
+            errors,
+            "invalid_subscribe_topic",
+        )
+        validate_field(
+            "availability_template",
+            valid_subscribe_topic_template,
+            user_input,
+            errors,
+            "invalid_template",
+        )
+        if not errors and user_input is not None:
+            self._subentry_data.setdefault("availability", MqttAvailabilityData())
+            self._subentry_data["availability"] = cast(MqttAvailabilityData, user_input)
+            return await self.async_step_summary_menu()
+
+        data_schema = SUBENTRY_AVAILABILITY_SCHEMA
+        data_schema = self.add_suggested_values_to_schema(
+            data_schema,
+            dict(self._subentry_data.setdefault("availability", {}))
+            if self.source == SOURCE_RECONFIGURE
+            else user_input,
+        )
+        return self.async_show_form(
+            step_id="availability",
+            data_schema=data_schema,
+            errors=errors,
+            last_step=False,
+        )
+
+    async def async_step_summary_menu(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Show summary menu and decide to add more entities or to finish the flow."""
+        self._component_id = None
+        mqtt_device = self._subentry_data[CONF_DEVICE][CONF_NAME]
+        mqtt_items = ", ".join(
+            f"{mqtt_device} {component.get(CONF_NAME, '-')}"
+            for component in self._subentry_data["components"].values()
+        )
+        menu_options = [
+            "entity",
+            "update_entity",
+        ]
+        if len(self._subentry_data["components"]) > 1:
+            menu_options.append("delete_entity")
+        menu_options.extend(["device", "availability"])
+        if self._subentry_data != self._get_reconfigure_subentry().data:
+            menu_options.append("save_changes")
+        return self.async_show_menu(
+            step_id="summary_menu",
+            menu_options=menu_options,
+            description_placeholders={
+                "mqtt_device": mqtt_device,
+                "mqtt_items": mqtt_items,
+            },
+        )
+
+    async def async_step_save_changes(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Save the changes made to the subentry."""
+        entry = self._get_entry()
+        subentry = self._get_reconfigure_subentry()
+        entity_registry = er.async_get(self.hass)
+
+        # When a component is removed from the MQTT device,
+        # And we save the changes to the subentry,
+        # we need to clean up stale entity registry entries.
+        # The component id is used as a part of the unique id of the entity.
+        for unique_id, platform in [
+            (
+                f"{subentry.subentry_id}_{component_id}",
+                subentry.data["components"][component_id][CONF_PLATFORM],
+            )
+            for component_id in subentry.data["components"]
+            if component_id not in self._subentry_data["components"]
+        ]:
+            if entity_id := entity_registry.async_get_entity_id(
+                platform, DOMAIN, unique_id
+            ):
+                entity_registry.async_remove(entity_id)
+
+        return self.async_update_and_abort(
+            entry,
+            subentry,
+            data=self._subentry_data,
+            title=self._subentry_data[CONF_DEVICE][CONF_NAME],
+        )
+
+
+@callback
+def async_is_pem_data(data: bytes) -> bool:
+    """Return True if data is in PEM format."""
+    return (
+        b"-----BEGIN CERTIFICATE-----" in data
+        or b"-----BEGIN PRIVATE KEY-----" in data
+        or b"-----BEGIN RSA PRIVATE KEY-----" in data
+        or b"-----BEGIN ENCRYPTED PRIVATE KEY-----" in data
+    )
+
+
+class PEMType(IntEnum):
+    """Type of PEM data."""
+
+    CERTIFICATE = 1
+    PRIVATE_KEY = 2
+
+
+@callback
+def async_convert_to_pem(
+    data: bytes, pem_type: PEMType, password: str | None = None
+) -> str | None:
+    """Convert data to PEM format."""
+    try:
+        if async_is_pem_data(data):
+            if not password:
+                # Assume unencrypted PEM encoded private key
+                return data.decode(DEFAULT_ENCODING)
+            # Return decrypted PEM encoded private key
+            return (
+                load_pem_private_key(data, password=password.encode(DEFAULT_ENCODING))
+                .private_bytes(
+                    encoding=Encoding.PEM,
+                    format=PrivateFormat.TraditionalOpenSSL,
+                    encryption_algorithm=NoEncryption(),
+                )
+                .decode(DEFAULT_ENCODING)
+            )
+        # Convert from DER encoding to PEM
+        if pem_type == PEMType.CERTIFICATE:
+            return (
+                load_der_x509_certificate(data)
+                .public_bytes(
+                    encoding=Encoding.PEM,
+                )
+                .decode(DEFAULT_ENCODING)
+            )
+        # Assume DER encoded private key
+        pem_key_data: bytes = load_der_private_key(
+            data, password.encode(DEFAULT_ENCODING) if password else None
+        ).private_bytes(
+            encoding=Encoding.PEM,
+            format=PrivateFormat.TraditionalOpenSSL,
+            encryption_algorithm=NoEncryption(),
+        )
+        return pem_key_data.decode("utf-8")
+    except (TypeError, ValueError, SSLError):
+        _LOGGER.exception("Error converting %s file data to PEM format", pem_type.name)
+        return None
+
+
+async def _get_uploaded_file(hass: HomeAssistant, id: str) -> bytes:
+    """Get file content from uploaded certificate or key file."""
+
+    def _proces_uploaded_file() -> bytes:
+        with process_uploaded_file(hass, id) as file_path:
+            return file_path.read_bytes()
+
+    return await hass.async_add_executor_job(_proces_uploaded_file)
+
+
+def _validate_pki_file(
+    file_id: str | None, pem_data: str | None, errors: dict[str, str], error: str
+) -> bool:
+    """Return False if uploaded file could not be converted to PEM format."""
+    if file_id and not pem_data:
+        errors["base"] = error
+        return False
+    return True
+
+
+async def async_get_broker_settings(  # noqa: C901
     flow: ConfigFlow | OptionsFlow,
     fields: OrderedDict[Any, Any],
     entry_config: MappingProxyType[str, Any] | None,
@@ -794,42 +1334,66 @@ async def async_get_broker_settings(
         validated_user_input.update(user_input)
         client_certificate_id: str | None = user_input.get(CONF_CLIENT_CERT)
         client_key_id: str | None = user_input.get(CONF_CLIENT_KEY)
-        if (
-            client_certificate_id
-            and not client_key_id
-            or not client_certificate_id
-            and client_key_id
+        # We do not store the private key password in the entry data
+        client_key_password: str | None = validated_user_input.pop(
+            CONF_CLIENT_KEY_PASSWORD, None
+        )
+        if (client_certificate_id and not client_key_id) or (
+            not client_certificate_id and client_key_id
         ):
             errors["base"] = "invalid_inclusion"
             return False
         certificate_id: str | None = user_input.get(CONF_CERTIFICATE)
         if certificate_id:
-            with process_uploaded_file(hass, certificate_id) as certificate_file:
-                certificate = certificate_file.read_text(encoding=DEFAULT_ENCODING)
+            certificate_data_raw = await _get_uploaded_file(hass, certificate_id)
+            certificate = async_convert_to_pem(
+                certificate_data_raw, PEMType.CERTIFICATE
+            )
+        if not _validate_pki_file(
+            certificate_id, certificate, errors, "bad_certificate"
+        ):
+            return False
 
         # Return to form for file upload CA cert or client cert and key
         if (
-            not client_certificate
-            and user_input.get(SET_CLIENT_CERT)
-            and not client_certificate_id
-            or not certificate
-            and user_input.get(SET_CA_CERT, "off") == "custom"
-            and not certificate_id
-            or user_input.get(CONF_TRANSPORT) == TRANSPORT_WEBSOCKETS
-            and CONF_WS_PATH not in user_input
+            (
+                not client_certificate
+                and user_input.get(SET_CLIENT_CERT)
+                and not client_certificate_id
+            )
+            or (
+                not certificate
+                and user_input.get(SET_CA_CERT, "off") == "custom"
+                and not certificate_id
+            )
+            or (
+                user_input.get(CONF_TRANSPORT) == TRANSPORT_WEBSOCKETS
+                and CONF_WS_PATH not in user_input
+            )
         ):
             return False
 
         if client_certificate_id:
-            with process_uploaded_file(
+            client_certificate_data = await _get_uploaded_file(
                 hass, client_certificate_id
-            ) as client_certificate_file:
-                client_certificate = client_certificate_file.read_text(
-                    encoding=DEFAULT_ENCODING
-                )
+            )
+            client_certificate = async_convert_to_pem(
+                client_certificate_data, PEMType.CERTIFICATE
+            )
+        if not _validate_pki_file(
+            client_certificate_id, client_certificate, errors, "bad_client_cert"
+        ):
+            return False
+
         if client_key_id:
-            with process_uploaded_file(hass, client_key_id) as key_file:
-                client_key = key_file.read_text(encoding=DEFAULT_ENCODING)
+            client_key_data = await _get_uploaded_file(hass, client_key_id)
+            client_key = async_convert_to_pem(
+                client_key_data, PEMType.PRIVATE_KEY, password=client_key_password
+            )
+        if not _validate_pki_file(
+            client_key_id, client_key, errors, "client_key_error"
+        ):
+            return False
 
         certificate_data: dict[str, Any] = {}
         if certificate:
@@ -986,6 +1550,14 @@ async def async_get_broker_settings(
                 description={"suggested_value": user_input_basic.get(CONF_CLIENT_KEY)},
             )
         ] = KEY_UPLOAD_SELECTOR
+        fields[
+            vol.Optional(
+                CONF_CLIENT_KEY_PASSWORD,
+                description={
+                    "suggested_value": user_input_basic.get(CONF_CLIENT_KEY_PASSWORD)
+                },
+            )
+        ] = PASSWORD_SELECTOR
     verification_mode = current_config.get(SET_CA_CERT) or (
         "off"
         if current_ca_certificate is None
@@ -1053,14 +1625,14 @@ def try_connection(
     result: queue.Queue[bool] = queue.Queue(maxsize=1)
 
     def on_connect(
-        client_: mqtt.Client,
-        userdata: None,
-        flags: dict[str, Any],
-        result_code: int,
-        properties: mqtt.Properties | None = None,
+        _mqttc: mqtt.Client,
+        _userdata: None,
+        _connect_flags: mqtt.ConnectFlags,
+        reason_code: mqtt.ReasonCode,
+        _properties: mqtt.Properties | None = None,
     ) -> None:
         """Handle connection result."""
-        result.put(result_code == mqtt.CONNACK_ACCEPTED)
+        result.put(not reason_code.is_failure)
 
     client.on_connect = on_connect
 
@@ -1090,7 +1662,7 @@ def check_certicate_chain() -> str | None:
             with open(private_key, "rb") as client_key_file:
                 load_pem_private_key(client_key_file.read(), password=None)
         except (TypeError, ValueError):
-            return "bad_client_key"
+            return "client_key_error"
     # Check the certificate chain
     context = SSLContext(PROTOCOL_TLS_CLIENT)
     if client_certificate and private_key:

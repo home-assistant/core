@@ -32,6 +32,23 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "indoor_unit_water_pump_state": {
+        "name": "Indoor unit water pump"
+      },
+      "indoor_unit_auxiliary_pump_state": {
+        "name": "Indoor unit auxiliary water pump"
+      },
+      "indoor_unit_dhw_valve_or_pump_state": {
+        "name": "Indoor unit DHW valve or water pump"
+      },
+      "indoor_unit_gas_boiler_state": {
+        "name": "Indoor unit gas boiler heating allowed"
+      },
+      "indoor_unit_electric_heater_state": {
+        "name": "Indoor unit electric heater"
+      }
+    },
     "sensor": {
       "power_output": {
         "name": "Output power"
@@ -54,6 +71,15 @@
       "outside_temperature": {
         "name": "Outside temperature"
       },
+      "thermostat_water_setpoint": {
+        "name": "Water target temperature"
+      },
+      "thermostat_room_temperature": {
+        "name": "Current room temperature"
+      },
+      "thermostat_room_temperature_setpoint": {
+        "name": "Room temperature setpoint"
+      },
       "dhw_top_temperature": {
         "name": "DHW top temperature"
       },
@@ -75,6 +101,15 @@
       },
       "electricity_used": {
         "name": "Electricity used"
+      },
+      "energy_output": {
+        "name": "Total energy output"
+      },
+      "compressor_rpm": {
+        "name": "Compressor speed"
+      },
+      "compressor_percentage": {
+        "name": "Compressor usage"
       }
     }
   }

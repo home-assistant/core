@@ -22,10 +22,17 @@ from homeassistant.components.update import (
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import CONF_SLEEP_PERIOD, OTA_BEGIN, OTA_ERROR, OTA_PROGRESS, OTA_SUCCESS
+from .const import (
+    CONF_SLEEP_PERIOD,
+    DOMAIN,
+    OTA_BEGIN,
+    OTA_ERROR,
+    OTA_PROGRESS,
+    OTA_SUCCESS,
+)
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     RestEntityDescription,
@@ -104,7 +111,7 @@ RPC_UPDATES: Final = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up update entities for Shelly component."""
     if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
@@ -198,7 +205,11 @@ class RestUpdateEntity(ShellyRestAttributeEntity, UpdateEntity):
         try:
             result = await self.coordinator.device.trigger_ota_update(beta=beta)
         except DeviceConnectionError as err:
-            raise HomeAssistantError(f"Error starting OTA update: {err!r}") from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="ota_update_connection_error",
+                translation_placeholders={"device": self.coordinator.name},
+            ) from err
         except InvalidAuthError:
             await self.coordinator.async_shutdown_device_and_start_reauth()
         else:
@@ -238,7 +249,8 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
     ) -> None:
         """Initialize update entity."""
         super().__init__(coordinator, key, attribute, description)
-        self._ota_in_progress: bool | int = False
+        self._ota_in_progress = False
+        self._ota_progress_percentage: int | None = None
         self._attr_release_url = get_release_url(
             coordinator.device.gen, coordinator.model, description.beta
         )
@@ -256,11 +268,12 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
         if self.in_progress is not False:
             event_type = event["event"]
             if event_type == OTA_BEGIN:
-                self._ota_in_progress = 0
+                self._ota_progress_percentage = 0
             elif event_type == OTA_PROGRESS:
-                self._ota_in_progress = event["progress_percent"]
+                self._ota_progress_percentage = event["progress_percent"]
             elif event_type in (OTA_ERROR, OTA_SUCCESS):
                 self._ota_in_progress = False
+                self._ota_progress_percentage = None
             self.async_write_ha_state()
 
     @property
@@ -278,9 +291,14 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
         return self.installed_version
 
     @property
-    def in_progress(self) -> bool | int:
+    def in_progress(self) -> bool:
         """Update installation in progress."""
         return self._ota_in_progress
+
+    @property
+    def update_percentage(self) -> int | None:
+        """Update installation progress."""
+        return self._ota_progress_percentage
 
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
@@ -303,13 +321,25 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
         try:
             await self.coordinator.device.trigger_ota_update(beta=beta)
         except DeviceConnectionError as err:
-            raise HomeAssistantError(f"OTA update connection error: {err!r}") from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="ota_update_connection_error",
+                translation_placeholders={"device": self.coordinator.name},
+            ) from err
         except RpcCallError as err:
-            raise HomeAssistantError(f"OTA update request error: {err!r}") from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="ota_update_rpc_error",
+                translation_placeholders={
+                    "entity": self.entity_id,
+                    "device": self.coordinator.name,
+                },
+            ) from err
         except InvalidAuthError:
             await self.coordinator.async_shutdown_device_and_start_reauth()
         else:
             self._ota_in_progress = True
+            self._ota_progress_percentage = None
             LOGGER.debug("OTA update call for %s successful", self.coordinator.name)
 
 

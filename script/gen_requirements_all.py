@@ -58,8 +58,16 @@ INCLUDED_REQUIREMENTS_WHEELS = {
 # will be included in requirements_all_{action}.txt
 
 OVERRIDDEN_REQUIREMENTS_ACTIONS = {
-    "pytest": {"exclude": set(), "include": {"python-gammu"}},
-    "wheels_aarch64": {"exclude": set(), "include": INCLUDED_REQUIREMENTS_WHEELS},
+    "pytest": {
+        "exclude": set(),
+        "include": {"python-gammu"},
+        "markers": {},
+    },
+    "wheels_aarch64": {
+        "exclude": set(),
+        "include": INCLUDED_REQUIREMENTS_WHEELS,
+        "markers": {},
+    },
     # Pandas has issues building on armhf, it is expected they
     # will drop the platform in the near future (they consider it
     # "flimsy" on 386). The following packages depend on pandas,
@@ -67,10 +75,23 @@ OVERRIDDEN_REQUIREMENTS_ACTIONS = {
     "wheels_armhf": {
         "exclude": {"env-canada", "noaa-coops", "pyezviz", "pykrakenapi"},
         "include": INCLUDED_REQUIREMENTS_WHEELS,
+        "markers": {},
     },
-    "wheels_armv7": {"exclude": set(), "include": INCLUDED_REQUIREMENTS_WHEELS},
-    "wheels_amd64": {"exclude": set(), "include": INCLUDED_REQUIREMENTS_WHEELS},
-    "wheels_i386": {"exclude": set(), "include": INCLUDED_REQUIREMENTS_WHEELS},
+    "wheels_armv7": {
+        "exclude": set(),
+        "include": INCLUDED_REQUIREMENTS_WHEELS,
+        "markers": {},
+    },
+    "wheels_amd64": {
+        "exclude": set(),
+        "include": INCLUDED_REQUIREMENTS_WHEELS,
+        "markers": {},
+    },
+    "wheels_i386": {
+        "exclude": set(),
+        "include": INCLUDED_REQUIREMENTS_WHEELS,
+        "markers": {},
+    },
 }
 
 IGNORE_PIN = ("colorlog>2.1,<3", "urllib3")
@@ -96,9 +117,9 @@ httplib2>=0.19.0
 # gRPC is an implicit dependency that we want to make explicit so we manage
 # upgrades intentionally. It is a large package to build from source and we
 # want to ensure we have wheels built.
-grpcio==1.59.0
-grpcio-status==1.59.0
-grpcio-reflection==1.59.0
+grpcio==1.67.1
+grpcio-status==1.67.1
+grpcio-reflection==1.67.1
 
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0
@@ -118,16 +139,17 @@ uuid==1000000000.0.0
 # these requirements are quite loose. As the entire stack has some outstanding issues, and
 # even newer versions seem to introduce new issues, it's useful for us to pin all these
 # requirements so we can directly link HA versions to these library versions.
-anyio==4.4.0
+anyio==4.9.0
 h11==0.14.0
-httpcore==1.0.5
+httpcore==1.0.7
 
 # Ensure we have a hyperframe version that works in Python 3.10
 # 5.2.0 fixed a collections abc deprecation
 hyperframe>=5.2.0
 
 # Ensure we run compatible with musllinux build env
-numpy==1.26.4
+numpy==2.2.2
+pandas~=2.2.3
 
 # Constrain multidict to avoid typing issues
 # https://github.com/home-assistant/core/pull/67046
@@ -136,9 +158,8 @@ multidict>=6.0.2
 # Version 2.0 added typing, prevent accidental fallbacks
 backoff>=2.0
 
-# Required to avoid breaking (#101042).
-# v2 has breaking changes (#99218).
-pydantic==1.10.17
+# ensure pydantic version does not float since it might have breaking changes
+pydantic==2.10.6
 
 # Required for Python 3.12.4 compatibility (#119223).
 mashumaro>=3.13.1
@@ -157,16 +178,18 @@ pyOpenSSL>=24.0.0
 
 # protobuf must be in package constraints for the wheel
 # builder to build binary wheels
-protobuf==4.25.4
+protobuf==5.29.2
 
 # faust-cchardet: Ensure we have a version we can build wheels
 # 2.1.18 is the first version that works with our wheel builder
 faust-cchardet>=2.1.18
 
-# websockets 11.0 is missing files in the source distribution
-# which break wheel builds so we need at least 11.0.1
-# https://github.com/aaugustin/websockets/issues/1329
-websockets>=11.0.1
+# websockets 13.1 is the first version to fully support the new
+# asyncio implementation. The legacy implementation is now
+# deprecated as of websockets 14.0.
+# https://websockets.readthedocs.io/en/13.0.1/howto/upgrade.html#missing-features
+# https://websockets.readthedocs.io/en/stable/howto/upgrade.html
+websockets>=13.1
 
 # pysnmplib is no longer maintained and does not work with newer
 # python
@@ -176,17 +199,18 @@ pysnmplib==1000000000.0.0
 # breaks getmac due to them both sharing the same python package name inside 'getmac'.
 get-mac==1000000000.0.0
 
+# Poetry is a build dependency. Installing it as a runtime dependency almost
+# always indicates an issue with library requirements.
+poetry==1000000000.0.0
+
 # We want to skip the binary wheels for the 'charset-normalizer' packages.
 # They are build with mypyc, but causes issues with our wheel builder.
 # In order to do so, we need to constrain the version.
-charset-normalizer==3.2.0
+charset-normalizer==3.4.0
 
 # dacite: Ensure we have a version that is able to handle type unions for
-# Roborock, NAM, Brother, and GIOS.
+# NAM, Brother, and GIOS.
 dacite>=1.7.0
-
-# Musle wheels for pandas 2.2.0 cannot be build for any architecture.
-pandas==2.1.4
 
 # chacha20poly1305-reuseable==0.12.x is incompatible with cryptography==43.0.x
 chacha20poly1305-reuseable>=0.13.0
@@ -195,8 +219,8 @@ chacha20poly1305-reuseable>=0.13.0
 # https://github.com/pycountry/pycountry/blob/ea69bab36f00df58624a0e490fdad4ccdc14268b/HISTORY.txt#L39
 pycountry>=23.12.11
 
-# scapy<2.5.0 will not work with python3.12
-scapy>=2.5.0
+# scapy==2.6.0 causes CI failures due to a race condition
+scapy>=2.6.1
 
 # tuf isn't updated to deal with breaking changes in securesystemslib==1.0.
 # Only tuf>=4 includes a constraint to <1.0.
@@ -205,6 +229,18 @@ tuf>=4.0.0
 
 # https://github.com/jd/tenacity/issues/471
 tenacity!=8.4.0
+
+# 5.0.0 breaks Timeout as a context manager
+# TypeError: 'Timeout' object does not support the context manager protocol
+async-timeout==4.0.3
+
+# aiofiles keeps getting downgraded by custom components
+# causing newer methods to not be available and breaking
+# some integrations at startup
+# https://github.com/home-assistant/core/issues/127529
+# https://github.com/home-assistant/core/issues/122508
+# https://github.com/home-assistant/core/issues/118004
+aiofiles>=24.1.0
 """
 
 GENERATED_MESSAGE = (
@@ -309,6 +345,10 @@ def process_action_requirement(req: str, action: str) -> str:
         return req
     if normalized_package_name in EXCLUDED_REQUIREMENTS_ALL:
         return f"# {req}"
+    if markers := OVERRIDDEN_REQUIREMENTS_ACTIONS[action]["markers"].get(
+        normalized_package_name, None
+    ):
+        return f"{req};{markers}"
     return req
 
 
@@ -321,8 +361,8 @@ def gather_modules() -> dict[str, list[str]] | None:
     gather_requirements_from_manifests(errors, reqs)
     gather_requirements_from_modules(errors, reqs)
 
-    for key in reqs:
-        reqs[key] = sorted(reqs[key], key=lambda name: (len(name.split(".")), name))
+    for value in reqs.values():
+        value = sorted(value, key=lambda name: (len(name.split(".")), name))
 
     if errors:
         print("******* ERROR")
@@ -592,7 +632,6 @@ def _get_hassfest_config() -> Config:
         specific_integrations=None,
         action="validate",
         requirements=True,
-        core_integrations_path=Path("homeassistant/components"),
     )
 
 

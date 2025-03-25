@@ -136,15 +136,9 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._config = {**self._config, CONF_API_KEY: user_input[CONF_API_KEY]}
             if not (errors := await self._async_try_connect()):
-                entry = self.hass.config_entries.async_get_entry(
-                    self.context["entry_id"]
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(), data=self._config
                 )
-                assert entry
-                self.hass.config_entries.async_update_entry(entry, data=self._config)
-                self.hass.async_create_task(
-                    self.hass.config_entries.async_reload(self.context["entry_id"])
-                )
-                return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
             step_id="reauth_confirm",

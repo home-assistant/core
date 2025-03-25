@@ -31,7 +31,7 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 
 from .coordinator import XiaomiPassiveBluetoothDataProcessor
@@ -48,8 +48,8 @@ SENSOR_DESCRIPTIONS = {
     ),
     (DeviceClass.CONDUCTIVITY, Units.CONDUCTIVITY): SensorEntityDescription(
         key=str(Units.CONDUCTIVITY),
-        device_class=None,
-        native_unit_of_measurement=UnitOfConductivity.MICROSIEMENS,
+        device_class=SensorDeviceClass.CONDUCTIVITY,
+        native_unit_of_measurement=UnitOfConductivity.MICROSIEMENS_PER_CM,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     (
@@ -208,7 +208,7 @@ def sensor_update_to_bluetooth_data_update(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: XiaomiBLEConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Xiaomi BLE sensors."""
     coordinator = entry.runtime_data

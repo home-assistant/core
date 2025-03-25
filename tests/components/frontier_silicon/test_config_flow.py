@@ -6,7 +6,6 @@ from afsapi import ConnectionError, InvalidPinException, NotImplementedException
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import ssdp
 from homeassistant.components.frontier_silicon.const import (
     CONF_WEBFSAPI_URL,
     DEFAULT_PIN,
@@ -15,25 +14,28 @@ from homeassistant.components.frontier_silicon.const import (
 from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
 from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
-MOCK_DISCOVERY = ssdp.SsdpServiceInfo(
+MOCK_DISCOVERY = SsdpServiceInfo(
     ssdp_usn="mock_usn",
     ssdp_udn="uuid:3dcc7100-f76c-11dd-87af-00226124ca30",
     ssdp_st="mock_st",
     ssdp_location="http://1.1.1.1/device",
+    ssdp_headers={"SPEAKER-NAME": "Speaker Name"},
     upnp={"SPEAKER-NAME": "Speaker Name"},
 )
 
-INVALID_MOCK_DISCOVERY = ssdp.SsdpServiceInfo(
+INVALID_MOCK_DISCOVERY = SsdpServiceInfo(
     ssdp_usn="mock_usn",
     ssdp_udn="uuid:3dcc7100-f76c-11dd-87af-00226124ca30",
     ssdp_st="mock_st",
     ssdp_location=None,
+    ssdp_headers={"SPEAKER-NAME": "Speaker Name"},
     upnp={"SPEAKER-NAME": "Speaker Name"},
 )
 
@@ -267,6 +269,11 @@ async def test_ssdp(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    flow = flows[0]
+    assert flow["context"]["title_placeholders"] == {"name": "Speaker Name"}
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],

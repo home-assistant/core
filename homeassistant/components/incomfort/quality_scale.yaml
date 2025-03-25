@@ -1,0 +1,77 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: |
+      No actions implemented.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: |
+      No actions implemented.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: done
+    comment: |
+      Entities are set up dand updated through the datacoordimator.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+  # Silver
+  config-entry-unloading: done
+  log-when-unavailable: done
+  entity-unavailable: done
+  action-exceptions: done
+  reauthentication-flow: done
+  parallel-updates: done
+  test-coverage: done
+  integration-owner: done
+  docs-installation-parameters: done
+  docs-configuration-parameters: done
+
+  # Gold
+  entity-translations: done
+  entity-device-class: done
+  devices: done
+  entity-category: done
+  entity-disabled-by-default: done
+  discovery: done
+  stale-devices:
+    status: exempt
+    comment: >
+      There is a maximum of 3 heaters that can be discovered by the gateway.
+      The user must remove manually any heeater devices that have been replaced.
+  diagnostics: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow: done
+  dynamic-devices: done
+  discovery-update-info: done
+  repair-issues:
+    status: exempt
+    comment: |
+      No current issues to repair.
+  docs-use-cases: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-data-update: done
+  docs-known-limitations:
+    status: done
+    comment: There are no known limmitations,
+  docs-troubleshooting: done
+  docs-examples: done
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done

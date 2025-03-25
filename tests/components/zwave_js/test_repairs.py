@@ -3,14 +3,14 @@
 from copy import deepcopy
 from unittest.mock import patch
 
+import pytest
 from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
 
 from homeassistant.components.zwave_js import DOMAIN
 from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.device_registry as dr
-import homeassistant.helpers.issue_registry as ir
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
 from tests.components.repairs import (
     async_process_repairs_platforms,
@@ -179,6 +179,10 @@ async def test_device_config_file_changed_ignore_step(
     assert msg["result"]["issues"][0].get("dismissed_version") is not None
 
 
+@pytest.mark.parametrize(
+    "ignore_missing_translations",
+    ["component.zwave_js.issues.invalid_issue.title"],
+)
 async def test_invalid_issue(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,

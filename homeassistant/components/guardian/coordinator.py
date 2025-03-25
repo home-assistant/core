@@ -42,6 +42,7 @@ class GuardianDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         super().__init__(
             hass,
             LOGGER,
+            config_entry=entry,
             name=f"{valve_controller_uid}_{api_name}",
             update_interval=DEFAULT_UPDATE_INTERVAL,
         )
@@ -50,7 +51,6 @@ class GuardianDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._api_lock = api_lock
         self._client = client
 
-        self.config_entry = entry
         self.signal_reboot_requested = SIGNAL_REBOOT_REQUESTED.format(
             self.config_entry.entry_id
         )

@@ -134,16 +134,21 @@ async def test_create_eager_task_312(hass: HomeAssistant) -> None:
 async def test_create_eager_task_from_thread(hass: HomeAssistant) -> None:
     """Test we report trying to create an eager task from a thread."""
 
+    coro = asyncio.sleep(0)
+
     def create_task():
-        hasync.create_eager_task(asyncio.sleep(0))
+        hasync.create_eager_task(coro)
 
     with pytest.raises(
         RuntimeError,
         match=(
-            "Detected code that attempted to create an asyncio task from a thread. Please report this issue."
+            "Detected code that attempted to create an asyncio task from a thread. Please report this issue"
         ),
     ):
         await hass.async_add_executor_job(create_task)
+
+    # Avoid `RuntimeWarning: coroutine 'sleep' was never awaited`
+    await coro
 
 
 async def test_create_eager_task_from_thread_in_integration(
@@ -151,8 +156,10 @@ async def test_create_eager_task_from_thread_in_integration(
 ) -> None:
     """Test we report trying to create an eager task from a thread."""
 
+    coro = asyncio.sleep(0)
+
     def create_task():
-        hasync.create_eager_task(asyncio.sleep(0))
+        hasync.create_eager_task(coro)
 
     frames = extract_stack_to_frame(
         [
@@ -199,6 +206,9 @@ async def test_create_eager_task_from_thread_in_integration(
         "from a thread at homeassistant/components/hue/light.py, line 23: "
         "self.light.is_on"
     ) in caplog.text
+
+    # Avoid `RuntimeWarning: coroutine 'sleep' was never awaited`
+    await coro
 
 
 async def test_get_scheduled_timer_handles(hass: HomeAssistant) -> None:

@@ -23,7 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
@@ -50,7 +50,7 @@ from .const import (
     FEATURE_FLAGS_FAN_1C,
     FEATURE_FLAGS_FAN_P5,
     FEATURE_FLAGS_FAN_P9,
-    FEATURE_FLAGS_FAN_P10_P11,
+    FEATURE_FLAGS_FAN_P10_P11_P18,
     FEATURE_FLAGS_FAN_ZA5,
     FEATURE_SET_DELAY_OFF_COUNTDOWN,
     FEATURE_SET_FAN_LEVEL,
@@ -72,6 +72,7 @@ from .const import (
     MODEL_AIRHUMIDIFIER_CB1,
     MODEL_AIRPURIFIER_2S,
     MODEL_AIRPURIFIER_3C,
+    MODEL_AIRPURIFIER_3C_REV_A,
     MODEL_AIRPURIFIER_4,
     MODEL_AIRPURIFIER_4_LITE_RMA1,
     MODEL_AIRPURIFIER_4_LITE_RMB1,
@@ -86,6 +87,7 @@ from .const import (
     MODEL_FAN_P9,
     MODEL_FAN_P10,
     MODEL_FAN_P11,
+    MODEL_FAN_P18,
     MODEL_FAN_SA1,
     MODEL_FAN_V2,
     MODEL_FAN_V3,
@@ -244,6 +246,7 @@ MODEL_TO_FEATURES_MAP = {
     MODEL_AIRHUMIDIFIER_CB1: FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB,
     MODEL_AIRPURIFIER_2S: FEATURE_FLAGS_AIRPURIFIER_2S,
     MODEL_AIRPURIFIER_3C: FEATURE_FLAGS_AIRPURIFIER_3C,
+    MODEL_AIRPURIFIER_3C_REV_A: FEATURE_FLAGS_AIRPURIFIER_3C,
     MODEL_AIRPURIFIER_PRO: FEATURE_FLAGS_AIRPURIFIER_PRO,
     MODEL_AIRPURIFIER_PRO_V7: FEATURE_FLAGS_AIRPURIFIER_PRO_V7,
     MODEL_AIRPURIFIER_V1: FEATURE_FLAGS_AIRPURIFIER_V1,
@@ -254,8 +257,9 @@ MODEL_TO_FEATURES_MAP = {
     MODEL_AIRPURIFIER_4_PRO: FEATURE_FLAGS_AIRPURIFIER_4,
     MODEL_AIRPURIFIER_ZA1: FEATURE_FLAGS_AIRPURIFIER_ZA1,
     MODEL_FAN_1C: FEATURE_FLAGS_FAN_1C,
-    MODEL_FAN_P10: FEATURE_FLAGS_FAN_P10_P11,
-    MODEL_FAN_P11: FEATURE_FLAGS_FAN_P10_P11,
+    MODEL_FAN_P10: FEATURE_FLAGS_FAN_P10_P11_P18,
+    MODEL_FAN_P11: FEATURE_FLAGS_FAN_P10_P11_P18,
+    MODEL_FAN_P18: FEATURE_FLAGS_FAN_P10_P11_P18,
     MODEL_FAN_P5: FEATURE_FLAGS_FAN_P5,
     MODEL_FAN_P9: FEATURE_FLAGS_FAN_P9,
     MODEL_FAN_SA1: FEATURE_FLAGS_FAN,
@@ -273,6 +277,7 @@ OSCILLATION_ANGLE_VALUES = {
     MODEL_FAN_P9: OscillationAngleValues(max_value=150, min_value=30, step=30),
     MODEL_FAN_P10: OscillationAngleValues(max_value=140, min_value=30, step=30),
     MODEL_FAN_P11: OscillationAngleValues(max_value=140, min_value=30, step=30),
+    MODEL_FAN_P18: OscillationAngleValues(max_value=140, min_value=30, step=30),
 }
 
 FAVORITE_LEVEL_VALUES = {
@@ -284,7 +289,7 @@ FAVORITE_LEVEL_VALUES = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Selectors from a config entry."""
     entities = []

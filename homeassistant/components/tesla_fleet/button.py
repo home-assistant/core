@@ -10,7 +10,7 @@ from tesla_fleet_api.const import Scope
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TeslaFleetConfigEntry
 from .entity import TeslaFleetVehicleEntity
@@ -20,8 +20,9 @@ from .models import TeslaFleetVehicleData
 PARALLEL_UPDATES = 0
 
 
-async def do_nothing() -> None:
-    """Do nothing."""
+async def do_nothing() -> dict[str, dict[str, bool]]:
+    """Do nothing with a positive result."""
+    return {"response": {"result": True}}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -60,7 +61,7 @@ DESCRIPTIONS: tuple[TeslaFleetButtonEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TeslaFleetConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the TeslaFleet Button platform from a config entry."""
 
@@ -69,8 +70,6 @@ async def async_setup_entry(
         for vehicle in entry.runtime_data.vehicles
         for description in DESCRIPTIONS
         if Scope.VEHICLE_CMDS in entry.runtime_data.scopes
-        and (not vehicle.signing or description.key == "wake")
-        # Wake doesn't need signing
     )
 
 

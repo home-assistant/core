@@ -10,16 +10,12 @@ from pypoint import PointSession
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
-)
-from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_TRIGGERED,
+    AlarmControlPanelState,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import PointConfigEntry
 from .const import DOMAIN as POINT_DOMAIN, SIGNAL_WEBHOOK
@@ -28,16 +24,16 @@ _LOGGER = logging.getLogger(__name__)
 
 
 EVENT_MAP = {
-    "off": STATE_ALARM_DISARMED,
-    "alarm_silenced": STATE_ALARM_DISARMED,
-    "alarm_grace_period_expired": STATE_ALARM_TRIGGERED,
+    "off": AlarmControlPanelState.DISARMED,
+    "alarm_silenced": AlarmControlPanelState.DISARMED,
+    "alarm_grace_period_expired": AlarmControlPanelState.TRIGGERED,
 }
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: PointConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Point's alarm_control_panel based on a config entry."""
     coordinator = config_entry.runtime_data
@@ -99,9 +95,11 @@ class MinutPointAlarmControl(AlarmControlPanelEntity):
         self.async_write_ha_state()
 
     @property
-    def state(self) -> str:
+    def alarm_state(self) -> AlarmControlPanelState:
         """Return state of the device."""
-        return EVENT_MAP.get(self._home["alarm_status"], STATE_ALARM_ARMED_AWAY)
+        return EVENT_MAP.get(
+            self._home["alarm_status"], AlarmControlPanelState.ARMED_AWAY
+        )
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""

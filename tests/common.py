@@ -15,7 +15,7 @@ from collections.abc import (
 )
 from contextlib import asynccontextmanager, contextmanager, suppress
 from datetime import UTC, datetime, timedelta
-from enum import Enum
+from enum import Enum, StrEnum
 import functools as ft
 from functools import lru_cache
 from io import StringIO
@@ -29,9 +29,9 @@ from typing import Any, Literal, NoReturn
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa: F401
+from annotatedyaml import load_yaml_dict, loader as yaml_loader
 import pytest
 from syrupy import SnapshotAssertion
-from typing_extensions import TypeVar
 import voluptuous as vol
 
 from homeassistant import auth, bootstrap, config_entries, loader
@@ -87,15 +87,18 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.json import JSONEncoder, _orjson_default_encoder, json_dumps
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import dt as dt_util, ulid as ulid_util
 from homeassistant.util.async_ import (
     _SHUTDOWN_RUN_CALLBACK_THREADSAFE,
     get_scheduled_timer_handles,
     run_callback_threadsafe,
 )
-import homeassistant.util.dt as dt_util
 from homeassistant.util.event_type import EventType
 from homeassistant.util.json import (
     JsonArrayType,
@@ -106,20 +109,24 @@ from homeassistant.util.json import (
     json_loads_object,
 )
 from homeassistant.util.signal_type import SignalType
-import homeassistant.util.ulid as ulid_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
-import homeassistant.util.yaml.loader as yaml_loader
 
 from .testing_config.custom_components.test_constant_deprecation import (
     import_deprecated_constant,
 )
 
-_DataT = TypeVar("_DataT", bound=Mapping[str, Any], default=dict[str, Any])
-
 _LOGGER = logging.getLogger(__name__)
 INSTANCES = []
 CLIENT_ID = "https://example.com/app"
 CLIENT_REDIRECT_URI = "https://example.com/app/callback"
+
+
+class QualityScaleStatus(StrEnum):
+    """Source of core configuration."""
+
+    DONE = "done"
+    EXEMPT = "exempt"
+    TODO = "todo"
 
 
 async def async_get_device_automations(
@@ -403,6 +410,25 @@ def async_mock_intent(hass: HomeAssistant, intent_typ: str) -> list[intent.Inten
     return intents
 
 
+class MockMqttReasonCode:
+    """Class to fake a MQTT ReasonCode."""
+
+    value: int
+    is_failure: bool
+
+    def __init__(
+        self, value: int = 0, is_failure: bool = False, name: str = "Success"
+    ) -> None:
+        """Initialize the mock reason code."""
+        self.value = value
+        self.is_failure = is_failure
+        self._name = name
+
+    def getName(self) -> str:
+        """Return the name of the reason code."""
+        return self._name
+
+
 @callback
 def async_fire_mqtt_message(
     hass: HomeAssistant,
@@ -491,7 +517,7 @@ _MONOTONIC_RESOLUTION = time.get_clock_info("monotonic").resolution
 def _async_fire_time_changed(
     hass: HomeAssistant, utc_datetime: datetime | None, fire_all: bool
 ) -> None:
-    timestamp = dt_util.utc_to_timestamp(utc_datetime)
+    timestamp = utc_datetime.timestamp()
     for task in list(get_scheduled_timer_handles(hass.loop)):
         if not isinstance(task, asyncio.TimerHandle):
             continue
@@ -1000,6 +1026,7 @@ class MockConfigEntry(config_entries.ConfigEntry):
         reason=None,
         source=config_entries.SOURCE_USER,
         state=None,
+        subentries_data=None,
         title="Mock Title",
         unique_id=None,
         version=1,
@@ -1016,6 +1043,7 @@ class MockConfigEntry(config_entries.ConfigEntry):
             "options": options or {},
             "pref_disable_new_entities": pref_disable_new_entities,
             "pref_disable_polling": pref_disable_polling,
+            "subentries_data": subentries_data or (),
             "title": title,
             "unique_id": unique_id,
             "version": version,
@@ -1064,17 +1092,74 @@ class MockConfigEntry(config_entries.ConfigEntry):
         data: dict[str, Any] | None = None,
     ) -> ConfigFlowResult:
         """Start a reauthentication flow."""
+        if self.entry_id not in hass.config_entries._entries:
+            raise ValueError("Config entry must be added to hass to start reauth flow")
+        return await start_reauth_flow(hass, self, context, data)
+
+    async def start_reconfigure_flow(
+        self,
+        hass: HomeAssistant,
+        *,
+        show_advanced_options: bool = False,
+    ) -> ConfigFlowResult:
+        """Start a reconfiguration flow."""
+        if self.entry_id not in hass.config_entries._entries:
+            raise ValueError(
+                "Config entry must be added to hass to start reconfiguration flow"
+            )
         return await hass.config_entries.flow.async_init(
             self.domain,
             context={
-                "source": config_entries.SOURCE_REAUTH,
+                "source": config_entries.SOURCE_RECONFIGURE,
                 "entry_id": self.entry_id,
-                "title_placeholders": {"name": self.title},
-                "unique_id": self.unique_id,
-            }
-            | (context or {}),
-            data=self.data | (data or {}),
+                "show_advanced_options": show_advanced_options,
+            },
         )
+
+    async def start_subentry_reconfigure_flow(
+        self,
+        hass: HomeAssistant,
+        subentry_flow_type: str,
+        subentry_id: str,
+        *,
+        show_advanced_options: bool = False,
+    ) -> ConfigFlowResult:
+        """Start a subentry reconfiguration flow."""
+        if self.entry_id not in hass.config_entries._entries:
+            raise ValueError(
+                "Config entry must be added to hass to start reconfiguration flow"
+            )
+        return await hass.config_entries.subentries.async_init(
+            (self.entry_id, subentry_flow_type),
+            context={
+                "source": config_entries.SOURCE_RECONFIGURE,
+                "subentry_id": subentry_id,
+                "show_advanced_options": show_advanced_options,
+            },
+        )
+
+
+async def start_reauth_flow(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    context: dict[str, Any] | None = None,
+    data: dict[str, Any] | None = None,
+) -> ConfigFlowResult:
+    """Start a reauthentication flow for a config entry.
+
+    This helper method should be aligned with `ConfigEntry._async_init_reauth`.
+    """
+    return await hass.config_entries.flow.async_init(
+        entry.domain,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": entry.entry_id,
+            "title_placeholders": {"name": entry.title},
+            "unique_id": entry.unique_id,
+        }
+        | (context or {}),
+        data=entry.data | (data or {}),
+    )
 
 
 def patch_yaml_files(files_dict, endswith=True):
@@ -1154,16 +1239,16 @@ def assert_setup_component(count, domain=None):
         yield config
 
     if domain is None:
-        assert (
-            len(config) == 1
-        ), f"assert_setup_component requires DOMAIN: {list(config.keys())}"
+        assert len(config) == 1, (
+            f"assert_setup_component requires DOMAIN: {list(config.keys())}"
+        )
         domain = list(config.keys())[0]
 
     res = config.get(domain)
     res_len = 0 if res is None else len(res)
-    assert (
-        res_len == count
-    ), f"setup_component failed, expected {count} got {res_len}: {res}"
+    assert res_len == count, (
+        f"setup_component failed, expected {count} got {res_len}: {res}"
+    )
 
 
 def mock_restore_cache(hass: HomeAssistant, states: Sequence[State]) -> None:
@@ -1502,7 +1587,7 @@ def mock_platform(
     module_cache[platform_path] = module or Mock()
 
 
-def async_capture_events(
+def async_capture_events[_DataT: Mapping[str, Any] = dict[str, Any]](
     hass: HomeAssistant, event_name: EventType[_DataT] | str
 ) -> list[Event[_DataT]]:
     """Create a helper that captures events."""
@@ -1750,7 +1835,7 @@ def setup_test_component_platform(
         async def _async_setup_entry(
             hass: HomeAssistant,
             entry: ConfigEntry,
-            async_add_entities: AddEntitiesCallback,
+            async_add_entities: AddConfigEntryEntitiesCallback,
         ) -> None:
             """Set up a test component platform."""
             async_add_entities(entities)
@@ -1771,12 +1856,31 @@ async def snapshot_platform(
     """Snapshot a platform."""
     entity_entries = er.async_entries_for_config_entry(entity_registry, config_entry_id)
     assert entity_entries
-    assert (
-        len({entity_entry.domain for entity_entry in entity_entries}) == 1
-    ), "Please limit the loaded platforms to 1 platform."
+    assert len({entity_entry.domain for entity_entry in entity_entries}) == 1, (
+        "Please limit the loaded platforms to 1 platform."
+    )
     for entity_entry in entity_entries:
         assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
         assert entity_entry.disabled_by is None, "Please enable all entities."
         state = hass.states.get(entity_entry.entity_id)
         assert state, f"State not found for {entity_entry.entity_id}"
         assert state == snapshot(name=f"{entity_entry.entity_id}-state")
+
+
+@lru_cache
+def get_quality_scale(integration: str) -> dict[str, QualityScaleStatus]:
+    """Load quality scale for integration."""
+    quality_scale_file = pathlib.Path(
+        f"homeassistant/components/{integration}/quality_scale.yaml"
+    )
+    if not quality_scale_file.exists():
+        return {}
+    raw = load_yaml_dict(quality_scale_file)
+    return {
+        rule: (
+            QualityScaleStatus(details)
+            if isinstance(details, str)
+            else QualityScaleStatus(details["status"])
+        )
+        for rule, details in raw["rules"].items()
+    }

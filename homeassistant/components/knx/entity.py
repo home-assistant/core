@@ -69,7 +69,7 @@ class _KnxEntityBase(Entity):
         """Request a state update from KNX bus."""
         await self._device.sync()
 
-    def after_update_callback(self, _device: XknxDevice) -> None:
+    def after_update_callback(self, device: XknxDevice) -> None:
         """Call after device was updated."""
         self.async_write_ha_state()
 

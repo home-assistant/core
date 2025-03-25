@@ -6,13 +6,13 @@ import asyncio
 from collections import defaultdict
 from collections.abc import Callable, Iterable
 from datetime import date, timedelta
-from functools import cached_property
 from typing import Any
 
 from nibe.coil import Coil, CoilData
 from nibe.connection import Connection
 from nibe.exceptions import CoilNotFoundException, ReadException
 from nibe.heatpump import HeatPump, Series
+from propcache.api import cached_property
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -71,12 +71,17 @@ class CoilCoordinator(ContextCoordinator[dict[int, CoilData], int]):
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: ConfigEntry,
         heatpump: HeatPump,
         connection: Connection,
     ) -> None:
         """Initialize coordinator."""
         super().__init__(
-            hass, LOGGER, name="Nibe Heat Pump", update_interval=timedelta(seconds=60)
+            hass,
+            LOGGER,
+            config_entry=config_entry,
+            name="Nibe Heat Pump",
+            update_interval=timedelta(seconds=60),
         )
 
         self.data = {}

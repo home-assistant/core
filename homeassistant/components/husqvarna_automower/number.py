@@ -11,7 +11,7 @@ from aioautomower.session import AutomowerSession
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AutomowerConfigEntry
 from .coordinator import AutomowerDataUpdateCoordinator
@@ -19,11 +19,12 @@ from .entity import (
     AutomowerControlEntity,
     WorkAreaControlEntity,
     _work_area_translation_key,
-    async_remove_work_area_entities,
     handle_sending_exception,
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 1
 
 
 @callback
@@ -43,7 +44,7 @@ async def async_set_work_area_cutting_height(
 ) -> None:
     """Set cutting height for work area."""
     await coordinator.api.commands.workarea_settings(
-        mower_id, int(cheight), work_area_id
+        mower_id, work_area_id, cutting_height=int(cheight)
     )
 
 
@@ -65,7 +66,7 @@ class AutomowerNumberEntityDescription(NumberEntityDescription):
     set_value_fn: Callable[[AutomowerSession, str, float], Awaitable[Any]]
 
 
-NUMBER_TYPES: tuple[AutomowerNumberEntityDescription, ...] = (
+MOWER_NUMBER_TYPES: tuple[AutomowerNumberEntityDescription, ...] = (
     AutomowerNumberEntityDescription(
         key="cutting_height",
         translation_key="cutting_height",
@@ -81,7 +82,7 @@ NUMBER_TYPES: tuple[AutomowerNumberEntityDescription, ...] = (
 
 
 @dataclass(frozen=True, kw_only=True)
-class AutomowerWorkAreaNumberEntityDescription(NumberEntityDescription):
+class WorkAreaNumberEntityDescription(NumberEntityDescription):
     """Describes Automower work area number entity."""
 
     value_fn: Callable[[WorkArea], int]
@@ -91,8 +92,8 @@ class AutomowerWorkAreaNumberEntityDescription(NumberEntityDescription):
     ]
 
 
-WORK_AREA_NUMBER_TYPES: tuple[AutomowerWorkAreaNumberEntityDescription, ...] = (
-    AutomowerWorkAreaNumberEntityDescription(
+WORK_AREA_NUMBER_TYPES: tuple[WorkAreaNumberEntityDescription, ...] = (
+    WorkAreaNumberEntityDescription(
         key="cutting_height_work_area",
         translation_key_fn=_work_area_translation_key,
         entity_category=EntityCategory.CONFIG,
@@ -106,30 +107,51 @@ WORK_AREA_NUMBER_TYPES: tuple[AutomowerWorkAreaNumberEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AutomowerConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up number platform."""
     coordinator = entry.runtime_data
     entities: list[NumberEntity] = []
-
     for mower_id in coordinator.data:
         if coordinator.data[mower_id].capabilities.work_areas:
             _work_areas = coordinator.data[mower_id].work_areas
             if _work_areas is not None:
                 entities.extend(
-                    AutomowerWorkAreaNumberEntity(
+                    WorkAreaNumberEntity(
                         mower_id, coordinator, description, work_area_id
                     )
                     for description in WORK_AREA_NUMBER_TYPES
                     for work_area_id in _work_areas
                 )
-            async_remove_work_area_entities(hass, coordinator, entry, mower_id)
         entities.extend(
             AutomowerNumberEntity(mower_id, coordinator, description)
-            for description in NUMBER_TYPES
+            for description in MOWER_NUMBER_TYPES
             if description.exists_fn(coordinator.data[mower_id])
         )
     async_add_entities(entities)
+
+    def _async_add_new_work_areas(mower_id: str, work_area_ids: set[int]) -> None:
+        async_add_entities(
+            WorkAreaNumberEntity(mower_id, coordinator, description, work_area_id)
+            for description in WORK_AREA_NUMBER_TYPES
+            for work_area_id in work_area_ids
+        )
+
+    def _async_add_new_devices(mower_ids: set[str]) -> None:
+        async_add_entities(
+            AutomowerNumberEntity(mower_id, coordinator, description)
+            for description in MOWER_NUMBER_TYPES
+            for mower_id in mower_ids
+            if description.exists_fn(coordinator.data[mower_id])
+        )
+        for mower_id in mower_ids:
+            mower_data = coordinator.data[mower_id]
+            if mower_data.capabilities.work_areas and mower_data.work_areas is not None:
+                work_area_ids = set(mower_data.work_areas.keys())
+                _async_add_new_work_areas(mower_id, work_area_ids)
+
+    coordinator.new_areas_callbacks.append(_async_add_new_work_areas)
+    coordinator.new_devices_callbacks.append(_async_add_new_devices)
 
 
 class AutomowerNumberEntity(AutomowerControlEntity, NumberEntity):
@@ -161,16 +183,16 @@ class AutomowerNumberEntity(AutomowerControlEntity, NumberEntity):
         )
 
 
-class AutomowerWorkAreaNumberEntity(WorkAreaControlEntity, NumberEntity):
-    """Defining the AutomowerWorkAreaNumberEntity with AutomowerWorkAreaNumberEntityDescription."""
+class WorkAreaNumberEntity(WorkAreaControlEntity, NumberEntity):
+    """Defining the WorkAreaNumberEntity with WorkAreaNumberEntityDescription."""
 
-    entity_description: AutomowerWorkAreaNumberEntityDescription
+    entity_description: WorkAreaNumberEntityDescription
 
     def __init__(
         self,
         mower_id: str,
         coordinator: AutomowerDataUpdateCoordinator,
-        description: AutomowerWorkAreaNumberEntityDescription,
+        description: WorkAreaNumberEntityDescription,
         work_area_id: int,
     ) -> None:
         """Set up AutomowerNumberEntity."""

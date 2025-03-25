@@ -2,6 +2,7 @@
 
 from datetime import datetime
 from ipaddress import IPv4Address
+from typing import Any
 from unittest.mock import ANY, AsyncMock, patch
 
 from async_upnp_client.server import UpnpServer
@@ -19,13 +20,32 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.discovery_flow import DiscoveryKey
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_NT,
+    ATTR_ST,
+    ATTR_UPNP_DEVICE_TYPE,
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_MANUFACTURER,
+    ATTR_UPNP_MANUFACTURER_URL,
+    ATTR_UPNP_MODEL_DESCRIPTION,
+    ATTR_UPNP_MODEL_NAME,
+    ATTR_UPNP_MODEL_NUMBER,
+    ATTR_UPNP_MODEL_URL,
+    ATTR_UPNP_PRESENTATION_URL,
+    ATTR_UPNP_SERIAL,
+    ATTR_UPNP_SERVICE_LIST,
+    ATTR_UPNP_UDN,
+    ATTR_UPNP_UPC,
+    SsdpServiceInfo,
+)
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import (
     MockConfigEntry,
     MockModule,
     async_fire_time_changed,
+    import_and_test_deprecated_constant,
     mock_integration,
 )
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -74,7 +94,7 @@ async def test_ssdp_flow_dispatched_on_st(
         "discovery_key": DiscoveryKey(domain="ssdp", key="uuid:mock-udn", version=1),
         "source": config_entries.SOURCE_SSDP,
     }
-    mock_call_data: ssdp.SsdpServiceInfo = mock_flow_init.mock_calls[0][2]["data"]
+    mock_call_data: SsdpServiceInfo = mock_flow_init.mock_calls[0][2]["data"]
     assert mock_call_data.ssdp_st == "mock-st"
     assert mock_call_data.ssdp_location == "http://1.1.1.1"
     assert mock_call_data.ssdp_usn == "uuid:mock-udn::mock-st"
@@ -83,7 +103,7 @@ async def test_ssdp_flow_dispatched_on_st(
     assert mock_call_data.ssdp_udn == ANY
     assert mock_call_data.ssdp_headers["_timestamp"] == ANY
     assert mock_call_data.x_homeassistant_matching_domains == {"mock-domain"}
-    assert mock_call_data.upnp == {ssdp.ATTR_UPNP_UDN: "uuid:mock-udn"}
+    assert mock_call_data.upnp == {ATTR_UPNP_UDN: "uuid:mock-udn"}
     assert "Failed to fetch ssdp data" not in caplog.text
 
 
@@ -118,7 +138,7 @@ async def test_ssdp_flow_dispatched_on_manufacturer_url(
         "discovery_key": DiscoveryKey(domain="ssdp", key="uuid:mock-udn", version=1),
         "source": config_entries.SOURCE_SSDP,
     }
-    mock_call_data: ssdp.SsdpServiceInfo = mock_flow_init.mock_calls[0][2]["data"]
+    mock_call_data: SsdpServiceInfo = mock_flow_init.mock_calls[0][2]["data"]
     assert mock_call_data.ssdp_st == "mock-st"
     assert mock_call_data.ssdp_location == "http://1.1.1.1"
     assert mock_call_data.ssdp_usn == "uuid:mock-udn::mock-st"
@@ -127,7 +147,7 @@ async def test_ssdp_flow_dispatched_on_manufacturer_url(
     assert mock_call_data.ssdp_udn == ANY
     assert mock_call_data.ssdp_headers["_timestamp"] == ANY
     assert mock_call_data.x_homeassistant_matching_domains == {"mock-domain"}
-    assert mock_call_data.upnp == {ssdp.ATTR_UPNP_UDN: "uuid:mock-udn"}
+    assert mock_call_data.upnp == {ATTR_UPNP_UDN: "uuid:mock-udn"}
     assert "Failed to fetch ssdp data" not in caplog.text
 
 
@@ -227,8 +247,8 @@ async def test_scan_match_upnp_devicedesc_devicetype(
     return_value={
         "mock-domain": [
             {
-                ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
-                ssdp.ATTR_UPNP_MANUFACTURER: "Paulus",
+                ATTR_UPNP_DEVICE_TYPE: "Paulus",
+                ATTR_UPNP_MANUFACTURER: "Paulus",
             }
         ]
     },
@@ -270,8 +290,8 @@ async def test_scan_not_all_present(
     return_value={
         "mock-domain": [
             {
-                ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
-                ssdp.ATTR_UPNP_MANUFACTURER: "Not-Paulus",
+                ATTR_UPNP_DEVICE_TYPE: "Paulus",
+                ATTR_UPNP_MANUFACTURER: "Not-Paulus",
             }
         ]
     },
@@ -455,8 +475,8 @@ async def test_discovery_from_advertisement_sets_ssdp_st(
     assert discovery_info.ssdp_headers["nts"] == "ssdp:alive"
     assert discovery_info.ssdp_headers["_timestamp"] == ANY
     assert discovery_info.upnp == {
-        ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
-        ssdp.ATTR_UPNP_UDN: "uuid:mock-udn",
+        ATTR_UPNP_DEVICE_TYPE: "Paulus",
+        ATTR_UPNP_UDN: "uuid:mock-udn",
     }
 
 
@@ -555,7 +575,7 @@ async def test_scan_with_registered_callback(
     assert async_match_any_callback.call_count == 1
     assert async_not_matching_integration_callback.call_count == 0
     assert async_integration_callback.call_args[0][1] == ssdp.SsdpChange.ALIVE
-    mock_call_data: ssdp.SsdpServiceInfo = async_integration_callback.call_args[0][0]
+    mock_call_data: SsdpServiceInfo = async_integration_callback.call_args[0][0]
     assert mock_call_data.ssdp_ext == ""
     assert mock_call_data.ssdp_location == "http://1.1.1.1"
     assert mock_call_data.ssdp_server == "mock-server"
@@ -568,8 +588,8 @@ async def test_scan_with_registered_callback(
     assert mock_call_data.ssdp_headers["_timestamp"] == ANY
     assert mock_call_data.x_homeassistant_matching_domains == set()
     assert mock_call_data.upnp == {
-        ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
-        ssdp.ATTR_UPNP_UDN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL",
+        ATTR_UPNP_DEVICE_TYPE: "Paulus",
+        ATTR_UPNP_UDN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL",
     }
     assert "Exception in SSDP callback" in caplog.text
 
@@ -627,8 +647,8 @@ async def test_getting_existing_headers(
     assert discovery_info_by_st.ssdp_udn == ANY
     assert discovery_info_by_st.ssdp_headers["_timestamp"] == ANY
     assert discovery_info_by_st.upnp == {
-        ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
-        ssdp.ATTR_UPNP_UDN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL",
+        ATTR_UPNP_DEVICE_TYPE: "Paulus",
+        ATTR_UPNP_UDN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL",
     }
 
     discovery_info_by_udn = await ssdp.async_get_discovery_info_by_udn(
@@ -646,8 +666,8 @@ async def test_getting_existing_headers(
     assert discovery_info_by_udn.ssdp_udn == ANY
     assert discovery_info_by_udn.ssdp_headers["_timestamp"] == ANY
     assert discovery_info_by_udn.upnp == {
-        ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
-        ssdp.ATTR_UPNP_UDN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL",
+        ATTR_UPNP_DEVICE_TYPE: "Paulus",
+        ATTR_UPNP_UDN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL",
     }
 
     discovery_info_by_udn_st = await ssdp.async_get_discovery_info_by_udn_st(
@@ -664,8 +684,8 @@ async def test_getting_existing_headers(
     assert discovery_info_by_udn_st.ssdp_udn == ANY
     assert discovery_info_by_udn_st.ssdp_headers["_timestamp"] == ANY
     assert discovery_info_by_udn_st.upnp == {
-        ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
-        ssdp.ATTR_UPNP_UDN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL",
+        ATTR_UPNP_DEVICE_TYPE: "Paulus",
+        ATTR_UPNP_UDN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL",
     }
 
     assert (
@@ -713,7 +733,7 @@ _ADAPTERS_WITH_MANUAL_CONFIG = [
     return_value={
         "mock-domain": [
             {
-                ssdp.ATTR_UPNP_DEVICE_TYPE: "ABC",
+                ATTR_UPNP_DEVICE_TYPE: "ABC",
             }
         ]
     },
@@ -738,7 +758,7 @@ async def test_async_detect_interfaces_setting_empty_route(
     return_value={
         "mock-domain": [
             {
-                ssdp.ATTR_UPNP_DEVICE_TYPE: "ABC",
+                ATTR_UPNP_DEVICE_TYPE: "ABC",
             }
         ]
     },
@@ -787,7 +807,7 @@ async def test_bind_failure_skips_adapter(
     return_value={
         "mock-domain": [
             {
-                ssdp.ATTR_UPNP_DEVICE_TYPE: "ABC",
+                ATTR_UPNP_DEVICE_TYPE: "ABC",
             }
         ]
     },
@@ -938,14 +958,21 @@ async def test_flow_dismiss_on_byebye(
         ),
     ],
 )
-@pytest.mark.parametrize("entry_source", [config_entries.SOURCE_IGNORE])
+@pytest.mark.parametrize(
+    "entry_source",
+    [
+        config_entries.SOURCE_IGNORE,
+        config_entries.SOURCE_SSDP,
+        config_entries.SOURCE_USER,
+    ],
+)
 async def test_ssdp_rediscover(
     mock_get_ssdp,
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     mock_flow_init,
     entry_domain: str,
-    entry_discovery_keys: tuple,
+    entry_discovery_keys: dict[str, tuple[DiscoveryKey, ...]],
     entry_source: str,
 ) -> None:
     """Test we reinitiate flows when an ignored config entry is removed."""
@@ -992,117 +1019,7 @@ async def test_ssdp_rediscover(
     assert len(mock_flow_init.mock_calls) == 1
     assert mock_flow_init.mock_calls[0][1][0] == "mock-domain"
     assert mock_flow_init.mock_calls[0][2]["context"] == expected_context
-    mock_call_data: ssdp.SsdpServiceInfo = mock_flow_init.mock_calls[0][2]["data"]
-    assert mock_call_data.ssdp_st == "mock-st"
-    assert mock_call_data.ssdp_location == "http://1.1.1.1"
-
-    await hass.config_entries.async_remove(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert len(mock_flow_init.mock_calls) == 3
-    assert mock_flow_init.mock_calls[1][1][0] == entry_domain
-    assert mock_flow_init.mock_calls[1][2]["context"] == {"source": "unignore"}
-    assert mock_flow_init.mock_calls[2][1][0] == "mock-domain"
-    assert mock_flow_init.mock_calls[2][2]["context"] == expected_context
-    assert (
-        mock_flow_init.mock_calls[2][2]["data"]
-        == mock_flow_init.mock_calls[0][2]["data"]
-    )
-
-
-@patch(
-    "homeassistant.components.ssdp.async_get_ssdp",
-    return_value={"mock-domain": [{"st": "mock-st"}]},
-)
-@pytest.mark.parametrize(
-    (
-        "entry_domain",
-        "entry_discovery_keys",
-    ),
-    [
-        # Matching discovery key
-        (
-            "mock-domain",
-            {"ssdp": (DiscoveryKey(domain="ssdp", key="uuid:mock-udn", version=1),)},
-        ),
-        # Matching discovery key
-        (
-            "mock-domain",
-            {
-                "ssdp": (DiscoveryKey(domain="ssdp", key="uuid:mock-udn", version=1),),
-                "other": (DiscoveryKey(domain="other", key="blah", version=1),),
-            },
-        ),
-        # Matching discovery key, other domain
-        # Note: Rediscovery is not currently restricted to the domain of the removed
-        # entry. Such a check can be added if needed.
-        (
-            "comp",
-            {"ssdp": (DiscoveryKey(domain="ssdp", key="uuid:mock-udn", version=1),)},
-        ),
-    ],
-)
-@pytest.mark.parametrize(
-    "entry_source", [config_entries.SOURCE_USER, config_entries.SOURCE_ZEROCONF]
-)
-async def test_ssdp_rediscover_2(
-    mock_get_ssdp,
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    mock_flow_init,
-    entry_domain: str,
-    entry_discovery_keys: tuple,
-    entry_source: str,
-) -> None:
-    """Test we reinitiate flows when an ignored config entry is removed.
-
-    This test can be merged with test_zeroconf_rediscover when
-    async_step_unignore has been removed from the ConfigFlow base class.
-    """
-    entry = MockConfigEntry(
-        domain=entry_domain,
-        discovery_keys=entry_discovery_keys,
-        unique_id="mock-unique-id",
-        state=config_entries.ConfigEntryState.LOADED,
-        source=entry_source,
-    )
-    entry.add_to_hass(hass)
-
-    mock_ssdp_search_response = _ssdp_headers(
-        {
-            "st": "mock-st",
-            "location": "http://1.1.1.1",
-            "usn": "uuid:mock-udn::mock-st",
-            "server": "mock-server",
-            "ext": "",
-            "_source": "search",
-        }
-    )
-    aioclient_mock.get(
-        "http://1.1.1.1",
-        text="""
-<root>
-  <device>
-    <deviceType>Paulus</deviceType>
-    <manufacturer>Paulus</manufacturer>
-  </device>
-</root>
-    """,
-    )
-    ssdp_listener = await init_ssdp_component(hass)
-    ssdp_listener._on_search(mock_ssdp_search_response)
-    await hass.async_block_till_done()
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-    await hass.async_block_till_done()
-
-    expected_context = {
-        "discovery_key": DiscoveryKey(domain="ssdp", key="uuid:mock-udn", version=1),
-        "source": config_entries.SOURCE_SSDP,
-    }
-    assert len(mock_flow_init.mock_calls) == 1
-    assert mock_flow_init.mock_calls[0][1][0] == "mock-domain"
-    assert mock_flow_init.mock_calls[0][2]["context"] == expected_context
-    mock_call_data: ssdp.SsdpServiceInfo = mock_flow_init.mock_calls[0][2]["data"]
+    mock_call_data: SsdpServiceInfo = mock_flow_init.mock_calls[0][2]["data"]
     assert mock_call_data.ssdp_st == "mock-st"
     assert mock_call_data.ssdp_location == "http://1.1.1.1"
 
@@ -1151,7 +1068,7 @@ async def test_ssdp_rediscover_no_match(
     hass: HomeAssistant,
     mock_flow_init,
     entry_domain: str,
-    entry_discovery_keys: tuple,
+    entry_discovery_keys: dict[str, tuple[DiscoveryKey, ...]],
     entry_source: str,
     entry_unique_id: str,
 ) -> None:
@@ -1189,13 +1106,113 @@ async def test_ssdp_rediscover_no_match(
     assert len(mock_flow_init.mock_calls) == 1
     assert mock_flow_init.mock_calls[0][1][0] == "mock-domain"
     assert mock_flow_init.mock_calls[0][2]["context"] == expected_context
-    mock_call_data: ssdp.SsdpServiceInfo = mock_flow_init.mock_calls[0][2]["data"]
+    mock_call_data: SsdpServiceInfo = mock_flow_init.mock_calls[0][2]["data"]
     assert mock_call_data.ssdp_st == "mock-st"
     assert mock_call_data.ssdp_location == "http://1.1.1.1"
 
     await hass.config_entries.async_remove(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert len(mock_flow_init.mock_calls) == 2
-    assert mock_flow_init.mock_calls[1][1][0] == entry_domain
-    assert mock_flow_init.mock_calls[1][2]["context"] == {"source": "unignore"}
+    assert len(mock_flow_init.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("constant_name", "replacement_name", "replacement"),
+    [
+        (
+            "SsdpServiceInfo",
+            "homeassistant.helpers.service_info.ssdp.SsdpServiceInfo",
+            SsdpServiceInfo,
+        ),
+        (
+            "ATTR_ST",
+            "homeassistant.helpers.service_info.ssdp.ATTR_ST",
+            ATTR_ST,
+        ),
+        (
+            "ATTR_NT",
+            "homeassistant.helpers.service_info.ssdp.ATTR_NT",
+            ATTR_NT,
+        ),
+        (
+            "ATTR_UPNP_DEVICE_TYPE",
+            "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_DEVICE_TYPE",
+            ATTR_UPNP_DEVICE_TYPE,
+        ),
+        (
+            "ATTR_UPNP_FRIENDLY_NAME",
+            "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_FRIENDLY_NAME",
+            ATTR_UPNP_FRIENDLY_NAME,
+        ),
+        (
+            "ATTR_UPNP_MANUFACTURER",
+            "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_MANUFACTURER",
+            ATTR_UPNP_MANUFACTURER,
+        ),
+        (
+            "ATTR_UPNP_MANUFACTURER_URL",
+            "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_MANUFACTURER_URL",
+            ATTR_UPNP_MANUFACTURER_URL,
+        ),
+        (
+            "ATTR_UPNP_MODEL_DESCRIPTION",
+            "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_MODEL_DESCRIPTION",
+            ATTR_UPNP_MODEL_DESCRIPTION,
+        ),
+        (
+            "ATTR_UPNP_MODEL_NAME",
+            "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_MODEL_NAME",
+            ATTR_UPNP_MODEL_NAME,
+        ),
+        (
+            "ATTR_UPNP_MODEL_NUMBER",
+            "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_MODEL_NUMBER",
+            ATTR_UPNP_MODEL_NUMBER,
+        ),
+        (
+            "ATTR_UPNP_MODEL_URL",
+            "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_MODEL_URL",
+            ATTR_UPNP_MODEL_URL,
+        ),
+        (
+            "ATTR_UPNP_SERIAL",
+            "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_SERIAL",
+            ATTR_UPNP_SERIAL,
+        ),
+        (
+            "ATTR_UPNP_SERVICE_LIST",
+            "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_SERVICE_LIST",
+            ATTR_UPNP_SERVICE_LIST,
+        ),
+        (
+            "ATTR_UPNP_UDN",
+            "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_UDN",
+            ATTR_UPNP_UDN,
+        ),
+        (
+            "ATTR_UPNP_UPC",
+            "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_UPC",
+            ATTR_UPNP_UPC,
+        ),
+        (
+            "ATTR_UPNP_PRESENTATION_URL",
+            "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_PRESENTATION_URL",
+            ATTR_UPNP_PRESENTATION_URL,
+        ),
+    ],
+)
+def test_deprecated_constants(
+    caplog: pytest.LogCaptureFixture,
+    constant_name: str,
+    replacement_name: str,
+    replacement: Any,
+) -> None:
+    """Test deprecated automation constants."""
+    import_and_test_deprecated_constant(
+        caplog,
+        ssdp,
+        constant_name,
+        replacement_name,
+        replacement,
+        "2026.2",
+    )

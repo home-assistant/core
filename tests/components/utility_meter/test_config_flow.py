@@ -374,6 +374,7 @@ async def test_change_device_source(
 
     # Configure source entity 3 (without a device)
     source_config_entry_3 = MockConfigEntry()
+    source_config_entry_3.add_to_hass(hass)
     source_entity_3 = entity_registry.async_get_or_create(
         "sensor",
         "test",

@@ -2,7 +2,7 @@
 
 import asyncio
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from aiohttp import ClientResponseError
 from gql.transport.exceptions import TransportServerError
@@ -30,21 +30,26 @@ class MonarchData:
     cashflow_summary: MonarchCashflowSummary
 
 
+type MonarchMoneyConfigEntry = ConfigEntry[MonarchMoneyDataUpdateCoordinator]
+
+
 class MonarchMoneyDataUpdateCoordinator(DataUpdateCoordinator[MonarchData]):
     """Data update coordinator for Monarch Money."""
 
-    config_entry: ConfigEntry
+    config_entry: MonarchMoneyConfigEntry
     subscription_id: str
 
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: MonarchMoneyConfigEntry,
         client: TypedMonarchMoney,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass=hass,
             logger=LOGGER,
+            config_entry=config_entry,
             name="monarchmoney",
             update_interval=timedelta(hours=4),
         )
@@ -63,9 +68,13 @@ class MonarchMoneyDataUpdateCoordinator(DataUpdateCoordinator[MonarchData]):
     async def _async_update_data(self) -> MonarchData:
         """Fetch data for all accounts."""
 
+        now = datetime.now()
+
         account_data, cashflow_summary = await asyncio.gather(
             self.client.get_accounts_as_dict_with_id_key(),
-            self.client.get_cashflow_summary(),
+            self.client.get_cashflow_summary(
+                start_date=f"{now.year}-01-01", end_date=f"{now.year}-12-31"
+            ),
         )
 
         return MonarchData(account_data=account_data, cashflow_summary=cashflow_summary)

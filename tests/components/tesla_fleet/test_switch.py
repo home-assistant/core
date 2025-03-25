@@ -1,6 +1,5 @@
 """Test the tesla_fleet switch platform."""
 
-from copy import deepcopy
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -160,32 +159,6 @@ async def test_switch_no_scope(
 
     await setup_platform(hass, readonly_config_entry, [Platform.SWITCH])
     with pytest.raises(ServiceValidationError, match="Missing vehicle commands scope"):
-        await hass.services.async_call(
-            SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "switch.test_auto_steering_wheel_heater"},
-            blocking=True,
-        )
-
-
-async def test_switch_no_signing(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    normal_config_entry: MockConfigEntry,
-    mock_products: AsyncMock,
-) -> None:
-    """Tests that the switch entities are correct."""
-
-    # Make the vehicle require command signing
-    products = deepcopy(mock_products.return_value)
-    products["response"][0]["command_signing"] = "required"
-    mock_products.return_value = products
-
-    await setup_platform(hass, normal_config_entry, [Platform.SWITCH])
-    with pytest.raises(
-        ServiceValidationError,
-        match="Vehicle requires command signing. Please see documentation for more details",
-    ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_OFF,

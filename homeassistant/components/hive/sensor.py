@@ -21,7 +21,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN
@@ -89,7 +89,9 @@ SENSOR_TYPES: tuple[HiveSensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Hive thermostat based on a config entry."""
     hive = hass.data[DOMAIN][entry.entry_id]
@@ -127,5 +129,5 @@ class HiveSensorEntity(HiveEntity, SensorEntity):
         await self.hive.session.updateData(self.device)
         self.device = await self.hive.sensor.getSensor(self.device)
         self._attr_native_value = self.entity_description.fn(
-            self.device["status"]["state"]
+            self.device.get("status", {}).get("state")
         )

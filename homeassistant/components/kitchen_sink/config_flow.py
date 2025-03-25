@@ -12,9 +12,12 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlowWithConfigEntry,
+    ConfigSubentryFlow,
+    OptionsFlow,
+    SubentryFlowResult,
 )
 from homeassistant.core import callback
+from homeassistant.helpers import config_validation as cv
 
 from . import DOMAIN
 
@@ -33,13 +36,18 @@ class KitchenSinkConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
-        return OptionsFlowHandler(config_entry)
+        return OptionsFlowHandler()
+
+    @classmethod
+    @callback
+    def async_get_supported_subentry_types(
+        cls, config_entry: ConfigEntry
+    ) -> dict[str, type[ConfigSubentryFlow]]:
+        """Return subentries supported by this handler."""
+        return {"entity": SubentryFlowHandler}
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Set the config entry up from yaml."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         return self.async_create_entry(title="Kitchen Sink", data=import_data)
 
     async def async_step_reauth(
@@ -57,7 +65,7 @@ class KitchenSinkConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_abort(reason="reauth_successful")
 
 
-class OptionsFlowHandler(OptionsFlowWithConfigEntry):
+class OptionsFlowHandler(OptionsFlow):
     """Handle options."""
 
     async def async_step_init(
@@ -71,34 +79,86 @@ class OptionsFlowHandler(OptionsFlowWithConfigEntry):
     ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
-            self.options.update(user_input)
-            return await self._update_options()
+            return self.async_create_entry(data=self.config_entry.options | user_input)
+
+        data_schema = vol.Schema(
+            {
+                vol.Required("section_1"): data_entry_flow.section(
+                    vol.Schema(
+                        {
+                            vol.Optional(
+                                CONF_BOOLEAN,
+                                default=self.config_entry.options.get(
+                                    CONF_BOOLEAN, False
+                                ),
+                            ): bool,
+                            vol.Optional(CONF_INT): cv.positive_int,
+                        }
+                    ),
+                    {"collapsed": False},
+                ),
+            }
+        )
+        self.add_suggested_values_to_schema(
+            data_schema,
+            {"section_1": {"int": self.config_entry.options.get(CONF_INT, 10)}},
+        )
+
+        return self.async_show_form(step_id="options_1", data_schema=data_schema)
+
+
+class SubentryFlowHandler(ConfigSubentryFlow):
+    """Handle subentry flow."""
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """User flow to create a sensor subentry."""
+        return await self.async_step_add_sensor()
+
+    async def async_step_add_sensor(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Add a new sensor."""
+        if user_input is not None:
+            title = user_input.pop("name")
+            return self.async_create_entry(data=user_input, title=title)
 
         return self.async_show_form(
-            step_id="options_1",
+            step_id="add_sensor",
             data_schema=vol.Schema(
                 {
-                    vol.Required("section_1"): data_entry_flow.section(
-                        vol.Schema(
-                            {
-                                vol.Optional(
-                                    CONF_BOOLEAN,
-                                    default=self.config_entry.options.get(
-                                        CONF_BOOLEAN, False
-                                    ),
-                                ): bool,
-                                vol.Optional(
-                                    CONF_INT,
-                                    default=self.config_entry.options.get(CONF_INT, 10),
-                                ): int,
-                            }
-                        ),
-                        {"collapsed": False},
-                    ),
+                    vol.Required("name"): str,
+                    vol.Required("state"): int,
                 }
             ),
         )
 
-    async def _update_options(self) -> ConfigFlowResult:
-        """Update config entry options."""
-        return self.async_create_entry(title="", data=self.options)
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Reconfigure a sensor subentry."""
+        return await self.async_step_reconfigure_sensor()
+
+    async def async_step_reconfigure_sensor(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Reconfigure a sensor."""
+        if user_input is not None:
+            title = user_input.pop("name")
+            return self.async_update_and_abort(
+                self._get_entry(),
+                self._get_reconfigure_subentry(),
+                data=user_input,
+                title=title,
+            )
+
+        return self.async_show_form(
+            step_id="reconfigure_sensor",
+            data_schema=vol.Schema(
+                {
+                    vol.Required("name"): str,
+                    vol.Required("state"): int,
+                }
+            ),
+        )

@@ -36,6 +36,9 @@ class MinutPointEntity(CoordinatorEntity[PointDataUpdateCoordinator]):
         if self.device_class:
             self._attr_name = f"{self._name} {self.device_class.capitalize()}"
 
+    async def _update_callback(self):
+        """Update the value of the sensor."""
+
     @property
     def client(self) -> PointSession:
         """Return the client object."""

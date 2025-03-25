@@ -7,6 +7,7 @@ import logging
 
 from aioaseko import Aseko, Unit
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -14,17 +15,24 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+type AsekoConfigEntry = ConfigEntry[AsekoDataUpdateCoordinator]
+
 
 class AsekoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Unit]]):
     """Class to manage fetching Aseko unit data from single endpoint."""
 
-    def __init__(self, hass: HomeAssistant, aseko: Aseko) -> None:
+    config_entry: AsekoConfigEntry
+
+    def __init__(
+        self, hass: HomeAssistant, config_entry: AsekoConfigEntry, aseko: Aseko
+    ) -> None:
         """Initialize global Aseko unit data updater."""
         self._aseko = aseko
 
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(minutes=2),
         )

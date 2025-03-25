@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from collections import defaultdict
 from collections.abc import Callable, Iterable
+from contextlib import suppress
 import datetime
-from functools import partial
 import itertools
 import logging
 import math
@@ -38,6 +38,7 @@ from homeassistant.helpers.entity import entity_sources
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.loader import async_suggest_report_issue
 from homeassistant.util import dt as dt_util
+from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.enum import try_parse_enum
 from homeassistant.util.hass_dict import HassKey
 
@@ -133,16 +134,7 @@ def _time_weighted_average(
         duration = end - old_start_time
         accumulated += old_fstate * duration.total_seconds()
 
-    period_seconds = (end - start).total_seconds()
-    if period_seconds == 0:
-        # If the only state changed that happened was at the exact moment
-        # at the end of the period, we can't calculate a meaningful average
-        # so we return 0.0 since it represents a time duration smaller than
-        # we can measure. This probably means the precision of statistics
-        # column schema in the database is incorrect but it is actually possible
-        # to happen if the state change event fired at the exact microsecond
-        return 0.0
-    return accumulated / period_seconds
+    return accumulated / (end - start).total_seconds()
 
 
 def _get_units(fstates: list[tuple[float, State]]) -> set[str | None]:
@@ -177,6 +169,14 @@ def _entity_history_to_float_and_state(
         except (ValueError, TypeError):
             pass
     return float_states
+
+
+def _is_numeric(state: State) -> bool:
+    """Return if the state is numeric."""
+    with suppress(ValueError, TypeError):
+        if (num_state := float(state.state)) is not None and math.isfinite(num_state):
+            return True
+    return False
 
 
 def _normalize_states(
@@ -438,7 +438,11 @@ def compile_statistics(  # noqa: C901
         entity_id = _state.entity_id
         # If there are no recent state changes, the sensor's state may already be pruned
         # from the recorder. Get the state from the state machine instead.
-        if not (entity_history := history_list.get(entity_id, [_state])):
+        try:
+            entity_history = history_list[entity_id]
+        except KeyError:
+            entity_history = [_state] if _state.last_changed < end else []
+        if not entity_history:
             continue
         if not (float_states := _entity_history_to_float_and_state(entity_history)):
             continue
@@ -677,36 +681,31 @@ def list_statistic_ids(
 @callback
 def _update_issues(
     report_issue: Callable[[str, str, dict[str, Any]], None],
-    clear_issue: Callable[[str, str], None],
     sensor_states: list[State],
     metadatas: dict[str, tuple[int, StatisticMetaData]],
 ) -> None:
     """Update repair issues."""
     for state in sensor_states:
         entity_id = state.entity_id
+        numeric = _is_numeric(state)
         state_class = try_parse_enum(
             SensorStateClass, state.attributes.get(ATTR_STATE_CLASS)
         )
         state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
         if metadata := metadatas.get(entity_id):
-            if state_class is None:
+            if numeric and state_class is None:
                 # Sensor no longer has a valid state class
                 report_issue(
-                    "unsupported_state_class",
+                    "state_class_removed",
                     entity_id,
-                    {
-                        "statistic_id": entity_id,
-                        "state_class": state_class,
-                    },
+                    {"statistic_id": entity_id},
                 )
-            else:
-                clear_issue("unsupported_state_class", entity_id)
 
             metadata_unit = metadata[1]["unit_of_measurement"]
             converter = statistics.STATISTIC_UNIT_TO_UNIT_CONVERTER.get(metadata_unit)
             if not converter:
-                if not _equivalent_units({state_unit, metadata_unit}):
+                if numeric and not _equivalent_units({state_unit, metadata_unit}):
                     # The unit has changed, and it's not possible to convert
                     report_issue(
                         "units_changed",
@@ -718,9 +717,7 @@ def _update_issues(
                             "supported_unit": metadata_unit,
                         },
                     )
-                else:
-                    clear_issue("units_changed", entity_id)
-            elif state_unit not in converter.VALID_UNITS:
+            elif numeric and state_unit not in converter.VALID_UNITS:
                 # The state unit can't be converted to the unit in metadata
                 valid_units = (unit or "<None>" for unit in converter.VALID_UNITS)
                 valid_units_str = ", ".join(sorted(valid_units))
@@ -734,8 +731,6 @@ def _update_issues(
                         "supported_unit": valid_units_str,
                     },
                 )
-            else:
-                clear_issue("units_changed", entity_id)
 
 
 def update_statistics_issues(
@@ -749,36 +744,50 @@ def update_statistics_issues(
         instance, session, statistic_source=RECORDER_DOMAIN
     )
 
+    @callback
+    def get_sensor_statistics_issues(hass: HomeAssistant) -> set[str]:
+        """Return a list of statistics issues."""
+        issues = set()
+        issue_registry = ir.async_get(hass)
+        for issue in issue_registry.issues.values():
+            if (
+                issue.domain != DOMAIN
+                or not (issue_data := issue.data)
+                or issue_data.get("issue_type")
+                not in ("state_class_removed", "units_changed")
+            ):
+                continue
+            issues.add(issue.issue_id)
+        return issues
+
+    issues = run_callback_threadsafe(
+        hass.loop, get_sensor_statistics_issues, hass
+    ).result()
+
     def create_issue_registry_issue(
         issue_type: str, statistic_id: str, data: dict[str, Any]
     ) -> None:
         """Create an issue registry issue."""
-        hass.loop.call_soon_threadsafe(
-            partial(
-                ir.async_create_issue,
-                hass,
-                DOMAIN,
-                f"{issue_type}_{statistic_id}",
-                data=data | {"issue_type": issue_type},
-                is_fixable=False,
-                severity=ir.IssueSeverity.WARNING,
-                translation_key=issue_type,
-                translation_placeholders=data,
-            )
-        )
-
-    def delete_issue_registry_issue(issue_type: str, statistic_id: str) -> None:
-        """Delete an issue registry issue."""
-        hass.loop.call_soon_threadsafe(
-            ir.async_delete_issue, hass, DOMAIN, f"{issue_type}_{statistic_id}"
+        issue_id = f"{issue_type}_{statistic_id}"
+        issues.discard(issue_id)
+        ir.create_issue(
+            hass,
+            DOMAIN,
+            issue_id,
+            data=data | {"issue_type": issue_type},
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=issue_type,
+            translation_placeholders=data,
         )
 
     _update_issues(
         create_issue_registry_issue,
-        delete_issue_registry_issue,
         sensor_states,
         metadatas,
     )
+    for issue_id in issues:
+        hass.loop.call_soon_threadsafe(ir.async_delete_issue, hass, DOMAIN, issue_id)
 
 
 def validate_statistics(
@@ -804,7 +813,6 @@ def validate_statistics(
 
     _update_issues(
         create_statistic_validation_issue,
-        lambda issue_type, statistic_id: None,
         sensor_states,
         metadatas,
     )

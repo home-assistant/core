@@ -23,11 +23,10 @@ UNSUPPORTED_DEVICES = [
     "E3_FloorHeatingCircuitChannel",
     "E3_FloorHeatingCircuitDistributorBox",
     "E3_RoomControl_One_522",
-    "E3_RoomSensor",
 ]
 
-DEVICE_LIST = "device_list"
 VICARE_NAME = "ViCare"
+VICARE_TOKEN_FILENAME = "vicare_token.save"
 
 CONF_CIRCUIT = "circuit"
 CONF_HEATING_TYPE = "heating_type"

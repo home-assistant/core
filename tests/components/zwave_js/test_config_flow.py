@@ -6,20 +6,23 @@ from copy import copy
 from ipaddress import ip_address
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, call, patch
+from uuid import uuid4
 
+from aiohasupervisor import SupervisorError
+from aiohasupervisor.models import AddonsOptions, Discovery
 import aiohttp
 import pytest
 from serial.tools.list_ports_common import ListPortInfo
 from zwave_js_server.version import VersionInfo
 
 from homeassistant import config_entries
-from homeassistant.components import usb
-from homeassistant.components.hassio import HassioAPIError, HassioServiceInfo
-from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.components.zwave_js.config_flow import SERVER_VERSION_TIMEOUT, TITLE
 from homeassistant.components.zwave_js.const import ADDON_SLUG, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
+from homeassistant.helpers.service_info.usb import UsbServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from tests.common import MockConfigEntry
 
@@ -30,7 +33,7 @@ ADDON_DISCOVERY_INFO = {
 }
 
 
-USB_DISCOVERY_INFO = usb.UsbServiceInfo(
+USB_DISCOVERY_INFO = UsbServiceInfo(
     device="/dev/zwave",
     pid="AAAA",
     vid="AAAA",
@@ -39,7 +42,7 @@ USB_DISCOVERY_INFO = usb.UsbServiceInfo(
     manufacturer="test",
 )
 
-NORTEK_ZIGBEE_DISCOVERY_INFO = usb.UsbServiceInfo(
+NORTEK_ZIGBEE_DISCOVERY_INFO = UsbServiceInfo(
     device="/dev/zigbee",
     pid="8A2A",
     vid="10C4",
@@ -48,7 +51,7 @@ NORTEK_ZIGBEE_DISCOVERY_INFO = usb.UsbServiceInfo(
     manufacturer="nortek",
 )
 
-CP2652_ZIGBEE_DISCOVERY_INFO = usb.UsbServiceInfo(
+CP2652_ZIGBEE_DISCOVERY_INFO = UsbServiceInfo(
     device="/dev/zigbee",
     pid="EA60",
     vid="10C4",
@@ -553,7 +556,19 @@ async def test_abort_hassio_discovery_for_other_addon(
     assert result2["reason"] == "not_zwave_js_addon"
 
 
-@pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
+@pytest.mark.parametrize(
+    "discovery_info",
+    [
+        [
+            Discovery(
+                addon="core_zwave_js",
+                service="zwave_js",
+                uuid=uuid4(),
+                config=ADDON_DISCOVERY_INFO,
+            )
+        ]
+    ],
+)
 async def test_usb_discovery(
     hass: HomeAssistant,
     supervisor,
@@ -583,7 +598,7 @@ async def test_usb_discovery(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert install_addon.call_args == call(hass, "core_zwave_js")
+    assert install_addon.call_args == call("core_zwave_js")
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "configure_addon"
@@ -601,10 +616,9 @@ async def test_usb_discovery(
     )
 
     assert set_addon_options.call_args == call(
-        hass,
         "core_zwave_js",
-        {
-            "options": {
+        AddonsOptions(
+            config={
                 "device": USB_DISCOVERY_INFO.device,
                 "s0_legacy_key": "new123",
                 "s2_access_control_key": "new456",
@@ -613,7 +627,7 @@ async def test_usb_discovery(
                 "lr_s2_access_control_key": "new654",
                 "lr_s2_authenticated_key": "new321",
             }
-        },
+        ),
     )
 
     assert result["type"] is FlowResultType.SHOW_PROGRESS
@@ -652,7 +666,19 @@ async def test_usb_discovery(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
+@pytest.mark.parametrize(
+    "discovery_info",
+    [
+        [
+            Discovery(
+                addon="core_zwave_js",
+                service="zwave_js",
+                uuid=uuid4(),
+                config=ADDON_DISCOVERY_INFO,
+            )
+        ]
+    ],
+)
 async def test_usb_discovery_addon_not_running(
     hass: HomeAssistant,
     supervisor,
@@ -702,10 +728,9 @@ async def test_usb_discovery_addon_not_running(
     )
 
     assert set_addon_options.call_args == call(
-        hass,
         "core_zwave_js",
-        {
-            "options": {
+        AddonsOptions(
+            config={
                 "device": USB_DISCOVERY_INFO.device,
                 "s0_legacy_key": "new123",
                 "s2_access_control_key": "new456",
@@ -714,7 +739,7 @@ async def test_usb_discovery_addon_not_running(
                 "lr_s2_access_control_key": "new654",
                 "lr_s2_authenticated_key": "new321",
             }
-        },
+        ),
     )
 
     assert result["type"] is FlowResultType.SHOW_PROGRESS
@@ -797,10 +822,9 @@ async def test_discovery_addon_not_running(
     )
 
     assert set_addon_options.call_args == call(
-        hass,
         "core_zwave_js",
-        {
-            "options": {
+        AddonsOptions(
+            config={
                 "device": "/test",
                 "s0_legacy_key": "new123",
                 "s2_access_control_key": "new456",
@@ -809,7 +833,7 @@ async def test_discovery_addon_not_running(
                 "lr_s2_access_control_key": "new654",
                 "lr_s2_authenticated_key": "new321",
             }
-        },
+        ),
     )
 
     assert result["type"] is FlowResultType.SHOW_PROGRESS
@@ -881,7 +905,7 @@ async def test_discovery_addon_not_installed(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert install_addon.call_args == call(hass, "core_zwave_js")
+    assert install_addon.call_args == call("core_zwave_js")
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "configure_addon"
@@ -900,10 +924,9 @@ async def test_discovery_addon_not_installed(
     )
 
     assert set_addon_options.call_args == call(
-        hass,
         "core_zwave_js",
-        {
-            "options": {
+        AddonsOptions(
+            config={
                 "device": "/test",
                 "s0_legacy_key": "new123",
                 "s2_access_control_key": "new456",
@@ -912,7 +935,7 @@ async def test_discovery_addon_not_installed(
                 "lr_s2_access_control_key": "new654",
                 "lr_s2_authenticated_key": "new321",
             }
-        },
+        ),
     )
 
     assert result["type"] is FlowResultType.SHOW_PROGRESS
@@ -1092,7 +1115,19 @@ async def test_not_addon(hass: HomeAssistant, supervisor) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
+@pytest.mark.parametrize(
+    "discovery_info",
+    [
+        [
+            Discovery(
+                addon="core_zwave_js",
+                service="zwave_js",
+                uuid=uuid4(),
+                config=ADDON_DISCOVERY_INFO,
+            )
+        ]
+    ],
+)
 async def test_addon_running(
     hass: HomeAssistant,
     supervisor,
@@ -1158,31 +1193,52 @@ async def test_addon_running(
     ),
     [
         (
-            {"config": ADDON_DISCOVERY_INFO},
-            HassioAPIError(),
+            [
+                Discovery(
+                    addon="core_zwave_js",
+                    service="zwave_js",
+                    uuid=uuid4(),
+                    config=ADDON_DISCOVERY_INFO,
+                )
+            ],
+            SupervisorError(),
             None,
             None,
             "addon_get_discovery_info_failed",
         ),
         (
-            {"config": ADDON_DISCOVERY_INFO},
+            [
+                Discovery(
+                    addon="core_zwave_js",
+                    service="zwave_js",
+                    uuid=uuid4(),
+                    config=ADDON_DISCOVERY_INFO,
+                )
+            ],
             None,
             TimeoutError,
             None,
             "cannot_connect",
         ),
         (
-            None,
+            [],
             None,
             None,
             None,
             "addon_get_discovery_info_failed",
         ),
         (
-            {"config": ADDON_DISCOVERY_INFO},
+            [
+                Discovery(
+                    addon="core_zwave_js",
+                    service="zwave_js",
+                    uuid=uuid4(),
+                    config=ADDON_DISCOVERY_INFO,
+                )
+            ],
             None,
             None,
-            HassioAPIError(),
+            SupervisorError(),
             "addon_info_failed",
         ),
     ],
@@ -1214,7 +1270,19 @@ async def test_addon_running_failures(
     assert result["reason"] == abort_reason
 
 
-@pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
+@pytest.mark.parametrize(
+    "discovery_info",
+    [
+        [
+            Discovery(
+                addon="core_zwave_js",
+                service="zwave_js",
+                uuid=uuid4(),
+                config=ADDON_DISCOVERY_INFO,
+            )
+        ]
+    ],
+)
 async def test_addon_running_already_configured(
     hass: HomeAssistant,
     supervisor,
@@ -1273,7 +1341,19 @@ async def test_addon_running_already_configured(
     assert entry.data["lr_s2_authenticated_key"] == "new321"
 
 
-@pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
+@pytest.mark.parametrize(
+    "discovery_info",
+    [
+        [
+            Discovery(
+                addon="core_zwave_js",
+                service="zwave_js",
+                uuid=uuid4(),
+                config=ADDON_DISCOVERY_INFO,
+            )
+        ]
+    ],
+)
 async def test_addon_installed(
     hass: HomeAssistant,
     supervisor,
@@ -1313,10 +1393,9 @@ async def test_addon_installed(
     )
 
     assert set_addon_options.call_args == call(
-        hass,
         "core_zwave_js",
-        {
-            "options": {
+        AddonsOptions(
+            config={
                 "device": "/test",
                 "s0_legacy_key": "new123",
                 "s2_access_control_key": "new456",
@@ -1325,7 +1404,7 @@ async def test_addon_installed(
                 "lr_s2_access_control_key": "new654",
                 "lr_s2_authenticated_key": "new321",
             }
-        },
+        ),
     )
 
     assert result["type"] is FlowResultType.SHOW_PROGRESS
@@ -1366,7 +1445,17 @@ async def test_addon_installed(
 
 @pytest.mark.parametrize(
     ("discovery_info", "start_addon_side_effect"),
-    [({"config": ADDON_DISCOVERY_INFO}, HassioAPIError())],
+    [
+        (
+            Discovery(
+                addon="core_zwave_js",
+                service="zwave_js",
+                uuid=uuid4(),
+                config=ADDON_DISCOVERY_INFO,
+            ),
+            SupervisorError(),
+        )
+    ],
 )
 async def test_addon_installed_start_failure(
     hass: HomeAssistant,
@@ -1407,10 +1496,9 @@ async def test_addon_installed_start_failure(
     )
 
     assert set_addon_options.call_args == call(
-        hass,
         "core_zwave_js",
-        {
-            "options": {
+        AddonsOptions(
+            config={
                 "device": "/test",
                 "s0_legacy_key": "new123",
                 "s2_access_control_key": "new456",
@@ -1419,7 +1507,7 @@ async def test_addon_installed_start_failure(
                 "lr_s2_access_control_key": "new654",
                 "lr_s2_authenticated_key": "new321",
             }
-        },
+        ),
     )
 
     assert result["type"] is FlowResultType.SHOW_PROGRESS
@@ -1438,11 +1526,18 @@ async def test_addon_installed_start_failure(
     ("discovery_info", "server_version_side_effect"),
     [
         (
-            {"config": ADDON_DISCOVERY_INFO},
+            [
+                Discovery(
+                    addon="core_zwave_js",
+                    service="zwave_js",
+                    uuid=uuid4(),
+                    config=ADDON_DISCOVERY_INFO,
+                )
+            ],
             TimeoutError,
         ),
         (
-            None,
+            [],
             None,
         ),
     ],
@@ -1486,10 +1581,9 @@ async def test_addon_installed_failures(
     )
 
     assert set_addon_options.call_args == call(
-        hass,
         "core_zwave_js",
-        {
-            "options": {
+        AddonsOptions(
+            config={
                 "device": "/test",
                 "s0_legacy_key": "new123",
                 "s2_access_control_key": "new456",
@@ -1498,7 +1592,7 @@ async def test_addon_installed_failures(
                 "lr_s2_access_control_key": "new654",
                 "lr_s2_authenticated_key": "new321",
             }
-        },
+        ),
     )
 
     assert result["type"] is FlowResultType.SHOW_PROGRESS
@@ -1515,7 +1609,19 @@ async def test_addon_installed_failures(
 
 @pytest.mark.parametrize(
     ("set_addon_options_side_effect", "discovery_info"),
-    [(HassioAPIError(), {"config": ADDON_DISCOVERY_INFO})],
+    [
+        (
+            SupervisorError(),
+            [
+                Discovery(
+                    addon="core_zwave_js",
+                    service="zwave_js",
+                    uuid=uuid4(),
+                    config=ADDON_DISCOVERY_INFO,
+                )
+            ],
+        )
+    ],
 )
 async def test_addon_installed_set_options_failure(
     hass: HomeAssistant,
@@ -1556,10 +1662,9 @@ async def test_addon_installed_set_options_failure(
     )
 
     assert set_addon_options.call_args == call(
-        hass,
         "core_zwave_js",
-        {
-            "options": {
+        AddonsOptions(
+            config={
                 "device": "/test",
                 "s0_legacy_key": "new123",
                 "s2_access_control_key": "new456",
@@ -1568,7 +1673,7 @@ async def test_addon_installed_set_options_failure(
                 "lr_s2_access_control_key": "new654",
                 "lr_s2_authenticated_key": "new321",
             }
-        },
+        ),
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -1577,7 +1682,19 @@ async def test_addon_installed_set_options_failure(
     assert start_addon.call_count == 0
 
 
-@pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
+@pytest.mark.parametrize(
+    "discovery_info",
+    [
+        [
+            Discovery(
+                addon="core_zwave_js",
+                service="zwave_js",
+                uuid=uuid4(),
+                config=ADDON_DISCOVERY_INFO,
+            )
+        ]
+    ],
+)
 async def test_addon_installed_already_configured(
     hass: HomeAssistant,
     supervisor,
@@ -1634,10 +1751,9 @@ async def test_addon_installed_already_configured(
     )
 
     assert set_addon_options.call_args == call(
-        hass,
         "core_zwave_js",
-        {
-            "options": {
+        AddonsOptions(
+            config={
                 "device": "/new",
                 "s0_legacy_key": "new123",
                 "s2_access_control_key": "new456",
@@ -1646,7 +1762,7 @@ async def test_addon_installed_already_configured(
                 "lr_s2_access_control_key": "new654",
                 "lr_s2_authenticated_key": "new321",
             }
-        },
+        ),
     )
 
     assert result["type"] is FlowResultType.SHOW_PROGRESS
@@ -1669,7 +1785,19 @@ async def test_addon_installed_already_configured(
     assert entry.data["lr_s2_authenticated_key"] == "new321"
 
 
-@pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
+@pytest.mark.parametrize(
+    "discovery_info",
+    [
+        [
+            Discovery(
+                addon="core_zwave_js",
+                service="zwave_js",
+                uuid=uuid4(),
+                config=ADDON_DISCOVERY_INFO,
+            )
+        ]
+    ],
+)
 async def test_addon_not_installed(
     hass: HomeAssistant,
     supervisor,
@@ -1700,7 +1828,7 @@ async def test_addon_not_installed(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert install_addon.call_args == call(hass, "core_zwave_js")
+    assert install_addon.call_args == call("core_zwave_js")
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "configure_addon"
@@ -1719,10 +1847,9 @@ async def test_addon_not_installed(
     )
 
     assert set_addon_options.call_args == call(
-        hass,
         "core_zwave_js",
-        {
-            "options": {
+        AddonsOptions(
+            config={
                 "device": "/test",
                 "s0_legacy_key": "new123",
                 "s2_access_control_key": "new456",
@@ -1731,7 +1858,7 @@ async def test_addon_not_installed(
                 "lr_s2_access_control_key": "new654",
                 "lr_s2_authenticated_key": "new321",
             }
-        },
+        ),
     )
 
     assert result["type"] is FlowResultType.SHOW_PROGRESS
@@ -1774,7 +1901,7 @@ async def test_install_addon_failure(
     hass: HomeAssistant, supervisor, addon_not_installed, install_addon
 ) -> None:
     """Test add-on install failure."""
-    install_addon.side_effect = HassioAPIError()
+    install_addon.side_effect = SupervisorError()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -1794,7 +1921,7 @@ async def test_install_addon_failure(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert install_addon.call_args == call(hass, "core_zwave_js")
+    assert install_addon.call_args == call("core_zwave_js")
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "addon_install_failed"
@@ -1895,7 +2022,14 @@ async def test_options_not_addon(
     ),
     [
         (
-            {"config": ADDON_DISCOVERY_INFO},
+            [
+                Discovery(
+                    addon="core_zwave_js",
+                    service="zwave_js",
+                    uuid=uuid4(),
+                    config=ADDON_DISCOVERY_INFO,
+                )
+            ],
             {},
             {
                 "device": "/test",
@@ -1921,7 +2055,14 @@ async def test_options_not_addon(
             0,
         ),
         (
-            {"config": ADDON_DISCOVERY_INFO},
+            [
+                Discovery(
+                    addon="core_zwave_js",
+                    service="zwave_js",
+                    uuid=uuid4(),
+                    config=ADDON_DISCOVERY_INFO,
+                )
+            ],
             {"use_addon": True},
             {
                 "device": "/test",
@@ -1994,9 +2135,8 @@ async def test_options_addon_running(
 
     new_addon_options["device"] = new_addon_options.pop("usb_path")
     assert set_addon_options.call_args == call(
-        hass,
         "core_zwave_js",
-        {"options": new_addon_options},
+        AddonsOptions(config=new_addon_options),
     )
     assert client.disconnect.call_count == disconnect_calls
 
@@ -2042,7 +2182,14 @@ async def test_options_addon_running(
     ("discovery_info", "entry_data", "old_addon_options", "new_addon_options"),
     [
         (
-            {"config": ADDON_DISCOVERY_INFO},
+            [
+                Discovery(
+                    addon="core_zwave_js",
+                    service="zwave_js",
+                    uuid=uuid4(),
+                    config=ADDON_DISCOVERY_INFO,
+                )
+            ],
             {},
             {
                 "device": "/test",
@@ -2169,7 +2316,14 @@ async def different_device_server_version(*args):
     ),
     [
         (
-            {"config": ADDON_DISCOVERY_INFO},
+            [
+                Discovery(
+                    addon="core_zwave_js",
+                    service="zwave_js",
+                    uuid=uuid4(),
+                    config=ADDON_DISCOVERY_INFO,
+                )
+            ],
             {},
             {
                 "device": "/test",
@@ -2198,7 +2352,14 @@ async def different_device_server_version(*args):
             different_device_server_version,
         ),
         (
-            {"config": ADDON_DISCOVERY_INFO},
+            [
+                Discovery(
+                    addon="core_zwave_js",
+                    service="zwave_js",
+                    uuid=uuid4(),
+                    config=ADDON_DISCOVERY_INFO,
+                )
+            ],
             {},
             {
                 "device": "/test",
@@ -2275,9 +2436,7 @@ async def test_options_different_device(
     assert set_addon_options.call_count == 1
     new_addon_options["device"] = new_addon_options.pop("usb_path")
     assert set_addon_options.call_args == call(
-        hass,
-        "core_zwave_js",
-        {"options": new_addon_options},
+        "core_zwave_js", AddonsOptions(config=new_addon_options)
     )
     assert client.disconnect.call_count == disconnect_calls
     assert result["type"] is FlowResultType.SHOW_PROGRESS
@@ -2298,9 +2457,7 @@ async def test_options_different_device(
 
     assert set_addon_options.call_count == 2
     assert set_addon_options.call_args == call(
-        hass,
-        "core_zwave_js",
-        {"options": addon_options},
+        "core_zwave_js", AddonsOptions(config=addon_options)
     )
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_addon"
@@ -2331,7 +2488,14 @@ async def test_options_different_device(
     ),
     [
         (
-            {"config": ADDON_DISCOVERY_INFO},
+            [
+                Discovery(
+                    addon="core_zwave_js",
+                    service="zwave_js",
+                    uuid=uuid4(),
+                    config=ADDON_DISCOVERY_INFO,
+                )
+            ],
             {},
             {
                 "device": "/test",
@@ -2357,10 +2521,17 @@ async def test_options_different_device(
                 "emulate_hardware": False,
             },
             0,
-            [HassioAPIError(), None],
+            [SupervisorError(), None],
         ),
         (
-            {"config": ADDON_DISCOVERY_INFO},
+            [
+                Discovery(
+                    addon="core_zwave_js",
+                    service="zwave_js",
+                    uuid=uuid4(),
+                    config=ADDON_DISCOVERY_INFO,
+                )
+            ],
             {},
             {
                 "device": "/test",
@@ -2387,8 +2558,8 @@ async def test_options_different_device(
             },
             0,
             [
-                HassioAPIError(),
-                HassioAPIError(),
+                SupervisorError(),
+                SupervisorError(),
             ],
         ),
     ],
@@ -2441,9 +2612,7 @@ async def test_options_addon_restart_failed(
     assert set_addon_options.call_count == 1
     new_addon_options["device"] = new_addon_options.pop("usb_path")
     assert set_addon_options.call_args == call(
-        hass,
-        "core_zwave_js",
-        {"options": new_addon_options},
+        "core_zwave_js", AddonsOptions(config=new_addon_options)
     )
     assert client.disconnect.call_count == disconnect_calls
     assert result["type"] is FlowResultType.SHOW_PROGRESS
@@ -2461,9 +2630,7 @@ async def test_options_addon_restart_failed(
     old_addon_options.pop("network_key")
     assert set_addon_options.call_count == 2
     assert set_addon_options.call_args == call(
-        hass,
-        "core_zwave_js",
-        {"options": old_addon_options},
+        "core_zwave_js", AddonsOptions(config=old_addon_options)
     )
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_addon"
@@ -2494,7 +2661,14 @@ async def test_options_addon_restart_failed(
     ),
     [
         (
-            {"config": ADDON_DISCOVERY_INFO},
+            [
+                Discovery(
+                    addon="core_zwave_js",
+                    service="zwave_js",
+                    uuid=uuid4(),
+                    config=ADDON_DISCOVERY_INFO,
+                )
+            ],
             {},
             {
                 "device": "/test",
@@ -2587,7 +2761,14 @@ async def test_options_addon_running_server_info_failure(
     ),
     [
         (
-            {"config": ADDON_DISCOVERY_INFO},
+            [
+                Discovery(
+                    addon="core_zwave_js",
+                    service="zwave_js",
+                    uuid=uuid4(),
+                    config=ADDON_DISCOVERY_INFO,
+                )
+            ],
             {},
             {
                 "device": "/test",
@@ -2613,7 +2794,14 @@ async def test_options_addon_running_server_info_failure(
             0,
         ),
         (
-            {"config": ADDON_DISCOVERY_INFO},
+            [
+                Discovery(
+                    addon="core_zwave_js",
+                    service="zwave_js",
+                    uuid=uuid4(),
+                    config=ADDON_DISCOVERY_INFO,
+                )
+            ],
             {"use_addon": True},
             {
                 "device": "/test",
@@ -2685,7 +2873,7 @@ async def test_options_addon_not_installed(
 
     result = await hass.config_entries.options.async_configure(result["flow_id"])
 
-    assert install_addon.call_args == call(hass, "core_zwave_js")
+    assert install_addon.call_args == call("core_zwave_js")
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "configure_addon"
@@ -2697,9 +2885,7 @@ async def test_options_addon_not_installed(
 
     new_addon_options["device"] = new_addon_options.pop("usb_path")
     assert set_addon_options.call_args == call(
-        hass,
-        "core_zwave_js",
-        {"options": new_addon_options},
+        "core_zwave_js", AddonsOptions(config=new_addon_options)
     )
     assert client.disconnect.call_count == disconnect_calls
 

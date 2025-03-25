@@ -1,5 +1,7 @@
 """Media source for Google Photos."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 from enum import StrEnum
 import logging
@@ -18,8 +20,8 @@ from homeassistant.components.media_source import (
 )
 from homeassistant.core import HomeAssistant
 
-from . import GooglePhotosConfigEntry
 from .const import DOMAIN, READ_SCOPE
+from .coordinator import GooglePhotosConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +48,7 @@ class PhotosIdentifierType(StrEnum):
     ALBUM = "a"
 
     @classmethod
-    def of(cls, name: str) -> "PhotosIdentifierType":
+    def of(cls, name: str) -> PhotosIdentifierType:
         """Parse a PhotosIdentifierType by string value."""
         for enum in PhotosIdentifierType:
             if enum.value == name:

@@ -1,7 +1,7 @@
 """NYTGames tests configuration."""
 
 from collections.abc import Generator
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from nyt_games.models import ConnectionsStats, WordleStats
 import pytest
@@ -10,7 +10,6 @@ from homeassistant.components.nyt_games.const import DOMAIN
 from homeassistant.const import CONF_TOKEN
 
 from tests.common import MockConfigEntry, load_fixture
-from tests.components.smhi.common import AsyncMock
 
 
 @pytest.fixture

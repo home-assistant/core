@@ -28,6 +28,7 @@ from aioshelly.const import (
 )
 
 from homeassistant.components.number import NumberMode
+from homeassistant.components.sensor import SensorDeviceClass
 
 DOMAIN: Final = "shelly"
 
@@ -116,6 +117,10 @@ BATTERY_DEVICES_WITH_PERMANENT_CONNECTION: Final = [
 # Button/Click events for Block & RPC devices
 EVENT_SHELLY_CLICK: Final = "shelly.click"
 
+SHELLY_EMIT_EVENT_PATTERN: Final = re.compile(
+    r"(?:Shelly\s*\.\s*emitEvent\s*\(\s*[\"'`])(\w*)"
+)
+
 ATTR_CLICK_TYPE: Final = "click_type"
 ATTR_CHANNEL: Final = "channel"
 ATTR_DEVICE: Final = "device"
@@ -187,6 +192,13 @@ RPC_THERMOSTAT_SETTINGS: Final = {
     "step": 0.5,
 }
 
+BLU_TRV_TEMPERATURE_SETTINGS: Final = {
+    "min": 4,
+    "max": 30,
+    "step": 0.1,
+    "default": 20.0,
+}
+
 # Kelvin value for colorTemp
 KELVIN_MAX_VALUE: Final = 6500
 KELVIN_MIN_VALUE_WHITE: Final = 2700
@@ -230,6 +242,7 @@ OTA_SUCCESS = "ota_success"
 
 GEN1_RELEASE_URL = "https://shelly-api-docs.shelly.cloud/gen1/#changelog"
 GEN2_RELEASE_URL = "https://shelly-api-docs.shelly.cloud/gen2/changelog/"
+GEN2_BETA_RELEASE_URL = f"{GEN2_RELEASE_URL}#unreleased"
 DEVICES_WITHOUT_FIRMWARE_CHANGELOG = (
     MODEL_WALL_DISPLAY,
     MODEL_MOTION,
@@ -238,8 +251,6 @@ DEVICES_WITHOUT_FIRMWARE_CHANGELOG = (
 )
 
 CONF_GEN = "gen"
-
-SHELLY_PLUS_RGBW_CHANNELS = 4
 
 VIRTUAL_COMPONENTS_MAP = {
     "binary_sensor": {"types": ["boolean"], "modes": ["label"]},
@@ -257,3 +268,10 @@ VIRTUAL_NUMBER_MODE_MAP = {
 
 
 API_WS_URL = "/api/shelly/ws"
+
+COMPONENT_ID_PATTERN = re.compile(r"[a-z\d]+:\d+")
+
+ROLE_TO_DEVICE_CLASS_MAP = {
+    "current_humidity": SensorDeviceClass.HUMIDITY,
+    "current_temperature": SensorDeviceClass.TEMPERATURE,
+}

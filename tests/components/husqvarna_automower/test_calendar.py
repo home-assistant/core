@@ -6,6 +6,7 @@ from http import HTTPStatus
 from typing import Any
 from unittest.mock import AsyncMock
 import urllib
+import zoneinfo
 
 from aioautomower.utils import mower_list_to_dictionary_dataclass
 from freezegun.api import FrozenDateTimeFactory
@@ -93,12 +94,16 @@ async def test_empty_calendar(
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
     get_events: GetEventsFn,
+    mower_time_zone: zoneinfo.ZoneInfo,
 ) -> None:
     """State if there is no schedule set."""
     await setup_integration(hass, mock_config_entry)
     json_values = load_json_value_fixture("mower.json", DOMAIN)
     json_values["data"][0]["attributes"]["calendar"]["tasks"] = []
-    values = mower_list_to_dictionary_dataclass(json_values)
+    values = mower_list_to_dictionary_dataclass(
+        json_values,
+        mower_time_zone,
+    )
     mock_automower_client.get_status.return_value = values
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)

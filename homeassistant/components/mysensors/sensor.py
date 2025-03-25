@@ -35,7 +35,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from . import setup_mysensors_platform
@@ -50,7 +50,6 @@ from .const import (
     NodeDiscoveryInfo,
 )
 from .entity import MySensorNodeEntity, MySensorsChildEntity
-from .helpers import on_unload
 
 SENSORS: dict[str, SensorEntityDescription] = {
     "V_TEMP": SensorEntityDescription(
@@ -102,6 +101,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
         key="V_DIRECTION",
         native_unit_of_measurement=DEGREE,
         icon="mdi:compass",
+        device_class=SensorDeviceClass.WIND_DIRECTION,
     ),
     "V_WEIGHT": SensorEntityDescription(
         key="V_WEIGHT",
@@ -193,7 +193,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
     ),
     "V_EC": SensorEntityDescription(
         key="V_EC",
-        native_unit_of_measurement=UnitOfConductivity.MICROSIEMENS,
+        native_unit_of_measurement=UnitOfConductivity.MICROSIEMENS_PER_CM,
     ),
     "V_VAR": SensorEntityDescription(
         key="V_VAR",
@@ -210,7 +210,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up this platform for a specific ConfigEntry(==Gateway)."""
 
@@ -232,9 +232,7 @@ async def async_setup_entry(
         gateway: BaseAsyncGateway = hass.data[DOMAIN][MYSENSORS_GATEWAYS][gateway_id]
         async_add_entities([MyBatterySensor(gateway_id, gateway, node_id)])
 
-    on_unload(
-        hass,
-        config_entry.entry_id,
+    config_entry.async_on_unload(
         async_dispatcher_connect(
             hass,
             MYSENSORS_DISCOVERY.format(config_entry.entry_id, Platform.SENSOR),
@@ -242,9 +240,7 @@ async def async_setup_entry(
         ),
     )
 
-    on_unload(
-        hass,
-        config_entry.entry_id,
+    config_entry.async_on_unload(
         async_dispatcher_connect(
             hass,
             MYSENSORS_NODE_DISCOVERY,

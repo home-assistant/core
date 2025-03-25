@@ -1,22 +1,24 @@
 """Airgradient Update platform."""
 
 from datetime import timedelta
-from functools import cached_property
+
+from propcache.api import cached_property
 
 from homeassistant.components.update import UpdateDeviceClass, UpdateEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AirGradientConfigEntry, AirGradientCoordinator
 from .entity import AirGradientEntity
 
+PARALLEL_UPDATES = 1
 SCAN_INTERVAL = timedelta(hours=1)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: AirGradientConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Airgradient update platform."""
 

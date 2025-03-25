@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from functools import partial
 import logging
 from types import MappingProxyType
 from typing import Any
@@ -33,10 +34,12 @@ from .const import (
     CONF_PROMPT,
     CONF_RECOMMENDED,
     CONF_TEMPERATURE,
+    CONF_THINKING_BUDGET,
     DOMAIN,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_TEMPERATURE,
+    RECOMMENDED_THINKING_BUDGET,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -59,13 +62,10 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    client = anthropic.AsyncAnthropic(api_key=data[CONF_API_KEY])
-    await client.messages.create(
-        model="claude-3-haiku-20240307",
-        max_tokens=1,
-        messages=[{"role": "user", "content": "Hi"}],
-        timeout=10.0,
+    client = await hass.async_add_executor_job(
+        partial(anthropic.AsyncAnthropic, api_key=data[CONF_API_KEY])
     )
+    await client.models.list(timeout=10.0)
 
 
 class AnthropicConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -87,10 +87,13 @@ class AnthropicConfigFlow(ConfigFlow, domain=DOMAIN):
             except anthropic.APIConnectionError:
                 errors["base"] = "cannot_connect"
             except anthropic.APIStatusError as e:
-                if isinstance(e.body, dict):
-                    errors["base"] = e.body.get("error", {}).get("type", "unknown")
-                else:
-                    errors["base"] = "unknown"
+                errors["base"] = "unknown"
+                if (
+                    isinstance(e.body, dict)
+                    and (error := e.body.get("error"))
+                    and error.get("type") == "authentication_error"
+                ):
+                    errors["base"] = "authentication_error"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -118,7 +121,6 @@ class AnthropicOptionsFlow(OptionsFlow):
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
-        self.config_entry = config_entry
         self.last_rendered_recommended = config_entry.options.get(
             CONF_RECOMMENDED, False
         )
@@ -128,21 +130,29 @@ class AnthropicOptionsFlow(OptionsFlow):
     ) -> ConfigFlowResult:
         """Manage the options."""
         options: dict[str, Any] | MappingProxyType[str, Any] = self.config_entry.options
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             if user_input[CONF_RECOMMENDED] == self.last_rendered_recommended:
                 if user_input[CONF_LLM_HASS_API] == "none":
                     user_input.pop(CONF_LLM_HASS_API)
-                return self.async_create_entry(title="", data=user_input)
 
-            # Re-render the options again, now with the recommended options shown/hidden
-            self.last_rendered_recommended = user_input[CONF_RECOMMENDED]
+                if user_input.get(
+                    CONF_THINKING_BUDGET, RECOMMENDED_THINKING_BUDGET
+                ) >= user_input.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS):
+                    errors[CONF_THINKING_BUDGET] = "thinking_budget_too_large"
 
-            options = {
-                CONF_RECOMMENDED: user_input[CONF_RECOMMENDED],
-                CONF_PROMPT: user_input[CONF_PROMPT],
-                CONF_LLM_HASS_API: user_input[CONF_LLM_HASS_API],
-            }
+                if not errors:
+                    return self.async_create_entry(title="", data=user_input)
+            else:
+                # Re-render the options again, now with the recommended options shown/hidden
+                self.last_rendered_recommended = user_input[CONF_RECOMMENDED]
+
+                options = {
+                    CONF_RECOMMENDED: user_input[CONF_RECOMMENDED],
+                    CONF_PROMPT: user_input[CONF_PROMPT],
+                    CONF_LLM_HASS_API: user_input[CONF_LLM_HASS_API],
+                }
 
         suggested_values = options.copy()
         if not suggested_values.get(CONF_PROMPT):
@@ -156,6 +166,7 @@ class AnthropicOptionsFlow(OptionsFlow):
         return self.async_show_form(
             step_id="init",
             data_schema=schema,
+            errors=errors or None,
         )
 
 
@@ -205,6 +216,10 @@ def anthropic_config_option_schema(
                 CONF_TEMPERATURE,
                 default=RECOMMENDED_TEMPERATURE,
             ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+            vol.Optional(
+                CONF_THINKING_BUDGET,
+                default=RECOMMENDED_THINKING_BUDGET,
+            ): int,
         }
     )
     return schema

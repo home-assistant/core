@@ -14,13 +14,11 @@ from homeassistant.components.update import (
     UpdateEntity,
     UpdateEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .controller import OmadaSiteController
+from . import OmadaConfigEntry
 from .coordinator import POLL_DEVICES, OmadaCoordinator, OmadaDevicesCoordinator
 from .entity import OmadaDeviceEntity
 
@@ -40,12 +38,14 @@ class OmadaFirmwareUpdateCoordinator(OmadaCoordinator[FirmwareUpdateStatus]):  #
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: OmadaConfigEntry,
         omada_client: OmadaSiteClient,
         devices_coordinator: OmadaDevicesCoordinator,
     ) -> None:
         """Initialize my coordinator."""
-        super().__init__(hass, omada_client, "Firmware Updates", poll_delay=None)
+        super().__init__(
+            hass, config_entry, omada_client, "Firmware Updates", poll_delay=None
+        )
 
         self._devices_coordinator = devices_coordinator
         self._config_entry = config_entry
@@ -92,11 +92,11 @@ class OmadaFirmwareUpdateCoordinator(OmadaCoordinator[FirmwareUpdateStatus]):  #
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: OmadaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switches."""
-    controller: OmadaSiteController = hass.data[DOMAIN][config_entry.entry_id]
+    controller = config_entry.runtime_data
 
     devices = controller.devices_coordinator.data
 
@@ -121,7 +121,6 @@ class OmadaDeviceUpdate(
         | UpdateEntityFeature.PROGRESS
         | UpdateEntityFeature.RELEASE_NOTES
     )
-    _attr_has_entity_name = True
     _attr_device_class = UpdateDeviceClass.FIRMWARE
 
     def __init__(

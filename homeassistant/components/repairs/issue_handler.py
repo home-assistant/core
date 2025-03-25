@@ -53,7 +53,7 @@ class RepairsFlowManager(data_entry_flow.FlowManager):
         self,
         handler_key: str,
         *,
-        context: dict[str, Any] | None = None,
+        context: data_entry_flow.FlowContext | None = None,
         data: dict[str, Any] | None = None,
     ) -> RepairsFlow:
         """Create a flow. platform is a repairs module."""

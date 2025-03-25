@@ -1,10 +1,10 @@
 """Test the Teslemetry lock platform."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
-from syrupy import SnapshotAssertion
-from tesla_fleet_api.exceptions import VehicleOffline
+from syrupy.assertion import SnapshotAssertion
+from teslemetry_stream.const import Signal
 
 from homeassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN,
@@ -12,19 +12,20 @@ from homeassistant.components.lock import (
     SERVICE_UNLOCK,
     LockState,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
-from . import assert_entities, setup_platform
-from .const import COMMAND_OK
+from . import assert_entities, reload_platform, setup_platform
+from .const import COMMAND_OK, VEHICLE_DATA_ALT
 
 
 async def test_lock(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
+    mock_legacy: AsyncMock,
 ) -> None:
     """Tests that the lock entities are correct."""
 
@@ -32,16 +33,18 @@ async def test_lock(
     assert_entities(hass, entry.entry_id, entity_registry, snapshot)
 
 
-async def test_lock_offline(
+async def test_lock_alt(
     hass: HomeAssistant,
-    mock_vehicle_data,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    mock_vehicle_data: AsyncMock,
+    mock_legacy: AsyncMock,
 ) -> None:
-    """Tests that the lock entities are correct when offline."""
+    """Tests that the lock entities are correct."""
 
-    mock_vehicle_data.side_effect = VehicleOffline
-    await setup_platform(hass, [Platform.LOCK])
-    state = hass.states.get("lock.test_lock")
-    assert state.state == STATE_UNKNOWN
+    mock_vehicle_data.return_value = VEHICLE_DATA_ALT
+    entry = await setup_platform(hass, [Platform.LOCK])
+    assert_entities(hass, entry.entry_id, entity_registry, snapshot)
 
 
 async def test_lock_services(
@@ -104,3 +107,60 @@ async def test_lock_services(
         state = hass.states.get(entity_id)
         assert state.state == LockState.UNLOCKED
         call.assert_called_once()
+
+
+async def test_lock_streaming(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    mock_vehicle_data: AsyncMock,
+    mock_add_listener: AsyncMock,
+) -> None:
+    """Tests that the lock entities with streaming are correct."""
+
+    entry = await setup_platform(hass, [Platform.LOCK])
+
+    # Stream update
+    mock_add_listener.send(
+        {
+            "vin": VEHICLE_DATA_ALT["response"]["vin"],
+            "data": {
+                Signal.LOCKED: True,
+                Signal.CHARGE_PORT_LATCH: "ChargePortLatchEngaged",
+            },
+            "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+
+    await reload_platform(hass, entry, [Platform.LOCK])
+
+    # Assert the entities restored their values
+    for entity_id in (
+        "lock.test_lock",
+        "lock.test_charge_cable_lock",
+    ):
+        state = hass.states.get(entity_id)
+        assert state.state == snapshot(name=f"{entity_id}-locked")
+
+    # Stream update
+    mock_add_listener.send(
+        {
+            "vin": VEHICLE_DATA_ALT["response"]["vin"],
+            "data": {
+                Signal.LOCKED: False,
+                Signal.CHARGE_PORT_LATCH: "ChargePortLatchDisengaged",
+            },
+            "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+
+    await reload_platform(hass, entry, [Platform.LOCK])
+
+    # Assert the entities restored their values
+    for entity_id in (
+        "lock.test_lock",
+        "lock.test_charge_cable_lock",
+    ):
+        state = hass.states.get(entity_id)
+        assert state.state == snapshot(name=f"{entity_id}-unlocked")

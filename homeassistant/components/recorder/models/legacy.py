@@ -14,7 +14,7 @@ from homeassistant.const import (
     COMPRESSED_STATE_STATE,
 )
 from homeassistant.core import Context, State
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .state_attributes import decode_attributes_from_source
 from .time import process_timestamp
@@ -24,11 +24,12 @@ class LegacyLazyState(State):
     """A lazy version of core State after schema 31."""
 
     __slots__ = [
-        "_row",
         "_attributes",
-        "_last_changed_ts",
-        "_last_updated_ts",
         "_context",
+        "_last_changed_ts",
+        "_last_reported_ts",
+        "_last_updated_ts",
+        "_row",
         "attr_cache",
     ]
 
@@ -45,7 +46,7 @@ class LegacyLazyState(State):
         self.state = self._row.state or ""
         self._attributes: dict[str, Any] | None = None
         self._last_updated_ts: float | None = self._row.last_updated_ts or (
-            dt_util.utc_to_timestamp(start_time) if start_time else None
+            start_time.timestamp() if start_time else None
         )
         self._last_changed_ts: float | None = (
             self._row.last_changed_ts or self._last_updated_ts
@@ -145,7 +146,7 @@ def legacy_row_to_compressed_state(
         COMPRESSED_STATE_ATTRIBUTES: decode_attributes_from_row_legacy(row, attr_cache),
     }
     if start_time:
-        comp_state[COMPRESSED_STATE_LAST_UPDATED] = dt_util.utc_to_timestamp(start_time)
+        comp_state[COMPRESSED_STATE_LAST_UPDATED] = start_time.timestamp()
     else:
         row_last_updated_ts: float = row.last_updated_ts
         comp_state[COMPRESSED_STATE_LAST_UPDATED] = row_last_updated_ts

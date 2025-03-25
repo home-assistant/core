@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import intent
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, intent
 
 from . import DOMAIN, EVENT_SHOPPING_LIST_UPDATED
 
@@ -29,7 +28,7 @@ class AddItemIntent(intent.IntentHandler):
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         slots = self.async_validate_slots(intent_obj.slots)
-        item = slots["item"]["value"]
+        item = slots["item"]["value"].strip()
         await intent_obj.hass.data[DOMAIN].async_add(item)
 
         response = intent_obj.create_response()

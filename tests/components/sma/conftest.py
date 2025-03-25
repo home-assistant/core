@@ -22,9 +22,10 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         title=MOCK_DEVICE["name"],
-        unique_id=MOCK_DEVICE["serial"],
+        unique_id=str(MOCK_DEVICE["serial"]),
         data=MOCK_USER_INPUT,
         source=config_entries.SOURCE_IMPORT,
+        minor_version=2,
     )
 
 

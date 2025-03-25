@@ -29,8 +29,8 @@ from homeassistant.const import (
     EntityCategory,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     CONF_FLOW_TYPE,
@@ -59,7 +59,7 @@ from .const import (
     FEATURE_FLAGS_FAN_1C,
     FEATURE_FLAGS_FAN_P5,
     FEATURE_FLAGS_FAN_P9,
-    FEATURE_FLAGS_FAN_P10_P11,
+    FEATURE_FLAGS_FAN_P10_P11_P18,
     FEATURE_FLAGS_FAN_ZA5,
     FEATURE_SET_ANION,
     FEATURE_SET_AUTO_DETECT,
@@ -84,6 +84,7 @@ from .const import (
     MODEL_AIRPURIFIER_2H,
     MODEL_AIRPURIFIER_2S,
     MODEL_AIRPURIFIER_3C,
+    MODEL_AIRPURIFIER_3C_REV_A,
     MODEL_AIRPURIFIER_4,
     MODEL_AIRPURIFIER_4_LITE_RMA1,
     MODEL_AIRPURIFIER_4_LITE_RMB1,
@@ -98,6 +99,7 @@ from .const import (
     MODEL_FAN_P9,
     MODEL_FAN_P10,
     MODEL_FAN_P11,
+    MODEL_FAN_P18,
     MODEL_FAN_ZA1,
     MODEL_FAN_ZA3,
     MODEL_FAN_ZA4,
@@ -199,6 +201,7 @@ MODEL_TO_FEATURES_MAP = {
     MODEL_AIRPURIFIER_2H: FEATURE_FLAGS_AIRPURIFIER_2S,
     MODEL_AIRPURIFIER_2S: FEATURE_FLAGS_AIRPURIFIER_2S,
     MODEL_AIRPURIFIER_3C: FEATURE_FLAGS_AIRPURIFIER_3C,
+    MODEL_AIRPURIFIER_3C_REV_A: FEATURE_FLAGS_AIRPURIFIER_3C,
     MODEL_AIRPURIFIER_PRO: FEATURE_FLAGS_AIRPURIFIER_PRO,
     MODEL_AIRPURIFIER_PRO_V7: FEATURE_FLAGS_AIRPURIFIER_PRO_V7,
     MODEL_AIRPURIFIER_V1: FEATURE_FLAGS_AIRPURIFIER_V1,
@@ -209,8 +212,9 @@ MODEL_TO_FEATURES_MAP = {
     MODEL_AIRPURIFIER_4_PRO: FEATURE_FLAGS_AIRPURIFIER_4,
     MODEL_AIRPURIFIER_ZA1: FEATURE_FLAGS_AIRPURIFIER_ZA1,
     MODEL_FAN_1C: FEATURE_FLAGS_FAN_1C,
-    MODEL_FAN_P10: FEATURE_FLAGS_FAN_P10_P11,
-    MODEL_FAN_P11: FEATURE_FLAGS_FAN_P10_P11,
+    MODEL_FAN_P10: FEATURE_FLAGS_FAN_P10_P11_P18,
+    MODEL_FAN_P11: FEATURE_FLAGS_FAN_P10_P11_P18,
+    MODEL_FAN_P18: FEATURE_FLAGS_FAN_P10_P11_P18,
     MODEL_FAN_P5: FEATURE_FLAGS_FAN_P5,
     MODEL_FAN_P9: FEATURE_FLAGS_FAN_P9,
     MODEL_FAN_ZA1: FEATURE_FLAGS_FAN,
@@ -337,7 +341,7 @@ SWITCH_TYPES = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the switch from a config entry."""
     model = config_entry.data[CONF_MODEL]

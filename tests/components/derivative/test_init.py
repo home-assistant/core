@@ -42,7 +42,7 @@ async def test_setup_and_remove_config_entry(
 
     # Check the platform is setup correctly
     state = hass.states.get(derivative_entity_id)
-    assert state.state == "0"
+    assert state.state == "0.0"
     assert "unit_of_measurement" not in state.attributes
     assert state.attributes["source"] == "sensor.input"
 

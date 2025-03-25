@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Any
 
 from aiostreammagic import (
     RepeatMode as CambridgeRepeatMode,
@@ -12,6 +13,7 @@ from aiostreammagic import (
 )
 
 from homeassistant.components.media_player import (
+    BrowseMedia,
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
@@ -19,16 +21,25 @@ from homeassistant.components.media_player import (
     MediaType,
     RepeatMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import CambridgeAudioConfigEntry, media_browser
+from .const import (
+    CAMBRIDGE_MEDIA_TYPE_AIRABLE,
+    CAMBRIDGE_MEDIA_TYPE_INTERNET_RADIO,
+    CAMBRIDGE_MEDIA_TYPE_PRESET,
+    DOMAIN,
+)
 from .entity import CambridgeAudioEntity, command
 
 BASE_FEATURES = (
-    MediaPlayerEntityFeature.SELECT_SOURCE
+    MediaPlayerEntityFeature.BROWSE_MEDIA
+    | MediaPlayerEntityFeature.SELECT_SOURCE
     | MediaPlayerEntityFeature.TURN_OFF
     | MediaPlayerEntityFeature.TURN_ON
+    | MediaPlayerEntityFeature.PLAY_MEDIA
 )
 
 PREAMP_FEATURES = (
@@ -48,11 +59,13 @@ TRANSPORT_FEATURES: dict[TransportControl, MediaPlayerEntityFeature] = {
     TransportControl.STOP: MediaPlayerEntityFeature.STOP,
 }
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: CambridgeAudioConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Cambridge Audio device based on a config entry."""
     client: StreamMagicClient = entry.runtime_data
@@ -168,12 +181,9 @@ class CambridgeAudioDevice(CambridgeAudioEntity, MediaPlayerEntity):
         return volume / 100
 
     @property
-    def shuffle(self) -> bool | None:
+    def shuffle(self) -> bool:
         """Current shuffle configuration."""
-        mode_shuffle = self.client.play_state.mode_shuffle
-        if not mode_shuffle:
-            return False
-        return mode_shuffle != ShuffleMode.OFF
+        return self.client.play_state.mode_shuffle != ShuffleMode.OFF
 
     @property
     def repeat(self) -> RepeatMode | None:
@@ -285,3 +295,58 @@ class CambridgeAudioDevice(CambridgeAudioEntity, MediaPlayerEntity):
         if repeat in {RepeatMode.ALL, RepeatMode.ONE}:
             repeat_mode = CambridgeRepeatMode.ALL
         await self.client.set_repeat(repeat_mode)
+
+    @command
+    async def async_play_media(
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    ) -> None:
+        """Play media on the Cambridge Audio device."""
+
+        if media_type not in {
+            CAMBRIDGE_MEDIA_TYPE_PRESET,
+            CAMBRIDGE_MEDIA_TYPE_AIRABLE,
+            CAMBRIDGE_MEDIA_TYPE_INTERNET_RADIO,
+        }:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_media_type",
+                translation_placeholders={"media_type": media_type},
+            )
+
+        if media_type == CAMBRIDGE_MEDIA_TYPE_PRESET:
+            try:
+                preset_id = int(media_id)
+            except ValueError as ve:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="preset_non_integer",
+                    translation_placeholders={"preset_id": media_id},
+                ) from ve
+            preset = None
+            for _preset in self.client.preset_list.presets:
+                if _preset.preset_id == preset_id:
+                    preset = _preset
+            if not preset:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="missing_preset",
+                    translation_placeholders={"preset_id": media_id},
+                )
+            await self.client.recall_preset(preset.preset_id)
+
+        if media_type == CAMBRIDGE_MEDIA_TYPE_AIRABLE:
+            preset_id = int(media_id)
+            await self.client.play_radio_airable("Radio", preset_id)
+
+        if media_type == CAMBRIDGE_MEDIA_TYPE_INTERNET_RADIO:
+            await self.client.play_radio_url("Radio", media_id)
+
+    async def async_browse_media(
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
+    ) -> BrowseMedia:
+        """Implement the media browsing helper."""
+        return await media_browser.async_browse_media(
+            self.hass, self.client, media_content_id, media_content_type
+        )

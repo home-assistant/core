@@ -1,10 +1,11 @@
-"""Test the Whirlpool Sixth Sense climate domain."""
+"""Test the Honeywell climate domain."""
 
 import datetime
 from unittest.mock import MagicMock
 
 from aiohttp import ClientConnectionError
 import aiosomecomfort
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
@@ -29,6 +30,8 @@ from homeassistant.components.climate import (
 )
 from homeassistant.components.honeywell.climate import (
     DOMAIN,
+    MODE_PERMANENT_HOLD,
+    MODE_TEMPORARY_HOLD,
     PRESET_HOLD,
     RETRY,
     SCAN_INTERVAL,
@@ -1197,6 +1200,7 @@ async def test_unique_id(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test unique id convert to string."""
+    config_entry.add_to_hass(hass)
     entity_registry.async_get_or_create(
         Platform.CLIMATE,
         DOMAIN,
@@ -1207,3 +1211,59 @@ async def test_unique_id(
     await init_integration(hass, config_entry)
     entity_entry = entity_registry.async_get(f"climate.{device.name}")
     assert entity_entry.unique_id == str(device.deviceid)
+
+
+async def test_preset_mode(
+    hass: HomeAssistant,
+    device: MagicMock,
+    config_entry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test mode settings properly reflected."""
+    await init_integration(hass, config_entry)
+    entity_id = f"climate.{device.name}"
+
+    device.raw_ui_data["StatusHeat"] = 3
+    device.raw_ui_data["StatusCool"] = 3
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE
+
+    device.raw_ui_data["StatusHeat"] = MODE_TEMPORARY_HOLD
+    device.raw_ui_data["StatusCool"] = MODE_TEMPORARY_HOLD
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_HOLD
+
+    device.raw_ui_data["StatusHeat"] = MODE_PERMANENT_HOLD
+    device.raw_ui_data["StatusCool"] = MODE_PERMANENT_HOLD
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_HOLD
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_AWAY},
+        blocking=True,
+    )
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_AWAY
+
+    device.raw_ui_data["StatusHeat"] = 3
+    device.raw_ui_data["StatusCool"] = 3
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE

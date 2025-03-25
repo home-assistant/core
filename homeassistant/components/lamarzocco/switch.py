@@ -4,18 +4,22 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any
 
-from lmcloud.const import BoilerType
-from lmcloud.lm_machine import LaMarzoccoMachine
-from lmcloud.models import LaMarzoccoMachineConfig
+from pylamarzocco.const import BoilerType
+from pylamarzocco.devices.machine import LaMarzoccoMachine
+from pylamarzocco.exceptions import RequestNotSuccessful
+from pylamarzocco.models import LaMarzoccoMachineConfig
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import LaMarzoccoConfigEntry
-from .coordinator import LaMarzoccoUpdateCoordinator
+from .const import DOMAIN
+from .coordinator import LaMarzoccoConfigEntry, LaMarzoccoUpdateCoordinator
 from .entity import LaMarzoccoBaseEntity, LaMarzoccoEntity, LaMarzoccoEntityDescription
+
+PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -43,17 +47,28 @@ ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
         control_fn=lambda machine, state: machine.set_steam(state),
         is_on_fn=lambda config: config.boilers[BoilerType.STEAM].enabled,
     ),
+    LaMarzoccoSwitchEntityDescription(
+        key="smart_standby_enabled",
+        translation_key="smart_standby_enabled",
+        entity_category=EntityCategory.CONFIG,
+        control_fn=lambda machine, state: machine.set_smart_standby(
+            enabled=state,
+            mode=machine.config.smart_standby.mode,
+            minutes=machine.config.smart_standby.minutes,
+        ),
+        is_on_fn=lambda config: config.smart_standby.enabled,
+    ),
 )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: LaMarzoccoConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switch entities and services."""
 
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.config_coordinator
 
     entities: list[SwitchEntity] = []
     entities.extend(
@@ -77,12 +92,26 @@ class LaMarzoccoSwitchEntity(LaMarzoccoEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
-        await self.entity_description.control_fn(self.coordinator.device, True)
+        try:
+            await self.entity_description.control_fn(self.coordinator.device, True)
+        except RequestNotSuccessful as exc:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="switch_on_error",
+                translation_placeholders={"key": self.entity_description.key},
+            ) from exc
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
-        await self.entity_description.control_fn(self.coordinator.device, False)
+        try:
+            await self.entity_description.control_fn(self.coordinator.device, False)
+        except RequestNotSuccessful as exc:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="switch_off_error",
+                translation_placeholders={"key": self.entity_description.key},
+            ) from exc
         self.async_write_ha_state()
 
     @property
@@ -114,7 +143,14 @@ class LaMarzoccoAutoOnOffSwitchEntity(LaMarzoccoBaseEntity, SwitchEntity):
             self._identifier
         ]
         wake_up_sleep_entry.enabled = state
-        await self.coordinator.device.set_wake_up_sleep(wake_up_sleep_entry)
+        try:
+            await self.coordinator.device.set_wake_up_sleep(wake_up_sleep_entry)
+        except RequestNotSuccessful as exc:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="auto_on_off_error",
+                translation_placeholders={"id": self._identifier, "state": str(state)},
+            ) from exc
         self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:

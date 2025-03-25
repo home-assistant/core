@@ -8,6 +8,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -81,6 +82,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -154,6 +156,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -227,6 +230,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -300,6 +304,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -373,6 +378,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -446,6 +452,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -519,6 +526,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -592,6 +600,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -665,6 +674,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -738,6 +748,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -811,6 +822,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -884,6 +896,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -957,6 +970,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1030,6 +1044,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1103,6 +1118,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1176,6 +1192,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1249,6 +1266,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1322,6 +1340,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1395,6 +1414,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1468,6 +1488,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1541,6 +1562,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1614,6 +1636,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1687,6 +1710,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1751,6 +1775,90 @@
     'state': '0.074',
   })
 # ---
+# name: test_sensors[sensor.energy_site_island_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'on_grid',
+        'off_grid',
+        'off_grid_intentional',
+        'off_grid_unintentional',
+        'island_status_unknown',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.energy_site_island_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Island status',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'island_status',
+    'unique_id': '123456-island_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.energy_site_island_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Energy Site Island status',
+      'options': list([
+        'on_grid',
+        'off_grid',
+        'off_grid_intentional',
+        'off_grid_unintentional',
+        'island_status_unknown',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_island_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on_grid',
+  })
+# ---
+# name: test_sensors[sensor.energy_site_island_status-statealt]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Energy Site Island status',
+      'options': list([
+        'on_grid',
+        'off_grid',
+        'off_grid_intentional',
+        'off_grid_unintentional',
+        'island_status_unknown',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_island_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on_grid',
+  })
+# ---
 # name: test_sensors[sensor.energy_site_load_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1760,6 +1868,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1824,67 +1933,6 @@
     'state': '6.245',
   })
 # ---
-# name: test_sensors[sensor.energy_site_none-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.energy_site_none',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'teslemetry',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'island_status',
-    'unique_id': '123456-island_status',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[sensor.energy_site_none-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Energy Site None',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.energy_site_none',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on_grid',
-  })
-# ---
-# name: test_sensors[sensor.energy_site_none-statealt]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Energy Site None',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.energy_site_none',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on_grid',
-  })
-# ---
 # name: test_sensors[sensor.energy_site_percentage_charged-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1894,6 +1942,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1964,6 +2013,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2037,6 +2087,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2110,6 +2161,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2183,6 +2235,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2254,6 +2307,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2313,6 +2367,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2378,6 +2433,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2392,6 +2448,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
@@ -2400,7 +2459,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_battery_level',
-    'unique_id': 'LRWXF7EK4KC700000-charge_state_battery_level',
+    'unique_id': 'LRW3F7EK4NC700000-charge_state_battery_level',
     'unit_of_measurement': '%',
   })
 # ---
@@ -2445,6 +2504,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2473,7 +2533,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_battery_range',
-    'unique_id': 'LRWXF7EK4KC700000-charge_state_battery_range',
+    'unique_id': 'LRW3F7EK4NC700000-charge_state_battery_range',
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
@@ -2516,6 +2576,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2538,7 +2599,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_conn_charge_cable',
-    'unique_id': 'LRWXF7EK4KC700000-charge_state_conn_charge_cable',
+    'unique_id': 'LRW3F7EK4NC700000-charge_state_conn_charge_cable',
     'unit_of_measurement': None,
   })
 # ---
@@ -2577,6 +2638,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2602,7 +2664,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_charge_energy_added',
-    'unique_id': 'LRWXF7EK4KC700000-charge_state_charge_energy_added',
+    'unique_id': 'LRW3F7EK4NC700000-charge_state_charge_energy_added',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -2647,6 +2709,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2672,7 +2735,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_charge_rate',
-    'unique_id': 'LRWXF7EK4KC700000-charge_state_charge_rate',
+    'unique_id': 'LRW3F7EK4NC700000-charge_state_charge_rate',
     'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
   })
 # ---
@@ -2717,6 +2780,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2739,7 +2803,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_charger_actual_current',
-    'unique_id': 'LRWXF7EK4KC700000-charge_state_charger_actual_current',
+    'unique_id': 'LRW3F7EK4NC700000-charge_state_charger_actual_current',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -2784,6 +2848,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2806,7 +2871,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_charger_power',
-    'unique_id': 'LRWXF7EK4KC700000-charge_state_charger_power',
+    'unique_id': 'LRW3F7EK4NC700000-charge_state_charger_power',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -2851,6 +2916,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2873,7 +2939,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_charger_voltage',
-    'unique_id': 'LRWXF7EK4KC700000-charge_state_charger_voltage',
+    'unique_id': 'LRW3F7EK4NC700000-charge_state_charger_voltage',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -2925,6 +2991,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2947,7 +3014,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_charging_state',
-    'unique_id': 'LRWXF7EK4KC700000-charge_state_charging_state',
+    'unique_id': 'LRW3F7EK4NC700000-charge_state_charging_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -3004,6 +3071,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3029,7 +3097,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'drive_state_active_route_miles_to_arrival',
-    'unique_id': 'LRWXF7EK4KC700000-drive_state_active_route_miles_to_arrival',
+    'unique_id': 'LRW3F7EK4NC700000-drive_state_active_route_miles_to_arrival',
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
@@ -3074,6 +3142,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3099,7 +3168,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_driver_temp_setting',
-    'unique_id': 'LRWXF7EK4KC700000-climate_state_driver_temp_setting',
+    'unique_id': 'LRW3F7EK4NC700000-climate_state_driver_temp_setting',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -3144,6 +3213,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3172,7 +3242,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_est_battery_range',
-    'unique_id': 'LRWXF7EK4KC700000-charge_state_est_battery_range',
+    'unique_id': 'LRW3F7EK4NC700000-charge_state_est_battery_range',
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
@@ -3215,6 +3285,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3237,7 +3308,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_fast_charger_type',
-    'unique_id': 'LRWXF7EK4KC700000-charge_state_fast_charger_type',
+    'unique_id': 'LRW3F7EK4NC700000-charge_state_fast_charger_type',
     'unit_of_measurement': None,
   })
 # ---
@@ -3276,6 +3347,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3304,7 +3376,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_ideal_battery_range',
-    'unique_id': 'LRWXF7EK4KC700000-charge_state_ideal_battery_range',
+    'unique_id': 'LRW3F7EK4NC700000-charge_state_ideal_battery_range',
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
@@ -3349,6 +3421,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3374,7 +3447,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_inside_temp',
-    'unique_id': 'LRWXF7EK4KC700000-climate_state_inside_temp',
+    'unique_id': 'LRW3F7EK4NC700000-climate_state_inside_temp',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -3419,6 +3492,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3447,7 +3521,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_odometer',
-    'unique_id': 'LRWXF7EK4KC700000-vehicle_state_odometer',
+    'unique_id': 'LRW3F7EK4NC700000-vehicle_state_odometer',
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
@@ -3492,6 +3566,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3517,7 +3592,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_outside_temp',
-    'unique_id': 'LRWXF7EK4KC700000-climate_state_outside_temp',
+    'unique_id': 'LRW3F7EK4NC700000-climate_state_outside_temp',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -3562,6 +3637,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3587,7 +3663,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_passenger_temp_setting',
-    'unique_id': 'LRWXF7EK4KC700000-climate_state_passenger_temp_setting',
+    'unique_id': 'LRW3F7EK4NC700000-climate_state_passenger_temp_setting',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -3632,6 +3708,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3654,7 +3731,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'drive_state_power',
-    'unique_id': 'LRWXF7EK4KC700000-drive_state_power',
+    'unique_id': 'LRW3F7EK4NC700000-drive_state_power',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -3704,6 +3781,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3726,7 +3804,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'drive_state_shift_state',
-    'unique_id': 'LRWXF7EK4KC700000-drive_state_shift_state',
+    'unique_id': 'LRW3F7EK4NC700000-drive_state_shift_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -3779,6 +3857,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3804,7 +3883,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'drive_state_speed',
-    'unique_id': 'LRWXF7EK4KC700000-drive_state_speed',
+    'unique_id': 'LRW3F7EK4NC700000-drive_state_speed',
     'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
   })
 # ---
@@ -3821,7 +3900,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'unavailable',
   })
 # ---
 # name: test_sensors[sensor.test_speed-statealt]
@@ -3837,7 +3916,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'unavailable',
   })
 # ---
 # name: test_sensors[sensor.test_state_of_charge_at_arrival-entry]
@@ -3849,6 +3928,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3871,7 +3951,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'drive_state_active_route_energy_at_arrival',
-    'unique_id': 'LRWXF7EK4KC700000-drive_state_active_route_energy_at_arrival',
+    'unique_id': 'LRW3F7EK4NC700000-drive_state_active_route_energy_at_arrival',
     'unit_of_measurement': '%',
   })
 # ---
@@ -3888,7 +3968,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unavailable',
   })
 # ---
 # name: test_sensors[sensor.test_state_of_charge_at_arrival-statealt]
@@ -3904,7 +3984,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unavailable',
   })
 # ---
 # name: test_sensors[sensor.test_time_to_arrival-entry]
@@ -3914,6 +3994,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3936,7 +4017,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'drive_state_active_route_minutes_to_arrival',
-    'unique_id': 'LRWXF7EK4KC700000-drive_state_active_route_minutes_to_arrival',
+    'unique_id': 'LRW3F7EK4NC700000-drive_state_active_route_minutes_to_arrival',
     'unit_of_measurement': None,
   })
 # ---
@@ -3975,6 +4056,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3997,7 +4079,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_minutes_to_full_charge',
-    'unique_id': 'LRWXF7EK4KC700000-charge_state_minutes_to_full_charge',
+    'unique_id': 'LRW3F7EK4NC700000-charge_state_minutes_to_full_charge',
     'unit_of_measurement': None,
   })
 # ---
@@ -4038,6 +4120,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -4066,7 +4149,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_tpms_pressure_fl',
-    'unique_id': 'LRWXF7EK4KC700000-vehicle_state_tpms_pressure_fl',
+    'unique_id': 'LRW3F7EK4NC700000-vehicle_state_tpms_pressure_fl',
     'unit_of_measurement': <UnitOfPressure.PSI: 'psi'>,
   })
 # ---
@@ -4111,6 +4194,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -4139,7 +4223,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_tpms_pressure_fr',
-    'unique_id': 'LRWXF7EK4KC700000-vehicle_state_tpms_pressure_fr',
+    'unique_id': 'LRW3F7EK4NC700000-vehicle_state_tpms_pressure_fr',
     'unit_of_measurement': <UnitOfPressure.PSI: 'psi'>,
   })
 # ---
@@ -4184,6 +4268,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -4212,7 +4297,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_tpms_pressure_rl',
-    'unique_id': 'LRWXF7EK4KC700000-vehicle_state_tpms_pressure_rl',
+    'unique_id': 'LRW3F7EK4NC700000-vehicle_state_tpms_pressure_rl',
     'unit_of_measurement': <UnitOfPressure.PSI: 'psi'>,
   })
 # ---
@@ -4257,6 +4342,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -4285,7 +4371,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_tpms_pressure_rr',
-    'unique_id': 'LRWXF7EK4KC700000-vehicle_state_tpms_pressure_rr',
+    'unique_id': 'LRW3F7EK4NC700000-vehicle_state_tpms_pressure_rr',
     'unit_of_measurement': <UnitOfPressure.PSI: 'psi'>,
   })
 # ---
@@ -4330,6 +4416,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -4352,7 +4439,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'drive_state_active_route_traffic_minutes_delay',
-    'unique_id': 'LRWXF7EK4KC700000-drive_state_active_route_traffic_minutes_delay',
+    'unique_id': 'LRW3F7EK4NC700000-drive_state_active_route_traffic_minutes_delay',
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
@@ -4397,6 +4484,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -4419,7 +4507,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_usable_battery_level',
-    'unique_id': 'LRWXF7EK4KC700000-charge_state_usable_battery_level',
+    'unique_id': 'LRW3F7EK4NC700000-charge_state_usable_battery_level',
     'unit_of_measurement': '%',
   })
 # ---
@@ -4462,6 +4550,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -4521,6 +4610,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -4582,6 +4672,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -4655,6 +4746,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -4726,6 +4818,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -4785,6 +4878,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -4844,6 +4938,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -4903,6 +4998,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -4954,4 +5050,25 @@
     'last_updated': <ANY>,
     'state': 'unknown',
   })
+# ---
+# name: test_sensors_streaming[sensor.test_battery_level-state]
+  '90'
+# ---
+# name: test_sensors_streaming[sensor.test_charge_cable-state]
+  'unknown'
+# ---
+# name: test_sensors_streaming[sensor.test_charge_energy_added-state]
+  '10'
+# ---
+# name: test_sensors_streaming[sensor.test_charger_power-state]
+  '2'
+# ---
+# name: test_sensors_streaming[sensor.test_charging-state]
+  'charging'
+# ---
+# name: test_sensors_streaming[sensor.test_time_to_arrival-state]
+  'unknown'
+# ---
+# name: test_sensors_streaming[sensor.test_time_to_full_charge-state]
+  'unknown'
 # ---

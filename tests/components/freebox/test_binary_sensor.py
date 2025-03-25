@@ -4,6 +4,7 @@ from copy import deepcopy
 from unittest.mock import Mock
 
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 
 from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
@@ -45,6 +46,7 @@ async def test_raid_array_degraded(
     )
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_home(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory, router: Mock
 ) -> None:

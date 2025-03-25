@@ -17,10 +17,9 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SmConfigEntry
-from .coordinator import SmDataUpdateCoordinator
+from .coordinator import SmConfigEntry, SmDataUpdateCoordinator
 from .entity import SmEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -52,6 +51,7 @@ SWITCHES: list[SmSwitchEntityDescription] = [
         translation_key="auto_zigbee_update",
         entity_category=EntityCategory.CONFIG,
         setting=Settings.ZB_AUTOUPDATE,
+        entity_registry_enabled_default=False,
         state_fn=lambda x: x.auto_zigbee,
     ),
     SmSwitchEntityDescription(
@@ -67,7 +67,7 @@ SWITCHES: list[SmSwitchEntityDescription] = [
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SmConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize switches for SLZB-06 device."""
     coordinator = entry.runtime_data.data

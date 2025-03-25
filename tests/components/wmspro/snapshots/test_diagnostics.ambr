@@ -149,6 +149,8 @@
         }),
         'status': dict({
         }),
+        'unknownProducts': dict({
+        }),
       }),
       '97358': dict({
         'actions': dict({
@@ -202,6 +204,8 @@
           '19239': 'Terrasse',
         }),
         'status': dict({
+        }),
+        'unknownProducts': dict({
         }),
       }),
     }),

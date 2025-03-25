@@ -5,39 +5,31 @@ from unittest.mock import MagicMock
 from matter_server.client.models.node import MatterNode
 from matter_server.common.models import EventType, MatterNodeEvent
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.event import ATTR_EVENT_TYPE, ATTR_EVENT_TYPES
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from .common import setup_integration_with_node_fixture, trigger_subscription_callback
-
-
-@pytest.fixture(name="generic_switch_node")
-async def switch_node_fixture(
-    hass: HomeAssistant, matter_client: MagicMock
-) -> MatterNode:
-    """Fixture for a GenericSwitch node."""
-    return await setup_integration_with_node_fixture(
-        hass, "generic_switch", matter_client
-    )
+from .common import snapshot_matter_entities, trigger_subscription_callback
 
 
-@pytest.fixture(name="generic_switch_multi_node")
-async def multi_switch_node_fixture(
-    hass: HomeAssistant, matter_client: MagicMock
-) -> MatterNode:
-    """Fixture for a GenericSwitch node with multiple buttons."""
-    return await setup_integration_with_node_fixture(
-        hass, "generic_switch_multi", matter_client
-    )
+@pytest.mark.usefixtures("matter_devices")
+async def test_events(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test events."""
+    snapshot_matter_entities(hass, entity_registry, snapshot, Platform.EVENT)
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
+@pytest.mark.parametrize("node_fixture", ["generic_switch"])
 async def test_generic_switch_node(
     hass: HomeAssistant,
     matter_client: MagicMock,
-    generic_switch_node: MatterNode,
+    matter_node: MatterNode,
 ) -> None:
     """Test event entity for a GenericSwitch node."""
     state = hass.states.get("event.mock_generic_switch_button")
@@ -57,7 +49,7 @@ async def test_generic_switch_node(
         matter_client,
         EventType.NODE_EVENT,
         MatterNodeEvent(
-            node_id=generic_switch_node.node_id,
+            node_id=matter_node.node_id,
             endpoint_id=1,
             cluster_id=59,
             event_id=1,
@@ -72,12 +64,11 @@ async def test_generic_switch_node(
     assert state.attributes[ATTR_EVENT_TYPE] == "initial_press"
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
+@pytest.mark.parametrize("node_fixture", ["generic_switch_multi"])
 async def test_generic_switch_multi_node(
     hass: HomeAssistant,
     matter_client: MagicMock,
-    generic_switch_multi_node: MatterNode,
+    matter_node: MatterNode,
 ) -> None:
     """Test event entity for a GenericSwitch node with multiple buttons."""
     state_button_1 = hass.states.get("event.mock_generic_switch_button_1")
@@ -105,7 +96,7 @@ async def test_generic_switch_multi_node(
         matter_client,
         EventType.NODE_EVENT,
         MatterNodeEvent(
-            node_id=generic_switch_multi_node.node_id,
+            node_id=matter_node.node_id,
             endpoint_id=1,
             cluster_id=59,
             event_id=6,

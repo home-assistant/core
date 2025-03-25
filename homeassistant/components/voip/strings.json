@@ -10,16 +10,6 @@
     }
   },
   "entity": {
-    "assist_satellite": {
-      "assist_satellite": {
-        "state": {
-          "listening_wake_word": "[%key:component::assist_satellite::entity_component::_::state::listening_wake_word%]",
-          "listening_command": "[%key:component::assist_satellite::entity_component::_::state::listening_command%]",
-          "responding": "[%key:component::assist_satellite::entity_component::_::state::responding%]",
-          "processing": "[%key:component::assist_satellite::entity_component::_::state::processing%]"
-        }
-      }
-    },
     "binary_sensor": {
       "call_in_progress": {
         "name": "Call in progress"
@@ -63,9 +53,15 @@
     "step": {
       "init": {
         "data": {
-          "sip_port": "SIP port"
+          "sip_port": "SIP port",
+          "sip_user": "SIP user"
         }
       }
+    }
+  },
+  "exceptions": {
+    "non_tts_announcement": {
+      "message": "VoIP does not currently support non-TTS announcements"
     }
   }
 }

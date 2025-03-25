@@ -22,6 +22,38 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "state_e_activated": {
+        "name": "EV error"
+      },
+      "overtemp": {
+        "name": "Thermal throttling"
+      },
+      "critical_temp": {
+        "name": "Overheating"
+      },
+      "overcurrent": {
+        "name": "Overcurrent"
+      },
+      "meter_fault": {
+        "name": "Metering error"
+      },
+      "undervoltage": {
+        "name": "Undervoltage"
+      },
+      "overvoltage": {
+        "name": "Overvoltage"
+      },
+      "rcd_error": {
+        "name": "RCD error"
+      },
+      "cp_diode_failure": {
+        "name": "EV diode short"
+      },
+      "contactor_failure": {
+        "name": "Relay contacts welded"
+      }
+    },
     "button": {
       "charge_start": {
         "name": "Charge start"
@@ -32,7 +64,7 @@
     },
     "number": {
       "led_max_brightness": {
-        "name": "Led brightness"
+        "name": "LED brightness"
       },
       "dynamic_limit": {
         "name": "Dynamic limit"
@@ -54,11 +86,13 @@
         "name": "State",
         "state": {
           "available": "Available",
+          "charging": "[%key:common::state::charging%]",
           "connected": "Connected",
+          "error": "Error",
+          "locked": "Locked",
           "need_auth": "Waiting for authentication",
           "paused": "Paused",
-          "charging": "Charging",
-          "error": "Error",
+          "paused_by_scheduler": "Paused by scheduler",
           "updating_firmware": "Updating firmware"
         }
       },
@@ -125,6 +159,17 @@
       },
       "pf_l3": {
         "name": "Power factor L3"
+      }
+    },
+    "switch": {
+      "authentication": {
+        "name": "Authentication"
+      },
+      "force_single_phase": {
+        "name": "Force single phase"
+      },
+      "lock": {
+        "name": "Lock"
       }
     }
   }

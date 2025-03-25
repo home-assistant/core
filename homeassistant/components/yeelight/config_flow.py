@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, Self
 from urllib.parse import urlparse
 
 import voluptuous as vol
@@ -11,7 +11,7 @@ import yeelight
 from yeelight.aio import AsyncBulb
 from yeelight.main import get_known_models
 
-from homeassistant.components import dhcp, onboarding, ssdp, zeroconf
+from homeassistant.components import onboarding
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigEntryState,
@@ -22,7 +22,10 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_ID, CONF_MODEL, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.helpers.typing import VolDictType
 
 from .const import (
@@ -53,35 +56,37 @@ class YeelightConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _discovered_ip: str
+    _discovered_ip: str = ""
     _discovered_model: str
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowHandler:
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> OptionsFlowHandler:
         """Return the options flow."""
-        return OptionsFlowHandler(config_entry)
+        return OptionsFlowHandler()
 
     def __init__(self) -> None:
         """Initialize the config flow."""
         self._discovered_devices: dict[str, Any] = {}
 
     async def async_step_homekit(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle discovery from homekit."""
         self._discovered_ip = discovery_info.host
         return await self._async_handle_discovery()
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle discovery from dhcp."""
         self._discovered_ip = discovery_info.ip
         return await self._async_handle_discovery()
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle discovery from zeroconf."""
         self._discovered_ip = discovery_info.host
@@ -89,7 +94,7 @@ class YeelightConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self._async_handle_discovery_with_unique_id()
 
     async def async_step_ssdp(
-        self, discovery_info: ssdp.SsdpServiceInfo
+        self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle discovery from ssdp."""
         self._discovered_ip = urlparse(discovery_info.ssdp_headers["location"]).hostname
@@ -119,10 +124,8 @@ class YeelightConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _async_handle_discovery(self) -> ConfigFlowResult:
         """Handle any discovery."""
-        self.context[CONF_HOST] = self._discovered_ip
-        for progress in self._async_in_progress():
-            if progress.get("context", {}).get(CONF_HOST) == self._discovered_ip:
-                return self.async_abort(reason="already_in_progress")
+        if self.hass.config_entries.flow.async_has_matching_flow(self):
+            return self.async_abort(reason="already_in_progress")
         self._async_abort_entries_match({CONF_HOST: self._discovered_ip})
 
         try:
@@ -139,6 +142,10 @@ class YeelightConfigFlow(ConfigFlow, domain=DOMAIN):
             updates={CONF_HOST: self._discovered_ip}, reload_on_update=False
         )
         return await self.async_step_discovery_confirm()
+
+    def is_matching(self, other_flow: Self) -> bool:
+        """Return True if other_flow is matching this flow."""
+        return other_flow._discovered_ip == self._discovered_ip  # noqa: SLF001
 
     async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None
@@ -294,16 +301,12 @@ class YeelightConfigFlow(ConfigFlow, domain=DOMAIN):
 class OptionsFlowHandler(OptionsFlow):
     """Handle a option flow for Yeelight."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize the option flow."""
-        self._config_entry = config_entry
-
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        data = self._config_entry.data
-        options = self._config_entry.options
+        data = self.config_entry.data
+        options = self.config_entry.options
         detected_model = data.get(CONF_DETECTED_MODEL)
         model = options[CONF_MODEL] or detected_model
 

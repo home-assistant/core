@@ -14,7 +14,7 @@
       }
     },
     "error": {
-      "invalid_key": "Failed to register with provided key. If this keeps happening, try restarting the gateway.",
+      "invalid_security_code": "Failed to register with provided key. If this keeps happening, try restarting the gateway.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "timeout": "Timeout validating the code.",
       "cannot_authenticate": "Cannot authenticate, is Gateway paired with another server like e.g. Homekit?"

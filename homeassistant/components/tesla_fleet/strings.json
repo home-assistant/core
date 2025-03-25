@@ -8,7 +8,9 @@
       "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
-      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]"
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reauth_account_mismatch": "The reauthentication account does not match the original account"
     },
     "error": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
@@ -327,7 +329,7 @@
         "name": "Charging",
         "state": {
           "starting": "Starting",
-          "charging": "Charging",
+          "charging": "[%key:common::state::charging%]",
           "disconnected": "Disconnected",
           "stopped": "Stopped",
           "complete": "Complete",
@@ -412,6 +414,19 @@
       "vehicle_state_odometer": {
         "name": "Odometer"
       },
+      "island_status": {
+        "name": "Grid Status",
+        "state": {
+          "island_status_unknown": "Unknown",
+          "on_grid": "Connected",
+          "off_grid": "Disconnected",
+          "off_grid_unintentional": "Disconnected unintentionally",
+          "off_grid_intentional": "Disconnected intentionally"
+        }
+      },
+      "storm_mode_active": {
+        "name": "Storm Watch active"
+      },
       "vehicle_state_tpms_pressure_fl": {
         "name": "Tire pressure front left"
       },
@@ -441,10 +456,73 @@
       },
       "wall_connector_state": {
         "name": "State code"
+      },
+      "solar_energy_exported": {
+        "name": "Solar exported"
+      },
+      "generator_energy_exported": {
+        "name": "Generator exported"
+      },
+      "grid_energy_imported": {
+        "name": "Grid imported"
+      },
+      "grid_services_energy_imported": {
+        "name": "Grid services imported"
+      },
+      "grid_services_energy_exported": {
+        "name": "Grid services exported"
+      },
+      "grid_energy_exported_from_solar": {
+        "name": "Grid exported from solar"
+      },
+      "grid_energy_exported_from_generator": {
+        "name": "Grid exported from generator"
+      },
+      "grid_energy_exported_from_battery": {
+        "name": "Grid exported from battery"
+      },
+      "battery_energy_exported": {
+        "name": "Battery exported"
+      },
+      "battery_energy_imported_from_grid": {
+        "name": "Battery imported from grid"
+      },
+      "battery_energy_imported_from_solar": {
+        "name": "Battery imported from solar"
+      },
+      "battery_energy_imported_from_generator": {
+        "name": "Battery imported from generator"
+      },
+      "consumer_energy_imported_from_grid": {
+        "name": "Consumer imported from grid"
+      },
+      "consumer_energy_imported_from_solar": {
+        "name": "Consumer imported from solar"
+      },
+      "consumer_energy_imported_from_battery": {
+        "name": "Consumer imported from battery"
+      },
+      "consumer_energy_imported_from_generator": {
+        "name": "Consumer imported from generator"
+      },
+      "total_home_usage": {
+        "name": "Home usage"
+      },
+      "total_battery_charge": {
+        "name": "Battery charged"
+      },
+      "total_battery_discharge": {
+        "name": "Battery discharged"
+      },
+      "total_solar_generation": {
+        "name": "Solar generated"
+      },
+      "total_grid_energy_exported": {
+        "name": "Grid exported"
       }
     },
     "switch": {
-      "charge_state_user_charge_enable_request": {
+      "charge_state_charging_state": {
         "name": "Charge"
       },
       "climate_state_auto_seat_climate_left": {
@@ -491,9 +569,6 @@
     },
     "command_no_reason": {
       "message": "Command was unsuccessful but did not return a reason why."
-    },
-    "command_signing": {
-      "message": "Vehicle requires command signing. Please see documentation for more details."
     },
     "invalid_cop_temp": {
       "message": "Cabin overheat protection does not support that temperature."

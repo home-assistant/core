@@ -18,8 +18,7 @@ from homeassistant.const import (
     SERVICE_RELOAD,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.helpers import collection
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import collection, config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.service
@@ -385,7 +384,7 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
     @callback
     def async_set_datetime(self, date=None, time=None, datetime=None, timestamp=None):
         """Set a new date / time."""
-        if timestamp:
+        if timestamp is not None:
             datetime = dt_util.as_local(dt_util.utc_from_timestamp(timestamp))
 
         if datetime:

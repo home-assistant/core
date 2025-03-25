@@ -6,6 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/apcupsd",
   "iot_class": "local_polling",
   "loggers": ["apcaccess"],
-  "quality_scale": "silver",
   "requirements": ["aioapcaccess==0.4.2"]
 }

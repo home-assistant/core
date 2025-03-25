@@ -26,8 +26,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import collection, config_entry_oauth2_flow
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import (
+    collection,
+    config_entry_oauth2_flow,
+    config_validation as cv,
+)
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.loader import (
@@ -36,8 +39,9 @@ from homeassistant.loader import (
     async_get_integration,
 )
 from homeassistant.util import slugify
+from homeassistant.util.hass_dict import HassKey
 
-__all__ = ["ClientCredential", "AuthorizationServer", "async_import_client_credential"]
+__all__ = ["AuthorizationServer", "ClientCredential", "async_import_client_credential"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,7 +49,7 @@ DOMAIN = "application_credentials"
 
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
-DATA_STORAGE = "storage"
+DATA_COMPONENT: HassKey[ApplicationCredentialsStorageCollection] = HassKey(DOMAIN)
 CONF_AUTH_DOMAIN = "auth_domain"
 DEFAULT_IMPORT_NAME = "Import from configuration.yaml"
 
@@ -142,15 +146,13 @@ class ApplicationCredentialsStorageCollection(collection.DictStorageCollection):
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Application Credentials."""
-    hass.data[DOMAIN] = {}
-
     id_manager = collection.IDManager()
     storage_collection = ApplicationCredentialsStorageCollection(
         Store(hass, STORAGE_VERSION, STORAGE_KEY),
         id_manager,
     )
     await storage_collection.async_load()
-    hass.data[DOMAIN][DATA_STORAGE] = storage_collection
+    hass.data[DATA_COMPONENT] = storage_collection
 
     collection.DictStorageCollectionWebsocket(
         storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
@@ -175,7 +177,6 @@ async def async_import_client_credential(
     """Import an existing credential from configuration.yaml."""
     if DOMAIN not in hass.data:
         raise ValueError("Integration 'application_credentials' not setup")
-    storage_collection = hass.data[DOMAIN][DATA_STORAGE]
     item = {
         CONF_DOMAIN: domain,
         CONF_CLIENT_ID: credential.client_id,
@@ -183,7 +184,7 @@ async def async_import_client_credential(
         CONF_AUTH_DOMAIN: auth_domain if auth_domain else domain,
     }
     item[CONF_NAME] = credential.name if credential.name else DEFAULT_IMPORT_NAME
-    await storage_collection.async_import_item(item)
+    await hass.data[DATA_COMPONENT].async_import_item(item)
 
 
 class AuthImplementation(config_entry_oauth2_flow.LocalOAuth2Implementation):
@@ -222,8 +223,7 @@ async def _async_provide_implementation(
     if not platform:
         return []
 
-    storage_collection = hass.data[DOMAIN][DATA_STORAGE]
-    credentials = storage_collection.async_client_credentials(domain)
+    credentials = hass.data[DATA_COMPONENT].async_client_credentials(domain)
     if hasattr(platform, "async_get_auth_implementation"):
         return [
             await platform.async_get_auth_implementation(hass, auth_domain, credential)
@@ -246,8 +246,7 @@ async def _async_config_entry_app_credentials(
     ):
         return None
 
-    storage_collection = hass.data[DOMAIN][DATA_STORAGE]
-    for item in storage_collection.async_items():
+    for item in hass.data[DATA_COMPONENT].async_items():
         item_id = item[CONF_ID]
         if (
             item[CONF_DOMAIN] == config_entry.domain

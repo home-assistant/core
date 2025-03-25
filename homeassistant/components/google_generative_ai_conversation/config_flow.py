@@ -3,18 +3,17 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from functools import partial
 import logging
 from types import MappingProxyType
 from typing import Any
 
-from google.ai import generativelanguage_v1beta
-from google.api_core.client_options import ClientOptions
-from google.api_core.exceptions import ClientError, GoogleAPIError
-import google.generativeai as genai
+from google import genai  # type: ignore[attr-defined]
+from google.genai.errors import APIError, ClientError
+from requests.exceptions import Timeout
 import voluptuous as vol
 
 from homeassistant.config_entries import (
+    SOURCE_REAUTH,
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
@@ -45,6 +44,7 @@ from .const import (
     CONF_TEMPERATURE,
     CONF_TOP_K,
     CONF_TOP_P,
+    CONF_USE_GOOGLE_SEARCH_TOOL,
     DOMAIN,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_HARM_BLOCK_THRESHOLD,
@@ -52,6 +52,8 @@ from .const import (
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_TOP_K,
     RECOMMENDED_TOP_P,
+    RECOMMENDED_USE_GOOGLE_SEARCH_TOOL,
+    TIMEOUT_MILLIS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -69,25 +71,26 @@ RECOMMENDED_OPTIONS = {
 }
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
+async def validate_input(data: dict[str, Any]) -> None:
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    client = generativelanguage_v1beta.ModelServiceAsyncClient(
-        client_options=ClientOptions(api_key=data[CONF_API_KEY])
+    client = genai.Client(api_key=data[CONF_API_KEY])
+    await client.aio.models.list(
+        config={
+            "http_options": {
+                "timeout": TIMEOUT_MILLIS,
+            },
+            "query_base": True,
+        }
     )
-    await client.list_models(timeout=5.0)
 
 
 class GoogleGenerativeAIConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Google Generative AI Conversation."""
 
     VERSION = 1
-
-    def __init__(self) -> None:
-        """Initialize a new GoogleGenerativeAIConfigFlow."""
-        self.reauth_entry: ConfigEntry | None = None
 
     async def async_step_api(
         self, user_input: dict[str, Any] | None = None
@@ -96,9 +99,9 @@ class GoogleGenerativeAIConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             try:
-                await validate_input(self.hass, user_input)
-            except GoogleAPIError as err:
-                if isinstance(err, ClientError) and err.reason == "API_KEY_INVALID":
+                await validate_input(user_input)
+            except (APIError, Timeout) as err:
+                if isinstance(err, ClientError) and "API_KEY_INVALID" in str(err):
                     errors["base"] = "invalid_auth"
                 else:
                     errors["base"] = "cannot_connect"
@@ -106,9 +109,9 @@ class GoogleGenerativeAIConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                if self.reauth_entry:
+                if self.source == SOURCE_REAUTH:
                     return self.async_update_reload_and_abort(
-                        self.reauth_entry,
+                        self._get_reauth_entry(),
                         data=user_input,
                     )
                 return self.async_create_entry(
@@ -135,9 +138,6 @@ class GoogleGenerativeAIConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
-        self.reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -146,12 +146,13 @@ class GoogleGenerativeAIConfigFlow(ConfigFlow, domain=DOMAIN):
         """Dialog that informs the user that reauth is required."""
         if user_input is not None:
             return await self.async_step_api()
-        assert self.reauth_entry
+
+        reauth_entry = self._get_reauth_entry()
         return self.async_show_form(
             step_id="reauth_confirm",
             description_placeholders={
-                CONF_NAME: self.reauth_entry.title,
-                CONF_API_KEY: self.reauth_entry.data.get(CONF_API_KEY, ""),
+                CONF_NAME: reauth_entry.title,
+                CONF_API_KEY: reauth_entry.data.get(CONF_API_KEY, ""),
             },
         )
 
@@ -168,10 +169,10 @@ class GoogleGenerativeAIOptionsFlow(OptionsFlow):
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
-        self.config_entry = config_entry
         self.last_rendered_recommended = config_entry.options.get(
             CONF_RECOMMENDED, False
         )
+        self._genai_client = config_entry.runtime_data
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -194,7 +195,9 @@ class GoogleGenerativeAIOptionsFlow(OptionsFlow):
                 CONF_LLM_HASS_API: user_input[CONF_LLM_HASS_API],
             }
 
-        schema = await google_generative_ai_config_option_schema(self.hass, options)
+        schema = await google_generative_ai_config_option_schema(
+            self.hass, options, self._genai_client
+        )
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(schema),
@@ -204,6 +207,7 @@ class GoogleGenerativeAIOptionsFlow(OptionsFlow):
 async def google_generative_ai_config_option_schema(
     hass: HomeAssistant,
     options: dict[str, Any] | MappingProxyType[str, Any],
+    genai_client: genai.Client,
 ) -> dict:
     """Return a schema for Google Generative AI completion options."""
     hass_apis: list[SelectOptionDict] = [
@@ -242,18 +246,21 @@ async def google_generative_ai_config_option_schema(
     if options.get(CONF_RECOMMENDED):
         return schema
 
-    api_models = await hass.async_add_executor_job(partial(genai.list_models))
-
+    api_models_pager = await genai_client.aio.models.list(config={"query_base": True})
+    api_models = [api_model async for api_model in api_models_pager]
     models = [
         SelectOptionDict(
             label=api_model.display_name,
             value=api_model.name,
         )
-        for api_model in sorted(api_models, key=lambda x: x.display_name)
+        for api_model in sorted(api_models, key=lambda x: x.display_name or "")
         if (
             api_model.name != "models/gemini-1.0-pro"  # duplicate of gemini-pro
+            and api_model.display_name
+            and api_model.name
+            and api_model.supported_actions
             and "vision" not in api_model.name
-            and "generateContent" in api_model.supported_generation_methods
+            and "generateContent" in api_model.supported_actions
         )
     ]
 
@@ -336,6 +343,13 @@ async def google_generative_ai_config_option_schema(
                 },
                 default=RECOMMENDED_HARM_BLOCK_THRESHOLD,
             ): harm_block_thresholds_selector,
+            vol.Optional(
+                CONF_USE_GOOGLE_SEARCH_TOOL,
+                description={
+                    "suggested_value": options.get(CONF_USE_GOOGLE_SEARCH_TOOL),
+                },
+                default=RECOMMENDED_USE_GOOGLE_SEARCH_TOOL,
+            ): bool,
         }
     )
     return schema

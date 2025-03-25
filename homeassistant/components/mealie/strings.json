@@ -1,4 +1,9 @@
 {
+  "common": {
+    "data_description_host": "The URL of your Mealie instance, for example, http://192.168.1.123:1234",
+    "data_description_api_token": "The API token of your Mealie instance from your user profile within Mealie.",
+    "data_description_verify_ssl": "Should SSL certificates be verified? This should be off for self-signed certificates."
+  },
   "config": {
     "step": {
       "user": {
@@ -8,27 +13,38 @@
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
-          "host": "The URL of your Mealie instance."
+          "host": "[%key:component::mealie::common::data_description_host%]",
+          "api_token": "[%key:component::mealie::common::data_description_api_token%]",
+          "verify_ssl": "[%key:component::mealie::common::data_description_verify_ssl%]"
         }
       },
       "reauth_confirm": {
         "description": "Please reauthenticate with Mealie.",
         "data": {
           "api_token": "[%key:common::config_flow::data::api_token%]"
+        },
+        "data_description": {
+          "api_token": "[%key:component::mealie::common::data_description_api_token%]"
         }
       },
-      "reconfigure_confirm": {
+      "reconfigure": {
         "description": "Please reconfigure with Mealie.",
         "data": {
           "host": "[%key:common::config_flow::data::url%]",
           "api_token": "[%key:common::config_flow::data::api_token%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "host": "[%key:component::mealie::common::data_description_host%]",
+          "api_token": "[%key:component::mealie::common::data_description_api_token%]",
+          "verify_ssl": "[%key:component::mealie::common::data_description_verify_ssl%]"
         }
       }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "ingress_url": "Ingress URLs are only used for accessing the Mealie UI. Use your Home Assistant IP address and the network port within the configuration tab of the Mealie add-on.",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "mealie_version": "Minimum required version is v1.0.0. Please upgrade Mealie and then retry."
     },
@@ -56,19 +72,24 @@
     },
     "sensor": {
       "recipes": {
-        "name": "Recipes"
+        "name": "Recipes",
+        "unit_of_measurement": "recipes"
       },
       "users": {
-        "name": "Users"
+        "name": "Users",
+        "unit_of_measurement": "users"
       },
       "categories": {
-        "name": "Categories"
+        "name": "Categories",
+        "unit_of_measurement": "categories"
       },
       "tags": {
-        "name": "Tags"
+        "name": "Tags",
+        "unit_of_measurement": "tags"
       },
       "tools": {
-        "name": "Tools"
+        "name": "Tools",
+        "unit_of_measurement": "tools"
       }
     }
   },
@@ -105,16 +126,31 @@
     },
     "version_error": {
       "message": "You are running {mealie_version} of Mealie. Minimum required version is {min_version}. Please upgrade Mealie and then retry."
+    },
+    "auth_failed": {
+      "message": "Authentication failed. Please reauthenticate."
+    },
+    "update_failed_mealplan": {
+      "message": "Could not fetch mealplan data."
+    },
+    "update_failed_shopping_list": {
+      "message": "Could not fetch shopping list data."
+    },
+    "update_failed_statistics": {
+      "message": "Could not fetch statistics data."
+    },
+    "setup_failed": {
+      "message": "Could not connect to the Mealie instance."
     }
   },
   "services": {
     "get_mealplan": {
       "name": "Get mealplan",
-      "description": "Get meaplan from Mealie",
+      "description": "Gets a mealplan from Mealie",
       "fields": {
         "config_entry_id": {
           "name": "Mealie instance",
-          "description": "Select the Mealie instance to get mealplan from"
+          "description": "The Mealie instance to use for this action."
         },
         "start_date": {
           "name": "Start date",
@@ -128,7 +164,7 @@
     },
     "get_recipe": {
       "name": "Get recipe",
-      "description": "Get recipe from Mealie",
+      "description": "Gets a recipe from Mealie",
       "fields": {
         "config_entry_id": {
           "name": "[%key:component::mealie::services::get_mealplan::fields::config_entry_id::name%]",
@@ -142,7 +178,7 @@
     },
     "import_recipe": {
       "name": "Import recipe",
-      "description": "Import recipe from an URL",
+      "description": "Imports a recipe from an URL",
       "fields": {
         "config_entry_id": {
           "name": "[%key:component::mealie::services::get_mealplan::fields::config_entry_id::name%]",
@@ -160,7 +196,7 @@
     },
     "set_random_mealplan": {
       "name": "Set random mealplan",
-      "description": "Set a random mealplan for a specific date",
+      "description": "Sets a random mealplan for a specific date",
       "fields": {
         "config_entry_id": {
           "name": "[%key:component::mealie::services::get_mealplan::fields::config_entry_id::name%]",
@@ -178,7 +214,7 @@
     },
     "set_mealplan": {
       "name": "Set a mealplan",
-      "description": "Set a mealplan for a specific date",
+      "description": "Sets a mealplan for a specific date",
       "fields": {
         "config_entry_id": {
           "name": "[%key:component::mealie::services::get_mealplan::fields::config_entry_id::name%]",
@@ -193,8 +229,8 @@
           "description": "The type of dish to set the recipe to."
         },
         "recipe_id": {
-          "name": "[%key:component::mealie::services::get_recipe::fields::recipe_id::name%]",
-          "description": "[%key:component::mealie::services::get_recipe::fields::recipe_id::description%]"
+          "name": "Recipe ID",
+          "description": "The recipe ID or the slug of the recipe to get."
         },
         "note_title": {
           "name": "Meal note title",

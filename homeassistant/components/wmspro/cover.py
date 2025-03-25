@@ -12,7 +12,7 @@ from wmspro.const import (
 
 from homeassistant.components.cover import ATTR_POSITION, CoverDeviceClass, CoverEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import WebControlProConfigEntry
 from .entity import WebControlProGenericEntity
@@ -24,7 +24,7 @@ PARALLEL_UPDATES = 1
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: WebControlProConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the WMS based covers from a config entry."""
     hub = config_entry.runtime_data
@@ -46,12 +46,12 @@ class WebControlProAwning(WebControlProGenericEntity, CoverEntity):
     def current_cover_position(self) -> int | None:
         """Return current position of cover."""
         action = self._dest.action(WMS_WebControl_pro_API_actionDescription.AwningDrive)
-        return action["percentage"]
+        return 100 - action["percentage"]
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         action = self._dest.action(WMS_WebControl_pro_API_actionDescription.AwningDrive)
-        await action(percentage=kwargs[ATTR_POSITION])
+        await action(percentage=100 - kwargs[ATTR_POSITION])
 
     @property
     def is_closed(self) -> bool | None:
@@ -61,12 +61,12 @@ class WebControlProAwning(WebControlProGenericEntity, CoverEntity):
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         action = self._dest.action(WMS_WebControl_pro_API_actionDescription.AwningDrive)
-        await action(percentage=100)
+        await action(percentage=0)
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         action = self._dest.action(WMS_WebControl_pro_API_actionDescription.AwningDrive)
-        await action(percentage=0)
+        await action(percentage=100)
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the device if in motion."""

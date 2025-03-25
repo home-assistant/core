@@ -5,11 +5,11 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 from datetime import timedelta
 from enum import StrEnum
-from functools import cached_property
 import logging
 import re
 from typing import Any, final
 
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry

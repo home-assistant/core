@@ -86,6 +86,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool:
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=entry,
         name="NUT resource status",
         update_method=async_update_data,
         update_interval=timedelta(seconds=scan_interval),
@@ -102,7 +103,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool:
     )
     status = coordinator.data
 
-    _LOGGER.debug("NUT Sensors Available: %s", status)
+    _LOGGER.debug("NUT Sensors Available: %s", status if status else None)
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     unique_id = _unique_id_from_status(status)
@@ -110,13 +111,33 @@ async def async_setup_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool:
         unique_id = entry.entry_id
 
     if username is not None and password is not None:
+        # Dynamically add outlet integration commands
+        additional_integration_commands = set()
+        if (num_outlets := status.get("outlet.count")) is not None:
+            for outlet_num in range(1, int(num_outlets) + 1):
+                outlet_num_str: str = str(outlet_num)
+                additional_integration_commands |= {
+                    f"outlet.{outlet_num_str}.load.cycle",
+                    f"outlet.{outlet_num_str}.load.on",
+                    f"outlet.{outlet_num_str}.load.off",
+                }
+
+        valid_integration_commands = (
+            INTEGRATION_SUPPORTED_COMMANDS | additional_integration_commands
+        )
+
         user_available_commands = {
-            device_supported_command
-            for device_supported_command in await data.async_list_commands() or {}
-            if device_supported_command in INTEGRATION_SUPPORTED_COMMANDS
+            device_command
+            for device_command in await data.async_list_commands() or {}
+            if device_command in valid_integration_commands
         }
     else:
         user_available_commands = set()
+
+    _LOGGER.debug(
+        "NUT Commands Available: %s",
+        user_available_commands if user_available_commands else None,
+    )
 
     entry.runtime_data = NutRuntimeData(
         coordinator, data, unique_id, user_available_commands
@@ -129,7 +150,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool:
         name=data.name.title(),
         manufacturer=data.device_info.manufacturer,
         model=data.device_info.model,
+        model_id=data.device_info.model_id,
         sw_version=data.device_info.firmware,
+        serial_number=data.device_info.serial,
+        suggested_area=data.device_info.device_location,
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -207,7 +231,10 @@ class NUTDeviceInfo:
 
     manufacturer: str | None = None
     model: str | None = None
+    model_id: str | None = None
     firmware: str | None = None
+    serial: str | None = None
+    device_location: str | None = None
 
 
 class PyNUTData:
@@ -233,6 +260,7 @@ class PyNUTData:
 
         self._client = AIONUTClient(self._host, port, username, password, 5, persistent)
         self.ups_list: dict[str, str] | None = None
+        self.device_name: str | None = None
         self._status: dict[str, str] | None = None
         self._device_info: NUTDeviceInfo | None = None
 
@@ -243,7 +271,7 @@ class PyNUTData:
 
     @property
     def name(self) -> str:
-        """Return the name of the ups."""
+        """Return the name of the NUT device."""
         return self._alias or f"Nut-{self._host}"
 
     @property
@@ -266,8 +294,13 @@ class PyNUTData:
 
         manufacturer = _manufacturer_from_status(self._status)
         model = _model_from_status(self._status)
+        model_id: str | None = self._status.get("device.part")
         firmware = _firmware_from_status(self._status)
-        return NUTDeviceInfo(manufacturer, model, firmware)
+        serial = _serial_from_status(self._status)
+        device_location: str | None = self._status.get("device.location")
+        return NUTDeviceInfo(
+            manufacturer, model, model_id, firmware, serial, device_location
+        )
 
     async def _async_get_status(self) -> dict[str, str]:
         """Get the ups status from NUT."""
@@ -282,6 +315,8 @@ class PyNUTData:
         self._status = await self._async_get_status()
         if self._device_info is None:
             self._device_info = self._get_device_info()
+        if self.device_name is None:
+            self.device_name = self.name.title()
         return self._status
 
     async def async_run_command(self, command_name: str) -> None:

@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from asyncio import sleep
-from functools import cached_property
 from typing import Any, cast
 
+from propcache.api import cached_property
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
 from homeassistant.components.climate import (

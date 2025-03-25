@@ -4,17 +4,21 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from functools import lru_cache
+from math import floor, log10
 
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
     UNIT_NOT_RECOGNIZED_TEMPLATE,
+    UnitOfArea,
+    UnitOfBloodGlucoseConcentration,
     UnitOfConductivity,
     UnitOfDataRate,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
+    UnitOfEnergyDistance,
     UnitOfInformation,
     UnitOfLength,
     UnitOfMass,
@@ -40,6 +44,19 @@ _YARD_TO_M = _FOOT_TO_M * 3  # 3 feet = 1 yard (0.9144 m)
 _MILE_TO_M = _YARD_TO_M * 1760  # 1760 yard = 1 mile (1609.344 m)
 
 _NAUTICAL_MILE_TO_M = 1852  # 1 nautical mile = 1852 m
+
+# Area constants to square meters
+_CM2_TO_M2 = _CM_TO_M**2  # 1 cm² = 0.0001 m²
+_MM2_TO_M2 = _MM_TO_M**2  # 1 mm² = 0.000001 m²
+_KM2_TO_M2 = _KM_TO_M**2  # 1 km² = 1,000,000 m²
+
+_IN2_TO_M2 = _IN_TO_M**2  # 1 in² = 0.00064516 m²
+_FT2_TO_M2 = _FOOT_TO_M**2  # 1 ft² = 0.092903 m²
+_YD2_TO_M2 = _YARD_TO_M**2  # 1 yd² = 0.836127 m²
+_MI2_TO_M2 = _MILE_TO_M**2  # 1 mi² = 2,590,000 m²
+
+_ACRE_TO_M2 = 66 * 660 * _FT2_TO_M2  # 1 acre = 4,046.86 m²
+_HECTARE_TO_M2 = 100 * 100  # 1 hectare = 10,000 m²
 
 # Duration conversion constants
 _MIN_TO_SEC = 60  # 1 min = 60 seconds
@@ -75,6 +92,7 @@ class BaseUnitConverter:
     VALID_UNITS: set[str | None]
 
     _UNIT_CONVERSION: dict[str | None, float]
+    _UNIT_INVERSES: set[str] = set()
 
     @classmethod
     def convert(cls, value: float, from_unit: str | None, to_unit: str | None) -> float:
@@ -90,6 +108,8 @@ class BaseUnitConverter:
         if from_unit == to_unit:
             return lambda value: value
         from_ratio, to_ratio = cls._get_from_to_ratio(from_unit, to_unit)
+        if cls._are_unit_inverses(from_unit, to_unit):
+            return lambda val: to_ratio / (val / from_ratio)
         return lambda val: (val / from_ratio) * to_ratio
 
     @classmethod
@@ -114,6 +134,8 @@ class BaseUnitConverter:
         if from_unit == to_unit:
             return lambda value: value
         from_ratio, to_ratio = cls._get_from_to_ratio(from_unit, to_unit)
+        if cls._are_unit_inverses(from_unit, to_unit):
+            return lambda val: None if val is None else to_ratio / (val / from_ratio)
         return lambda val: None if val is None else (val / from_ratio) * to_ratio
 
     @classmethod
@@ -122,6 +144,21 @@ class BaseUnitConverter:
         """Get unit ratio between units of measurement."""
         from_ratio, to_ratio = cls._get_from_to_ratio(from_unit, to_unit)
         return from_ratio / to_ratio
+
+    @classmethod
+    @lru_cache
+    def get_unit_floored_log_ratio(
+        cls, from_unit: str | None, to_unit: str | None
+    ) -> float:
+        """Get floored base10 log ratio between units of measurement."""
+        from_ratio, to_ratio = cls._get_from_to_ratio(from_unit, to_unit)
+        return floor(max(0, log10(from_ratio / to_ratio)))
+
+    @classmethod
+    @lru_cache
+    def _are_unit_inverses(cls, from_unit: str | None, to_unit: str | None) -> bool:
+        """Return true if one unit is an inverse but not the other."""
+        return (from_unit in cls._UNIT_INVERSES) != (to_unit in cls._UNIT_INVERSES)
 
 
 class DataRateConverter(BaseUnitConverter):
@@ -145,6 +182,25 @@ class DataRateConverter(BaseUnitConverter):
     VALID_UNITS = set(UnitOfDataRate)
 
 
+class AreaConverter(BaseUnitConverter):
+    """Utility to convert area values."""
+
+    UNIT_CLASS = "area"
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        UnitOfArea.SQUARE_METERS: 1,
+        UnitOfArea.SQUARE_CENTIMETERS: 1 / _CM2_TO_M2,
+        UnitOfArea.SQUARE_MILLIMETERS: 1 / _MM2_TO_M2,
+        UnitOfArea.SQUARE_KILOMETERS: 1 / _KM2_TO_M2,
+        UnitOfArea.SQUARE_INCHES: 1 / _IN2_TO_M2,
+        UnitOfArea.SQUARE_FEET: 1 / _FT2_TO_M2,
+        UnitOfArea.SQUARE_YARDS: 1 / _YD2_TO_M2,
+        UnitOfArea.SQUARE_MILES: 1 / _MI2_TO_M2,
+        UnitOfArea.ACRES: 1 / _ACRE_TO_M2,
+        UnitOfArea.HECTARES: 1 / _HECTARE_TO_M2,
+    }
+    VALID_UNITS = set(UnitOfArea)
+
+
 class DistanceConverter(BaseUnitConverter):
     """Utility to convert distance values."""
 
@@ -158,10 +214,12 @@ class DistanceConverter(BaseUnitConverter):
         UnitOfLength.FEET: 1 / _FOOT_TO_M,
         UnitOfLength.YARDS: 1 / _YARD_TO_M,
         UnitOfLength.MILES: 1 / _MILE_TO_M,
+        UnitOfLength.NAUTICAL_MILES: 1 / _NAUTICAL_MILE_TO_M,
     }
     VALID_UNITS = {
         UnitOfLength.KILOMETERS,
         UnitOfLength.MILES,
+        UnitOfLength.NAUTICAL_MILES,
         UnitOfLength.FEET,
         UnitOfLength.METERS,
         UnitOfLength.CENTIMETERS,
@@ -171,14 +229,25 @@ class DistanceConverter(BaseUnitConverter):
     }
 
 
+class BloodGlucoseConcentrationConverter(BaseUnitConverter):
+    """Utility to convert blood glucose concentration values."""
+
+    UNIT_CLASS = "blood_glucose_concentration"
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER: 18,
+        UnitOfBloodGlucoseConcentration.MILLIMOLE_PER_LITER: 1,
+    }
+    VALID_UNITS = set(UnitOfBloodGlucoseConcentration)
+
+
 class ConductivityConverter(BaseUnitConverter):
     """Utility to convert electric current values."""
 
     UNIT_CLASS = "conductivity"
     _UNIT_CONVERSION: dict[str | None, float] = {
-        UnitOfConductivity.MICROSIEMENS: 1,
-        UnitOfConductivity.MILLISIEMENS: 1e-3,
-        UnitOfConductivity.SIEMENS: 1e-6,
+        UnitOfConductivity.MICROSIEMENS_PER_CM: 1,
+        UnitOfConductivity.MILLISIEMENS_PER_CM: 1e-3,
+        UnitOfConductivity.SIEMENS_PER_CM: 1e-6,
     }
     VALID_UNITS = set(UnitOfConductivity)
 
@@ -201,10 +270,16 @@ class ElectricPotentialConverter(BaseUnitConverter):
     _UNIT_CONVERSION: dict[str | None, float] = {
         UnitOfElectricPotential.VOLT: 1,
         UnitOfElectricPotential.MILLIVOLT: 1e3,
+        UnitOfElectricPotential.MICROVOLT: 1e6,
+        UnitOfElectricPotential.KILOVOLT: 1 / 1e3,
+        UnitOfElectricPotential.MEGAVOLT: 1 / 1e6,
     }
     VALID_UNITS = {
         UnitOfElectricPotential.VOLT,
         UnitOfElectricPotential.MILLIVOLT,
+        UnitOfElectricPotential.MICROVOLT,
+        UnitOfElectricPotential.KILOVOLT,
+        UnitOfElectricPotential.MEGAVOLT,
     }
 
 
@@ -217,15 +292,34 @@ class EnergyConverter(BaseUnitConverter):
         UnitOfEnergy.KILO_JOULE: _WH_TO_J,
         UnitOfEnergy.MEGA_JOULE: _WH_TO_J / 1e3,
         UnitOfEnergy.GIGA_JOULE: _WH_TO_J / 1e6,
+        UnitOfEnergy.MILLIWATT_HOUR: 1e6,
         UnitOfEnergy.WATT_HOUR: 1e3,
         UnitOfEnergy.KILO_WATT_HOUR: 1,
         UnitOfEnergy.MEGA_WATT_HOUR: 1 / 1e3,
+        UnitOfEnergy.GIGA_WATT_HOUR: 1 / 1e6,
+        UnitOfEnergy.TERA_WATT_HOUR: 1 / 1e9,
         UnitOfEnergy.CALORIE: _WH_TO_CAL * 1e3,
         UnitOfEnergy.KILO_CALORIE: _WH_TO_CAL,
         UnitOfEnergy.MEGA_CALORIE: _WH_TO_CAL / 1e3,
         UnitOfEnergy.GIGA_CALORIE: _WH_TO_CAL / 1e6,
     }
     VALID_UNITS = set(UnitOfEnergy)
+
+
+class EnergyDistanceConverter(BaseUnitConverter):
+    """Utility to convert vehicle energy consumption values."""
+
+    UNIT_CLASS = "energy_distance"
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM: 1,
+        UnitOfEnergyDistance.MILES_PER_KILO_WATT_HOUR: 100 * _KM_TO_M / _MILE_TO_M,
+        UnitOfEnergyDistance.KM_PER_KILO_WATT_HOUR: 100,
+    }
+    _UNIT_INVERSES: set[str] = {
+        UnitOfEnergyDistance.MILES_PER_KILO_WATT_HOUR,
+        UnitOfEnergyDistance.KM_PER_KILO_WATT_HOUR,
+    }
+    VALID_UNITS = set(UnitOfEnergyDistance)
 
 
 class InformationConverter(BaseUnitConverter):
@@ -288,12 +382,20 @@ class PowerConverter(BaseUnitConverter):
 
     UNIT_CLASS = "power"
     _UNIT_CONVERSION: dict[str | None, float] = {
+        UnitOfPower.MILLIWATT: 1 * 1000,
         UnitOfPower.WATT: 1,
         UnitOfPower.KILO_WATT: 1 / 1000,
+        UnitOfPower.MEGA_WATT: 1 / 1e6,
+        UnitOfPower.GIGA_WATT: 1 / 1e9,
+        UnitOfPower.TERA_WATT: 1 / 1e12,
     }
     VALID_UNITS = {
+        UnitOfPower.MILLIWATT,
         UnitOfPower.WATT,
         UnitOfPower.KILO_WATT,
+        UnitOfPower.MEGA_WATT,
+        UnitOfPower.GIGA_WATT,
+        UnitOfPower.TERA_WATT,
     }
 
 
@@ -609,12 +711,15 @@ class VolumeFlowRateConverter(BaseUnitConverter):
         / (_HRS_TO_MINUTES * _L_TO_CUBIC_METER),
         UnitOfVolumeFlowRate.GALLONS_PER_MINUTE: 1
         / (_HRS_TO_MINUTES * _GALLON_TO_CUBIC_METER),
+        UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND: 1
+        / (_HRS_TO_SECS * _ML_TO_CUBIC_METER),
     }
     VALID_UNITS = {
         UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
         UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
         UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+        UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND,
     }
 
 

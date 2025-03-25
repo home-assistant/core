@@ -8,7 +8,7 @@ from ayla_iot_unofficial import AylaAuthError, new_ayla_api
 from ayla_iot_unofficial.fujitsu_consts import FGLAIR_APP_CREDENTIALS
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
@@ -41,7 +41,6 @@ class FGLairConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Fujitsu HVAC (based on Ayla IOT)."""
 
     MINOR_VERSION = 2
-    _reauth_entry: ConfigEntry | None = None
 
     async def _async_validate_credentials(
         self, user_input: dict[str, Any]
@@ -63,7 +62,7 @@ class FGLairConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         except AylaAuthError:
             errors["base"] = "invalid_auth"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
 
@@ -93,9 +92,6 @@ class FGLairConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
-        self._reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -103,25 +99,23 @@ class FGLairConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
         errors: dict[str, str] = {}
-        assert self._reauth_entry
 
+        reauth_entry = self._get_reauth_entry()
         if user_input:
-            reauth_data = {
-                **self._reauth_entry.data,
-                CONF_PASSWORD: user_input[CONF_PASSWORD],
-            }
-            errors = await self._async_validate_credentials(reauth_data)
+            errors = await self._async_validate_credentials(
+                reauth_entry.data | user_input
+            )
 
-            if len(errors) == 0:
+            if not errors:
                 return self.async_update_reload_and_abort(
-                    self._reauth_entry, data=reauth_data
+                    reauth_entry, data_updates=user_input
                 )
 
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=STEP_REAUTH_DATA_SCHEMA,
             description_placeholders={
-                CONF_USERNAME: self._reauth_entry.data[CONF_USERNAME],
+                CONF_USERNAME: reauth_entry.data[CONF_USERNAME],
                 **self.context["title_placeholders"],
             },
             errors=errors,

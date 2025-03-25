@@ -11,6 +11,7 @@ from typing import Any, Concatenate
 import requests
 from wallbox import Wallbox
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -28,6 +29,7 @@ from .const import (
     CHARGER_STATUS_DESCRIPTION_KEY,
     CHARGER_STATUS_ID_KEY,
     CODE_KEY,
+    CONF_STATION,
     DOMAIN,
     UPDATE_INTERVAL,
     ChargerStatus,
@@ -89,17 +91,37 @@ def _require_authentication[_WallboxCoordinatorT: WallboxCoordinator, **_P](
     return require_authentication
 
 
+def _validate(wallbox: Wallbox) -> None:
+    """Authenticate using Wallbox API."""
+    try:
+        wallbox.authenticate()
+    except requests.exceptions.HTTPError as wallbox_connection_error:
+        if wallbox_connection_error.response.status_code == 403:
+            raise InvalidAuth from wallbox_connection_error
+        raise ConnectionError from wallbox_connection_error
+
+
+async def async_validate_input(hass: HomeAssistant, wallbox: Wallbox) -> None:
+    """Get new sensor data for Wallbox component."""
+    await hass.async_add_executor_job(_validate, wallbox)
+
+
 class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Wallbox Coordinator class."""
 
-    def __init__(self, station: str, wallbox: Wallbox, hass: HomeAssistant) -> None:
+    config_entry: ConfigEntry
+
+    def __init__(
+        self, hass: HomeAssistant, config_entry: ConfigEntry, wallbox: Wallbox
+    ) -> None:
         """Initialize."""
-        self._station = station
+        self._station = config_entry.data[CONF_STATION]
         self._wallbox = wallbox
 
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=UPDATE_INTERVAL),
         )
@@ -107,19 +129,6 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def authenticate(self) -> None:
         """Authenticate using Wallbox API."""
         self._wallbox.authenticate()
-
-    def _validate(self) -> None:
-        """Authenticate using Wallbox API."""
-        try:
-            self._wallbox.authenticate()
-        except requests.exceptions.HTTPError as wallbox_connection_error:
-            if wallbox_connection_error.response.status_code == 403:
-                raise InvalidAuth from wallbox_connection_error
-            raise ConnectionError from wallbox_connection_error
-
-    async def async_validate_input(self) -> None:
-        """Get new sensor data for Wallbox component."""
-        await self.hass.async_add_executor_job(self._validate)
 
     @_require_authentication
     def _get_data(self) -> dict[str, Any]:

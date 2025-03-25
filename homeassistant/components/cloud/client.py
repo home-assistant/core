@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from datetime import datetime
 from http import HTTPStatus
 import logging
@@ -11,12 +12,14 @@ from typing import Any, Literal
 
 import aiohttp
 from hass_nabucasa.client import CloudClient as Interface, RemoteActivationNotAllowed
+from webrtc_models import RTCIceServer
 
 from homeassistant.components import google_assistant, persistent_notification, webhook
 from homeassistant.components.alexa import (
     errors as alexa_errors,
     smart_home as alexa_smart_home,
 )
+from homeassistant.components.camera.webrtc import async_register_ice_servers
 from homeassistant.components.google_assistant import smart_home as ga
 from homeassistant.const import __version__ as HA_VERSION
 from homeassistant.core import Context, HassJob, HomeAssistant, callback
@@ -27,7 +30,7 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 from homeassistant.util.aiohttp import MockRequest, serialize_response
 
 from . import alexa_config, google_config
-from .const import DISPATCHER_REMOTE_UPDATE, DOMAIN
+from .const import DISPATCHER_REMOTE_UPDATE, DOMAIN, PREF_ENABLE_CLOUD_ICE_SERVERS
 from .prefs import CloudPreferences
 
 _LOGGER = logging.getLogger(__name__)
@@ -60,6 +63,7 @@ class CloudClient(Interface):
         self._alexa_config_init_lock = asyncio.Lock()
         self._google_config_init_lock = asyncio.Lock()
         self._relayer_region: str | None = None
+        self._cloud_ice_servers_listener: Callable[[], None] | None = None
 
     @property
     def base_path(self) -> Path:
@@ -187,6 +191,49 @@ class CloudClient(Interface):
             if is_new_user:
                 await gconf.async_sync_entities(gconf.agent_user_id)
 
+        async def setup_cloud_ice_servers(_: datetime) -> None:
+            async def register_cloud_ice_server(
+                ice_servers: list[RTCIceServer],
+            ) -> Callable[[], None]:
+                """Register cloud ice server."""
+
+                def get_ice_servers() -> list[RTCIceServer]:
+                    return ice_servers
+
+                return async_register_ice_servers(self._hass, get_ice_servers)
+
+            async def async_register_cloud_ice_servers_listener(
+                prefs: CloudPreferences,
+            ) -> None:
+                is_cloud_ice_servers_enabled = (
+                    self.cloud.is_logged_in
+                    and not self.cloud.subscription_expired
+                    and prefs.cloud_ice_servers_enabled
+                )
+                if is_cloud_ice_servers_enabled:
+                    if self._cloud_ice_servers_listener is None:
+                        self._cloud_ice_servers_listener = await self.cloud.ice_servers.async_register_ice_servers_listener(
+                            register_cloud_ice_server
+                        )
+                elif self._cloud_ice_servers_listener:
+                    self._cloud_ice_servers_listener()
+                    self._cloud_ice_servers_listener = None
+
+            async def async_prefs_updated(prefs: CloudPreferences) -> None:
+                updated_prefs = prefs.last_updated
+
+                if (
+                    updated_prefs is None
+                    or PREF_ENABLE_CLOUD_ICE_SERVERS not in updated_prefs
+                ):
+                    return
+
+                await async_register_cloud_ice_servers_listener(prefs)
+
+            await async_register_cloud_ice_servers_listener(self._prefs)
+
+            self._prefs.async_listen_updates(async_prefs_updated)
+
         tasks = []
 
         if self._prefs.alexa_enabled and self._prefs.alexa_report_state:
@@ -194,6 +241,8 @@ class CloudClient(Interface):
 
         if self._prefs.google_enabled:
             tasks.append(enable_google)
+
+        tasks.append(setup_cloud_ice_servers)
 
         if tasks:
             await asyncio.gather(*(task(None) for task in tasks))
@@ -221,6 +270,10 @@ class CloudClient(Interface):
         if self._google_config:
             self._google_config.async_deinitialize()
         self._google_config = None
+
+        if self._cloud_ice_servers_listener:
+            self._cloud_ice_servers_listener()
+            self._cloud_ice_servers_listener = None
 
     @callback
     def user_message(self, identifier: str, title: str, message: str) -> None:
@@ -253,6 +306,7 @@ class CloudClient(Interface):
             },
             "version": HA_VERSION,
             "instance_id": self.prefs.instance_id,
+            "name": self._hass.config.location_name,
         }
 
     async def async_alexa_message(self, payload: dict[Any, Any]) -> dict[Any, Any]:

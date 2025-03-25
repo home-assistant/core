@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
-from functools import cached_property, partial
+from functools import partial
 import logging
 from typing import Any
 
+from propcache.api import cached_property
 from zha.mixins import LogMixin
 
 from homeassistant.const import ATTR_MANUFACTURER, ATTR_MODEL, ATTR_NAME, EntityCategory
@@ -58,6 +59,10 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
     def name(self) -> str | UndefinedType | None:
         """Return the name of the entity."""
         meta = self.entity_data.entity.info_object
+        if meta.primary:
+            self._attr_name = None
+            return super().name
+
         original_name = super().name
 
         if original_name not in (UNDEFINED, None) or meta.fallback_name is None:
@@ -86,7 +91,7 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
             manufacturer=zha_device_info[ATTR_MANUFACTURER],
             model=zha_device_info[ATTR_MODEL],
             name=zha_device_info[ATTR_NAME],
-            via_device=(DOMAIN, zha_gateway.state.node_info.ieee),
+            via_device=(DOMAIN, str(zha_gateway.state.node_info.ieee)),
         )
 
     @callback

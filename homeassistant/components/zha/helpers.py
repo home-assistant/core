@@ -11,6 +11,7 @@ import enum
 import functools
 import itertools
 import logging
+import queue
 import re
 import time
 from types import MappingProxyType
@@ -104,16 +105,17 @@ from homeassistant.const import (
     ATTR_NAME,
     Platform,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.logging import HomeAssistantQueueHandler
 
 from .const import (
     ATTR_ACTIVE_COORDINATOR,
@@ -170,7 +172,7 @@ if TYPE_CHECKING:
     from .entity import ZHAEntity
     from .update import ZHAFirmwareUpdateCoordinator
 
-    _LogFilterType = Filter | Callable[[LogRecord], bool]
+    type _LogFilterType = Filter | Callable[[LogRecord], bool]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -495,7 +497,7 @@ class ZHAGatewayProxy(EventBase):
         self.hass = hass
         self.config_entry = config_entry
         self.gateway = gateway
-        self.device_proxies: dict[str, ZHADeviceProxy] = {}
+        self.device_proxies: dict[EUI64, ZHADeviceProxy] = {}
         self.group_proxies: dict[int, ZHAGroupProxy] = {}
         self._ha_entity_refs: collections.defaultdict[EUI64, list[EntityReference]] = (
             collections.defaultdict(list)
@@ -505,10 +507,23 @@ class ZHAGatewayProxy(EventBase):
             DEBUG_LEVEL_CURRENT: async_capture_log_levels(),
         }
         self.debug_enabled: bool = False
-        self._log_relay_handler: LogRelayHandler = LogRelayHandler(hass, self)
+
+        log_relay_handler: LogRelayHandler = LogRelayHandler(hass, self)
+        log_simple_queue: queue.SimpleQueue[logging.Handler] = queue.SimpleQueue()
+        self._log_queue_handler = HomeAssistantQueueHandler(log_simple_queue)
+        self._log_queue_handler.listener = logging.handlers.QueueListener(
+            log_simple_queue, log_relay_handler
+        )
+
         self._unsubs: list[Callable[[], None]] = []
         self._unsubs.append(self.gateway.on_all_events(self._handle_event_protocol))
         self._reload_task: asyncio.Task | None = None
+        config_entry.async_on_unload(
+            self.hass.bus.async_listen(
+                er.EVENT_ENTITY_REGISTRY_UPDATED,
+                self._handle_entity_registry_updated,
+            )
+        )
 
     @property
     def ha_entity_refs(self) -> collections.defaultdict[EUI64, list[EntityReference]]:
@@ -531,6 +546,46 @@ class ZHAGatewayProxy(EventBase):
                 remove_future=remove_future,
             )
         )
+
+    async def _handle_entity_registry_updated(
+        self, event: Event[er.EventEntityRegistryUpdatedData]
+    ) -> None:
+        """Handle when entity registry updated."""
+        entity_id = event.data["entity_id"]
+        entity_entry: er.RegistryEntry | None = er.async_get(self.hass).async_get(
+            entity_id
+        )
+        if (
+            entity_entry is None
+            or entity_entry.config_entry_id != self.config_entry.entry_id
+            or entity_entry.device_id is None
+        ):
+            return
+        device_entry: dr.DeviceEntry | None = dr.async_get(self.hass).async_get(
+            entity_entry.device_id
+        )
+        assert device_entry
+
+        ieee_address = next(
+            identifier
+            for domain, identifier in device_entry.identifiers
+            if domain == DOMAIN
+        )
+        assert ieee_address
+
+        ieee = EUI64.convert(ieee_address)
+
+        assert ieee in self.device_proxies
+
+        zha_device_proxy = self.device_proxies[ieee]
+        entity_key = (entity_entry.domain, entity_entry.unique_id)
+        if entity_key not in zha_device_proxy.device.platform_entities:
+            return
+        platform_entity = zha_device_proxy.device.platform_entities[entity_key]
+        if entity_entry.disabled:
+            platform_entity.disable()
+        else:
+            platform_entity.enable()
 
     async def async_initialize_devices_and_entities(self) -> None:
         """Initialize devices and entities."""
@@ -690,10 +745,13 @@ class ZHAGatewayProxy(EventBase):
         self._log_levels[DEBUG_LEVEL_CURRENT] = async_capture_log_levels()
 
         if filterer:
-            self._log_relay_handler.addFilter(filterer)
+            self._log_queue_handler.addFilter(filterer)
+
+        if self._log_queue_handler.listener:
+            self._log_queue_handler.listener.start()
 
         for logger_name in DEBUG_RELAY_LOGGERS:
-            logging.getLogger(logger_name).addHandler(self._log_relay_handler)
+            logging.getLogger(logger_name).addHandler(self._log_queue_handler)
 
         self.debug_enabled = True
 
@@ -703,9 +761,14 @@ class ZHAGatewayProxy(EventBase):
         async_set_logger_levels(self._log_levels[DEBUG_LEVEL_ORIGINAL])
         self._log_levels[DEBUG_LEVEL_CURRENT] = async_capture_log_levels()
         for logger_name in DEBUG_RELAY_LOGGERS:
-            logging.getLogger(logger_name).removeHandler(self._log_relay_handler)
+            logging.getLogger(logger_name).removeHandler(self._log_queue_handler)
+
+        if self._log_queue_handler.listener:
+            self._log_queue_handler.listener.stop()
+
         if filterer:
-            self._log_relay_handler.removeFilter(filterer)
+            self._log_queue_handler.removeFilter(filterer)
+
         self.debug_enabled = False
 
     async def shutdown(self) -> None:
@@ -932,7 +995,7 @@ class LogRelayHandler(logging.Handler):
         entry = LogEntry(
             record, self.paths_re, figure_out_source=record.levelno >= logging.WARNING
         )
-        async_dispatcher_send(
+        dispatcher_send(
             self.hass,
             ZHA_GW_MSG,
             {ATTR_TYPE: ZHA_GW_MSG_LOG_OUTPUT, ZHA_GW_MSG_LOG_ENTRY: entry.to_dict()},
@@ -1117,18 +1180,21 @@ def async_add_entities(
     if not entities:
         return
 
-    entities_to_add = []
+    entities_to_add: list[ZHAEntity] = []
     for entity_data in entities:
         try:
             entities_to_add.append(entity_class(entity_data))
         # broad exception to prevent a single entity from preventing an entire platform from loading
         # this can potentially be caused by a misbehaving device or a bad quirk. Not ideal but the
         # alternative is adding try/catch to each entity class __init__ method with a specific exception
-        except Exception:  # noqa: BLE001
+        except Exception:
             _LOGGER.exception(
                 "Error while adding entity from entity data: %s", entity_data
             )
     _async_add_entities(entities_to_add, update_before_add=False)
+    for entity in entities_to_add:
+        if not entity.enabled:
+            entity.entity_data.entity.disable()
     entities.clear()
 
 
@@ -1198,7 +1264,7 @@ def create_zha_config(hass: HomeAssistant, ha_zha_data: HAZHAData) -> ZHAData:
     # deep copy the yaml config to avoid modifying the original and to safely
     # pass it to the ZHA library
     app_config = copy.deepcopy(ha_zha_data.yaml_config.get(CONF_ZIGPY, {}))
-    database = app_config.get(
+    database = ha_zha_data.yaml_config.get(
         CONF_DATABASE,
         hass.config.path(DEFAULT_DATABASE_NAME),
     )

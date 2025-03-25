@@ -13,6 +13,7 @@ from homeassistant.components.alarm_control_panel import (
     PLATFORM_SCHEMA as ALARM_CONTROL_PANEL_PLATFORM_SCHEMA,
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
     CodeFormat,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -22,26 +23,19 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_ARMED_VACATION,
-    STATE_ALARM_ARMING,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_PENDING,
-    STATE_ALARM_TRIGGERED,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import selector
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, selector
+from homeassistant.helpers.device import async_device_info_to_link_from_device_id
 from homeassistant.helpers.entity import async_generate_entity_id
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
 
@@ -50,15 +44,15 @@ from .template_entity import TemplateEntity, rewrite_common_legacy_to_modern_con
 
 _LOGGER = logging.getLogger(__name__)
 _VALID_STATES = [
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_ARMED_VACATION,
-    STATE_ALARM_ARMING,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_PENDING,
-    STATE_ALARM_TRIGGERED,
+    AlarmControlPanelState.ARMED_AWAY,
+    AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
+    AlarmControlPanelState.ARMED_HOME,
+    AlarmControlPanelState.ARMED_NIGHT,
+    AlarmControlPanelState.ARMED_VACATION,
+    AlarmControlPanelState.ARMING,
+    AlarmControlPanelState.DISARMED,
+    AlarmControlPanelState.PENDING,
+    AlarmControlPanelState.TRIGGERED,
     STATE_UNAVAILABLE,
 ]
 
@@ -154,7 +148,7 @@ async def _async_create_entities(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize config entry."""
     _options = dict(config_entry.options)
@@ -204,67 +198,31 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity, Restore
         name = self._attr_name
         assert name is not None
         self._template = config.get(CONF_VALUE_TEMPLATE)
-        self._disarm_script = None
         self._attr_code_arm_required: bool = config[CONF_CODE_ARM_REQUIRED]
         self._attr_code_format = config[CONF_CODE_FORMAT].value
-        if (disarm_action := config.get(CONF_DISARM_ACTION)) is not None:
-            self._disarm_script = Script(hass, disarm_action, name, DOMAIN)
-        self._arm_away_script = None
-        if (arm_away_action := config.get(CONF_ARM_AWAY_ACTION)) is not None:
-            self._arm_away_script = Script(hass, arm_away_action, name, DOMAIN)
-        self._arm_home_script = None
-        if (arm_home_action := config.get(CONF_ARM_HOME_ACTION)) is not None:
-            self._arm_home_script = Script(hass, arm_home_action, name, DOMAIN)
-        self._arm_night_script = None
-        if (arm_night_action := config.get(CONF_ARM_NIGHT_ACTION)) is not None:
-            self._arm_night_script = Script(hass, arm_night_action, name, DOMAIN)
-        self._arm_vacation_script = None
-        if (arm_vacation_action := config.get(CONF_ARM_VACATION_ACTION)) is not None:
-            self._arm_vacation_script = Script(hass, arm_vacation_action, name, DOMAIN)
-        self._arm_custom_bypass_script = None
-        if (
-            arm_custom_bypass_action := config.get(CONF_ARM_CUSTOM_BYPASS_ACTION)
-        ) is not None:
-            self._arm_custom_bypass_script = Script(
-                hass, arm_custom_bypass_action, name, DOMAIN
-            )
-        self._trigger_script = None
-        if (trigger_action := config.get(CONF_TRIGGER_ACTION)) is not None:
-            self._trigger_script = Script(hass, trigger_action, name, DOMAIN)
 
-        self._state: str | None = None
+        self._attr_supported_features = AlarmControlPanelEntityFeature(0)
+        for action_id, supported_feature in (
+            (CONF_DISARM_ACTION, 0),
+            (CONF_ARM_AWAY_ACTION, AlarmControlPanelEntityFeature.ARM_AWAY),
+            (CONF_ARM_HOME_ACTION, AlarmControlPanelEntityFeature.ARM_HOME),
+            (CONF_ARM_NIGHT_ACTION, AlarmControlPanelEntityFeature.ARM_NIGHT),
+            (CONF_ARM_VACATION_ACTION, AlarmControlPanelEntityFeature.ARM_VACATION),
+            (
+                CONF_ARM_CUSTOM_BYPASS_ACTION,
+                AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS,
+            ),
+            (CONF_TRIGGER_ACTION, AlarmControlPanelEntityFeature.TRIGGER),
+        ):
+            if action_config := config.get(action_id):
+                self.add_script(action_id, action_config, name, DOMAIN)
+                self._attr_supported_features |= supported_feature
 
-        supported_features = AlarmControlPanelEntityFeature(0)
-        if self._arm_night_script is not None:
-            supported_features = (
-                supported_features | AlarmControlPanelEntityFeature.ARM_NIGHT
-            )
-
-        if self._arm_home_script is not None:
-            supported_features = (
-                supported_features | AlarmControlPanelEntityFeature.ARM_HOME
-            )
-
-        if self._arm_away_script is not None:
-            supported_features = (
-                supported_features | AlarmControlPanelEntityFeature.ARM_AWAY
-            )
-
-        if self._arm_vacation_script is not None:
-            supported_features = (
-                supported_features | AlarmControlPanelEntityFeature.ARM_VACATION
-            )
-
-        if self._arm_custom_bypass_script is not None:
-            supported_features = (
-                supported_features | AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS
-            )
-
-        if self._trigger_script is not None:
-            supported_features = (
-                supported_features | AlarmControlPanelEntityFeature.TRIGGER
-            )
-        self._attr_supported_features = supported_features
+        self._state: AlarmControlPanelState | None = None
+        self._attr_device_info = async_device_info_to_link_from_device_id(
+            hass,
+            config.get(CONF_DEVICE_ID),
+        )
 
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
@@ -277,10 +235,10 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity, Restore
             # then we should not restore state
             and self._state is None
         ):
-            self._state = last_state.state
+            self._state = AlarmControlPanelState(last_state.state)
 
     @property
-    def state(self) -> str | None:
+    def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the state of the device."""
         return self._state
 
@@ -331,43 +289,55 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity, Restore
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Arm the panel to Away."""
         await self._async_alarm_arm(
-            STATE_ALARM_ARMED_AWAY, script=self._arm_away_script, code=code
+            AlarmControlPanelState.ARMED_AWAY,
+            script=self._action_scripts.get(CONF_ARM_AWAY_ACTION),
+            code=code,
         )
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Arm the panel to Home."""
         await self._async_alarm_arm(
-            STATE_ALARM_ARMED_HOME, script=self._arm_home_script, code=code
+            AlarmControlPanelState.ARMED_HOME,
+            script=self._action_scripts.get(CONF_ARM_HOME_ACTION),
+            code=code,
         )
 
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Arm the panel to Night."""
         await self._async_alarm_arm(
-            STATE_ALARM_ARMED_NIGHT, script=self._arm_night_script, code=code
+            AlarmControlPanelState.ARMED_NIGHT,
+            script=self._action_scripts.get(CONF_ARM_NIGHT_ACTION),
+            code=code,
         )
 
     async def async_alarm_arm_vacation(self, code: str | None = None) -> None:
         """Arm the panel to Vacation."""
         await self._async_alarm_arm(
-            STATE_ALARM_ARMED_VACATION, script=self._arm_vacation_script, code=code
+            AlarmControlPanelState.ARMED_VACATION,
+            script=self._action_scripts.get(CONF_ARM_VACATION_ACTION),
+            code=code,
         )
 
     async def async_alarm_arm_custom_bypass(self, code: str | None = None) -> None:
         """Arm the panel to Custom Bypass."""
         await self._async_alarm_arm(
-            STATE_ALARM_ARMED_CUSTOM_BYPASS,
-            script=self._arm_custom_bypass_script,
+            AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
+            script=self._action_scripts.get(CONF_ARM_CUSTOM_BYPASS_ACTION),
             code=code,
         )
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Disarm the panel."""
         await self._async_alarm_arm(
-            STATE_ALARM_DISARMED, script=self._disarm_script, code=code
+            AlarmControlPanelState.DISARMED,
+            script=self._action_scripts.get(CONF_DISARM_ACTION),
+            code=code,
         )
 
     async def async_alarm_trigger(self, code: str | None = None) -> None:
         """Trigger the panel."""
         await self._async_alarm_arm(
-            STATE_ALARM_TRIGGERED, script=self._trigger_script, code=code
+            AlarmControlPanelState.TRIGGERED,
+            script=self._action_scripts.get(CONF_TRIGGER_ACTION),
+            code=code,
         )

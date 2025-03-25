@@ -32,7 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         client_session=async_get_clientsession(hass),
     )
 
-    if custom_account := entry.data.get(CONF_ACCOUNT) is not None:
+    if (custom_account := entry.data.get(CONF_ACCOUNT)) is not None:
         client.custom_account_id = custom_account
 
     try:
@@ -49,7 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def async_update_data() -> OVODailyUsage:
         """Fetch data from OVO Energy."""
-        if custom_account := entry.data.get(CONF_ACCOUNT) is not None:
+        if (custom_account := entry.data.get(CONF_ACCOUNT)) is not None:
             client.custom_account_id = custom_account
 
         async with asyncio.timeout(10):
@@ -67,6 +67,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = DataUpdateCoordinator[OVODailyUsage](
         hass,
         _LOGGER,
+        config_entry=entry,
         # Name of the data. For logging purposes.
         name="sensor",
         update_method=async_update_data,

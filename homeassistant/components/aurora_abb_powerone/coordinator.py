@@ -6,6 +6,7 @@ from time import sleep
 from aurorapy.client import AuroraError, AuroraSerialClient, AuroraTimeoutError
 from serial import SerialException
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -14,15 +15,32 @@ from .const import DOMAIN, SCAN_INTERVAL
 _LOGGER = logging.getLogger(__name__)
 
 
+type AuroraAbbConfigEntry = ConfigEntry[AuroraAbbDataUpdateCoordinator]
+
+
 class AuroraAbbDataUpdateCoordinator(DataUpdateCoordinator[dict[str, float]]):
     """Class to manage fetching AuroraAbbPowerone data."""
 
-    def __init__(self, hass: HomeAssistant, comport: str, address: int) -> None:
+    config_entry: AuroraAbbConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: AuroraAbbConfigEntry,
+        comport: str,
+        address: int,
+    ) -> None:
         """Initialize the data update coordinator."""
         self.available_prev = False
         self.available = False
         self.client = AuroraSerialClient(address, comport, parity="N", timeout=1)
-        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            update_interval=SCAN_INTERVAL,
+        )
 
     def _update_data(self) -> dict[str, float]:
         """Fetch new state data for the sensors.

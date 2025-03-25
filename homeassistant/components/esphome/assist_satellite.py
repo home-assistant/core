@@ -36,10 +36,10 @@ from homeassistant.components.intent import (
 )
 from homeassistant.components.media_player import async_process_play_media_url
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .entity import EsphomeAssistEntity
@@ -87,7 +87,7 @@ _CONFIG_TIMEOUT_SEC = 5
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ESPHomeConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Assist satellite entity."""
     entry_data = entry.runtime_data
@@ -95,11 +95,7 @@ async def async_setup_entry(
     if entry_data.device_info.voice_assistant_feature_flags_compat(
         entry_data.api_version
     ):
-        async_add_entities(
-            [
-                EsphomeAssistSatellite(entry, entry_data),
-            ]
-        )
+        async_add_entities([EsphomeAssistSatellite(entry, entry_data)])
 
 
 class EsphomeAssistSatellite(
@@ -108,9 +104,7 @@ class EsphomeAssistSatellite(
     """Satellite running ESPHome."""
 
     entity_description = assist_satellite.AssistSatelliteEntityDescription(
-        key="assist_satellite",
-        translation_key="assist_satellite",
-        entity_category=EntityCategory.CONFIG,
+        key="assist_satellite", translation_key="assist_satellite"
     )
 
     def __init__(
@@ -133,7 +127,7 @@ class EsphomeAssistSatellite(
 
         # Empty config. Updated when added to HA.
         self._satellite_config = assist_satellite.AssistSatelliteConfiguration(
-            available_wake_words=[], active_wake_words=[], max_active_wake_words=0
+            available_wake_words=[], active_wake_words=[], max_active_wake_words=1
         )
 
     @property
@@ -179,7 +173,13 @@ class EsphomeAssistSatellite(
 
     async def _update_satellite_config(self) -> None:
         """Get the latest satellite configuration from the device."""
-        config = await self.cli.get_voice_assistant_configuration(_CONFIG_TIMEOUT_SEC)
+        try:
+            config = await self.cli.get_voice_assistant_configuration(
+                _CONFIG_TIMEOUT_SEC
+            )
+        except TimeoutError:
+            # Placeholder config will be used
+            return
 
         # Update available/active wake words
         self._satellite_config.available_wake_words = [
@@ -194,6 +194,9 @@ class EsphomeAssistSatellite(
         self._satellite_config.max_active_wake_words = config.max_active_wake_words
         _LOGGER.debug("Received satellite configuration: %s", self._satellite_config)
 
+        # Inform listeners that config has been updated
+        self.entry_data.async_assist_satellite_config_updated(self._satellite_config)
+
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
@@ -206,7 +209,7 @@ class EsphomeAssistSatellite(
         )
         if feature_flags & VoiceAssistantFeature.API_AUDIO:
             # TCP audio
-            self.entry_data.disconnect_callbacks.add(
+            self.async_on_remove(
                 self.cli.subscribe_voice_assistant(
                     handle_start=self.handle_pipeline_start,
                     handle_stop=self.handle_pipeline_stop,
@@ -216,7 +219,7 @@ class EsphomeAssistSatellite(
             )
         else:
             # UDP audio
-            self.entry_data.disconnect_callbacks.add(
+            self.async_on_remove(
                 self.cli.subscribe_voice_assistant(
                     handle_start=self.handle_pipeline_start,
                     handle_stop=self.handle_pipeline_stop,
@@ -229,7 +232,7 @@ class EsphomeAssistSatellite(
             assert (self.registry_entry is not None) and (
                 self.registry_entry.device_id is not None
             )
-            self.entry_data.disconnect_callbacks.add(
+            self.async_on_remove(
                 async_register_timer_handler(
                     self.hass, self.registry_entry.device_id, self.handle_timer_event
                 )
@@ -241,13 +244,20 @@ class EsphomeAssistSatellite(
                 assist_satellite.AssistSatelliteEntityFeature.ANNOUNCE
             )
 
+            # Block until config is retrieved.
+            # If the device supports announcements, it will return a config.
+            _LOGGER.debug("Waiting for satellite configuration")
+            await self._update_satellite_config()
+
         if not (feature_flags & VoiceAssistantFeature.SPEAKER):
             # Will use media player for TTS/announcements
             self._update_tts_format()
 
-        # Fetch latest config in the background
-        self.config_entry.async_create_background_task(
-            self.hass, self._update_satellite_config(), "esphome_voice_assistant_config"
+        # Update wake word select when config is updated
+        self.async_on_remove(
+            self.entry_data.async_register_assist_satellite_set_wake_word_callback(
+                self.async_set_wake_word
+            )
         )
 
     async def async_will_remove_from_hass(self) -> None:
@@ -274,7 +284,10 @@ class EsphomeAssistSatellite(
         elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_INTENT_END:
             assert event.data is not None
             data_to_send = {
-                "conversation_id": event.data["intent_output"]["conversation_id"] or "",
+                "conversation_id": event.data["intent_output"]["conversation_id"],
+                "continue_conversation": str(
+                    int(event.data["intent_output"]["continue_conversation"])
+                ),
             }
         elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_TTS_START:
             assert event.data is not None
@@ -315,6 +328,10 @@ class EsphomeAssistSatellite(
                 "code": event.data["code"],
                 "message": event.data["message"],
             }
+        elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_RUN_END:
+            if self._tts_streaming_task is None:
+                # No TTS
+                self.entry_data.async_set_assist_pipeline_state(False)
 
         self.cli.send_voice_assistant_event(event_type, data_to_send)
 
@@ -413,7 +430,6 @@ class EsphomeAssistSatellite(
 
         # Run the pipeline
         _LOGGER.debug("Running pipeline from %s to %s", start_stage, end_stage)
-        self.entry_data.async_set_assist_pipeline_state(True)
         self._pipeline_task = self.config_entry.async_create_background_task(
             self.hass,
             self.async_accept_pipeline_from_satellite(
@@ -443,7 +459,6 @@ class EsphomeAssistSatellite(
 
     def handle_pipeline_finished(self) -> None:
         """Handle when pipeline has finished running."""
-        self.entry_data.async_set_assist_pipeline_state(False)
         self._stop_udp_server()
         _LOGGER.debug("Pipeline finished")
 
@@ -471,6 +486,17 @@ class EsphomeAssistSatellite(
     ) -> None:
         """Handle announcement finished message (also sent for TTS)."""
         self.tts_response_finished()
+
+    @callback
+    def async_set_wake_word(self, wake_word_id: str) -> None:
+        """Set active wake word and update config on satellite."""
+        self._satellite_config.active_wake_words = [wake_word_id]
+        self.config_entry.async_create_background_task(
+            self.hass,
+            self.async_set_configuration(self._satellite_config),
+            "esphome_voice_assistant_set_config",
+        )
+        _LOGGER.debug("Setting active wake word: %s", wake_word_id)
 
     def _update_tts_format(self) -> None:
         """Update the TTS format from the first media player."""
@@ -561,6 +587,7 @@ class EsphomeAssistSatellite(
 
         # State change
         self.tts_response_finished()
+        self.entry_data.async_set_assist_pipeline_state(False)
 
     async def _wrap_audio_stream(self) -> AsyncIterable[bytes]:
         """Yield audio chunks from the queue until None."""

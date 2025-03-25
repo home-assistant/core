@@ -6,10 +6,8 @@ from typing import TYPE_CHECKING, Any
 from aioautomower.model import MowerModes, StayOutZones, Zone
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AutomowerConfigEntry
 from .coordinator import AutomowerDataUpdateCoordinator
@@ -20,13 +18,15 @@ from .entity import (
     handle_sending_exception,
 )
 
+PARALLEL_UPDATES = 1
+
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AutomowerConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switch platform."""
     coordinator = entry.runtime_data
@@ -40,12 +40,9 @@ async def async_setup_entry(
             _stay_out_zones = coordinator.data[mower_id].stay_out_zones
             if _stay_out_zones is not None:
                 entities.extend(
-                    AutomowerStayOutZoneSwitchEntity(
-                        coordinator, mower_id, stay_out_zone_uid
-                    )
+                    StayOutZoneSwitchEntity(coordinator, mower_id, stay_out_zone_uid)
                     for stay_out_zone_uid in _stay_out_zones.zones
                 )
-            async_remove_entities(hass, coordinator, entry, mower_id)
         if coordinator.data[mower_id].capabilities.work_areas:
             _work_areas = coordinator.data[mower_id].work_areas
             if _work_areas is not None:
@@ -54,6 +51,42 @@ async def async_setup_entry(
                     for work_area_id in _work_areas
                 )
     async_add_entities(entities)
+
+    def _async_add_new_stay_out_zones(
+        mower_id: str, stay_out_zone_uids: set[str]
+    ) -> None:
+        async_add_entities(
+            StayOutZoneSwitchEntity(coordinator, mower_id, zone_uid)
+            for zone_uid in stay_out_zone_uids
+        )
+
+    def _async_add_new_work_areas(mower_id: str, work_area_ids: set[int]) -> None:
+        async_add_entities(
+            WorkAreaSwitchEntity(coordinator, mower_id, work_area_id)
+            for work_area_id in work_area_ids
+        )
+
+    def _async_add_new_devices(mower_ids: set[str]) -> None:
+        async_add_entities(
+            AutomowerScheduleSwitchEntity(mower_id, coordinator)
+            for mower_id in mower_ids
+        )
+        for mower_id in mower_ids:
+            mower_data = coordinator.data[mower_id]
+            if (
+                mower_data.capabilities.stay_out_zones
+                and mower_data.stay_out_zones is not None
+                and mower_data.stay_out_zones.zones is not None
+            ):
+                _async_add_new_stay_out_zones(
+                    mower_id, set(mower_data.stay_out_zones.zones.keys())
+                )
+            if mower_data.capabilities.work_areas and mower_data.work_areas is not None:
+                _async_add_new_work_areas(mower_id, set(mower_data.work_areas.keys()))
+
+    coordinator.new_devices_callbacks.append(_async_add_new_devices)
+    coordinator.new_zones_callbacks.append(_async_add_new_stay_out_zones)
+    coordinator.new_areas_callbacks.append(_async_add_new_work_areas)
 
 
 class AutomowerScheduleSwitchEntity(AutomowerControlEntity, SwitchEntity):
@@ -86,7 +119,7 @@ class AutomowerScheduleSwitchEntity(AutomowerControlEntity, SwitchEntity):
         await self.coordinator.api.commands.resume_schedule(self.mower_id)
 
 
-class AutomowerStayOutZoneSwitchEntity(AutomowerControlEntity, SwitchEntity):
+class StayOutZoneSwitchEntity(AutomowerControlEntity, SwitchEntity):
     """Defining the Automower stay out zone switch."""
 
     _attr_translation_key = "stay_out_zones"
@@ -132,14 +165,14 @@ class AutomowerStayOutZoneSwitchEntity(AutomowerControlEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.coordinator.api.commands.switch_stay_out_zone(
-            self.mower_id, self.stay_out_zone_uid, False
+            self.mower_id, self.stay_out_zone_uid, switch=False
         )
 
     @handle_sending_exception(poll_after_sending=True)
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.coordinator.api.commands.switch_stay_out_zone(
-            self.mower_id, self.stay_out_zone_uid, True
+            self.mower_id, self.stay_out_zone_uid, switch=True
         )
 
 
@@ -182,28 +215,3 @@ class WorkAreaSwitchEntity(WorkAreaControlEntity, SwitchEntity):
         await self.coordinator.api.commands.workarea_settings(
             self.mower_id, self.work_area_id, enabled=True
         )
-
-
-@callback
-def async_remove_entities(
-    hass: HomeAssistant,
-    coordinator: AutomowerDataUpdateCoordinator,
-    entry: AutomowerConfigEntry,
-    mower_id: str,
-) -> None:
-    """Remove deleted stay-out-zones from Home Assistant."""
-    entity_reg = er.async_get(hass)
-    active_zones = set()
-    _zones = coordinator.data[mower_id].stay_out_zones
-    if _zones is not None:
-        for zones_uid in _zones.zones:
-            uid = f"{mower_id}_{zones_uid}_stay_out_zones"
-            active_zones.add(uid)
-    for entity_entry in er.async_entries_for_config_entry(entity_reg, entry.entry_id):
-        if (
-            entity_entry.domain == Platform.SWITCH
-            and (split := entity_entry.unique_id.split("_"))[0] == mower_id
-            and split[-1] == "zones"
-            and entity_entry.unique_id not in active_zones
-        ):
-            entity_reg.async_remove(entity_entry.entity_id)

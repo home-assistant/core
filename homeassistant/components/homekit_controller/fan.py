@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from functools import cached_property
 from typing import Any
 
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
+from propcache.api import cached_property
 
 from homeassistant.components.fan import (
     DIRECTION_FORWARD,
@@ -17,7 +17,7 @@ from homeassistant.components.fan import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
     ranged_value_to_percentage,
@@ -42,7 +42,6 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
     # This must be set in subclasses to the name of a boolean characteristic
     # that controls whether the fan is on or off.
     on_characteristic: str
-    _enable_turn_on_off_backwards_compatibility = False
 
     @callback
     def _async_reconfigure(self) -> None:
@@ -211,7 +210,7 @@ ENTITY_TYPES = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Homekit fans."""
     hkid: str = config_entry.data["AccessoryPairingID"]

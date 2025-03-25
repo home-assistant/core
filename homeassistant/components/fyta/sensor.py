@@ -22,11 +22,10 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import FytaConfigEntry
-from .coordinator import FytaCoordinator
+from .coordinator import FytaConfigEntry, FytaCoordinator
 from .entity import FytaPlantEntity
 
 
@@ -83,6 +82,13 @@ SENSORS: Final[list[FytaSensorEntityDescription]] = [
         value_fn=lambda plant: plant.moisture_status.name.lower(),
     ),
     FytaSensorEntityDescription(
+        key="nutrients_status",
+        translation_key="nutrients_status",
+        device_class=SensorDeviceClass.ENUM,
+        options=PLANT_MEASUREMENT_STATUS_LIST,
+        value_fn=lambda plant: plant.nutrients_status.name.lower(),
+    ),
+    FytaSensorEntityDescription(
         key="salinity_status",
         translation_key="salinity_status",
         device_class=SensorDeviceClass.ENUM,
@@ -113,7 +119,7 @@ SENSORS: Final[list[FytaSensorEntityDescription]] = [
     FytaSensorEntityDescription(
         key="salinity",
         translation_key="salinity",
-        native_unit_of_measurement=UnitOfConductivity.MILLISIEMENS,
+        native_unit_of_measurement=UnitOfConductivity.MILLISIEMENS_PER_CM,
         device_class=SensorDeviceClass.CONDUCTIVITY,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda plant: plant.salinity,
@@ -123,6 +129,18 @@ SENSORS: Final[list[FytaSensorEntityDescription]] = [
         device_class=SensorDeviceClass.PH,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda plant: plant.ph,
+    ),
+    FytaSensorEntityDescription(
+        key="fertilise_last",
+        translation_key="last_fertilised",
+        device_class=SensorDeviceClass.DATE,
+        value_fn=lambda plant: plant.fertilise_last,
+    ),
+    FytaSensorEntityDescription(
+        key="fertilise_next",
+        translation_key="next_fertilisation",
+        device_class=SensorDeviceClass.DATE,
+        value_fn=lambda plant: plant.fertilise_next,
     ),
     FytaSensorEntityDescription(
         key="battery_level",
@@ -136,7 +154,9 @@ SENSORS: Final[list[FytaSensorEntityDescription]] = [
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: FytaConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: FytaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the FYTA sensors."""
     coordinator: FytaCoordinator = entry.runtime_data
@@ -149,6 +169,15 @@ async def async_setup_entry(
     ]
 
     async_add_entities(plant_entities)
+
+    def _async_add_new_device(plant_id: int) -> None:
+        async_add_entities(
+            FytaPlantSensor(coordinator, entry, sensor, plant_id)
+            for sensor in SENSORS
+            if sensor.key in dir(coordinator.data.get(plant_id))
+        )
+
+    coordinator.new_device_callbacks.append(_async_add_new_device)
 
 
 class FytaPlantSensor(FytaPlantEntity, SensorEntity):

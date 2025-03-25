@@ -1,7 +1,8 @@
 """Test the Assist Satellite entity."""
 
 import asyncio
-from unittest.mock import patch
+from collections.abc import Generator
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -25,9 +26,32 @@ from homeassistant.components.assist_satellite.entity import AssistSatelliteStat
 from homeassistant.components.media_source import PlayMedia
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from . import ENTITY_ID
 from .conftest import MockAssistSatellite
+
+from tests.components.tts.common import MockResultStream
+
+
+@pytest.fixture
+def mock_chat_session_conversation_id() -> Generator[Mock]:
+    """Mock the ulid library."""
+    with patch("homeassistant.helpers.chat_session.ulid_now") as mock_ulid_now:
+        mock_ulid_now.return_value = "mock-conversation-id"
+        yield mock_ulid_now
+
+
+@pytest.fixture(autouse=True)
+async def set_pipeline_tts(hass: HomeAssistant, init_components: ConfigEntry) -> None:
+    """Set up a pipeline with a TTS engine."""
+    await async_update_pipeline(
+        hass,
+        async_get_pipeline(hass),
+        tts_engine="tts.mock_entity",
+        tts_language="en",
+        tts_voice="test-voice",
+    )
 
 
 async def test_entity_state(
@@ -37,7 +61,7 @@ async def test_entity_state(
 
     state = hass.states.get(ENTITY_ID)
     assert state is not None
-    assert state.state == AssistSatelliteState.LISTENING_WAKE_WORD
+    assert state.state == AssistSatelliteState.IDLE
 
     context = Context()
     audio_stream = object()
@@ -63,8 +87,8 @@ async def test_entity_state(
     )
     assert kwargs["stt_stream"] is audio_stream
     assert kwargs["pipeline_id"] is None
-    assert kwargs["device_id"] is None
-    assert kwargs["tts_audio_output"] is None
+    assert kwargs["device_id"] is entity.device_entry.id
+    assert kwargs["tts_audio_output"] == {"test-option": "test-value"}
     assert kwargs["wake_word_phrase"] is None
     assert kwargs["audio_settings"] == AudioSettings(
         silence_seconds=vad.VadSensitivity.to_seconds(vad.VadSensitivity.DEFAULT)
@@ -73,18 +97,18 @@ async def test_entity_state(
     assert kwargs["end_stage"] == PipelineStage.TTS
 
     for event_type, event_data, expected_state in (
-        (PipelineEventType.RUN_START, {}, AssistSatelliteState.LISTENING_WAKE_WORD),
-        (PipelineEventType.RUN_END, {}, AssistSatelliteState.LISTENING_WAKE_WORD),
+        (PipelineEventType.RUN_START, {}, AssistSatelliteState.IDLE),
+        (PipelineEventType.RUN_END, {}, AssistSatelliteState.IDLE),
         (
             PipelineEventType.WAKE_WORD_START,
             {},
-            AssistSatelliteState.LISTENING_WAKE_WORD,
+            AssistSatelliteState.IDLE,
         ),
-        (PipelineEventType.WAKE_WORD_END, {}, AssistSatelliteState.LISTENING_WAKE_WORD),
-        (PipelineEventType.STT_START, {}, AssistSatelliteState.LISTENING_COMMAND),
-        (PipelineEventType.STT_VAD_START, {}, AssistSatelliteState.LISTENING_COMMAND),
-        (PipelineEventType.STT_VAD_END, {}, AssistSatelliteState.LISTENING_COMMAND),
-        (PipelineEventType.STT_END, {}, AssistSatelliteState.LISTENING_COMMAND),
+        (PipelineEventType.WAKE_WORD_END, {}, AssistSatelliteState.IDLE),
+        (PipelineEventType.STT_START, {}, AssistSatelliteState.LISTENING),
+        (PipelineEventType.STT_VAD_START, {}, AssistSatelliteState.LISTENING),
+        (PipelineEventType.STT_VAD_END, {}, AssistSatelliteState.LISTENING),
+        (PipelineEventType.STT_END, {}, AssistSatelliteState.LISTENING),
         (PipelineEventType.INTENT_START, {}, AssistSatelliteState.PROCESSING),
         (
             PipelineEventType.INTENT_END,
@@ -105,7 +129,7 @@ async def test_entity_state(
 
     entity.tts_response_finished()
     state = hass.states.get(ENTITY_ID)
-    assert state.state == AssistSatelliteState.LISTENING_WAKE_WORD
+    assert state.state == AssistSatelliteState.IDLE
 
 
 async def test_new_pipeline_cancels_pipeline(
@@ -163,21 +187,49 @@ async def test_new_pipeline_cancels_pipeline(
         (
             {"message": "Hello"},
             AssistSatelliteAnnouncement(
-                "Hello", "https://www.home-assistant.io/resolved.mp3", "tts"
+                message="Hello",
+                media_id="http://10.10.10.10:8123/api/tts_proxy/test-token",
+                original_media_id="media-source://bla",
+                tts_token="test-token",
+                media_id_source="tts",
             ),
         ),
         (
             {
                 "message": "Hello",
-                "media_id": "media-source://bla",
+                "media_id": "media-source://given",
             },
             AssistSatelliteAnnouncement(
-                "Hello", "https://www.home-assistant.io/resolved.mp3", "media_id"
+                message="Hello",
+                media_id="https://www.home-assistant.io/resolved.mp3",
+                original_media_id="media-source://given",
+                tts_token=None,
+                media_id_source="media_id",
             ),
         ),
         (
             {"media_id": "http://example.com/bla.mp3"},
-            AssistSatelliteAnnouncement("", "http://example.com/bla.mp3", "url"),
+            AssistSatelliteAnnouncement(
+                message="",
+                media_id="http://example.com/bla.mp3",
+                original_media_id="http://example.com/bla.mp3",
+                tts_token=None,
+                media_id_source="url",
+            ),
+        ),
+        (
+            {
+                "media_id": "http://example.com/bla.mp3",
+                "preannounce_media_id": "http://example.com/preannounce.mp3",
+            },
+            AssistSatelliteAnnouncement(
+                message="",
+                media_id="http://example.com/bla.mp3",
+                original_media_id="http://example.com/bla.mp3",
+                tts_token=None,
+                media_id_source="url",
+                preannounce_media_id="http://example.com/preannounce.mp3",
+            ),
         ),
     ],
 )
@@ -189,24 +241,12 @@ async def test_announce(
     expected_params: tuple[str, str],
 ) -> None:
     """Test announcing on a device."""
-    await async_update_pipeline(
-        hass,
-        async_get_pipeline(hass),
-        tts_engine="tts.mock_entity",
-        tts_language="en",
-        tts_voice="test-voice",
-    )
-
-    entity._attr_tts_options = {"test-option": "test-value"}
-
     original_announce = entity.async_announce
-    announce_started = asyncio.Event()
 
     async def async_announce(announcement):
         # Verify state change
         assert entity.state == AssistSatelliteState.RESPONDING
         await original_announce(announcement)
-        announce_started.set()
 
     def tts_generate_media_source_id(
         hass: HomeAssistant,
@@ -222,8 +262,16 @@ async def test_announce(
 
     with (
         patch(
-            "homeassistant.components.assist_satellite.entity.tts_generate_media_source_id",
+            "homeassistant.components.tts.generate_media_source_id",
             new=tts_generate_media_source_id,
+        ),
+        patch(
+            "homeassistant.components.tts.async_resolve_engine",
+            return_value="tts.cloud",
+        ),
+        patch(
+            "homeassistant.components.tts.async_create_stream",
+            return_value=MockResultStream(hass, "wav", b""),
         ),
         patch(
             "homeassistant.components.media_source.async_resolve_media",
@@ -241,7 +289,7 @@ async def test_announce(
             target={"entity_id": "assist_satellite.test_entity"},
             blocking=True,
         )
-        assert entity.state == AssistSatelliteState.LISTENING_WAKE_WORD
+        assert entity.state == AssistSatelliteState.IDLE
 
     assert entity.announcements[0] == expected_params
 
@@ -464,3 +512,188 @@ async def test_vad_sensitivity_entity_not_found(
 
     with pytest.raises(RuntimeError):
         await entity.async_accept_pipeline_from_satellite(audio_stream)
+
+
+@pytest.mark.parametrize(
+    ("service_data", "expected_params"),
+    [
+        (
+            {
+                "start_message": "Hello",
+                "extra_system_prompt": "Better system prompt",
+            },
+            (
+                "mock-conversation-id",
+                "Better system prompt",
+                AssistSatelliteAnnouncement(
+                    message="Hello",
+                    media_id="http://10.10.10.10:8123/api/tts_proxy/test-token",
+                    tts_token="test-token",
+                    original_media_id="media-source://generated",
+                    media_id_source="tts",
+                ),
+            ),
+        ),
+        (
+            {
+                "start_message": "Hello",
+                "start_media_id": "media-source://given",
+            },
+            (
+                "mock-conversation-id",
+                "Hello",
+                AssistSatelliteAnnouncement(
+                    message="Hello",
+                    media_id="https://www.home-assistant.io/resolved.mp3",
+                    tts_token=None,
+                    original_media_id="media-source://given",
+                    media_id_source="media_id",
+                ),
+            ),
+        ),
+        (
+            {"start_media_id": "http://example.com/given.mp3"},
+            (
+                "mock-conversation-id",
+                None,
+                AssistSatelliteAnnouncement(
+                    message="",
+                    media_id="http://example.com/given.mp3",
+                    tts_token=None,
+                    original_media_id="http://example.com/given.mp3",
+                    media_id_source="url",
+                ),
+            ),
+        ),
+        (
+            {
+                "start_media_id": "http://example.com/given.mp3",
+                "preannounce_media_id": "http://example.com/preannounce.mp3",
+            },
+            (
+                "mock-conversation-id",
+                None,
+                AssistSatelliteAnnouncement(
+                    message="",
+                    media_id="http://example.com/given.mp3",
+                    tts_token=None,
+                    original_media_id="http://example.com/given.mp3",
+                    media_id_source="url",
+                    preannounce_media_id="http://example.com/preannounce.mp3",
+                ),
+            ),
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_chat_session_conversation_id")
+async def test_start_conversation(
+    hass: HomeAssistant,
+    init_components: ConfigEntry,
+    entity: MockAssistSatellite,
+    service_data: dict,
+    expected_params: tuple[str, str],
+) -> None:
+    """Test starting a conversation on a device."""
+    await async_update_pipeline(
+        hass,
+        async_get_pipeline(hass),
+        conversation_engine="conversation.some_llm",
+    )
+
+    with (
+        patch(
+            "homeassistant.components.tts.generate_media_source_id",
+            return_value="media-source://generated",
+        ),
+        patch(
+            "homeassistant.components.tts.async_resolve_engine",
+            return_value="tts.cloud",
+        ),
+        patch(
+            "homeassistant.components.tts.async_create_stream",
+            return_value=MockResultStream(hass, "wav", b""),
+        ),
+        patch(
+            "homeassistant.components.media_source.async_resolve_media",
+            return_value=PlayMedia(
+                url="https://www.home-assistant.io/resolved.mp3",
+                mime_type="audio/mp3",
+            ),
+        ),
+    ):
+        await hass.services.async_call(
+            "assist_satellite",
+            "start_conversation",
+            service_data,
+            target={"entity_id": "assist_satellite.test_entity"},
+            blocking=True,
+        )
+
+    assert entity.start_conversations[0] == expected_params
+
+
+async def test_start_conversation_reject_builtin_agent(
+    hass: HomeAssistant,
+    init_components: ConfigEntry,
+    entity: MockAssistSatellite,
+) -> None:
+    """Test starting a conversation on a device."""
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "assist_satellite",
+            "start_conversation",
+            {"start_message": "Hey!"},
+            target={"entity_id": "assist_satellite.test_entity"},
+            blocking=True,
+        )
+
+
+async def test_wake_word_start_keeps_responding(
+    hass: HomeAssistant, init_components: ConfigEntry, entity: MockAssistSatellite
+) -> None:
+    """Test entity state stays responding on wake word start event."""
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == AssistSatelliteState.IDLE
+
+    # Get into responding state
+    audio_stream = object()
+
+    with patch(
+        "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream"
+    ) as mock_start_pipeline:
+        await entity.async_accept_pipeline_from_satellite(
+            audio_stream, start_stage=PipelineStage.TTS
+        )
+
+    assert mock_start_pipeline.called
+    kwargs = mock_start_pipeline.call_args[1]
+    event_callback = kwargs["event_callback"]
+    event_callback(PipelineEvent(PipelineEventType.TTS_START, {}))
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == AssistSatelliteState.RESPONDING
+
+    # Verify that starting a new wake word stream keeps the state
+    audio_stream = object()
+
+    with patch(
+        "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream"
+    ) as mock_start_pipeline:
+        await entity.async_accept_pipeline_from_satellite(
+            audio_stream, start_stage=PipelineStage.WAKE_WORD
+        )
+
+    assert mock_start_pipeline.called
+    kwargs = mock_start_pipeline.call_args[1]
+    event_callback = kwargs["event_callback"]
+    event_callback(PipelineEvent(PipelineEventType.WAKE_WORD_START, {}))
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == AssistSatelliteState.RESPONDING
+
+    # Only return to idle once TTS is finished
+    entity.tts_response_finished()
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == AssistSatelliteState.IDLE

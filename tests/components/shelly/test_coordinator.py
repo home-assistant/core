@@ -10,6 +10,7 @@ import pytest
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.shelly import MacAddressMismatchError
 from homeassistant.components.shelly.const import (
     ATTR_CHANNEL,
     ATTR_CLICK_TYPE,
@@ -254,11 +255,13 @@ async def test_block_polling_connection_error(
     assert get_entity_state(hass, "switch.test_name_channel_1") == STATE_UNAVAILABLE
 
 
+@pytest.mark.parametrize("exc", [DeviceConnectionError, MacAddressMismatchError])
 async def test_block_rest_update_connection_error(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_block_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
+    exc: Exception,
 ) -> None:
     """Test block REST update connection error."""
     entity_id = register_entity(hass, BINARY_SENSOR_DOMAIN, "test_name_cloud", "cloud")
@@ -269,11 +272,7 @@ async def test_block_rest_update_connection_error(
     await mock_rest_update(hass, freezer)
     assert get_entity_state(hass, entity_id) == STATE_ON
 
-    monkeypatch.setattr(
-        mock_block_device,
-        "update_shelly",
-        AsyncMock(side_effect=DeviceConnectionError),
-    )
+    monkeypatch.setattr(mock_block_device, "update_shelly", AsyncMock(side_effect=exc))
     await mock_rest_update(hass, freezer)
 
     assert get_entity_state(hass, entity_id) == STATE_UNAVAILABLE
@@ -387,6 +386,8 @@ async def test_rpc_reload_on_cfg_change(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC reload on config change."""
+    monkeypatch.delitem(mock_rpc_device.status, "cover:0")
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
     await init_integration(hass, 2)
 
     # Generate config change from switch to light
@@ -561,7 +562,7 @@ async def test_rpc_update_entry_sleep_period(
     mock_rpc_device.mock_online()
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert entry.data["sleep_period"] == 600
+    assert entry.data[CONF_SLEEP_PERIOD] == 600
 
     # Move time to generate sleep period update
     monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 3600)
@@ -569,7 +570,7 @@ async def test_rpc_update_entry_sleep_period(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert entry.data["sleep_period"] == 3600
+    assert entry.data[CONF_SLEEP_PERIOD] == 3600
 
 
 async def test_rpc_sleeping_device_no_periodic_updates(
@@ -702,25 +703,23 @@ async def test_rpc_polling_auth_error(
     assert flow["context"].get("entry_id") == entry.entry_id
 
 
+@pytest.mark.parametrize("exc", [DeviceConnectionError, MacAddressMismatchError])
 async def test_rpc_reconnect_error(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
+    exc: Exception,
 ) -> None:
     """Test RPC reconnect error."""
+    monkeypatch.delitem(mock_rpc_device.status, "cover:0")
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
     await init_integration(hass, 2)
 
     assert get_entity_state(hass, "switch.test_switch_0") == STATE_ON
 
     monkeypatch.setattr(mock_rpc_device, "connected", False)
-    monkeypatch.setattr(
-        mock_rpc_device,
-        "initialize",
-        AsyncMock(
-            side_effect=DeviceConnectionError,
-        ),
-    )
+    monkeypatch.setattr(mock_rpc_device, "initialize", AsyncMock(side_effect=exc))
 
     # Move time to generate reconnect
     freezer.tick(timedelta(seconds=RPC_RECONNECT_INTERVAL))
@@ -734,9 +733,12 @@ async def test_rpc_error_running_connected_events(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test RPC error while running connected events."""
+    monkeypatch.delitem(mock_rpc_device.status, "cover:0")
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
     with patch(
         "homeassistant.components.shelly.coordinator.async_ensure_ble_enabled",
         side_effect=DeviceConnectionError,
@@ -1016,3 +1018,22 @@ async def test_rpc_already_connected(
 
     assert "already connected" in caplog.text
     mock_rpc_device.initialize.assert_called_once()
+
+
+async def test_xmod_model_lookup(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test XMOD model look-up."""
+    xmod_model = "Test XMOD model name"
+    monkeypatch.setattr(mock_rpc_device, "xmod_info", {"n": xmod_model})
+    entry = await init_integration(hass, 2)
+
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, entry.entry_id)},
+        connections={(dr.CONNECTION_NETWORK_MAC, dr.format_mac(entry.unique_id))},
+    )
+    assert device
+    assert device.model == xmod_model

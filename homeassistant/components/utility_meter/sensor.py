@@ -9,7 +9,7 @@ from decimal import Decimal, DecimalException, InvalidOperation
 import logging
 from typing import Any, Self
 
-from croniter import croniter
+from cronsim import CronSim
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -27,6 +27,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
     CONF_UNIQUE_ID,
+    EVENT_CORE_CONFIG_UPDATE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -40,7 +41,10 @@ from homeassistant.core import (
 from homeassistant.helpers import entity_platform, entity_registry as er
 from homeassistant.helpers.device import async_device_info_to_link_from_entity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.event import (
     async_track_point_in_time,
     async_track_state_change_event,
@@ -48,8 +52,7 @@ from homeassistant.helpers.event import (
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.template import is_number
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import slugify
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util, slugify
 from homeassistant.util.enum import try_parse_enum
 
 from .const import (
@@ -116,7 +119,7 @@ def validate_is_number(value):
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize Utility Meter config entry."""
     entry_id = config_entry.entry_id
@@ -379,14 +382,13 @@ class UtilityMeterSensor(RestoreSensor):
         self.entity_id = suggested_entity_id
         self._parent_meter = parent_meter
         self._sensor_source_id = source_entity
-        self._state = None
         self._last_period = Decimal(0)
         self._last_reset = dt_util.utcnow()
         self._last_valid_state = None
         self._collecting = None
-        self._name = name
+        self._attr_name = name
         self._input_device_class = None
-        self._unit_of_measurement = None
+        self._attr_native_unit_of_measurement = None
         self._period = meter_type
         if meter_type is not None:
             # For backwards compatibility reasons we convert the period and offset into a cron pattern
@@ -405,12 +407,26 @@ class UtilityMeterSensor(RestoreSensor):
         self._tariff = tariff
         self._tariff_entity = tariff_entity
         self._next_reset = None
+        self._current_tz = None
+        self._config_scheduler()
+
+    def _config_scheduler(self):
+        self.scheduler = (
+            CronSim(
+                self._cron_pattern,
+                dt_util.now(
+                    dt_util.get_default_time_zone()
+                ),  # we need timezone for DST purposes (see issue #102984)
+            )
+            if self._cron_pattern
+            else None
+        )
 
     def start(self, attributes: Mapping[str, Any]) -> None:
         """Initialize unit and state upon source initial update."""
         self._input_device_class = attributes.get(ATTR_DEVICE_CLASS)
-        self._unit_of_measurement = attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        self._state = 0
+        self._attr_native_unit_of_measurement = attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        self._attr_native_value = 0
         self.async_write_ha_state()
 
     @staticmethod
@@ -485,13 +501,13 @@ class UtilityMeterSensor(RestoreSensor):
             )
             return
 
-        if self._state is None:
+        if self.native_value is None:
             # First state update initializes the utility_meter sensors
             for sensor in self.hass.data[DATA_UTILITY][self._parent_meter][
                 DATA_TARIFF_SENSORS
             ]:
                 sensor.start(new_state_attributes)
-                if self._unit_of_measurement is None:
+                if self.native_unit_of_measurement is None:
                     _LOGGER.warning(
                         "Source sensor %s has no unit of measurement. Please %s",
                         self._sensor_source_id,
@@ -502,10 +518,12 @@ class UtilityMeterSensor(RestoreSensor):
             adjustment := self.calculate_adjustment(old_state, new_state)
         ) is not None and (self._sensor_net_consumption or adjustment >= 0):
             # If net_consumption is off, the adjustment must be non-negative
-            self._state += adjustment  # type: ignore[operator] # self._state will be set to by the start function if it is None, therefore it always has a valid Decimal value at this line
+            self._attr_native_value += adjustment  # type: ignore[operator] # self._attr_native_value will be set to by the start function if it is None, therefore it always has a valid Decimal value at this line
 
         self._input_device_class = new_state_attributes.get(ATTR_DEVICE_CLASS)
-        self._unit_of_measurement = new_state_attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        self._attr_native_unit_of_measurement = new_state_attributes.get(
+            ATTR_UNIT_OF_MEASUREMENT
+        )
         self._last_valid_state = new_state_val
         self.async_write_ha_state()
 
@@ -534,7 +552,7 @@ class UtilityMeterSensor(RestoreSensor):
 
         _LOGGER.debug(
             "%s - %s - source <%s>",
-            self._name,
+            self.name,
             COLLECTING if self._collecting is not None else PAUSED,
             self._sensor_source_id,
         )
@@ -543,11 +561,10 @@ class UtilityMeterSensor(RestoreSensor):
 
     async def _program_reset(self):
         """Program the reset of the utility meter."""
-        if self._cron_pattern is not None:
-            tz = dt_util.get_default_time_zone()
-            self._next_reset = croniter(self._cron_pattern, dt_util.now(tz)).get_next(
-                datetime
-            )  # we need timezone for DST purposes (see issue #102984)
+        if self.scheduler:
+            self._next_reset = next(self.scheduler)
+
+            _LOGGER.debug("Next reset of %s is %s", self.entity_id, self._next_reset)
             self.async_on_remove(
                 async_track_point_in_time(
                     self.hass,
@@ -555,6 +572,7 @@ class UtilityMeterSensor(RestoreSensor):
                     self._next_reset,
                 )
             )
+            self.async_write_ha_state()
 
     async def _async_reset_meter(self, event):
         """Reset the utility meter status."""
@@ -575,19 +593,25 @@ class UtilityMeterSensor(RestoreSensor):
             return
         _LOGGER.debug("Reset utility meter <%s>", self.entity_id)
         self._last_reset = dt_util.utcnow()
-        self._last_period = Decimal(self._state) if self._state else Decimal(0)
-        self._state = 0
+        self._last_period = (
+            Decimal(self.native_value) if self.native_value else Decimal(0)
+        )
+        self._attr_native_value = 0
         self.async_write_ha_state()
 
     async def async_calibrate(self, value):
         """Calibrate the Utility Meter with a given value."""
-        _LOGGER.debug("Calibrate %s = %s type(%s)", self._name, value, type(value))
-        self._state = Decimal(str(value))
+        _LOGGER.debug("Calibrate %s = %s type(%s)", self.name, value, type(value))
+        self._attr_native_value = Decimal(str(value))
         self.async_write_ha_state()
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
         await super().async_added_to_hass()
+
+        # track current timezone in case it changes
+        # and we need to reconfigure the scheduler
+        self._current_tz = self.hass.config.time_zone
 
         await self._program_reset()
 
@@ -598,49 +622,17 @@ class UtilityMeterSensor(RestoreSensor):
         )
 
         if (last_sensor_data := await self.async_get_last_sensor_data()) is not None:
-            # new introduced in 2022.04
-            self._state = last_sensor_data.native_value
+            self._attr_native_value = last_sensor_data.native_value
             self._input_device_class = last_sensor_data.input_device_class
-            self._unit_of_measurement = last_sensor_data.native_unit_of_measurement
+            self._attr_native_unit_of_measurement = (
+                last_sensor_data.native_unit_of_measurement
+            )
             self._last_period = last_sensor_data.last_period
             self._last_reset = last_sensor_data.last_reset
             self._last_valid_state = last_sensor_data.last_valid_state
             if last_sensor_data.status == COLLECTING:
                 # Null lambda to allow cancelling the collection on tariff change
                 self._collecting = lambda: None
-
-        elif state := await self.async_get_last_state():
-            # legacy to be removed on 2022.10 (we are keeping this to avoid utility_meter counter losses)
-            try:
-                self._state = Decimal(state.state)
-            except InvalidOperation:
-                _LOGGER.error(
-                    "Could not restore state <%s>. Resetting utility_meter.%s",
-                    state.state,
-                    self.name,
-                )
-            else:
-                self._unit_of_measurement = state.attributes.get(
-                    ATTR_UNIT_OF_MEASUREMENT
-                )
-                self._last_period = (
-                    Decimal(state.attributes[ATTR_LAST_PERIOD])
-                    if state.attributes.get(ATTR_LAST_PERIOD)
-                    and is_number(state.attributes[ATTR_LAST_PERIOD])
-                    else Decimal(0)
-                )
-                self._last_valid_state = (
-                    Decimal(state.attributes[ATTR_LAST_VALID_STATE])
-                    if state.attributes.get(ATTR_LAST_VALID_STATE)
-                    and is_number(state.attributes[ATTR_LAST_VALID_STATE])
-                    else None
-                )
-                self._last_reset = dt_util.as_utc(
-                    dt_util.parse_datetime(state.attributes.get(ATTR_LAST_RESET))
-                )
-                if state.attributes.get(ATTR_STATUS) == COLLECTING:
-                    # Null lambda to allow cancelling the collection on tariff change
-                    self._collecting = lambda: None
 
         @callback
         def async_source_tracking(event):
@@ -666,7 +658,7 @@ class UtilityMeterSensor(RestoreSensor):
             _LOGGER.debug(
                 "<%s> collecting %s from %s",
                 self.name,
-                self._unit_of_measurement,
+                self.native_unit_of_measurement,
                 self._sensor_source_id,
             )
             self._collecting = async_track_state_change_event(
@@ -675,6 +667,19 @@ class UtilityMeterSensor(RestoreSensor):
 
         self.async_on_remove(async_at_started(self.hass, async_source_tracking))
 
+        async def async_track_time_zone(event):
+            """Reconfigure Scheduler after time zone changes."""
+
+            if self._current_tz != self.hass.config.time_zone:
+                self._current_tz = self.hass.config.time_zone
+
+                self._config_scheduler()
+                await self._program_reset()
+
+        self.async_on_remove(
+            self.hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, async_track_time_zone)
+        )
+
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         if self._collecting:
@@ -682,21 +687,14 @@ class UtilityMeterSensor(RestoreSensor):
         self._collecting = None
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
     def device_class(self):
         """Return the device class of the sensor."""
         if self._input_device_class is not None:
             return self._input_device_class
-        if self._unit_of_measurement in DEVICE_CLASS_UNITS[SensorDeviceClass.ENERGY]:
+        if (
+            self.native_unit_of_measurement
+            in DEVICE_CLASS_UNITS[SensorDeviceClass.ENERGY]
+        ):
             return SensorDeviceClass.ENERGY
         return None
 
@@ -708,11 +706,6 @@ class UtilityMeterSensor(RestoreSensor):
             if self._sensor_net_consumption
             else SensorStateClass.TOTAL_INCREASING
         )
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self._unit_of_measurement
 
     @property
     def extra_state_attributes(self):

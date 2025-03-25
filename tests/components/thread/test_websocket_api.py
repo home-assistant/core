@@ -353,6 +353,7 @@ async def test_discover_routers(
     assert msg == {
         "event": {
             "data": {
+                "instance_name": "HomeAssistant OpenThreadBorderRouter #0BBF",
                 "addresses": ["192.168.0.115"],
                 "border_agent_id": "230c6a1ac57f6f4be262acf32e5ef52c",
                 "brand": "homeassistant",
@@ -388,6 +389,7 @@ async def test_discover_routers(
                 "brand": "google",
                 "extended_address": "f6a99b425a67abed",
                 "extended_pan_id": "9e75e256f61409a3",
+                "instance_name": "Google-Nest-Hub-#ABED",
                 "model_name": "Google Nest Hub",
                 "network_name": "NEST-PAN-E1AF",
                 "server": "2d99f293-cd8e-2770-8dd2-6675de9fa000.local.",

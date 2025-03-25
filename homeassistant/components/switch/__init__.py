@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from datetime import timedelta
 from enum import StrEnum
-from functools import cached_property, partial
 import logging
 
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -18,12 +18,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.deprecation import (
-    DeprecatedConstantEnum,
-    all_with_deprecated_constants,
-    check_if_deprecated_constant,
-    dir_with_deprecated_constants,
-)
 from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
@@ -51,16 +45,8 @@ class SwitchDeviceClass(StrEnum):
 
 
 DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(SwitchDeviceClass))
-
-# DEVICE_CLASS* below are deprecated as of 2021.12
-# use the SwitchDeviceClass enum instead.
 DEVICE_CLASSES = [cls.value for cls in SwitchDeviceClass]
-_DEPRECATED_DEVICE_CLASS_OUTLET = DeprecatedConstantEnum(
-    SwitchDeviceClass.OUTLET, "2025.1"
-)
-_DEPRECATED_DEVICE_CLASS_SWITCH = DeprecatedConstantEnum(
-    SwitchDeviceClass.SWITCH, "2025.1"
-)
+
 
 # mypy: disallow-any-generics
 
@@ -123,11 +109,3 @@ class SwitchEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
         if hasattr(self, "entity_description"):
             return self.entity_description.device_class
         return None
-
-
-# These can be removed if no deprecated constant are in this module anymore
-__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(
-    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
-)
-__all__ = all_with_deprecated_constants(globals())
