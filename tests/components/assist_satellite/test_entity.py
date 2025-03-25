@@ -594,6 +594,13 @@ async def test_start_conversation(
     expected_params: tuple[str, str],
 ) -> None:
     """Test starting a conversation on a device."""
+    original_start_conversation = entity.async_start_conversation
+
+    async def async_start_conversation(start_announcement):
+        # Verify state change
+        assert entity.state == AssistSatelliteState.RESPONDING
+        await original_start_conversation(start_announcement)
+
     await async_update_pipeline(
         hass,
         async_get_pipeline(hass),
@@ -620,6 +627,7 @@ async def test_start_conversation(
                 mime_type="audio/mp3",
             ),
         ),
+        patch.object(entity, "async_start_conversation", new=async_start_conversation),
     ):
         await hass.services.async_call(
             "assist_satellite",
