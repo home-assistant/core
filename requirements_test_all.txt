@@ -433,6 +433,9 @@ airtouch4pyapi==1.0.5
 # homeassistant.components.airtouch5
 airtouch5py==0.2.11
 
+# homeassistant.components.airzone_mqtt
+airzone-mqtt==0.0.3
+
 # homeassistant.components.amberelectric
 amberelectric==2.0.12
 

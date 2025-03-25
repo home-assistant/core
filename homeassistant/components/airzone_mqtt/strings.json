@@ -1,0 +1,37 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "mqtt_unavailable": "MQTT integration is not available"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "mqtt_topic": "MQTT topic"
+        },
+        "data_description": {
+          "mqtt_topic": "MQTT topic"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "hvac_mode": {
+        "name": "HVAC mode"
+      },
+      "hvac_setpoint": {
+        "name": "HVAC setpoint"
+      },
+      "hvac_setpoint_max": {
+        "name": "HVAC maximum setpoint"
+      },
+      "hvac_setpoint_min": {
+        "name": "HVAC minimum setpoint"
+      }
+    }
+  }
+}
