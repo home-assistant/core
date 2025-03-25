@@ -1545,6 +1545,30 @@
       "oven_current_cavity_temperature": {
         "name": "Current oven cavity temperature"
       },
+      "freezer_door_alarm": {
+        "name": "Freezer door alarm",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "refrigerator_door_alarm": {
+        "name": "Refrigerator door alarm",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "freezer_temperature_alarm": {
+        "name": "Freezer temperature alarm",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
       "program_aborted": {
         "name": "Program aborted",
         "state": {
@@ -1587,22 +1611,6 @@
       },
       "drying_process_finished": {
         "name": "Drying process finished",
-        "state": {
-          "off": "[%key:common::state::off%]",
-          "confirmed": "[%key:component::home_connect::common::confirmed%]",
-          "present": "[%key:component::home_connect::common::present%]"
-        }
-      },
-      "salt_nearly_empty": {
-        "name": "Salt nearly empty",
-        "state": {
-          "off": "[%key:common::state::off%]",
-          "confirmed": "[%key:component::home_connect::common::confirmed%]",
-          "present": "[%key:component::home_connect::common::present%]"
-        }
-      },
-      "rinse_aid_nearly_empty": {
-        "name": "Rinse aid nearly empty",
         "state": {
           "off": "[%key:common::state::off%]",
           "confirmed": "[%key:component::home_connect::common::confirmed%]",
@@ -1769,30 +1777,6 @@
           "present": "[%key:component::home_connect::common::present%]"
         }
       },
-      "freezer_door_alarm": {
-        "name": "Freezer door alarm",
-        "state": {
-          "off": "[%key:common::state::off%]",
-          "confirmed": "[%key:component::home_connect::common::confirmed%]",
-          "present": "[%key:component::home_connect::common::present%]"
-        }
-      },
-      "refrigerator_door_alarm": {
-        "name": "Refrigerator door alarm",
-        "state": {
-          "off": "[%key:common::state::off%]",
-          "confirmed": "[%key:component::home_connect::common::confirmed%]",
-          "present": "[%key:component::home_connect::common::present%]"
-        }
-      },
-      "freezer_temperature_alarm": {
-        "name": "Freezer temperature alarm",
-        "state": {
-          "off": "[%key:common::state::off%]",
-          "confirmed": "[%key:component::home_connect::common::confirmed%]",
-          "present": "[%key:component::home_connect::common::present%]"
-        }
-      },
       "empty_dust_box_and_clean_filter": {
         "name": "Empty dust box and clean filter",
         "state": {
@@ -1843,6 +1827,22 @@
       },
       "grease_filter_max_saturation_reached": {
         "name": "Grease filter max saturation reached",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "salt_nearly_empty": {
+        "name": "Salt nearly empty",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "rinse_aid_nearly_empty": {
+        "name": "Rinse aid nearly empty",
         "state": {
           "off": "[%key:common::state::off%]",
           "confirmed": "[%key:component::home_connect::common::confirmed%]",
