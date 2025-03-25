@@ -81,8 +81,8 @@ class LeaController:
         self._update_handle: asyncio.TimerHandle | None = None
 
         self._response_handler: dict[str, Callable] = {
-            GetNumOfInputsMessage.data: self._handle_scan_response,
-            DevStatusResponse.command: self._handle_status_update_response,
+            GetNumOfInputsMessage.command: self._handle_num_inputs,
+            DevStatusResponse.command: self._handle_response_received,
         }
 
     async def start(self):
