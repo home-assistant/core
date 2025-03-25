@@ -5,6 +5,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/sunweg",
   "iot_class": "cloud_polling",
-  "loggers": ["sunweg"],
+  "loggers": [],
   "requirements": []
 }
