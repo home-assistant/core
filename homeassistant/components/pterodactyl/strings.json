@@ -25,6 +25,47 @@
       "status": {
         "name": "Status"
       }
+    },
+    "sensor": {
+      "cpu_utilization": {
+        "name": "CPU Utilization",
+        "state_attributes": {
+          "cpu_limit": {
+            "name": "CPU Limit in (%)"
+          }
+        }
+      },
+      "memory_utilization": {
+        "name": "Memory Utilization",
+        "state_attributes": {
+          "memory_usage": {
+            "name": "Memory Usage (MB)"
+          },
+          "memory_limit": {
+            "name": "Memory Limit (MB)"
+          }
+        }
+      },
+      "disk_utilization": {
+        "name": "Disk Utilization",
+        "state_attributes": {
+          "disk_usage": {
+            "name": "Disk Usage (MB)"
+          },
+          "disk_limit": {
+            "name": "Disk Limit (MB)"
+          }
+        }
+      },
+      "network_inbound": {
+        "name": "Network Inbound"
+      },
+      "network_outbound": {
+        "name": "Network Outbound"
+      },
+      "uptime": {
+        "name": "Uptime"
+      }
     }
   }
 }

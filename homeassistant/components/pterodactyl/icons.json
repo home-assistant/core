@@ -1,0 +1,24 @@
+{
+  "entity": {
+    "sensor": {
+      "cpu_utilization": {
+        "default": "mdi:cpu-64-bit"
+      },
+      "memory_utilization": {
+        "default": "mdi:memory"
+      },
+      "disk_utilization": {
+        "default": "mdi:harddisk"
+      },
+      "network_inbound": {
+        "default": "mdi:download"
+      },
+      "network_outbound": {
+        "default": "mdi:upload"
+      },
+      "uptime": {
+        "default": "mdi:timer"
+      }
+    }
+  }
+}
