@@ -16,8 +16,7 @@ from zcc import (
     ControlPointError,
 )
 
-from homeassistant import config_entries
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PORT
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import (
@@ -69,7 +68,7 @@ class ZimiConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial auto-discovery step."""
 
         self.data = {}
@@ -89,7 +88,7 @@ class ZimiConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_selection(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Handle selection of zcc to configure if multiple are discovered."""
 
         errors: dict[str, str] = {}
@@ -149,7 +148,7 @@ class ZimiConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def create_entry(self) -> config_entries.ConfigFlowResult:
+    async def create_entry(self) -> ConfigFlowResult:
         """Create entry for zcc."""
 
         if not self.api:
