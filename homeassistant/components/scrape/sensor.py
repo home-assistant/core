@@ -101,40 +101,41 @@ async def async_setup_entry(
     entities: list = []
 
     coordinator = entry.runtime_data
-    config = dict(entry.options)
-    for sensor in config["sensor"]:
-        sensor_config: ConfigType = vol.Schema(
-            TEMPLATE_SENSOR_BASE_SCHEMA.schema, extra=vol.ALLOW_EXTRA
-        )(sensor)
+    for subentry in entry.subentries.values():
+        config = dict(subentry.data)
+        for sensor in config["sensor"]:
+            sensor_config: ConfigType = vol.Schema(
+                TEMPLATE_SENSOR_BASE_SCHEMA.schema, extra=vol.ALLOW_EXTRA
+            )(sensor)
 
-        name: str = sensor_config[CONF_NAME]
-        value_string: str | None = sensor_config.get(CONF_VALUE_TEMPLATE)
+            name: str = sensor_config[CONF_NAME]
+            value_string: str | None = sensor_config.get(CONF_VALUE_TEMPLATE)
 
-        value_template: ValueTemplate | None = (
-            ValueTemplate(value_string, hass) if value_string is not None else None
-        )
-
-        trigger_entity_config: dict[str, str | Template | None] = {CONF_NAME: name}
-        for key in TRIGGER_ENTITY_OPTIONS:
-            if key not in sensor_config:
-                continue
-            if key == CONF_AVAILABILITY:
-                trigger_entity_config[key] = Template(sensor_config[key], hass)
-                continue
-            trigger_entity_config[key] = sensor_config[key]
-
-        entities.append(
-            ScrapeSensor(
-                hass,
-                coordinator,
-                trigger_entity_config,
-                sensor_config[CONF_SELECT],
-                sensor_config.get(CONF_ATTRIBUTE),
-                sensor_config[CONF_INDEX],
-                value_template,
-                False,
+            value_template: ValueTemplate | None = (
+                ValueTemplate(value_string, hass) if value_string is not None else None
             )
-        )
+
+            trigger_entity_config: dict[str, str | Template | None] = {CONF_NAME: name}
+            for key in TRIGGER_ENTITY_OPTIONS:
+                if key not in sensor_config:
+                    continue
+                if key == CONF_AVAILABILITY:
+                    trigger_entity_config[key] = Template(sensor_config[key], hass)
+                    continue
+                trigger_entity_config[key] = sensor_config[key]
+
+            entities.append(
+                ScrapeSensor(
+                    hass,
+                    coordinator,
+                    trigger_entity_config,
+                    sensor_config[CONF_SELECT],
+                    sensor_config.get(CONF_ATTRIBUTE),
+                    sensor_config[CONF_INDEX],
+                    value_template,
+                    False,
+                )
+            )
 
     async_add_entities(entities)
 
