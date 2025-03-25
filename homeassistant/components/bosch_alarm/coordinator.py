@@ -11,8 +11,7 @@ from bosch_alarm_mode2 import Panel
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_INSTALLER_CODE, CONF_USER_CODE
 
@@ -56,7 +55,7 @@ class BoschAlarmCoordinator(DataUpdateCoordinator[None]):
             await self.panel.connect()
         except (PermissionError, ValueError) as err:
             await self.panel.disconnect()
-            raise ConfigEntryNotReady from err
+            raise UpdateFailed from err
         except (
             OSError,
             ConnectionRefusedError,
@@ -64,7 +63,7 @@ class BoschAlarmCoordinator(DataUpdateCoordinator[None]):
             asyncio.exceptions.TimeoutError,
         ) as err:
             await self.panel.disconnect()
-            raise ConfigEntryNotReady("Connection failed") from err
+            raise UpdateFailed("Connection failed") from err
 
     async def _async_update_data(self) -> None:
         pass
