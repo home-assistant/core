@@ -2313,7 +2313,7 @@ pysma==0.7.5
 pysmappee==0.2.29
 
 # homeassistant.components.smartthings
-pysmartthings==2.7.4
+pysmartthings==3.0.0
 
 # homeassistant.components.smarty
 pysmarty2==0.10.2
@@ -3125,7 +3125,7 @@ yeelight==0.7.16
 yeelightsunflower==0.0.10
 
 # homeassistant.components.yolink
-yolink-api==0.4.8
+yolink-api==0.4.9
 
 # homeassistant.components.youless
 youless-api==2.2.0
