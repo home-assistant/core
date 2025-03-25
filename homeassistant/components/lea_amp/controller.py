@@ -199,7 +199,7 @@ class LeaController:
             while True:
                 data = self._transport.recv(2048)
                 if data:
-                    _LOGGER.log(logging.INFO, "data: %s", str(data.decode()))
+                    _LOGGER.log(logging.INFO, "response data: %s", str(data.decode()))
                     self._handle_response_received(data.decode())
                     break
         if self._registry.has_queued_zones:
