@@ -193,11 +193,7 @@ async def _async_fix_unique_id(
             return False
 
     _LOGGER.debug("Updating unique id to %s", new_unique_id)
-    hass.config_entries.async_update_entry(
-        entry,
-        unique_id=new_unique_id,
-        data=entry.data,
-    )
+    hass.config_entries.async_update_entry(entry, unique_id=new_unique_id)
     return True
 
 
