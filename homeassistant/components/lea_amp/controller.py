@@ -216,6 +216,11 @@ class LeaController:
 
     def send_update_message(self):
         """Send Update Message."""
+        _LOGGER.log(
+            logging.INFO,
+            "Sending update message:  %s",
+            (str(self._registry.discovered_zones.values())),
+        )
         if self._transport:
             for d in self._registry.discovered_zones.values():
                 self._send_update_message(zone=d)
@@ -298,9 +303,9 @@ class LeaController:
             zone = LeaZone(self, str(i))
             if self._call_discovered_callback(zone, True):
                 zone = self._registry.add_discovered_zone(zone)
-                self._logger.debug("zone discovered: %s", zone)
+                _LOGGER.log(logging.INFO, "zone discovered: %s", zone)
             else:
-                self._logger.debug("zone %s ignored", zone)
+                _LOGGER.log(logging.INFO, "zone %s ignored", zone)
 
     def _call_discovered_callback(self, zone: LeaZone, is_new: bool) -> bool:
         if not self._zone_discovered_callback:
