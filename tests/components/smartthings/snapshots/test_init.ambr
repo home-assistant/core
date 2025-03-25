@@ -1487,6 +1487,39 @@
     'via_device_id': None,
   })
 # ---
+# name: test_devices[vd_sensor_light_2023]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': '',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        '5cc1c096-98b9-460c-8f1c-1045509ec605',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'Samsung Electronics',
+    'model': 'QE55LS03DAUXXN',
+    'model_id': None,
+    'name': 'Light Sensor - 55" The Frame',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': 'latest',
+    'via_device_id': None,
+  })
+# ---
 # name: test_devices[vd_stv_2017_k]
   DeviceRegistryEntrySnapshot({
     'area_id': 'theater',

@@ -675,6 +675,15 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
+    Capability.RELATIVE_BRIGHTNESS: {
+        Attribute.BRIGHTNESS_INTENSITY: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.BRIGHTNESS_INTENSITY,
+                translation_key="brightness_intensity",
+                state_class=SensorStateClass.MEASUREMENT,
+            )
+        ]
+    },
     Capability.RELATIVE_HUMIDITY_MEASUREMENT: {
         Attribute.HUMIDITY: [
             SmartThingsSensorEntityDescription(
