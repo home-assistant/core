@@ -185,8 +185,10 @@ class LeaController:
     def send_discovery_message(self):
         """Send Get Number of Inputs."""
         message: str = str(GetNumOfInputsMessage())
+        _LOGGER.debug("Sending discovery message: %s", message)
         call_later: bool = False
         if not self._transport:
+            _LOGGER.debug("Transport not available")
             return
 
         if self._discovery_enabled:
