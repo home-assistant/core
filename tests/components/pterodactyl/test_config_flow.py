@@ -40,15 +40,15 @@ async def test_full_flow(
         TEST_SERVER_UTILIZATION
     )
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         flow_id=result["flow_id"],
         user_input=TEST_USER_INPUT,
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == TEST_URL
-    assert result2["data"] == TEST_USER_INPUT
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == TEST_URL
+    assert result["data"] == TEST_USER_INPUT
 
 
 @pytest.mark.parametrize(
@@ -71,14 +71,14 @@ async def test_recovery_after_api_error(
 
     mock_pterodactyl.client.servers.list_servers.side_effect = exception_type
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         flow_id=result["flow_id"],
         user_input=TEST_USER_INPUT,
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
 
     mock_pterodactyl.reset_mock(side_effect=True)
     mock_pterodactyl.client.servers.list_servers.return_value = PaginatedResponse(
@@ -89,14 +89,14 @@ async def test_recovery_after_api_error(
         TEST_SERVER_UTILIZATION
     )
 
-    result3 = await hass.config_entries.flow.async_configure(
-        flow_id=result2["flow_id"], user_input=TEST_USER_INPUT
+    result = await hass.config_entries.flow.async_configure(
+        flow_id=result["flow_id"], user_input=TEST_USER_INPUT
     )
     await hass.async_block_till_done()
 
-    assert result3["type"] is FlowResultType.CREATE_ENTRY
-    assert result3["title"] == TEST_URL
-    assert result3["data"] == TEST_USER_INPUT
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == TEST_URL
+    assert result["data"] == TEST_USER_INPUT
 
 
 @pytest.mark.usefixtures("mock_pterodactyl")
@@ -112,14 +112,14 @@ async def test_recovery_after_unknown_error(
 
     mock_pterodactyl.client.servers.list_servers.side_effect = Exception
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         flow_id=result["flow_id"],
         user_input=TEST_USER_INPUT,
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "unknown"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}
 
     mock_pterodactyl.reset_mock(side_effect=True)
     mock_pterodactyl.client.servers.list_servers.return_value = PaginatedResponse(
@@ -130,14 +130,14 @@ async def test_recovery_after_unknown_error(
         TEST_SERVER_UTILIZATION
     )
 
-    result3 = await hass.config_entries.flow.async_configure(
-        flow_id=result2["flow_id"], user_input=TEST_USER_INPUT
+    result = await hass.config_entries.flow.async_configure(
+        flow_id=result["flow_id"], user_input=TEST_USER_INPUT
     )
     await hass.async_block_till_done()
 
-    assert result3["type"] is FlowResultType.CREATE_ENTRY
-    assert result3["title"] == TEST_URL
-    assert result3["data"] == TEST_USER_INPUT
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == TEST_URL
+    assert result["data"] == TEST_USER_INPUT
 
 
 @pytest.mark.usefixtures("mock_config_entry", "mock_pterodactyl")
