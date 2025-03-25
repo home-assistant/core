@@ -34,6 +34,7 @@ class PointDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]
         self._known_homes: set[str] = set()
         self.new_home_callback: Callable[[str], None] | None = None
         self.new_device_callbacks: list[Callable[[str], None]] = []
+        self.data: dict[str, dict[str, Any]] = {}
 
     async def _async_update_data(self) -> dict[str, dict[str, Any]]:
         if not await self.point.update():
