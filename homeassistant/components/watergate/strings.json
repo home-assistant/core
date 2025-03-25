@@ -21,7 +21,7 @@
   "entity": {
     "event": {
       "auto_shut_off_volume": {
-        "name": "Volume Auto shut-off",
+        "name": "Volume auto shut-off",
         "state_attributes": {
           "event_type": {
             "state": {
@@ -38,7 +38,7 @@
         }
       },
       "auto_shut_off_duration": {
-        "name": "Duration Auto shut-off",
+        "name": "Duration auto shut-off",
         "state_attributes": {
           "event_type": {
             "state": {
