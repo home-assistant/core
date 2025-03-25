@@ -1363,7 +1363,7 @@ async def test_unprovision_smart_start_node(
     # Create device registry entry for mock node
     device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, "provision_test"), "test"},
+        identifiers={(DOMAIN, "provision_test"), ("other_domain", "test")},
         name="Node 67",
     )
     provisioning_entry = ProvisioningEntry.from_dict(
