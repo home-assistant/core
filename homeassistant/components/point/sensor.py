@@ -78,9 +78,9 @@ class MinutPointSensor(MinutPointEntity, SensorEntity):
         description: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
+        self.entity_description = description
         super().__init__(coordinator, device_id)
         self._attr_unique_id = f"point.{device_id}-{description.key}"
-        self.entity_description = description
 
     @property
     def native_value(self) -> StateType:

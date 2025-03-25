@@ -80,6 +80,7 @@ class MinutPointBinarySensor(MinutPointEntity, BinarySensorEntity):
         self._events = EVENTS[key]
         self._attr_unique_id = f"point.{device_id}-{key}"
         self._attr_icon = DEVICES[key].get("icon")
+        self._attr_device_class = DEVICES[key].get("device_class", key)
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to HOme Assistant."""
