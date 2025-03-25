@@ -98,11 +98,11 @@ class BoschAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
                 ConnectionRefusedError,
                 ssl.SSLError,
                 asyncio.exceptions.TimeoutError,
-            ):
-                _LOGGER.exception("Connection Error")
+            ) as e:
+                _LOGGER.error("Connection Error: %s", e)
                 errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
+            except Exception as e:  # noqa: BLE001
+                _LOGGER.error("Unexpected exception: %s", e)
                 errors["base"] = "unknown"
             else:
                 self._data = user_input
@@ -136,19 +136,19 @@ class BoschAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
                 (model, serial_number) = await try_connect(
                     self._data, Panel.LOAD_EXTENDED_INFO
                 )
-            except (PermissionError, ValueError):
+            except (PermissionError, ValueError) as e:
                 errors["base"] = "invalid_auth"
-                _LOGGER.exception("Authentication Error")
+                _LOGGER.error("Authentication Error: %s", e)
             except (
                 OSError,
                 ConnectionRefusedError,
                 ssl.SSLError,
                 TimeoutError,
-            ):
-                _LOGGER.exception("Connection Error")
+            ) as e:
+                _LOGGER.error("Connection Error: %s", e)
                 errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
+            except Exception as e:  # noqa: BLE001
+                _LOGGER.error("Unexpected exception: %s", e)
                 errors["base"] = "unknown"
             else:
                 if serial_number:
