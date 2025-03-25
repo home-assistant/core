@@ -2025,6 +2025,13 @@ class _SchemaVersion49Migrator(_SchemaVersionMigrator, target_version=49):
                 ),
                 {"mean_type": StatisticMeanType.ARIMETHIC.value},
             )
+
+
+class _SchemaVersion50Migrator(_SchemaVersionMigrator, target_version=50):
+    def _apply_update(self) -> None:
+        """Version specific update method."""
+        with session_scope(session=self.session_maker()) as session:
+            connection = session.connection()
             connection.execute(text("UPDATE statistics_meta SET has_mean=NULL"))
 
 
