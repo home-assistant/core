@@ -6,7 +6,7 @@
           "station_id": "Hydrological station"
         },
         "data_description": {
-          "station_id": "Select a hydrological station from the list of available stations."
+          "station_id": "Select a hydrological station from the list."
         }
       }
     },
