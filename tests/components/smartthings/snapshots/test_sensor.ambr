@@ -7231,7 +7231,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'media_input_source',
-    'unique_id': 'afcf3b91-0000-1111-2222-ddff2a0a6577.inputSource',
+    'unique_id': 'afcf3b91-0000-1111-2222-ddff2a0a6577_main_mediaInputSource_inputSource_inputSource',
     'unit_of_measurement': None,
   })
 # ---
@@ -7295,7 +7295,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'media_playback_status',
-    'unique_id': 'afcf3b91-0000-1111-2222-ddff2a0a6577.playbackStatus',
+    'unique_id': 'afcf3b91-0000-1111-2222-ddff2a0a6577_main_mediaPlayback_playbackStatus_playbackStatus',
     'unit_of_measurement': None,
   })
 # ---
@@ -7351,7 +7351,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'audio_volume',
-    'unique_id': 'afcf3b91-0000-1111-2222-ddff2a0a6577.volume',
+    'unique_id': 'afcf3b91-0000-1111-2222-ddff2a0a6577_main_audioVolume_volume_volume',
     'unit_of_measurement': '%',
   })
 # ---
