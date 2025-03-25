@@ -20,7 +20,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Fluss Devices."""
 
-    api: FlussApiClient = entry.runtime_data
+    api = entry.runtime_data
 
     devices_data = await api.async_get_devices()
     devices = devices_data["devices"]
