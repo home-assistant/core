@@ -330,6 +330,9 @@ COMMON_ENTITY_FIELDS = {
 COMMON_MQTT_FIELDS = {
     CONF_QOS: PlatformField(QOS_SELECTOR, False, valid_qos_schema, default=0),
 }
+
+COLLAPSED_SECTIONS = {"advanced_settings"}
+
 PLATFORM_ENTITY_FIELDS = {
     Platform.NOTIFY.value: {},
     Platform.SENSOR.value: {
@@ -545,6 +548,7 @@ def data_schema_from_fields(
     }
     data_schema: dict[Any, Any] = {}
     all_data_element_options: set[Any] = set()
+    no_reconfig_options: set[Any] = set()
     for schema_section in sections:
         data_schema_element = {
             vol.Required(field_name, default=field_details.default)
@@ -561,11 +565,20 @@ def data_schema_from_fields(
         }
         data_element_options = set(data_schema_element)
         all_data_element_options |= data_element_options
+        no_reconfig_options |= {
+            field_name
+            for field_name, field_details in data_schema_fields.items()
+            if field_details.section == schema_section
+            and field_details.exclude_from_reconfig
+        }
+        if not data_element_options:
+            continue
         if schema_section is None:
             data_schema.update(data_schema_element)
             continue
         collapsed = (
-            bool(data_element_options - set(user_data))  # type: ignore[arg-type]
+            schema_section in COLLAPSED_SECTIONS
+            or not bool(set(user_data) & data_element_options)
             if user_data is not None
             else True
         )
@@ -575,7 +588,9 @@ def data_schema_from_fields(
 
     # Reset all fields from the component not in the schema
     if component:
-        filtered_fields = set(data_schema_fields) - all_data_element_options
+        filtered_fields = (
+            set(data_schema_fields) - all_data_element_options - no_reconfig_options
+        )
         for field in filtered_fields:
             if field in component:
                 del component[field]
