@@ -81,7 +81,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-PySwitchbot==0.57.1
+PySwitchbot==0.58.0
 
 # homeassistant.components.syncthru
 PySyncThru==0.8.0
@@ -201,7 +201,7 @@ aiobafi6==0.9.0
 aiobotocore==2.13.1
 
 # homeassistant.components.comelit
-aiocomelit==0.11.2
+aiocomelit==0.11.3
 
 # homeassistant.components.dhcp
 aiodhcpwatcher==1.1.1
@@ -889,7 +889,7 @@ google-cloud-speech==2.27.0
 google-cloud-texttospeech==2.17.2
 
 # homeassistant.components.google_generative_ai_conversation
-google-genai==1.1.0
+google-genai==1.7.0
 
 # homeassistant.components.nest
 google-nest-sdm==7.1.4
@@ -978,7 +978,7 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.68
+holidays==0.69
 
 # homeassistant.components.frontend
 home-assistant-frontend==20250306.0
@@ -1409,7 +1409,7 @@ prometheus-client==0.21.0
 psutil-home-assistant==0.0.1
 
 # homeassistant.components.systemmonitor
-psutil==6.1.1
+psutil==7.0.0
 
 # homeassistant.components.pushbullet
 pushbullet.py==0.11.0
@@ -1796,7 +1796,7 @@ pyotgw==2.2.2
 pyotp==2.8.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.16.4
+pyoverkiz==1.16.5
 
 # homeassistant.components.onewire
 pyownet==0.10.0.post1
@@ -1883,7 +1883,7 @@ pysma==0.7.5
 pysmappee==0.2.29
 
 # homeassistant.components.smartthings
-pysmartthings==2.7.4
+pysmartthings==3.0.0
 
 # homeassistant.components.smarty
 pysmarty2==0.10.2
@@ -1989,7 +1989,7 @@ python-otbr-api==2.7.0
 python-overseerr==0.7.1
 
 # homeassistant.components.picnic
-python-picnic-api2==1.2.2
+python-picnic-api2==1.2.4
 
 # homeassistant.components.rabbitair
 python-rabbitair==0.0.8
@@ -2122,7 +2122,7 @@ renault-api==0.2.9
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.12.3
+reolink-aio==0.13.0
 
 # homeassistant.components.rflink
 rflink==0.0.66
@@ -2518,7 +2518,7 @@ yalexs==8.10.0
 yeelight==0.7.16
 
 # homeassistant.components.yolink
-yolink-api==0.4.8
+yolink-api==0.4.9
 
 # homeassistant.components.youless
 youless-api==2.2.0

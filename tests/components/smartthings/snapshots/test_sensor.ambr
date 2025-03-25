@@ -7193,6 +7193,182 @@
     'state': '19.0',
   })
 # ---
+# name: test_all_entities[hw_q80r_soundbar][sensor.soundbar_media_input_source-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'wifi',
+        'bluetooth',
+        'hdmi1',
+        'hdmi2',
+        'digital',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.soundbar_media_input_source',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Media input source',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'media_input_source',
+    'unique_id': 'afcf3b91-0000-1111-2222-ddff2a0a6577.inputSource',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[hw_q80r_soundbar][sensor.soundbar_media_input_source-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Soundbar Media input source',
+      'options': list([
+        'wifi',
+        'bluetooth',
+        'hdmi1',
+        'hdmi2',
+        'digital',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.soundbar_media_input_source',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'wifi',
+  })
+# ---
+# name: test_all_entities[hw_q80r_soundbar][sensor.soundbar_media_playback_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'paused',
+        'playing',
+        'stopped',
+        'fast_forwarding',
+        'rewinding',
+        'buffering',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.soundbar_media_playback_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Media playback status',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'media_playback_status',
+    'unique_id': 'afcf3b91-0000-1111-2222-ddff2a0a6577.playbackStatus',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[hw_q80r_soundbar][sensor.soundbar_media_playback_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Soundbar Media playback status',
+      'options': list([
+        'paused',
+        'playing',
+        'stopped',
+        'fast_forwarding',
+        'rewinding',
+        'buffering',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.soundbar_media_playback_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'playing',
+  })
+# ---
+# name: test_all_entities[hw_q80r_soundbar][sensor.soundbar_volume-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.soundbar_volume',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Volume',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'audio_volume',
+    'unique_id': 'afcf3b91-0000-1111-2222-ddff2a0a6577.volume',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[hw_q80r_soundbar][sensor.soundbar_volume-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Soundbar Volume',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.soundbar_volume',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
 # name: test_all_entities[ikea_kadrilj][sensor.kitchen_ikea_kadrilj_window_blind_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -8169,6 +8345,57 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '17',
+  })
+# ---
+# name: test_all_entities[vd_sensor_light_2023][sensor.light_sensor_55_the_frame_brightness_intensity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.light_sensor_55_the_frame_brightness_intensity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Brightness intensity',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'brightness_intensity',
+    'unique_id': '5cc1c096-98b9-460c-8f1c-1045509ec605.brightnessIntensity',
+    'unit_of_measurement': 'level',
+  })
+# ---
+# name: test_all_entities[vd_sensor_light_2023][sensor.light_sensor_55_the_frame_brightness_intensity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Light Sensor - 55" The Frame Brightness intensity',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'level',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.light_sensor_55_the_frame_brightness_intensity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
   })
 # ---
 # name: test_all_entities[vd_stv_2017_k][sensor.tv_samsung_8_series_49_media_input_source-entry]
