@@ -1,7 +1,6 @@
 """Define fixtures for Bosch Alarm tests."""
 
-import asyncio
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from dataclasses import dataclass
 from unittest.mock import AsyncMock, patch
 
@@ -27,6 +26,14 @@ class MockBoschAlarmConfig:
     serial: str
     config: dict
     side_effect: Exception
+    updates: list[Callable]
+
+    def process_updates(self) -> None:
+        """Process any updates that need to happen."""
+
+        for update in self.updates:
+            update()
+        self.updates.clear()
 
 
 @pytest.fixture
@@ -73,25 +80,27 @@ def bosch_alarm_test_data_fixture(
 ) -> Generator[MockBoschAlarmConfig]:
     """Define a fixture to set up Bosch Alarm."""
     if request.param == "Solution 3000":
-        config = MockBoschAlarmConfig(request.param, None, data_solution_3000, None)
+        config = MockBoschAlarmConfig(request.param, None, data_solution_3000, None, [])
     if request.param == "AMAX 3000":
-        config = MockBoschAlarmConfig(request.param, None, data_amax_3000, None)
+        config = MockBoschAlarmConfig(request.param, None, data_amax_3000, None, [])
     if request.param == "B5512 (US1B)":
-        config = MockBoschAlarmConfig(request.param, 1234567890, data_b5512, None)
+        config = MockBoschAlarmConfig(request.param, 1234567890, data_b5512, None, [])
 
-    def area_arm_update(self: Panel, area_id: int, arm_type: int) -> None:
-        if arm_type == self._all_arming_id:
-            self.areas[area_id].status = AREA_STATUS.ALL_ARMED[0]
-        if arm_type == self._partial_arming_id:
-            self.areas[area_id].status = AREA_STATUS.PART_ARMED[0]
+    def area_arm_update(self: Panel, area_id: int, status: int) -> None:
+        self.areas[area_id].status = status
 
     async def area_arm(self: Panel, area_id: int, arm_type: int) -> None:
         if arm_type == AREA_ARMING_STATUS.DISARM:
             self.areas[area_id].status = AREA_STATUS.DISARMED
-        if arm_type in (self._all_arming_id, self._partial_arming_id):
+        if arm_type == self._all_arming_id:
             self.areas[area_id].status = AREA_STATUS.ARMING[0]
-            asyncio.get_event_loop().call_later(
-                0.1, area_arm_update, self, area_id, arm_type
+            config.updates.append(
+                lambda: area_arm_update(self, area_id, AREA_STATUS.ALL_ARMED[0])
+            )
+        if arm_type == self._partial_arming_id:
+            self.areas[area_id].status = AREA_STATUS.ARMING[0]
+            config.updates.append(
+                lambda: area_arm_update(self, area_id, AREA_STATUS.PART_ARMED[0])
             )
 
     async def connect(self: Panel, load_selector: int = 0):

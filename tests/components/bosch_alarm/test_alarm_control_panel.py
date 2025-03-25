@@ -1,6 +1,5 @@
 """Tests for Bosch Alarm component."""
 
-import asyncio
 from collections.abc import AsyncGenerator
 from unittest.mock import patch
 
@@ -53,7 +52,8 @@ async def test_update_alarm_device(
     )
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == AlarmControlPanelState.ARMING
-    await asyncio.sleep(0.1)
+    bosch_alarm_test_data.process_updates()
+    await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == AlarmControlPanelState.ARMED_AWAY
     await hass.services.async_call(
         ALARM_DOMAIN,
@@ -71,7 +71,8 @@ async def test_update_alarm_device(
     )
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == AlarmControlPanelState.ARMING
-    await asyncio.sleep(0.1)
+    bosch_alarm_test_data.process_updates()
+    await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == AlarmControlPanelState.ARMED_HOME
     await hass.services.async_call(
         ALARM_DOMAIN,
