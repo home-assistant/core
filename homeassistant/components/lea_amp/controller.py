@@ -195,14 +195,13 @@ class LeaController:
         if self._discovery_enabled:
             call_later = True
             self._transport.send(message.encode())
-            # self._transport.sendto(message, (self._ip_address, self._port))
-            while True:
-                data = self._transport.recv(2048)
-                if data:
-                    _LOGGER.log(logging.INFO, "response data: %s", str(data))
-                    self._transport.close()
-                    self._handle_response_received(data)
-                    break
+            # while True:
+            data = self._transport.recv(2048)
+            if data:
+                _LOGGER.log(logging.INFO, "response data: %s", str(data))
+                # self._transport.close()
+                self._handle_response_received(data)
+
         if self._registry.has_queued_zones:
             call_later = True
             for zone_id in self._registry.zones_queue:
