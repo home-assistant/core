@@ -1,4 +1,4 @@
-"""Provides time enties for Home Connect."""
+"""Provides time entities for Home Connect."""
 
 from datetime import time
 from typing import cast
