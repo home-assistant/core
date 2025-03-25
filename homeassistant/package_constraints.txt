@@ -10,7 +10,7 @@ aiohttp==3.11.14
 aiohttp_cors==0.7.0
 aiousbwatcher==1.1.1
 aiozoneinfo==0.2.3
-annotatedyaml==0.4.4
+annotatedyaml==0.4.5
 astral==2.2
 async-interrupt==1.2.2
 async-upnp-client==0.43.0
@@ -30,7 +30,7 @@ certifi>=2021.5.30
 ciso8601==2.3.2
 cronsim==2.6
 cryptography==44.0.1
-dbus-fast==2.39.6
+dbus-fast==2.43.0
 fnv-hash-fast==1.4.0
 go2rtc-client==0.1.2
 ha-ffmpeg==3.2.2
@@ -39,7 +39,7 @@ hass-nabucasa==0.94.0
 hassil==2.2.3
 home-assistant-bluetooth==1.13.1
 home-assistant-frontend==20250306.0
-home-assistant-intents==2025.3.5
+home-assistant-intents==2025.3.23
 httpx==0.28.1
 ifaddr==0.2.0
 Jinja2==3.1.6
@@ -109,7 +109,7 @@ uuid==1000000000.0.0
 # these requirements are quite loose. As the entire stack has some outstanding issues, and
 # even newer versions seem to introduce new issues, it's useful for us to pin all these
 # requirements so we can directly link HA versions to these library versions.
-anyio==4.8.0
+anyio==4.9.0
 h11==0.14.0
 httpcore==1.0.7
 

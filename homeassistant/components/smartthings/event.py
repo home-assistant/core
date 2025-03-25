@@ -22,10 +22,12 @@ async def async_setup_entry(
     """Add events for a config entry."""
     entry_data = entry.runtime_data
     async_add_entities(
-        SmartThingsButtonEvent(entry_data.client, device, component)
+        SmartThingsButtonEvent(
+            entry_data.client, device, device.device.components[component]
+        )
         for device in entry_data.devices.values()
-        for component in device.device.components
-        if Capability.BUTTON in component.capabilities
+        for component, capabilities in device.status.items()
+        if Capability.BUTTON in capabilities
     )
 
 
