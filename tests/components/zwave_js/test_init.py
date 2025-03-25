@@ -415,16 +415,24 @@ async def test_on_node_added_ready(
 
     assert state  # entity and device added
     assert state.state != STATE_UNAVAILABLE
-    device = device_registry.async_get_device(
+    assert device_registry.async_get_device(
         identifiers={(DOMAIN, air_temperature_device_id)}
     )
-    assert device
 
-    # Test node added event with a preprovisioned device
+
+async def test_on_node_added_preprovisioned(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    multisensor_6_state,
+    client,
+    integration,
+) -> None:
+    """Test node added event with a preprovisioned device."""
     dsk = "test"
-    device_registry.async_update_device(
-        device.id,
-        new_identifiers={(DOMAIN, f"provision_{dsk}")},
+    node = Node(client, deepcopy(multisensor_6_state))
+    device = device_registry.async_get_or_create(
+        config_entry_id=integration.entry_id,
+        identifiers={(DOMAIN, f"provision_{dsk}")},
     )
     provisioning_entry = ProvisioningEntry.from_dict(
         {
@@ -435,21 +443,15 @@ async def test_on_node_added_ready(
     )
     with patch(
         f"{CONTROLLER_PATCH_PREFIX}.async_get_provisioning_entry",
-        return_value=provisioning_entry,
+        side_effect=lambda id: provisioning_entry if id == node.node_id else None,
     ):
-        node = Node(client, deepcopy(multisensor_6_state))
         event = {"node": node}
         client.driver.controller.emit("node added", event)
         await hass.async_block_till_done()
 
-        state = hass.states.get(AIR_TEMPERATURE_SENSOR)
-
-        assert state  # entity and device added
-        assert state.state != STATE_UNAVAILABLE
-        device = device_registry.async_get_device(
-            identifiers={(DOMAIN, air_temperature_device_id)}
-        )
+        device = device_registry.async_get(device.id)
         assert device
+        assert len(device.identifiers) > 0
         assert (DOMAIN, f"provision_{dsk}") not in device.identifiers
 
 

@@ -454,6 +454,8 @@ class ControllerEvents:
             )
         )
 
+        await self.async_check_preprovisioned_device(node)
+
         if node.is_controller_node:
             # Create a controller status sensor for each device
             async_dispatcher_send(
@@ -580,6 +582,41 @@ class ControllerEvents:
             f"{DOMAIN}.identify_controller.{dev_id[1]}",
         )
 
+    async def async_check_preprovisioned_device(self, node: ZwaveNode) -> None:
+        """Check if the node was preprovisioned and update the device registry."""
+        provisioning_entry = (
+            await self.driver_events.driver.controller.async_get_provisioning_entry(
+                node.node_id
+            )
+        )
+        if (
+            provisioning_entry
+            and provisioning_entry.additional_properties
+            and "device_id" in provisioning_entry.additional_properties
+        ):
+            preprovisioned_device = self.dev_reg.async_get(
+                provisioning_entry.additional_properties["device_id"]
+            )
+
+            if preprovisioned_device:
+                dsk = provisioning_entry.dsk
+                dsk_identifier = (DOMAIN, f"provision_{dsk}")
+
+                # If the pre-provisioned device has the DSK identifier, remove it
+                if dsk_identifier in preprovisioned_device.identifiers:
+                    driver = self.driver_events.driver
+                    device_id = get_device_id(driver, node)
+                    device_id_ext = get_device_id_ext(driver, node)
+                    new_identifiers = preprovisioned_device.identifiers.copy()
+                    new_identifiers.remove(dsk_identifier)
+                    new_identifiers.add(device_id)
+                    if device_id_ext:
+                        new_identifiers.add(device_id_ext)
+                    self.dev_reg.async_update_device(
+                        preprovisioned_device.id,
+                        new_identifiers=new_identifiers,
+                    )
+
     async def async_register_node_in_dev_reg(self, node: ZwaveNode) -> dr.DeviceEntry:
         """Register node in dev reg."""
         driver = self.driver_events.driver
@@ -628,46 +665,6 @@ class ControllerEvents:
             ids = {device_id, device_id_ext}
         else:
             ids = {device_id}
-
-        # Check if this node was previously provisioned
-        provisioning_entry = await controller.async_get_provisioning_entry(node.node_id)
-
-        if (
-            provisioning_entry
-            and hasattr(provisioning_entry, "device_id")
-            and provisioning_entry.device_id
-        ):
-            preprovisioned_device = self.dev_reg.async_get(provisioning_entry.device_id)
-
-            if preprovisioned_device:
-                dsk = provisioning_entry.dsk
-                dsk_identifier = (DOMAIN, f"provision_{dsk}")
-
-                # If the pre-provisioned device has the DSK identifier, remove it
-                if dsk_identifier in preprovisioned_device.identifiers:
-                    new_identifiers = preprovisioned_device.identifiers.copy()
-                    new_identifiers.remove(dsk_identifier)
-                    new_identifiers.update(ids)
-                    via_device_id = None
-                    if via_identifier:
-                        # async_update_device expects a device id not a device identifier
-                        via_device = self.dev_reg.async_get_device(
-                            identifiers={via_identifier}
-                        )
-                        if via_device:
-                            via_device_id = via_device.id
-                    self.dev_reg.async_update_device(
-                        preprovisioned_device.id,
-                        new_identifiers=new_identifiers,
-                        sw_version=node.firmware_version,
-                        name=node.name
-                        or node.device_config.description
-                        or f"Node {node.node_id}",
-                        model=node.device_config.label,
-                        manufacturer=node.device_config.manufacturer,
-                        via_device_id=via_device_id,
-                    )
-                    return preprovisioned_device
 
         device = self.dev_reg.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
