@@ -183,7 +183,7 @@ class LeaController:
         """Return updates is enabled."""
         return self._update_enabled
 
-    def send_discovery_message(self):
+    async def send_discovery_message(self):
         """Send Get Number of Inputs."""
         message: str = str(GetNumOfInputsMessage())
         _LOGGER.log(logging.INFO, "Sending discovery message: %s", message)
@@ -198,7 +198,7 @@ class LeaController:
             data = self._transport.recv(2048)
             if data:
                 _LOGGER.log(logging.INFO, "response data: %s", str(data))
-                self._handle_num_inputs(data)
+                await self._handle_num_inputs(data)
                 # self._handle_response_received(data)
             self._transport.close()
         if self._registry.has_queued_zones:
