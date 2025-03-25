@@ -88,7 +88,8 @@ class LeaController:
     async def start(self):
         """Start: Get Number of inputs."""
         self._transport = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self._transport.connect(self._ip_address, self._port)
+        address = (self._ip_address, int(self._port))
+        self._transport.connect(address)
 
         if self._discovery_enabled or self._registry.has_queued_zones:
             self.send_discovery_message()
