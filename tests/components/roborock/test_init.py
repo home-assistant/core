@@ -380,11 +380,11 @@ async def test_no_stale_device(
 @pytest.mark.parametrize(
     ("config_entry_unique_id", "expected_unique_id"),
     [
-        (ROBOROCK_RRUID, ROBOROCK_RRUID),
+        (ROBOROCK_RRUID, ROBOROCK_RRUID),  # No migration needed
         (USER_EMAIL, ROBOROCK_RRUID),
     ],
 )
-async def test_migrate_config_entry(
+async def test_migrate_config_entry_unique_id(
     hass: HomeAssistant,
     bypass_api_fixture,
     setup_entry: MockConfigEntry,
