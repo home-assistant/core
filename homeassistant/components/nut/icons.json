@@ -162,6 +162,15 @@
       "ups_test_result": {
         "default": "mdi:information-outline"
       },
+      "ups_timer_reboot": {
+        "default": "mdi:timer-refresh-outline"
+      },
+      "ups_timer_shutdown": {
+        "default": "mdi:timer-stop-outline"
+      },
+      "ups_timer_start": {
+        "default": "mdi:timer-play-outline"
+      },
       "ups_type": {
         "default": "mdi:information-outline"
       },
