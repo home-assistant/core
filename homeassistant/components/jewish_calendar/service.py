@@ -15,6 +15,7 @@ from homeassistant.core import (
     ServiceResponse,
     SupportsResponse,
 )
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import LanguageSelector, LanguageSelectorConfig
 
 from .const import ATTR_DATE, ATTR_NUSACH, DOMAIN, SERVICE_COUNT_OMER
@@ -22,7 +23,7 @@ from .const import ATTR_DATE, ATTR_NUSACH, DOMAIN, SERVICE_COUNT_OMER
 SUPPORTED_LANGUAGES = {"en": "english", "fr": "french", "he": "hebrew"}
 OMER_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_DATE, default=datetime.date.today): datetime.date,
+        vol.Required(ATTR_DATE, default=datetime.date.today): cv.date,
         vol.Required(ATTR_NUSACH, default="sfarad"): vol.In(
             [nusach.name.lower() for nusach in Nusach]
         ),
