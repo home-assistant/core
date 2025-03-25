@@ -32,6 +32,7 @@ from .const import (
     ATTR_STATUS,
     ATTR_UPDATED,
     DOMAIN,
+    STATUS_TYPES,
 )
 
 
@@ -63,6 +64,22 @@ def _ensure_timezone(timestamp: datetime | None) -> datetime | None:
         return timestamp.replace(tzinfo=UTC)
 
     return timestamp
+
+
+def _get_status_type(status: str | None) -> str | None:
+    """Get the status type from the status string.
+
+    Returns the status type in snake_case, so it can be used as a key for the translations.
+    E.g: "clientDeleteProhibited https://icann.org/epp#clientDeleteProhibited" -> "client_delete_prohibited".
+    """
+    if status is None:
+        return None
+
+    # If the status is not in the STATUS_TYPES, return the status as is.
+    for key, value in STATUS_TYPES.items():
+        if key in status:
+            return value
+    return status
 
 
 SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
@@ -133,7 +150,7 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
         translation_key="status",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda domain: getattr(domain, "status", None),
+        value_fn=lambda domain: _get_status_type(domain.status),
     ),
 )
 
