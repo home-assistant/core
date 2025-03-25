@@ -219,11 +219,11 @@ class LeaController:
         _LOGGER.log(
             logging.INFO,
             "Sending update message:  %s",
-            (str(self._registry.discovered_zones.values().zone_id)),
+            (str(self._registry.discovered_zones.values())),
         )
         if self._transport:
             for d in self._registry.discovered_zones.values():
-                self._send_update_message(zone=d)
+                self._send_update_message(d.zone_id)
 
             if self._update_enabled:
                 self._update_handle = self._loop.call_later(
@@ -299,7 +299,7 @@ class LeaController:
         value = value.replace(".0", "")
         _LOGGER.log(logging.INFO, "_handle_num_inputs: %s", str(value))
 
-        for i in range(1, int(value)):
+        for i in range(1, int(value) + 1):
             zone = LeaZone(self, str(i))
             if self._call_discovered_callback(zone, True):
                 zone = self._registry.add_discovered_zone(zone)
