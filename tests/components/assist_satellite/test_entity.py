@@ -636,6 +636,7 @@ async def test_start_conversation(
             target={"entity_id": "assist_satellite.test_entity"},
             blocking=True,
         )
+        assert entity.state == AssistSatelliteState.IDLE
 
     assert entity.start_conversations[0] == expected_params
 
