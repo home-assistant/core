@@ -10,15 +10,13 @@
           "broadcast_address": "Broadcast address",
           "broadcast_port": "Broadcast port",
           "host": "Host",
-          "name": "Name",
           "turn_off": "Turn off"
         },
         "data_description": {
           "mac": "MAC address of the device to wake up.",
           "broadcast_address": "The IP address of the host to send the magic packet to. Defaults to `255.255.255.255` and is normally not changed.",
           "broadcast_port": "The port to send the magic packet to. Defaults to `9` and is normally not changed.",
-          "host": "Host of the device to wake up.",
-          "name": "Name of the device to wake up.",
+          "host": "IP of the host to wake up.",
           "turn_off": "Action to turn off the device."
         }
       }
@@ -34,14 +32,12 @@
           "broadcast_address": "[%key:component::wake_on_lan::config::step::user::data::broadcast_address%]",
           "broadcast_port": "[%key:component::wake_on_lan::config::step::user::data::broadcast_port%]",
           "host": "[%key:component::wake_on_lan::config::step::user::data::host%]",
-          "name": "[%key:component::wake_on_lan::config::step::user::data::name%]",
           "turn_off": "[%key:component::wake_on_lan::config::step::user::data::turn_off%]"
         },
         "data_description": {
           "broadcast_address": "[%key:component::wake_on_lan::config::step::user::data_description::broadcast_address%]",
           "broadcast_port": "[%key:component::wake_on_lan::config::step::user::data_description::broadcast_port%]",
           "host": "[%key:component::wake_on_lan::config::step::user::data_description::host%]",
-          "name": "[%key:component::wake_on_lan::config::step::user::data_description::name%]",
           "turn_off": "[%key:component::wake_on_lan::config::step::user::data_description::turn_off%]"
         }
       }
