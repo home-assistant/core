@@ -278,30 +278,21 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
 
         assert self._num_locations is not None  # mypy
 
-        data_schema = vol.Schema(
-            {
-                vol.Required(CONF_LOCATION_IDX, default=DEFAULT_LOCATION_IDX): vol.All(
-                    NumberSelector(
-                        NumberSelectorConfig(
-                            max=self._num_locations - 1,
-                            min=0,
-                            step=1,
-                            mode=NumberSelectorMode.SLIDER,
-                        )
-                    ),
-                ),
-            }
+        data_schema = self._location_idx_schema(
+            DEFAULT_LOCATION_IDX,
+            self._num_locations,
         )
 
         return self.async_show_form(
-            step_id="location", data_schema=data_schema, errors=errors
+            step_id="location",
+            data_schema=data_schema,
+            errors=errors,
         )
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the reconfigure step (location index)."""
-        # self._get_reconfigure_entry()
 
         errors: dict[str, str] = {}
 
@@ -319,19 +310,9 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
         runtime_data: EvoRuntimeDataT = config_entry.runtime_data
         self._num_locations = len(runtime_data["coordinator"].client.locations)
 
-        data_schema = vol.Schema(
-            {
-                vol.Required(CONF_LOCATION_IDX, default=self._location_idx): vol.All(
-                    NumberSelector(
-                        NumberSelectorConfig(
-                            max=self._num_locations - 1,
-                            min=0,
-                            step=1,
-                            mode=NumberSelectorMode.SLIDER,
-                        )
-                    ),
-                ),
-            }
+        data_schema = self._location_idx_schema(
+            self._location_idx,
+            self._num_locations,
         )
 
         return self.async_show_form(
@@ -429,6 +410,62 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
             title="Evohome",
             data=config,
             options=self._options,
+        )
+
+    def _location_idx_schema(
+        self,
+        location_idx: int,
+        num_locations: int,
+    ) -> vol.Schema:
+        """Return a location index schema."""
+
+        return vol.Schema(
+            {
+                vol.Required(CONF_LOCATION_IDX, default=location_idx): vol.All(
+                    NumberSelector(
+                        NumberSelectorConfig(
+                            max=num_locations - 1,
+                            min=0,
+                            step=1,
+                            mode=NumberSelectorMode.SLIDER,
+                        )
+                    ),
+                ),
+            }
+        )
+
+    def _user_credentials_schema(
+        self,
+        username: str | None,
+    ) -> vol.Schema:
+        """Return a user credentials schema."""
+
+        return vol.Schema(
+            {
+                vol.Required(
+                    CONF_USERNAME,
+                    default=username,
+                ): TextSelector(
+                    TextSelectorConfig(
+                        type=TextSelectorType.EMAIL,
+                        autocomplete="email",
+                    )
+                )
+            }
+        ).extend(self._user_password_schema())
+
+    def _user_password_schema(self) -> vol.Schema:
+        """Return a user password schema."""
+
+        return vol.Schema(
+            {
+                vol.Required(CONF_PASSWORD): TextSelector(
+                    TextSelectorConfig(
+                        type=TextSelectorType.PASSWORD,
+                        autocomplete="current-password",
+                    )
+                ),
+            }
         )
 
 
