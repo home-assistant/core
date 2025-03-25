@@ -889,7 +889,7 @@ google-cloud-speech==2.27.0
 google-cloud-texttospeech==2.17.2
 
 # homeassistant.components.google_generative_ai_conversation
-google-genai==1.1.0
+google-genai==1.7.0
 
 # homeassistant.components.nest
 google-nest-sdm==7.1.4
@@ -1796,7 +1796,7 @@ pyotgw==2.2.2
 pyotp==2.8.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.16.4
+pyoverkiz==1.16.5
 
 # homeassistant.components.onewire
 pyownet==0.10.0.post1
@@ -1883,7 +1883,7 @@ pysma==0.7.5
 pysmappee==0.2.29
 
 # homeassistant.components.smartthings
-pysmartthings==2.7.4
+pysmartthings==3.0.0
 
 # homeassistant.components.smarty
 pysmarty2==0.10.2
@@ -2518,7 +2518,7 @@ yalexs==8.10.0
 yeelight==0.7.16
 
 # homeassistant.components.yolink
-yolink-api==0.4.8
+yolink-api==0.4.9
 
 # homeassistant.components.youless
 youless-api==2.2.0
