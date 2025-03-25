@@ -194,7 +194,6 @@ class LeaController:
         _LOGGER.log(logging.INFO, "Discovery enabled: %s", str(self._discovery_enabled))
         if self._discovery_enabled:
             call_later = True
-            _LOGGER.log(logging.INFO, "encoded msg: %s", str(message.encode))
             self._transport.send(message.encode())
             # self._transport.sendto(message, (self._ip_address, self._port))
             while True:
