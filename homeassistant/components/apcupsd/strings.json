@@ -57,7 +57,7 @@
         "name": "Status date"
       },
       "dip_switch_settings": {
-        "name": "Dip switch settings"
+        "name": "DIP switch settings"
       },
       "low_battery_signal": {
         "name": "Low battery signal"

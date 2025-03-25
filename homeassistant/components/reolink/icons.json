@@ -350,6 +350,9 @@
       },
       "sub_bit_rate": {
         "default": "mdi:play-speed"
+      },
+      "scene_mode": {
+        "default": "mdi:view-list"
       }
     },
     "sensor": {
@@ -364,6 +367,9 @@
       },
       "battery_state": {
         "default": "mdi:battery-charging"
+      },
+      "day_night_state": {
+        "default": "mdi:theme-light-dark"
       },
       "wifi_signal": {
         "default": "mdi:wifi"
