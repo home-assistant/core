@@ -5,10 +5,6 @@ from collections.abc import Iterable
 import logging
 from typing import Any
 
-from constlea import DOMAIN
-from Coordinator import LEAAMPApiCoordinator, LEAAMPConfigEntry
-from zone import LeaZone
-
 from homeassistant.components.remote import (
     ATTR_DELAY_SECS,
     ATTR_HOLD_SECS,
@@ -22,6 +18,10 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .constlea import DOMAIN
+from .Coordinator import LEAAMPApiCoordinator, LEAAMPConfigEntry
+from .zone import LeaZone
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -93,12 +93,12 @@ class LeaRemote(CoordinatorEntity[LEAAMPApiCoordinator], RemoteEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the Zone on."""
         if not self.is_on:
-            self.coordinator.turn_on()
+            await self.coordinator.turn_on(self._zone)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the Android TV off."""
         if self.is_on:
-            self.coordinator.turn_off()
+            await self.coordinator.turn_off(self._zone)
 
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a command to one zone."""
@@ -109,11 +109,13 @@ class LeaRemote(CoordinatorEntity[LEAAMPApiCoordinator], RemoteEntity):
         for _ in range(num_repeats):
             for single_command in command:
                 if hold_secs:
-                    self.coordinator.send_key_command(single_command, "START_LONG")
+                    await self.coordinator.send_key_command(
+                        single_command, "START_LONG"
+                    )
                     await asyncio.sleep(hold_secs)
-                    self.coordinator.send_key_command(single_command, "END_LONG")
+                    await self.coordinator.send_key_command(single_command, "END_LONG")
                 else:
-                    self.coordinator.send_key_command(single_command, "SHORT")
+                    await self.coordinator.send_key_command(single_command, "SHORT")
                 await asyncio.sleep(delay_secs)
 
     @callback

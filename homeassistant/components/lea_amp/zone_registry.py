@@ -2,7 +2,7 @@
 
 import logging
 
-from zone import LeaZone
+from .zone import LeaZone
 
 
 # discovered_devices: number of zones
@@ -17,20 +17,20 @@ class ZoneRegistry:
 
     def add_discovered_zone(self, zone: LeaZone):
         """Add Discovered Zones."""
-        if zone.zone_id in self._custom_zones_queue:
+        if int(zone.zone_id) in self._custom_zones_queue:
             self._logger.debug(
                 f"Found manullay added device {zone}. Removing from queue."  # noqa: G004
             )
-            self._custom_zones_queue.remove(zone.zone_id)
+            self._custom_zones_queue.remove(int(zone.zone_id))
             zone.is_manual = True
-        self._num_of_zones[zone.zone_id] = zone
+        self._num_of_zones[int(zone.zone_id)] = zone
         return zone
 
     def remove_discovered_zone(self, zone: str | LeaZone) -> None:
         """Remove Zone."""
         if isinstance(zone, LeaZone):
             zone = zone.zone_id
-        if zone in self._num_of_zones:
+        if int(zone) in self._num_of_zones:
             del self._num_of_zones[int(zone)]
 
     def add_zone_to_queue(self, zone_id: int):
@@ -55,10 +55,14 @@ class ZoneRegistry:
         self._num_of_zones.clear()
         self._custom_zones_queue.clear()
 
-    def get_zone_by_zone_id(self, zone_id: int) -> LeaZone:
+    def get_zone_by_zone_id(self, zone_id: int) -> LeaZone | None:
         """Get zone by zone id."""
         return next(
-            (zone for zone in self._num_of_zones.values() if zone.zone_id == zone_id),
+            (
+                zone
+                for zone in self._num_of_zones.values()
+                if int(zone.zone_id) == zone_id
+            ),
             None,
         )
 

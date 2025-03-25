@@ -8,7 +8,7 @@ import logging
 import socket
 from typing import Any
 
-from message import (
+from .message import (
     DevStatusResponse,
     GetNumOfInputsMessage,
     LeaMessage,
@@ -18,9 +18,10 @@ from message import (
     getMuteMessage,
     getSourceMessage,
     getVolumeMessage,
+    setVolumeMessage,
 )
-from zone import LeaZone
-from zone_registry import ZoneRegistry
+from .zone import LeaZone
+from .zone_registry import ZoneRegistry
 
 IP_ADDRESS = "192.168.0.250"
 PORT = "4321"
@@ -105,16 +106,16 @@ class LeaController:
         self._registry.cleanup()
         return self._cleanup_done
 
-    def add_zone_to_discovery_queue(self, zone_id: int) -> bool:
+    def add_zone_to_discovery_queue(self, zone_id: str) -> bool:
         """Add zone to queue."""
-        zone_added: bool = self._registry.add_zone_to_queue(zone_id)
+        zone_added: bool = self._registry.add_zone_to_queue(int(zone_id))
         if not self._discovery_enabled and zone_added:
             self.send_discovery_message()
         return zone_added
 
-    def remove_zone_from_discovery_queue(self, zone_id: int) -> bool:
+    def remove_zone_from_discovery_queue(self, zone_id: str) -> bool:
         """Remove zone from queue."""
-        return self._registry.remove_zone_from_queue(zone_id)
+        return self._registry.remove_zone_from_queue(int(zone_id))
 
     @property
     def discovery_queue(self):
@@ -220,19 +221,19 @@ class LeaController:
 
     async def turn_on_off(self, zone: LeaZone, status: str):
         """Turn on off."""
-        self._send_message(OnOffMessage(status), zone)
+        self._send_message(OnOffMessage(zone.zone_id, status), zone)
 
     async def set_volume(self, zone: LeaZone, volume: int) -> None:
         """Set Volume."""
-        self._send_message(getVolumeMessage(volume), zone)
+        self._send_message(setVolumeMessage(zone.zone_id, volume), zone)
 
     async def set_mute(self, zone: LeaZone, mute: bool) -> None:
         """Set Volume."""
         self._send_message(getMuteMessage(str(mute)), zone)
 
-    def get_zone_by_id(self, zone_id: int) -> LeaZone | None:
+    def get_zone_by_id(self, zone_id: str) -> LeaZone | None:
         """Get Zone by id."""
-        return self._registry.get_zone_by_zone_id(zone_id)
+        return self._registry.get_zone_by_zone_id(int(zone_id))
 
     @property
     def zones(self) -> list[LeaZone]:
@@ -263,29 +264,26 @@ class LeaController:
 
     async def _handle_response_received(self, data: str):
         """Handle received response."""
-        value, zone_id, commandType = self._message_factory.create_message(data)
-        if GetNumOfInputsMessage.command in data:
+        zone_id, commandType, value = self._message_factory.create_message(data)
+
+        if GetNumOfInputsMessage.command in commandType:
             await self._handle_num_inputs(value)
         elif commandType == "volume":
-            DevStatusResponse.volume = value
+            if zone := self.get_zone_by_id(zone_id):
+                zone.updateVolume(value)
         elif commandType == "mute":
-            DevStatusResponse.mute = value
+            if zone := self.get_zone_by_id(zone_id):
+                zone.updateMute(value)
         elif commandType == "source":
-            DevStatusResponse.source = value
+            if zone := self.get_zone_by_id(zone_id):
+                zone.updateSource(value)
         elif commandType == "power":
-            DevStatusResponse.power = value
-        await self._handle_status_update_response(DevStatusResponse, zone_id)
-
-    async def _handle_status_update_response(self, message: DevStatusResponse, zone_id):
-        """Handle update response."""
-        self._logger.debug(("Status update received from {}: {}", zone_id, message))
-
-        if zone := self.get_zone_by_id(zone_id):
-            zone.update(message)
+            if zone := self.get_zone_by_id(zone_id):
+                zone.updatePower(value)
 
     async def _handle_num_inputs(self, value: str):
         for i in range(int(value)):
-            zone = LeaZone(self, i)
+            zone = LeaZone(self, str(i))
             if self._call_discovered_callback(zone, True):
                 zone = self._registry.add_discovered_zone(zone)
                 self._logger.debug("zone discovered: %s", zone)
@@ -301,7 +299,7 @@ class LeaController:
         self._transport.send(message)
 
     def _send_update_message(self, zone: LeaZone):
-        self._send_message(ZoneEnabledMsg(), zone)
-        self._send_message(getMuteMessage(), zone)
-        self._send_message(getVolumeMessage(), zone)
-        self._send_message(getSourceMessage(), zone)
+        self._send_message(ZoneEnabledMsg(zone.zone_id), zone)
+        self._send_message(getMuteMessage(zone.zone_id), zone)
+        self._send_message(getVolumeMessage(zone.zone_id), zone)
+        self._send_message(getSourceMessage(zone.zone_id), zone)

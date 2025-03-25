@@ -55,18 +55,20 @@ class GetNumOfInputsMessage(LeaMessage):
 class ZoneEnabledMsg(LeaMessage):
     """Zone enabled msg."""
 
+    command = "enable"
     request_type = "get "
     ext1 = "/amp/channels/"
     ext2 = "/output/enable"
 
-    def __init__(self, zone_id, command) -> None:
+    def __init__(self, zone_id) -> None:
         """Init."""
-        super().__init__(self.as_dict(zone_id, command))
+        super().__init__(self.as_dict(zone_id))
 
 
 class OnOffMessage(LeaMessage):
     """OnOffMsg."""
 
+    command = "enable"
     request_type = "set "
     ext1 = "/amp/channels/"
     ext2 = "/output/enable"
@@ -79,6 +81,7 @@ class OnOffMessage(LeaMessage):
 class getVolumeMessage(LeaMessage):
     """Get volume msgs."""
 
+    command = "fader"
     request_type = "get "
     ext1 = "/amp/channels/"
     ext2 = "/output/fader"
@@ -91,6 +94,7 @@ class getVolumeMessage(LeaMessage):
 class setVolumeMessage(LeaMessage):
     """Set Volume Message."""
 
+    command = "fader"
     request_type = "set "
     ext1 = "/amp/channels/"
     ext2 = "/output/fader"
@@ -103,6 +107,7 @@ class setVolumeMessage(LeaMessage):
 class getMuteMessage(LeaMessage):
     """Get Mute Message."""
 
+    command = "mute"
     request_type = "get "
     ext1 = "/amp/channels/"
     ext2 = "/output/mute"
@@ -115,6 +120,7 @@ class getMuteMessage(LeaMessage):
 class setMuteMessage(LeaMessage):
     """Set Mute Message."""
 
+    command = "mute"
     request_type = "set "
     ext1 = "/amp/channels/"
     ext2 = "/output/mute"
@@ -127,6 +133,7 @@ class setMuteMessage(LeaMessage):
 class getSourceMessage(LeaMessage):
     """Get Source Message."""
 
+    command = "source"
     request_type = "get "
     ext1 = "/amp/channels/"
     ext2 = "/inputSelector/primary"
@@ -139,6 +146,7 @@ class getSourceMessage(LeaMessage):
 class setSourceMessage(LeaMessage):
     """Set source Message."""
 
+    command = "source"
     request_type = "set "
     ext1 = "/amp/channels/"
     ext2 = "/inputSelector/primary"
@@ -153,9 +161,10 @@ class ScanResponse(LeaMessage):
 
     command = "scan"
 
-    # def __init__(self, data: str) -> None:
-    # """Init."""
-    # super().__init__(data)
+    @property
+    def id(self):
+        """Id."""
+        return self._data
 
     @property
     def zone(self):
@@ -168,25 +177,9 @@ class DevStatusResponse(LeaMessage):
 
     command = "devStatus"
 
-    # def __init__(self, data: str) -> None:
-    # """Init."""
-    # super().__init__(data)
-
-    @property
-    def power(self) -> bool:  # noqa: D102
-        return bool(self._data)
-
-    @property
-    def volume(self) -> int:  # noqa: D102
-        return int(self._data)
-
-    @property
-    def mute(self) -> bool:  # noqa: D102
-        return bool(self._data)
-
-    @property
-    def source(self) -> int:  # noqa: D102
-        return int(self._data)
+    """def __init__(self, data: dict[str, Any]) -> None:
+        Init
+        super().__init__(data)"""
 
 
 class StatusResponse(LeaMessage):
@@ -194,9 +187,9 @@ class StatusResponse(LeaMessage):
 
     command = "status"
 
-    '''def __init__(self, data: str) -> None:
-        """Init."""
-        super().__init__(data)'''
+    """def __init__(self, data: dict[str, Any]) -> None:
+        Init
+        super().__init__(data)"""
 
 
 class MessageResponseFactory:
@@ -206,53 +199,50 @@ class MessageResponseFactory:
         """Init."""
         self._messages: set[type[LeaMessage]] = {
             DevStatusResponse,
-            StatusResponse,
+            ScanResponse,
         }
 
-        def create_message(self, data: str):
-            if "deviceName" in data:
-                zoneId = "0"
-                value = data[data.find("deviceName") + 12 : len(data) - 2]
-                command_type = "deviceName"
-            elif "numInputs" in data:
-                zoneId = "0"
-                value = data.replace("/amp/deviceInfo/numInputs", "")
-            elif "output/name" in data:
-                zoneId = data[data.find("channels/") + 9 : data.find("/output") - 1]
-                value = data[data.find("output/name") + 13 : len(data) - 2]
+    def create_message(self, data: str):
+        """Create message."""
+        if "deviceName" in data:
+            zoneId = "0"
+            value = data[data.find("deviceName") + 12 : len(data) - 2]
+            command_type = "deviceName"
+        elif "numInputs" in data:
+            zoneId = "0"
+            value = data.replace("/amp/deviceInfo/numInputs", "")
+        elif "output/name" in data:
+            zoneId = data[data.find("channels/") + 9 : data.find("/output") - 1]
+            value = data[data.find("output/name") + 13 : len(data) - 2]
 
-                command_type = "zoneName"
-            elif "output/fader" in data:
-                zoneId = data[data.find("channels/") + 9 : data.find("/output") - 1]
+            command_type = "zoneName"
+        elif "output/fader" in data:
+            zoneId = data[data.find("channels/") + 9 : data.find("/output") - 1]
 
-                value = data.replace("/amp/channels/" + zoneId + "/output/fader", "")
-                value = data.replace('"', "")
-                command_type = "volume"
-            elif "output/mute" in data:
-                zoneId = data[data.find("channels/") + 9 : data.find("/output") - 1]
+            value = data.replace("/amp/channels/" + zoneId + "/output/fader", "")
+            value = data.replace('"', "")
+            command_type = "volume"
+        elif "output/mute" in data:
+            zoneId = data[data.find("channels/") + 9 : data.find("/output") - 1]
 
-                value = data.replace("/amp/channels/" + zoneId + "/output/mute", "")
-                value = data.replace('"', "")
-                command_type = "mute"
-            elif "output/enable" in data:
-                zoneId = data[data.find("channels/") + 9 : data.find("/output") - 1]
+            value = data.replace("/amp/channels/" + zoneId + "/output/mute", "")
+            value = data.replace('"', "")
+            command_type = "mute"
+        elif "output/enable" in data:
+            zoneId = data[data.find("channels/") + 9 : data.find("/output") - 1]
 
-                value = data.replace("/amp/channels/" + zoneId + "/output/enable", "")
-                value = data.replace('"', "")
-                command_type = "power"
-            elif "inputSelector/primary" in data:
-                zoneId = data[
-                    data.find("channels/") + 9 : data.find("/inputSelector") - 1
-                ]
+            value = data.replace("/amp/channels/" + zoneId + "/output/enable", "")
+            value = data.replace('"', "")
+            command_type = "power"
+        elif "inputSelector/primary" in data:
+            zoneId = data[data.find("channels/") + 9 : data.find("/inputSelector") - 1]
 
-                value = data[data.find("primary") + 9 : len(data) - 2]
-                value = data.replace('"', "")
-                command_type = "source"
-            value = value.replace(" ", "")
+            value = data[data.find("primary") + 9 : len(data) - 2]
+            value = data.replace('"', "")
+            command_type = "source"
+        value = value.replace(" ", "")
 
-            # message_data = []
+        if not value:
+            return None
 
-            if not value:
-                return None
-            # message_data = [value, command_type, zoneId]
-            return value, zoneId, command_type
+        return zoneId, command_type, value

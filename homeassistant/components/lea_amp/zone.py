@@ -5,15 +5,13 @@ from datetime import datetime
 import logging
 from typing import Any
 
-from .message import DevStatusResponse
-
 _LOGGER = logging.getLogger(__name__)
 
 
 class LeaZone:
     """LeaZone."""
 
-    def __init__(self, controller, zone_id: int) -> None:
+    def __init__(self, controller, zone_id: str) -> None:
         """Init."""
 
         self._zone_id = zone_id
@@ -29,12 +27,30 @@ class LeaZone:
         self._update_callback: Callable[[LeaZone], None] | None = None
         self.is_manual: bool = False
 
-    def update(self, message: DevStatusResponse) -> None:
+    def updatePower(self, value: bool) -> None:
         """Update zone."""
-        self._power = message.power
-        self._volume = message.volume
-        self._mute = message.mute
-        self._source = message.source
+        self._power = value
+        self.update_lastseen()
+        if self._update_callback and callable(self._update_callback):
+            self._update_callback(self)
+
+    def updateVolume(self, value: int) -> None:
+        """Update zone."""
+        self._volume = value
+        self.update_lastseen()
+        if self._update_callback and callable(self._update_callback):
+            self._update_callback(self)
+
+    def updateMute(self, value: bool) -> None:
+        """Update zone."""
+        self._mute = value
+        self.update_lastseen()
+        if self._update_callback and callable(self._update_callback):
+            self._update_callback(self)
+
+    def updateSource(self, value: int) -> None:
+        """Update zone."""
+        self._source = value
         self.update_lastseen()
         if self._update_callback and callable(self._update_callback):
             self._update_callback(self)
@@ -45,7 +61,7 @@ class LeaZone:
         return self._controller
 
     @property
-    def zone_id(self) -> int:
+    def zone_id(self) -> str:
         """Zone Id."""
         return self._zone_id
 
@@ -119,16 +135,6 @@ class LeaZone:
         _LOGGER.debug("set_zone_source")
         await self._controller.set_zone_source(source)
         self._source = source
-
-    async def update_zone_state(self, message: DevStatusResponse):
-        """Update Zone State."""
-        _LOGGER.debug("update_zone_state")
-        self._volume = message.volume
-        self._mute = message.mute
-        self._source = message.source
-        self.update_lastseen()
-        if self._update_callback and callable(self._update_callback):
-            self._update_callback(self)
 
     def update_lastseen(self):
         """Update Last Seen."""
