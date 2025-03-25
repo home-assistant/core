@@ -63,8 +63,8 @@ rules:
   reconfiguration-flow: done
   repair-issues: done
   stale-devices:
-    status: exempt
-    comment: The integration connects to a single device.
+    status: todo
+    comment: BLU TRV needs to be removed when un-paired
 
   # Platinum
   async-dependency: done
