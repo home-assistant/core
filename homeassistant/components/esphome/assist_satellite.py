@@ -253,6 +253,11 @@ class EsphomeAssistSatellite(
             # Will use media player for TTS/announcements
             self._update_tts_format()
 
+        if feature_flags & VoiceAssistantFeature.START_CONVERSATION:
+            self._attr_supported_features |= (
+                assist_satellite.AssistSatelliteEntityFeature.START_CONVERSATION
+            )
+
         # Update wake word select when config is updated
         self.async_on_remove(
             self.entry_data.async_register_assist_satellite_set_wake_word_callback(
@@ -342,6 +347,23 @@ class EsphomeAssistSatellite(
 
         Should block until the announcement is done playing.
         """
+        await self._do_announce(announcement, run_pipeline_after=False)
+
+    async def async_start_conversation(
+        self, start_announcement: assist_satellite.AssistSatelliteAnnouncement
+    ) -> None:
+        """Start a conversation from the satellite."""
+        await self._do_announce(start_announcement, run_pipeline_after=True)
+
+    async def _do_announce(
+        self,
+        announcement: assist_satellite.AssistSatelliteAnnouncement,
+        run_pipeline_after: bool,
+    ) -> None:
+        """Announce media on the satellite.
+
+        Optionally run a voice pipeline after the announcement has finished.
+        """
         _LOGGER.debug(
             "Waiting for announcement to finished (message=%s, media_id=%s)",
             announcement.message,
@@ -374,7 +396,10 @@ class EsphomeAssistSatellite(
                 media_id = async_process_play_media_url(self.hass, proxy_url)
 
         await self.cli.send_voice_assistant_announcement_await_response(
-            media_id, _ANNOUNCEMENT_TIMEOUT_SEC, announcement.message
+            media_id,
+            _ANNOUNCEMENT_TIMEOUT_SEC,
+            announcement.message,
+            start_conversation=run_pipeline_after,
         )
 
     async def handle_pipeline_start(
