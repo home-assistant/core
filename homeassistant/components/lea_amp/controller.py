@@ -30,6 +30,8 @@ DISCOVERY_INTERVAL = 10
 EVICT_INTERVAL = DISCOVERY_INTERVAL * 3
 UPDATE_INTERVAL = 5
 
+_LOGGER = logging.getLogger(__name__)
+
 
 class LeaController:
     """LEA Controller."""
@@ -90,7 +92,9 @@ class LeaController:
         self._transport = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         address = (self._ip_address, int(self._port))
         self._transport.connect(address)
-
+        _LOGGER.debug("Connected to %s", address)
+        _LOGGER.debug("Discover enabled %s", str(self._discovery_enabled))
+        _LOGGER.debug("Update enabled %s", str(self._update_enabled))
         if self._discovery_enabled or self._registry.has_queued_zones:
             self.send_discovery_message()
         if self._update_enabled:
