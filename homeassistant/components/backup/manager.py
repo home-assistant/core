@@ -1726,7 +1726,9 @@ class CoreBackupReaderWriter(BackupReaderWriter):
             """Filter to filter excludes."""
 
             for exclude in excludes:
-                if not path.match(exclude):
+                # The home assistant core configuration directory is added as "data"
+                # in the tar file, so we need to prefix that path to the filters.
+                if not path.full_match(f"data/{exclude}"):
                     continue
                 LOGGER.debug("Ignoring %s because of %s", path, exclude)
                 return True
