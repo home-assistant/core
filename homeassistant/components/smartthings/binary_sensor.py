@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from pysmartthings import Attribute, Capability, Category, SmartThings
+from pysmartthings import Attribute, Capability, Category, SmartThings, Status
 
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.binary_sensor import (
@@ -38,6 +38,9 @@ class SmartThingsBinarySensorEntityDescription(BinarySensorEntityDescription):
     category: set[Category] | None = None
     exists_fn: Callable[[str], bool] | None = None
     component_translation_key: dict[str, str] | None = None
+    deprecated_fn: Callable[
+        [dict[str, dict[Capability | str, dict[Attribute | str, Status]]]], str | None
+    ] = lambda _: None
 
 
 CAPABILITY_TO_SENSORS: dict[
@@ -66,6 +69,19 @@ CAPABILITY_TO_SENSORS: dict[
                 "freezer": "freezer_door",
                 "cooler": "cooler_door",
             },
+            deprecated_fn=(
+                lambda status: "fridge_door"
+                if "freezer" in status and "cooler" in status
+                else None
+            ),
+        )
+    },
+    Capability.CUSTOM_DRYER_WRINKLE_PREVENT: {
+        Attribute.OPERATING_STATE: SmartThingsBinarySensorEntityDescription(
+            key=Attribute.OPERATING_STATE,
+            translation_key="dryer_wrinkle_prevent_active",
+            is_on_key="running",
+            entity_category=EntityCategory.DIAGNOSTIC,
         )
     },
     Capability.FILTER_STATUS: {
@@ -133,6 +149,7 @@ CAPABILITY_TO_SENSORS: dict[
             translation_key="valve",
             device_class=BinarySensorDeviceClass.OPENING,
             is_on_key="open",
+            deprecated_fn=lambda _: "valve",
         )
     },
     Capability.WATER_SENSOR: {
@@ -242,7 +259,7 @@ class SmartThingsBinarySensor(SmartThingsEntity, BinarySensorEntity):
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         await super().async_added_to_hass()
-        if self.capability is not Capability.VALVE:
+        if (issue := self.entity_description.deprecated_fn(self.device.status)) is None:
             return
         automations = automations_with_entity(self.hass, self.entity_id)
         scripts = scripts_with_entity(self.hass, self.entity_id)
@@ -273,11 +290,11 @@ class SmartThingsBinarySensor(SmartThingsEntity, BinarySensorEntity):
         async_create_issue(
             self.hass,
             DOMAIN,
-            f"deprecated_binary_valve_{self.entity_id}",
+            f"deprecated_binary_{issue}_{self.entity_id}",
             breaks_in_ha_version="2025.10.0",
             is_fixable=False,
             severity=IssueSeverity.WARNING,
-            translation_key="deprecated_binary_valve",
+            translation_key=f"deprecated_binary_{issue}",
             translation_placeholders={
                 "entity": self.entity_id,
                 "items": "\n".join(items_list),
@@ -287,6 +304,8 @@ class SmartThingsBinarySensor(SmartThingsEntity, BinarySensorEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Call when entity will be removed from hass."""
         await super().async_will_remove_from_hass()
+        if (issue := self.entity_description.deprecated_fn(self.device.status)) is None:
+            return
         async_delete_issue(
-            self.hass, DOMAIN, f"deprecated_binary_valve_{self.entity_id}"
+            self.hass, DOMAIN, f"deprecated_binary_{issue}_{self.entity_id}"
         )
