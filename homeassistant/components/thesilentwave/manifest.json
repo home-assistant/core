@@ -1,0 +1,13 @@
+{
+    "domain": "thesilentwave",
+    "name": "TheSilentWave",
+    "documentation": "https://thesilentwave.de/doc",
+    "dependencies": [],
+    "codeowners": ["@thesilentwave"],
+    "requirements": ["aiohttp>=3.8.0"],
+    "version": "1.0.0",
+    "iot_class": "local_polling",
+    "config_flow": true,
+    "integration_type": "hub",
+    "logo": "https://thesilentwave.de/static/images/logo.png"
+}
