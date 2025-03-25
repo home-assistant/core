@@ -12,8 +12,11 @@ from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api import ActiveConnection
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.storage import Store
+from homeassistant.util.hass_dict import HassKey
 
-DATA_STORAGE = "frontend_storage"
+DATA_STORAGE: HassKey[tuple[dict[str, Store], dict[str, dict]]] = HassKey(
+    "frontend_storage"
+)
 STORAGE_VERSION_USER_DATA = 1
 
 

@@ -44,6 +44,7 @@ from .const import (
     CONF_TEMPERATURE,
     CONF_TOP_K,
     CONF_TOP_P,
+    CONF_USE_GOOGLE_SEARCH_TOOL,
     DOMAIN,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_HARM_BLOCK_THRESHOLD,
@@ -51,6 +52,7 @@ from .const import (
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_TOP_K,
     RECOMMENDED_TOP_P,
+    RECOMMENDED_USE_GOOGLE_SEARCH_TOOL,
     TIMEOUT_MILLIS,
 )
 
@@ -341,6 +343,13 @@ async def google_generative_ai_config_option_schema(
                 },
                 default=RECOMMENDED_HARM_BLOCK_THRESHOLD,
             ): harm_block_thresholds_selector,
+            vol.Optional(
+                CONF_USE_GOOGLE_SEARCH_TOOL,
+                description={
+                    "suggested_value": options.get(CONF_USE_GOOGLE_SEARCH_TOOL),
+                },
+                default=RECOMMENDED_USE_GOOGLE_SEARCH_TOOL,
+            ): bool,
         }
     )
     return schema

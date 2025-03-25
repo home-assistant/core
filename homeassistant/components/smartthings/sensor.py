@@ -132,6 +132,7 @@ class SmartThingsSensorEntityDescription(SensorEntityDescription):
     capability_ignore_list: list[set[Capability]] | None = None
     options_attribute: Attribute | None = None
     exists_fn: Callable[[Status], bool] | None = None
+    use_temperature_unit: bool = False
 
 
 CAPABILITY_TO_SENSORS: dict[
@@ -224,7 +225,6 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
-    # Haven't seen at devices yet
     Capability.CARBON_DIOXIDE_MEASUREMENT: {
         Attribute.CARBON_DIOXIDE: [
             SmartThingsSensorEntityDescription(
@@ -466,7 +466,6 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
-    # part of the proposed spec, Haven't seen at devices yet
     Capability.MEDIA_PLAYBACK_REPEAT: {
         Attribute.PLAYBACK_REPEAT_MODE: [
             SmartThingsSensorEntityDescription(
@@ -475,7 +474,6 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
-    # part of the proposed spec, Haven't seen at devices yet
     Capability.MEDIA_PLAYBACK_SHUFFLE: {
         Attribute.PLAYBACK_SHUFFLE: [
             SmartThingsSensorEntityDescription(
@@ -572,6 +570,10 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.OVEN_SETPOINT,
                 translation_key="oven_setpoint",
+                device_class=SensorDeviceClass.TEMPERATURE,
+                use_temperature_unit=True,
+                # Set the value to None if it is 0 F (-17 C)
+                value_fn=lambda value: None if value in {0, -17} else value,
             )
         ]
     },
@@ -898,6 +900,16 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
+    Capability.VERY_FINE_DUST_SENSOR: {
+        Attribute.VERY_FINE_DUST_LEVEL: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.VERY_FINE_DUST_LEVEL,
+                native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+                device_class=SensorDeviceClass.PM1,
+                state_class=SensorStateClass.MEASUREMENT,
+            )
+        ]
+    },
     Capability.VOLTAGE_MEASUREMENT: {
         Attribute.VOLTAGE: [
             SmartThingsSensorEntityDescription(
@@ -985,7 +997,6 @@ async def async_setup_entry(
             entry_data.client,
             device,
             description,
-            entry_data.rooms,
             capability,
             attribute,
         )
@@ -1018,12 +1029,14 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
         client: SmartThings,
         device: FullDevice,
         entity_description: SmartThingsSensorEntityDescription,
-        rooms: dict[str, str],
         capability: Capability,
         attribute: Attribute,
     ) -> None:
         """Init the class."""
-        super().__init__(client, device, rooms, {capability})
+        capabilities_to_subscribe = {capability}
+        if entity_description.use_temperature_unit:
+            capabilities_to_subscribe.add(Capability.TEMPERATURE_MEASUREMENT)
+        super().__init__(client, device, capabilities_to_subscribe)
         self._attr_unique_id = f"{device.device.device_id}{entity_description.unique_id_separator}{entity_description.key}"
         self._attribute = attribute
         self.capability = capability
@@ -1038,7 +1051,12 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
     @property
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit this state is expressed in."""
-        unit = self._internal_state[self.capability][self._attribute].unit
+        if self.entity_description.use_temperature_unit:
+            unit = self._internal_state[Capability.TEMPERATURE_MEASUREMENT][
+                Attribute.TEMPERATURE
+            ].unit
+        else:
+            unit = self._internal_state[self.capability][self._attribute].unit
         return (
             UNITS.get(unit, unit)
             if unit

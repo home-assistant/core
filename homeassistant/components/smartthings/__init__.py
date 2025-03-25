@@ -3,25 +3,36 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+import contextlib
 from dataclasses import dataclass
+from http import HTTPStatus
 import logging
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, cast
 
-from aiohttp import ClientError
+from aiohttp import ClientResponseError
 from pysmartthings import (
     Attribute,
     Capability,
+    ComponentStatus,
     Device,
     DeviceEvent,
+    Lifecycle,
     Scene,
     SmartThings,
     SmartThingsAuthenticationFailedError,
+    SmartThingsConnectionError,
     SmartThingsSinkError,
     Status,
 )
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_CONNECTIONS,
+    ATTR_HW_VERSION,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_SW_VERSION,
+    ATTR_VIA_DEVICE,
     CONF_ACCESS_TOKEN,
     CONF_TOKEN,
     EVENT_HOMEASSISTANT_STOP,
@@ -64,21 +75,28 @@ class FullDevice:
     """Define an object to hold device data."""
 
     device: Device
-    status: dict[str, dict[Capability | str, dict[Attribute | str, Status]]]
+    status: dict[str, ComponentStatus]
 
 
 type SmartThingsConfigEntry = ConfigEntry[SmartThingsData]
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.CLIMATE,
     Platform.COVER,
+    Platform.EVENT,
     Platform.FAN,
     Platform.LIGHT,
     Platform.LOCK,
+    Platform.MEDIA_PLAYER,
+    Platform.NUMBER,
     Platform.SCENE,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.UPDATE,
+    Platform.VALVE,
 ]
 
 
@@ -93,7 +111,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
 
     try:
         await session.async_ensure_token_valid()
-    except ClientError as err:
+    except ClientResponseError as err:
+        if err.status == HTTPStatus.BAD_REQUEST:
+            raise ConfigEntryAuthFailed("Token not valid, trigger renewal") from err
         raise ConfigEntryNotReady from err
 
     client = SmartThings(session=async_get_clientsession(hass))
@@ -108,7 +128,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
     client.refresh_token_function = _refresh_token
 
     def _handle_max_connections() -> None:
-        _LOGGER.debug("We hit the limit of max connections")
+        _LOGGER.debug(
+            "We hit the limit of max connections or we could not remove the old one, so retrying"
+        )
         hass.config_entries.async_schedule_reload(entry.entry_id)
 
     client.max_connections_reached_callback = _handle_max_connections
@@ -131,7 +153,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
 
     if (old_identifier := entry.data.get(CONF_SUBSCRIPTION_ID)) is not None:
         _LOGGER.debug("Trying to delete old subscription %s", old_identifier)
-        await client.delete_subscription(old_identifier)
+        try:
+            await client.delete_subscription(old_identifier)
+        except SmartThingsConnectionError as err:
+            raise ConfigEntryNotReady("Could not delete old subscription") from err
 
     _LOGGER.debug("Trying to create a new subscription")
     try:
@@ -140,7 +165,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
             entry.data[CONF_TOKEN][CONF_INSTALLED_APP_ID],
         )
     except SmartThingsSinkError as err:
-        _LOGGER.debug("Couldn't create a new subscription: %s", err)
+        _LOGGER.exception("Couldn't create a new subscription")
         raise ConfigEntryNotReady from err
     subscription_id = subscription.subscription_id
     _handle_new_subscription_identifier(subscription_id)
@@ -169,29 +194,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
         raise ConfigEntryAuthFailed from err
 
     device_registry = dr.async_get(hass)
-    for dev in device_status.values():
-        for component in dev.device.components:
-            if component.id == MAIN and Capability.BRIDGE in component.capabilities:
-                assert dev.device.hub
-                device_registry.async_get_or_create(
-                    config_entry_id=entry.entry_id,
-                    identifiers={(DOMAIN, dev.device.device_id)},
-                    connections=(
-                        {(dr.CONNECTION_NETWORK_MAC, dev.device.hub.mac_address)}
-                        if dev.device.hub.mac_address
-                        else set()
-                    ),
-                    name=dev.device.label,
-                    sw_version=dev.device.hub.firmware_version,
-                    model=dev.device.hub.hardware_type,
-                    suggested_area=(
-                        rooms.get(dev.device.room_id) if dev.device.room_id else None
-                    ),
-                )
+    create_devices(device_registry, device_status, entry, rooms)
+
     scenes = {
         scene.scene_id: scene
         for scene in await client.get_scenes(location_id=entry.data[CONF_LOCATION_ID])
     }
+
+    def handle_deleted_device(device_id: str) -> None:
+        """Handle a deleted device."""
+        dev_entry = device_registry.async_get_device(
+            identifiers={(DOMAIN, device_id)},
+        )
+        if dev_entry is not None:
+            device_registry.async_update_device(
+                dev_entry.id, remove_config_entry_id=entry.entry_id
+            )
+
+    entry.async_on_unload(
+        client.add_device_lifecycle_event_listener(
+            Lifecycle.DELETE, handle_deleted_device
+        )
+    )
 
     entry.runtime_data = SmartThingsData(
         devices={
@@ -204,6 +228,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
         rooms=rooms,
     )
 
+    # Events are deprecated and will be removed in 2025.10
     def handle_button_press(event: DeviceEvent) -> None:
         """Handle a button press."""
         if (
@@ -258,7 +283,8 @@ async def async_unload_entry(
     """Unload a config entry."""
     client = entry.runtime_data.client
     if (subscription_id := entry.data.get(CONF_SUBSCRIPTION_ID)) is not None:
-        await client.delete_subscription(subscription_id)
+        with contextlib.suppress(SmartThingsConnectionError):
+            await client.delete_subscription(subscription_id)
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
@@ -274,6 +300,58 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
+def create_devices(
+    device_registry: dr.DeviceRegistry,
+    devices: dict[str, FullDevice],
+    entry: SmartThingsConfigEntry,
+    rooms: dict[str, str],
+) -> None:
+    """Create devices in the device registry."""
+    for device in devices.values():
+        kwargs: dict[str, Any] = {}
+        if device.device.hub is not None:
+            kwargs = {
+                ATTR_SW_VERSION: device.device.hub.firmware_version,
+                ATTR_MODEL: device.device.hub.hardware_type,
+            }
+            if device.device.hub.mac_address:
+                kwargs[ATTR_CONNECTIONS] = {
+                    (dr.CONNECTION_NETWORK_MAC, device.device.hub.mac_address)
+                }
+        if device.device.parent_device_id:
+            kwargs[ATTR_VIA_DEVICE] = (DOMAIN, device.device.parent_device_id)
+        if (ocf := device.device.ocf) is not None:
+            kwargs.update(
+                {
+                    ATTR_MANUFACTURER: ocf.manufacturer_name,
+                    ATTR_MODEL: (
+                        (ocf.model_number.split("|")[0]) if ocf.model_number else None
+                    ),
+                    ATTR_HW_VERSION: ocf.hardware_version,
+                    ATTR_SW_VERSION: ocf.firmware_version,
+                }
+            )
+        if (viper := device.device.viper) is not None:
+            kwargs.update(
+                {
+                    ATTR_MANUFACTURER: viper.manufacturer_name,
+                    ATTR_MODEL: viper.model_name,
+                    ATTR_HW_VERSION: viper.hardware_version,
+                    ATTR_SW_VERSION: viper.software_version,
+                }
+            )
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, device.device.device_id)},
+            configuration_url="https://account.smartthings.com",
+            name=device.device.label,
+            suggested_area=(
+                rooms.get(device.device.room_id) if device.device.room_id else None
+            ),
+            **kwargs,
+        )
+
+
 KEEP_CAPABILITY_QUIRK: dict[
     Capability | str, Callable[[dict[Attribute | str, Status]], bool]
 ] = {
@@ -287,9 +365,7 @@ KEEP_CAPABILITY_QUIRK: dict[
 }
 
 
-def process_status(
-    status: dict[str, dict[Capability | str, dict[Attribute | str, Status]]],
-) -> dict[str, dict[Capability | str, dict[Attribute | str, Status]]]:
+def process_status(status: dict[str, ComponentStatus]) -> dict[str, ComponentStatus]:
     """Remove disabled capabilities from status."""
     if (main_component := status.get(MAIN)) is None:
         return status
