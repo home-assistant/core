@@ -2687,7 +2687,7 @@ async def test_migrate_of_incompatible_config_entry(
                     },
                     {
                         "device_class": "options_device_class_enum",
-                        "unit_of_measurement": "invalid_uom",
+                        "unit_of_measurement": "uom_required_for_device_class",
                     },
                 ),
                 # Include options again to allow flow with valid data

@@ -1355,7 +1355,8 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
                 CONF_PLATFORM: platform,
                 "entity": full_entity_name,
                 "url": learn_more_url(platform),
-            },
+            }
+            | (user_input or {}),
             errors=errors,
             last_step=False,
         )

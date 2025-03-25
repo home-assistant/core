@@ -492,7 +492,7 @@ def validate_sensor_state_and_device_class_config(
         and errors is not None
     ):
         # Do not allow an empty unit of measurement in a subentry data flow
-        errors[CONF_UNIT_OF_MEASUREMENT] = "invalid_uom"
+        errors[CONF_UNIT_OF_MEASUREMENT] = "uom_required_for_device_class"
         return config
 
     if (
