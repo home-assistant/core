@@ -868,6 +868,9 @@
       }
     },
     "number": {
+      "alarm_clock": {
+        "name": "Alarm clock"
+      },
       "refrigerator_setpoint_temperature": {
         "name": "Refrigerator temperature"
       },
@@ -1929,11 +1932,6 @@
       },
       "i_dos2_active": {
         "name": "[%key:component::home_connect::services::set_program_and_options::fields::laundry_care_washer_option_i_dos2_active::name%]"
-      }
-    },
-    "time": {
-      "alarm_clock": {
-        "name": "Alarm clock"
       }
     }
   }

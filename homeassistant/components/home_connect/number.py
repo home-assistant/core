@@ -27,6 +27,11 @@ PARALLEL_UPDATES = 1
 
 NUMBERS = (
     NumberEntityDescription(
+        key=SettingKey.BSH_COMMON_ALARM_CLOCK,
+        device_class=NumberDeviceClass.DURATION,
+        translation_key="alarm_clock",
+    ),
+    NumberEntityDescription(
         key=SettingKey.REFRIGERATION_FRIDGE_FREEZER_SETPOINT_TEMPERATURE_REFRIGERATOR,
         device_class=NumberDeviceClass.TEMPERATURE,
         translation_key="refrigerator_setpoint_temperature",
