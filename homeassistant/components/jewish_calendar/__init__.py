@@ -113,8 +113,8 @@ async def async_migrate_entry(
             "first_stars": "tset_hakohavim_tsom",
             "three_stars": "tset_hakohavim_shabbat",
         }
-        new_keys = tuple(key_translations.values())
-        if not entity_entry.unique_id.endswith(new_keys):
+        old_keys = tuple(key_translations.keys())
+        if entity_entry.unique_id.endswith(old_keys):
             old_key = entity_entry.unique_id.split("-")[1]
             new_unique_id = f"{config_entry.entry_id}-{key_translations[old_key]}"
             return {"new_unique_id": new_unique_id}
