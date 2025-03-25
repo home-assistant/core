@@ -8,7 +8,6 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_URL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import (
@@ -57,7 +56,7 @@ class PterodactylCoordinator(DataUpdateCoordinator[dict[str, PterodactylData]]):
         try:
             await self.api.async_init()
         except PterodactylConfigurationError as error:
-            raise ConfigEntryNotReady(error) from error
+            raise UpdateFailed(error) from error
 
     async def _async_update_data(self) -> dict[str, PterodactylData]:
         """Get updated data from the Pterodactyl server."""

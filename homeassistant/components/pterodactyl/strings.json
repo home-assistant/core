@@ -7,7 +7,7 @@
           "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
-          "url": "The IP address or hostname of your Pterodactyl server, starting with either 'http://' or 'https://', optionally including the port at the end.",
+          "url": "The URL of your Pterodactyl server, including the protocol (http:// or https://) and optionally the port number.",
           "api_key": "The account API key for accessing your Pterodactyl server."
         }
       }
