@@ -6,14 +6,8 @@
       }
     },
     "sensor": {
-      "ambient_humidity": {
-        "default": "mdi:water-percent"
-      },
       "ambient_humidity_status": {
         "default": "mdi:information-outline"
-      },
-      "ambient_temperature": {
-        "default": "mdi:thermometer"
       },
       "ambient_temperature_status": {
         "default": "mdi:information-outline"
@@ -23,9 +17,6 @@
       },
       "battery_capacity": {
         "default": "mdi:flash"
-      },
-      "battery_charge": {
-        "default": "mdi:percent-box"
       },
       "battery_charge_low": {
         "default": "mdi:gauge"
@@ -38,12 +29,6 @@
       },
       "battery_charger_status": {
         "default": "mdi:information-outline"
-      },
-      "battery_currrent": {
-        "default": "mdi:gauge"
-      },
-      "battery_currrent_total": {
-        "default": "mdi:gauge"
       },
       "battery_date": {
         "default": "mdi:calendar"
@@ -58,22 +43,16 @@
         "default": "mdi:information-outline"
       },
       "battery_runtime": {
-        "default": "mdi:timer-outline"
+        "default": "mdi:clock-outline"
       },
       "battery_runtime_low": {
-        "default": "mdi:timer-alert-outline"
+        "default": "mdi:clock-alert-outline"
       },
       "battery_runtime_restart": {
-        "default": "mdi:timer-alert-outline"
-      },
-      "battery_temperature": {
-        "default": "mdi:thermometer"
+        "default": "mdi:clock-start"
       },
       "battery_type": {
         "default": "mdi:information-outline"
-      },
-      "battery_voltage": {
-        "default": "mdi:current-dc"
       },
       "battery_voltage_high": {
         "default": "mdi:battery-high"
@@ -81,137 +60,32 @@
       "battery_voltage_low": {
         "default": "mdi:battery-low"
       },
-      "battery_voltage_nominal": {
-        "default": "mdi:current-dc"
-      },
-      "input_bypass_current": {
-        "default": "mdi:gauge"
-      },
-      "input_bypass_frequency": {
-        "default": "mdi:sine-wave"
-      },
-      "input_bypass_l1_current": {
-        "default": "mdi:gauge"
-      },
-      "input_bypass_l1_n_voltage": {
-        "default": "mdi:sine-wave"
-      },
-      "input_bypass_l1_real_power": {
-        "default": "mdi:gauge"
-      },
-      "input_bypass_l2_current": {
-        "default": "mdi:gauge"
-      },
-      "input_bypass_l2_n_voltage": {
-        "default": "mdi:sine-wave"
-      },
-      "input_bypass_l2_real_power": {
-        "default": "mdi:gauge"
-      },
-      "input_bypass_l3_current": {
-        "default": "mdi:gauge"
-      },
-      "input_bypass_l3_n_voltage": {
-        "default": "mdi:sine-wave"
-      },
-      "input_bypass_l3_real_power": {
-        "default": "mdi:gauge"
-      },
       "input_bypass_phases": {
-        "default": "mdi:information-outline"
-      },
-      "input_bypass_realpower": {
-        "default": "mdi:gauge"
-      },
-      "input_bypass_voltage": {
         "default": "mdi:sine-wave"
-      },
-      "input_current": {
-        "default": "mdi:current-ac"
       },
       "input_current_status": {
         "default": "mdi:information-outline"
       },
-      "input_frequency": {
-        "default": "mdi:sine-wave"
-      },
-      "input_frequency_nominal": {
-        "default": "mdi:sine-wave"
-      },
       "input_frequency_status": {
         "default": "mdi:information-outline"
       },
-      "input_l1_current": {
-        "default": "mdi:current-ac"
-      },
-      "input_l1_frequency": {
-        "default": "mdi:sine-wave"
-      },
-      "input_l1_n_voltage": {
-        "default": "mdi:sine-wave"
-      },
-      "input_l1_realpower": {
-        "default": "mdi:gauge"
-      },
-      "input_l2_current": {
-        "default": "mdi:current-ac"
-      },
-      "input_l2_frequency": {
-        "default": "mdi:sine-wave"
-      },
-      "input_l2_n_voltage": {
-        "default": "mdi:sine-wave"
-      },
-      "input_l2_realpower": {
-        "default": "mdi:gauge"
-      },
-      "input_l3_current": {
-        "default": "mdi:current-ac"
-      },
-      "input_l3_frequency": {
-        "default": "mdi:sine-wave"
-      },
-      "input_l3_n_voltage": {
-        "default": "mdi:sine-wave"
-      },
-      "input_l3_realpower": {
-        "default": "mdi:gauge"
-      },
       "input_load": {
-        "default": "mdi:gauge"
+        "default": "mdi:percent-box-outline"
       },
       "input_phases": {
-        "default": "mdi:information-outline"
-      },
-      "input_power": {
-        "default": "mdi:gauge"
-      },
-      "input_realpower": {
-        "default": "mdi:gauge"
+        "default": "mdi:sine-wave"
       },
       "input_sensitivity": {
         "default": "mdi:information-outline"
       },
-      "input_transfer_high": {
-        "default": "mdi:battery-alert-variant-outline"
-      },
-      "input_transfer_low": {
-        "default": "mdi:battery-alert-variant-outline"
-      },
       "input_transfer_reason": {
         "default": "mdi:information-outline"
-      },
-      "input_voltage": {
-        "default": "mdi:sine-wave"
-      },
-      "input_voltage_nominal": {
-        "default": "mdi:sine-wave"
       },
       "input_voltage_status": {
         "default": "mdi:information-outline"
       },
       "outlet_number_current": {
-        "default": "mdi:gauge"
+        "default": "mdi:current-ac"
       },
       "outlet_number_current_status": {
         "default": "mdi:information-outline"
@@ -222,79 +96,16 @@
       "outlet_number_power": {
         "default": "mdi:gauge"
       },
-      "outlet_number_realpower": {
-        "default": "mdi:gauge"
-      },
-      "outlet_voltage": {
-        "default": "mdi:gauge"
-      },
-      "output_current": {
-        "default": "mdi:current-ac"
-      },
-      "output_current_nominal": {
-        "default": "mdi:current-ac"
-      },
-      "output_frequency": {
-        "default": "mdi:sine-wave"
-      },
-      "output_frequency_nominal": {
-        "default": "mdi:sine-wave"
-      },
-      "output_l1_current": {
-        "default": "mdi:current-ac"
-      },
-      "output_l1_n_voltage": {
-        "default": "mdi:sine-wave"
-      },
       "output_l1_power_percent": {
-        "default": "mdi:percent-box"
-      },
-      "output_l1_realpower": {
-        "default": "mdi:gauge"
-      },
-      "output_l2_current": {
-        "default": "mdi:current-ac"
-      },
-      "output_l2_n_voltage": {
-        "default": "mdi:sine-wave"
+        "default": "mdi:percent-circle-outline"
       },
       "output_l2_power_percent": {
-        "default": "mdi:percent-box"
-      },
-      "output_l2_realpower": {
-        "default": "mdi:gauge"
-      },
-      "output_l3_current": {
-        "default": "mdi:current-ac"
-      },
-      "output_l3_n_voltage": {
-        "default": "mdi:sine-wave"
+        "default": "mdi:percent-circle-outline"
       },
       "output_l3_power_percent": {
-        "default": "mdi:percent-box"
-      },
-      "output_l3_realpower": {
-        "default": "mdi:gauge"
+        "default": "mdi:percent-circle-outline"
       },
       "output_phases": {
-        "default": "mdi:information-outline"
-      },
-      "output_power": {
-        "default": "mdi:gauge"
-      },
-      "output_power_nominal": {
-        "default": "mdi:gauge"
-      },
-      "output_realpower": {
-        "default": "mdi:gauge"
-      },
-      "output_realpower_nominal": {
-        "default": "mdi:gauge"
-      },
-      "output_voltage": {
-        "default": "mdi:sine-wave"
-      },
-      "output_voltage_nominal": {
         "default": "mdi:sine-wave"
       },
       "ups_alarm": {
@@ -319,28 +130,16 @@
         "default": "mdi:information-outline"
       },
       "ups_efficiency": {
-        "default": "mdi:gauge"
+        "default": "mdi:percent-outline"
       },
       "ups_id": {
         "default": "mdi:information-outline"
       },
       "ups_load": {
-        "default": "mdi:gauge"
+        "default": "mdi:percent-box-outline"
       },
       "ups_load_high": {
-        "default": "mdi:gauge"
-      },
-      "ups_power": {
-        "default": "mdi:gauge"
-      },
-      "ups_power_nominal": {
-        "default": "mdi:gauge"
-      },
-      "ups_realpower": {
-        "default": "mdi:gauge"
-      },
-      "ups_realpower_nominal": {
-        "default": "mdi:gauge"
+        "default": "mdi:percent-box-outline"
       },
       "ups_shutdown": {
         "default": "mdi:information-outline"
@@ -360,9 +159,6 @@
       "ups_status_display": {
         "default": "mdi:information-outline"
       },
-      "ups_temperature": {
-        "default": "mdi:thermometer"
-      },
       "ups_test_date": {
         "default": "mdi:calendar"
       },
@@ -371,15 +167,6 @@
       },
       "ups_test_result": {
         "default": "mdi:information-outline"
-      },
-      "ups_timer_reboot": {
-        "default": "mdi:timer-outline"
-      },
-      "ups_timer_shutdown": {
-        "default": "mdi:timer-outline"
-      },
-      "ups_timer_start": {
-        "default": "mdi:timer-outline"
       },
       "ups_type": {
         "default": "mdi:information-outline"
