@@ -123,6 +123,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SynologyDSMConfigEntry) 
     entry.runtime_data = SynologyDSMData(
         api=api,
         coordinator_central=coordinator_central,
+        coordinator_central_old_update_success=True,
         coordinator_cameras=coordinator_cameras,
         coordinator_switches=coordinator_switches,
     )
@@ -139,8 +140,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: SynologyDSMConfigEntry) 
             entry.async_on_state_change(async_notify_backup_listeners)
         )
 
+        def async_check_last_update_success() -> None:
+            if (
+                coordinator_central.last_update_success
+                is not entry.runtime_data.coordinator_central_old_update_success
+            ):
+                entry.runtime_data.coordinator_central_old_update_success = (
+                    coordinator_central.last_update_success
+                )
+                async_notify_backup_listeners()
+
         entry.runtime_data.coordinator_central.async_add_listener(
-            async_notify_backup_listeners
+            async_check_last_update_success
         )
 
     return True
