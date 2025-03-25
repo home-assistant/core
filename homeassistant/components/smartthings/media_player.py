@@ -286,24 +286,16 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
         ]
 
     @property
-    def is_volume_muted(self) -> bool | None:
+    def is_volume_muted(self) -> bool:
         """Returns if the volume is muted."""
-        if self.supports_capability(Capability.AUDIO_MUTE):
-            return (
-                self.get_attribute_value(Capability.AUDIO_MUTE, Attribute.MUTE)
-                == "muted"
-            )
-        return None
+        return (
+            self.get_attribute_value(Capability.AUDIO_MUTE, Attribute.MUTE) == "muted"
+        )
 
     @property
-    def volume_level(self) -> float | None:
+    def volume_level(self) -> float:
         """Volume level."""
-        if self.supports_capability(Capability.AUDIO_VOLUME):
-            return (
-                self.get_attribute_value(Capability.AUDIO_VOLUME, Attribute.VOLUME)
-                / 100
-            )
-        return None
+        return self.get_attribute_value(Capability.AUDIO_VOLUME, Attribute.VOLUME) / 100
 
     @property
     def source(self) -> str | None:
