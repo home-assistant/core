@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_set_program_and_options[service_call0-set_selected_program]
+# name: test_set_program_and_options[service_call0-set_selected_program-Washer]
   _Call(
     tuple(
       'SIEMENS-HCS03WCH1-7BC6383CF794',
@@ -18,7 +18,7 @@
     }),
   )
 # ---
-# name: test_set_program_and_options[service_call1-start_program]
+# name: test_set_program_and_options[service_call1-start_program-Washer]
   _Call(
     tuple(
       'SIEMENS-HCS03WCH1-7BC6383CF794',
@@ -37,7 +37,7 @@
     }),
   )
 # ---
-# name: test_set_program_and_options[service_call2-set_active_program_options]
+# name: test_set_program_and_options[service_call2-set_active_program_options-Washer]
   _Call(
     tuple(
       'SIEMENS-HCS03WCH1-7BC6383CF794',
@@ -57,7 +57,7 @@
     }),
   )
 # ---
-# name: test_set_program_and_options[service_call3-set_selected_program_options]
+# name: test_set_program_and_options[service_call3-set_selected_program_options-Washer]
   _Call(
     tuple(
       'SIEMENS-HCS03WCH1-7BC6383CF794',
