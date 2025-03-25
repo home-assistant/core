@@ -290,6 +290,7 @@ class LeaController:
         _LOGGER.log(logging.INFO, "_handle_num_inputs: %s", str(value))
         value = value.replace("/amp/deviceInfo/numInputs", "")
         value = value.replace(" ", "")
+        value = value.replace("\n", "")
         for i in range(int(value)):
             zone = LeaZone(self, str(i))
             if self._call_discovered_callback(zone, True):
