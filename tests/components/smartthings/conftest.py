@@ -4,12 +4,13 @@ from collections.abc import Generator
 import time
 from unittest.mock import AsyncMock, patch
 
-from pysmartthings.models import (
+from pysmartthings import (
     DeviceResponse,
     DeviceStatus,
     LocationResponse,
     RoomResponse,
     SceneResponse,
+    Subscription,
 )
 import pytest
 
@@ -82,12 +83,17 @@ def mock_smartthings() -> Generator[AsyncMock]:
         client.get_rooms.return_value = RoomResponse.from_json(
             load_fixture("rooms.json", DOMAIN)
         ).items
+        client.create_subscription.return_value = Subscription.from_json(
+            load_fixture("subscription.json", DOMAIN)
+        )
         yield client
 
 
 @pytest.fixture(
     params=[
+        "da_ac_airsensor_01001",
         "da_ac_rac_000001",
+        "da_ac_rac_100001",
         "da_ac_rac_01001",
         "multipurpose_sensor",
         "contact_sensor",
@@ -101,11 +107,16 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "da_ref_normal_000001",
         "vd_network_audio_002s",
         "iphone",
+        "da_sac_ehs_000001_sub",
         "da_wm_dw_000001",
         "da_wm_wd_000001",
+        "da_wm_wd_000001_1",
         "da_wm_wm_000001",
+        "da_wm_wm_000001_1",
         "da_rvc_normal_000001",
         "da_ks_microwave_0101x",
+        "da_ks_range_0101x",
+        "da_ks_oven_01061",
         "hue_color_temperature_bulb",
         "hue_rgbw_color_bulb",
         "c2c_shade",
@@ -117,7 +128,18 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "sensibo_airconditioner_1",
         "ecobee_sensor",
         "ecobee_thermostat",
+        "ecobee_thermostat_offline",
         "fake_fan",
+        "generic_fan_3_speed",
+        "heatit_ztrm3_thermostat",
+        "heatit_zpushwall",
+        "generic_ef00_v1",
+        "bosch_radiator_thermostat_ii",
+        "im_speaker_ai_0001",
+        "abl_light_b_001",
+        "tplink_p110",
+        "ikea_kadrilj",
+        "aux_ac",
     ]
 )
 def device_fixture(

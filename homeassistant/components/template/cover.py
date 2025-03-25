@@ -325,9 +325,9 @@ class CoverTemplate(TemplateEntity, CoverEntity):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Move the cover up."""
-        if (open_script := self._action_scripts.get(OPEN_ACTION)) is not None:
+        if open_script := self._action_scripts.get(OPEN_ACTION):
             await self.async_run_script(open_script, context=self._context)
-        elif (position_script := self._action_scripts.get(POSITION_ACTION)) is not None:
+        elif position_script := self._action_scripts.get(POSITION_ACTION):
             await self.async_run_script(
                 position_script,
                 run_variables={"position": 100},
@@ -339,9 +339,9 @@ class CoverTemplate(TemplateEntity, CoverEntity):
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Move the cover down."""
-        if (close_script := self._action_scripts.get(CLOSE_ACTION)) is not None:
+        if close_script := self._action_scripts.get(CLOSE_ACTION):
             await self.async_run_script(close_script, context=self._context)
-        elif (position_script := self._action_scripts.get(POSITION_ACTION)) is not None:
+        elif position_script := self._action_scripts.get(POSITION_ACTION):
             await self.async_run_script(
                 position_script,
                 run_variables={"position": 0},
@@ -353,7 +353,7 @@ class CoverTemplate(TemplateEntity, CoverEntity):
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Fire the stop action."""
-        if (stop_script := self._action_scripts.get(STOP_ACTION)) is not None:
+        if stop_script := self._action_scripts.get(STOP_ACTION):
             await self.async_run_script(stop_script, context=self._context)
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:

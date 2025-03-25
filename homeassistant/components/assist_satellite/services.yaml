@@ -14,6 +14,10 @@ announce:
       required: false
       selector:
         text:
+    preannounce_media_id:
+      required: false
+      selector:
+        text:
 start_conversation:
   target:
     entity:
@@ -31,6 +35,10 @@ start_conversation:
       selector:
         text:
     extra_system_prompt:
+      required: false
+      selector:
+        text:
+    preannounce_media_id:
       required: false
       selector:
         text:
