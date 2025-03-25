@@ -57,7 +57,7 @@ class PointDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]
         state: dict[str, dict[str, Any]] = {}
 
         for device in self.point.devices:
-            last_updated = parse_datetime(device.last_updated)
+            last_updated = parse_datetime(device.last_update)
             if (
                 not last_updated
                 or device.device_id not in self.device_updates
