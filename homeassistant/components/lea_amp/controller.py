@@ -92,9 +92,10 @@ class LeaController:
         self._transport = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         address = (self._ip_address, int(self._port))
         self._transport.connect(address)
-        _LOGGER.debug("Connected to %s", address)
-        _LOGGER.debug("Discover enabled %s", str(self._discovery_enabled))
-        _LOGGER.debug("Update enabled %s", str(self._update_enabled))
+        _LOGGER.log(logging.INFO, "Connected to %s", address)
+        _LOGGER.log(logging.INFO, "Discover enabled %s", str(self._discovery_enabled))
+        _LOGGER.log(logging.INFO, "Update enabled %s", str(self._update_enabled))
+
         if self._discovery_enabled or self._registry.has_queued_zones:
             self.send_discovery_message()
         if self._update_enabled:
