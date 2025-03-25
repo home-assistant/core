@@ -126,7 +126,7 @@ class ZimiConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_manual(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Handle manual configuration step if needed."""
 
         errors: dict[str, str] = {}
