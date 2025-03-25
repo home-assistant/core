@@ -19,8 +19,8 @@
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "username": "Username for the device's web UI panel.",
-          "password": "Password for the device's web UI panel."
+          "username": "Username for the device's web panel.",
+          "password": "Password for the device's web panel."
         }
       },
       "reauth_confirm": {
