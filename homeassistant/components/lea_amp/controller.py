@@ -187,13 +187,12 @@ class LeaController:
         """Send Get Number of Inputs."""
         message: str = str(GetNumOfInputsMessage())
         _LOGGER.log(logging.INFO, "Sending discovery message: %s", message)
-        call_later: bool = False
+
         if not self._transport:
             _LOGGER.log(logging.INFO, "Transport not available")
             return
         _LOGGER.log(logging.INFO, "Discovery enabled: %s", str(self._discovery_enabled))
         if self._discovery_enabled:
-            call_later = True
             self._transport.send(message.encode())
             # while True:
             data = self._transport.recv(2048)
@@ -203,7 +202,6 @@ class LeaController:
                 self._handle_response_received(data)
             self._transport.close()
         if self._registry.has_queued_zones:
-            call_later = True
             for zone_id in self._registry.zones_queue:
                 self._transport.sendto(message, (zone_id, self._port))
 
@@ -213,14 +211,8 @@ class LeaController:
             if zone.is_manual
         ]
         if manually_added_zones:
-            call_later = True
             for zone_id in manually_added_zones:
                 self._transport.sendto(message, (zone_id, self._port))
-
-        if call_later:
-            self._discovery_handle = self._loop.call_later(
-                self._discovery_interval, self.send_discovery_message
-            )
 
     def send_update_message(self):
         """Send Update Message."""
