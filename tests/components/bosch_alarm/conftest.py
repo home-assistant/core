@@ -102,8 +102,12 @@ def bosch_alarm_test_data_fixture(
         self.areas = data_areas
 
     with (
-        patch("bosch_alarm_mode2.panel.Panel.connect", connect),
-        patch("bosch_alarm_mode2.panel.Panel._area_arm", area_arm),
+        patch(
+            "homeassistant.components.bosch_alarm.coordinator.Panel.connect", connect
+        ),
+        patch(
+            "homeassistant.components.bosch_alarm.coordinator.Panel._area_arm", area_arm
+        ),
     ):
         yield config
 

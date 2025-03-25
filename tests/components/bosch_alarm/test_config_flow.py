@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.bosch_alarm.const import DOMAIN
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -57,6 +58,10 @@ async def test_form_user(
         CONF_MODEL: bosch_alarm_test_data.model,
         **bosch_alarm_test_data.config,
     }
+    if bosch_alarm_test_data.serial:
+        assert result["context"]["unique_id"] == str(bosch_alarm_test_data.serial)
+    else:
+        assert "unique_id" not in result["context"]
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -190,9 +195,7 @@ async def test_entry_already_configured_host(
     bosch_alarm_test_data: MockBoschAlarmConfig,
 ) -> None:
     """Test if configuring an entity twice results in an error."""
-    entry = MockConfigEntry(
-        domain="bosch_alarm", unique_id="unique_id", data={CONF_HOST: "0.0.0.0"}
-    )
+    entry = MockConfigEntry(domain="bosch_alarm", data={CONF_HOST: "0.0.0.0"})
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
 
