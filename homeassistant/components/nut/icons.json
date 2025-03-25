@@ -84,17 +84,11 @@
       "input_voltage_status": {
         "default": "mdi:information-outline"
       },
-      "outlet_number_current": {
-        "default": "mdi:current-ac"
-      },
       "outlet_number_current_status": {
         "default": "mdi:information-outline"
       },
       "outlet_number_desc": {
         "default": "mdi:information-outline"
-      },
-      "outlet_number_power": {
-        "default": "mdi:gauge"
       },
       "output_l1_power_percent": {
         "default": "mdi:percent-circle-outline"
