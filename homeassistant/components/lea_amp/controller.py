@@ -291,6 +291,7 @@ class LeaController:
         value = value.replace("/amp/deviceInfo/numInputs", "")
         value = value.replace(" ", "")
         value = value.replace("\n", "")
+        value = value.replace(".0", "")
         _LOGGER.log(logging.INFO, "_handle_num_inputs: %s", str(value))
 
         for i in range(1, int(value)):
