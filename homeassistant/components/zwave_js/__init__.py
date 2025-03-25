@@ -586,11 +586,11 @@ class ControllerEvents:
         device_id = get_device_id(driver, node)
         device_id_ext = get_device_id_ext(driver, node)
         node_id_device = self.dev_reg.async_get_device(identifiers={device_id})
-        via_device_id = None
+        via_identifier = None
         controller = driver.controller
         # Get the controller node device ID if this node is not the controller
         if controller.own_node and controller.own_node != node:
-            via_device_id = get_device_id(driver, controller.own_node)
+            via_identifier = get_device_id(driver, controller.own_node)
 
         if device_id_ext:
             # If there is a device with this node ID but with a different hardware
@@ -648,9 +648,26 @@ class ControllerEvents:
                     new_identifiers = preprovisioned_device.identifiers.copy()
                     new_identifiers.remove(dsk_identifier)
                     new_identifiers.update(ids)
+                    via_device_id = None
+                    if via_identifier:
+                        # async_update_device expects a device id not a device identifier
+                        via_device = self.dev_reg.async_get_device(
+                            identifiers={via_identifier}
+                        )
+                        if via_device:
+                            via_device_id = via_device.id
                     self.dev_reg.async_update_device(
-                        preprovisioned_device.id, new_identifiers=new_identifiers
+                        preprovisioned_device.id,
+                        new_identifiers=new_identifiers,
+                        sw_version=node.firmware_version,
+                        name=node.name
+                        or node.device_config.description
+                        or f"Node {node.node_id}",
+                        model=node.device_config.label,
+                        manufacturer=node.device_config.manufacturer,
+                        via_device_id=via_device_id,
                     )
+                    return preprovisioned_device
 
         device = self.dev_reg.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
@@ -660,7 +677,7 @@ class ControllerEvents:
             model=node.device_config.label,
             manufacturer=node.device_config.manufacturer,
             suggested_area=node.location if node.location else UNDEFINED,
-            via_device=via_device_id,
+            via_device=via_identifier,
         )
 
         async_dispatcher_send(self.hass, EVENT_DEVICE_ADDED_TO_REGISTRY, device)

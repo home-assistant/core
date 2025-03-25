@@ -10,12 +10,14 @@ from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import AddonsOptions
 import pytest
 from zwave_js_server.client import Client
+from zwave_js_server.const import SecurityClass
 from zwave_js_server.event import Event
 from zwave_js_server.exceptions import (
     BaseZwaveJSServerError,
     InvalidServerVersion,
     NotConnected,
 )
+from zwave_js_server.model.controller import ProvisioningEntry
 from zwave_js_server.model.node import Node
 from zwave_js_server.model.version import VersionInfo
 
@@ -43,6 +45,8 @@ from tests.common import (
     async_get_persistent_notifications,
 )
 from tests.typing import WebSocketGenerator
+
+CONTROLLER_PATCH_PREFIX = "zwave_js_server.model.controller.Controller"
 
 
 @pytest.fixture(name="connect_timeout")
@@ -411,9 +415,42 @@ async def test_on_node_added_ready(
 
     assert state  # entity and device added
     assert state.state != STATE_UNAVAILABLE
-    assert device_registry.async_get_device(
+    device = device_registry.async_get_device(
         identifiers={(DOMAIN, air_temperature_device_id)}
     )
+    assert device
+
+    # Test node added event with a preprovisioned device
+    dsk = "test"
+    device_registry.async_update_device(
+        device.id,
+        new_identifiers={(DOMAIN, f"provision_{dsk}")},
+    )
+    provisioning_entry = ProvisioningEntry.from_dict(
+        {
+            "dsk": dsk,
+            "securityClasses": [SecurityClass.S2_UNAUTHENTICATED],
+            "device_id": device.id,
+        }
+    )
+    with patch(
+        f"{CONTROLLER_PATCH_PREFIX}.async_get_provisioning_entry",
+        return_value=provisioning_entry,
+    ):
+        node = Node(client, deepcopy(multisensor_6_state))
+        event = {"node": node}
+        client.driver.controller.emit("node added", event)
+        await hass.async_block_till_done()
+
+        state = hass.states.get(AIR_TEMPERATURE_SENSOR)
+
+        assert state  # entity and device added
+        assert state.state != STATE_UNAVAILABLE
+        device = device_registry.async_get_device(
+            identifiers={(DOMAIN, air_temperature_device_id)}
+        )
+        assert device
+        assert (DOMAIN, f"provision_{dsk}") not in device.identifiers
 
 
 async def test_on_node_added_not_ready(
