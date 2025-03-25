@@ -6,14 +6,17 @@ from homeassistant.components.sensor import (
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.helpers.entity import DeviceInfo
 
+
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the sensor platform."""
     return True
+
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the sensor from a config entry."""
     coordinator = hass.data["thesilentwave"][entry.entry_id]
     async_add_entities([TheSilentWaveSensor(coordinator)], True)
+
 
 class TheSilentWaveSensor(CoordinatorEntity, SensorEntity):
     """Representation of a TheSilentWave sensor."""

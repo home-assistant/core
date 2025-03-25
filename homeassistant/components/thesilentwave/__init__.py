@@ -6,19 +6,21 @@ from datetime import timedelta
 
 _LOGGER = logging.getLogger(__name__)
 
+
 async def async_setup(hass, config):
     """Set up the component."""
     return True
 
+
 async def async_setup_entry(hass, entry):
     """Set up a sensor from a config entry."""
-    
+
     # Fetch the configuration data from the entry
     name = entry.data.get("name", "TheSilentWaveSensor")
     host = entry.data.get("host", "")
     scan_interval = entry.data.get("scan_interval", 10)
     url = f"http://{host}:8080/api/status"
-    
+
     # Define your update coordinator for polling API
     class TheSilentWaveCoordinator(DataUpdateCoordinator):
         """Class to manage fetching the data from the API."""
@@ -31,7 +33,7 @@ async def async_setup_entry(hass, entry):
                 hass,
                 _LOGGER,
                 name=name,
-                update_interval=timedelta(seconds=scan_interval)
+                update_interval=timedelta(seconds=scan_interval),
             )
 
         async def _async_update_data(self):
