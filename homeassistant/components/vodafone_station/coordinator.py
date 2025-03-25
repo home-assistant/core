@@ -21,6 +21,8 @@ from .helpers import cleanup_device_tracker
 
 CONSIDER_HOME_SECONDS = DEFAULT_CONSIDER_HOME.total_seconds()
 
+type VodafoneConfigEntry = ConfigEntry[VodafoneStationRouter]
+
 
 @dataclass(slots=True)
 class VodafoneStationDeviceInfo:
@@ -42,7 +44,7 @@ class UpdateCoordinatorDataType:
 class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
     """Queries router running Vodafone Station firmware."""
 
-    config_entry: ConfigEntry
+    config_entry: VodafoneConfigEntry
 
     def __init__(
         self,
@@ -50,7 +52,7 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         host: str,
         username: str,
         password: str,
-        config_entry: ConfigEntry,
+        config_entry: VodafoneConfigEntry,
     ) -> None:
         """Initialize the scanner."""
 
@@ -120,7 +122,11 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 data_sensors = await self.api.get_sensor_data()
                 await self.api.logout()
             except exceptions.CannotAuthenticate as err:
-                raise ConfigEntryAuthFailed from err
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="cannot_authenticate",
+                    translation_placeholders={"error": repr(err)},
+                ) from err
             except (
                 exceptions.CannotConnect,
                 exceptions.AlreadyLogged,
