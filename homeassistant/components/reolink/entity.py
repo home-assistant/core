@@ -179,7 +179,7 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
                 self._dev_id = f"{self._host.unique_id}_ch{dev_ch}"
 
             connections = set()
-            if (mac := self._host.api.baichuan.mac_address(dev_ch)) != "Unknown":
+            if mac := self._host.api.baichuan.mac_address(dev_ch):
                 connections.add((CONNECTION_NETWORK_MAC, mac))
 
             self._attr_device_info = DeviceInfo(
