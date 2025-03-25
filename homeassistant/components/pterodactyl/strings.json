@@ -31,7 +31,7 @@
         "name": "CPU Utilization",
         "state_attributes": {
           "cpu_limit": {
-            "name": "CPU Limit in (%)"
+            "name": "CPU Limit (%)"
           }
         }
       },
