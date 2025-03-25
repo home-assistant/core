@@ -83,7 +83,7 @@ class LeaController:
         self._update_handle: asyncio.TimerHandle | None = None
 
         self._response_handler: dict[str, Callable] = {
-            GetNumOfInputsMessage.command: self._handle_num_inputs,
+            # GetNumOfInputsMessage: self._handle_num_inputs,
             DevStatusResponse.command: self._handle_response_received,
         }
 
@@ -274,7 +274,7 @@ class LeaController:
         """Handle received response."""
         zone_id, commandType, value = self._message_factory.create_message(data)
 
-        if GetNumOfInputsMessage.command in commandType:
+        if commandType == "numInputs":
             await self._handle_num_inputs(value)
         elif commandType == "volume":
             if zone := self.get_zone_by_id(zone_id):
