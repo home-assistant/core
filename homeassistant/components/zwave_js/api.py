@@ -1035,6 +1035,9 @@ async def websocket_provision_smart_start_node(
             name=device_name,
             manufacturer=manufacturer,
             model=model,
+            via_device=get_device_id(driver, driver.controller.own_node)
+            if driver.controller.own_node
+            else None,
         )
         if area_id := msg.get(AREA_ID):
             dev_reg.async_update_device(device.id, area_id=area_id)
