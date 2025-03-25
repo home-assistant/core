@@ -331,8 +331,6 @@ COMMON_MQTT_FIELDS = {
     CONF_QOS: PlatformField(QOS_SELECTOR, False, valid_qos_schema, default=0),
 }
 
-COLLAPSED_SECTIONS = {"advanced_settings"}
-
 PLATFORM_ENTITY_FIELDS = {
     Platform.NOTIFY.value: {},
     Platform.SENSOR.value: {
@@ -571,14 +569,16 @@ def data_schema_from_fields(
             if field_details.section == schema_section
             and field_details.exclude_from_reconfig
         }
-        if not data_element_options:
-            continue
         if schema_section is None:
             data_schema.update(data_schema_element)
             continue
         collapsed = (
-            schema_section in COLLAPSED_SECTIONS
-            or not bool(set(user_data) & data_element_options)
+            not any(
+                (default := data_schema_fields[str(option)].default) is vol.UNDEFINED
+                or user_data[str(option)] != default
+                for option in data_element_options
+                if option in user_data
+            )
             if user_data is not None
             else True
         )
