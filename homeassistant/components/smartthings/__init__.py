@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+import contextlib
 from dataclasses import dataclass
 from http import HTTPStatus
 import logging
@@ -12,15 +13,17 @@ from aiohttp import ClientResponseError
 from pysmartthings import (
     Attribute,
     Capability,
+    ComponentStatus,
     Device,
     DeviceEvent,
+    Lifecycle,
     Scene,
     SmartThings,
     SmartThingsAuthenticationFailedError,
+    SmartThingsConnectionError,
     SmartThingsSinkError,
     Status,
 )
-from pysmartthings.models import Lifecycle
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -72,7 +75,7 @@ class FullDevice:
     """Define an object to hold device data."""
 
     device: Device
-    status: dict[str, dict[Capability | str, dict[Attribute | str, Status]]]
+    status: dict[str, ComponentStatus]
 
 
 type SmartThingsConfigEntry = ConfigEntry[SmartThingsData]
@@ -124,7 +127,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
     client.refresh_token_function = _refresh_token
 
     def _handle_max_connections() -> None:
-        _LOGGER.debug("We hit the limit of max connections")
+        _LOGGER.debug(
+            "We hit the limit of max connections or we could not remove the old one, so retrying"
+        )
         hass.config_entries.async_schedule_reload(entry.entry_id)
 
     client.max_connections_reached_callback = _handle_max_connections
@@ -147,7 +152,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
 
     if (old_identifier := entry.data.get(CONF_SUBSCRIPTION_ID)) is not None:
         _LOGGER.debug("Trying to delete old subscription %s", old_identifier)
-        await client.delete_subscription(old_identifier)
+        try:
+            await client.delete_subscription(old_identifier)
+        except SmartThingsConnectionError as err:
+            raise ConfigEntryNotReady("Could not delete old subscription") from err
 
     _LOGGER.debug("Trying to create a new subscription")
     try:
@@ -274,7 +282,8 @@ async def async_unload_entry(
     """Unload a config entry."""
     client = entry.runtime_data.client
     if (subscription_id := entry.data.get(CONF_SUBSCRIPTION_ID)) is not None:
-        await client.delete_subscription(subscription_id)
+        with contextlib.suppress(SmartThingsConnectionError):
+            await client.delete_subscription(subscription_id)
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
@@ -355,9 +364,7 @@ KEEP_CAPABILITY_QUIRK: dict[
 }
 
 
-def process_status(
-    status: dict[str, dict[Capability | str, dict[Attribute | str, Status]]],
-) -> dict[str, dict[Capability | str, dict[Attribute | str, Status]]]:
+def process_status(status: dict[str, ComponentStatus]) -> dict[str, ComponentStatus]:
     """Remove disabled capabilities from status."""
     if (main_component := status.get(MAIN)) is None:
         return status
