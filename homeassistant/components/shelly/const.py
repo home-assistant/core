@@ -35,7 +35,6 @@ DOMAIN: Final = "shelly"
 LOGGER: Logger = getLogger(__package__)
 
 CONF_COAP_PORT: Final = "coap_port"
-CONF_SCRIPT: Final = "script"
 FIRMWARE_PATTERN: Final = re.compile(r"^(\d{8})")
 
 # max BLOCK light transition time in milliseconds (min=0)

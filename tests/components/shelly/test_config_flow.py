@@ -24,6 +24,7 @@ from homeassistant.components.shelly.const import (
     BLEScannerMode,
 )
 from homeassistant.components.shelly.coordinator import ENTRY_RELOAD_COOLDOWN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
     CONF_MODEL,
@@ -742,6 +743,38 @@ async def test_zeroconf_sleeping_device_error(hass: HomeAssistant) -> None:
         )
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "cannot_connect"
+
+
+async def test_options_flow_abort_setup_retry(
+    hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test ble options abort if device is in setup retry."""
+    monkeypatch.setattr(
+        mock_rpc_device, "initialize", AsyncMock(side_effect=DeviceConnectionError)
+    )
+    entry = await init_integration(hass, 2)
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
+async def test_options_flow_abort_no_scripts_support(
+    hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test ble options abort if device does not support scripts."""
+    monkeypatch.setattr(
+        mock_rpc_device, "supports_scripts", AsyncMock(return_value=False)
+    )
+    entry = await init_integration(hass, 2)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_scripts_support"
 
 
 async def test_zeroconf_already_configured(hass: HomeAssistant) -> None:

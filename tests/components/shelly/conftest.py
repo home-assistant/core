@@ -562,7 +562,6 @@ async def mock_rpc_device():
         rpc_device_mock.return_value.mock_event = Mock(side_effect=event)
         rpc_device_mock.return_value.mock_online = Mock(side_effect=online)
         rpc_device_mock.return_value.mock_initialized = Mock(side_effect=initialized)
-        rpc_device_mock.return_value.supports_scripts = AsyncMock(return_value=True)
 
         yield rpc_device_mock.return_value
 
@@ -589,9 +588,6 @@ async def mock_blu_trv():
         device = _mock_blu_rtv_device()
         blu_trv_device_mock.return_value = device
         blu_trv_device_mock.return_value.mock_update = Mock(side_effect=update)
-        blu_trv_device_mock.return_value.supports_scripts = AsyncMock(
-            return_value=False
-        )
 
         yield blu_trv_device_mock.return_value
 
