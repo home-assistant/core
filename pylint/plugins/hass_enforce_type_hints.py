@@ -106,7 +106,8 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "aiohttp_client": "ClientSessionGenerator",
     "aiohttp_server": "Callable[[], TestServer]",
     "area_registry": "AreaRegistry",
-    "async_test_recorder": "RecorderInstanceGenerator",
+    "async_test_recorder": "RecorderInstanceContextManager",
+    "async_setup_recorder_instance": "RecorderInstanceGenerator",
     "caplog": "pytest.LogCaptureFixture",
     "capsys": "pytest.CaptureFixture[str]",
     "current_request_with_host": "None",
@@ -251,7 +252,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             arg_types={
                 0: "HomeAssistant",
                 1: "ConfigEntry",
-                2: "AddEntitiesCallback",
+                2: "AddConfigEntryEntitiesCallback",
             },
             return_type=None,
         ),
@@ -1409,6 +1410,16 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             ],
         ),
     ],
+    "entity": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
+        ),
+    ],
     "fan": [
         ClassTypeHintMatch(
             base_class="Entity",
@@ -2557,7 +2568,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="in_progress",
-                    return_type=["bool", "int", None],
+                    return_type=["bool", None],
                 ),
                 TypeHintMatch(
                     function_name="latest_version",
@@ -2578,6 +2589,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="title",
                     return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="update_percentage",
+                    return_type=["int", "float", None],
                 ),
                 TypeHintMatch(
                     function_name="install",

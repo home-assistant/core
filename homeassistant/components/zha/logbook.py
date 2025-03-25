@@ -10,7 +10,7 @@ from zha.application.const import ZHA_EVENT
 from homeassistant.components.logbook import LOGBOOK_ENTRY_MESSAGE, LOGBOOK_ENTRY_NAME
 from homeassistant.const import ATTR_COMMAND, ATTR_DEVICE_ID
 from homeassistant.core import Event, HomeAssistant, callback
-import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN as ZHA_DOMAIN
 from .helpers import async_get_zha_device_proxy

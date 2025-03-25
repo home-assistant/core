@@ -8,6 +8,7 @@ from typing import Any
 
 from monzopy import AuthorisationExpiredError, InvalidMonzoAPIResponseError
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -29,11 +30,16 @@ class MonzoData:
 class MonzoCoordinator(DataUpdateCoordinator[MonzoData]):
     """Class to manage fetching Monzo data from the API."""
 
-    def __init__(self, hass: HomeAssistant, api: AuthenticatedMonzoAPI) -> None:
+    config_entry: ConfigEntry
+
+    def __init__(
+        self, hass: HomeAssistant, config_entry: ConfigEntry, api: AuthenticatedMonzoAPI
+    ) -> None:
         """Initialize."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(minutes=1),
         )

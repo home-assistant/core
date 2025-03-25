@@ -6,17 +6,17 @@ import asyncio
 from collections.abc import Callable
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING
 
 from aioautomower.exceptions import (
-    ApiException,
-    AuthException,
+    ApiError,
+    AuthError,
+    HusqvarnaTimeoutError,
     HusqvarnaWSServerHandshakeError,
-    TimeoutException,
 )
-from aioautomower.model import MowerAttributes
+from aioautomower.model import MowerDictionary
 from aioautomower.session import AutomowerSession
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -24,25 +24,30 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN
 
-if TYPE_CHECKING:
-    from . import AutomowerConfigEntry
-
 _LOGGER = logging.getLogger(__name__)
 MAX_WS_RECONNECT_TIME = 600
 SCAN_INTERVAL = timedelta(minutes=8)
 DEFAULT_RECONNECT_TIME = 2  # Define a default reconnect time
 
+type AutomowerConfigEntry = ConfigEntry[AutomowerDataUpdateCoordinator]
 
-class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttributes]]):
+
+class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
     """Class to manage fetching Husqvarna data."""
 
     config_entry: AutomowerConfigEntry
 
-    def __init__(self, hass: HomeAssistant, api: AutomowerSession) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: AutomowerConfigEntry,
+        api: AutomowerSession,
+    ) -> None:
         """Initialize data updater."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
         )
@@ -56,7 +61,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
         self._zones_last_update: dict[str, set[str]] = {}
         self._areas_last_update: dict[str, set[int]] = {}
 
-    async def _async_update_data(self) -> dict[str, MowerAttributes]:
+    async def _async_update_data(self) -> MowerDictionary:
         """Subscribe for websocket and poll data from the API."""
         if not self.ws_connected:
             await self.api.connect()
@@ -64,9 +69,9 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
             self.ws_connected = True
         try:
             data = await self.api.get_status()
-        except ApiException as err:
+        except ApiError as err:
             raise UpdateFailed(err) from err
-        except AuthException as err:
+        except AuthError as err:
             raise ConfigEntryAuthFailed(err) from err
 
         self._async_add_remove_devices(data)
@@ -79,7 +84,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
         return data
 
     @callback
-    def callback(self, ws_data: dict[str, MowerAttributes]) -> None:
+    def callback(self, ws_data: MowerDictionary) -> None:
         """Process websocket callbacks and write them to the DataUpdateCoordinator."""
         self.async_set_updated_data(ws_data)
 
@@ -100,7 +105,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
                 "Failed to connect to websocket. Trying to reconnect: %s",
                 err,
             )
-        except TimeoutException as err:
+        except HusqvarnaTimeoutError as err:
             _LOGGER.debug(
                 "Failed to listen to websocket. Trying to reconnect: %s",
                 err,
@@ -114,7 +119,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
                 "reconnect_task",
             )
 
-    def _async_add_remove_devices(self, data: dict[str, MowerAttributes]) -> None:
+    def _async_add_remove_devices(self, data: MowerDictionary) -> None:
         """Add new device, remove non-existing device."""
         current_devices = set(data)
 
@@ -154,9 +159,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
         for mower_callback in self.new_devices_callbacks:
             mower_callback(new_devices)
 
-    def _async_add_remove_stay_out_zones(
-        self, data: dict[str, MowerAttributes]
-    ) -> None:
+    def _async_add_remove_stay_out_zones(self, data: MowerDictionary) -> None:
         """Add new stay-out zones, remove non-existing stay-out zones."""
         current_zones = {
             mower_id: set(mower_data.stay_out_zones.zones)
@@ -202,7 +205,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
 
         return current_zones
 
-    def _async_add_remove_work_areas(self, data: dict[str, MowerAttributes]) -> None:
+    def _async_add_remove_work_areas(self, data: MowerDictionary) -> None:
         """Add new work areas, remove non-existing work areas."""
         current_areas = {
             mower_id: set(mower_data.work_areas)

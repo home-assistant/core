@@ -37,6 +37,7 @@ from .const import (
     CONF_PASSIVE,
     CONF_SOURCE,
     CONF_SOURCE_CONFIG_ENTRY_ID,
+    CONF_SOURCE_DEVICE_ID,
     CONF_SOURCE_DOMAIN,
     CONF_SOURCE_MODEL,
     DOMAIN,
@@ -139,7 +140,7 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
                 title=adapter_title(adapter, details), data={}
             )
 
-        configured_addresses = self._async_current_ids()
+        configured_addresses = self._async_current_ids(include_ignore=False)
         bluetooth_adapters = get_adapters()
         await bluetooth_adapters.refresh()
         self._adapters = bluetooth_adapters.adapters
@@ -154,12 +155,8 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
             and not (system == "Linux" and details[ADAPTER_ADDRESS] == DEFAULT_ADDRESS)
         ]
         if not unconfigured_adapters:
-            ignored_adapters = len(
-                self._async_current_entries(include_ignore=True)
-            ) - len(self._async_current_entries(include_ignore=False))
             return self.async_abort(
                 reason="no_adapters",
-                description_placeholders={"ignored_adapters": str(ignored_adapters)},
             )
         if len(unconfigured_adapters) == 1:
             self._adapter = list(self._adapters)[0]
@@ -189,15 +186,28 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by an external scanner."""
         source = user_input[CONF_SOURCE]
         await self.async_set_unique_id(source)
+        source_config_entry_id = user_input[CONF_SOURCE_CONFIG_ENTRY_ID]
         data = {
             CONF_SOURCE: source,
             CONF_SOURCE_MODEL: user_input[CONF_SOURCE_MODEL],
             CONF_SOURCE_DOMAIN: user_input[CONF_SOURCE_DOMAIN],
-            CONF_SOURCE_CONFIG_ENTRY_ID: user_input[CONF_SOURCE_CONFIG_ENTRY_ID],
+            CONF_SOURCE_CONFIG_ENTRY_ID: source_config_entry_id,
+            CONF_SOURCE_DEVICE_ID: user_input[CONF_SOURCE_DEVICE_ID],
         }
         self._abort_if_unique_id_configured(updates=data)
-        manager = get_manager()
-        scanner = manager.async_scanner_by_source(source)
+        for entry in self._async_current_entries(include_ignore=False):
+            # If the mac address needs to be corrected, migrate
+            # the config entry to the new mac address
+            if (
+                entry.data.get(CONF_SOURCE_CONFIG_ENTRY_ID) == source_config_entry_id
+                and entry.unique_id != source
+            ):
+                self.hass.config_entries.async_update_entry(
+                    entry, unique_id=source, data={**entry.data, **data}
+                )
+                self.hass.config_entries.async_schedule_reload(entry.entry_id)
+                return self.async_abort(reason="already_configured")
+        scanner = get_manager().async_scanner_by_source(source)
         assert scanner is not None
         return self.async_create_entry(title=scanner.name, data=data)
 
@@ -211,10 +221,16 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(
         config_entry: ConfigEntry,
-    ) -> SchemaOptionsFlowHandler | RemoteAdapterOptionsFlowHandler:
+    ) -> (
+        SchemaOptionsFlowHandler
+        | RemoteAdapterOptionsFlowHandler
+        | LocalNoPassiveOptionsFlowHandler
+    ):
         """Get the options flow for this handler."""
         if CONF_SOURCE in config_entry.data:
             return RemoteAdapterOptionsFlowHandler()
+        if not (manager := get_manager()) or not manager.supports_passive_scan:
+            return LocalNoPassiveOptionsFlowHandler()
         return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)
 
     @classmethod
@@ -232,3 +248,13 @@ class RemoteAdapterOptionsFlowHandler(OptionsFlow):
     ) -> ConfigFlowResult:
         """Handle options flow."""
         return self.async_abort(reason="remote_adapters_not_supported")
+
+
+class LocalNoPassiveOptionsFlowHandler(OptionsFlow):
+    """Handle a option flow for local adapters with no passive support."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle options flow."""
+        return self.async_abort(reason="local_adapters_no_passive_support")

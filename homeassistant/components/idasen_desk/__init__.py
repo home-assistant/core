@@ -9,25 +9,22 @@ from idasen_ha.errors import AuthFailedError
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.match import ADDRESS, BluetoothCallbackMatcher
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .coordinator import IdasenDeskCoordinator
+from .coordinator import IdasenDeskConfigEntry, IdasenDeskCoordinator
 
 PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.COVER, Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
-
-type IdasenDeskConfigEntry = ConfigEntry[IdasenDeskCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: IdasenDeskConfigEntry) -> bool:
     """Set up IKEA Idasen from a config entry."""
     address: str = entry.data[CONF_ADDRESS].upper()
 
-    coordinator = IdasenDeskCoordinator(hass, entry.title, address)
+    coordinator = IdasenDeskCoordinator(hass, entry, address)
     entry.runtime_data = coordinator
 
     try:

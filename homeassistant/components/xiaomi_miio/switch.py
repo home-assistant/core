@@ -29,8 +29,8 @@ from homeassistant.const import (
     EntityCategory,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     CONF_FLOW_TYPE,
@@ -341,7 +341,7 @@ SWITCH_TYPES = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the switch from a config entry."""
     model = config_entry.data[CONF_MODEL]

@@ -10,7 +10,7 @@ from xknx.dpt import DPTBase, DPTNumeric, DPTString
 from xknx.exceptions import CouldNotParseAddress
 from xknx.telegram.address import IndividualAddress, parse_device_group_address
 
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 
 
 def dpt_subclass_validator(dpt_base_class: type[DPTBase]) -> Callable[[Any], str | int]:

@@ -9,7 +9,7 @@ import logging
 from typing import Any, Final, final
 
 from awesomeversion import AwesomeVersion, AwesomeVersionCompareException
-from propcache import cached_property
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
@@ -226,7 +226,7 @@ class UpdateEntity(
     _attr_installed_version: str | None = None
     _attr_device_class: UpdateDeviceClass | None
     _attr_display_precision: int
-    _attr_in_progress: bool | int = False
+    _attr_in_progress: bool = False
     _attr_latest_version: str | None = None
     _attr_release_summary: str | None = None
     _attr_release_url: str | None = None
@@ -295,7 +295,7 @@ class UpdateEntity(
         )
 
     @cached_property
-    def in_progress(self) -> bool | int | None:
+    def in_progress(self) -> bool | None:
         """Update installation progress.
 
         Needs UpdateEntityFeature.PROGRESS flag to be set for it to be used.
@@ -442,7 +442,7 @@ class UpdateEntity(
             in_progress = self.in_progress
             update_percentage = self.update_percentage if in_progress else None
             if type(in_progress) is not bool and isinstance(in_progress, int):
-                update_percentage = in_progress
+                update_percentage = in_progress  # type: ignore[unreachable]
                 in_progress = True
         else:
             in_progress = self.__in_progress

@@ -27,8 +27,7 @@ from homeassistant.const import (
     CONF_PLATFORM,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.helpers import discovery
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import (

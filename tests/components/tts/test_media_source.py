@@ -268,7 +268,7 @@ async def test_generate_media_source_id_and_media_source_id_to_kwargs(
         "message": "hello",
         "language": "en_US",
         "options": {"age": 5},
-        "cache": True,
+        "use_file_cache": True,
     }
 
     kwargs = {
@@ -284,7 +284,7 @@ async def test_generate_media_source_id_and_media_source_id_to_kwargs(
         "message": "hello",
         "language": "en_US",
         "options": {"age": [5, 6]},
-        "cache": True,
+        "use_file_cache": True,
     }
 
     kwargs = {
@@ -300,5 +300,5 @@ async def test_generate_media_source_id_and_media_source_id_to_kwargs(
         "message": "hello",
         "language": "en_US",
         "options": {"age": {"k1": [5, 6], "k2": "v2"}},
-        "cache": True,
+        "use_file_cache": True,
     }

@@ -387,4 +387,4 @@ def _validate_state_det_rules(state_det_rules: Any) -> list[Any] | None:
     except ValueError as exc:
         _LOGGER.warning("Invalid state detection rules: %s", exc)
         return None
-    return json_rules  # type: ignore[no-any-return]
+    return json_rules

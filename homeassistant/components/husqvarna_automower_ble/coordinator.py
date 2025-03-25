@@ -9,6 +9,7 @@ from bleak import BleakError
 from bleak_retry_connector import close_stale_connections_by_address
 
 from homeassistant.components import bluetooth
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -20,9 +21,12 @@ SCAN_INTERVAL = timedelta(seconds=60)
 class HusqvarnaCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
     """Class to manage fetching data."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: ConfigEntry,
         mower: Mower,
         address: str,
         channel_id: str,
@@ -32,6 +36,7 @@ class HusqvarnaCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
         super().__init__(
             hass=hass,
             logger=LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
         )

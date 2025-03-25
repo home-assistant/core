@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import get_data_update_coordinator, sensor_unique_id
 from .coordinator import DeviceDataUpdateCoordinator
@@ -26,7 +26,7 @@ SENSOR_ID_WIRED = "WIRE"
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the config entry."""
     data_update_coordinator = get_data_update_coordinator(hass, config_entry)

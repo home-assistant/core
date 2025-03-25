@@ -37,12 +37,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     data = DomainData(
         box=box,
-        dsl=SFRDataUpdateCoordinator(hass, box, "dsl", lambda b: b.dsl_get_info()),
-        ftth=SFRDataUpdateCoordinator(hass, box, "ftth", lambda b: b.ftth_get_info()),
-        system=SFRDataUpdateCoordinator(
-            hass, box, "system", lambda b: b.system_get_info()
+        dsl=SFRDataUpdateCoordinator(
+            hass, entry, box, "dsl", lambda b: b.dsl_get_info()
         ),
-        wan=SFRDataUpdateCoordinator(hass, box, "wan", lambda b: b.wan_get_info()),
+        ftth=SFRDataUpdateCoordinator(
+            hass, entry, box, "ftth", lambda b: b.ftth_get_info()
+        ),
+        system=SFRDataUpdateCoordinator(
+            hass, entry, box, "system", lambda b: b.system_get_info()
+        ),
+        wan=SFRDataUpdateCoordinator(
+            hass, entry, box, "wan", lambda b: b.wan_get_info()
+        ),
     )
     # Preload system information
     await data.system.async_config_entry_first_refresh()

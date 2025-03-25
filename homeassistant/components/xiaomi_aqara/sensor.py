@@ -20,7 +20,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import BATTERY_MODELS, DOMAIN, GATEWAYS_KEY, POWER_MODELS
 from .entity import XiaomiDevice
@@ -85,7 +85,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Perform the setup for Xiaomi devices."""
     entities: list[XiaomiSensor | XiaomiBatterySensor] = []

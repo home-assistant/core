@@ -8,7 +8,7 @@ import itertools
 import logging
 from typing import Any, cast
 
-from propcache import under_cached_property
+from propcache.api import under_cached_property
 import voluptuous as vol
 
 from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
@@ -24,7 +24,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
-    Context,
     Event,
     EventStateChangedData,
     HomeAssistant,
@@ -33,7 +32,7 @@ from homeassistant.core import (
     validate_state,
 )
 from homeassistant.exceptions import TemplateError
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (
     TrackTemplate,
@@ -41,7 +40,7 @@ from homeassistant.helpers.event import (
     TrackTemplateResultInfo,
     async_track_template_result,
 )
-from homeassistant.helpers.script import Script, _VarsType
+from homeassistant.helpers.script_variables import ScriptVariables
 from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.template import (
     Template,
@@ -61,6 +60,7 @@ from .const import (
     CONF_AVAILABILITY_TEMPLATE,
     CONF_PICTURE,
 )
+from .entity import AbstractTemplateEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -248,7 +248,7 @@ class _TemplateAttribute:
         return
 
 
-class TemplateEntity(Entity):  # pylint: disable=hass-enforce-class-module
+class TemplateEntity(AbstractTemplateEntity):
     """Entity that uses templates to calculate attributes."""
 
     _attr_available = True
@@ -268,6 +268,7 @@ class TemplateEntity(Entity):  # pylint: disable=hass-enforce-class-module
         unique_id: str | None = None,
     ) -> None:
         """Template Entity."""
+        super().__init__(hass)
         self._template_attrs: dict[Template, list[_TemplateAttribute]] = {}
         self._template_result_info: TrackTemplateResultInfo | None = None
         self._attr_extra_state_attributes = {}
@@ -285,6 +286,7 @@ class TemplateEntity(Entity):  # pylint: disable=hass-enforce-class-module
             ]
             | None
         ) = None
+        self._run_variables: ScriptVariables | dict
         if config is None:
             self._attribute_templates = attribute_templates
             self._availability_template = availability_template
@@ -340,18 +342,6 @@ class TemplateEntity(Entity):  # pylint: disable=hass-enforce-class-module
                 )
 
     @callback
-    def _render_variables(self) -> dict:
-        if isinstance(self._run_variables, dict):
-            return self._run_variables
-
-        return self._run_variables.async_render(
-            self.hass,
-            {
-                "this": TemplateStateFromEntityId(self.hass, self.entity_id),
-            },
-        )
-
-    @callback
     def _update_available(self, result: str | TemplateError) -> None:
         if isinstance(result, TemplateError):
             self._attr_available = True
@@ -386,6 +376,18 @@ class TemplateEntity(Entity):  # pylint: disable=hass-enforce-class-module
         if self._blueprint_inputs is None:
             return None
         return cast(str, self._blueprint_inputs[CONF_USE_BLUEPRINT][CONF_PATH])
+
+    def _render_script_variables(self) -> dict[str, Any]:
+        """Render configured variables."""
+        if isinstance(self._run_variables, dict):
+            return self._run_variables
+
+        return self._run_variables.async_render(
+            self.hass,
+            {
+                "this": TemplateStateFromEntityId(self.hass, self.entity_id),
+            },
+        )
 
     def add_template_attribute(
         self,
@@ -488,7 +490,7 @@ class TemplateEntity(Entity):  # pylint: disable=hass-enforce-class-module
 
         variables = {
             "this": TemplateStateFromEntityId(self.hass, self.entity_id),
-            **self._render_variables(),
+            **self._render_script_variables(),
         }
 
         for template, attributes in self._template_attrs.items():
@@ -581,22 +583,3 @@ class TemplateEntity(Entity):  # pylint: disable=hass-enforce-class-module
         """Call for forced update."""
         assert self._template_result_info
         self._template_result_info.async_refresh()
-
-    async def async_run_script(
-        self,
-        script: Script,
-        *,
-        run_variables: _VarsType | None = None,
-        context: Context | None = None,
-    ) -> None:
-        """Run an action script."""
-        if run_variables is None:
-            run_variables = {}
-        await script.async_run(
-            run_variables={
-                "this": TemplateStateFromEntityId(self.hass, self.entity_id),
-                **self._render_variables(),
-                **run_variables,
-            },
-            context=context,
-        )

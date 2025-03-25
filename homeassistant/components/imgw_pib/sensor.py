@@ -17,12 +17,11 @@ from homeassistant.components.sensor import (
 from homeassistant.const import UnitOfLength, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import ImgwPibConfigEntry
 from .const import DOMAIN
-from .coordinator import ImgwPibDataUpdateCoordinator
+from .coordinator import ImgwPibConfigEntry, ImgwPibDataUpdateCoordinator
 from .entity import ImgwPibEntity
 
 PARALLEL_UPDATES = 1
@@ -60,7 +59,7 @@ SENSOR_TYPES: tuple[ImgwPibSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ImgwPibConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add a IMGW-PIB sensor entity from a config_entry."""
     coordinator = entry.runtime_data.coordinator

@@ -31,15 +31,15 @@ from homeassistant.const import (
     UnitOfLength,
 )
 from homeassistant.core import callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.selector import (
     LocationSelector,
     NumberSelector,
     NumberSelectorConfig,
 )
 
-from .const import CONF_FUEL_TYPES, CONF_STATIONS, DEFAULT_RADIUS, DOMAIN, FUEL_TYPES
+from .const import CONF_STATIONS, DEFAULT_RADIUS, DOMAIN
 
 
 async def async_get_nearby_stations(
@@ -175,10 +175,6 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                     vol.Required(
                         CONF_API_KEY, default=user_input.get(CONF_API_KEY, "")
                     ): cv.string,
-                    vol.Required(
-                        CONF_FUEL_TYPES,
-                        default=user_input.get(CONF_FUEL_TYPES, list(FUEL_TYPES)),
-                    ): cv.multi_select(FUEL_TYPES),
                     vol.Required(
                         CONF_LOCATION,
                         default=user_input.get(

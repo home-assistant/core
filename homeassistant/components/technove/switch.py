@@ -12,11 +12,10 @@ from homeassistant.components.switch import SwitchEntity, SwitchEntityDescriptio
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import TechnoVEConfigEntry
 from .const import DOMAIN
-from .coordinator import TechnoVEDataUpdateCoordinator
+from .coordinator import TechnoVEConfigEntry, TechnoVEDataUpdateCoordinator
 from .entity import TechnoVEEntity
 from .helpers import technove_exception_handler
 
@@ -80,7 +79,7 @@ SWITCHES = [
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TechnoVEConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up TechnoVE switch based on a config entry."""
 

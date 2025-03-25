@@ -6,16 +6,12 @@ import logging
 
 from madvr.madvr import Madvr
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant
 
-from .coordinator import MadVRCoordinator
+from .coordinator import MadVRConfigEntry, MadVRCoordinator
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.REMOTE, Platform.SENSOR]
-
-
-type MadVRConfigEntry = ConfigEntry[MadVRCoordinator]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MadVRConfigEntry) -> boo
         connect_timeout=10,
         loop=hass.loop,
     )
-    coordinator = MadVRCoordinator(hass, madVRClient)
+    coordinator = MadVRCoordinator(hass, entry, madVRClient)
 
     entry.runtime_data = coordinator
 

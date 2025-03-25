@@ -7,18 +7,18 @@ from unittest.mock import MagicMock, patch
 import pytest
 from spotifyaio import SpotifyConnectionError
 
-from homeassistant.components import zeroconf
 from homeassistant.components.spotify.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
-BLANK_ZEROCONF_INFO = zeroconf.ZeroconfServiceInfo(
+BLANK_ZEROCONF_INFO = ZeroconfServiceInfo(
     ip_address=ip_address("1.2.3.4"),
     ip_addresses=[ip_address("1.2.3.4")],
     hostname="mock_hostname",

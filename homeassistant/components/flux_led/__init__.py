@@ -11,7 +11,6 @@ from flux_led.aio import AIOWifiLedBulb
 from flux_led.const import ATTR_ID, WhiteChannelType
 from flux_led.scanner import FluxLEDDiscovery
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -39,7 +38,7 @@ from .const import (
     FLUX_LED_EXCEPTIONS,
     SIGNAL_STATE_UPDATED,
 )
-from .coordinator import FluxLedUpdateCoordinator
+from .coordinator import FluxLedConfigEntry, FluxLedUpdateCoordinator
 from .discovery import (
     async_build_cached_discovery,
     async_clear_discovery_cache,
@@ -113,7 +112,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def _async_migrate_unique_ids(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def _async_migrate_unique_ids(
+    hass: HomeAssistant, entry: FluxLedConfigEntry
+) -> None:
     """Migrate entities when the mac address gets discovered."""
 
     @callback
@@ -146,14 +147,16 @@ async def _async_migrate_unique_ids(hass: HomeAssistant, entry: ConfigEntry) -> 
     await er.async_migrate_entries(hass, entry.entry_id, _async_migrator)
 
 
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def _async_update_listener(
+    hass: HomeAssistant, entry: FluxLedConfigEntry
+) -> None:
     """Handle options update."""
-    coordinator: FluxLedUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     if entry.title != coordinator.title:
         await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: FluxLedConfigEntry) -> bool:
     """Set up Flux LED/MagicLight from a config entry."""
     host = entry.data[CONF_HOST]
     discovery_cached = True
@@ -206,7 +209,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await _async_migrate_unique_ids(hass, entry)
 
     coordinator = FluxLedUpdateCoordinator(hass, device, entry)
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
     platforms = PLATFORMS_BY_TYPE[device.device_type]
     await hass.config_entries.async_forward_entry_setups(entry, platforms)
 
@@ -239,13 +242,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: FluxLedConfigEntry) -> bool:
     """Unload a config entry."""
-    device: AIOWifiLedBulb = hass.data[DOMAIN][entry.entry_id].device
+    device = entry.runtime_data.device
     platforms = PLATFORMS_BY_TYPE[device.device_type]
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, platforms):
         # Make sure we probe the device again in case something has changed externally
         async_clear_discovery_cache(hass, entry.data[CONF_HOST])
-        del hass.data[DOMAIN][entry.entry_id]
         await device.async_stop()
     return unload_ok

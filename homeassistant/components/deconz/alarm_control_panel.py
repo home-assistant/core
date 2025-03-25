@@ -16,10 +16,10 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelState,
     CodeFormat,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import DeconzConfigEntry
 from .entity import DeconzDevice
 from .hub import DeconzHub
 
@@ -47,11 +47,11 @@ def get_alarm_system_id_for_unique_id(hub: DeconzHub, unique_id: str) -> str | N
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: DeconzConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the deCONZ alarm control panel devices."""
-    hub = DeconzHub.get_hub(hass, config_entry)
+    hub = config_entry.runtime_data
     hub.entities[ALARM_CONTROl_PANEL_DOMAIN] = set()
 
     @callback

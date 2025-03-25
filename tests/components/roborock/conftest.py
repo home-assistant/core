@@ -2,7 +2,11 @@
 
 from collections.abc import Generator
 from copy import deepcopy
-from unittest.mock import patch
+import pathlib
+import shutil
+from typing import Any
+from unittest.mock import Mock, patch
+import uuid
 
 import pytest
 from roborock import RoborockCategory, RoomMapping
@@ -15,9 +19,9 @@ from homeassistant.components.roborock.const import (
     CONF_USER_DATA,
     DOMAIN,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from .mock_data import (
     BASE_URL,
@@ -26,6 +30,7 @@ from .mock_data import (
     MULTI_MAP_LIST,
     NETWORK_INFO,
     PROP,
+    SCENES,
     USER_DATA,
     USER_EMAIL,
 )
@@ -63,15 +68,33 @@ class A01Mock(RoborockMqttClientA01):
         return {prot: self.protocol_responses[prot] for prot in dyad_data_protocols}
 
 
+@pytest.fixture(name="bypass_api_client_fixture")
+def bypass_api_client_fixture() -> None:
+    """Skip calls to the API client."""
+    with (
+        patch(
+            "homeassistant.components.roborock.RoborockApiClient.get_home_data_v2",
+            return_value=HOME_DATA,
+        ),
+        patch(
+            "homeassistant.components.roborock.RoborockApiClient.get_scenes",
+            return_value=SCENES,
+        ),
+        patch(
+            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.load_multi_map"
+        ),
+    ):
+        yield
+
+
 @pytest.fixture(name="bypass_api_fixture")
-def bypass_api_fixture() -> None:
+def bypass_api_fixture(bypass_api_client_fixture: Any) -> None:
     """Skip calls to the API."""
     with (
         patch("homeassistant.components.roborock.RoborockMqttClientV1.async_connect"),
         patch("homeassistant.components.roborock.RoborockMqttClientV1._send_command"),
         patch(
-            "homeassistant.components.roborock.RoborockApiClient.get_home_data_v2",
-            return_value=HOME_DATA,
+            "homeassistant.components.roborock.coordinator.RoborockMqttClientV1._send_command"
         ),
         patch(
             "homeassistant.components.roborock.RoborockMqttClientV1.get_networking",
@@ -90,7 +113,7 @@ def bypass_api_fixture() -> None:
             return_value=MULTI_MAP_LIST,
         ),
         patch(
-            "homeassistant.components.roborock.image.RoborockMapDataParser.parse",
+            "homeassistant.components.roborock.coordinator.RoborockMapDataParser.parse",
             return_value=MAP_DATA,
         ),
         patch(
@@ -107,7 +130,7 @@ def bypass_api_fixture() -> None:
             "roborock.version_1_apis.AttributeCache.value",
         ),
         patch(
-            "homeassistant.components.roborock.image.MAP_SLEEP",
+            "homeassistant.components.roborock.coordinator.MAP_SLEEP",
             0,
         ),
         patch(
@@ -137,6 +160,22 @@ def bypass_api_fixture() -> None:
         patch("homeassistant.components.roborock.RoborockMqttClientA01", A01Mock),
     ):
         yield
+
+
+@pytest.fixture(name="send_message_side_effect")
+def send_message_side_effect_fixture() -> Any:
+    """Fixture to return a side effect for the send_message method."""
+    return None
+
+
+@pytest.fixture(name="mock_send_message")
+def mock_send_message_fixture(send_message_side_effect: Any) -> Mock:
+    """Fixture to mock the send_message method."""
+    with patch(
+        "homeassistant.components.roborock.coordinator.RoborockLocalClientV1._send_command",
+        side_effect=send_message_side_effect,
+    ) as mock_send_message:
+        yield mock_send_message
 
 
 @pytest.fixture
@@ -179,10 +218,37 @@ async def setup_entry(
     hass: HomeAssistant,
     bypass_api_fixture,
     mock_roborock_entry: MockConfigEntry,
+    cleanup_map_storage: pathlib.Path,
     platforms: list[Platform],
 ) -> Generator[MockConfigEntry]:
     """Set up the Roborock platform."""
     with patch("homeassistant.components.roborock.PLATFORMS", platforms):
-        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
         await hass.async_block_till_done()
         yield mock_roborock_entry
+
+
+@pytest.fixture(autouse=True)
+async def cleanup_map_storage(cleanup_map_storage_manual) -> Generator[pathlib.Path]:
+    """Test cleanup, remove any map storage persisted during the test."""
+    return cleanup_map_storage_manual
+
+
+@pytest.fixture
+async def cleanup_map_storage_manual(
+    hass: HomeAssistant, mock_roborock_entry: MockConfigEntry
+) -> Generator[pathlib.Path]:
+    """Test cleanup, remove any map storage persisted during the test."""
+    tmp_path = str(uuid.uuid4())
+    with patch(
+        "homeassistant.components.roborock.roborock_storage.STORAGE_PATH", new=tmp_path
+    ):
+        storage_path = (
+            pathlib.Path(hass.config.path(tmp_path)) / mock_roborock_entry.entry_id
+        )
+        yield storage_path
+        # We need to first unload the config entry because unloading it will
+        # persist any unsaved maps to storage.
+        if mock_roborock_entry.state is ConfigEntryState.LOADED:
+            await hass.config_entries.async_unload(mock_roborock_entry.entry_id)
+        shutil.rmtree(str(storage_path), ignore_errors=True)

@@ -6,7 +6,6 @@ from unittest.mock import patch
 from aionut import NUTError, NUTLoginError
 
 from homeassistant import config_entries, setup
-from homeassistant.components import zeroconf
 from homeassistant.components.nut.const import DOMAIN
 from homeassistant.const import (
     CONF_ALIAS,
@@ -20,6 +19,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .util import _get_mock_nutclient
 
@@ -38,7 +38,7 @@ async def test_form_zeroconf(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("192.168.1.5"),
             ip_addresses=[ip_address("192.168.1.5")],
             hostname="mock_hostname",

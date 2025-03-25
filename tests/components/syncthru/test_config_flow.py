@@ -6,12 +6,19 @@ from unittest.mock import patch
 from pysyncthru import SyncThruAPINotSupported
 
 from homeassistant import config_entries
-from homeassistant.components import ssdp
 from homeassistant.components.syncthru.config_flow import SyncThru
 from homeassistant.components.syncthru.const import DOMAIN
 from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_DEVICE_TYPE,
+    ATTR_UPNP_MANUFACTURER,
+    ATTR_UPNP_PRESENTATION_URL,
+    ATTR_UPNP_SERIAL,
+    ATTR_UPNP_UDN,
+    SsdpServiceInfo,
+)
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -138,16 +145,16 @@ async def test_ssdp(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) ->
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
-        data=ssdp.SsdpServiceInfo(
+        data=SsdpServiceInfo(
             ssdp_usn="mock_usn",
             ssdp_st="mock_st",
             ssdp_location="http://192.168.1.2:5200/Printer.xml",
             upnp={
-                ssdp.ATTR_UPNP_DEVICE_TYPE: "urn:schemas-upnp-org:device:Printer:1",
-                ssdp.ATTR_UPNP_MANUFACTURER: "Samsung Electronics",
-                ssdp.ATTR_UPNP_PRESENTATION_URL: url,
-                ssdp.ATTR_UPNP_SERIAL: "00000000",
-                ssdp.ATTR_UPNP_UDN: "uuid:XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX",
+                ATTR_UPNP_DEVICE_TYPE: "urn:schemas-upnp-org:device:Printer:1",
+                ATTR_UPNP_MANUFACTURER: "Samsung Electronics",
+                ATTR_UPNP_PRESENTATION_URL: url,
+                ATTR_UPNP_SERIAL: "00000000",
+                ATTR_UPNP_UDN: "uuid:XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX",
             },
         ),
     )

@@ -11,7 +11,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.const import UnitOfTemperature
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from ..entity import OverkizDataUpdateCoordinator, OverkizEntity
 

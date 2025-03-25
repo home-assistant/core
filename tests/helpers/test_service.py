@@ -36,11 +36,11 @@ from homeassistant.core import (
 )
 from homeassistant.helpers import (
     area_registry as ar,
+    config_validation as cv,
     device_registry as dr,
     entity_registry as er,
     service,
 )
-import homeassistant.helpers.config_validation as cv
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
 from homeassistant.util.yaml.loader import parse_yaml
@@ -961,7 +961,7 @@ async def test_async_get_all_descriptions_dot_keys(hass: HomeAssistant) -> None:
             side_effect=service._load_services_files,
         ) as proxy_load_services_files,
         patch(
-            "homeassistant.util.yaml.loader.load_yaml",
+            "annotatedyaml.loader.load_yaml",
             side_effect=load_yaml,
         ) as mock_load_yaml,
     ):
@@ -1033,7 +1033,7 @@ async def test_async_get_all_descriptions_filter(hass: HomeAssistant) -> None:
             side_effect=service._load_services_files,
         ) as proxy_load_services_files,
         patch(
-            "homeassistant.util.yaml.loader.load_yaml",
+            "annotatedyaml.loader.load_yaml",
             side_effect=load_yaml,
         ) as mock_load_yaml,
     ):

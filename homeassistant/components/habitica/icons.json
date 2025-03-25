@@ -217,6 +217,67 @@
       "sections": {
         "filter": "mdi:calendar-filter"
       }
+    },
+    "update_reward": {
+      "service": "mdi:treasure-chest",
+      "sections": {
+        "tag_options": "mdi:tag",
+        "developer_options": "mdi:test-tube"
+      }
+    },
+    "create_reward": {
+      "service": "mdi:treasure-chest-outline",
+      "sections": {
+        "developer_options": "mdi:test-tube"
+      }
+    },
+    "update_habit": {
+      "service": "mdi:contrast-box",
+      "sections": {
+        "tag_options": "mdi:tag",
+        "developer_options": "mdi:test-tube"
+      }
+    },
+    "create_habit": {
+      "service": "mdi:contrast-box",
+      "sections": {
+        "developer_options": "mdi:test-tube"
+      }
+    },
+    "update_todo": {
+      "service": "mdi:pencil-box-outline",
+      "sections": {
+        "checklist_options": "mdi:format-list-checks",
+        "tag_options": "mdi:tag",
+        "developer_options": "mdi:test-tube",
+        "duedate_options": "mdi:calendar-blank",
+        "reminder_options": "mdi:reminder"
+      }
+    },
+    "create_todo": {
+      "service": "mdi:pencil-box-outline",
+      "sections": {
+        "developer_options": "mdi:test-tube"
+      }
+    },
+    "update_daily": {
+      "service": "mdi:calendar-month",
+      "sections": {
+        "checklist_options": "mdi:format-list-checks",
+        "tag_options": "mdi:tag",
+        "developer_options": "mdi:test-tube",
+        "reminder_options": "mdi:reminder",
+        "repeat_weekly_options": "mdi:calendar-refresh",
+        "repeat_monthly_options": "mdi:calendar-refresh"
+      }
+    },
+    "create_daily": {
+      "service": "mdi:calendar-month",
+      "sections": {
+        "developer_options": "mdi:test-tube",
+        "repeat_weekly_options": "mdi:calendar-refresh",
+        "repeat_monthly_options": "mdi:calendar-refresh"
+      }
     }
   }
 }

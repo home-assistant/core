@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.event import (
@@ -22,7 +21,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ProximityConfigEntry) ->
     """Set up Proximity from a config entry."""
     _LOGGER.debug("setup %s with config:%s", entry.title, entry.data)
 
-    coordinator = ProximityDataUpdateCoordinator(hass, entry.title, dict(entry.data))
+    coordinator = ProximityDataUpdateCoordinator(hass, entry)
 
     entry.async_on_unload(
         async_track_state_change_event(
@@ -48,11 +47,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ProximityConfigEntry) ->
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ProximityConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, [Platform.SENSOR])
 
 
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def _async_update_listener(
+    hass: HomeAssistant, entry: ProximityConfigEntry
+) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)

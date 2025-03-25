@@ -19,11 +19,10 @@ from homeassistant.const import CONCENTRATION_MICROGRAMS_PER_CUBIC_METER, CONF_N
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import GiosConfigEntry
 from .const import (
     ATTR_AQI,
     ATTR_C6H6,
@@ -38,7 +37,7 @@ from .const import (
     MANUFACTURER,
     URL,
 )
-from .coordinator import GiosDataUpdateCoordinator
+from .coordinator import GiosConfigEntry, GiosDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -159,7 +158,9 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: GiosConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: GiosConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add a GIOS entities from a config_entry."""
     name = entry.data[CONF_NAME]

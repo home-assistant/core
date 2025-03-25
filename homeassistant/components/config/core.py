@@ -13,7 +13,7 @@ from homeassistant.components.sensor import async_update_suggested_units
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import check_config, config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.util import location, unit_system
+from homeassistant.util import location as location_util, unit_system
 
 
 @callback
@@ -99,7 +99,7 @@ async def websocket_detect_config(
 ) -> None:
     """Detect core config."""
     session = async_get_clientsession(hass)
-    location_info = await location.async_detect_location_info(session)
+    location_info = await location_util.async_detect_location_info(session)
 
     info: dict[str, Any] = {}
 

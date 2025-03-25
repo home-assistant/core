@@ -1,7 +1,9 @@
 """Teslemetry Data Coordinator."""
 
+from __future__ import annotations
+
 from datetime import datetime, timedelta
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from tesla_fleet_api import EnergySpecific, VehicleSpecific
 from tesla_fleet_api.const import TeslaEnergyPeriod, VehicleDataEndpoint
@@ -14,6 +16,9 @@ from tesla_fleet_api.exceptions import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+if TYPE_CHECKING:
+    from . import TeslemetryConfigEntry
 
 from .const import ENERGY_HISTORY_FIELDS, LOGGER
 from .helpers import flatten
@@ -37,15 +42,21 @@ ENDPOINTS = [
 class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching data from the Teslemetry API."""
 
+    config_entry: TeslemetryConfigEntry
     last_active: datetime
 
     def __init__(
-        self, hass: HomeAssistant, api: VehicleSpecific, product: dict
+        self,
+        hass: HomeAssistant,
+        config_entry: TeslemetryConfigEntry,
+        api: VehicleSpecific,
+        product: dict,
     ) -> None:
         """Initialize Teslemetry Vehicle Update Coordinator."""
         super().__init__(
             hass,
             LOGGER,
+            config_entry=config_entry,
             name="Teslemetry Vehicle",
             update_interval=VEHICLE_INTERVAL,
         )
@@ -69,13 +80,21 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching energy site live status from the Teslemetry API."""
 
+    config_entry: TeslemetryConfigEntry
     updated_once: bool
 
-    def __init__(self, hass: HomeAssistant, api: EnergySpecific, data: dict) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: TeslemetryConfigEntry,
+        api: EnergySpecific,
+        data: dict,
+    ) -> None:
         """Initialize Teslemetry Energy Site Live coordinator."""
         super().__init__(
             hass,
             LOGGER,
+            config_entry=config_entry,
             name="Teslemetry Energy Site Live",
             update_interval=ENERGY_LIVE_INTERVAL,
         )
@@ -108,11 +127,20 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
 class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching energy site info from the Teslemetry API."""
 
-    def __init__(self, hass: HomeAssistant, api: EnergySpecific, product: dict) -> None:
+    config_entry: TeslemetryConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: TeslemetryConfigEntry,
+        api: EnergySpecific,
+        product: dict,
+    ) -> None:
         """Initialize Teslemetry Energy Info coordinator."""
         super().__init__(
             hass,
             LOGGER,
+            config_entry=config_entry,
             name="Teslemetry Energy Site Info",
             update_interval=ENERGY_INFO_INTERVAL,
         )
@@ -135,11 +163,19 @@ class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
 class TeslemetryEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching energy site info from the Teslemetry API."""
 
-    def __init__(self, hass: HomeAssistant, api: EnergySpecific) -> None:
+    config_entry: TeslemetryConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: TeslemetryConfigEntry,
+        api: EnergySpecific,
+    ) -> None:
         """Initialize Teslemetry Energy Info coordinator."""
         super().__init__(
             hass,
             LOGGER,
+            config_entry=config_entry,
             name=f"Teslemetry Energy History {api.energy_site_id}",
             update_interval=ENERGY_HISTORY_INTERVAL,
         )
@@ -156,7 +192,7 @@ class TeslemetryEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise UpdateFailed(e.message) from e
 
         # Add all time periods together
-        output = {key: 0 for key in ENERGY_HISTORY_FIELDS}
+        output = dict.fromkeys(ENERGY_HISTORY_FIELDS, 0)
         for period in data.get("time_series", []):
             for key in ENERGY_HISTORY_FIELDS:
                 output[key] += period.get(key, 0)

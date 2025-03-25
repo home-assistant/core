@@ -6,9 +6,16 @@ import pytest
 from zwave_js_server.const import CommandClass
 from zwave_js_server.event import Event
 
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from tests.common import async_capture_events
+
+
+@pytest.fixture
+def platforms() -> list[str]:
+    """Fixture to specify platforms to test."""
+    return []
 
 
 async def test_scenes(
@@ -244,6 +251,7 @@ async def test_notifications(
     assert events[2].data["command_class_name"] == "Multilevel Switch"
 
 
+@pytest.mark.parametrize("platforms", [[Platform.SWITCH]])
 async def test_value_updated(
     hass: HomeAssistant, vision_security_zl7432, integration, client
 ) -> None:

@@ -20,8 +20,7 @@ from homeassistant.core import (
     SupportsResponse,
 )
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import device_registry as dr
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import (

@@ -17,8 +17,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_HOST, CONF_OFFSET, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
-from homeassistant.helpers import aiohttp_client
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import aiohttp_client, config_validation as cv
 
 from .const import CONF_FILTER, CONF_REAL_TIME, CONF_STATION, DOMAIN
 from .hub import GTIHub

@@ -11,10 +11,12 @@ from homeassistant.util.dt import utc_from_timestamp
 class AsyncConfigEntryAuth(AuthenticationManager):
     """Provide xbox authentication tied to an OAuth2 based config entry."""
 
-    def __init__(self, oauth_session: OAuth2Session) -> None:
+    def __init__(
+        self, signed_session: SignedSession, oauth_session: OAuth2Session
+    ) -> None:
         """Initialize xbox auth."""
         # Leaving out client credentials as they are handled by Home Assistant
-        super().__init__(SignedSession(), "", "", "")
+        super().__init__(signed_session, "", "", "")
         self._oauth_session = oauth_session
         self.oauth = self._get_oauth_token()
 

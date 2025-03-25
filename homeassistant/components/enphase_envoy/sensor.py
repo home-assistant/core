@@ -37,6 +37,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     PERCENTAGE,
+    EntityCategory,
     UnitOfApparentPower,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -48,14 +49,13 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
 from .entity import EnvoyBaseEntity
 
-ICON = "mdi:flash"
 _LOGGER = logging.getLogger(__name__)
 
 INVERTERS_KEY = "inverters"
@@ -370,6 +370,7 @@ CT_NET_CONSUMPTION_SENSORS = (
         key="net_consumption_ct_metering_status",
         translation_key="net_ct_metering_status",
         device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
         options=list(CtMeterStatus),
         entity_registry_enabled_default=False,
         value_fn=attrgetter("metering_status"),
@@ -379,6 +380,7 @@ CT_NET_CONSUMPTION_SENSORS = (
         key="net_consumption_ct_status_flags",
         translation_key="net_ct_status_flags",
         state_class=None,
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda ct: 0 if ct.status_flags is None else len(ct.status_flags),
         on_phase=None,
@@ -452,6 +454,7 @@ CT_PRODUCTION_SENSORS = (
         translation_key="production_ct_metering_status",
         device_class=SensorDeviceClass.ENUM,
         options=list(CtMeterStatus),
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=attrgetter("metering_status"),
         on_phase=None,
@@ -460,6 +463,7 @@ CT_PRODUCTION_SENSORS = (
         key="production_ct_status_flags",
         translation_key="production_ct_status_flags",
         state_class=None,
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda ct: 0 if ct.status_flags is None else len(ct.status_flags),
         on_phase=None,
@@ -565,6 +569,7 @@ CT_STORAGE_SENSORS = (
         translation_key="storage_ct_metering_status",
         device_class=SensorDeviceClass.ENUM,
         options=list(CtMeterStatus),
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=attrgetter("metering_status"),
         on_phase=None,
@@ -573,6 +578,7 @@ CT_STORAGE_SENSORS = (
         key="storage_ct_status_flags",
         translation_key="storage_ct_status_flags",
         state_class=None,
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda ct: 0 if ct.status_flags is None else len(ct.status_flags),
         on_phase=None,
@@ -800,7 +806,7 @@ AGGREGATE_BATTERY_SENSORS = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: EnphaseConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up envoy sensor platform."""
     coordinator = config_entry.runtime_data
@@ -945,8 +951,6 @@ class EnvoySensorBaseEntity(EnvoyBaseEntity, SensorEntity):
 
 class EnvoySystemSensorEntity(EnvoySensorBaseEntity):
     """Envoy system base entity."""
-
-    _attr_icon = ICON
 
     def __init__(
         self,
@@ -1174,7 +1178,6 @@ class EnvoyStorageCTPhaseEntity(EnvoySystemSensorEntity):
 class EnvoyInverterEntity(EnvoySensorBaseEntity):
     """Envoy inverter entity."""
 
-    _attr_icon = ICON
     entity_description: EnvoyInverterSensorEntityDescription
 
     def __init__(

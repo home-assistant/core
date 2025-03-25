@@ -28,7 +28,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time

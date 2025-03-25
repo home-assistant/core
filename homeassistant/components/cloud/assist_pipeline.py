@@ -14,7 +14,7 @@ from homeassistant.components.stt import DOMAIN as STT_DOMAIN
 from homeassistant.components.tts import DOMAIN as TTS_DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.entity_registry as er
+from homeassistant.helpers import entity_registry as er
 
 from .const import (
     DATA_PLATFORMS_SETUP,

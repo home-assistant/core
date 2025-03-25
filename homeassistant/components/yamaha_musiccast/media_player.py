@@ -24,8 +24,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import uuid
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import uuid as uuid_util
 
 from .const import (
     ATTR_MAIN_SYNC,
@@ -55,7 +55,7 @@ MUSIC_PLAYER_BASE_SUPPORT = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MusicCast sensor based on a config entry."""
     coordinator: MusicCastDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
@@ -735,7 +735,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         group = (
             self.coordinator.data.group_id
             if self.is_server
-            else uuid.random_uuid_hex().upper()
+            else uuid_util.random_uuid_hex().upper()
         )
 
         ip_addresses = set()

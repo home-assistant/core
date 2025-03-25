@@ -561,7 +561,7 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         if not hasattr(flow, method):
             self._async_remove_flow_progress(flow.flow_id)
             raise UnknownStep(
-                f"Handler {self.__class__.__name__} doesn't support step {step_id}"
+                f"Handler {flow.__class__.__name__} doesn't support step {step_id}"
             )
 
     async def _async_setup_preview(
@@ -656,6 +656,19 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
                     and not self.show_advanced_options
                 ):
                     continue
+
+            # Process the section schema options
+            if (
+                suggested_values is not None
+                and isinstance(val, section)
+                and key in suggested_values
+            ):
+                new_section_key = copy.copy(key)
+                schema[new_section_key] = val
+                val.schema = self.add_suggested_values_to_schema(
+                    val.schema, suggested_values[key]
+                )
+                continue
 
             new_key = key
             if (

@@ -10,7 +10,7 @@ from homeassistant.components.event import (
     EventEntityDescription,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import Bootstrap
 from .const import (
@@ -218,7 +218,7 @@ def _async_event_entities(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: UFPConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up event entities for UniFi Protect integration."""
     data = entry.runtime_data

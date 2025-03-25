@@ -35,8 +35,8 @@ from homeassistant.helpers.event import (
     async_track_state_change_event,
 )
 from homeassistant.helpers.json import json_bytes
+from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import create_eager_task
-import homeassistant.util.dt as dt_util
 
 from .const import EVENT_COALESCE_TIME, MAX_PENDING_HISTORY_STATES
 from .helpers import entities_may_have_state_changes_after, has_states_before

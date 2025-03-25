@@ -8,7 +8,7 @@ from typing import Any
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import RenaultConfigEntry
 from .entity import RenaultEntity
@@ -29,7 +29,7 @@ class RenaultButtonEntityDescription(ButtonEntityDescription):
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: RenaultConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Renault entities from config entry."""
     entities: list[RenaultButtonEntity] = [

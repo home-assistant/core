@@ -1,0 +1,70 @@
+{
+  "items": [
+    {
+      "deviceId": "2d9a892b-1c93-45a5-84cb-0e81889498c6",
+      "name": "contact-profile",
+      "label": ".Front Door Open/Closed Sensor",
+      "manufacturerName": "SmartThingsCommunity",
+      "presentationId": "a7f2c1d9-89b3-35a4-b217-fc68d9e4e752",
+      "deviceManufacturerCode": "Visonic",
+      "locationId": "c4d3b2a1-09f8-765e-4d3c-2b1a09f8e7d6 ",
+      "ownerId": "d47f2b19-3a6e-4c8d-bf21-9e8a7c5d134e",
+      "roomId": "7715151d-0314-457a-a82c-5ce48900e065",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "contactSensor",
+              "version": 1
+            },
+            {
+              "id": "temperatureMeasurement",
+              "version": 1
+            },
+            {
+              "id": "battery",
+              "version": 1
+            },
+            {
+              "id": "firmwareUpdate",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "ContactSensor",
+              "categoryType": "manufacturer"
+            },
+            {
+              "name": "GarageDoor",
+              "categoryType": "user"
+            }
+          ]
+        }
+      ],
+      "createTime": "2023-09-28T17:38:59.179Z",
+      "profile": {
+        "id": "22aa5a07-ac33-365f-b2f1-5ecef8cdb0eb"
+      },
+      "zigbee": {
+        "eui": "000D6F000576F604",
+        "networkId": "5A44",
+        "driverId": "408981c2-91d4-4dfc-bbfb-84ca0205d993",
+        "executingLocally": true,
+        "hubId": "074fa784-8be8-4c70-8e22-6f5ed6f81b7e",
+        "provisioningState": "PROVISIONED"
+      },
+      "type": "ZIGBEE",
+      "restrictionTier": 0,
+      "allowed": [],
+      "executionContext": "LOCAL"
+    }
+  ],
+  "_links": {}
+}

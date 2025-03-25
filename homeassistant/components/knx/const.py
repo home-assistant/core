@@ -67,6 +67,8 @@ CONF_KNX_SECURE_USER_PASSWORD: Final = "user_password"
 CONF_KNX_SECURE_DEVICE_AUTHENTICATION: Final = "device_authentication"
 
 
+CONF_CONTEXT_TIMEOUT: Final = "context_timeout"
+CONF_IGNORE_INTERNAL_STATE: Final = "ignore_internal_state"
 CONF_PAYLOAD_LENGTH: Final = "payload_length"
 CONF_RESET_AFTER: Final = "reset_after"
 CONF_RESPOND_TO_READ: Final = "respond_to_read"
@@ -156,7 +158,11 @@ SUPPORTED_PLATFORMS_YAML: Final = {
     Platform.WEATHER,
 }
 
-SUPPORTED_PLATFORMS_UI: Final = {Platform.SWITCH, Platform.LIGHT}
+SUPPORTED_PLATFORMS_UI: Final = {
+    Platform.BINARY_SENSOR,
+    Platform.LIGHT,
+    Platform.SWITCH,
+}
 
 # Map KNX controller modes to HA modes. This list might not be complete.
 CONTROLLER_MODES: Final = {

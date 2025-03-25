@@ -17,10 +17,12 @@ from homeassistant.components.sensor import (
 from homeassistant.const import CONF_NAME, CONF_TIME_ZONE, CONF_UNIT_SYSTEM
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.unit_system import METRIC_SYSTEM
+
+from .helpers import get_station_unique_id
 
 if TYPE_CHECKING:
     from pandas import Timestamp
@@ -105,6 +107,7 @@ class NOAATidesAndCurrentsSensor(SensorEntity):
         self._unit_system = unit_system
         self._station = station
         self.data: NOAATidesData | None = None
+        self._attr_unique_id = f"{get_station_unique_id(station_id)}_summary"
 
     @property
     def name(self) -> str:
@@ -169,8 +172,8 @@ class NOAATidesAndCurrentsSensor(SensorEntity):
             api_data = df_predictions.head()
             self.data = NOAATidesData(
                 time_stamp=list(api_data.index),
-                hi_lo=list(api_data["hi_lo"].values),
-                predicted_wl=list(api_data["predicted_wl"].values),
+                hi_lo=list(api_data["type"].values),
+                predicted_wl=list(api_data["v"].values),
             )
             _LOGGER.debug("Data = %s", api_data)
             _LOGGER.debug(

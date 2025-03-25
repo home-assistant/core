@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
 
-from pydrawise import Hydrawise, Zone
+from pydrawise import HydrawiseBase, Zone
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -16,7 +16,7 @@ from homeassistant.components.switch import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .const import DEFAULT_WATERING_TIME, DOMAIN
@@ -28,8 +28,8 @@ from .entity import HydrawiseEntity
 class HydrawiseSwitchEntityDescription(SwitchEntityDescription):
     """Describes Hydrawise binary sensor."""
 
-    turn_on_fn: Callable[[Hydrawise, Zone], Coroutine[Any, Any, None]]
-    turn_off_fn: Callable[[Hydrawise, Zone], Coroutine[Any, Any, None]]
+    turn_on_fn: Callable[[HydrawiseBase, Zone], Coroutine[Any, Any, None]]
+    turn_off_fn: Callable[[HydrawiseBase, Zone], Coroutine[Any, Any, None]]
     value_fn: Callable[[Zone], bool]
 
 
@@ -63,7 +63,7 @@ SWITCH_KEYS: list[str] = [desc.key for desc in SWITCH_TYPES]
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Hydrawise switch platform."""
     coordinators: HydrawiseUpdateCoordinators = hass.data[DOMAIN][config_entry.entry_id]

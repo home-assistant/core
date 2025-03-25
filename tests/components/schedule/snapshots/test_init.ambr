@@ -1,0 +1,59 @@
+# serializer version: 1
+# name: test_service_get[schedule.from_storage-get-after-update]
+  dict({
+    'friday': list([
+    ]),
+    'monday': list([
+    ]),
+    'saturday': list([
+    ]),
+    'sunday': list([
+    ]),
+    'thursday': list([
+    ]),
+    'tuesday': list([
+    ]),
+    'wednesday': list([
+      dict({
+        'from': datetime.time(17, 0),
+        'to': datetime.time(19, 0),
+      }),
+    ]),
+  })
+# ---
+# name: test_service_get[schedule.from_storage-get]
+  dict({
+    'friday': list([
+      dict({
+        'data': dict({
+          'party_level': 'epic',
+        }),
+        'from': datetime.time(17, 0),
+        'to': datetime.time(23, 59, 59),
+      }),
+    ]),
+    'monday': list([
+    ]),
+    'saturday': list([
+      dict({
+        'from': datetime.time(0, 0),
+        'to': datetime.time(23, 59, 59),
+      }),
+    ]),
+    'sunday': list([
+      dict({
+        'data': dict({
+          'entry': 'VIPs only',
+        }),
+        'from': datetime.time(0, 0),
+        'to': datetime.time(23, 59, 59, 999999),
+      }),
+    ]),
+    'thursday': list([
+    ]),
+    'tuesday': list([
+    ]),
+    'wednesday': list([
+    ]),
+  })
+# ---

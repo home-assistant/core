@@ -19,7 +19,7 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import MATCH_ALL
 from homeassistant.core import Event, HomeAssistant, State
 from homeassistant.exceptions import ConfigEntryNotReady
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA, EntityFilter
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.json import JSONEncoder

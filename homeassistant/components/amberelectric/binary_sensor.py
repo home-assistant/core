@@ -9,12 +9,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import AmberConfigEntry
 from .const import ATTRIBUTION
-from .coordinator import AmberUpdateCoordinator
+from .coordinator import AmberConfigEntry, AmberUpdateCoordinator
 
 PRICE_SPIKE_ICONS = {
     "none": "mdi:power-plug",
@@ -86,7 +85,7 @@ class AmberDemandWindowBinarySensor(AmberPriceGridSensor):
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AmberConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a config entry."""
     coordinator = entry.runtime_data

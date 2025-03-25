@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from datetime import timedelta
 from typing import Generic, TypeVar, cast
 
@@ -17,17 +18,32 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DEFAULT_MAX_RECORDS, DOMAIN, LOGGER
 
+
+@dataclass(kw_only=True, slots=True)
+class LidarrData:
+    """Lidarr data type."""
+
+    disk_space: DiskSpaceDataUpdateCoordinator
+    queue: QueueDataUpdateCoordinator
+    status: StatusDataUpdateCoordinator
+    wanted: WantedDataUpdateCoordinator
+    albums: AlbumsDataUpdateCoordinator
+
+
 T = TypeVar("T", bound=list[LidarrRootFolder] | LidarrQueue | str | LidarrAlbum | int)
+
+type LidarrConfigEntry = ConfigEntry[LidarrData]
 
 
 class LidarrDataUpdateCoordinator(DataUpdateCoordinator[T], Generic[T], ABC):
     """Data update coordinator for the Lidarr integration."""
 
-    config_entry: ConfigEntry
+    config_entry: LidarrConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: LidarrConfigEntry,
         host_configuration: PyArrHostConfiguration,
         api_client: LidarrClient,
     ) -> None:
@@ -35,6 +51,7 @@ class LidarrDataUpdateCoordinator(DataUpdateCoordinator[T], Generic[T], ABC):
         super().__init__(
             hass=hass,
             logger=LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=30),
         )

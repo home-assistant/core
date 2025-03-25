@@ -8,14 +8,14 @@ from functools import partial
 import logging
 from typing import Any, final, override
 
-from propcache import cached_property
+from propcache.api import cached_property
 import voluptuous as vol
 
-import homeassistant.components.persistent_notification as pn
+from homeassistant.components import persistent_notification as pn
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_PLATFORM, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant, ServiceCall
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity

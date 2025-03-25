@@ -14,7 +14,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
@@ -25,13 +24,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .api import FitbitApi
 from .const import ATTRIBUTION, BATTERY_LEVELS, DOMAIN, FitbitScope, FitbitUnitSystem
-from .coordinator import FitbitData, FitbitDeviceCoordinator
+from .coordinator import FitbitConfigEntry, FitbitDeviceCoordinator
 from .exceptions import FitbitApiException, FitbitAuthException
 from .model import FitbitDevice, config_from_entry_data
 
@@ -131,7 +130,7 @@ class FitbitSensorEntityDescription(SensorEntityDescription):
 
 
 def _build_device_info(
-    config_entry: ConfigEntry, entity_description: FitbitSensorEntityDescription
+    config_entry: FitbitConfigEntry, entity_description: FitbitSensorEntityDescription
 ) -> DeviceInfo:
     """Build device info for sensor entities info across devices."""
     unique_id = cast(str, config_entry.unique_id)
@@ -524,12 +523,12 @@ FITBIT_RESOURCE_BATTERY_LEVEL = FitbitSensorEntityDescription(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: FitbitConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Fitbit sensor platform."""
 
-    data: FitbitData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
     api = data.api
 
     # These are run serially to reuse the cached user profile, not gathered
@@ -601,7 +600,7 @@ class FitbitSensor(SensorEntity):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: FitbitConfigEntry,
         api: FitbitApi,
         user_profile_id: str,
         description: FitbitSensorEntityDescription,

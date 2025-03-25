@@ -7,7 +7,7 @@ from plexwebsocket import SIGNAL_CONNECTION_STATE, STATE_CONNECTED
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed
 

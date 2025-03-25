@@ -95,6 +95,7 @@
     }),
     'statistics': dict({
       'cutting_blade_usage_time': 123,
+      'downtime': 3600,
       'number_of_charging_cycles': 1380,
       'number_of_collisions': 11396,
       'total_charging_time': 4334400,
@@ -102,6 +103,7 @@
       'total_drive_distance': 1780272,
       'total_running_time': 4564800,
       'total_searching_time': 370800,
+      'uptime': 7200,
     }),
     'stay_out_zones': dict({
       'dirty': False,
@@ -183,6 +185,8 @@
     'pref_disable_new_entities': False,
     'pref_disable_polling': False,
     'source': 'user',
+    'subentries': list([
+    ]),
     'title': 'Husqvarna Automower of Erika Mustermann',
     'unique_id': '123',
     'version': 1,

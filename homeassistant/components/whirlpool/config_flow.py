@@ -9,13 +9,12 @@ from typing import Any
 from aiohttp import ClientError
 import voluptuous as vol
 from whirlpool.appliancesmanager import AppliancesManager
-from whirlpool.auth import Auth
+from whirlpool.auth import AccountLockedError as WhirlpoolAccountLocked, Auth
 from whirlpool.backendselector import BackendSelector
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_BRAND, CONF_BRANDS_MAP, CONF_REGIONS_MAP, DOMAIN
@@ -40,31 +39,41 @@ REAUTH_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, str]) -> dict[str, str]:
-    """Validate the user input allows us to connect.
+async def authenticate(
+    hass: HomeAssistant, data: dict[str, str], check_appliances_exist: bool
+) -> str | None:
+    """Authenticate with the api.
 
-    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
+    data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
+    Returns the error translation key if authentication fails, or None on success.
     """
     session = async_get_clientsession(hass)
     region = CONF_REGIONS_MAP[data[CONF_REGION]]
     brand = CONF_BRANDS_MAP[data[CONF_BRAND]]
     backend_selector = BackendSelector(brand, region)
     auth = Auth(backend_selector, data[CONF_USERNAME], data[CONF_PASSWORD], session)
+
     try:
         await auth.do_auth()
-    except (TimeoutError, ClientError) as exc:
-        raise CannotConnect from exc
+    except WhirlpoolAccountLocked:
+        return "account_locked"
+    except (TimeoutError, ClientError):
+        return "cannot_connect"
+    except Exception:
+        _LOGGER.exception("Unexpected exception")
+        return "unknown"
 
     if not auth.is_access_token_valid():
-        raise InvalidAuth
+        return "invalid_auth"
 
-    appliances_manager = AppliancesManager(backend_selector, auth, session)
-    await appliances_manager.fetch_appliances()
+    if check_appliances_exist:
+        appliances_manager = AppliancesManager(backend_selector, auth, session)
+        await appliances_manager.fetch_appliances()
 
-    if not appliances_manager.aircons and not appliances_manager.washer_dryers:
-        raise NoAppliances
+        if not appliances_manager.aircons and not appliances_manager.washer_dryers:
+            return "no_appliances"
 
-    return {"title": data[CONF_USERNAME]}
+    return None
 
 
 class WhirlpoolConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -90,14 +99,10 @@ class WhirlpoolConfigFlow(ConfigFlow, domain=DOMAIN):
             brand = user_input[CONF_BRAND]
             data = {**reauth_entry.data, CONF_PASSWORD: password, CONF_BRAND: brand}
 
-            try:
-                await validate_input(self.hass, data)
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            except (CannotConnect, TimeoutError):
-                errors["base"] = "cannot_connect"
-            else:
+            error_key = await authenticate(self.hass, data, False)
+            if not error_key:
                 return self.async_update_reload_and_abort(reauth_entry, data=data)
+            errors["base"] = error_key
 
         return self.async_show_form(
             step_id="reauth_confirm",
@@ -113,38 +118,17 @@ class WhirlpoolConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
 
-        errors = {}
-
-        try:
-            info = await validate_input(self.hass, user_input)
-        except CannotConnect:
-            errors["base"] = "cannot_connect"
-        except InvalidAuth:
-            errors["base"] = "invalid_auth"
-        except NoAppliances:
-            errors["base"] = "no_appliances"
-        except Exception:
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
-        else:
+        error_key = await authenticate(self.hass, user_input, True)
+        if not error_key:
             await self.async_set_unique_id(
                 user_input[CONF_USERNAME].lower(), raise_on_progress=False
             )
             self._abort_if_unique_id_configured()
-            return self.async_create_entry(title=info["title"], data=user_input)
+            return self.async_create_entry(
+                title=user_input[CONF_USERNAME], data=user_input
+            )
 
+        errors = {"base": error_key}
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""
-
-
-class NoAppliances(HomeAssistantError):
-    """Error to indicate no supported appliances in the user account."""

@@ -8,6 +8,8 @@ from cookidoo_api import (
     CookidooAdditionalItem,
     CookidooAuthResponse,
     CookidooIngredientItem,
+    CookidooSubscription,
+    CookidooUserInfo,
 )
 import pytest
 
@@ -54,6 +56,12 @@ def mock_cookidoo_client() -> Generator[AsyncMock]:
                 "data"
             ]
         ]
+        client.get_active_subscription.return_value = CookidooSubscription(
+            **load_json_object_fixture("subscriptions.json", DOMAIN)["data"]
+        )
+        client.get_user_info.return_value = CookidooUserInfo(
+            **load_json_object_fixture("user_info.json", DOMAIN)["data"]
+        )
         client.login.return_value = CookidooAuthResponse(
             **load_json_object_fixture("login.json", DOMAIN)
         )

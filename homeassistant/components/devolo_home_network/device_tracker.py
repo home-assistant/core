@@ -12,7 +12,7 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import STATE_UNKNOWN, UnitOfFrequency
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import DevoloHomeNetworkConfigEntry
@@ -25,7 +25,7 @@ PARALLEL_UPDATES = 0
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: DevoloHomeNetworkConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Get all devices and sensors and setup them via config entry."""
     device = entry.runtime_data.device

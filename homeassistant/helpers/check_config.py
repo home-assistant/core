@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 from typing import NamedTuple, Self
 
+from annotatedyaml import loader as yaml_loader
 import voluptuous as vol
 
 from homeassistant import loader
@@ -29,7 +30,6 @@ from homeassistant.requirements import (
     async_clear_install_history,
     async_get_integration_with_requirements,
 )
-import homeassistant.util.yaml.loader as yaml_loader
 
 from . import config_validation as cv
 from .typing import ConfigType

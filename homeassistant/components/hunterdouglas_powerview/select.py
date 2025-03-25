@@ -12,7 +12,7 @@ from aiopvapi.resources.shade import BaseShade
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import PowerviewShadeUpdateCoordinator
 from .entity import ShadeEntity
@@ -54,7 +54,7 @@ DROPDOWNS: Final = [
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: PowerviewConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the hunter douglas select entities."""
     pv_entry = entry.runtime_data

@@ -28,9 +28,9 @@ from .typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
     # mypy cannot workout _cache Protocol with dataclasses
-    from propcache import cached_property as under_cached_property
+    from propcache.api import cached_property as under_cached_property
 else:
-    from propcache import under_cached_property
+    from propcache.api import under_cached_property
 
 
 DATA_REGISTRY: HassKey[AreaRegistry] = HassKey("area_registry")

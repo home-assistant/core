@@ -7,7 +7,7 @@ from typing import Any
 
 from homeassistant.core import HomeAssistant
 
-from . import BrotherConfigEntry
+from .coordinator import BrotherConfigEntry
 
 
 async def async_get_config_entry_diagnostics(

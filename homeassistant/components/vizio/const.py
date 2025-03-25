@@ -10,7 +10,7 @@ from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
     MediaPlayerEntityFeature,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import VolDictType
 
 SERVICE_UPDATE_SETTING = "update_setting"

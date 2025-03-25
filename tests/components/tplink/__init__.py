@@ -2,13 +2,23 @@
 
 from collections import namedtuple
 from dataclasses import replace
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from kasa import BaseProtocol, Device, DeviceType, Feature, KasaException, Module
-from kasa.interfaces import Fan, Light, LightEffect, LightState
+from kasa import (
+    BaseProtocol,
+    Device,
+    DeviceType,
+    Feature,
+    KasaException,
+    Module,
+    ThermostatState,
+)
+from kasa.interfaces import Fan, Light, LightEffect, LightState, Thermostat
+from kasa.smart.modules import Speaker
 from kasa.smart.modules.alarm import Alarm
+from kasa.smart.modules.clean import AreaUnit, Clean, ErrorCode, Status
 from kasa.smartcam.modules.camera import LOCAL_STREAMING_PORT, Camera
 from syrupy import SnapshotAssertion
 
@@ -50,6 +60,7 @@ def _load_feature_fixtures():
 
 
 FEATURES_FIXTURE = _load_feature_fixtures()
+FIXTURE_ENUM_TYPES = {"CleanErrorCode": ErrorCode, "CleanAreaUnit": AreaUnit}
 
 
 async def setup_platform_for_device(
@@ -95,7 +106,7 @@ async def snapshot_platform(
         if entity_entry.translation_key:
             key = f"component.{DOMAIN}.entity.{entity_entry.domain}.{entity_entry.translation_key}.name"
             single_device_class_translation = False
-            if key not in translations and entity_entry.original_device_class:
+            if key not in translations:  # No name translation
                 if entity_entry.original_device_class not in unique_device_classes:
                     single_device_class_translation = True
                     unique_device_classes.append(entity_entry.original_device_class)
@@ -170,12 +181,6 @@ def _mocked_device(
         device_config.host = ip_address
     device.host = ip_address
 
-    if modules:
-        device.modules = {
-            module_name: MODULE_TO_MOCK_GEN[module_name](device)
-            for module_name in modules
-        }
-
     device_features = {}
     if features:
         device_features = {
@@ -193,14 +198,40 @@ def _mocked_device(
         )
     device.features = device_features
 
-    for mod in device.modules.values():
-        mod.get_feature.side_effect = device_features.get
-        mod.has_feature.side_effect = lambda id: id in device_features
+    # Add modules after features so modules can add any required features
+    if modules:
+        device.modules = {
+            module_name: MODULE_TO_MOCK_GEN[module_name](device)
+            for module_name in modules
+        }
 
+    # module features are accessed from a module via get_feature which is
+    # keyed on the module attribute name. Usually this is the same as the
+    # feature.id but not always so accept overrides.
+    module_features = {
+        mod_key if (mod_key := v.expected_module_key) else k: v
+        for k, v in device_features.items()
+    }
+    for mod in device.modules.values():
+        # Some tests remove the feature from device_features to test missing
+        # features, so check the key is still present there.
+        mod.get_feature.side_effect = (
+            lambda mod_id: mod_feat
+            if (mod_feat := module_features.get(mod_id))
+            and mod_feat.id in device_features
+            else None
+        )
+        mod.has_feature.side_effect = (
+            lambda mod_id: (mod_feat := module_features.get(mod_id))
+            and mod_feat.id in device_features
+        )
+
+    device.parent = None
     device.children = []
     if children:
         for child in children:
             child.mac = mac
+            child.parent = device
         device.children = children
     device.device_type = device_type if device_type else DeviceType.Unknown
     if (
@@ -232,6 +263,7 @@ def _mocked_feature(
     unit=None,
     minimum_value=None,
     maximum_value=None,
+    expected_module_key=None,
 ) -> Feature:
     """Get a mocked feature.
 
@@ -241,7 +273,21 @@ def _mocked_feature(
     feature.id = id
     feature.name = name or id.upper()
     feature.set_value = AsyncMock()
-    if not (fixture := FEATURES_FIXTURE.get(id)):
+    if fixture := FEATURES_FIXTURE.get(id):
+        # copy the fixture so tests do not interfere with each other
+        fixture = dict(fixture)
+
+        if enum_type := fixture.get("enum_type"):
+            val = FIXTURE_ENUM_TYPES[enum_type](fixture["value"])
+            fixture["value"] = val
+        if timedelta_type := fixture.get("timedelta_type"):
+            fixture["value"] = timedelta(**{timedelta_type: fixture["value"]})
+
+        if unit_enum_type := fixture.get("unit_enum_type"):
+            val = FIXTURE_ENUM_TYPES[unit_enum_type](fixture["unit"])
+            fixture["unit"] = val
+
+    else:
         assert require_fixture is False, (
             f"No fixture defined for feature {id} and require_fixture is True"
         )
@@ -249,7 +295,8 @@ def _mocked_feature(
             f"Value must be provided if feature {id} not defined in features.json"
         )
         fixture = {"value": value, "category": "Primary", "type": "Sensor"}
-    elif value is not UNDEFINED:
+
+    if value is not UNDEFINED:
         fixture["value"] = value
     feature.value = fixture["value"]
 
@@ -268,6 +315,16 @@ def _mocked_feature(
 
     # select
     feature.choices = choices or fixture.get("choices")
+
+    # module features are accessed from a module via get_feature which is
+    # keyed on the module attribute name. Usually this is the same as the
+    # feature.id but not always. module_key indicates the key of the feature
+    # in the module.
+    feature.expected_module_key = (
+        mod_key
+        if (mod_key := fixture.get("expected_module_key", expected_module_key))
+        else None
+    )
 
     return feature
 
@@ -342,8 +399,22 @@ def _mocked_fan_module(effect) -> Fan:
 def _mocked_alarm_module(device):
     alarm = MagicMock(auto_spec=Alarm, name="Mocked alarm")
     alarm.active = False
+    alarm.alarm_sounds = "Foo", "Bar"
     alarm.play = AsyncMock()
     alarm.stop = AsyncMock()
+
+    device.features["alarm_volume"] = _mocked_feature(
+        "alarm_volume",
+        minimum_value=0,
+        maximum_value=3,
+        value=None,
+    )
+    device.features["alarm_duration"] = _mocked_feature(
+        "alarm_duration",
+        minimum_value=0,
+        maximum_value=300,
+        value=None,
+    )
 
     return alarm
 
@@ -357,6 +428,55 @@ def _mocked_camera_module(device):
     )
 
     return camera
+
+
+def _mocked_thermostat_module(device):
+    therm = MagicMock(auto_spec=Thermostat, name="Mocked thermostat")
+    therm.state = True
+    therm.temperature = 20.2
+    therm.target_temperature = 22.2
+    therm.mode = ThermostatState.Heating
+    therm.set_state = AsyncMock()
+    therm.set_target_temperature = AsyncMock()
+
+    return therm
+
+
+def _mocked_clean_module(device):
+    clean = MagicMock(auto_spec=Clean, name="Mocked clean")
+
+    # methods
+    clean.start = AsyncMock()
+    clean.pause = AsyncMock()
+    clean.resume = AsyncMock()
+    clean.return_home = AsyncMock()
+    clean.set_fan_speed_preset = AsyncMock()
+
+    # properties
+    clean.fan_speed_preset = "Max"
+    clean.error = ErrorCode.Ok
+    clean.battery = 100
+    clean.status = Status.Charged
+
+    # Need to manually create the fan speed preset feature,
+    # as we are going to read its choices through it
+    device.features["vacuum_fan_speed"] = _mocked_feature(
+        "vacuum_fan_speed",
+        type_=Feature.Type.Choice,
+        category=Feature.Category.Config,
+        choices=["Quiet", "Max"],
+        value="Max",
+        expected_module_key="fan_speed_preset",
+    )
+
+    return clean
+
+
+def _mocked_speaker_module(device):
+    speaker = MagicMock(auto_spec=Speaker, name="Mocked speaker")
+    speaker.locate = AsyncMock()
+
+    return speaker
 
 
 def _mocked_strip_children(features=None, alias=None) -> list[Device]:
@@ -427,6 +547,9 @@ MODULE_TO_MOCK_GEN = {
     Module.Fan: _mocked_fan_module,
     Module.Alarm: _mocked_alarm_module,
     Module.Camera: _mocked_camera_module,
+    Module.Thermostat: _mocked_thermostat_module,
+    Module.Clean: _mocked_clean_module,
+    Module.Speaker: _mocked_speaker_module,
 }
 
 

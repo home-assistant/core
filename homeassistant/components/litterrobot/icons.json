@@ -17,6 +17,14 @@
       }
     },
     "select": {
+      "brightness_level": {
+        "default": "mdi:lightbulb-question",
+        "state": {
+          "low": "mdi:lightbulb-on-30",
+          "medium": "mdi:lightbulb-on-50",
+          "high": "mdi:lightbulb-on"
+        }
+      },
       "cycle_delay": {
         "default": "mdi:timer-outline"
       },

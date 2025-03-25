@@ -15,10 +15,9 @@ from homeassistant.components.number import (
     NumberMode,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TPLinkConfigEntry
-from .deprecate import async_cleanup_deprecated
 from .entity import (
     CoordinatedTPLinkFeatureEntity,
     TPLinkDataUpdateCoordinator,
@@ -66,6 +65,14 @@ NUMBER_DESCRIPTIONS: Final = (
         key="tilt_step",
         mode=NumberMode.BOX,
     ),
+    TPLinkNumberEntityDescription(
+        key="power_protection_threshold",
+        mode=NumberMode.SLIDER,
+    ),
+    TPLinkNumberEntityDescription(
+        key="clean_count",
+        mode=NumberMode.SLIDER,
+    ),
 )
 
 NUMBER_DESCRIPTIONS_MAP = {desc.key: desc for desc in NUMBER_DESCRIPTIONS}
@@ -74,7 +81,7 @@ NUMBER_DESCRIPTIONS_MAP = {desc.key: desc for desc in NUMBER_DESCRIPTIONS}
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: TPLinkConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up number entities."""
     data = config_entry.runtime_data
@@ -91,10 +98,10 @@ async def async_setup_entry(
             feature_type=Feature.Type.Number,
             entity_class=TPLinkNumberEntity,
             descriptions=NUMBER_DESCRIPTIONS_MAP,
+            platform_domain=NUMBER_DOMAIN,
             known_child_device_ids=known_child_device_ids,
             first_check=first_check,
         )
-        async_cleanup_deprecated(hass, NUMBER_DOMAIN, config_entry.entry_id, entities)
         async_add_entities(entities)
 
     _check_device()

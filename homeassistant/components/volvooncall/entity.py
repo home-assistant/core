@@ -57,7 +57,7 @@ class VolvoEntity(CoordinatorEntity[VolvoUpdateCoordinator]):
         return f"{self._vehicle_name} {self._entity_name}"
 
     @property
-    def assumed_state(self):
+    def assumed_state(self) -> bool:
         """Return true if unable to access real state of entity."""
         return True
 

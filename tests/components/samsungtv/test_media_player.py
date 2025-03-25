@@ -78,7 +78,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceNotSupported
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from . import async_wait_config_entry_reload, setup_samsungtv_entry
 from .const import (

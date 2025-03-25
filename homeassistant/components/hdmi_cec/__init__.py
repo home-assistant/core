@@ -33,8 +33,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HassJob, HomeAssistant, ServiceCall, callback
-from homeassistant.helpers import discovery, event
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, discovery, event
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, EVENT_HDMI_CEC_UNAVAILABLE

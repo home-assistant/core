@@ -14,12 +14,14 @@ from homeassistant.components.select import (
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AirGradientConfigEntry
 from .const import DOMAIN, PM_STANDARD, PM_STANDARD_REVERSE
 from .coordinator import AirGradientCoordinator
-from .entity import AirGradientEntity
+from .entity import AirGradientEntity, exception_handler
+
+PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -140,7 +142,7 @@ CONTROL_ENTITIES: tuple[AirGradientSelectEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AirGradientConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up AirGradient select entities based on a config entry."""
 
@@ -216,6 +218,7 @@ class AirGradientSelect(AirGradientEntity, SelectEntity):
         """Return the state of the select."""
         return self.entity_description.value_fn(self.coordinator.data.config)
 
+    @exception_handler
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self.entity_description.set_value_fn(self.coordinator.client, option)

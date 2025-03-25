@@ -18,7 +18,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from . import setup_integration
 
@@ -68,13 +68,13 @@ async def test_sensors(
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "GB"
     state = hass.states.get("sensor.mock_title_movies")
     assert state.state == "1"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "Movies"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "movies"
     state = hass.states.get("sensor.mock_title_start_time")
     assert state.state == "2020-09-01T23:50:20+00:00"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TIMESTAMP
     state = hass.states.get("sensor.mock_title_queue")
     assert state.state == "2"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "Movies"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "movies"
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
 
 

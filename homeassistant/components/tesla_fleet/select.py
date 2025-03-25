@@ -10,7 +10,7 @@ from tesla_fleet_api.const import EnergyExportMode, EnergyOperationMode, Scope, 
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TeslaFleetConfigEntry
 from .entity import TeslaFleetEnergyInfoEntity, TeslaFleetVehicleEntity
@@ -78,7 +78,7 @@ SEAT_HEATER_DESCRIPTIONS: tuple[SeatHeaterDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TeslaFleetConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the TeslaFleet select platform from a config entry."""
 

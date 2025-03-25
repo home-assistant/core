@@ -6,6 +6,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -55,6 +56,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -103,6 +105,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -151,6 +154,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -192,55 +196,6 @@
     'state': '2024-01-06T17:05:00+00:00',
   })
 # ---
-# name: test_all_entities[sensor.zurich_bern_duration-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.zurich_bern_duration',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
-    'original_icon': None,
-    'original_name': 'Duration',
-    'platform': 'swiss_public_transport',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'Zürich Bern_duration',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-  })
-# ---
-# name: test_all_entities[sensor.zurich_bern_duration-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by transport.opendata.ch',
-      'device_class': 'duration',
-      'friendly_name': 'Zürich Bern Duration',
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.zurich_bern_duration',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '10',
-  })
-# ---
 # name: test_all_entities[sensor.zurich_bern_line-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -248,6 +203,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -295,6 +251,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -342,6 +299,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -380,5 +338,58 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
+  })
+# ---
+# name: test_all_entities[sensor.zurich_bern_trip_duration-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.zurich_bern_trip_duration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Trip duration',
+    'platform': 'swiss_public_transport',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'trip_duration',
+    'unique_id': 'Zürich Bern_duration',
+    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+  })
+# ---
+# name: test_all_entities[sensor.zurich_bern_trip_duration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by transport.opendata.ch',
+      'device_class': 'duration',
+      'friendly_name': 'Zürich Bern Trip duration',
+      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.zurich_bern_trip_duration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.003',
   })
 # ---

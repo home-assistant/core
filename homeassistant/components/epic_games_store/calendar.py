@@ -7,25 +7,24 @@ from datetime import datetime
 from typing import Any
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, CalendarType
-from .coordinator import EGSCalendarUpdateCoordinator
+from .coordinator import EGSCalendarUpdateCoordinator, EGSConfigEntry
 
 DateRange = namedtuple("DateRange", ["start", "end"])  # noqa: PYI024
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: EGSConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the local calendar platform."""
-    coordinator: EGSCalendarUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     entities = [
         EGSCalendar(coordinator, entry.entry_id, CalendarType.FREE),

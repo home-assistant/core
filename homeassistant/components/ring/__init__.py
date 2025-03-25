@@ -2,37 +2,27 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import logging
 from typing import Any, cast
 import uuid
 
-from ring_doorbell import Auth, Ring, RingDevices
+from ring_doorbell import Auth, Ring
 
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import APPLICATION_NAME, CONF_DEVICE_ID, CONF_TOKEN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_LISTEN_CREDENTIALS, DOMAIN, PLATFORMS
-from .coordinator import RingDataCoordinator, RingListenCoordinator
+from .coordinator import (
+    RingConfigEntry,
+    RingData,
+    RingDataCoordinator,
+    RingListenCoordinator,
+)
 
 _LOGGER = logging.getLogger(__name__)
-
-
-@dataclass
-class RingData:
-    """Class to support type hinting of ring data collection."""
-
-    api: Ring
-    devices: RingDevices
-    devices_coordinator: RingDataCoordinator
-    listen_coordinator: RingListenCoordinator
-
-
-type RingConfigEntry = ConfigEntry[RingData]
 
 
 def get_auth_user_agent() -> str:
@@ -71,10 +61,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: RingConfigEntry) -> bool
     )
     ring = Ring(auth)
 
-    devices_coordinator = RingDataCoordinator(hass, ring)
+    devices_coordinator = RingDataCoordinator(hass, entry, ring)
     listen_credentials = entry.data.get(CONF_LISTEN_CREDENTIALS)
     listen_coordinator = RingListenCoordinator(
-        hass, ring, listen_credentials, listen_credentials_updater
+        hass, entry, ring, listen_credentials, listen_credentials_updater
     )
 
     await devices_coordinator.async_config_entry_first_refresh()
@@ -91,19 +81,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: RingConfigEntry) -> bool
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: RingConfigEntry) -> bool:
     """Unload Ring entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, entry: RingConfigEntry, device_entry: dr.DeviceEntry
 ) -> bool:
     """Remove a config entry from a device."""
     return True
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: RingConfigEntry) -> bool:
     """Migrate old config entry."""
     entry_version = entry.version
     entry_minor_version = entry.minor_version

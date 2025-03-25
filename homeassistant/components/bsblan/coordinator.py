@@ -38,6 +38,7 @@ class BSBLanUpdateCoordinator(DataUpdateCoordinator[BSBLanCoordinatorData]):
         super().__init__(
             hass,
             logger=LOGGER,
+            config_entry=config_entry,
             name=f"{DOMAIN}_{config_entry.data[CONF_HOST]}",
             update_interval=self._get_update_interval(),
         )

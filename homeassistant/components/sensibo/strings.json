@@ -18,7 +18,7 @@
           "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
-          "api_key": "Follow the [documentation]({url}) to get your api key"
+          "api_key": "Follow the [documentation]({url}) to get your API key"
         }
       },
       "reauth_confirm": {
@@ -429,16 +429,16 @@
       }
     },
     "enable_pure_boost": {
-      "name": "Enable pure boost",
+      "name": "Enable Pure Boost",
       "description": "Enables and configures Pure Boost settings.",
       "fields": {
         "ac_integration": {
           "name": "AC integration",
-          "description": "Integrate with Air Conditioner."
+          "description": "Integrate with air conditioner."
         },
         "geo_integration": {
           "name": "Geo integration",
-          "description": "Integrate with Presence."
+          "description": "Integrate with presence."
         },
         "indoor_integration": {
           "name": "Indoor air quality",
@@ -468,7 +468,7 @@
         },
         "fan_mode": {
           "name": "Fan mode",
-          "description": "set fan mode."
+          "description": "Set fan mode."
         },
         "swing_mode": {
           "name": "Swing mode",

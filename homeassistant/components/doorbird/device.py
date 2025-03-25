@@ -15,7 +15,7 @@ from doorbirdpy import (
     DoorBirdScheduleEntryOutput,
     DoorBirdScheduleEntrySchedule,
 )
-from propcache import cached_property
+from propcache.api import cached_property
 
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant

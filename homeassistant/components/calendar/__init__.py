@@ -153,6 +153,27 @@ def _has_min_duration(
     return validate
 
 
+def _has_positive_interval(
+    start_key: str, end_key: str, duration_key: str
+) -> Callable[[dict[str, Any]], dict[str, Any]]:
+    """Verify that the time span between start and end is greater than zero."""
+
+    def validate(obj: dict[str, Any]) -> dict[str, Any]:
+        if (duration := obj.get(duration_key)) is not None:
+            if duration <= datetime.timedelta(seconds=0):
+                raise vol.Invalid(f"Expected positive duration ({duration})")
+            return obj
+
+        if (start := obj.get(start_key)) and (end := obj.get(end_key)):
+            if start >= end:
+                raise vol.Invalid(
+                    f"Expected end time to be after start time ({start}, {end})"
+                )
+        return obj
+
+    return validate
+
+
 def _has_same_type(*keys: Any) -> Callable[[dict[str, Any]], dict[str, Any]]:
     """Verify that all values are of the same type."""
 
@@ -281,6 +302,7 @@ SERVICE_GET_EVENTS_SCHEMA: Final = vol.All(
             ),
         }
     ),
+    _has_positive_interval(EVENT_START_DATETIME, EVENT_END_DATETIME, EVENT_DURATION),
 )
 
 
@@ -870,6 +892,7 @@ async def async_get_events_service(
         end = start + service_call.data[EVENT_DURATION]
     else:
         end = service_call.data[EVENT_END_DATETIME]
+
     calendar_event_list = await calendar.async_get_events(
         calendar.hass, dt_util.as_local(start), dt_util.as_local(end)
     )

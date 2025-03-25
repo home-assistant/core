@@ -1,0 +1,98 @@
+# serializer version: 1
+# name: test_states[my_vacuum-entry]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'mac',
+        'aa:bb:cc:dd:ee:ff',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': '1.0.0',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tplink',
+        '123456789ABCDEFGH',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'TP-Link',
+    'model': 'HS100',
+    'model_id': None,
+    'name': 'my_vacuum',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': '1.0.0',
+    'via_device_id': None,
+  })
+# ---
+# name: test_states[vacuum.my_vacuum-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'fan_speed_list': list([
+        'quiet',
+        'max',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'vacuum',
+    'entity_category': None,
+    'entity_id': 'vacuum.my_vacuum',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tplink',
+    'previous_unique_id': None,
+    'supported_features': <VacuumEntityFeature: 12916>,
+    'translation_key': 'vacuum',
+    'unique_id': '123456789ABCDEFGH-vacuum',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[vacuum.my_vacuum-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'battery_icon': 'mdi:battery-charging-100',
+      'battery_level': 100,
+      'fan_speed': 'max',
+      'fan_speed_list': list([
+        'quiet',
+        'max',
+      ]),
+      'friendly_name': 'my_vacuum',
+      'supported_features': <VacuumEntityFeature: 12916>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'vacuum.my_vacuum',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'docked',
+  })
+# ---

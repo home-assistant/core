@@ -169,6 +169,9 @@
     "weight": {
       "name": "[%key:component::sensor::entity_component::weight::name%]"
     },
+    "wind_direction": {
+      "name": "[%key:component::sensor::entity_component::wind_direction::name%]"
+    },
     "wind_speed": {
       "name": "[%key:component::sensor::entity_component::wind_speed::name%]"
     }

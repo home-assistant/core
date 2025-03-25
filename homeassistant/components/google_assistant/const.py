@@ -14,6 +14,7 @@ from homeassistant.components import (
     input_boolean,
     input_button,
     input_select,
+    lawn_mower,
     light,
     lock,
     media_player,
@@ -58,6 +59,7 @@ DEFAULT_EXPOSED_DOMAINS = [
     "humidifier",
     "input_boolean",
     "input_select",
+    "lawn_mower",
     "light",
     "lock",
     "media_player",
@@ -88,6 +90,7 @@ TYPE_GATE = f"{PREFIX_TYPES}GATE"
 TYPE_HUMIDIFIER = f"{PREFIX_TYPES}HUMIDIFIER"
 TYPE_LIGHT = f"{PREFIX_TYPES}LIGHT"
 TYPE_LOCK = f"{PREFIX_TYPES}LOCK"
+TYPE_MOWER = f"{PREFIX_TYPES}MOWER"
 TYPE_OUTLET = f"{PREFIX_TYPES}OUTLET"
 TYPE_RECEIVER = f"{PREFIX_TYPES}AUDIO_VIDEO_RECEIVER"
 TYPE_SCENE = f"{PREFIX_TYPES}SCENE"
@@ -149,6 +152,7 @@ DOMAIN_TO_GOOGLE_TYPES = {
     input_boolean.DOMAIN: TYPE_SWITCH,
     input_button.DOMAIN: TYPE_SCENE,
     input_select.DOMAIN: TYPE_SENSOR,
+    lawn_mower.DOMAIN: TYPE_MOWER,
     light.DOMAIN: TYPE_LIGHT,
     lock.DOMAIN: TYPE_LOCK,
     media_player.DOMAIN: TYPE_SETTOP,

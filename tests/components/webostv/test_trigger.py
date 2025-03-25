@@ -1,4 +1,4 @@
-"""The tests for WebOS TV automation triggers."""
+"""The tests for LG webOS TV automation triggers."""
 
 from unittest.mock import patch
 
@@ -118,10 +118,10 @@ async def test_webostv_turn_on_trigger_entity_id(
     assert service_calls[1].data["id"] == 0
 
 
-async def test_wrong_trigger_platform_type(
+async def test_unknown_trigger_platform_type(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, client
 ) -> None:
-    """Test wrong trigger platform type."""
+    """Test unknown trigger platform type."""
     await setup_webostv(hass)
 
     await async_setup_component(
@@ -131,7 +131,7 @@ async def test_wrong_trigger_platform_type(
             automation.DOMAIN: [
                 {
                     "trigger": {
-                        "platform": "webostv.wrong_type",
+                        "platform": "webostv.unknown",
                         "entity_id": ENTITY_ID,
                     },
                     "action": {
@@ -146,10 +146,7 @@ async def test_wrong_trigger_platform_type(
         },
     )
 
-    assert (
-        "ValueError: Unknown webOS Smart TV trigger platform webostv.wrong_type"
-        in caplog.text
-    )
+    assert "Unknown trigger platform: webostv.unknown" in caplog.text
 
 
 async def test_trigger_invalid_entity_id(
@@ -185,7 +182,4 @@ async def test_trigger_invalid_entity_id(
         },
     )
 
-    assert (
-        f"ValueError: Entity {invalid_entity} is not a valid webostv entity"
-        in caplog.text
-    )
+    assert f"Entity {invalid_entity} is not a valid {DOMAIN} entity" in caplog.text

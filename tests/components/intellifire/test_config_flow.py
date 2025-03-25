@@ -5,11 +5,11 @@ from unittest.mock import AsyncMock
 from intellifire4py.exceptions import LoginError
 
 from homeassistant import config_entries
-from homeassistant.components import dhcp
 from homeassistant.components.intellifire.const import CONF_SERIAL, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from tests.common import MockConfigEntry
 
@@ -166,7 +166,7 @@ async def test_dhcp_discovery_intellifire_device(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
-        data=dhcp.DhcpServiceInfo(
+        data=DhcpServiceInfo(
             ip="1.1.1.1",
             macaddress="aabbcceeddff",
             hostname="zentrios-Test",
@@ -196,7 +196,7 @@ async def test_dhcp_discovery_non_intellifire_device(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
-        data=dhcp.DhcpServiceInfo(
+        data=DhcpServiceInfo(
             ip="1.1.1.1",
             macaddress="aabbcceeddff",
             hostname="zentrios-Evil",

@@ -29,7 +29,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import LaMarzoccoConfigEntry, LaMarzoccoUpdateCoordinator
@@ -144,9 +144,12 @@ KEY_ENTITIES: tuple[LaMarzoccoKeyNumberEntityDescription, ...] = (
         set_value_fn=lambda machine, value, key: machine.set_prebrew_time(
             prebrew_off_time=value, key=key
         ),
-        native_value_fn=lambda config, key: config.prebrew_configuration[key].off_time,
+        native_value_fn=lambda config, key: config.prebrew_configuration[key][
+            0
+        ].off_time,
         available_fn=lambda device: len(device.config.prebrew_configuration) > 0
-        and device.config.prebrew_mode == PrebrewMode.PREBREW,
+        and device.config.prebrew_mode
+        in (PrebrewMode.PREBREW, PrebrewMode.PREBREW_ENABLED),
         supported_fn=lambda coordinator: coordinator.device.model
         != MachineModel.GS3_MP,
     ),
@@ -162,9 +165,12 @@ KEY_ENTITIES: tuple[LaMarzoccoKeyNumberEntityDescription, ...] = (
         set_value_fn=lambda machine, value, key: machine.set_prebrew_time(
             prebrew_on_time=value, key=key
         ),
-        native_value_fn=lambda config, key: config.prebrew_configuration[key].off_time,
+        native_value_fn=lambda config, key: config.prebrew_configuration[key][
+            0
+        ].off_time,
         available_fn=lambda device: len(device.config.prebrew_configuration) > 0
-        and device.config.prebrew_mode == PrebrewMode.PREBREW,
+        and device.config.prebrew_mode
+        in (PrebrewMode.PREBREW, PrebrewMode.PREBREW_ENABLED),
         supported_fn=lambda coordinator: coordinator.device.model
         != MachineModel.GS3_MP,
     ),
@@ -180,8 +186,8 @@ KEY_ENTITIES: tuple[LaMarzoccoKeyNumberEntityDescription, ...] = (
         set_value_fn=lambda machine, value, key: machine.set_preinfusion_time(
             preinfusion_time=value, key=key
         ),
-        native_value_fn=lambda config, key: config.prebrew_configuration[
-            key
+        native_value_fn=lambda config, key: config.prebrew_configuration[key][
+            1
         ].preinfusion_time,
         available_fn=lambda device: len(device.config.prebrew_configuration) > 0
         and device.config.prebrew_mode == PrebrewMode.PREINFUSION,
@@ -220,7 +226,8 @@ SCALE_KEY_ENTITIES: tuple[LaMarzoccoKeyNumberEntityDescription, ...] = (
             config.bbw_settings.doses[key] if config.bbw_settings else None
         ),
         supported_fn=(
-            lambda coordinator: coordinator.device.model == MachineModel.LINEA_MINI
+            lambda coordinator: coordinator.device.model
+            in (MachineModel.LINEA_MINI, MachineModel.LINEA_MINI_R)
             and coordinator.device.config.scale is not None
         ),
     ),
@@ -230,7 +237,7 @@ SCALE_KEY_ENTITIES: tuple[LaMarzoccoKeyNumberEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: LaMarzoccoConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up number entities."""
     coordinator = entry.runtime_data.config_coordinator

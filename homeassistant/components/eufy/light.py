@@ -16,7 +16,7 @@ from homeassistant.components.light import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-import homeassistant.util.color as color_util
+from homeassistant.util import color as color_util
 
 EUFYHOME_MAX_KELVIN = 6500
 EUFYHOME_MIN_KELVIN = 2700

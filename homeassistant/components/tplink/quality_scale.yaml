@@ -44,12 +44,12 @@ rules:
   entity-category: done
   entity-disabled-by-default: done
   discovery: done
-  stale-devices: todo
+  stale-devices: done
   diagnostics: done
   exception-translations: done
   icon-translations: done
   reconfiguration-flow: done
-  dynamic-devices: todo
+  dynamic-devices: done
   discovery-update-info: done
   repair-issues: done
   docs-use-cases: done

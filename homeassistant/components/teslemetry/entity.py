@@ -3,7 +3,7 @@
 from abc import abstractmethod
 from typing import Any
 
-from propcache import cached_property
+from propcache.api import cached_property
 from tesla_fleet_api import EnergySpecific, VehicleSpecific
 from tesla_fleet_api.const import Scope
 from teslemetry_stream import Signal

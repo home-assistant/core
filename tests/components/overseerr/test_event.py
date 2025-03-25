@@ -107,3 +107,64 @@ async def test_event_goes_unavailable(
     assert (
         hass.states.get("event.overseerr_last_media_event").state == STATE_UNAVAILABLE
     )
+
+
+async def test_not_push_based(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_overseerr_client_needs_change: AsyncMock,
+) -> None:
+    """Test event entities aren't created if not push based."""
+
+    mock_overseerr_client_needs_change.test_webhook_notification_config.return_value = (
+        False
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("event.overseerr_last_media_event") is None
+
+
+async def test_cant_fetch_webhook_config(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_overseerr_client: AsyncMock,
+) -> None:
+    """Test event entities aren't created if not push based."""
+
+    mock_overseerr_client.get_webhook_notification_config.side_effect = (
+        OverseerrConnectionError("Boom")
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("event.overseerr_last_media_event") is None
+
+
+async def test_not_push_based_but_was_before(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_overseerr_client_needs_change: AsyncMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test event entities are created if push based in the past."""
+
+    entity_registry.async_get_or_create(
+        Platform.EVENT,
+        DOMAIN,
+        f"{mock_config_entry.entry_id}-media",
+        suggested_object_id="overseerr_last_media_event",
+        disabled_by=None,
+    )
+
+    mock_overseerr_client_needs_change.test_webhook_notification_config.return_value = (
+        False
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("event.overseerr_last_media_event") is not None
+
+    assert (
+        hass.states.get("event.overseerr_last_media_event").state == STATE_UNAVAILABLE
+    )

@@ -16,7 +16,7 @@ from async_upnp_client.const import NotificationSubType
 from async_upnp_client.exceptions import UpnpActionError, UpnpConnectionError, UpnpError
 from async_upnp_client.profiles.dlna import ContentDirectoryErrorCode, DmsDevice
 from didl_lite import didl_lite
-from propcache import cached_property
+from propcache.api import cached_property
 
 from homeassistant.components import ssdp
 from homeassistant.components.media_player import BrowseError, MediaClass
@@ -29,6 +29,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
 from .const import (
     CONF_SOURCE_ID,
@@ -220,7 +221,7 @@ class DmsDeviceSource:
         await self.device_disconnect()
 
     async def async_ssdp_callback(
-        self, info: ssdp.SsdpServiceInfo, change: ssdp.SsdpChange
+        self, info: SsdpServiceInfo, change: ssdp.SsdpChange
     ) -> None:
         """Handle notification from SSDP of device state change."""
         LOGGER.debug(

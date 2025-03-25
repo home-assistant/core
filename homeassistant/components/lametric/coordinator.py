@@ -21,14 +21,15 @@ class LaMetricDataUpdateCoordinator(DataUpdateCoordinator[Device]):
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the LaMatric coordinator."""
-        self.config_entry = entry
         self.lametric = LaMetricDevice(
             host=entry.data[CONF_HOST],
             api_key=entry.data[CONF_API_KEY],
             session=async_get_clientsession(hass),
         )
 
-        super().__init__(hass, LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
+        super().__init__(
+            hass, LOGGER, config_entry=entry, name=DOMAIN, update_interval=SCAN_INTERVAL
+        )
 
     async def _async_update_data(self) -> Device:
         """Fetch device information of the LaMetric device."""

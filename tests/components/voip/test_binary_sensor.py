@@ -22,18 +22,18 @@ async def test_call_in_progress(
     voip_device: VoIPDevice,
 ) -> None:
     """Test call in progress."""
-    state = hass.states.get("binary_sensor.sip_192_168_1_210_5060_call_in_progress")
+    state = hass.states.get("binary_sensor.192_168_1_210_call_in_progress")
     assert state is not None
     assert state.state == "off"
 
     voip_device.set_is_active(True)
 
-    state = hass.states.get("binary_sensor.sip_192_168_1_210_5060_call_in_progress")
+    state = hass.states.get("binary_sensor.192_168_1_210_call_in_progress")
     assert state.state == "on"
 
     voip_device.set_is_active(False)
 
-    state = hass.states.get("binary_sensor.sip_192_168_1_210_5060_call_in_progress")
+    state = hass.states.get("binary_sensor.192_168_1_210_call_in_progress")
     assert state.state == "off"
 
 
@@ -45,9 +45,9 @@ async def test_assist_in_progress_disabled_by_default(
 ) -> None:
     """Test assist in progress binary sensor is added disabled."""
 
-    assert not hass.states.get("binary_sensor.sip_192_168_1_210_5060_call_in_progress")
+    assert not hass.states.get("binary_sensor.192_168_1_210_call_in_progress")
     entity_entry = entity_registry.async_get(
-        "binary_sensor.sip_192_168_1_210_5060_call_in_progress"
+        "binary_sensor.192_168_1_210_call_in_progress"
     )
     assert entity_entry
     assert entity_entry.disabled
@@ -63,7 +63,7 @@ async def test_assist_in_progress_issue(
 ) -> None:
     """Test assist in progress binary sensor."""
 
-    call_in_progress_entity_id = "binary_sensor.sip_192_168_1_210_5060_call_in_progress"
+    call_in_progress_entity_id = "binary_sensor.192_168_1_210_call_in_progress"
 
     state = hass.states.get(call_in_progress_entity_id)
     assert state is not None
@@ -96,7 +96,7 @@ async def test_assist_in_progress_repair_flow(
 ) -> None:
     """Test assist in progress binary sensor deprecation issue flow."""
 
-    call_in_progress_entity_id = "binary_sensor.sip_192_168_1_210_5060_call_in_progress"
+    call_in_progress_entity_id = "binary_sensor.192_168_1_210_call_in_progress"
 
     state = hass.states.get(call_in_progress_entity_id)
     assert state is not None

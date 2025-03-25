@@ -12,7 +12,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from . import NOW, PRAYER_TIMES
 

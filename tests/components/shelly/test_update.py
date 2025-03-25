@@ -9,6 +9,7 @@ import pytest
 from homeassistant.components.shelly.const import (
     DOMAIN,
     GEN1_RELEASE_URL,
+    GEN2_BETA_RELEASE_URL,
     GEN2_RELEASE_URL,
 )
 from homeassistant.components.update import (
@@ -183,14 +184,16 @@ async def test_block_update_connection_error(
     )
     await init_integration(hass, 1)
 
-    with pytest.raises(HomeAssistantError) as excinfo:
+    with pytest.raises(
+        HomeAssistantError,
+        match="Device communication error occurred while triggering OTA update for Test name",
+    ):
         await hass.services.async_call(
             UPDATE_DOMAIN,
             SERVICE_INSTALL,
             {ATTR_ENTITY_ID: "update.test_name_firmware"},
             blocking=True,
         )
-    assert "Error starting OTA update" in str(excinfo.value)
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -572,7 +575,6 @@ async def test_rpc_beta_update(
     assert state.attributes[ATTR_LATEST_VERSION] == "1"
     assert state.attributes[ATTR_IN_PROGRESS] is False
     assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
-    assert state.attributes[ATTR_RELEASE_URL] is None
 
     monkeypatch.setitem(
         mock_rpc_device.status["sys"],
@@ -589,7 +591,7 @@ async def test_rpc_beta_update(
     assert state.attributes[ATTR_INSTALLED_VERSION] == "1"
     assert state.attributes[ATTR_LATEST_VERSION] == "2b"
     assert state.attributes[ATTR_IN_PROGRESS] is False
-    assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
+    assert state.attributes[ATTR_RELEASE_URL] == GEN2_BETA_RELEASE_URL
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
@@ -673,8 +675,14 @@ async def test_rpc_beta_update(
 @pytest.mark.parametrize(
     ("exc", "error"),
     [
-        (DeviceConnectionError, "OTA update connection error: DeviceConnectionError()"),
-        (RpcCallError(-1, "error"), "OTA update request error"),
+        (
+            DeviceConnectionError,
+            "Device communication error occurred while triggering OTA update for Test name",
+        ),
+        (
+            RpcCallError(-1, "error"),
+            "RPC call error occurred while triggering OTA update for Test name",
+        ),
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -701,14 +709,13 @@ async def test_rpc_update_errors(
     )
     await init_integration(hass, 2)
 
-    with pytest.raises(HomeAssistantError) as excinfo:
+    with pytest.raises(HomeAssistantError, match=error):
         await hass.services.async_call(
             UPDATE_DOMAIN,
             SERVICE_INSTALL,
             {ATTR_ENTITY_ID: "update.test_name_firmware"},
             blocking=True,
         )
-    assert error in str(excinfo.value)
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

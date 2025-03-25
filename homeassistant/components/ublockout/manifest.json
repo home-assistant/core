@@ -1,0 +1,6 @@
+{
+  "domain": "ublockout",
+  "name": "Ublockout",
+  "integration_type": "virtual",
+  "supported_by": "motion_blinds"
+}

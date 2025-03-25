@@ -21,8 +21,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client, config_validation as cv
-import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers import (
+    aiohttp_client,
+    config_validation as cv,
+    device_registry as dr,
+)
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 
 from .const import (

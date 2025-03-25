@@ -15,13 +15,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from . import setup_mysensors_platform
 from .const import MYSENSORS_DISCOVERY, DiscoveryInfo
 from .entity import MySensorsChildEntity
-from .helpers import on_unload
 
 DICT_HA_TO_MYS = {
     HVACMode.AUTO: "AutoChangeOver",
@@ -43,7 +42,7 @@ OPERATION_LIST = [HVACMode.OFF, HVACMode.AUTO, HVACMode.COOL, HVACMode.HEAT]
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up this platform for a specific ConfigEntry(==Gateway)."""
 
@@ -57,9 +56,7 @@ async def async_setup_entry(
             async_add_entities=async_add_entities,
         )
 
-    on_unload(
-        hass,
-        config_entry.entry_id,
+    config_entry.async_on_unload(
         async_dispatcher_connect(
             hass,
             MYSENSORS_DISCOVERY.format(config_entry.entry_id, Platform.CLIMATE),
@@ -85,7 +82,10 @@ class MySensorsHVAC(MySensorsChildEntity, ClimateEntity):
             and set_req.V_HVAC_SETPOINT_HEAT in self._values
         ):
             features = features | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
-        else:
+        elif (
+            set_req.V_HVAC_SETPOINT_COOL in self._values
+            or set_req.V_HVAC_SETPOINT_HEAT in self._values
+        ):
             features = features | ClimateEntityFeature.TARGET_TEMPERATURE
         return features
 
@@ -111,13 +111,11 @@ class MySensorsHVAC(MySensorsChildEntity, ClimateEntity):
 
     @property
     def target_temperature(self) -> float | None:
-        """Return the temperature we try to reach."""
+        """Return the temperature we try to reach.
+
+        Either V_HVAC_SETPOINT_COOL or V_HVAC_SETPOINT_HEAT may be used.
+        """
         set_req = self.gateway.const.SetReq
-        if (
-            set_req.V_HVAC_SETPOINT_COOL in self._values
-            and set_req.V_HVAC_SETPOINT_HEAT in self._values
-        ):
-            return None
         temp = self._values.get(set_req.V_HVAC_SETPOINT_COOL)
         if temp is None:
             temp = self._values.get(set_req.V_HVAC_SETPOINT_HEAT)
@@ -127,21 +125,13 @@ class MySensorsHVAC(MySensorsChildEntity, ClimateEntity):
     def target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
         set_req = self.gateway.const.SetReq
-        if set_req.V_HVAC_SETPOINT_HEAT in self._values:
-            temp = self._values.get(set_req.V_HVAC_SETPOINT_COOL)
-            return float(temp) if temp is not None else None
-
-        return None
+        return float(self._values[set_req.V_HVAC_SETPOINT_COOL])
 
     @property
     def target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
         set_req = self.gateway.const.SetReq
-        if set_req.V_HVAC_SETPOINT_COOL in self._values:
-            temp = self._values.get(set_req.V_HVAC_SETPOINT_HEAT)
-            return float(temp) if temp is not None else None
-
-        return None
+        return float(self._values[set_req.V_HVAC_SETPOINT_HEAT])
 
     @property
     def hvac_mode(self) -> HVACMode:
@@ -185,10 +175,6 @@ class MySensorsHVAC(MySensorsChildEntity, ClimateEntity):
             self.gateway.set_child_value(
                 self.node_id, self.child_id, value_type, value, ack=1
             )
-            if self.assumed_state:
-                # Optimistically assume that device has changed state
-                self._values[value_type] = value
-                self.async_write_ha_state()
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target temperature."""
@@ -196,10 +182,6 @@ class MySensorsHVAC(MySensorsChildEntity, ClimateEntity):
         self.gateway.set_child_value(
             self.node_id, self.child_id, set_req.V_HVAC_SPEED, fan_mode, ack=1
         )
-        if self.assumed_state:
-            # Optimistically assume that device has changed state
-            self._values[set_req.V_HVAC_SPEED] = fan_mode
-            self.async_write_ha_state()
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target temperature."""
@@ -210,10 +192,6 @@ class MySensorsHVAC(MySensorsChildEntity, ClimateEntity):
             DICT_HA_TO_MYS[hvac_mode],
             ack=1,
         )
-        if self.assumed_state:
-            # Optimistically assume that device has changed state
-            self._values[self.value_type] = hvac_mode
-            self.async_write_ha_state()
 
     @callback
     def _async_update(self) -> None:

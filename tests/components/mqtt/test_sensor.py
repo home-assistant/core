@@ -21,11 +21,11 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import Event, HomeAssistant, State, callback
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
-from .test_common import (
+from .common import (
     help_custom_config,
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
@@ -71,6 +71,7 @@ from .test_common import (
 
 from tests.common import (
     MockConfigEntry,
+    async_capture_events,
     async_fire_mqtt_message,
     async_fire_time_changed,
     mock_restore_cache_with_extra_data,
@@ -875,6 +876,71 @@ async def test_invalid_device_class(
     [
         {
             mqtt.DOMAIN: {
+                sensor.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "test-topic",
+                    "device_class": "energy",
+                    "unit_of_measurement": "ppm",
+                }
+            }
+        }
+    ],
+)
+async def test_invalid_unit_of_measurement(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test device_class with invalid unit of measurement."""
+    events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
+    assert await mqtt_mock_entry()
+    assert (
+        "The unit of measurement `ppm` is not valid together with device class `energy`"
+        in caplog.text
+    )
+    # A repair issue was logged
+    assert len(events) == 1
+    assert events[0].data["issue_id"] == "sensor.test"
+    # Assert the sensor works
+    async_fire_mqtt_message(hass, "test-topic", "100")
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.test")
+    assert state is not None
+    assert state.state == "100"
+
+    caplog.clear()
+
+    discovery_payload = {
+        "name": "bla",
+        "state_topic": "test-topic2",
+        "device_class": "temperature",
+        "unit_of_measurement": "C",
+    }
+    # Now discover an other invalid sensor
+    async_fire_mqtt_message(
+        hass, "homeassistant/sensor/bla/config", json.dumps(discovery_payload)
+    )
+    await hass.async_block_till_done()
+    assert (
+        "The unit of measurement `C` is not valid together with device class `temperature`"
+        in caplog.text
+    )
+    # Assert the sensor works
+    async_fire_mqtt_message(hass, "test-topic2", "21")
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.bla")
+    assert state is not None
+    assert state.state == "21"
+
+    # No new issue was registered for the discovered entity
+    assert len(events) == 1
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
                 sensor.DOMAIN: [
                     {
                         "name": "Test 1",
@@ -1409,6 +1475,7 @@ async def test_reloadable(
     await help_test_reloadable(hass, mqtt_client_mock, domain, config)
 
 
+@pytest.mark.usefixtures("mock_temp_dir")
 @pytest.mark.parametrize(
     "hass_config",
     [

@@ -26,7 +26,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utc_from_timestamp
 
@@ -229,7 +229,7 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: FritzboxConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the FRITZ!SmartHome sensor from ConfigEntry."""
     coordinator = entry.runtime_data

@@ -12,7 +12,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.schlage.const import DOMAIN, UPDATE_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceRegistry
 
 from . import MockSchlageConfigEntry

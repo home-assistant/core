@@ -6,11 +6,12 @@ from collections.abc import Callable, Iterable, Iterator
 from datetime import datetime
 from itertools import groupby
 from operator import itemgetter
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from sqlalchemy import (
     CompoundSelect,
     Select,
+    StatementLambdaElement,
     Subquery,
     and_,
     func,
@@ -25,9 +26,10 @@ from sqlalchemy.orm.session import Session
 from homeassistant.const import COMPRESSED_STATE_LAST_UPDATED, COMPRESSED_STATE_STATE
 from homeassistant.core import HomeAssistant, State, split_entity_id
 from homeassistant.helpers.recorder import get_instance
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
+from homeassistant.util.collection import chunked_or_all
 
-from ..const import LAST_REPORTED_SCHEMA_VERSION
+from ..const import LAST_REPORTED_SCHEMA_VERSION, MAX_IDS_FOR_INDEXED_GROUP_BY
 from ..db_schema import (
     SHARED_ATTR_OR_LEGACY_ATTRIBUTES,
     StateAttributes,
@@ -149,6 +151,7 @@ def _significant_states_stmt(
     no_attributes: bool,
     include_start_time_state: bool,
     run_start_ts: float | None,
+    slow_dependent_subquery: bool,
 ) -> Select | CompoundSelect:
     """Query the database for significant state changes."""
     include_last_changed = not significant_changes_only
@@ -187,6 +190,7 @@ def _significant_states_stmt(
                 metadata_ids,
                 no_attributes,
                 include_last_changed,
+                slow_dependent_subquery,
             ).subquery(),
             no_attributes,
             include_last_changed,
@@ -257,7 +261,68 @@ def get_significant_states_with_session(
     start_time_ts = start_time.timestamp()
     end_time_ts = datetime_to_timestamp_or_none(end_time)
     single_metadata_id = metadata_ids[0] if len(metadata_ids) == 1 else None
-    stmt = lambda_stmt(
+    rows: list[Row] = []
+    if TYPE_CHECKING:
+        assert instance.database_engine is not None
+    slow_dependent_subquery = instance.database_engine.optimizer.slow_dependent_subquery
+    if include_start_time_state and slow_dependent_subquery:
+        # https://github.com/home-assistant/core/issues/137178
+        # If we include the start time state we need to limit the
+        # number of metadata_ids we query for at a time to avoid
+        # hitting limits in the MySQL optimizer that prevent
+        # the start time state query from using an index-only optimization
+        # to find the start time state.
+        iter_metadata_ids = chunked_or_all(metadata_ids, MAX_IDS_FOR_INDEXED_GROUP_BY)
+    else:
+        iter_metadata_ids = (metadata_ids,)
+    for metadata_ids_chunk in iter_metadata_ids:
+        stmt = _generate_significant_states_with_session_stmt(
+            start_time_ts,
+            end_time_ts,
+            single_metadata_id,
+            metadata_ids_chunk,
+            metadata_ids_in_significant_domains,
+            significant_changes_only,
+            no_attributes,
+            include_start_time_state,
+            oldest_ts,
+            slow_dependent_subquery,
+        )
+        row_chunk = cast(
+            list[Row],
+            execute_stmt_lambda_element(session, stmt, None, end_time, orm_rows=False),
+        )
+        if rows:
+            rows += row_chunk
+        else:
+            # If we have no rows yet, we can just assign the chunk
+            # as this is the common case since its rare that
+            # we exceed the MAX_IDS_FOR_INDEXED_GROUP_BY limit
+            rows = row_chunk
+    return _sorted_states_to_dict(
+        rows,
+        start_time_ts if include_start_time_state else None,
+        entity_ids,
+        entity_id_to_metadata_id,
+        minimal_response,
+        compressed_state_format,
+        no_attributes=no_attributes,
+    )
+
+
+def _generate_significant_states_with_session_stmt(
+    start_time_ts: float,
+    end_time_ts: float | None,
+    single_metadata_id: int | None,
+    metadata_ids: list[int],
+    metadata_ids_in_significant_domains: list[int],
+    significant_changes_only: bool,
+    no_attributes: bool,
+    include_start_time_state: bool,
+    oldest_ts: float | None,
+    slow_dependent_subquery: bool,
+) -> StatementLambdaElement:
+    return lambda_stmt(
         lambda: _significant_states_stmt(
             start_time_ts,
             end_time_ts,
@@ -268,6 +333,7 @@ def get_significant_states_with_session(
             no_attributes,
             include_start_time_state,
             oldest_ts,
+            slow_dependent_subquery,
         ),
         track_on=[
             bool(single_metadata_id),
@@ -276,16 +342,8 @@ def get_significant_states_with_session(
             significant_changes_only,
             no_attributes,
             include_start_time_state,
+            slow_dependent_subquery,
         ],
-    )
-    return _sorted_states_to_dict(
-        execute_stmt_lambda_element(session, stmt, None, end_time, orm_rows=False),
-        start_time_ts if include_start_time_state else None,
-        entity_ids,
-        entity_id_to_metadata_id,
-        minimal_response,
-        compressed_state_format,
-        no_attributes=no_attributes,
     )
 
 
@@ -554,13 +612,14 @@ def get_last_state_changes(
         )
 
 
-def _get_start_time_state_for_entities_stmt(
+def _get_start_time_state_for_entities_stmt_dependent_sub_query(
     epoch_time: float,
     metadata_ids: list[int],
     no_attributes: bool,
     include_last_changed: bool,
 ) -> Select:
     """Baked query to get states for specific entities."""
+    # Engine has a fast dependent subquery optimizer
     # This query is the result of significant research in
     # https://github.com/home-assistant/core/issues/132865
     # A reverse index scan with a limit 1 is the fastest way to get the
@@ -570,7 +629,9 @@ def _get_start_time_state_for_entities_stmt(
     # before a specific point in time for all entities.
     stmt = (
         _stmt_and_join_attributes_for_start_state(
-            no_attributes, include_last_changed, False
+            no_attributes=no_attributes,
+            include_last_changed=include_last_changed,
+            include_last_reported=False,
         )
         .select_from(StatesMeta)
         .join(
@@ -600,6 +661,55 @@ def _get_start_time_state_for_entities_stmt(
     )
 
 
+def _get_start_time_state_for_entities_stmt_group_by(
+    epoch_time: float,
+    metadata_ids: list[int],
+    no_attributes: bool,
+    include_last_changed: bool,
+) -> Select:
+    """Baked query to get states for specific entities."""
+    # Simple group-by for MySQL, must use less
+    # than 1000 metadata_ids in the IN clause for MySQL
+    # or it will optimize poorly. Callers are responsible
+    # for ensuring that the number of metadata_ids is less
+    # than 1000.
+    most_recent_states_for_entities_by_date = (
+        select(
+            States.metadata_id.label("max_metadata_id"),
+            func.max(States.last_updated_ts).label("max_last_updated"),
+        )
+        .filter(
+            (States.last_updated_ts < epoch_time) & States.metadata_id.in_(metadata_ids)
+        )
+        .group_by(States.metadata_id)
+        .subquery()
+    )
+    stmt = (
+        _stmt_and_join_attributes_for_start_state(
+            no_attributes=no_attributes,
+            include_last_changed=include_last_changed,
+            include_last_reported=False,
+        )
+        .join(
+            most_recent_states_for_entities_by_date,
+            and_(
+                States.metadata_id
+                == most_recent_states_for_entities_by_date.c.max_metadata_id,
+                States.last_updated_ts
+                == most_recent_states_for_entities_by_date.c.max_last_updated,
+            ),
+        )
+        .filter(
+            (States.last_updated_ts < epoch_time) & States.metadata_id.in_(metadata_ids)
+        )
+    )
+    if no_attributes:
+        return stmt
+    return stmt.outerjoin(
+        StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
+    )
+
+
 def _get_oldest_possible_ts(
     hass: HomeAssistant, utc_point_in_time: datetime
 ) -> float | None:
@@ -620,6 +730,7 @@ def _get_start_time_state_stmt(
     metadata_ids: list[int],
     no_attributes: bool,
     include_last_changed: bool,
+    slow_dependent_subquery: bool,
 ) -> Select:
     """Return the states at a specific point in time."""
     if single_metadata_id:
@@ -634,7 +745,15 @@ def _get_start_time_state_stmt(
         )
     # We have more than one entity to look at so we need to do a query on states
     # since the last recorder run started.
-    return _get_start_time_state_for_entities_stmt(
+    if slow_dependent_subquery:
+        return _get_start_time_state_for_entities_stmt_group_by(
+            epoch_time,
+            metadata_ids,
+            no_attributes,
+            include_last_changed,
+        )
+
+    return _get_start_time_state_for_entities_stmt_dependent_sub_query(
         epoch_time,
         metadata_ids,
         no_attributes,
@@ -766,7 +885,7 @@ def _sorted_states_to_dict(
                     attr_cache,
                     start_time_ts,
                     entity_id,
-                    prev_state,  # type: ignore[arg-type]
+                    prev_state,
                     first_state[last_updated_ts_idx],
                     no_attributes,
                 )
