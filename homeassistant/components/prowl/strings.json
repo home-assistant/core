@@ -1,0 +1,33 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "country": "Country"
+        }
+      },
+      "choose_contract": {
+        "data": {
+          "contract": "Contract"
+        }
+      },
+      "reauth_confirm": {
+        "data": {
+          "description": "Re-authenticate with Prosegur account.",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "error": {
+      "invalid_api_key": "Invalid API key provided.",
+      "api_timeout": "Timeout calling the Prowl API.",
+      "bad_api_response": "Bad API response, try again later."
+    },
+    "abort": {
+      "reauth_successful": "Successfully updated the Prowl API key."
+    }
+  }
+}
