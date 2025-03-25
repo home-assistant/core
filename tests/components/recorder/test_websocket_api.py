@@ -8,6 +8,7 @@ from statistics import fmean
 import sys
 from unittest.mock import ANY, patch
 
+from _pytest.python_api import ApproxBase
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -682,6 +683,25 @@ async def test_statistic_during_period(
     }
 
 
+def _circular_mean(values: Iterable[StatisticData]) -> dict[str, float]:
+    sin_sum = 0
+    cos_sum = 0
+    for x in values:
+        mean = x.get("mean")
+        assert mean is not None
+        sin_sum += math.sin(mean * DEG_TO_RAD)
+        cos_sum += math.cos(mean * DEG_TO_RAD)
+
+    return {
+        "mean": (RAD_TO_DEG * math.atan2(sin_sum, cos_sum)) % 360,
+        "mean_weight": math.sqrt(sin_sum**2 + cos_sum**2),
+    }
+
+
+def _circular_mean_approx(values: Iterable[StatisticData]) -> ApproxBase:
+    return pytest.approx(_circular_mean(values)["mean"])
+
+
 @pytest.mark.freeze_time(datetime.datetime(2022, 10, 21, 7, 25, tzinfo=datetime.UTC))
 @pytest.mark.usefixtures("recorder_mock")
 @pytest.mark.parametrize("offset", [0, 1, 2])
@@ -709,20 +729,6 @@ async def test_statistic_during_period_circular_mean(
         }
         for i in range(39)
     ]
-
-    def _circular_mean(values: Iterable[StatisticData]) -> dict[str, float]:
-        sin_sum = 0
-        cos_sum = 0
-        for x in values:
-            mean = x.get("mean")
-            assert mean is not None
-            sin_sum += math.sin(mean * DEG_TO_RAD)
-            cos_sum += math.cos(mean * DEG_TO_RAD)
-
-        return {
-            "mean": (RAD_TO_DEG * math.atan2(sin_sum, cos_sum)) % 360,
-            "mean_weight": math.sqrt(sin_sum**2 + cos_sum**2),
-        }
 
     imported_stats = []
     slice_end = 12 - offset
@@ -801,7 +807,7 @@ async def test_statistic_during_period_circular_mean(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {
-        "mean": pytest.approx(_circular_mean(imported_stats_5min)["mean"]),
+        "mean": _circular_mean_approx(imported_stats_5min),
         "max": None,
         "min": None,
         "change": None,
@@ -829,7 +835,7 @@ async def test_statistic_during_period_circular_mean(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {
-        "mean": pytest.approx(_circular_mean(imported_stats_5min)["mean"]),
+        "mean": _circular_mean_approx(imported_stats_5min),
         "max": None,
         "min": None,
         "change": None,
@@ -857,7 +863,7 @@ async def test_statistic_during_period_circular_mean(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {
-        "mean": pytest.approx(_circular_mean(imported_stats_5min)["mean"]),
+        "mean": _circular_mean_approx(imported_stats_5min),
         "max": None,
         "min": None,
         "change": None,
@@ -881,7 +887,7 @@ async def test_statistic_during_period_circular_mean(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {
-        "mean": pytest.approx(_circular_mean(imported_stats_5min[26:])["mean"]),
+        "mean": _circular_mean_approx(imported_stats_5min[26:]),
         "max": None,
         "min": None,
         "change": None,
@@ -904,7 +910,7 @@ async def test_statistic_during_period_circular_mean(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {
-        "mean": pytest.approx(_circular_mean(imported_stats_5min[26:])["mean"]),
+        "mean": _circular_mean_approx(imported_stats_5min[26:]),
         "max": None,
         "min": None,
         "change": None,
@@ -928,7 +934,7 @@ async def test_statistic_during_period_circular_mean(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {
-        "mean": pytest.approx(_circular_mean(imported_stats_5min[:26])["mean"]),
+        "mean": _circular_mean_approx(imported_stats_5min[:26]),
         "max": None,
         "min": None,
         "change": None,
@@ -958,7 +964,7 @@ async def test_statistic_during_period_circular_mean(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {
-        "mean": pytest.approx(_circular_mean(imported_stats_5min[26:32])["mean"]),
+        "mean": _circular_mean_approx(imported_stats_5min[26:32]),
         "max": None,
         "min": None,
         "change": None,
@@ -980,9 +986,7 @@ async def test_statistic_during_period_circular_mean(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {
-        "mean": pytest.approx(
-            _circular_mean(imported_stats_5min[24 - offset :])["mean"]
-        ),
+        "mean": _circular_mean_approx(imported_stats_5min[24 - offset :]),
         "max": None,
         "min": None,
         "change": None,
@@ -1001,9 +1005,7 @@ async def test_statistic_during_period_circular_mean(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {
-        "mean": pytest.approx(
-            _circular_mean(imported_stats_5min[24 - offset :])["mean"]
-        ),
+        "mean": _circular_mean_approx(imported_stats_5min[24 - offset :]),
         "max": None,
         "min": None,
         "change": None,
@@ -1025,9 +1027,7 @@ async def test_statistic_during_period_circular_mean(
     slice_start = 24 - offset
     slice_end = 36 - offset
     assert response["result"] == {
-        "mean": pytest.approx(
-            _circular_mean(imported_stats_5min[slice_start:slice_end])["mean"]
-        ),
+        "mean": _circular_mean_approx(imported_stats_5min[slice_start:slice_end]),
         "max": None,
         "min": None,
         "change": None,
@@ -1044,23 +1044,15 @@ async def test_statistic_during_period_circular_mean(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {
-        "mean": pytest.approx(_circular_mean(imported_stats_5min)["mean"]),
+        "mean": _circular_mean_approx(imported_stats_5min),
     }
 
 
-# todo
 @pytest.mark.freeze_time(datetime.datetime(2022, 10, 21, 7, 25, tzinfo=datetime.UTC))
 async def test_statistic_during_period_hole(
     recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test statistic_during_period when there are holes in the data."""
-    stat_id = 1
-
-    def next_id():
-        nonlocal stat_id
-        stat_id += 1
-        return stat_id
-
     now = dt_util.utcnow()
 
     await async_recorder_block_till_done(hass)
@@ -1207,7 +1199,156 @@ async def test_statistic_during_period_hole(
     }
 
 
-# todo
+@pytest.mark.freeze_time(datetime.datetime(2022, 10, 21, 7, 25, tzinfo=datetime.UTC))
+@pytest.mark.usefixtures("recorder_mock")
+async def test_statistic_during_period_hole_circular_mean(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test statistic_during_period when there are holes in the data."""
+    now = dt_util.utcnow()
+
+    await async_recorder_block_till_done(hass)
+    client = await hass_ws_client()
+
+    zero = now
+    start = zero.replace(minute=0, second=0, microsecond=0) + timedelta(hours=-18)
+
+    imported_stats: list[StatisticData] = [
+        {
+            "start": (start + timedelta(hours=3 * i)),
+            "mean": (123.456 * i) % 360,
+            "mean_weight": 1,
+        }
+        for i in range(6)
+    ]
+
+    imported_metadata: StatisticMetaData = {
+        "mean_type": StatisticMeanType.CIRCULAR,
+        "has_sum": False,
+        "name": "Wind direction",
+        "source": "recorder",
+        "statistic_id": "sensor.test",
+        "unit_of_measurement": DEGREE,
+    }
+
+    recorder.get_instance(hass).async_import_statistics(
+        imported_metadata,
+        imported_stats,
+        Statistics,
+    )
+    await async_wait_recording_done(hass)
+
+    # This should include imported_stats[:]
+    await client.send_json_auto_id(
+        {
+            "type": "recorder/statistic_during_period",
+            "statistic_id": "sensor.test",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {
+        "mean": _circular_mean_approx(imported_stats[:]),
+        "max": None,
+        "min": None,
+        "change": None,
+    }
+
+    # This should also include imported_stats[:]
+    start_time = "2022-10-20T13:00:00+00:00"
+    end_time = "2022-10-21T05:00:00+00:00"
+    assert imported_stats[0]["start"].isoformat() == start_time
+    assert imported_stats[-1]["start"].isoformat() < end_time
+    await client.send_json_auto_id(
+        {
+            "type": "recorder/statistic_during_period",
+            "statistic_id": "sensor.test",
+            "fixed_period": {
+                "start_time": start_time,
+                "end_time": end_time,
+            },
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {
+        "mean": _circular_mean_approx(imported_stats[:]),
+        "max": None,
+        "min": None,
+        "change": None,
+    }
+
+    # This should also include imported_stats[:]
+    start_time = "2022-10-20T13:00:00+00:00"
+    end_time = "2022-10-21T08:20:00+00:00"
+    await client.send_json_auto_id(
+        {
+            "type": "recorder/statistic_during_period",
+            "statistic_id": "sensor.test",
+            "fixed_period": {
+                "start_time": start_time,
+                "end_time": end_time,
+            },
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {
+        "mean": _circular_mean_approx(imported_stats[:]),
+        "max": None,
+        "min": None,
+        "change": None,
+    }
+
+    # This should include imported_stats[1:4]
+    start_time = "2022-10-20T16:00:00+00:00"
+    end_time = "2022-10-20T23:00:00+00:00"
+    assert imported_stats[1]["start"].isoformat() == start_time
+    assert imported_stats[3]["start"].isoformat() < end_time
+    await client.send_json_auto_id(
+        {
+            "type": "recorder/statistic_during_period",
+            "statistic_id": "sensor.test",
+            "fixed_period": {
+                "start_time": start_time,
+                "end_time": end_time,
+            },
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {
+        "mean": _circular_mean_approx(imported_stats[1:4]),
+        "max": None,
+        "min": None,
+        "change": None,
+    }
+
+    # This should also include imported_stats[1:4]
+    start_time = "2022-10-20T15:00:00+00:00"
+    end_time = "2022-10-21T00:00:00+00:00"
+    assert imported_stats[1]["start"].isoformat() > start_time
+    assert imported_stats[3]["start"].isoformat() < end_time
+    await client.send_json_auto_id(
+        {
+            "type": "recorder/statistic_during_period",
+            "statistic_id": "sensor.test",
+            "fixed_period": {
+                "start_time": start_time,
+                "end_time": end_time,
+            },
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {
+        "mean": _circular_mean_approx(imported_stats[1:4]),
+        "max": None,
+        "min": None,
+        "change": None,
+    }
+
+
 @pytest.mark.parametrize(
     "frozen_time",
     [

@@ -495,7 +495,7 @@ def _compile_hourly_statistics(session: Session, start: datetime) -> None:
 
     if stats:
         for stat in stats:
-            metadata_id, _min, _max, _mean, _mean_type = stat
+            metadata_id, _min, _max, _mean, _mean_weight, _mean_type = stat
             if (
                 try_parse_enum(StatisticMeanType, _mean_type)
                 is StatisticMeanType.CIRCULAR
@@ -505,6 +505,7 @@ def _compile_hourly_statistics(session: Session, start: datetime) -> None:
             summary[metadata_id] = {
                 "start_ts": start_time_ts,
                 "mean": _mean,
+                "mean_weight": _mean_weight,
                 "min": _min,
                 "max": _max,
             }
