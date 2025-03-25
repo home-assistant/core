@@ -62,9 +62,8 @@ class StatisticMeanType(IntEnum):
 class StatisticMetaData(TypedDict):
     """Statistic meta data class."""
 
-    has_mean: NotRequired[
-        bool
-    ]  # Deprecated, use mean_type instead. Will be removed in 2026.4
+    # has_mean is deprecated, use mean_type instead. has_mean will be removed in 2026.4
+    has_mean: NotRequired[bool]
     mean_type: StatisticMeanType | None
     has_sum: bool
     name: str | None

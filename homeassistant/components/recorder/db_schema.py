@@ -859,10 +859,7 @@ class _StatisticsMeta:
     @staticmethod
     def from_meta(meta: StatisticMetaData) -> StatisticsMeta:
         """Create object from meta data."""
-        # has_mean is not used anymore
-        meta_dict = dict(meta.copy())
-        meta_dict["has_mean"] = None
-        return StatisticsMeta(**meta_dict)
+        return StatisticsMeta(**meta)
 
 
 class StatisticsMeta(Base, _StatisticsMeta):

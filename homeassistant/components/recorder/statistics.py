@@ -13,7 +13,7 @@ import math
 from operator import itemgetter
 import re
 from time import time as time_time
-from typing import TYPE_CHECKING, Any, Literal, TypedDict, cast
+from typing import TYPE_CHECKING, Any, Literal, Required, TypedDict, cast
 
 from sqlalchemy import (
     Label,
@@ -446,6 +446,11 @@ def _compile_hourly_statistics_summary_mean_stmt(
     start_time_ts: float, end_time_ts: float
 ) -> StatementLambdaElement:
     """Generate the summary mean statement for hourly statistics."""
+    # Due the fact that we support different mean type (See StatisticMeanType)
+    # we need to join here with the StatisticsMeta table to get the mean type
+    # and then use a case statement to compute the mean based on the mean type.
+    # As we use the StatisticsMeta.mean_type in the select case statement we need
+    # to group by it as well.
     return lambda_stmt(
         lambda: select(*QUERY_STATISTICS_SUMMARY_MEAN)
         .filter(StatisticsShortTerm.start_ts >= start_time_ts)
@@ -696,7 +701,6 @@ def _compile_statistics(
 
     if start.minute == 55:
         # A full hour is ready, summarize it
-        assert instance.engine is not None
         _compile_hourly_statistics(session, start)
 
     session.add(StatisticsRuns(start=start))
@@ -1264,7 +1268,7 @@ class _MaxMinMeanStatisticSubPeriod(TypedDict, total=False):
     mean_acc: float
     min: float
     duration: float
-    circular_means: list[tuple[float, float]]
+    circular_means: Required[list[tuple[float, float]]]
 
 
 def _get_max_mean_min_statistic_in_sub_period(
@@ -1315,10 +1319,7 @@ def _get_max_mean_min_statistic_in_sub_period(
                 if (new_circular_mean := stats[0].mean) is not None and (
                     weight := stats[0].mean_weight
                 ) is not None:
-                    # Normalize the circular mean to be in the range [0, 360)
-                    result.setdefault("circular_means", []).append(
-                        (new_circular_mean % 360, weight)
-                    )
+                    result["circular_means"].append((new_circular_mean, weight))
     if "min" in types and (new_min := stats[0].min) is not None:
         old_min = result.get("min")
         result["min"] = min(new_min, old_min) if old_min is not None else new_min
@@ -1341,7 +1342,7 @@ def _get_max_mean_min_statistic(
     The mean is time weighted, combining hourly and 5-minute statistics if
     necessary.
     """
-    max_mean_min = _MaxMinMeanStatisticSubPeriod()
+    max_mean_min = _MaxMinMeanStatisticSubPeriod(circular_means=[])
     result: dict[str, float | None] = {}
 
     if tail_start_time is not None:
@@ -1384,7 +1385,7 @@ def _get_max_mean_min_statistic(
         mean_value = None
         match metadata[1]["mean_type"]:
             case StatisticMeanType.CIRCULAR:
-                if circular_means := max_mean_min.get("circular_means", []):
+                if circular_means := max_mean_min["circular_means"]:
                     mean_value = weighted_circular_mean(circular_means)
             case StatisticMeanType.ARITHMETIC:
                 if (mean_value := max_mean_min.get("mean_acc")) is not None and (
@@ -1604,9 +1605,10 @@ def statistic_during_period(
 
     with session_scope(hass=hass, read_only=True) as session:
         # Fetch metadata for the given statistic_id
-        instance = get_instance(hass)
         if not (
-            metadata := instance.statistics_meta_manager.get(session, statistic_id)
+            metadata := get_instance(hass).statistics_meta_manager.get(
+                session, statistic_id
+            )
         ):
             return result
 
@@ -1682,7 +1684,6 @@ def statistic_during_period(
             main_end_time = end_time if tail_start_time is None else tail_start_time
 
         if not types.isdisjoint({"max", "mean", "min"}):
-            assert instance.engine is not None
             result = _get_max_mean_min_statistic(
                 session,
                 head_start_time,

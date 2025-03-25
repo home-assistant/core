@@ -623,6 +623,8 @@ class Recorder(threading.Thread):
             metadata["mean_type"] = (  # type: ignore[unreachable]
                 StatisticMeanType.ARITHMETIC if metadata.get("has_mean") else None
             )
+        # Remove deprecated has_mean as it's not needed anymore in core
+        metadata.pop("has_mean", None)
 
         self.queue_task(ImportStatisticsTask(metadata, stats, table))
 

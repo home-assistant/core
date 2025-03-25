@@ -15,6 +15,7 @@ from sqlalchemy.sql.lambdas import StatementLambdaElement
 
 from homeassistant.util.enum import try_parse_enum
 
+from ..const import CIRCULAR_MEAN_SCHEMA_VERSION
 from ..db_schema import StatisticsMeta
 from ..models import StatisticMeanType, StatisticMetaData
 from ..util import execute_stmt_lambda_element
@@ -50,9 +51,12 @@ def _generate_get_metadata_stmt(
     statistic_source: str | None = None,
     schema_version: int = 0,
 ) -> StatementLambdaElement:
-    """Generate a statement to fetch metadata."""
+    """Generate a statement to fetch metadata with the passed filters.
+
+    Depending on the schema version, either mean_type (added in version 49) or has_mean column is used.
+    """
     columns: list[InstrumentedAttribute[Any]] = list(QUERY_STATISTIC_META)
-    if schema_version >= 49:
+    if schema_version >= CIRCULAR_MEAN_SCHEMA_VERSION:
         columns.append(StatisticsMeta.mean_type)
     else:
         columns.append(StatisticsMeta.has_mean)
@@ -62,7 +66,7 @@ def _generate_get_metadata_stmt(
     if statistic_source is not None:
         stmt += lambda q: q.where(StatisticsMeta.source == statistic_source)
     if statistic_type == "mean":
-        if schema_version >= 49:
+        if schema_version >= CIRCULAR_MEAN_SCHEMA_VERSION:
             stmt += lambda q: q.where(StatisticsMeta.mean_type.isnot(None))
         else:
             stmt += lambda q: q.where(StatisticsMeta.has_mean == true())
@@ -120,7 +124,7 @@ class StatisticsMetaManager:
             ):
                 statistic_id = row[INDEX_STATISTIC_ID]
                 row_id = row[INDEX_ID]
-                if self.recorder.schema_version >= 49:
+                if self.recorder.schema_version >= CIRCULAR_MEAN_SCHEMA_VERSION:
                     mean_type = try_parse_enum(StatisticMeanType, row[INDEX_MEAN_TYPE])
                 else:
                     mean_type = (
@@ -179,9 +183,9 @@ class StatisticsMetaManager:
         recorder thread.
         """
         if "mean_type" not in new_metadata:
-            # To avoid breaking change as we added mean_type in schema version 49
-            # Even when typing suggests it is always present, we need to check it and guard
-            # against it as custom integrations might not set it.
+            # To maintain backward compatibility after adding 'mean_type' in schema version 49,
+            # we must still check for its presence. Even though type hints suggest it should always exist,
+            # custom integrations might omit it, so we need to guard against that.
             new_metadata["mean_type"] = (  # type: ignore[unreachable]
                 StatisticMeanType.ARITHMETIC if new_metadata["has_mean"] else None
             )
