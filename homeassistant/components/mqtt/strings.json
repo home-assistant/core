@@ -208,10 +208,10 @@
             "options": "Add option"
           },
           "data_description": {
-            "device_class": "The device class of the {platform} entity. [Learn more..]({url}#device_class)",
-            "state_class": "The [state_class](https://developers.home-assistant.io/docs/core/entity/sensor/#available-state-classes) of the sensor. [Learn more..]({url}#state_class)",
+            "device_class": "The device class of the {platform} entity. [Learn more.]({url}#device_class)",
+            "state_class": "The [state_class](https://developers.home-assistant.io/docs/core/entity/sensor/#available-state-classes) of the sensor. [Learn more.]({url}#state_class)",
             "unit_of_measurement": "Defines the unit of measurement of the sensor, if any.",
-            "options": "Options for allowed sensor state value's. The sensor’s device_class must be set to Enumeration. The options option cannot be used together with State Class or Unit of measurement."
+            "options": "Options for allowed sensor state values. The sensor’s device_class must be set to Enumeration. The options option cannot be used together with State Class or Unit of measurement."
           },
           "sections": {
             "advanced_settings": {
@@ -220,7 +220,7 @@
                 "suggested_display_precision": "Suggested display precision"
               },
               "data_description": {
-                "suggested_display_precision": "The number of decimals which should be used in the {platform} entity state after rounding. [Learn more..]({url}#suggested_display_precision)"
+                "suggested_display_precision": "The number of decimals which should be used in the {platform} entity state after rounding. [Learn more.]({url}#suggested_display_precision)"
               }
             }
           }
@@ -239,12 +239,12 @@
             "qos": "QoS"
           },
           "data_description": {
-            "command_topic": "The publishing topic that will be used to control the {platform} entity. [Learn more..]({url}#command_topic)",
+            "command_topic": "The publishing topic that will be used to control the {platform} entity. [Learn more.]({url}#command_topic)",
             "command_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to render the payload to be published at the command topic.",
-            "state_topic": "The MQTT topic subscribed to receive {platform} state values. [Learn more..]({url}#state_topic)",
+            "state_topic": "The MQTT topic subscribed to receive {platform} state values. [Learn more.]({url}#state_topic)",
             "value_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the {platform} entity value.",
-            "last_reset_value_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the last reset. When Last reset template is set, the State class option must be Total.  [Learn more..]({url}#last_reset_value_template)",
-            "force_update": "Sends update events even if the value hasn’t changed. Useful if you want to have meaningful value graphs in history. [Learn more..]({url}#force_update)",
+            "last_reset_value_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the last reset. When Last reset template is set, the State class option must be Total. [Learn more.]({url}#last_reset_value_template)",
+            "force_update": "Sends update events even if the value hasn’t changed. Useful if you want to have meaningful value graphs in history. [Learn more.]({url}#force_update)",
             "retain": "Select if values published by the {platform} entity should be retained at the MQTT broker.",
             "qos": "The QoS value {platform} entity should use."
           },
@@ -255,7 +255,7 @@
                 "expire_after": "Expire after"
               },
               "data_description": {
-                "expire_after": "If set, it defines the number of seconds after the sensor’s state expires, if it’s not updated. After expiry, the sensor’s state becomes unavailable. Default the sensors state never expires. [Learn more..]({url}#expire_after)"
+                "expire_after": "If set, it defines the number of seconds after the sensor’s state expires, if it’s not updated. After expiry, the sensor’s state becomes unavailable. Default the sensors state never expires. [Learn more.]({url}#expire_after)"
               }
             }
           }
