@@ -101,8 +101,8 @@ class BoschAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
             ) as e:
                 _LOGGER.error("Connection Error: %s", e)
                 errors["base"] = "cannot_connect"
-            except Exception as e:  # noqa: BLE001
-                _LOGGER.error("Unexpected exception: %s", e)
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
                 self._data = user_input
@@ -147,8 +147,8 @@ class BoschAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
             ) as e:
                 _LOGGER.error("Connection Error: %s", e)
                 errors["base"] = "cannot_connect"
-            except Exception as e:  # noqa: BLE001
-                _LOGGER.error("Unexpected exception: %s", e)
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
                 if serial_number:
