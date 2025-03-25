@@ -29,7 +29,7 @@ MEDIA_PLAYER_CAPABILITIES = (
 
 CONTROLLABLE_SOURCES = ["bluetooth", "wifi"]
 
-MEDIA_PLAYER_DEVICE_CLASSES = {
+DEVICE_CLASS_MAP: dict[Category | str, MediaPlayerDeviceClass] = {
     Category.NETWORK_AUDIO: MediaPlayerDeviceClass.SPEAKER,
     Category.SPEAKER: MediaPlayerDeviceClass.SPEAKER,
     Category.TELEVISION: MediaPlayerDeviceClass.TV,
@@ -72,9 +72,7 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
 
     _attr_name = None
 
-    def __init__(
-        self, client: SmartThings, device: FullDevice
-    ) -> None:
+    def __init__(self, client: SmartThings, device: FullDevice) -> None:
         """Initialize the media_player class."""
 
         super().__init__(
@@ -93,6 +91,11 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
             },
         )
         self._attr_supported_features = self._determine_features()
+        self._attr_device_class = DEVICE_CLASS_MAP.get(
+            device.device.components[0].user_category
+            or device.device.components[0].manufacturer_category,
+            None,
+        )
 
     def _determine_features(self) -> MediaPlayerEntityFeature:
         flags = MediaPlayerEntityFeature(0)
@@ -194,14 +197,14 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
         )
 
     async def async_media_previous_track(self) -> None:
-        """Stop media."""
+        """Previous track."""
         await self.execute_device_command(
             Capability.MEDIA_PLAYBACK,
             Command.REWIND,
         )
 
     async def async_media_next_track(self) -> None:
-        """Stop media."""
+        """Next track."""
         await self.execute_device_command(
             Capability.MEDIA_PLAYBACK,
             Command.FAST_FORWARD,
@@ -232,14 +235,6 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
         )
 
     @property
-    def device_class(self) -> MediaPlayerDeviceClass | None:
-        """Return the class of this entity."""
-        category = next(
-            map(lambda c: c.manufacturer_category, self.device.device.components), None
-        )
-        return MEDIA_PLAYER_DEVICE_CLASSES.get(category, None)
-
-    @property
     def media_title(self) -> str | None:
         """Title of current playing media."""
         if (
@@ -266,19 +261,18 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
         """State of the media player."""
         if self.get_attribute_value(Capability.SWITCH, Attribute.SWITCH) == "on":
             if (
-                self.source is not None and self.source in CONTROLLABLE_SOURCES
-            ):  # todo ???
-                if (
+                self.source is not None
+                and self.source in CONTROLLABLE_SOURCES
+                and self.get_attribute_value(
+                    Capability.MEDIA_PLAYBACK, Attribute.PLAYBACK_STATUS
+                )
+                in VALUE_TO_STATE
+            ):
+                return VALUE_TO_STATE[
                     self.get_attribute_value(
                         Capability.MEDIA_PLAYBACK, Attribute.PLAYBACK_STATUS
                     )
-                    in VALUE_TO_STATE
-                ):
-                    return VALUE_TO_STATE[
-                        self.get_attribute_value(
-                            Capability.MEDIA_PLAYBACK, Attribute.PLAYBACK_STATUS
-                        )
-                    ]
+                ]
             return MediaPlayerState.ON
         return MediaPlayerState.OFF
 
