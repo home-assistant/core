@@ -17,12 +17,12 @@ from .coordinator import BoschAlarmConfigEntry, BoschAlarmCoordinator
 
 
 async def async_setup_entry(
-    hass: HomeAssistant | None,
+    hass: HomeAssistant,
     config_entry: BoschAlarmConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up control panels for each area."""
-    coordinator: BoschAlarmCoordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data
 
     async_add_entities(
         AreaAlarmControlPanel(

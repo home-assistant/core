@@ -39,9 +39,9 @@ class BoschAlarmCoordinator(DataUpdateCoordinator[None]):
         self.panel = Panel(
             host=config_entry.data[CONF_HOST],
             port=config_entry.data[CONF_PORT],
-            automation_code=config_entry.data.get(CONF_PASSWORD, None),
+            automation_code=config_entry.data.get(CONF_PASSWORD),
             installer_or_user_code=config_entry.data.get(
-                CONF_INSTALLER_CODE, config_entry.data.get(CONF_USER_CODE, None)
+                CONF_INSTALLER_CODE, config_entry.data.get(CONF_USER_CODE)
             ),
         )
 
