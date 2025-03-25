@@ -132,7 +132,12 @@ CAPABILITY_TO_SENSORS: dict[
             key=Attribute.SWITCH,
             device_class=BinarySensorDeviceClass.POWER,
             is_on_key="on",
-            category={Category.DRYER, Category.WASHER},
+            category={
+                Category.DISHWASHER,
+                Category.DRYER,
+                Category.MICROWAVE,
+                Category.WASHER,
+            },
         )
     },
     Capability.TAMPER_ALERT: {
