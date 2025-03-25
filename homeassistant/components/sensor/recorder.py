@@ -194,13 +194,7 @@ def _time_weighted_circular_mean(
         if duration != 0:
             values.append((old_fstate, duration))
 
-    sin_sum = sum(
-        math.sin(x * statistics.DEG_TO_RAD) * duration for x, duration in values
-    )
-    cos_sum = sum(
-        math.cos(x * statistics.DEG_TO_RAD) * duration for x, duration in values
-    )
-    return (statistics.RAD_TO_DEG * math.atan2(sin_sum, cos_sum)) % 360
+    return statistics.duration_weighted_circular_mean(values)
 
 
 def _get_units(fstates: list[tuple[float, State]]) -> set[str | None]:
