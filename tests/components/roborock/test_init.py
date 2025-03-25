@@ -20,7 +20,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.setup import async_setup_component
 
-from .mock_data import HOME_DATA, NETWORK_INFO, NETWORK_INFO_2
+from .mock_data import (
+    HOME_DATA,
+    NETWORK_INFO,
+    NETWORK_INFO_2,
+    ROBOROCK_RRUID,
+    USER_EMAIL,
+)
 
 from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator
@@ -369,3 +375,22 @@ async def test_no_stale_device(
         mock_roborock_entry.entry_id
     )
     assert len(new_devices) == 6  # 2 for each robot, 1 for A01, 1 for Zeo
+
+
+@pytest.mark.parametrize(
+    ("config_entry_unique_id", "expected_unique_id"),
+    [
+        (ROBOROCK_RRUID, ROBOROCK_RRUID),
+        (USER_EMAIL, ROBOROCK_RRUID),
+    ],
+)
+async def test_migrate_config_entry(
+    hass: HomeAssistant,
+    bypass_api_fixture,
+    setup_entry: MockConfigEntry,
+    expected_unique_id: str,
+) -> None:
+    """Test unloading roboorck integration."""
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert setup_entry.state is ConfigEntryState.LOADED
+    assert setup_entry.unique_id == expected_unique_id

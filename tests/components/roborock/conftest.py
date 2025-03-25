@@ -28,6 +28,7 @@ from .mock_data import (
     MULTI_MAP_LIST,
     NETWORK_INFO,
     PROP,
+    ROBOROCK_RRUID,
     SCENES,
     USER_DATA,
     USER_EMAIL,
@@ -188,8 +189,16 @@ def bypass_api_fixture_v1_only(bypass_api_fixture) -> None:
         yield
 
 
+@pytest.fixture(name="config_entry_unique_id")
+def config_entry_unique_id_fixture() -> str:
+    """Fixture that returns the unique id for the config entry."""
+    return ROBOROCK_RRUID
+
+
 @pytest.fixture
-def mock_roborock_entry(hass: HomeAssistant) -> MockConfigEntry:
+def mock_roborock_entry(
+    hass: HomeAssistant, config_entry_unique_id: str
+) -> MockConfigEntry:
     """Create a Roborock Entry that has not been setup."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -199,7 +208,7 @@ def mock_roborock_entry(hass: HomeAssistant) -> MockConfigEntry:
             CONF_USER_DATA: USER_DATA.as_dict(),
             CONF_BASE_URL: BASE_URL,
         },
-        unique_id=USER_EMAIL,
+        unique_id=config_entry_unique_id,
     )
     mock_entry.add_to_hass(hass)
     return mock_entry

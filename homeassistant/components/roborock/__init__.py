@@ -43,9 +43,12 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> bool:
     """Set up roborock from a config entry."""
 
+    user_data = UserData.from_dict(entry.data[CONF_USER_DATA])
+    if not (await _async_fix_unique_id(hass, entry, user_data)):
+        return False
+
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
-    user_data = UserData.from_dict(entry.data[CONF_USER_DATA])
     api_client = RoborockApiClient(
         entry.data[CONF_USERNAME],
         entry.data[CONF_BASE_URL],
@@ -161,6 +164,40 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
             remove_config_entry_id=entry.entry_id,
         )
 
+    return True
+
+
+async def _async_fix_unique_id(
+    hass: HomeAssistant,
+    entry: RoborockConfigEntry,
+    user_data: UserData,
+) -> bool:
+    """Update the config entry with a unique id based on the rruid."""
+    _LOGGER.debug("Checking for migration of config entry (%s)", entry.unique_id)
+    new_unique_id = user_data.rruid
+    if entry.unique_id == new_unique_id:
+        _LOGGER.debug("Config entry already in correct state")
+        return True
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    for existing_entry in entries:
+        if existing_entry.unique_id == new_unique_id:
+            _LOGGER.warning(
+                "Found duplicate unique id (%s); Removing duplicate entry",
+                new_unique_id,
+            )
+            hass.async_create_background_task(
+                hass.config_entries.async_remove(entry.entry_id),
+                "Remove roborock config entry",
+            )
+            return False
+
+    _LOGGER.debug("Updating unique id to %s", new_unique_id)
+    hass.config_entries.async_update_entry(
+        entry,
+        unique_id=new_unique_id,
+        data=entry.data,
+    )
     return True
 
 
