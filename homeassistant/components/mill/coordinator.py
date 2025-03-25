@@ -134,7 +134,7 @@ class MillHistoricDataUpdateCoordinator(DataUpdateCoordinator):
             for start, state in hourly_data.items():
                 if state is None:
                     continue
-                if last_stats_time and (start < last_stats_time or start > now):
+                if (last_stats_time and start < last_stats_time) or start > now:
                     continue
                 _sum += state
                 statistics.append(
