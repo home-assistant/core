@@ -1573,7 +1573,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "ign_sismologia",
     "ihc",
     "imap",
-    "imgw_pib",
     "improv_ble",
     "influxdb",
     "inkbird",
