@@ -122,44 +122,21 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
         )
 
     @property
-    def is_away_mode_on(self) -> bool | None:
+    def is_away_mode_on(self) -> bool:
         """Return true if away mode is on."""
 
-        away_mode_duration = self.executor.select_state(
-            OverkizState.IO_AWAY_MODE_DURATION
+        away_mode_duration = cast(
+            str, self.executor.select_state(OverkizState.IO_AWAY_MODE_DURATION)
         )
-        # away_mode_duration can be either a string or an int of 0 to 7 days
-        if (
-            isinstance(away_mode_duration, str)
-            and away_mode_duration == OverkizCommandParam.ALWAYS
-        ) or (isinstance(away_mode_duration, int) and away_mode_duration > 0):
+        # away_mode_duration can be either a Literal["always"]
+        if away_mode_duration == OverkizCommandParam.ALWAYS:
             return True
 
-        # operating_mode can be a dict or a Literal[DHWP_AWAY_MODES]
-        operating_mode = self.executor.select_state(OverkizState.CORE_OPERATING_MODE)
-        if operating_mode:
-            if isinstance(operating_mode, dict):
-                if operating_mode.get(OverkizCommandParam.ABSENCE):
-                    return (
-                        cast(
-                            str,
-                            operating_mode.get(OverkizCommandParam.ABSENCE),
-                        )
-                        == OverkizCommandParam.ON
-                    )
-                if operating_mode.get(OverkizCommandParam.AWAY):
-                    return (
-                        cast(
-                            str,
-                            operating_mode.get(OverkizCommandParam.AWAY),
-                        )
-                        == OverkizCommandParam.ON
-                    )
-                return False
+        # Or an int of 0 to 7 days. But it still is a string.
+        if away_mode_duration.isdecimal() and int(away_mode_duration) > 0:
+            return True
 
-            return cast(str, operating_mode) in DHWP_AWAY_MODES
-
-        return None
+        return False
 
     @property
     def current_operation(self) -> str | None:
