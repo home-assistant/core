@@ -154,6 +154,29 @@ async def test_paired_depaired_devices_flow(
     for entity_entry in entity_entries:
         assert entity_registry.async_get(entity_entry.entity_id)
 
+    await client.add_events(
+        [
+            EventMessage(
+                appliance.ha_id,
+                EventType.EVENT,
+                ArrayOfEvents(
+                    [
+                        Event(
+                            key=EventKey.LAUNDRY_CARE_WASHER_EVENT_I_DOS_1_FILL_LEVEL_POOR,
+                            raw_key=EventKey.LAUNDRY_CARE_WASHER_EVENT_I_DOS_1_FILL_LEVEL_POOR.value,
+                            timestamp=0,
+                            level="",
+                            handling="",
+                            value=BSH_EVENT_PRESENT_STATE_PRESENT,
+                        )
+                    ],
+                ),
+            ),
+        ]
+    )
+    await hass.async_block_till_done()
+    assert hass.states.is_state("sensor.washer_poor_i_dos_1_fill_level", "present")
+
 
 @pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
 async def test_connected_devices(
@@ -641,7 +664,9 @@ async def test_event_sensors_states(
 
     assert not hass.states.get(entity_id)
 
-    times_called_add_event_sensor_entity = add_event_sensor_entity_mock.call_count
+    add_event_sensor_entity_expected_call_count = (
+        add_event_sensor_entity_mock.call_count + 1
+    )
 
     for value, expected_state in (
         (BSH_EVENT_PRESENT_STATE_OFF, "off"),
@@ -672,7 +697,7 @@ async def test_event_sensors_states(
         assert hass.states.is_state(entity_id, expected_state)
     assert (
         add_event_sensor_entity_mock.call_count
-        == times_called_add_event_sensor_entity + 1
+        == add_event_sensor_entity_expected_call_count
     )
 
 

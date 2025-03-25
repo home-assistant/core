@@ -1,5 +1,6 @@
 """Provides a sensor for Home Connect."""
 
+from collections import defaultdict
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
@@ -16,7 +17,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfVolume
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util, slugify
 
@@ -496,7 +497,7 @@ def _add_event_sensor_entity(
     async_add_entities: AddConfigEntryEntitiesCallback,
     appliance: HomeConnectApplianceData,
     description: HomeConnectSensorEntityDescription,
-    remove_listener: list[Callable[[], None]],
+    remove_event_sensor_listener_list: list[Callable[[], None]],
 ) -> None:
     """Add an event sensor entity."""
     if (
@@ -504,13 +505,57 @@ def _add_event_sensor_entity(
     ) or description.key not in appliance_data.events:
         return
 
-    for listener in remove_listener:
-        listener()
+    for remove_listener in remove_event_sensor_listener_list:
+        remove_listener()
     async_add_entities(
         [
             HomeConnectEventSensor(entry.runtime_data, appliance, description),
         ]
     )
+
+
+def _add_event_sensor_listeners(
+    entry: HomeConnectConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+    remove_event_sensor_listener_dict: dict[str, list[CALLBACK_TYPE]],
+) -> None:
+    for appliance in entry.runtime_data.data.values():
+        if appliance.info.ha_id in remove_event_sensor_listener_dict:
+            continue
+        for event_sensor_description in EVENT_SENSORS:
+            if appliance.info.type not in cast(
+                tuple[str, ...], event_sensor_description.appliance_types
+            ):
+                continue
+            # We use a list as a kind of lazy initializer, as we can use the
+            # remove_listener while we are initializing it.
+            remove_event_sensor_listener_list = remove_event_sensor_listener_dict[
+                appliance.info.ha_id
+            ]
+            remove_listener = entry.runtime_data.async_add_listener(
+                partial(
+                    _add_event_sensor_entity,
+                    entry,
+                    async_add_entities,
+                    appliance,
+                    event_sensor_description,
+                    remove_event_sensor_listener_list,
+                ),
+                (appliance.info.ha_id, event_sensor_description.key),
+            )
+            remove_event_sensor_listener_list.append(remove_listener)
+            entry.async_on_unload(remove_listener)
+
+
+def _remove_event_sensor_listeners_on_depaired(
+    entry: HomeConnectConfigEntry,
+    remove_event_sensor_listener_dict: dict[str, list[CALLBACK_TYPE]],
+) -> None:
+    registered_listeners_ha_id = set(remove_event_sensor_listener_dict.keys())
+    actual_appliances = set(entry.runtime_data.data.keys())
+    for appliance_ha_id in registered_listeners_ha_id - actual_appliances:
+        for listener in remove_event_sensor_listener_dict.pop(appliance_ha_id):
+            listener()
 
 
 async def async_setup_entry(
@@ -525,28 +570,31 @@ async def async_setup_entry(
         async_add_entities,
     )
 
-    for appliance in entry.runtime_data.data.values():
-        for event_sensor_description in EVENT_SENSORS:
-            if appliance.info.type not in cast(
-                tuple[str, ...], event_sensor_description.appliance_types
-            ):
-                continue
-            # We use a list as a kind of lazy initializer, as we can use the
-            # remove_listener while we are initializing it.
-            remove_listener_list: list[Callable[[], None]] = []
-            remove_listener = entry.runtime_data.async_add_listener(
-                partial(
-                    _add_event_sensor_entity,
-                    entry,
-                    async_add_entities,
-                    appliance,
-                    event_sensor_description,
-                    remove_listener_list,
-                ),
-                (appliance.info.ha_id, event_sensor_description.key),
-            )
-            remove_listener_list.append(remove_listener)
-            entry.async_on_unload(remove_listener)
+    remove_event_sensor_listener_dict: dict[str, list[CALLBACK_TYPE]] = defaultdict(
+        list
+    )
+
+    entry.async_on_unload(
+        entry.runtime_data.async_add_special_listener(
+            partial(
+                _add_event_sensor_listeners,
+                entry,
+                async_add_entities,
+                remove_event_sensor_listener_dict,
+            ),
+            (EventKey.BSH_COMMON_APPLIANCE_PAIRED,),
+        )
+    )
+    entry.async_on_unload(
+        entry.runtime_data.async_add_special_listener(
+            partial(
+                _remove_event_sensor_listeners_on_depaired,
+                entry,
+                remove_event_sensor_listener_dict,
+            ),
+            (EventKey.BSH_COMMON_APPLIANCE_DEPAIRED,),
+        )
+    )
 
 
 class HomeConnectSensor(HomeConnectEntity, SensorEntity):
