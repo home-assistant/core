@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/zimi",
   "iot_class": "local_push",
   "quality_scale": "bronze",
-  "requirements": ["StrEnum==0.4.15", "zcc-helper==3.3rc2"]
+  "requirements": ["StrEnum==0.4.15", "zcc-helper==3.3rc3"]
 }
