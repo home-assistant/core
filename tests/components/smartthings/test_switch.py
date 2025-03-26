@@ -128,10 +128,11 @@ async def test_state_update(
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
-    ("device_fixture", "entity_id"),
+    ("device_fixture", "entity_id", "translation_key"),
     [
-        ("da_wm_wm_000001", "switch.washer"),
-        ("da_wm_wd_000001", "switch.dryer"),
+        ("da_wm_wm_000001", "switch.washer", "deprecated_switch_appliance"),
+        ("da_wm_wd_000001", "switch.dryer", "deprecated_switch_appliance"),
+        ("hw_q80r_soundbar", "switch.soundbar", "deprecated_switch_media_player"),
     ],
 )
 async def test_create_issue(
@@ -140,6 +141,7 @@ async def test_create_issue(
     mock_config_entry: MockConfigEntry,
     issue_registry: ir.IssueRegistry,
     entity_id: str,
+    translation_key: str,
 ) -> None:
     """Test we create an issue when an automation or script is using a deprecated entity."""
     issue_id = f"deprecated_switch_{entity_id}"
@@ -187,7 +189,7 @@ async def test_create_issue(
     assert len(issue_registry.issues) == 1
     issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert issue is not None
-    assert issue.translation_key == "deprecated_switch_appliance"
+    assert issue.translation_key == translation_key
     assert issue.translation_placeholders == {
         "entity": entity_id,
         "items": "- [test](/config/automation/edit/test)\n- [test](/config/script/edit/test)",
