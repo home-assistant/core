@@ -69,7 +69,6 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
-    CONF_TEMPERATURE_UNIT,
     EVENT_HOMEASSISTANT_START,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -77,6 +76,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CoreState, Event, HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from tests.common import async_mock_service
 
@@ -858,6 +858,7 @@ async def test_thermostat_fahrenheit(
 ) -> None:
     """Test if accessory and HA are updated accordingly."""
     entity_id = "climate.test"
+    hass.config.units = US_CUSTOMARY_SYSTEM
 
     # support_ = True
     hass.states.async_set(
@@ -869,10 +870,7 @@ async def test_thermostat_fahrenheit(
         },
     )
     await hass.async_block_till_done()
-    with patch.object(
-        hass.config.units, CONF_TEMPERATURE_UNIT, new=UnitOfTemperature.FAHRENHEIT
-    ):
-        acc = Thermostat(hass, hk_driver, "Climate", entity_id, 1, None)
+    acc = Thermostat(hass, hk_driver, "Climate", entity_id, 1, None)
     hk_driver.add_accessory(acc)
     acc.run()
     await hass.async_block_till_done()
@@ -1786,13 +1784,11 @@ async def test_water_heater_fahrenheit(
 ) -> None:
     """Test if accessory and HA are update accordingly."""
     entity_id = "water_heater.test"
+    hass.config.units = US_CUSTOMARY_SYSTEM
 
     hass.states.async_set(entity_id, HVACMode.HEAT)
     await hass.async_block_till_done()
-    with patch.object(
-        hass.config.units, CONF_TEMPERATURE_UNIT, new=UnitOfTemperature.FAHRENHEIT
-    ):
-        acc = WaterHeater(hass, hk_driver, "WaterHeater", entity_id, 2, None)
+    acc = WaterHeater(hass, hk_driver, "WaterHeater", entity_id, 2, None)
     acc.run()
     await hass.async_block_till_done()
 

@@ -413,6 +413,7 @@ homeassistant.components.recollect_waste.*
 homeassistant.components.recorder.*
 homeassistant.components.remember_the_milk.*
 homeassistant.components.remote.*
+homeassistant.components.remote_calendar.*
 homeassistant.components.renault.*
 homeassistant.components.reolink.*
 homeassistant.components.repairs.*

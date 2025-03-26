@@ -1,16 +1,29 @@
 """Tests for the SmartThings component init module."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
-from pysmartthings import DeviceResponse, DeviceStatus
+from aiohttp import ClientResponseError, RequestInfo
+from pysmartthings import (
+    Attribute,
+    Capability,
+    DeviceResponse,
+    DeviceStatus,
+    Lifecycle,
+    SmartThingsSinkError,
+    Subscription,
+)
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.smartthings.const import DOMAIN
-from homeassistant.core import HomeAssistant
+from homeassistant.components.climate import HVACMode
+from homeassistant.components.smartthings import EVENT_BUTTON
+from homeassistant.components.smartthings.const import CONF_SUBSCRIPTION_ID, DOMAIN
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from . import setup_integration
+from . import setup_integration, trigger_update
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -33,6 +46,207 @@ async def test_devices(
     assert device == snapshot
 
 
+@pytest.mark.parametrize("device_fixture", ["button"])
+async def test_button_event(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test button event."""
+    await setup_integration(hass, mock_config_entry)
+    events = []
+
+    def capture_event(event: Event) -> None:
+        events.append(event)
+
+    hass.bus.async_listen_once(EVENT_BUTTON, capture_event)
+
+    await trigger_update(
+        hass,
+        devices,
+        "c4bdd19f-85d1-4d58-8f9c-e75ac3cf113b",
+        Capability.BUTTON,
+        Attribute.BUTTON,
+        "pushed",
+    )
+
+    assert len(events) == 1
+    assert events[0] == snapshot
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_create_subscription(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test creating a subscription."""
+    assert CONF_SUBSCRIPTION_ID not in mock_config_entry.data
+
+    await setup_integration(hass, mock_config_entry)
+
+    devices.create_subscription.assert_called_once()
+
+    assert (
+        mock_config_entry.data[CONF_SUBSCRIPTION_ID]
+        == "f5768ce8-c9e5-4507-9020-912c0c60e0ab"
+    )
+
+    devices.subscribe.assert_called_once_with(
+        "397678e5-9995-4a39-9d9f-ae6ba310236c",
+        "5aaaa925-2be1-4e40-b257-e4ef59083324",
+        Subscription.from_json(load_fixture("subscription.json", DOMAIN)),
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_create_subscription_sink_error(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test handling an error when creating a subscription."""
+    assert CONF_SUBSCRIPTION_ID not in mock_config_entry.data
+
+    devices.create_subscription.side_effect = SmartThingsSinkError("Sink error")
+
+    await setup_integration(hass, mock_config_entry)
+
+    devices.subscribe.assert_not_called()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert CONF_SUBSCRIPTION_ID not in mock_config_entry.data
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_update_subscription_identifier(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test updating the subscription identifier."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert (
+        mock_config_entry.data[CONF_SUBSCRIPTION_ID]
+        == "f5768ce8-c9e5-4507-9020-912c0c60e0ab"
+    )
+
+    devices.new_subscription_id_callback("abc")
+
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.data[CONF_SUBSCRIPTION_ID] == "abc"
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_stale_subscription_id(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test updating the subscription identifier."""
+    mock_config_entry.add_to_hass(hass)
+
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={**mock_config_entry.data, CONF_SUBSCRIPTION_ID: "test"},
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        mock_config_entry.data[CONF_SUBSCRIPTION_ID]
+        == "f5768ce8-c9e5-4507-9020-912c0c60e0ab"
+    )
+    devices.delete_subscription.assert_called_once_with("test")
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_remove_subscription_identifier(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test removing the subscription identifier."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert (
+        mock_config_entry.data[CONF_SUBSCRIPTION_ID]
+        == "f5768ce8-c9e5-4507-9020-912c0c60e0ab"
+    )
+
+    devices.new_subscription_id_callback(None)
+
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.data[CONF_SUBSCRIPTION_ID] is None
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_max_connections_handling(
+    hass: HomeAssistant, devices: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test handling reaching max connections."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert (
+        mock_config_entry.data[CONF_SUBSCRIPTION_ID]
+        == "f5768ce8-c9e5-4507-9020-912c0c60e0ab"
+    )
+
+    devices.create_subscription.side_effect = SmartThingsSinkError("Sink error")
+
+    devices.max_connections_reached_callback()
+
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_unloading(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test unloading the integration."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    devices.delete_subscription.assert_called_once_with(
+        "f5768ce8-c9e5-4507-9020-912c0c60e0ab"
+    )
+    # Deleting the subscription automatically deletes the subscription ID
+    devices.new_subscription_id_callback(None)
+
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    assert mock_config_entry.data[CONF_SUBSCRIPTION_ID] is None
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_shutdown(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test shutting down Home Assistant."""
+    await setup_integration(hass, mock_config_entry)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    devices.delete_subscription.assert_called_once_with(
+        "f5768ce8-c9e5-4507-9020-912c0c60e0ab"
+    )
+    # Deleting the subscription automatically deletes the subscription ID
+    devices.new_subscription_id_callback(None)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.data[CONF_SUBSCRIPTION_ID] is None
+
+
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
 async def test_removing_stale_devices(
     hass: HomeAssistant,
@@ -51,6 +265,57 @@ async def test_removing_stale_devices(
     await hass.async_block_till_done()
 
     assert not device_registry.async_get_device({(DOMAIN, "aaa-bbb-ccc")})
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_refreshing_expired_token(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test removing stale devices."""
+    with patch(
+        "homeassistant.components.smartthings.OAuth2Session.async_ensure_token_valid",
+        side_effect=ClientResponseError(
+            request_info=RequestInfo(
+                url="http://example.com",
+                method="GET",
+                headers={},
+                real_url="http://example.com",
+            ),
+            status=400,
+            history=(),
+        ),
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert len(hass.config_entries.flow.async_progress()) == 1
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_error_refreshing_token(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test removing stale devices."""
+    with patch(
+        "homeassistant.components.smartthings.OAuth2Session.async_ensure_token_valid",
+        side_effect=ClientResponseError(
+            request_info=RequestInfo(
+                url="http://example.com",
+                method="GET",
+                headers={},
+                real_url="http://example.com",
+            ),
+            status=500,
+            history=(),
+        ),
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_hub_via_device(
@@ -82,3 +347,23 @@ async def test_hub_via_device(
         ).via_device_id
         == hub_device.id
     )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_deleted_device_runtime(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test devices that are deleted in runtime."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("climate.ac_office_granit").state == HVACMode.OFF
+
+    for call in devices.add_device_lifecycle_event_listener.call_args_list:
+        if call[0][0] == Lifecycle.DELETE:
+            call[0][1]("96a5ef74-5832-a84b-f1f7-ca799957065d")
+    await hass.async_block_till_done()
+
+    assert hass.states.get("climate.ac_office_granit") is None
