@@ -234,7 +234,9 @@ async def test_homekit(hass: HomeAssistant, mock_tado_api: MagicMock) -> None:
             type="mock_type",
         ),
     )
-    assert result["type"] is FlowResultType.SHOW_PROGRESS_DONE
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "homekit"
+    # @joostlek, from here on we need to fix the test
     flow = next(
         flow
         for flow in hass.config_entries.flow.async_progress()

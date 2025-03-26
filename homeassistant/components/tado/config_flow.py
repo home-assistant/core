@@ -170,6 +170,15 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         await self.async_set_unique_id(properties[ATTR_PROPERTIES_ID])
         self._abort_if_unique_id_configured()
+        return await self.async_step_homekit_confirm()
+
+    async def async_step_homekit_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Prepare for Homekit."""
+        if user_input is None:
+            return self.async_show_form(step_id="homekit")
+
         return await self.async_step_user()
 
     @staticmethod
