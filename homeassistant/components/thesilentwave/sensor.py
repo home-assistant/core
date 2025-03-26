@@ -1,48 +1,47 @@
-"""Config flow for TheSilentWave integration."""
+"""Support for TheSilentWave sensors."""
 
-import logging
-import voluptuous as vol
-from homeassistant import config_entries
-from homeassistant.const import CONF_NAME, CONF_HOST, CONF_SCAN_INTERVAL
-import ipaddress
-
-_LOGGER = logging.getLogger(__name__)
+from homeassistant.components.sensor import SensorEntity, SensorStateClass
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 
-class TheSilentWaveConfigFlow(config_entries.ConfigFlow, domain="thesilentwave"):
-    """Handle a config flow for TheSilentWave integration."""
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Set up the sensor platform."""
+    return True
 
-    VERSION = 1
 
-    async def async_step_user(self, user_input=None) -> config_entries.FlowResult:
-        """Handle the user input for the configuration."""
-        errors = {}
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up the sensor from a config entry."""
+    coordinator = hass.data["thesilentwave"][entry.entry_id]
+    async_add_entities([TheSilentWaveSensor(coordinator, entry.entry_id)], True)
 
-        if user_input is not None:
-            try:
-                # Validate IP address
-                ipaddress.ip_address(user_input[CONF_HOST])
-                return self.async_create_entry(
-                    title=user_input[CONF_NAME],
-                    data={
-                        CONF_NAME: user_input[CONF_NAME],
-                        CONF_HOST: user_input[CONF_HOST],
-                        CONF_SCAN_INTERVAL: user_input.get(CONF_SCAN_INTERVAL, 10),
-                    },
-                )
-            except ValueError:
-                errors[CONF_HOST] = "invalid_ip"
 
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_NAME, default="TheSilentWaveSensor"): str,
-                    vol.Required(CONF_HOST): str,
-                    vol.Optional(CONF_SCAN_INTERVAL, default=10): vol.All(
-                        vol.Coerce(int), vol.Range(min=5, max=300)
-                    ),
-                }
-            ),
-            errors=errors,
+class TheSilentWaveSensor(CoordinatorEntity, SensorEntity):
+    """Representation of a TheSilentWave sensor."""
+
+    def __init__(self, coordinator, entry_id):
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"silent_wave_{entry_id}"
+        self._attr_name = coordinator.name
+        self._attr_state_class = SensorStateClass.MEASUREMENT
+        self._attr_should_poll = True
+
+    @property
+    def device_info(self):
+        """Return device info."""
+        return DeviceInfo(
+            identifiers={("thesilentwave", self._attr_unique_id)},
+            name=self._attr_name,
+            manufacturer="TheSilentWave",
         )
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        return self.coordinator.data
+
+    @property
+    def icon(self):
+        """Return the icon."""
+        return "mdi:power" if self.state == "on" else "mdi:power-off"
