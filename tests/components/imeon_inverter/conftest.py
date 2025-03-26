@@ -44,12 +44,10 @@ def mock_imeon_inverter() -> Generator[MagicMock]:
 @pytest.fixture
 def mock_async_setup_entry() -> Generator[AsyncMock]:
     """Fixture for mocking async_setup_entry."""
-    with (
-        patch(
-            "homeassistant.components.imeon_inverter.async_setup_entry",
-            return_value=True,
-        ) as mock,
-    ):
+    with patch(
+        "homeassistant.components.imeon_inverter.async_setup_entry",
+        return_value=True,
+    ) as mock:
         yield mock
 
 
@@ -57,6 +55,7 @@ def mock_async_setup_entry() -> Generator[AsyncMock]:
 def mock_config_entry() -> MockConfigEntry:
     """Mock a config entry."""
     return MockConfigEntry(
+        title="Imeon inverter",
         domain=DOMAIN,
         data=TEST_USER_INPUT,
         unique_id=TEST_SERIAL,
