@@ -9,9 +9,9 @@
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "address": "The address of the inverter",
-          "username": "Your inverter login",
-          "password": "Your inverter password"
+          "address": "The hostname or IP of your inverter",
+          "username": "The username of your OS One account",
+          "password": "The password of your OS One account"
         }
       }
     },
