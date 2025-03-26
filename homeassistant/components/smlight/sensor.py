@@ -148,7 +148,6 @@ async def async_setup_entry(
     )
 
     radios = coordinator.data.info.radios
-    assert radios is not None
 
     entities.extend(
         SmInfoSensorEntity(coordinator, RADIO_INFO, idx) for idx, _ in enumerate(radios)
