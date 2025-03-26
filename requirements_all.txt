@@ -1888,7 +1888,7 @@ pycsspeechtts==1.0.8
 # pycups==2.0.4
 
 # homeassistant.components.daikin
-pydaikin==2.14.1
+pydaikin==git+https://github.com/fredrike/pydaikin@fix-blocking-event-loop
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
