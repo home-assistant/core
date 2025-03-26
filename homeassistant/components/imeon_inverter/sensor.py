@@ -452,8 +452,8 @@ class InverterSensor(CoordinatorEntity[InverterCoordinator], SensorEntity):
             identifiers={(DOMAIN, entry.unique_id)},
             name="Imeon inverter",
             manufacturer="Imeon Energy",
-            model=self._inverter.get("inverter", ""),
-            sw_version=self._inverter.get("software", ""),
+            model=self._inverter.get("inverter"),
+            sw_version=self._inverter.get("software"),
         )
 
     @property
