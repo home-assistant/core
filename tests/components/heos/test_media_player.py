@@ -15,6 +15,7 @@ from pyheos import (
     MediaType as HeosMediaType,
     PlayerUpdateResult,
     PlayState,
+    QueueItem,
     RepeatType,
     SignalHeosEvent,
     SignalType,
@@ -27,6 +28,7 @@ from syrupy.filters import props
 
 from homeassistant.components.heos.const import (
     DOMAIN,
+    SERVICE_GET_QUEUE,
     SERVICE_GROUP_VOLUME_DOWN,
     SERVICE_GROUP_VOLUME_SET,
     SERVICE_GROUP_VOLUME_UP,
@@ -1696,3 +1698,27 @@ async def test_media_player_group_fails_wrong_integration(
             blocking=True,
         )
     controller.set_group.assert_not_called()
+
+
+async def test_get_queue(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    controller: MockHeos,
+    queue: list[QueueItem],
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the get queue service."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    controller.player_get_queue.return_value = queue
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_QUEUE,
+        {
+            ATTR_ENTITY_ID: "media_player.test_player",
+        },
+        blocking=True,
+        return_response=True,
+    )
+    controller.player_get_queue.assert_called_once_with(1, None, None)
+    assert response == snapshot

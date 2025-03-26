@@ -262,6 +262,8 @@ class AssistSatelliteEntity(entity.Entity):
             raise SatelliteBusyError
 
         self._is_announcing = True
+        self._set_state(AssistSatelliteState.RESPONDING)
+
         # Provide our start info to the LLM so it understands context of incoming message
         if extra_system_prompt is not None:
             self._extra_system_prompt = extra_system_prompt
@@ -291,6 +293,7 @@ class AssistSatelliteEntity(entity.Entity):
             raise
         finally:
             self._is_announcing = False
+            self._set_state(AssistSatelliteState.IDLE)
 
     async def async_start_conversation(
         self, start_announcement: AssistSatelliteAnnouncement
