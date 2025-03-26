@@ -3,7 +3,7 @@
     "flow_title": "{short_mac} ({ip_address})",
     "step": {
       "user": {
-        "description": "Connect to your Motionblinds gateway, if the IP address is not set, auto-discovery is used",
+        "description": "Connect to your Motionblinds gateway. If the IP address is not set, auto-discovery is used",
         "data": {
           "host": "[%key:common::config_flow::data::ip%]"
         }
