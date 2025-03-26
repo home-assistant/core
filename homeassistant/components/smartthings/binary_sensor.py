@@ -134,6 +134,7 @@ CAPABILITY_TO_SENSORS: dict[
             is_on_key="on",
             category={
                 Category.CLOTHING_CARE_MACHINE,
+                Category.COOKTOP,
                 Category.DISHWASHER,
                 Category.DRYER,
                 Category.MICROWAVE,
