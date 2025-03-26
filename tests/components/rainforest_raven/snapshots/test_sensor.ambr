@@ -104,7 +104,7 @@
     'state': '0.10',
   })
 # ---
-# name: test_sensors[sensor.raven_device_meter_signal_strength-entry]
+# name: test_sensors[sensor.raven_device_signal_strength-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -119,7 +119,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.raven_device_meter_signal_strength',
+    'entity_id': 'sensor.raven_device_signal_strength',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -131,7 +131,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Meter signal strength',
+    'original_name': 'Signal strength',
     'platform': 'rainforest_raven',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -140,16 +140,16 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[sensor.raven_device_meter_signal_strength-state]
+# name: test_sensors[sensor.raven_device_signal_strength-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'channel': 13,
-      'friendly_name': 'RAVEn Device Meter signal strength',
+      'friendly_name': 'RAVEn Device Signal strength',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.raven_device_meter_signal_strength',
+    'entity_id': 'sensor.raven_device_signal_strength',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
