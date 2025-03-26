@@ -323,3 +323,25 @@ async def test_options_web_search_user_location(
         CONF_WEB_SEARCH_COUNTRY: "US",
         CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
     }
+
+
+async def test_options_web_search_unsupported_model(
+    hass: HomeAssistant, mock_config_entry, mock_init_component
+) -> None:
+    """Test the options form giving error about web search not being available."""
+    options_flow = await hass.config_entries.options.async_init(
+        mock_config_entry.entry_id
+    )
+    result = await hass.config_entries.options.async_configure(
+        options_flow["flow_id"],
+        {
+            CONF_RECOMMENDED: False,
+            CONF_PROMPT: "Speak like a pirate",
+            CONF_CHAT_MODEL: "o1-pro",
+            CONF_LLM_HASS_API: "assist",
+            CONF_WEB_SEARCH: True,
+        },
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"web_search": "web_search_not_supported"}

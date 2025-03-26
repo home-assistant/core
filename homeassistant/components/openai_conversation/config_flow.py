@@ -158,11 +158,16 @@ class OpenAIOptionsFlow(OptionsFlow):
 
                 if user_input.get(CONF_CHAT_MODEL) in UNSUPPORTED_MODELS:
                     errors[CONF_CHAT_MODEL] = "model_not_supported"
-                else:
-                    if user_input.get(CONF_WEB_SEARCH) and user_input.get(
-                        CONF_WEB_SEARCH_USER_LOCATION
-                    ):
+
+                if user_input.get(CONF_WEB_SEARCH):
+                    if not user_input.get(
+                        CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL
+                    ).startswith("gpt-4o"):
+                        errors[CONF_WEB_SEARCH] = "web_search_not_supported"
+                    elif user_input.get(CONF_WEB_SEARCH_USER_LOCATION):
                         user_input.update(await self.get_location_data())
+
+                if not errors:
                     return self.async_create_entry(title="", data=user_input)
             else:
                 # Re-render the options again, now with the recommended options shown/hidden
