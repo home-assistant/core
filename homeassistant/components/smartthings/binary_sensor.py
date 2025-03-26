@@ -133,6 +133,7 @@ CAPABILITY_TO_SENSORS: dict[
             device_class=BinarySensorDeviceClass.POWER,
             is_on_key="on",
             category={
+                Category.CLOTHING_CARE_MACHINE,
                 Category.DISHWASHER,
                 Category.DRYER,
                 Category.MICROWAVE,
