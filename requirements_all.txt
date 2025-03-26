@@ -179,7 +179,7 @@ aioacaia==0.1.14
 aioairq==0.4.4
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.6.10
+aioairzone-cloud==0.6.11
 
 # homeassistant.components.airzone
 aioairzone==0.9.9
