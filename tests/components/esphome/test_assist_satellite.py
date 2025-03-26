@@ -1222,6 +1222,7 @@ async def test_announce_message(
         assert media_id == "http://10.10.10.10:8123/api/tts_proxy/test-token"
         assert text == "test-text"
         assert not start_conversation
+        assert not preannounce_media_id
 
         done.set()
 
@@ -1315,6 +1316,7 @@ async def test_announce_media_id(
         assert satellite.state == AssistSatelliteState.RESPONDING
         assert media_id == "https://www.home-assistant.io/proxied.flac"
         assert not start_conversation
+        assert not preannounce_media_id
 
         done.set()
 
@@ -1351,6 +1353,83 @@ async def test_announce_media_id(
             channels=2,
             width=2,
         )
+
+
+async def test_announce_message_with_preannounce(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
+) -> None:
+    """Test announcement with message and preannounce media id."""
+    mock_device: MockESPHomeDevice = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=[],
+        user_service=[],
+        states=[],
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+            | VoiceAssistantFeature.SPEAKER
+            | VoiceAssistantFeature.API_AUDIO
+            | VoiceAssistantFeature.ANNOUNCE
+        },
+    )
+    await hass.async_block_till_done()
+
+    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
+    assert satellite is not None
+
+    done = asyncio.Event()
+
+    async def send_voice_assistant_announcement_await_response(
+        media_id: str,
+        timeout: float,
+        text: str,
+        start_conversation: bool,
+        preannounce_media_id: str | None = None,
+    ):
+        assert satellite.state == AssistSatelliteState.RESPONDING
+        assert media_id == "http://10.10.10.10:8123/api/tts_proxy/test-token"
+        assert text == "test-text"
+        assert not start_conversation
+        assert preannounce_media_id == "test-preannounce"
+
+        done.set()
+
+    with (
+        patch(
+            "homeassistant.components.tts.generate_media_source_id",
+            return_value="media-source://bla",
+        ),
+        patch(
+            "homeassistant.components.tts.async_resolve_engine",
+            return_value="tts.cloud_tts",
+        ),
+        patch(
+            "homeassistant.components.tts.async_create_stream",
+            return_value=MockResultStream(hass, "wav", b""),
+        ),
+        patch.object(
+            mock_client,
+            "send_voice_assistant_announcement_await_response",
+            new=send_voice_assistant_announcement_await_response,
+        ),
+    ):
+        async with asyncio.timeout(1):
+            await hass.services.async_call(
+                assist_satellite.DOMAIN,
+                "announce",
+                {
+                    "entity_id": satellite.entity_id,
+                    "message": "test-text",
+                    "preannounce_media_id": "test-preannounce",
+                },
+                blocking=True,
+            )
+            await done.wait()
+            assert satellite.state == AssistSatelliteState.IDLE
 
 
 async def test_start_conversation_supported_features(
@@ -1435,6 +1514,7 @@ async def test_start_conversation_message(
         assert media_id == "http://10.10.10.10:8123/api/tts_proxy/test-token"
         assert text == "test-text"
         assert start_conversation
+        assert not preannounce_media_id
 
         done.set()
 
@@ -1547,6 +1627,7 @@ async def test_start_conversation_media_id(
         assert satellite.state == AssistSatelliteState.RESPONDING
         assert media_id == "https://www.home-assistant.io/proxied.flac"
         assert start_conversation
+        assert not preannounce_media_id
 
         done.set()
 
@@ -1587,6 +1668,102 @@ async def test_start_conversation_media_id(
             channels=2,
             width=2,
         )
+
+
+async def test_start_conversation_message_with_preannounce(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
+) -> None:
+    """Test start conversation with message and preannounce media id."""
+    mock_device: MockESPHomeDevice = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=[],
+        user_service=[],
+        states=[],
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+            | VoiceAssistantFeature.SPEAKER
+            | VoiceAssistantFeature.API_AUDIO
+            | VoiceAssistantFeature.ANNOUNCE
+            | VoiceAssistantFeature.START_CONVERSATION
+        },
+    )
+    await hass.async_block_till_done()
+
+    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
+    assert satellite is not None
+
+    pipeline = assist_pipeline.Pipeline(
+        conversation_engine="test engine",
+        conversation_language="en",
+        language="en",
+        name="test pipeline",
+        stt_engine="test stt",
+        stt_language="en",
+        tts_engine="test tts",
+        tts_language="en",
+        tts_voice=None,
+        wake_word_entity=None,
+        wake_word_id=None,
+    )
+
+    done = asyncio.Event()
+
+    async def send_voice_assistant_announcement_await_response(
+        media_id: str,
+        timeout: float,
+        text: str,
+        start_conversation: bool,
+        preannounce_media_id: str,
+    ):
+        assert satellite.state == AssistSatelliteState.RESPONDING
+        assert media_id == "http://10.10.10.10:8123/api/tts_proxy/test-token"
+        assert text == "test-text"
+        assert start_conversation
+        assert preannounce_media_id == "test-preannounce"
+
+        done.set()
+
+    with (
+        patch(
+            "homeassistant.components.tts.generate_media_source_id",
+            return_value="media-source://bla",
+        ),
+        patch(
+            "homeassistant.components.tts.async_resolve_engine",
+            return_value="tts.cloud_tts",
+        ),
+        patch(
+            "homeassistant.components.tts.async_create_stream",
+            return_value=MockResultStream(hass, "wav", b""),
+        ),
+        patch.object(
+            mock_client,
+            "send_voice_assistant_announcement_await_response",
+            new=send_voice_assistant_announcement_await_response,
+        ),
+        patch(
+            "homeassistant.components.assist_satellite.entity.async_get_pipeline",
+            return_value=pipeline,
+        ),
+    ):
+        async with asyncio.timeout(1):
+            await hass.services.async_call(
+                assist_satellite.DOMAIN,
+                "start_conversation",
+                {
+                    "entity_id": satellite.entity_id,
+                    "start_message": "test-text",
+                    "preannounce_media_id": "test-preannounce",
+                },
+                blocking=True,
+            )
+            await done.wait()
+            assert satellite.state == AssistSatelliteState.IDLE
 
 
 async def test_satellite_unloaded_on_disconnect(
