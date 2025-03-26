@@ -53,7 +53,7 @@ BSH_PROGRAM_SENSORS = (
         device_class=SensorDeviceClass.TIMESTAMP,
         translation_key="program_finish_time",
         appliance_types=(
-            "CoffeMaker",
+            "CoffeeMaker",
             "CookProcessor",
             "Dishwasher",
             "Dryer",
@@ -195,30 +195,6 @@ SENSORS = (
 
 EVENT_SENSORS = (
     HomeConnectSensorEntityDescription(
-        key=EventKey.REFRIGERATION_FRIDGE_FREEZER_EVENT_DOOR_ALARM_FREEZER,
-        device_class=SensorDeviceClass.ENUM,
-        options=EVENT_OPTIONS,
-        default_value="off",
-        translation_key="freezer_door_alarm",
-        appliance_types=("FridgeFreezer", "Freezer"),
-    ),
-    HomeConnectSensorEntityDescription(
-        key=EventKey.REFRIGERATION_FRIDGE_FREEZER_EVENT_DOOR_ALARM_REFRIGERATOR,
-        device_class=SensorDeviceClass.ENUM,
-        options=EVENT_OPTIONS,
-        default_value="off",
-        translation_key="refrigerator_door_alarm",
-        appliance_types=("FridgeFreezer", "Refrigerator"),
-    ),
-    HomeConnectSensorEntityDescription(
-        key=EventKey.REFRIGERATION_FRIDGE_FREEZER_EVENT_TEMPERATURE_ALARM_FREEZER,
-        device_class=SensorDeviceClass.ENUM,
-        options=EVENT_OPTIONS,
-        default_value="off",
-        translation_key="freezer_temperature_alarm",
-        appliance_types=("FridgeFreezer", "Freezer"),
-    ),
-    HomeConnectSensorEntityDescription(
         key=EventKey.BSH_COMMON_EVENT_PROGRAM_ABORTED,
         device_class=SensorDeviceClass.ENUM,
         options=EVENT_OPTIONS,
@@ -273,6 +249,22 @@ EVENT_SENSORS = (
         default_value="off",
         translation_key="drying_process_finished",
         appliance_types=("Dryer",),
+    ),
+    HomeConnectSensorEntityDescription(
+        key=EventKey.DISHCARE_DISHWASHER_EVENT_SALT_NEARLY_EMPTY,
+        device_class=SensorDeviceClass.ENUM,
+        options=EVENT_OPTIONS,
+        default_value="off",
+        translation_key="salt_nearly_empty",
+        appliance_types=("Dishwasher",),
+    ),
+    HomeConnectSensorEntityDescription(
+        key=EventKey.DISHCARE_DISHWASHER_EVENT_RINSE_AID_NEARLY_EMPTY,
+        device_class=SensorDeviceClass.ENUM,
+        options=EVENT_OPTIONS,
+        default_value="off",
+        translation_key="rinse_aid_nearly_empty",
+        appliance_types=("Dishwasher",),
     ),
     HomeConnectSensorEntityDescription(
         key=EventKey.CONSUMER_PRODUCTS_COFFEE_MAKER_EVENT_BEAN_CONTAINER_EMPTY,
@@ -435,6 +427,30 @@ EVENT_SENSORS = (
         appliance_types=("CoffeeMaker",),
     ),
     HomeConnectSensorEntityDescription(
+        key=EventKey.REFRIGERATION_FRIDGE_FREEZER_EVENT_DOOR_ALARM_FREEZER,
+        device_class=SensorDeviceClass.ENUM,
+        options=EVENT_OPTIONS,
+        default_value="off",
+        translation_key="freezer_door_alarm",
+        appliance_types=("FridgeFreezer", "Freezer"),
+    ),
+    HomeConnectSensorEntityDescription(
+        key=EventKey.REFRIGERATION_FRIDGE_FREEZER_EVENT_DOOR_ALARM_REFRIGERATOR,
+        device_class=SensorDeviceClass.ENUM,
+        options=EVENT_OPTIONS,
+        default_value="off",
+        translation_key="refrigerator_door_alarm",
+        appliance_types=("FridgeFreezer", "Refrigerator"),
+    ),
+    HomeConnectSensorEntityDescription(
+        key=EventKey.REFRIGERATION_FRIDGE_FREEZER_EVENT_TEMPERATURE_ALARM_FREEZER,
+        device_class=SensorDeviceClass.ENUM,
+        options=EVENT_OPTIONS,
+        default_value="off",
+        translation_key="freezer_temperature_alarm",
+        appliance_types=("FridgeFreezer", "Freezer"),
+    ),
+    HomeConnectSensorEntityDescription(
         key=EventKey.CONSUMER_PRODUCTS_CLEANING_ROBOT_EVENT_EMPTY_DUST_BOX_AND_CLEAN_FILTER,
         device_class=SensorDeviceClass.ENUM,
         options=EVENT_OPTIONS,
@@ -489,22 +505,6 @@ EVENT_SENSORS = (
         default_value="off",
         translation_key="grease_filter_max_saturation_reached",
         appliance_types=("Hood",),
-    ),
-    HomeConnectSensorEntityDescription(
-        key=EventKey.DISHCARE_DISHWASHER_EVENT_SALT_NEARLY_EMPTY,
-        device_class=SensorDeviceClass.ENUM,
-        options=EVENT_OPTIONS,
-        default_value="off",
-        translation_key="salt_nearly_empty",
-        appliance_types=("Dishwasher",),
-    ),
-    HomeConnectSensorEntityDescription(
-        key=EventKey.DISHCARE_DISHWASHER_EVENT_RINSE_AID_NEARLY_EMPTY,
-        device_class=SensorDeviceClass.ENUM,
-        options=EVENT_OPTIONS,
-        default_value="off",
-        translation_key="rinse_aid_nearly_empty",
-        appliance_types=("Dishwasher",),
     ),
 )
 
