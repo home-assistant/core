@@ -39,6 +39,7 @@ from .common import (
     MOCK_SENSOR_SUBENTRY_DATA_SINGLE,
     MOCK_SENSOR_SUBENTRY_DATA_SINGLE_LAST_RESET_TEMPLATE,
     MOCK_SENSOR_SUBENTRY_DATA_SINGLE_STATE_CLASS,
+    MOCK_SWITCH_SUBENTRY_DATA_SINGLE_STATE_CLASS,
 )
 
 from tests.common import MockConfigEntry, MockMqttReasonCode
@@ -2733,12 +2734,41 @@ async def test_migrate_of_incompatible_config_entry(
             (),
             "Test sensor Energy",
         ),
+        (
+            MOCK_SWITCH_SUBENTRY_DATA_SINGLE_STATE_CLASS,
+            {"name": "Test switch", "mqtt_settings": {"qos": 0}},
+            {"name": "Outlet"},
+            {"device_class": "outlet"},
+            (),
+            {
+                "command_topic": "test-topic",
+                "command_template": "{{ value }}",
+                "state_topic": "test-topic",
+                "value_template": "{{ value_json.value }}",
+                "optimistic": True,
+            },
+            (
+                (
+                    {"command_topic": "test-topic#invalid"},
+                    {"command_topic": "invalid_publish_topic"},
+                ),
+                (
+                    {
+                        "command_topic": "test-topic",
+                        "state_topic": "test-topic#invalid",
+                    },
+                    {"state_topic": "invalid_subscribe_topic"},
+                ),
+            ),
+            "Test switch Outlet",
+        ),
     ],
     ids=[
         "notify_with_entity_name",
         "notify_no_entity_name",
         "sensor_options",
         "sensor_total",
+        "switch",
     ],
 )
 async def test_subentry_configflow(
