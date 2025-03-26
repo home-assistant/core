@@ -61,11 +61,13 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utcnow
 
 from .const import (
+    ATTR_QUEUE_IDS,
     DOMAIN as HEOS_DOMAIN,
     SERVICE_GET_QUEUE,
     SERVICE_GROUP_VOLUME_DOWN,
     SERVICE_GROUP_VOLUME_SET,
     SERVICE_GROUP_VOLUME_UP,
+    SERVICE_REMOVE_FROM_QUEUE,
 )
 from .coordinator import HeosConfigEntry, HeosCoordinator
 
@@ -144,6 +146,17 @@ async def async_setup_entry(
         None,
         "async_get_queue",
         supports_response=SupportsResponse.ONLY,
+    )
+    platform.async_register_entity_service(
+        SERVICE_REMOVE_FROM_QUEUE,
+        {
+            vol.Required(ATTR_QUEUE_IDS): vol.All(
+                cv.ensure_list,
+                [vol.All(cv.positive_int, vol.Range(min=1))],
+                vol.Unique(),
+            )
+        },
+        "async_remove_from_queue",
     )
     platform.async_register_entity_service(
         SERVICE_GROUP_VOLUME_SET,
@@ -499,6 +512,10 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
                 new_members.remove(self._player.player_id)
                 await self.coordinator.heos.set_group(new_members)
                 return
+
+    async def async_remove_from_queue(self, queue_ids: list[int]) -> None:
+        """Remove items from the queue."""
+        await self._player.remove_from_queue(queue_ids)
 
     @property
     def available(self) -> bool:
