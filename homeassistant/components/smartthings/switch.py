@@ -187,6 +187,7 @@ class SmartThingsSwitch(SmartThingsEntity, SwitchEntity):
         if self.entity_description != SWITCH or self.device.device.components[
             MAIN
         ].manufacturer_category not in {
+            Category.CLOTHING_CARE_MACHINE,
             Category.DRYER,
             Category.WASHER,
             Category.MICROWAVE,
