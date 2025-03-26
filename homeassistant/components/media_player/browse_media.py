@@ -169,6 +169,7 @@ class BrowseMedia:
 class SearchMedia:
     """Represent a search media file."""
 
+    version: int = field(default=1)
     result: list[BrowseMedia]
     offset_or_next: int | str = field(default=0)
 
@@ -178,3 +179,13 @@ class SearchMedia:
             "result": [item.as_dict(parent=parent) for item in self.result],
             "offset_or_next": self.offset_or_next,
         }
+
+
+@dataclass(kw_only=True, frozen=True)
+class SearchMediaQuery:
+    """Represent a search media file."""
+
+    query: str
+    media_content_type: MediaType | str | None = field(default=None)
+    media_content_id: str | None = None
+    target_media_classes: set[MediaClass] | None = field(default=None)

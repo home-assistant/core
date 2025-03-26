@@ -44,8 +44,6 @@ ATTR_MEDIA_TITLE = "media_title"
 ATTR_MEDIA_TRACK = "media_track"
 ATTR_MEDIA_VOLUME_LEVEL = "volume_level"
 ATTR_MEDIA_VOLUME_MUTED = "is_volume_muted"
-ATTR_SEARCH_PAGE_SIZE = "page_size"
-ATTR_SEARCH_OFFSET_OR_NEXT = "offset_or_next"
 ATTR_SOUND_MODE = "sound_mode"
 ATTR_SOUND_MODE_LIST = "sound_mode_list"
 

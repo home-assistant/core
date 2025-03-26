@@ -14,7 +14,7 @@ import hashlib
 from http import HTTPStatus
 import logging
 import secrets
-from typing import Any, Final, Required, TypedDict, cast, final
+from typing import Any, Final, Required, TypedDict, final
 from urllib.parse import quote, urlparse
 
 import aiohttp
@@ -71,6 +71,7 @@ from homeassistant.util.hass_dict import HassKey
 from .browse_media import (  # noqa: F401
     BrowseMedia,
     SearchMedia,
+    SearchMediaQuery,
     async_process_play_media_url,
 )
 from .const import (  # noqa: F401
@@ -125,8 +126,6 @@ from .const import (  # noqa: F401
     ATTR_MEDIA_TRACK,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
-    ATTR_SEARCH_OFFSET_OR_NEXT,
-    ATTR_SEARCH_PAGE_SIZE,
     ATTR_SOUND_MODE,
     ATTR_SOUND_MODE_LIST,
     CONTENT_AUTH_EXPIRY_TIME,
@@ -462,14 +461,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         {
             vol.Optional(ATTR_MEDIA_CONTENT_TYPE): cv.string,
             vol.Optional(ATTR_MEDIA_CONTENT_ID): cv.string,
-            vol.Optional(ATTR_MEDIA_SEARCH_QUERY): cv.string,
+            vol.Required(ATTR_MEDIA_SEARCH_QUERY): cv.string,
             vol.Optional(ATTR_MEDIA_TARGET_CLASSES): vol.All(
-                cv.ensure_list, [vol.In([m.value for m in MediaClass])]
+                cv.ensure_list, [cv.enum(MediaClass)]
             ),
-            vol.Optional(ATTR_SEARCH_PAGE_SIZE, default=128): int,
-            vol.Optional(ATTR_SEARCH_OFFSET_OR_NEXT, default=0): vol.Any(int, str),
         },
-        "async_search_media",
+        "async_internal_search_media",
         supports_response=SupportsResponse.ONLY,
     )
     component.async_register_entity_service(
@@ -1183,18 +1180,28 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """
         raise NotImplementedError
 
-    async def async_search_media(
+    async def async_internal_search_media(
         self,
+        query: str,
         media_content_type: MediaType | str | None = None,
         media_content_id: str | None = None,
-        query: str | None = None,
         target_media_classes: set[MediaClass] | None = None,
-        page_size: int = 128,
-        offset_or_next: int | str = 0,
     ) -> SearchMedia:
-        """Return a list of BrowseMedia instances.
+        return await self.async_search_media(
+            query=SearchMediaQuery(
+                query=query,
+                media_content_type=media_content_type,
+                media_content_id=media_content_id,
+                target_media_classes=target_media_classes,
+            )
+        )
 
-        The BrowseMedia list will be used by the
+    async def async_search_media(
+        self,
+        query: SearchMediaQuery,
+    ) -> SearchMedia:
+        """Search the media player.
+
         "media_player/search_media" websocket command.
         """
         raise NotImplementedError
@@ -1416,12 +1423,10 @@ async def websocket_browse_media(
             "media_ids",
             "media_content_type and media_content_id must be provided together",
         ): str,
-        vol.Optional(ATTR_MEDIA_SEARCH_QUERY): str,
+        vol.Required(ATTR_MEDIA_SEARCH_QUERY): str,
         vol.Optional(ATTR_MEDIA_TARGET_CLASSES): vol.All(
-            cv.ensure_list, [vol.In([m.value for m in MediaClass])]
+            cv.ensure_list, [cv.enum(MediaClass)]
         ),
-        vol.Optional(ATTR_SEARCH_PAGE_SIZE, default=128): int,
-        vol.Optional(ATTR_SEARCH_OFFSET_OR_NEXT, default=0): vol.Any(int, str),
     }
 )
 @websocket_api.async_response
@@ -1451,35 +1456,16 @@ async def websocket_search_media(
 
     media_content_type = msg.get(ATTR_MEDIA_CONTENT_TYPE)
     media_content_id = msg.get(ATTR_MEDIA_CONTENT_ID)
-    query = msg.get(ATTR_MEDIA_SEARCH_QUERY)
+    query = str(msg.get(ATTR_MEDIA_SEARCH_QUERY))
     target_media_classes = msg.get(ATTR_MEDIA_TARGET_CLASSES)
-    page_size = cast(int, msg.get(ATTR_SEARCH_PAGE_SIZE))
-    offset_or_next = cast(int | str, msg.get(ATTR_SEARCH_OFFSET_OR_NEXT))
 
     try:
-        payload = await player.async_search_media(
+        payload = await player.async_internal_search_media(
+            query,
             media_content_type,
             media_content_id,
-            query,
             target_media_classes,
-            page_size,
-            offset_or_next,
         )
-    except NotImplementedError:
-        assert player.platform
-        _LOGGER.error(
-            "%s allows media searching but its integration (%s) does not",
-            player.entity_id,
-            player.platform.platform_name,
-        )
-        connection.send_message(
-            websocket_api.error_message(
-                msg["id"],
-                ERR_NOT_SUPPORTED,
-                "Integration does not support searching media",
-            )
-        )
-        return
     except SearchError as err:
         connection.send_message(
             websocket_api.error_message(msg["id"], ERR_UNKNOWN_ERROR, str(err))
