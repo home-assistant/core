@@ -569,6 +569,9 @@ bluetooth-data-tools==1.26.1
 # homeassistant.components.bond
 bond-async==0.2.1
 
+# homeassistant.components.bosch_alarm
+bosch-alarm-mode2==0.4.3
+
 # homeassistant.components.bosch_shc
 boschshcpy==0.2.91
 
@@ -984,7 +987,7 @@ holidays==0.69
 home-assistant-frontend==20250306.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2025.3.23
+home-assistant-intents==2025.3.24
 
 # homeassistant.components.homematicip_cloud
 homematicip==1.1.7
@@ -2316,7 +2319,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==0.9.13
+tesla-fleet-api==1.0.16
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.2

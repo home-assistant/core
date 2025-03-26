@@ -71,13 +71,13 @@ dependencies    = [
     "SQLAlchemy==2.0.39",
     "standard-aifc==3.13.0",
     "standard-telnetlib==3.13.0",
-    "typing-extensions>=4.12.2,<5.0",
+    "typing-extensions>=4.13.0,<5.0",
     "ulid-transform==1.4.0",
     # Constrain urllib3 to ensure we deal with CVE-2020-26137 and CVE-2021-33503
     # Temporary setting an upper bound, to prevent compat issues with urllib3>=2
     # https://github.com/home-assistant/core/issues/97248
     "urllib3>=1.26.5,<2",
-    "uv==0.6.8",
+    "uv==0.6.10",
     "voluptuous==0.15.2",
     "voluptuous-serialize==2.6.0",
     "voluptuous-openapi==0.0.6",
