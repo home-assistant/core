@@ -64,7 +64,12 @@ CAPABILITY_TO_SWITCHES: dict[Capability | str, SmartThingsSwitchEntityDescriptio
         key=Capability.SAMSUNG_CE_WASHER_BUBBLE_SOAK,
         translation_key="bubble_soak",
         status_attribute=Attribute.STATUS,
-    )
+    ),
+    Capability.SAMSUNG_CE_SABBATH_MODE: SmartThingsSwitchEntityDescription(
+        key=Capability.SAMSUNG_CE_SABBATH_MODE,
+        translation_key="sabbath_mode",
+        status_attribute=Attribute.STATUS,
+    ),
 }
 
 

@@ -469,6 +469,9 @@
       },
       "wrinkle_prevent": {
         "name": "Wrinkle prevent"
+      },
+      "sabbath_mode": {
+        "name": "Sabbath mode"
       }
     }
   },
