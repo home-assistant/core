@@ -1009,6 +1009,7 @@ async def websocket_provision_smart_start_node(
         )
         return
 
+    device = None
     # Create an empty device if device_name is provided
     if device_name := msg.get(DEVICE_NAME):
         dev_reg = dr.async_get(hass)
@@ -1050,7 +1051,10 @@ async def websocket_provision_smart_start_node(
         async_dispatcher_send(hass, EVENT_DEVICE_ADDED_TO_REGISTRY, device)
 
     await driver.controller.async_provision_smart_start_node(provisioning_info)
-    connection.send_result(msg[ID])
+    if device:
+        connection.send_result(msg[ID], device.id)
+    else:
+        connection.send_result(msg[ID])
 
 
 @websocket_api.require_admin
