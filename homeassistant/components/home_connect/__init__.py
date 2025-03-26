@@ -6,10 +6,8 @@ import logging
 from typing import Any
 
 from aiohomeconnect.client import Client as HomeConnectClient
-from aiohomeconnect.model import SettingKey
 import aiohttp
 
-from homeassistant.components.time import DOMAIN as TIME_DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -99,47 +97,25 @@ async def async_migrate_entry(
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s", entry.version)
 
-    if entry.version == 1:
-        if entry.minor_version == 1:
+    if entry.version == 1 and entry.minor_version == 1:
 
-            @callback
-            def update_unique_id(
-                entity_entry: RegistryEntry,
-            ) -> dict[str, Any] | None:
-                """Update unique ID of entity entry."""
-                for (
-                    old_id_suffix,
-                    new_id_suffix,
-                ) in OLD_NEW_UNIQUE_ID_SUFFIX_MAP.items():
-                    if entity_entry.unique_id.endswith(f"-{old_id_suffix}"):
-                        return {
-                            "new_unique_id": entity_entry.unique_id.replace(
-                                old_id_suffix, new_id_suffix
-                            )
-                        }
-                return None
+        @callback
+        def update_unique_id(
+            entity_entry: RegistryEntry,
+        ) -> dict[str, Any] | None:
+            """Update unique ID of entity entry."""
+            for old_id_suffix, new_id_suffix in OLD_NEW_UNIQUE_ID_SUFFIX_MAP.items():
+                if entity_entry.unique_id.endswith(f"-{old_id_suffix}"):
+                    return {
+                        "new_unique_id": entity_entry.unique_id.replace(
+                            old_id_suffix, new_id_suffix
+                        )
+                    }
+            return None
 
-            await async_migrate_entries(hass, entry.entry_id, update_unique_id)
+        await async_migrate_entries(hass, entry.entry_id, update_unique_id)
 
-            hass.config_entries.async_update_entry(entry, minor_version=2)
-
-        elif entry.minor_version == 2:
-
-            @callback
-            def update_unique_id(
-                entity_entry: RegistryEntry,
-            ) -> dict[str, Any] | None:
-                """Update unique ID of entity entry."""
-                if (
-                    entity_entry.domain == TIME_DOMAIN
-                    and entity_entry.unique_id.endswith(
-                        SettingKey.BSH_COMMON_ALARM_CLOCK.value
-                    )
-                ):
-                    return {"new_unique_id": entity_entry.unique_id + "-time"}
-                return None
-
-            hass.config_entries.async_update_entry(entry, version=3)
+        hass.config_entries.async_update_entry(entry, minor_version=2)
 
     _LOGGER.debug("Migration to version %s successful", entry.version)
     return True

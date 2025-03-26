@@ -12,7 +12,6 @@ from homeassistant.components.time import TimeEntity, TimeEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.issue_registry import (
     IssueSeverity,
@@ -22,11 +21,7 @@ from homeassistant.helpers.issue_registry import (
 
 from .common import setup_home_connect_entry
 from .const import DOMAIN
-from .coordinator import (
-    HomeConnectApplianceData,
-    HomeConnectConfigEntry,
-    HomeConnectCoordinator,
-)
+from .coordinator import HomeConnectApplianceData, HomeConnectConfigEntry
 from .entity import HomeConnectEntity
 from .utils import get_dict_from_home_connect_error
 
@@ -80,18 +75,6 @@ def time_to_seconds(t: time) -> int:
 
 class HomeConnectTimeEntity(HomeConnectEntity, TimeEntity):
     """Time setting class for Home Connect."""
-
-    def __init__(
-        self,
-        coordinator: HomeConnectCoordinator,
-        appliance: HomeConnectApplianceData,
-        desc: EntityDescription,
-    ) -> None:
-        """Initialize the entity."""
-        super().__init__(coordinator, appliance, desc)
-        if self.bsh_key == SettingKey.BSH_COMMON_ALARM_CLOCK:
-            assert self._attr_unique_id is not None
-            self._attr_unique_id = self._attr_unique_id + "-time"
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
