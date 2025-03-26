@@ -198,6 +198,7 @@ class SmartThingsSwitch(SmartThingsEntity, SwitchEntity):
             and self.device.device.components[MAIN].manufacturer_category
             not in {
                 Category.CLOTHING_CARE_MACHINE,
+                Category.COOKTOP,
                 Category.DRYER,
                 Category.WASHER,
                 Category.MICROWAVE,

@@ -431,6 +431,39 @@
     'via_device_id': None,
   })
 # ---
+# name: test_devices[da_ks_cooktop_31001]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        '808dbd84-f357-47e2-a0cd-3b66fa22d584',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': None,
+    'model': None,
+    'model_id': None,
+    'name': 'Induction Hob',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_devices[da_ks_microwave_0101x]
   DeviceRegistryEntrySnapshot({
     'area_id': 'theater',

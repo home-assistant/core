@@ -42,7 +42,7 @@ PlexAPI==4.15.16
 ProgettiHWSW==0.1.3
 
 # homeassistant.components.cast
-PyChromecast==14.0.6
+PyChromecast==14.0.7
 
 # homeassistant.components.flick_electric
 PyFlick==1.1.3
@@ -984,7 +984,7 @@ hole==0.8.0
 holidays==0.69
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250306.0
+home-assistant-frontend==20250326.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.3.24
