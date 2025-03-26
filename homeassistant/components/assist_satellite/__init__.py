@@ -25,6 +25,7 @@ from .entity import (
     AssistSatelliteWakeWord,
 )
 from .errors import SatelliteBusyError
+from .http import PreannounceSoundView
 from .websocket_api import async_register_websocket_api
 
 __all__ = [
@@ -83,6 +84,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[CONNECTION_TEST_DATA] = {}
     async_register_websocket_api(hass)
     hass.http.register_view(ConnectionTestView())
+    hass.http.register_view(PreannounceSoundView())
 
     return True
 

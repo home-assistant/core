@@ -30,6 +30,7 @@ from homeassistant.helpers.entity import EntityDescription
 
 from .const import AssistSatelliteEntityFeature
 from .errors import AssistSatelliteError, SatelliteBusyError
+from .http import PREANNOUNCE_URL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -180,6 +181,7 @@ class AssistSatelliteEntity(entity.Entity):
         self,
         message: str | None = None,
         media_id: str | None = None,
+        play_preannounce: bool = True,
         preannounce_media_id: str | None = None,
     ) -> None:
         """Play and show an announcement on the satellite.
@@ -190,7 +192,8 @@ class AssistSatelliteEntity(entity.Entity):
         If media_id is provided, it is played directly. It is possible
         to omit the message and the satellite will not show any text.
 
-        If preannounce_media_id is provided, it is played before the announcement.
+        If play_preannounce is True, a sound is played before the announcement.
+        If preannounce_media_id is provided, it overrides the default sound.
 
         Calls async_announce with message and media id.
         """
@@ -547,6 +550,10 @@ class AssistSatelliteEntity(entity.Entity):
         media_id = async_process_play_media_url(self.hass, media_id)
 
         # Resolve preannounce media id
+        if preannounce_media_id is None:
+            # Default sound
+            preannounce_media_id = PREANNOUNCE_URL
+
         if preannounce_media_id:
             if media_source.is_media_source_id(preannounce_media_id):
                 preannounce_media = await media_source.async_resolve_media(

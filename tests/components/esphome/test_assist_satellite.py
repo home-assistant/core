@@ -1249,7 +1249,11 @@ async def test_announce_message(
             await hass.services.async_call(
                 assist_satellite.DOMAIN,
                 "announce",
-                {"entity_id": satellite.entity_id, "message": "test-text"},
+                {
+                    "entity_id": satellite.entity_id,
+                    "message": "test-text",
+                    "preannounce_media_id": "",
+                },
                 blocking=True,
             )
             await done.wait()
@@ -1338,6 +1342,7 @@ async def test_announce_media_id(
                 {
                     "entity_id": satellite.entity_id,
                     "media_id": "https://www.home-assistant.io/resolved.mp3",
+                    "preannounce_media_id": "",
                 },
                 blocking=True,
             )
@@ -1545,7 +1550,11 @@ async def test_start_conversation_message(
             await hass.services.async_call(
                 assist_satellite.DOMAIN,
                 "start_conversation",
-                {"entity_id": satellite.entity_id, "start_message": "test-text"},
+                {
+                    "entity_id": satellite.entity_id,
+                    "start_message": "test-text",
+                    "preannounce_media_id": "",
+                },
                 blocking=True,
             )
             await done.wait()
@@ -1653,6 +1662,7 @@ async def test_start_conversation_media_id(
                 {
                     "entity_id": satellite.entity_id,
                     "start_media_id": "https://www.home-assistant.io/resolved.mp3",
+                    "preannounce_media_id": "",
                 },
                 blocking=True,
             )
