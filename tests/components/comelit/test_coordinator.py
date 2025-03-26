@@ -7,7 +7,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.comelit.const import SCAN_INTERVAL
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
@@ -31,7 +31,13 @@ async def test_coordinator_data_update_fails(
     side_effect: Exception,
 ) -> None:
     """Test coordinator data update exceptions."""
+
+    entity_id = "light.light0"
+
     await setup_integration(hass, mock_serial_bridge_config_entry)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_OFF
 
     mock_serial_bridge.login.side_effect = side_effect
 
@@ -39,6 +45,5 @@ async def test_coordinator_data_update_fails(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get("cover.cover0")
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE
