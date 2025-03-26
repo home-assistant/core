@@ -89,6 +89,7 @@ PLATFORMS = [
     Platform.FAN,
     Platform.LIGHT,
     Platform.LOCK,
+    Platform.MEDIA_PLAYER,
     Platform.NUMBER,
     Platform.SCENE,
     Platform.SELECT,
