@@ -300,6 +300,7 @@ def async_setup_entity_entry_helper(
             availability_config = subentry_data.get("availability", {})
             subentry_entities: list[Entity] = []
             device_config = subentry_data["device"].copy()
+            device_mqtt_options = device_config.pop("mqtt_settings", {})
             device_config["identifiers"] = config_subentry_id
             for component_id, component_data in subentry_data["components"].items():
                 if component_data["platform"] != domain:
@@ -311,6 +312,7 @@ def async_setup_entity_entry_helper(
                 component_config[CONF_DEVICE] = device_config
                 component_config.pop("platform")
                 component_config.update(availability_config)
+                component_config.update(device_mqtt_options)
 
                 try:
                     config = platform_schema_modern(component_config)
