@@ -54,14 +54,18 @@ class AreaAlarmControlPanel(
         super().__init__(coordinator, area_id)
         self._area = coordinator.panel.areas[area_id]
         self._area_id = area_id
-        self._attr_name = self._area.name
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_area_{area_id}"
+        entry = coordinator.config_entry
+        self._attr_unique_id = f"{entry.unique_id or entry.entry_id}_area_{area_id}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
-            name=f"Bosch {coordinator.panel.model}",
+            identifiers={(DOMAIN, self._attr_unique_id)},
+            name=self._area.name,
             manufacturer="Bosch Security Systems",
             model=coordinator.panel.model,
             sw_version=coordinator.panel.firmware_version,
+            via_device=(
+                DOMAIN,
+                f"{entry.unique_id or entry.entry_id}",
+            ),
         )
 
     @property
