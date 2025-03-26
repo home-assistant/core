@@ -1468,6 +1468,9 @@ jobs:
     name: Upload test results to Codecov
     if: needs.info.outputs.skip_coverage != 'true' && !cancelled()
     runs-on: ubuntu-24.04
+    permissions:
+      id-token: write
+      contents: read
     needs:
       - info
       - pytest-partial
@@ -1485,4 +1488,4 @@ jobs:
         with:
           fail_ci_if_error: true
           verbose: true
-          token: ${{ secrets.CODECOV_TOKEN }}
+          use_oidc: true
