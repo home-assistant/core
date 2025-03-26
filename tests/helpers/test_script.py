@@ -5861,7 +5861,7 @@ async def test_stop_action_subscript(
         (1, "If: Then", "parallel", 2),
         (2, "Testing 123", "parallel", 2),
         (1, "If: Then", "queued", 2),
-        (2, "Testing 123", "queued", 2)
+        (2, "Testing 123", "queued", 2),
     ],
 )
 async def test_stop_action_response_variables(
