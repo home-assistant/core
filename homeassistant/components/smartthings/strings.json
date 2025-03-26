@@ -494,6 +494,10 @@
     "deprecated_switch_appliance": {
       "title": "Deprecated switch detected in some automations or scripts",
       "description": "The switch `{entity}` is deprecated because the actions did not work, so it has been replaced with a binary sensor instead.\n\nThe switch was used in the following automations or scripts:\n{items}\n\nPlease use them in the above automations or scripts to fix this issue."
+    },
+    "deprecated_media_player": {
+      "title": "Deprecated sensor detected in some automations or scripts",
+      "description": "The sensor `{entity}` is deprecated because it has been replaced with a media player entity.\n\nThe sensor was used in the following automations or scripts:\n{items}\n\nPlease use the media player entity in the above automations or scripts to fix this issue."
     }
   }
 }
