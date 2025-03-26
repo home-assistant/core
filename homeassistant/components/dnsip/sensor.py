@@ -79,7 +79,7 @@ class WanIpSensor(SensorEntity):
         self,
         name: str,
         hostname: str,
-        resolver: str,
+        resolver: str | None,
         ipv6: bool,
         port: int,
     ) -> None:
@@ -88,7 +88,9 @@ class WanIpSensor(SensorEntity):
         self._attr_unique_id = f"{hostname}_{ipv6}"
         self.hostname = hostname
         self.resolver = aiodns.DNSResolver(tcp_port=port, udp_port=port)
-        self.resolver.nameservers = [resolver]
+        if resolver is not None:
+            self.resolver.nameservers = [resolver]
+            # otherwise default resolver is used
         self.querytype = "AAAA" if ipv6 else "A"
         self._retries = DEFAULT_RETRIES
         self._attr_extra_state_attributes = {
