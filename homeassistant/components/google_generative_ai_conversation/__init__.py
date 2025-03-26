@@ -2,11 +2,8 @@
 
 from __future__ import annotations
 
-import errno
-import fcntl
 import mimetypes
 from pathlib import Path
-import signal
 
 from google import genai  # type: ignore[attr-defined]
 from google.genai.errors import APIError, ClientError
@@ -45,28 +42,8 @@ CONF_FILENAMES = "filenames"
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = (Platform.CONVERSATION,)
-LOCK_ACQISITION_TIMEOUT = 2  # seconds
 
 type GoogleGenerativeAIConfigEntry = ConfigEntry[genai.Client]
-
-
-def acquire_lock_with_timeout(fd: int, timeout: int):
-    """Acquire a lock on the file descriptor with a timeout."""
-
-    def handler(signum, frame):
-        raise TimeoutError("Lock acquisition timed out")
-
-    signal.signal(signal.SIGALRM, handler)
-    signal.alarm(timeout)
-
-    try:
-        fcntl.flock(fd, fcntl.LOCK_EX)
-    except OSError as e:
-        if e.errno == errno.EINTR:
-            raise TimeoutError("Lock acquisition interrupted") from e
-        raise
-    finally:
-        signal.alarm(0)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -109,8 +86,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     raise HomeAssistantError(f"`{filename}` does not exist")
                 mimetype = mimetypes.guess_type(filename)[0]
                 with open(filename, "rb") as file:
-                    # Attempt to acquire a lock on the file descriptor
-                    acquire_lock_with_timeout(file.fileno(), LOCK_ACQISITION_TIMEOUT)
                     uploaded_file = client.files.upload(
                         file=file, config={"mime_type": mimetype}
                     )
