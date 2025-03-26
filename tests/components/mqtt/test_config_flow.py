@@ -2908,6 +2908,10 @@ async def test_subentry_configflow(
         iter(config_subentries_data["components"].values())
     )
 
+    subentry_device_data = next(iter(config_entry.subentries.values())).data["device"]
+    for option, value in mock_device_user_input.items():
+        assert subentry_device_data[option] == value
+
     await hass.async_block_till_done()
 
 
