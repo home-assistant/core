@@ -5,7 +5,6 @@ from __future__ import annotations
 from asyncio import timeout
 from datetime import timedelta
 import logging
-from typing import Any
 
 from imeon_inverter_api.inverter import Inverter
 
@@ -48,7 +47,6 @@ class InverterCoordinator(DataUpdateCoordinator[dict[str, str | float | int]]):
             config_entry=entry,
         )
 
-        self._HUBs: dict[Any, InverterCoordinator] = {}
         self._api = Inverter(entry.data[CONF_ADDRESS])
 
     @property
