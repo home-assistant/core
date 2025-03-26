@@ -745,14 +745,17 @@ async def test_cost_sensor_price_entity_total_no_reset(
     assert statistics["stat"]["sum"] == 18.0
 
 
+_WH_TO_J = 3600  # 1 Wh = 3600 J
+_WH_TO_CAL = _WH_TO_J / 4.184  # 1 Wh = 860.42065 cal
+
 @pytest.mark.parametrize(
     ("energy_unit", "factor"),
     [
         (UnitOfEnergy.WATT_HOUR, 1000),
         (UnitOfEnergy.KILO_WATT_HOUR, 1),
         (UnitOfEnergy.MEGA_WATT_HOUR, 0.001),
-        (UnitOfEnergy.GIGA_JOULE, 0.001 * 3.6),
-        (UnitOfEnergy.GIGA_CALORIE, 0.00396832),
+        (UnitOfEnergy.GIGA_JOULE, 1e-6 * _WH_TO_J),
+        (UnitOfEnergy.GIGA_CALORIE, 1e-6 * _WH_TO_CAL),
     ],
 )
 async def test_cost_sensor_handle_energy_units(
@@ -810,7 +813,7 @@ async def test_cost_sensor_handle_energy_units(
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.energy_consumption_cost")
-    assert state.state == "5.0"
+    assert float(state.state) == pytest.approx(5.0)
 
 
 @pytest.mark.parametrize(
@@ -819,8 +822,8 @@ async def test_cost_sensor_handle_energy_units(
         (f"EUR/{UnitOfEnergy.WATT_HOUR}", 0.001),
         (f"EUR/{UnitOfEnergy.KILO_WATT_HOUR}", 1),
         (f"EUR/{UnitOfEnergy.MEGA_WATT_HOUR}", 1000),
-        (f"EUR/{UnitOfEnergy.GIGA_JOULE}", 1000 / 3.6),
-        (f"EUR/{UnitOfEnergy.GIGA_CALORIE}", 0.00396832 * 1),
+        (f"EUR/{UnitOfEnergy.GIGA_JOULE}", 1e6 / _WH_TO_J),
+        (f"EUR/{UnitOfEnergy.GIGA_CALORIE}", 1e6 / _WH_TO_CAL),
     ],
 )
 async def test_cost_sensor_handle_price_units(
@@ -883,7 +886,7 @@ async def test_cost_sensor_handle_price_units(
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.energy_consumption_cost")
-    assert state.state == "20.0"
+    assert float(state.state) == pytest.approx(20.0)
 
 
 async def test_cost_sensor_handle_late_price_sensor(
