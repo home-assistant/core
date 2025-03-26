@@ -1,4 +1,4 @@
-"""Provides number enties for Home Connect."""
+"""Provides number entities for Home Connect."""
 
 import logging
 from typing import cast

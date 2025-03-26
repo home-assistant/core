@@ -978,7 +978,7 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.68
+holidays==0.69
 
 # homeassistant.components.frontend
 home-assistant-frontend==20250306.0
@@ -1409,7 +1409,7 @@ prometheus-client==0.21.0
 psutil-home-assistant==0.0.1
 
 # homeassistant.components.systemmonitor
-psutil==6.1.1
+psutil==7.0.0
 
 # homeassistant.components.pushbullet
 pushbullet.py==0.11.0
@@ -1431,6 +1431,9 @@ py-ccm15==0.0.9
 
 # homeassistant.components.cpuspeed
 py-cpuinfo==9.0.0
+
+# homeassistant.components.pterodactyl
+py-dactyl==2.0.4
 
 # homeassistant.components.dormakaba_dkey
 py-dormakaba-dkey==1.0.5

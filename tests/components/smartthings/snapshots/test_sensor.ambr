@@ -8347,6 +8347,57 @@
     'state': '17',
   })
 # ---
+# name: test_all_entities[vd_sensor_light_2023][sensor.light_sensor_55_the_frame_brightness_intensity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.light_sensor_55_the_frame_brightness_intensity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Brightness intensity',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'brightness_intensity',
+    'unique_id': '5cc1c096-98b9-460c-8f1c-1045509ec605.brightnessIntensity',
+    'unit_of_measurement': 'level',
+  })
+# ---
+# name: test_all_entities[vd_sensor_light_2023][sensor.light_sensor_55_the_frame_brightness_intensity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Light Sensor - 55" The Frame Brightness intensity',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'level',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.light_sensor_55_the_frame_brightness_intensity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
 # name: test_all_entities[vd_stv_2017_k][sensor.tv_samsung_8_series_49_media_input_source-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
