@@ -13,8 +13,10 @@ from systembridgeconnector.exceptions import (
     ConnectionErrorException,
 )
 from systembridgeconnector.version import Version
+from systembridgemodels.display import DisplaySetting, DisplayUpdateSettingOp
 from systembridgemodels.keyboard_key import KeyboardKey
 from systembridgemodels.keyboard_text import KeyboardText
+from systembridgemodels.modules.displays import InputSource, PowerMode
 from systembridgemodels.modules.processes import Process
 from systembridgemodels.open_path import OpenPath
 from systembridgemodels.open_url import OpenUrl
@@ -71,6 +73,9 @@ PLATFORMS = [
 CONF_BRIDGE = "bridge"
 CONF_KEY = "key"
 CONF_TEXT = "text"
+CONF_MONITOR_ID = "monitor_id"
+CONF_SETTING = "setting"
+CONF_VALUE = "value"
 
 SERVICE_GET_PROCESS_BY_ID = "get_process_by_id"
 SERVICE_GET_PROCESSES_BY_NAME = "get_processes_by_name"
@@ -79,6 +84,7 @@ SERVICE_POWER_COMMAND = "power_command"
 SERVICE_OPEN_URL = "open_url"
 SERVICE_SEND_KEYPRESS = "send_keypress"
 SERVICE_SEND_TEXT = "send_text"
+SERVICE_DISPLAY_CONTROL = "display_control"
 
 POWER_COMMAND_MAP = {
     "hibernate": "power_hibernate",
@@ -345,6 +351,27 @@ async def async_setup_entry(
         )
         return asdict(response)
 
+    async def handle_display_control(service_call: ServiceCall) -> ServiceResponse:
+        """Handle the display control service call."""
+        _LOGGER.debug("Display control: %s", service_call.data)
+        coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
+            service_call.data[CONF_BRIDGE]
+        ]
+
+        monitor_id = service_call.data[CONF_MONITOR_ID]
+        setting = DisplaySetting(service_call.data[CONF_SETTING])
+        if setting == DisplaySetting.POWER_STATE:
+            value = PowerMode[service_call.data[CONF_VALUE]]
+        elif setting == DisplaySetting.INPUT_SOURCE:
+            value = InputSource[service_call.data[CONF_VALUE]]
+        else:
+            value = service_call.data[CONF_VALUE]
+
+        response = await coordinator.websocket_client.display_update_setting(
+            DisplayUpdateSettingOp(monitor_id, setting, value)
+        )
+        return asdict(response)
+
     hass.services.async_register(
         DOMAIN,
         SERVICE_GET_PROCESS_BY_ID,
@@ -436,6 +463,20 @@ async def async_setup_entry(
         supports_response=SupportsResponse.ONLY,
     )
 
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_DISPLAY_CONTROL,
+        handle_display_control,
+        schema=vol.Schema(
+            {
+                vol.Required(CONF_BRIDGE): valid_device,
+                vol.Required(CONF_MONITOR_ID): cv.positive_int,
+                vol.Required(CONF_SETTING): cv.string,
+                vol.Required(CONF_VALUE): vol.Any(cv.positive_int, str),
+            },
+        ),
+        supports_response=SupportsResponse.OPTIONAL,
+    )
     # Reload entry when its updated.
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
