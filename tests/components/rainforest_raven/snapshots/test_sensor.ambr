@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensors[sensor.raven_device_meter_power_demand-entry]
+# name: test_sensors[sensor.raven_device_power_demand-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -14,7 +14,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.raven_device_meter_power_demand',
+    'entity_id': 'sensor.raven_device_power_demand',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -35,7 +35,7 @@
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
-# name: test_sensors[sensor.raven_device_meter_power_demand-state]
+# name: test_sensors[sensor.raven_device_power_demand-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -44,7 +44,7 @@
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.raven_device_meter_power_demand',
+    'entity_id': 'sensor.raven_device_power_demand',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -156,7 +156,7 @@
     'state': '100',
   })
 # ---
-# name: test_sensors[sensor.raven_device_total_meter_energy_delivered-entry]
+# name: test_sensors[sensor.raven_device_total_energy_delivered-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -171,7 +171,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.raven_device_total_meter_energy_delivered',
+    'entity_id': 'sensor.raven_device_total_energy_delivered',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -192,7 +192,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors[sensor.raven_device_total_meter_energy_delivered-state]
+# name: test_sensors[sensor.raven_device_total_energy_delivered-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -201,14 +201,14 @@
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.raven_device_total_meter_energy_delivered',
+    'entity_id': 'sensor.raven_device_total_energy_delivered',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '23456.7890',
   })
 # ---
-# name: test_sensors[sensor.raven_device_total_meter_energy_received-entry]
+# name: test_sensors[sensor.raven_device_total_energy_received-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -223,7 +223,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.raven_device_total_meter_energy_received',
+    'entity_id': 'sensor.raven_device_total_energy_received',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -244,7 +244,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors[sensor.raven_device_total_meter_energy_received-state]
+# name: test_sensors[sensor.raven_device_total_energy_received-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -253,7 +253,7 @@
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.raven_device_total_meter_energy_received',
+    'entity_id': 'sensor.raven_device_total_energy_received',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
