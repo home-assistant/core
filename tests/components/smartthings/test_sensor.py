@@ -79,6 +79,7 @@ async def test_create_issue(
         automation.DOMAIN,
         {
             automation.DOMAIN: {
+                "id": "test",
                 "alias": "test",
                 "trigger": {"platform": "state", "entity_id": entity_id},
                 "action": {
@@ -114,7 +115,13 @@ async def test_create_issue(
     assert scripts_with_entity(hass, entity_id)[0] == "script.test"
 
     assert len(issue_registry.issues) == 1
-    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.translation_key == "deprecated_machine_state"
+    assert issue.translation_placeholders == {
+        "entity": entity_id,
+        "items": "- [test](/config/automation/edit/test)\n- [test](/config/script/edit/test)",
+    }
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
