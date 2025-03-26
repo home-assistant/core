@@ -141,7 +141,7 @@ class SmartThingsSwitch(SmartThingsEntity, SwitchEntity):
         super().__init__(client, device, {capability}, component=component)
         self.entity_description = entity_description
         self.switch_capability = capability
-        self._attr_unique_id = f"{device.device.device_id}_{component}_{capability}"
+        self._attr_unique_id = f"{device.device.device_id}_{component}_{capability}_{entity_description.status_attribute}_{entity_description.status_attribute}"
         if (
             translation_keys := entity_description.component_translation_key
         ) is not None and (
