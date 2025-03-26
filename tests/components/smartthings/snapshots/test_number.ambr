@@ -34,7 +34,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'washer_rinse_cycles',
-    'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47_main_custom.washerRinseCycles',
+    'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47_main_custom.washerRinseCycles_washerRinseCycles_washerRinseCycles',
     'unit_of_measurement': 'cycles',
   })
 # ---
@@ -91,7 +91,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'washer_rinse_cycles',
-    'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7_main_custom.washerRinseCycles',
+    'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7_main_custom.washerRinseCycles_washerRinseCycles_washerRinseCycles',
     'unit_of_measurement': 'cycles',
   })
 # ---

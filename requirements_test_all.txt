@@ -81,7 +81,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-PySwitchbot==0.57.1
+PySwitchbot==0.58.0
 
 # homeassistant.components.syncthru
 PySyncThru==0.8.0
@@ -201,7 +201,7 @@ aiobafi6==0.9.0
 aiobotocore==2.13.1
 
 # homeassistant.components.comelit
-aiocomelit==0.11.2
+aiocomelit==0.11.3
 
 # homeassistant.components.dhcp
 aiodhcpwatcher==1.1.1
@@ -978,7 +978,7 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.68
+holidays==0.69
 
 # homeassistant.components.frontend
 home-assistant-frontend==20250306.0
@@ -1409,7 +1409,7 @@ prometheus-client==0.21.0
 psutil-home-assistant==0.0.1
 
 # homeassistant.components.systemmonitor
-psutil==6.1.1
+psutil==7.0.0
 
 # homeassistant.components.pushbullet
 pushbullet.py==0.11.0
@@ -1431,6 +1431,9 @@ py-ccm15==0.0.9
 
 # homeassistant.components.cpuspeed
 py-cpuinfo==9.0.0
+
+# homeassistant.components.pterodactyl
+py-dactyl==2.0.4
 
 # homeassistant.components.dormakaba_dkey
 py-dormakaba-dkey==1.0.5
@@ -1895,7 +1898,7 @@ pysmhi==1.0.0
 pysml==0.0.12
 
 # homeassistant.components.smlight
-pysmlight==0.2.3
+pysmlight==0.2.4
 
 # homeassistant.components.snmp
 pysnmp==6.2.6
@@ -1989,7 +1992,7 @@ python-otbr-api==2.7.0
 python-overseerr==0.7.1
 
 # homeassistant.components.picnic
-python-picnic-api2==1.2.2
+python-picnic-api2==1.2.4
 
 # homeassistant.components.rabbitair
 python-rabbitair==0.0.8
@@ -2122,7 +2125,7 @@ renault-api==0.2.9
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.12.3
+reolink-aio==0.13.0
 
 # homeassistant.components.rflink
 rflink==0.0.66
@@ -2313,7 +2316,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==0.9.13
+tesla-fleet-api==1.0.16
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.2
@@ -2539,7 +2542,7 @@ zeroconf==0.146.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.53
+zha==0.0.54
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.62.0

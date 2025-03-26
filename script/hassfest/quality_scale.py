@@ -1927,7 +1927,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "risco",
     "rituals_perfume_genie",
     "rmvtransport",
-    "roborock",
     "rocketchat",
     "roku",
     "romy",
