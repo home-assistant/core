@@ -6,7 +6,7 @@
         "step": {
             "user": {
                 "title": "TheSilentWave Setup",
-                "description": "Set up TheSilentWave integration",
+                "description": "Setup TheSilentWave integration",
                 "data": {
                     "name": "Name",
                     "host": "IP Address",
