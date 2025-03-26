@@ -525,6 +525,7 @@ def calculate_merged_config(
 def validate_user_input(
     user_input: dict[str, Any],
     data_schema_fields: dict[str, PlatformField],
+    *,
     component_data: dict[str, Any] | None = None,
     config_validator: Callable[[dict[str, Any]], dict[str, str]] | None = None,
 ) -> tuple[dict[str, Any], dict[str, str]]:
@@ -1274,7 +1275,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         data_schema = data_schema_from_fields(data_schema_fields, reconfig=reconfig)
         if user_input is not None:
             merged_user_input, errors = validate_user_input(
-                user_input, data_schema_fields, component_data
+                user_input, data_schema_fields, component_data=component_data
             )
             if not errors:
                 if self._component_id is None:
@@ -1374,8 +1375,8 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             merged_user_input, errors = validate_user_input(
                 user_input,
                 data_schema_fields,
-                component_data,
-                ENTITY_CONFIG_VALIDATOR[platform],
+                component_data=component_data,
+                config_validator=ENTITY_CONFIG_VALIDATOR[platform],
             )
             if not errors:
                 self.update_component_fields(data_schema_fields, merged_user_input)
@@ -1425,8 +1426,8 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             merged_user_input, errors = validate_user_input(
                 user_input,
                 data_schema_fields,
-                component_data,
-                ENTITY_CONFIG_VALIDATOR[platform],
+                component_data=component_data,
+                config_validator=ENTITY_CONFIG_VALIDATOR[platform],
             )
             if not errors:
                 self.update_component_fields(data_schema_fields, merged_user_input)
