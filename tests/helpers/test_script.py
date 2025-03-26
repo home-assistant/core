@@ -5912,6 +5912,7 @@ async def test_stop_action_response_variables_queued(
             {"stop": "In the name of love", "response_variable": "output"},
         ]
     )
+    logger = logging.getLogger("TEST")
     script_obj = script.Script(
         hass,
         sequence,
