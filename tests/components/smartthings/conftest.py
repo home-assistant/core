@@ -4,7 +4,7 @@ from collections.abc import Generator
 import time
 from unittest.mock import AsyncMock, patch
 
-from pysmartthings.models import (
+from pysmartthings import (
     DeviceResponse,
     DeviceStatus,
     LocationResponse,
@@ -106,6 +106,7 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "centralite",
         "da_ref_normal_000001",
         "vd_network_audio_002s",
+        "vd_sensor_light_2023",
         "iphone",
         "da_sac_ehs_000001_sub",
         "da_wm_dw_000001",
@@ -140,6 +141,7 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "tplink_p110",
         "ikea_kadrilj",
         "aux_ac",
+        "hw_q80r_soundbar",
     ]
 )
 def device_fixture(
@@ -182,6 +184,7 @@ def mock_config_entry(expires_at: int) -> MockConfigEntry:
             CONF_INSTALLED_APP_ID: "123",
         },
         version=3,
+        minor_version=2,
     )
 
 

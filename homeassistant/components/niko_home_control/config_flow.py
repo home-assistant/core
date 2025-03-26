@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from nhc.controller import NHCController
@@ -11,6 +12,8 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -25,7 +28,8 @@ async def test_connection(host: str) -> str | None:
     controller = NHCController(host, 8000)
     try:
         await controller.connect()
-    except Exception:  # noqa: BLE001
+    except Exception:
+        _LOGGER.exception("Unexpected exception")
         return "cannot_connect"
     return None
 
