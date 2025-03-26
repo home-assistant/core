@@ -662,6 +662,39 @@
     'via_device_id': None,
   })
 # ---
+# name: test_devices[da_wm_sc_000001]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': 'MediaTek',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        'b93211bf-9d96-bd21-3b2f-964fcc87f5cc',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'Samsung Electronics',
+    'model': 'DA_DF_TP2_20_COMMON',
+    'model_id': None,
+    'name': 'AirDresser',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': 'DA_DF_TP2_20_COMMON_30230807',
+    'via_device_id': None,
+  })
+# ---
 # name: test_devices[da_wm_wd_000001]
   DeviceRegistryEntrySnapshot({
     'area_id': 'theater',
