@@ -57,5 +57,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschAlarmConfigEntry) -
 
 async def async_unload_entry(hass: HomeAssistant, entry: BoschAlarmConfigEntry) -> bool:
     """Unload a config entry."""
-    await entry.runtime_data.disconnect()
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        await entry.runtime_data.disconnect()
+    return unload_ok
