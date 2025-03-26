@@ -18,6 +18,7 @@ from openai.types.responses import (
     ResponseFunctionCallArgumentsDeltaEvent,
     ResponseFunctionCallArgumentsDoneEvent,
     ResponseFunctionToolCall,
+    ResponseFunctionWebSearch,
     ResponseIncompleteEvent,
     ResponseInProgressEvent,
     ResponseOutputItemAddedEvent,
@@ -29,6 +30,9 @@ from openai.types.responses import (
     ResponseTextConfig,
     ResponseTextDeltaEvent,
     ResponseTextDoneEvent,
+    ResponseWebSearchCallCompletedEvent,
+    ResponseWebSearchCallInProgressEvent,
+    ResponseWebSearchCallSearchingEvent,
 )
 from openai.types.responses.response import IncompleteDetails
 import pytest
@@ -36,6 +40,15 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import conversation
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
+from homeassistant.components.openai_conversation.const import (
+    CONF_WEB_SEARCH,
+    CONF_WEB_SEARCH_CITY,
+    CONF_WEB_SEARCH_CONTEXT_SIZE,
+    CONF_WEB_SEARCH_COUNTRY,
+    CONF_WEB_SEARCH_REGION,
+    CONF_WEB_SEARCH_TIMEZONE,
+    CONF_WEB_SEARCH_USER_LOCATION,
+)
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import intent
@@ -225,7 +238,6 @@ async def test_incomplete_response(
     mock_config_entry_with_assist: MockConfigEntry,
     mock_init_component,
     mock_create_stream: AsyncMock,
-    mock_chat_log: MockChatLog,  # noqa: F811
     reason: str,
     message: str,
 ) -> None:
@@ -301,7 +313,6 @@ async def test_failed_response(
     mock_config_entry_with_assist: MockConfigEntry,
     mock_init_component,
     mock_create_stream: AsyncMock,
-    mock_chat_log: MockChatLog,  # noqa: F811
     error: ResponseError | ResponseErrorEvent,
     message: str,
 ) -> None:
@@ -491,6 +502,41 @@ def create_reasoning_item(id: str, output_index: int) -> list[ResponseStreamEven
     ]
 
 
+def create_web_search_item(id: str, output_index: int) -> list[ResponseStreamEvent]:
+    """Create a web search call item."""
+    return [
+        ResponseOutputItemAddedEvent(
+            item=ResponseFunctionWebSearch(
+                id=id, status="in_progress", type="web_search_call"
+            ),
+            output_index=output_index,
+            type="response.output_item.added",
+        ),
+        ResponseWebSearchCallInProgressEvent(
+            item_id=id,
+            output_index=output_index,
+            type="response.web_search_call.in_progress",
+        ),
+        ResponseWebSearchCallSearchingEvent(
+            item_id=id,
+            output_index=output_index,
+            type="response.web_search_call.searching",
+        ),
+        ResponseWebSearchCallCompletedEvent(
+            item_id=id,
+            output_index=output_index,
+            type="response.web_search_call.completed",
+        ),
+        ResponseOutputItemDoneEvent(
+            item=ResponseFunctionWebSearch(
+                id=id, status="completed", type="web_search_call"
+            ),
+            output_index=output_index,
+            type="response.output_item.done",
+        ),
+    ]
+
+
 async def test_function_call(
     hass: HomeAssistant,
     mock_config_entry_with_assist: MockConfigEntry,
@@ -581,7 +627,6 @@ async def test_function_call_invalid(
     mock_config_entry_with_assist: MockConfigEntry,
     mock_init_component,
     mock_create_stream: AsyncMock,
-    mock_chat_log: MockChatLog,  # noqa: F811
     description: str,
     messages: tuple[ResponseStreamEvent],
 ) -> None:
@@ -633,3 +678,60 @@ async def test_assist_api_tools_conversion(
 
     tools = mock_create_stream.mock_calls[0][2]["tools"]
     assert tools
+
+
+async def test_web_search(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    mock_create_stream,
+    mock_chat_log: MockChatLog,  # noqa: F811
+) -> None:
+    """Test web_search_tool."""
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={
+            **mock_config_entry.options,
+            CONF_WEB_SEARCH: True,
+            CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
+            CONF_WEB_SEARCH_USER_LOCATION: True,
+            CONF_WEB_SEARCH_CITY: "San Francisco",
+            CONF_WEB_SEARCH_COUNTRY: "US",
+            CONF_WEB_SEARCH_REGION: "California",
+            CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
+        },
+    )
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+
+    message = "Home Assistant now supports ChatGPT Search in Assist"
+    mock_create_stream.return_value = [
+        # Initial conversation
+        (
+            *create_web_search_item(id="ws_A", output_index=0),
+            *create_message_item(id="msg_A", text=message, output_index=1),
+        )
+    ]
+
+    result = await conversation.async_converse(
+        hass,
+        "What's on the latest news?",
+        mock_chat_log.conversation_id,
+        Context(),
+        agent_id="conversation.openai",
+    )
+
+    assert mock_create_stream.mock_calls[0][2]["tools"] == [
+        {
+            "type": "web_search_preview",
+            "search_context_size": "low",
+            "user_location": {
+                "type": "approximate",
+                "city": "San Francisco",
+                "region": "California",
+                "country": "US",
+                "timezone": "America/Los_Angeles",
+            },
+        }
+    ]
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.speech["plain"]["speech"] == message, result.response.speech
