@@ -35,7 +35,7 @@ async def test_sensor(
 
 @pytest.mark.freeze_time("2024-11-05T18:00:00+00:00")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_sensor_current_and_averager_price_is_0(
+async def test_sensor_current_and_average_price_is_0(
     hass: HomeAssistant, load_int: ConfigEntry
 ) -> None:
     """Test the Nord Pool sensor working if prices are 0."""
@@ -45,54 +45,11 @@ async def test_sensor_current_and_averager_price_is_0(
     average_price_se4 = hass.states.get("sensor.nord_pool_se4_daily_average")
 
     assert current_price is not None
-    assert current_price.state == "0.0"  # SE4 2024-11-05T17:00:00Z
+    assert current_price.state == "0.0"  # SE4 2024-11-05T18:00:00Z
     assert average_price_se3 is not None
     assert average_price_se3.state == "0.90074"
     assert average_price_se4 is not None
     assert average_price_se4.state == "0.0"
-
-
-@pytest.mark.freeze_time("2024-11-05T18:00:00+00:00")
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_sensor_daily_average_price_is_not_0(
-    hass: HomeAssistant, load_int: ConfigEntry
-) -> None:
-    """Test the Nord Pool sensor."""
-
-    average_price = hass.states.get("sensor.nord_pool_se3_daily_average")
-
-    assert average_price is not None
-    assert average_price.state == "0.90074"
-
-
-@pytest.mark.freeze_time("2024-11-05T18:00:00+00:00")
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_sensor_daily_average_price_is_0(
-    hass: HomeAssistant, load_int: ConfigEntry
-) -> None:
-    """Test the Nord Pool sensor."""
-
-    average_price = hass.states.get("sensor.nord_pool_se4_daily_average")
-
-    assert average_price is not None
-    assert average_price.state == "0.0"
-
-
-@pytest.mark.freeze_time("2024-11-05T23:00:00+00:00")
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_sensor_no_next_price(hass: HomeAssistant, load_int: ConfigEntry) -> None:
-    """Test the Nord Pool sensor."""
-
-    current_price = hass.states.get("sensor.nord_pool_se3_current_price")
-    last_price = hass.states.get("sensor.nord_pool_se3_previous_price")
-    next_price = hass.states.get("sensor.nord_pool_se3_next_price")
-
-    assert current_price is not None
-    assert last_price is not None
-    assert next_price is not None
-    assert current_price.state == "0.12666"  # SE3 2024-11-05T23:00:00Z
-    assert last_price.state == "0.28914"  # SE3 2024-11-05T22:00:00Z
-    assert next_price.state == "0.07406"  # SE3 2024-11-06T00:00:00Z"
 
 
 @pytest.mark.freeze_time("2024-11-06T00:00:00+01:00")
