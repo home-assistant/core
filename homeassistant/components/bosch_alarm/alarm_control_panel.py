@@ -44,6 +44,7 @@ class AreaAlarmControlPanel(
         | AlarmControlPanelEntityFeature.ARM_AWAY
     )
     _attr_code_arm_required = False
+    _attr_name = None
 
     def __init__(
         self,
@@ -51,7 +52,7 @@ class AreaAlarmControlPanel(
         area_id: int,
     ) -> None:
         """Initialise a Bosch Alarm control panel entity."""
-        super().__init__(coordinator, area_id)
+        super().__init__(coordinator)
         self._area = coordinator.panel.areas[area_id]
         self._area_id = area_id
         entry = coordinator.config_entry
@@ -64,7 +65,7 @@ class AreaAlarmControlPanel(
             sw_version=coordinator.panel.firmware_version,
             via_device=(
                 DOMAIN,
-                f"{entry.unique_id or entry.entry_id}",
+                entry.unique_id or entry.entry_id,
             ),
         )
 
