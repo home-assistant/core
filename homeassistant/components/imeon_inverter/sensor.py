@@ -319,8 +319,8 @@ ENTITY_DESCRIPTIONS = (
     SensorEntityDescription(
         key="monitoring_economy_factor",
         translation_key="monitoring_economy_factor",
-        native_unit_of_measurement=PERCENTAGE,
-        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
         key="monitoring_grid_consumption",
