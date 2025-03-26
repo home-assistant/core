@@ -142,12 +142,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: SynologyDSMConfigEntry) 
 
         def async_check_last_update_success() -> None:
             if (
-                coordinator_central.last_update_success
-                is not entry.runtime_data.coordinator_central_old_update_success
-            ):
-                entry.runtime_data.coordinator_central_old_update_success = (
-                    coordinator_central.last_update_success
-                )
+                last := coordinator_central.last_update_success
+            ) is not entry.runtime_data.coordinator_central_old_update_success:
+                entry.runtime_data.coordinator_central_old_update_success = last
                 async_notify_backup_listeners()
 
         entry.runtime_data.coordinator_central.async_add_listener(
