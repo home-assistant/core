@@ -49,18 +49,23 @@ class InverterCoordinator(DataUpdateCoordinator[dict[str, str | float | int]]):
         )
 
         self._HUBs: dict[Any, InverterCoordinator] = {}
-        self.api = Inverter(entry.data[CONF_ADDRESS])
+        self._api = Inverter(entry.data[CONF_ADDRESS])
+
+    @property
+    def api(self) -> Inverter:
+        """Return the inverter object."""
+        return self._api
 
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
         async with timeout(TIMEOUT):
             if self.config_entry is not None:
-                await self.api.login(
+                await self._api.login(
                     self.config_entry.data[CONF_USERNAME],
                     self.config_entry.data[CONF_PASSWORD],
                 )
 
-                await self.api.init()
+                await self._api.init()
 
     async def _async_update_data(self) -> dict[str, str | float | int]:
         """Fetch and store newest data from API.
@@ -72,16 +77,16 @@ class InverterCoordinator(DataUpdateCoordinator[dict[str, str | float | int]]):
         data: dict[str, str | float | int] = {}
 
         async with timeout(TIMEOUT):
-            await self.api.login(
+            await self._api.login(
                 self.config_entry.data[CONF_USERNAME],
                 self.config_entry.data[CONF_PASSWORD],
             )
 
             # Fetch data using distant API
-            await self.api.update()
+            await self._api.update()
 
         # Store data
-        for key, val in self.api.storage.items():
+        for key, val in self._api.storage.items():
             if key == "timeline":
                 data[key] = val
             else:

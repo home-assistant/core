@@ -10,6 +10,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    PERCENTAGE,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -58,7 +59,7 @@ ENTITY_DESCRIPTIONS = (
     SensorEntityDescription(
         key="battery_soc",
         translation_key="battery_soc",
-        native_unit_of_measurement="%",
+        native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -66,7 +67,7 @@ ENTITY_DESCRIPTIONS = (
         key="battery_stored",
         translation_key="battery_stored",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        device_class=SensorDeviceClass.ENERGY,
+        device_class=SensorDeviceClass.ENERGY_STORAGE,
         state_class=SensorStateClass.TOTAL,
     ),
     # Grid
@@ -318,7 +319,7 @@ ENTITY_DESCRIPTIONS = (
     SensorEntityDescription(
         key="monitoring_economy_factor",
         translation_key="monitoring_economy_factor",
-        native_unit_of_measurement="",
+        native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
@@ -345,13 +346,13 @@ ENTITY_DESCRIPTIONS = (
     SensorEntityDescription(
         key="monitoring_self_consumption",
         translation_key="monitoring_self_consumption",
-        native_unit_of_measurement="%",
+        native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="monitoring_self_sufficiency",
         translation_key="monitoring_self_sufficiency",
-        native_unit_of_measurement="%",
+        native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
@@ -407,7 +408,6 @@ async def async_setup_entry(
 ) -> None:
     """Create each sensor for a given config entry."""
 
-    # Get Inverter from UUID
     coordinator = entry.runtime_data
 
     # Init sensor entities
@@ -420,7 +420,6 @@ async def async_setup_entry(
 class InverterSensor(CoordinatorEntity[InverterCoordinator], SensorEntity):
     """A sensor that returns numerical values with units."""
 
-    entity_description: SensorEntityDescription
     _attr_has_entity_name = True
 
     def __init__(
@@ -432,16 +431,16 @@ class InverterSensor(CoordinatorEntity[InverterCoordinator], SensorEntity):
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator)
         self.entity_description = description
+        self._inverter = coordinator.api.inverter
         self.data_key = description.key
-        self._attr_translation_key = description.key
         assert entry.unique_id
         self._attr_unique_id = f"{entry.unique_id}_{self.data_key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.unique_id)},
             name="Imeon inverter",
             manufacturer="Imeon Energy",
-            model="Home Assistant Integration",
-            sw_version="1.0",
+            model=self._inverter.get("inverter", ""),
+            sw_version=self._inverter.get("software", ""),
         )
 
     @property
