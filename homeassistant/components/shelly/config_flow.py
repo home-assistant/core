@@ -7,12 +7,7 @@ from typing import Any, Final
 
 from aioshelly.block_device import BlockDevice
 from aioshelly.common import ConnectionOptions, get_info
-from aioshelly.const import (
-    BLOCK_GENERATIONS,
-    DEFAULT_HTTP_PORT,
-    MODEL_WALL_DISPLAY,
-    RPC_GENERATIONS,
-)
+from aioshelly.const import BLOCK_GENERATIONS, DEFAULT_HTTP_PORT, RPC_GENERATIONS
 from aioshelly.exceptions import (
     CustomPortNotSupported,
     DeviceConnectionError,
@@ -461,11 +456,9 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def async_supports_options_flow(cls, config_entry: ShellyConfigEntry) -> bool:
         """Return options flow support for this handler."""
-        return (
-            get_device_entry_gen(config_entry) in RPC_GENERATIONS
-            and not config_entry.data.get(CONF_SLEEP_PERIOD)
-            and config_entry.data.get(CONF_MODEL) != MODEL_WALL_DISPLAY
-        )
+        return get_device_entry_gen(
+            config_entry
+        ) in RPC_GENERATIONS and not config_entry.data.get(CONF_SLEEP_PERIOD)
 
 
 class OptionsFlowHandler(OptionsFlow):
@@ -475,6 +468,13 @@ class OptionsFlowHandler(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle options flow."""
+        if (
+            supports_scripts := self.config_entry.runtime_data.rpc_supports_scripts
+        ) is None:
+            return self.async_abort(reason="cannot_connect")
+        if not supports_scripts:
+            return self.async_abort(reason="no_scripts_support")
+
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
