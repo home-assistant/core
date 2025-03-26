@@ -1103,7 +1103,11 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
         await super().async_added_to_hass()
         if (
             self.capability
-            not in {Capability.DRYER_OPERATING_STATE, Capability.WASHER_OPERATING_STATE}
+            not in {
+                Capability.DISHWASHER_OPERATING_STATE,
+                Capability.DRYER_OPERATING_STATE,
+                Capability.WASHER_OPERATING_STATE,
+            }
             or self._attribute is not Attribute.MACHINE_STATE
         ):
             return
