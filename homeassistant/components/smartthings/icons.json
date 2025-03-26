@@ -22,7 +22,7 @@
     },
     "button": {
       "reset_water_filter": {
-        "default": "mdi:air-filter"
+        "default": "mdi:reload"
       },
       "stop": {
         "default": "mdi:stop"
