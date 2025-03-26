@@ -158,7 +158,7 @@
                 "qos": "QoS"
               },
               "data_description": {
-                "qos": "The QoS value the device's entities should use."
+                "qos": "The Quality of Service value the device's entities should use."
               }
             }
           }
@@ -246,6 +246,7 @@
             "value_template": "Value template",
             "last_reset_value_template": "Last reset value template",
             "force_update": "Force update",
+            "optimistic": "Optimistic",
             "retain": "Retain"
           },
           "data_description": {
@@ -255,6 +256,7 @@
             "value_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the {platform} entity value.",
             "last_reset_value_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the last reset. When Last reset template is set, the State class option must be Total. [Learn more.]({url}#last_reset_value_template)",
             "force_update": "Sends update events even if the value hasn’t changed. Useful if you want to have meaningful value graphs in history. [Learn more.]({url}#force_update)",
+            "optimistic": "Flag that defines if the {platform} entity works in optimistic mode. [Learn more.]({url}#optimistic)",
             "retain": "Select if values published by the {platform} entity should be retained at the MQTT broker."
           },
           "sections": {
@@ -462,10 +464,17 @@
         "wind_speed": "[%key:component::sensor::entity_component::wind_speed::name%]"
       }
     },
+    "device_class_switch": {
+      "options": {
+        "outlet": "[%key:component::switch::entity_component::outlet::name%]",
+        "switch": "[%key:component::switch::title%]"
+      }
+    },
     "platform": {
       "options": {
         "notify": "Notify",
-        "sensor": "Sensor"
+        "sensor": "Sensor",
+        "switch": "Switch"
       }
     },
     "set_ca_cert": {

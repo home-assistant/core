@@ -58,10 +58,23 @@ async def test_state_update(
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
-    ("device_fixture", "entity_id"),
+    ("device_fixture", "entity_id", "translation_key"),
     [
-        ("da_wm_wm_000001", "sensor.washer_machine_state"),
-        ("da_wm_wd_000001", "sensor.dryer_machine_state"),
+        ("da_wm_wm_000001", "sensor.washer_machine_state", "machine_state"),
+        ("da_wm_wd_000001", "sensor.dryer_machine_state", "machine_state"),
+        ("hw_q80r_soundbar", "sensor.soundbar_volume", "media_player"),
+        ("hw_q80r_soundbar", "sensor.soundbar_media_playback_status", "media_player"),
+        ("hw_q80r_soundbar", "sensor.soundbar_media_input_source", "media_player"),
+        (
+            "im_speaker_ai_0001",
+            "sensor.galaxy_home_mini_media_playback_shuffle",
+            "media_player",
+        ),
+        (
+            "im_speaker_ai_0001",
+            "sensor.galaxy_home_mini_media_playback_repeat",
+            "media_player",
+        ),
     ],
 )
 async def test_create_issue(
@@ -70,9 +83,10 @@ async def test_create_issue(
     mock_config_entry: MockConfigEntry,
     issue_registry: ir.IssueRegistry,
     entity_id: str,
+    translation_key: str,
 ) -> None:
     """Test we create an issue when an automation or script is using a deprecated entity."""
-    issue_id = f"deprecated_machine_state_{entity_id}"
+    issue_id = f"deprecated_{translation_key}_{entity_id}"
 
     assert await async_setup_component(
         hass,
@@ -117,7 +131,7 @@ async def test_create_issue(
     assert len(issue_registry.issues) == 1
     issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert issue is not None
-    assert issue.translation_key == "deprecated_machine_state"
+    assert issue.translation_key == f"deprecated_{translation_key}"
     assert issue.translation_placeholders == {
         "entity": entity_id,
         "items": "- [test](/config/automation/edit/test)\n- [test](/config/script/edit/test)",
