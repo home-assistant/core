@@ -55,6 +55,7 @@ async def test_time(
     assert config_entry.state is ConfigEntryState.LOADED
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize("appliance", ["Oven"], indirect=True)
 async def test_paired_depaired_devices_flow(
     appliance: HomeAppliance,
@@ -109,6 +110,7 @@ async def test_paired_depaired_devices_flow(
         assert entity_registry.async_get(entity_entry.entity_id)
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize("appliance", ["Oven"], indirect=True)
 async def test_connected_devices(
     appliance: HomeAppliance,
@@ -161,6 +163,7 @@ async def test_connected_devices(
     assert len(new_entity_entries) > len(entity_entries)
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize("appliance", ["Oven"], indirect=True)
 async def test_time_entity_availability(
     hass: HomeAssistant,
@@ -214,6 +217,7 @@ async def test_time_entity_availability(
         assert state.state != STATE_UNAVAILABLE
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize("appliance", ["Oven"], indirect=True)
 @pytest.mark.parametrize(
     ("entity_id", "setting_key"),
@@ -258,6 +262,7 @@ async def test_time_entity_functionality(
     assert hass.states.is_state(entity_id, str(time(second=value)))
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     ("entity_id", "setting_key", "mock_attr"),
     [
