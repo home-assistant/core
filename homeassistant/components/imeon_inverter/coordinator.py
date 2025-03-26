@@ -43,22 +43,18 @@ class InverterCoordinator(DataUpdateCoordinator[dict[str, str | float | int]]):
         super().__init__(
             hass,
             _LOGGER,
-            # Name of the data. For logging purposes.
             name=HUBNAME,
-            # Polling interval. Will only be polled if there are subscribers.
             update_interval=INTERVAL,
-            always_update=True,
             config_entry=entry,
         )
 
         self._HUBs: dict[Any, InverterCoordinator] = {}
-        self.api = Inverter(entry.data[CONF_ADDRESS])  # API calls
+        self.api = Inverter(entry.data[CONF_ADDRESS])
 
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
-        async with timeout(TIMEOUT * 2):
+        async with timeout(TIMEOUT):
             if self.config_entry is not None:
-                # Am I logged in ? If not log in
                 await self.api.login(
                     self.config_entry.data[CONF_USERNAME],
                     self.config_entry.data[CONF_PASSWORD],
@@ -75,8 +71,7 @@ class InverterCoordinator(DataUpdateCoordinator[dict[str, str | float | int]]):
 
         data: dict[str, str | float | int] = {}
 
-        async with timeout(TIMEOUT * 4):
-            # Am I logged in ? If not log in
+        async with timeout(TIMEOUT):
             await self.api.login(
                 self.config_entry.data[CONF_USERNAME],
                 self.config_entry.data[CONF_PASSWORD],
@@ -93,4 +88,4 @@ class InverterCoordinator(DataUpdateCoordinator[dict[str, str | float | int]]):
                 for sub_key, sub_val in val.items():
                     data[f"{key}_{sub_key}"] = sub_val
 
-        return data  # send stored data so entities can poll it
+        return data
