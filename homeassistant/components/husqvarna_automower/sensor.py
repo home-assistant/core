@@ -232,7 +232,9 @@ def _get_current_work_area_name(data: MowerAttributes) -> str:
     if TYPE_CHECKING:
         # Sensor does not get created if values are None
         assert data.work_areas is not None
-    return data.work_areas[data.mower.work_area_id].name
+    if data.mower.work_area_id in data.work_areas:
+        return data.work_areas[data.mower.work_area_id].name
+    return STATE_NO_WORK_AREA_ACTIVE
 
 
 @callback
