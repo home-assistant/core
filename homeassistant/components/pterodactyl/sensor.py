@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.const import (
@@ -22,8 +21,11 @@ from .coordinator import PterodactylConfigEntry, PterodactylCoordinator, Pteroda
 from .entity import PterodactylEntity
 
 KEY_CPU_UTILIZATION = "cpu_utilization"
-KEY_MEMORY_UTILIZATION = "memory_utilization"
-KEY_DISK_UTILIZATION = "disk_utilization"
+KEY_CPU_LIMIT = "cpu_limit"
+KEY_MEMORY_USAGE = "memory_usage"
+KEY_MEMORY_LIMIT = "memory_limit"
+KEY_DISK_USAGE = "disk_usage"
+KEY_DISK_LIMIT = "disk_limit"
 KEY_NETWORK_INBOUND = "network_inbound"
 KEY_NETWORK_OUTBOUND = "network_outbound"
 KEY_UPTIME = "uptime"
@@ -37,58 +39,6 @@ class PterodactylSensorEntityDescription(SensorEntityDescription):
     """Class describing Pterodactyl sensor entities."""
 
     value_fn: Callable[[PterodactylData], StateType]
-    attributes_fn: Callable[[PterodactylData], dict[str, Any]] | None
-
-
-def get_extra_state_attributes_cpu(
-    data: PterodactylData,
-) -> dict[str, list[str]]:
-    """Return CPU limit as extra state attribute."""
-    extra_state_attributes: dict[str, Any] = {}
-
-    extra_state_attributes["cpu_limit"] = data.cpu_limit
-
-    return extra_state_attributes
-
-
-def get_extra_state_attributes_memory(
-    data: PterodactylData,
-) -> dict[str, list[str]]:
-    """Return memory usage and limit as extra state attributes."""
-    extra_state_attributes: dict[str, Any] = {}
-
-    extra_state_attributes["memory_usage"] = round(
-        InformationConverter.convert(
-            data.memory_usage, UnitOfInformation.BYTES, UnitOfInformation.MEGABYTES
-        )
-    )
-    extra_state_attributes["memory_limit"] = round(
-        InformationConverter.convert(
-            data.memory_limit, UnitOfInformation.BYTES, UnitOfInformation.MEGABYTES
-        )
-    )
-
-    return extra_state_attributes
-
-
-def get_extra_state_attributes_disk(
-    data: PterodactylData,
-) -> dict[str, list[str]]:
-    """Return disk usage and limit as extra state attributes."""
-    extra_state_attributes: dict[str, Any] = {}
-
-    extra_state_attributes["disk_usage"] = round(
-        InformationConverter.convert(
-            data.disk_usage, UnitOfInformation.BYTES, UnitOfInformation.MEGABYTES
-        )
-    )
-    extra_state_attributes["disk_limit"] = round(
-        InformationConverter.convert(
-            data.disk_limit, UnitOfInformation.BYTES, UnitOfInformation.MEGABYTES
-        )
-    )
-
-    return extra_state_attributes
 
 
 SENSOR_DESCRIPTIONS = [
@@ -96,28 +46,56 @@ SENSOR_DESCRIPTIONS = [
         key=KEY_CPU_UTILIZATION,
         translation_key=KEY_CPU_UTILIZATION,
         value_fn=lambda data: data.cpu_utilization,
-        attributes_fn=get_extra_state_attributes_cpu,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
         suggested_display_precision=0,
     ),
     PterodactylSensorEntityDescription(
-        key=KEY_MEMORY_UTILIZATION,
-        translation_key=KEY_MEMORY_UTILIZATION,
-        value_fn=lambda data: ((data.memory_usage / data.memory_limit) * 100),
-        attributes_fn=get_extra_state_attributes_memory,
+        key=KEY_CPU_LIMIT,
+        translation_key=KEY_CPU_LIMIT,
+        value_fn=lambda data: data.cpu_limit,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
+        suggested_display_precision=0,
+        entity_registry_enabled_default=False,
+    ),
+    PterodactylSensorEntityDescription(
+        key=KEY_MEMORY_USAGE,
+        translation_key=KEY_MEMORY_USAGE,
+        value_fn=lambda data: InformationConverter.convert(
+            data.memory_usage, UnitOfInformation.BYTES, UnitOfInformation.MEGABYTES
+        ),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         suggested_display_precision=0,
     ),
     PterodactylSensorEntityDescription(
-        key=KEY_DISK_UTILIZATION,
-        translation_key=KEY_DISK_UTILIZATION,
-        value_fn=lambda data: ((data.disk_usage / data.disk_limit) * 100),
-        attributes_fn=get_extra_state_attributes_disk,
+        key=KEY_MEMORY_LIMIT,
+        translation_key=KEY_MEMORY_LIMIT,
+        value_fn=lambda data: data.memory_limit,
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         suggested_display_precision=0,
+        entity_registry_enabled_default=False,
+    ),
+    PterodactylSensorEntityDescription(
+        key=KEY_DISK_USAGE,
+        translation_key=KEY_DISK_USAGE,
+        value_fn=lambda data: InformationConverter.convert(
+            data.disk_usage, UnitOfInformation.BYTES, UnitOfInformation.MEGABYTES
+        ),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfInformation.MEGABYTES,
+        suggested_display_precision=0,
+    ),
+    PterodactylSensorEntityDescription(
+        key=KEY_DISK_LIMIT,
+        translation_key=KEY_DISK_LIMIT,
+        value_fn=lambda data: data.disk_limit,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfInformation.MEGABYTES,
+        suggested_display_precision=0,
+        entity_registry_enabled_default=False,
     ),
     PterodactylSensorEntityDescription(
         key=KEY_NETWORK_INBOUND,
@@ -125,7 +103,6 @@ SENSOR_DESCRIPTIONS = [
         value_fn=lambda data: InformationConverter.convert(
             data.network_inbound, UnitOfInformation.BYTES, UnitOfInformation.KILOBYTES
         ),
-        attributes_fn=None,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfInformation.KILOBYTES,
         suggested_display_precision=0,
@@ -137,7 +114,6 @@ SENSOR_DESCRIPTIONS = [
         value_fn=lambda data: InformationConverter.convert(
             data.network_outbound, UnitOfInformation.BYTES, UnitOfInformation.KILOBYTES
         ),
-        attributes_fn=None,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfInformation.KILOBYTES,
         suggested_display_precision=0,
@@ -149,7 +125,6 @@ SENSOR_DESCRIPTIONS = [
         value_fn=lambda data: DurationConverter.convert(
             data.uptime, UnitOfTime.SECONDS, UnitOfTime.MINUTES
         ),
-        attributes_fn=None,
         native_unit_of_measurement=UnitOfTime.MINUTES,
         suggested_display_precision=0,
     ),
@@ -165,11 +140,9 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data
 
     async_add_entities(
-        [
-            PterodactylSensorEntity(coordinator, identifier, description, config_entry)
-            for identifier in coordinator.api.identifiers
-            for description in SENSOR_DESCRIPTIONS
-        ]
+        PterodactylSensorEntity(coordinator, identifier, description, config_entry)
+        for identifier in coordinator.api.identifiers
+        for description in SENSOR_DESCRIPTIONS
     )
 
 
@@ -203,6 +176,3 @@ class PterodactylSensorEntity(PterodactylEntity, SensorEntity):
         self._attr_native_value = self.entity_description.value_fn(
             self.game_server_data
         )
-
-        if func := self.entity_description.attributes_fn:
-            self._attr_extra_state_attributes = func(self.game_server_data)

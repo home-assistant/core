@@ -11,9 +11,7 @@ from pydactyl.exceptions import (
     PydactylError,
 )
 
-from homeassistant.const import UnitOfInformation
 from homeassistant.core import HomeAssistant
-from homeassistant.util.unit_conversion import InformationConverter
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -115,21 +113,9 @@ class PterodactylAPI:
                     cpu_utilization=utilization["resources"]["cpu_absolute"],
                     cpu_limit=server["limits"]["cpu"],
                     memory_usage=utilization["resources"]["memory_bytes"],
-                    memory_limit=int(
-                        InformationConverter.convert(
-                            server["limits"]["memory"],
-                            UnitOfInformation.MEGABYTES,
-                            UnitOfInformation.BYTES,
-                        )
-                    ),
+                    memory_limit=server["limits"]["memory"],
                     disk_usage=utilization["resources"]["disk_bytes"],
-                    disk_limit=int(
-                        InformationConverter.convert(
-                            server["limits"]["disk"],
-                            UnitOfInformation.MEGABYTES,
-                            UnitOfInformation.BYTES,
-                        )
-                    ),
+                    disk_limit=server["limits"]["disk"],
                     network_inbound=utilization["resources"]["network_rx_bytes"],
                     network_outbound=utilization["resources"]["network_tx_bytes"],
                     uptime=utilization["resources"]["uptime"],

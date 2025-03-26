@@ -28,34 +28,22 @@
     },
     "sensor": {
       "cpu_utilization": {
-        "name": "CPU Utilization",
-        "state_attributes": {
-          "cpu_limit": {
-            "name": "CPU Limit (%)"
-          }
-        }
+        "name": "CPU Utilization"
       },
-      "memory_utilization": {
-        "name": "Memory Utilization",
-        "state_attributes": {
-          "memory_usage": {
-            "name": "Memory Usage (MB)"
-          },
-          "memory_limit": {
-            "name": "Memory Limit (MB)"
-          }
-        }
+      "cpu_limit": {
+        "name": "CPU Limit"
       },
-      "disk_utilization": {
-        "name": "Disk Utilization",
-        "state_attributes": {
-          "disk_usage": {
-            "name": "Disk Usage (MB)"
-          },
-          "disk_limit": {
-            "name": "Disk Limit (MB)"
-          }
-        }
+      "memory_usage": {
+        "name": "Memory Usage"
+      },
+      "memory_limit": {
+        "name": "Memory Limit"
+      },
+      "disk_usage": {
+        "name": "Disk Usage"
+      },
+      "disk_limit": {
+        "name": "Disk Limit"
       },
       "network_inbound": {
         "name": "Network Inbound"

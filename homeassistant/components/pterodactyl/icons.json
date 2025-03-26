@@ -4,10 +4,19 @@
       "cpu_utilization": {
         "default": "mdi:cpu-64-bit"
       },
-      "memory_utilization": {
+      "cpu_limit": {
+        "default": "mdi:cpu-64-bit"
+      },
+      "memory_usage": {
         "default": "mdi:memory"
       },
-      "disk_utilization": {
+      "memory_limit": {
+        "default": "mdi:memory"
+      },
+      "disk_usage": {
+        "default": "mdi:harddisk"
+      },
+      "disk_limit": {
         "default": "mdi:harddisk"
       },
       "network_inbound": {
