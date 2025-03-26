@@ -96,7 +96,7 @@
       "fields": {
         "queue_ids": {
           "name": "Queue IDs",
-          "description": "The id (index) of the items in the queue to remove."
+          "description": "The ID (index) of the items in the queue to remove."
         }
       }
     },
