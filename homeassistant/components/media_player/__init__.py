@@ -112,6 +112,7 @@ from .const import (  # noqa: F401
     ATTR_MEDIA_ENQUEUE,
     ATTR_MEDIA_EPISODE,
     ATTR_MEDIA_EXTRA,
+    ATTR_MEDIA_FILTER_CLASSES,
     ATTR_MEDIA_PLAYLIST,
     ATTR_MEDIA_POSITION,
     ATTR_MEDIA_POSITION_UPDATED_AT,
@@ -121,7 +122,6 @@ from .const import (  # noqa: F401
     ATTR_MEDIA_SEEK_POSITION,
     ATTR_MEDIA_SERIES_TITLE,
     ATTR_MEDIA_SHUFFLE,
-    ATTR_MEDIA_TARGET_CLASSES,
     ATTR_MEDIA_TITLE,
     ATTR_MEDIA_TRACK,
     ATTR_MEDIA_VOLUME_LEVEL,
@@ -462,7 +462,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             vol.Optional(ATTR_MEDIA_CONTENT_TYPE): cv.string,
             vol.Optional(ATTR_MEDIA_CONTENT_ID): cv.string,
             vol.Required(ATTR_MEDIA_SEARCH_QUERY): cv.string,
-            vol.Optional(ATTR_MEDIA_TARGET_CLASSES): vol.All(
+            vol.Optional(ATTR_MEDIA_FILTER_CLASSES): vol.All(
                 cv.ensure_list, [cv.enum(MediaClass)]
             ),
         },
@@ -1200,10 +1200,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         self,
         query: SearchMediaQuery,
     ) -> SearchMedia:
-        """Search the media player.
-
-        "media_player/search_media" websocket command.
-        """
+        """Search the media player."""
         raise NotImplementedError
 
     def join_players(self, group_members: list[str]) -> None:
@@ -1424,7 +1421,7 @@ async def websocket_browse_media(
             "media_content_type and media_content_id must be provided together",
         ): str,
         vol.Required(ATTR_MEDIA_SEARCH_QUERY): str,
-        vol.Optional(ATTR_MEDIA_TARGET_CLASSES): vol.All(
+        vol.Optional(ATTR_MEDIA_FILTER_CLASSES): vol.All(
             cv.ensure_list, [cv.enum(MediaClass)]
         ),
     }
@@ -1457,7 +1454,7 @@ async def websocket_search_media(
     media_content_type = msg.get(ATTR_MEDIA_CONTENT_TYPE)
     media_content_id = msg.get(ATTR_MEDIA_CONTENT_ID)
     query = str(msg.get(ATTR_MEDIA_SEARCH_QUERY))
-    target_media_classes = msg.get(ATTR_MEDIA_TARGET_CLASSES)
+    target_media_classes = msg.get(ATTR_MEDIA_FILTER_CLASSES)
 
     try:
         payload = await player.async_internal_search_media(

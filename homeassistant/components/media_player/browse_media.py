@@ -167,7 +167,7 @@ class BrowseMedia:
 
 @dataclass(kw_only=True, frozen=True)
 class SearchMedia:
-    """Represent a search media file."""
+    """Represent search results."""
 
     version: int = field(default=1)
     result: list[BrowseMedia]
