@@ -70,14 +70,12 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Fast.com sensors from a config entry."""
-    coordinator = entry.runtime_data
-    entry_id = entry.entry_id
 
     # Ensure coordinator has data immediately
-    await coordinator.async_config_entry_first_refresh()
+    await entry.runtime_data.async_config_entry_first_refresh()
 
     device_info = DeviceInfo(
-        identifiers={(DOMAIN, entry_id)},
+        identifiers={(DOMAIN, entry.entry_id)},
         name=DEFAULT_NAME,
         manufacturer=DEFAULT_NAME,
         model="Speed Test Integration",
@@ -86,7 +84,7 @@ async def async_setup_entry(
     )
 
     entities = [
-        FastdotcomSensor(entry_id, coordinator, description, device_info)
+        FastdotcomSensor(entry.entry_id, entry.runtime_data, description, device_info)
         for description in SENSOR_TYPES
     ]
 
