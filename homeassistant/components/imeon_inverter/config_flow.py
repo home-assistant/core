@@ -6,7 +6,7 @@ from typing import Any
 from imeon_inverter_api.inverter import Inverter
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS, CONF_PASSWORD, CONF_USERNAME
 
 from .const import DOMAIN
@@ -22,12 +22,12 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-class ImeonInverterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class ImeonInverterConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle the initial setup flow for Imeon Inverters."""
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Handle the user step for creating a new configuration entry."""
         errors: dict[str, str] = {}
 
@@ -55,6 +55,9 @@ class ImeonInverterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                     else:
                         errors["base"] = "unknown"
+                        _LOGGER.exception(
+                            "Unexpected error occurred while connecting to the Imeon"
+                        )
 
                 if not errors:
                     # Check if entry already exists
