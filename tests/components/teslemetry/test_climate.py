@@ -210,7 +210,7 @@ async def test_invalid_error(hass: HomeAssistant, snapshot: SnapshotAssertion) -
 
     with (
         patch(
-            "homeassistant.components.teslemetry.VehicleSpecific.auto_conditioning_start",
+            "tesla_fleet_api.teslemetry.Vehicle.auto_conditioning_start",
             side_effect=InvalidCommand,
         ) as mock_on,
         pytest.raises(HomeAssistantError) as error,
@@ -234,7 +234,7 @@ async def test_errors(hass: HomeAssistant, response: str) -> None:
 
     with (
         patch(
-            "homeassistant.components.teslemetry.VehicleSpecific.auto_conditioning_start",
+            "tesla_fleet_api.teslemetry.Vehicle.auto_conditioning_start",
             return_value=response,
         ) as mock_on,
         pytest.raises(HomeAssistantError),
@@ -256,7 +256,7 @@ async def test_ignored_error(
     await setup_platform(hass, [Platform.CLIMATE])
     entity_id = "climate.test_climate"
     with patch(
-        "homeassistant.components.teslemetry.VehicleSpecific.auto_conditioning_start",
+        "tesla_fleet_api.teslemetry.Vehicle.auto_conditioning_start",
         return_value=COMMAND_IGNORED_REASON,
     ) as mock_on:
         await hass.services.async_call(
