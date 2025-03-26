@@ -21,7 +21,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 
-from . import get_radio
 from .const import UPTIME_DEVIATION
 from .coordinator import SmConfigEntry, SmDataUpdateCoordinator
 from .entity import SmEntity
@@ -63,7 +62,7 @@ RADIO_INFO = SmInfoEntityDescription(
     translation_key="zigbee_type",
     device_class=SensorDeviceClass.ENUM,
     options=["coordinator", "router", "thread"],
-    value_fn=lambda x, idx: get_radio(x, idx).zb_type,
+    value_fn=lambda x, idx: x.radios[idx].zb_type,
 )
 
 
@@ -147,10 +146,9 @@ async def async_setup_entry(
         )
     )
 
-    radios = coordinator.data.info.radios
-
     entities.extend(
-        SmInfoSensorEntity(coordinator, RADIO_INFO, idx) for idx, _ in enumerate(radios)
+        SmInfoSensorEntity(coordinator, RADIO_INFO, idx)
+        for idx, _ in enumerate(coordinator.data.info.radios)
     )
 
     if coordinator.data.sensors.zb_temp2 is not None:
