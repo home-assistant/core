@@ -25,11 +25,13 @@ from homeassistant.components.netatmo.const import (
     ATTR_END_DATETIME,
     ATTR_SCHEDULE_NAME,
     ATTR_TARGET_TEMPERATURE,
+    ATTR_TEMPERATURE_SET,
     ATTR_TIME_PERIOD,
     DOMAIN as NETATMO_DOMAIN,
     SERVICE_CLEAR_TEMPERATURE_SETTING,
     SERVICE_SET_PRESET_MODE_WITH_END_DATETIME,
     SERVICE_SET_SCHEDULE,
+    SERVICE_SET_SCHEDULED_THERMOSTAT_TEMPERATURE,
     SERVICE_SET_TEMPERATURE_WITH_END_DATETIME,
     SERVICE_SET_TEMPERATURE_WITH_TIME_PERIOD,
 )
@@ -1091,3 +1093,43 @@ async def test_webhook_set_point(
     await simulate_webhook(hass, webhook_id, response)
 
     assert hass.states.get(climate_entity_entrada).state == "heat"
+
+
+async def test_set_scheduled_thermostat_temperature_success(
+    hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
+) -> None:
+    """Test setting the scheduled device temperature."""
+    with selected_platforms([Platform.CLIMATE]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Test changing scheduled temperature
+    with patch("pyatmo.home.Home.async_set_schedule_temperatures") as mock_home:
+        await hass.services.async_call(
+            "netatmo",
+            SERVICE_SET_SCHEDULED_THERMOSTAT_TEMPERATURE,
+            {
+                ATTR_ENTITY_ID: "climate.livingroom",
+                ATTR_TEMPERATURE_SET: "Comfort",
+                ATTR_TEMPERATURE: 25,
+            },
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+        mock_home.assert_called_once_with(zone_id=0, temps={"2746182631": 25})
+
+        mock_home.reset_mock()
+        await hass.services.async_call(
+            "netatmo",
+            SERVICE_SET_SCHEDULED_THERMOSTAT_TEMPERATURE,
+            {
+                ATTR_ENTITY_ID: "climate.Entrada",
+                ATTR_TEMPERATURE_SET: "Night",
+                ATTR_TEMPERATURE: 25,
+            },
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+        mock_home.assert_called_once_with(zone_id=1, temps={"2833524037": 25})

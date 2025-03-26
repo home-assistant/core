@@ -53,7 +53,8 @@
     "trigger_subtype": {
       "away": "[%key:common::state::not_home%]",
       "schedule": "Schedule",
-      "hg": "Frost guard"
+      "hg": "Frost guard",
+      "temperature_set": "Temperature Set"
     },
     "trigger_type": {
       "turned_off": "[%key:common::device_automation::trigger_type::turned_off%]",
@@ -109,6 +110,20 @@
         "person": {
           "name": "Person",
           "description": "Person's name."
+        }
+      }
+    },
+    "set_scheduled_thermostat_temperature": {
+      "name": "Set scheduled thermostat temperature",
+      "description": "Sets the desired temperature for a given thermostat, temperature set and the active schedule. The selected temperature set must correspond to one configured in Netatmo.",
+      "fields": {
+        "temperature_set": {
+          "name": "[%key:component::netatmo::device_automation::trigger_subtype::temperature_set%]",
+          "description": "Temperature Set."
+        },
+        "temperature": {
+          "name": "[%key:component::sensor::entity_component::temperature::name%]",
+          "description": "Desired thermostat temperature."
         }
       }
     },

@@ -61,6 +61,9 @@
     "set_preset_mode_with_end_datetime": {
       "service": "mdi:calendar-clock"
     },
+    "set_scheduled_thermostat_temperature": {
+      "service": "mdi:thermometer"
+    },
     "set_temperature_with_end_datetime": {
       "service": "mdi:thermometer"
     },
