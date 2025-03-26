@@ -9,6 +9,8 @@ from typing import Any, cast
 
 from pysmartthings import Attribute, Capability, SmartThings, Status
 
+from homeassistant.components.automation import automations_with_entity
+from homeassistant.components.script import scripts_with_entity
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -29,11 +31,17 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 from homeassistant.util import dt as dt_util
 
 from . import FullDevice, SmartThingsConfigEntry
-from .const import MAIN
+from .const import DOMAIN, MAIN
 from .entity import SmartThingsEntity
 
 THERMOSTAT_CAPABILITIES = {
@@ -128,7 +136,6 @@ class SmartThingsSensorEntityDescription(SensorEntityDescription):
 
     value_fn: Callable[[Any], str | float | int | datetime | None] = lambda value: value
     extra_state_attributes_fn: Callable[[Any], dict[str, Any]] | None = None
-    unique_id_separator: str = "."
     capability_ignore_list: list[set[Capability]] | None = None
     options_attribute: Attribute | None = None
     exists_fn: Callable[[Status], bool] | None = None
@@ -225,7 +232,6 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
-    # Haven't seen at devices yet
     Capability.CARBON_DIOXIDE_MEASUREMENT: {
         Attribute.CARBON_DIOXIDE: [
             SmartThingsSensorEntityDescription(
@@ -467,7 +473,6 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
-    # part of the proposed spec, Haven't seen at devices yet
     Capability.MEDIA_PLAYBACK_REPEAT: {
         Attribute.PLAYBACK_REPEAT_MODE: [
             SmartThingsSensorEntityDescription(
@@ -476,7 +481,6 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
-    # part of the proposed spec, Haven't seen at devices yet
     Capability.MEDIA_PLAYBACK_SHUFFLE: {
         Attribute.PLAYBACK_SHUFFLE: [
             SmartThingsSensorEntityDescription(
@@ -678,6 +682,15 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
+    Capability.RELATIVE_BRIGHTNESS: {
+        Attribute.BRIGHTNESS_INTENSITY: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.BRIGHTNESS_INTENSITY,
+                translation_key="brightness_intensity",
+                state_class=SensorStateClass.MEASUREMENT,
+            )
+        ]
+    },
     Capability.RELATIVE_HUMIDITY_MEASUREMENT: {
         Attribute.HUMIDITY: [
             SmartThingsSensorEntityDescription(
@@ -849,21 +862,18 @@ CAPABILITY_TO_SENSORS: dict[
     Capability.THREE_AXIS: {
         Attribute.THREE_AXIS: [
             SmartThingsSensorEntityDescription(
-                key="X Coordinate",
+                key="x_coordinate",
                 translation_key="x_coordinate",
-                unique_id_separator=" ",
                 value_fn=lambda value: value[0],
             ),
             SmartThingsSensorEntityDescription(
-                key="Y Coordinate",
+                key="y_coordinate",
                 translation_key="y_coordinate",
-                unique_id_separator=" ",
                 value_fn=lambda value: value[1],
             ),
             SmartThingsSensorEntityDescription(
-                key="Z Coordinate",
+                key="z_coordinate",
                 translation_key="z_coordinate",
-                unique_id_separator=" ",
                 value_fn=lambda value: value[2],
             ),
         ]
@@ -899,6 +909,16 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.ULTRAVIOLET_INDEX,
                 translation_key="uv_index",
+                state_class=SensorStateClass.MEASUREMENT,
+            )
+        ]
+    },
+    Capability.VERY_FINE_DUST_SENSOR: {
+        Attribute.VERY_FINE_DUST_LEVEL: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.VERY_FINE_DUST_LEVEL,
+                native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+                device_class=SensorDeviceClass.PM1,
                 state_class=SensorStateClass.MEASUREMENT,
             )
         ]
@@ -990,7 +1010,6 @@ async def async_setup_entry(
             entry_data.client,
             device,
             description,
-            entry_data.rooms,
             capability,
             attribute,
         )
@@ -1023,7 +1042,6 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
         client: SmartThings,
         device: FullDevice,
         entity_description: SmartThingsSensorEntityDescription,
-        rooms: dict[str, str],
         capability: Capability,
         attribute: Attribute,
     ) -> None:
@@ -1031,8 +1049,8 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
         capabilities_to_subscribe = {capability}
         if entity_description.use_temperature_unit:
             capabilities_to_subscribe.add(Capability.TEMPERATURE_MEASUREMENT)
-        super().__init__(client, device, rooms, capabilities_to_subscribe)
-        self._attr_unique_id = f"{device.device.device_id}{entity_description.unique_id_separator}{entity_description.key}"
+        super().__init__(client, device, capabilities_to_subscribe)
+        self._attr_unique_id = f"{device.device.device_id}_{MAIN}_{capability}_{attribute}_{entity_description.key}"
         self._attribute = attribute
         self.capability = capability
         self.entity_description = entity_description
@@ -1079,3 +1097,63 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
                 return []
             return [option.lower() for option in options]
         return super().options
+
+    async def async_added_to_hass(self) -> None:
+        """Call when entity is added to hass."""
+        await super().async_added_to_hass()
+        if (
+            self.capability
+            not in {
+                Capability.DISHWASHER_OPERATING_STATE,
+                Capability.DRYER_OPERATING_STATE,
+                Capability.WASHER_OPERATING_STATE,
+            }
+            or self._attribute is not Attribute.MACHINE_STATE
+        ):
+            return
+        automations = automations_with_entity(self.hass, self.entity_id)
+        scripts = scripts_with_entity(self.hass, self.entity_id)
+        if not automations and not scripts:
+            return
+
+        entity_reg: er.EntityRegistry = er.async_get(self.hass)
+        items_list = [
+            f"- [{item.original_name}](/config/{integration}/edit/{item.unique_id})"
+            for integration, entities in (
+                ("automation", automations),
+                ("script", scripts),
+            )
+            for entity_id in entities
+            if (item := entity_reg.async_get(entity_id))
+        ]
+
+        async_create_issue(
+            self.hass,
+            DOMAIN,
+            f"deprecated_machine_state_{self.entity_id}",
+            breaks_in_ha_version="2025.10.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_machine_state",
+            translation_placeholders={
+                "entity": self.entity_id,
+                "items": "\n".join(items_list),
+            },
+        )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Call when entity will be removed from hass."""
+        await super().async_will_remove_from_hass()
+        if (
+            self.capability
+            not in {
+                Capability.DISHWASHER_OPERATING_STATE,
+                Capability.DRYER_OPERATING_STATE,
+                Capability.WASHER_OPERATING_STATE,
+            }
+            or self._attribute is not Attribute.MACHINE_STATE
+        ):
+            return
+        async_delete_issue(
+            self.hass, DOMAIN, f"deprecated_machine_state_{self.entity_id}"
+        )

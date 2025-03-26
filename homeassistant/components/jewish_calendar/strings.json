@@ -45,5 +45,35 @@
         }
       }
     }
+  },
+  "selector": {
+    "nusach": {
+      "options": {
+        "sfarad": "Sfarad",
+        "ashkenaz": "Ashkenaz",
+        "adot_mizrah": "Adot Mizrah",
+        "italian": "Italian"
+      }
+    }
+  },
+  "services": {
+    "count_omer": {
+      "name": "Count the Omer",
+      "description": "Returns the phrase for counting the Omer on a given date.",
+      "fields": {
+        "date": {
+          "name": "Date",
+          "description": "Date to count the Omer for."
+        },
+        "nusach": {
+          "name": "Nusach",
+          "description": "Nusach to count the Omer in."
+        },
+        "language": {
+          "name": "Language",
+          "description": "Language to count the Omer in."
+        }
+      }
+    }
   }
 }

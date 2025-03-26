@@ -299,6 +299,39 @@
     'via_device_id': None,
   })
 # ---
+# name: test_devices[da_ac_airsensor_01001]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': 'Realtek',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        'a3a970ea-e09c-9c04-161b-94c934e21666',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'Samsung Electronics',
+    'model': 'ASM-KR-TP1-22-ACMB1M',
+    'model_id': None,
+    'name': '에어모니터 플러스',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': 'ASM-KR-TP1-22-ACMB1M_16240426',
+    'via_device_id': None,
+  })
+# ---
 # name: test_devices[da_ac_rac_000001]
   DeviceRegistryEntrySnapshot({
     'area_id': 'theater',
@@ -992,6 +1025,39 @@
     'via_device_id': None,
   })
 # ---
+# name: test_devices[heatit_zpushwall]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        '5e5b97f3-3094-44e6-abc0-f61283412d6a',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': None,
+    'model': None,
+    'model_id': None,
+    'name': 'Livingroom smart switch',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_devices[heatit_ztrm3_thermostat]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -1088,6 +1154,39 @@
     'serial_number': None,
     'suggested_area': None,
     'sw_version': '1.122.2',
+    'via_device_id': None,
+  })
+# ---
+# name: test_devices[hw_q80r_soundbar]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': '0-0',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        'afcf3b91-0000-1111-2222-ddff2a0a6577',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'Samsung Electronics',
+    'model': 'Q80R',
+    'model_id': None,
+    'name': 'Soundbar',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': 'HW-Q80RWWB-1012.6',
     'via_device_id': None,
   })
 # ---
@@ -1388,6 +1487,39 @@
     'via_device_id': None,
   })
 # ---
+# name: test_devices[vd_sensor_light_2023]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': '',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        '5cc1c096-98b9-460c-8f1c-1045509ec605',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'Samsung Electronics',
+    'model': 'QE55LS03DAUXXN',
+    'model_id': None,
+    'name': 'Light Sensor - 55" The Frame',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': 'latest',
+    'via_device_id': None,
+  })
+# ---
 # name: test_devices[vd_stv_2017_k]
   DeviceRegistryEntrySnapshot({
     'area_id': 'theater',
@@ -1558,7 +1690,7 @@
     'area_id': 'theater',
     'config_entries': <ANY>,
     'config_entries_subentries': <ANY>,
-    'configuration_url': None,
+    'configuration_url': 'https://account.smartthings.com',
     'connections': set({
       tuple(
         'mac',
