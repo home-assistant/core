@@ -301,7 +301,10 @@ class SnapcastGroupDevice(SnapcastBaseDevice):
         """Return the state of the player."""
         if self.is_volume_muted:
             return MediaPlayerState.IDLE
-        return STREAM_STATUS.get(self._device.stream_status)
+        try:
+            return STREAM_STATUS.get(self._device.stream_status)
+        except KeyError:
+            return MediaPlayerState.IDLE
 
     async def async_set_latency(self, latency) -> None:
         """Handle the set_latency service."""
