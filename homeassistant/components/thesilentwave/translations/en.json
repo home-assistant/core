@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "invalid_ip": "Invalid IP address format"
+        },
+        "step": {
+            "user": {
+                "title": "TheSilentWave Setup",
+                "description": "Set up TheSilentWave integration",
+                "data": {
+                    "name": "Name",
+                    "host": "IP Address",
+                    "scan_interval": "Update interval in seconds (5-300)"
+                }
+            }
+        }
+    }
+}
