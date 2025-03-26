@@ -2559,7 +2559,7 @@ pywemo==1.4.0
 pywilight==0.0.74
 
 # homeassistant.components.wiz
-pywizlight==0.6.0
+pywizlight==0.6.2
 
 # homeassistant.components.wmspro
 pywmspro==0.2.1

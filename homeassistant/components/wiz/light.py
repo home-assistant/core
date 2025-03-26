@@ -123,8 +123,3 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
         """Instruct the light to turn on."""
         await self._device.turn_on(_async_pilot_builder(**kwargs))
         await self.coordinator.async_request_refresh()
-
-    @property
-    def color_mode(self) -> str | None:
-        """Provide the current color mode."""
-        return self._attr_color_mode
