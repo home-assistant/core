@@ -228,6 +228,18 @@
       "start_addon": "[%key:component::zwave_js::config::progress::start_addon%]"
     },
     "step": {
+      "init": {
+        "title": "Reconfigure Z-Wave JS",
+        "description": "Z-Wave JS will be stopped. Do you wish to continue?"
+      },
+      "prompt_migrate_or_reconfigure": {
+        "title": "Migrate or re-configure",
+        "description": "Are you migrating to a new radio or re-configuring the current radio?",
+        "menu_options": {
+          "intent_migrate": "Migrate to a new radio",
+          "intent_reconfigure": "Re-configure the current radio"
+        }
+      },
       "configure_addon": {
         "data": {
           "emulate_hardware": "Emulate Hardware",

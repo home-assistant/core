@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import asyncio
+from contextlib import suppress
 import logging
 from typing import Any
 
@@ -28,6 +29,7 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowContext,
     ConfigFlowResult,
+    OperationNotAllowed,
     OptionsFlow,
     OptionsFlowManager,
 )
@@ -77,6 +79,9 @@ ADDON_SETUP_TIMEOUT_ROUNDS = 40
 CONF_EMULATE_HARDWARE = "emulate_hardware"
 CONF_LOG_LEVEL = "log_level"
 SERVER_VERSION_TIMEOUT = 10
+
+OPTIONS_INTENT_MIGRATE = "intent_migrate"
+OPTIONS_INTENT_RECONFIGURE = "intent_reconfigure"
 
 ADDON_LOG_LEVELS = {
     "error": "Error",
@@ -742,11 +747,32 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Manage the options."""
-        if is_hassio(self.hass):
-            return await self.async_step_on_supervisor()
+        """Launch the options flow."""
+        if user_input is not None:
+            with suppress(OperationNotAllowed):
+                await self.hass.config_entries.async_unload(self.config_entry.entry_id)
 
-        return await self.async_step_manual()
+            return await self.async_step_prompt_migrate_or_reconfigure()
+
+        return self.async_show_form(step_id="init")
+        # """Manage the options."""
+        # if is_hassio(self.hass):
+        #     return await self.async_step_on_supervisor()
+
+        # return await self.async_step_manual()
+
+    async def async_step_prompt_migrate_or_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm if we are migrating adapters or just re-configuring."""
+
+        return self.async_show_menu(
+            step_id="prompt_migrate_or_reconfigure",
+            menu_options=[
+                OPTIONS_INTENT_RECONFIGURE,
+                OPTIONS_INTENT_MIGRATE,
+            ],
+        )
 
     async def async_step_manual(
         self, user_input: dict[str, Any] | None = None
