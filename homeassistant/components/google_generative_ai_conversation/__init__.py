@@ -5,7 +5,6 @@ from __future__ import annotations
 import mimetypes
 from pathlib import Path
 
-from google import genai  # type: ignore[attr-defined]
 from google.genai import Client
 from google.genai.errors import APIError, ClientError
 from requests.exceptions import Timeout
