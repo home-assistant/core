@@ -44,7 +44,7 @@ CONF_FILENAMES = "filenames"
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = (Platform.CONVERSATION,)
 
-type GoogleGenerativeAIConfigEntry = ConfigEntry[genai.Client]
+type GoogleGenerativeAIConfigEntry = ConfigEntry[Client]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -144,7 +144,10 @@ async def async_setup_entry(
 
         def init_client():
             nonlocal client
-            client = genai.Client(api_key=entry.data[CONF_API_KEY])
+            client = Client(api_key=entry.data[CONF_API_KEY])
+
+        if client is None:
+            raise HomeAssistantError("Google Generative AI client is not initialized")
 
         await hass.async_add_executor_job(init_client)
 
