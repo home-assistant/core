@@ -1,3 +1,5 @@
+"""Config flow for TheSilentWave integration."""
+
 import logging
 import voluptuous as vol
 from homeassistant import config_entries
@@ -12,7 +14,7 @@ class TheSilentWaveConfigFlow(config_entries.ConfigFlow, domain="thesilentwave")
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, user_input=None) -> config_entries.FlowResult:
         """Handle the user input for the configuration."""
         errors = {}
 
