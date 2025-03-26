@@ -95,7 +95,7 @@ class TfiacClimate(ClimateEntity):
         self._available = True
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return if the device is available."""
         return self._available
 
