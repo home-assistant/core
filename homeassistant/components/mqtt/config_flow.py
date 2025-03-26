@@ -527,11 +527,11 @@ def calculate_merged_config(
 def validate_user_input(
     user_input: dict[str, Any],
     data_schema_fields: dict[str, PlatformField],
-    errors: dict[str, str],
     component_data: dict[str, Any] | None,
     config_validator: Callable[[dict[str, Any]], dict[str, str]] | None = None,
-) -> dict[str, Any]:
+) -> tuple[dict[str, Any], dict[str, str]]:
     """Validate user input."""
+    errors: dict[str, str] = {}
     # Merge sections
     merged_user_input: dict[str, Any] = {}
     for key, value in user_input.items():
@@ -557,7 +557,7 @@ def validate_user_input(
             ),
         )
 
-    return merged_user_input
+    return merged_user_input, errors
 
 
 @callback
@@ -1256,8 +1256,8 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             entity_name_label = f" ({name})" if name is not None else ""
         data_schema = data_schema_from_fields(data_schema_fields, reconfig=reconfig)
         if user_input is not None:
-            merged_user_input = validate_user_input(
-                user_input, data_schema_fields, errors, component_data
+            merged_user_input, errors = validate_user_input(
+                user_input, data_schema_fields, component_data
             )
             if not errors:
                 if self._component_id is None:
@@ -1354,10 +1354,9 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             return await self.async_step_mqtt_platform_config()
         if user_input is not None:
             # Test entity fields against the validator
-            merged_user_input = validate_user_input(
+            merged_user_input, errors = validate_user_input(
                 user_input,
                 data_schema_fields,
-                errors,
                 component_data,
                 ENTITY_CONFIG_VALIDATOR[platform],
             )
@@ -1406,10 +1405,9 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         )
         if user_input is not None:
             # Test entity fields against the validator
-            merged_user_input = validate_user_input(
+            merged_user_input, errors = validate_user_input(
                 user_input,
                 data_schema_fields,
-                errors,
                 component_data,
                 ENTITY_CONFIG_VALIDATOR[platform],
             )
