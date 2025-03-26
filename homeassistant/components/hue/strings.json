@@ -11,7 +11,7 @@
         }
       },
       "manual": {
-        "title": "Manual configure a Hue bridge",
+        "title": "Manually configure a Hue bridge",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         },
@@ -46,8 +46,8 @@
       "button_2": "Second button",
       "button_3": "Third button",
       "button_4": "Fourth button",
-      "double_buttons_1_3": "First and Third buttons",
-      "double_buttons_2_4": "Second and Fourth buttons",
+      "double_buttons_1_3": "First and third button",
+      "double_buttons_2_4": "Second and fourth button",
       "dim_down": "Dim down",
       "dim_up": "Dim up",
       "turn_off": "[%key:common::action::turn_off%]",

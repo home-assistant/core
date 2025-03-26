@@ -184,6 +184,7 @@ def mock_config_entry(expires_at: int) -> MockConfigEntry:
             CONF_INSTALLED_APP_ID: "123",
         },
         version=3,
+        minor_version=2,
     )
 
 
