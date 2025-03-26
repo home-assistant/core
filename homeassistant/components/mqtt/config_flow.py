@@ -134,6 +134,7 @@ from .const import (
     DEFAULT_PORT,
     DEFAULT_PREFIX,
     DEFAULT_PROTOCOL,
+    DEFAULT_QOS,
     DEFAULT_TRANSPORT,
     DEFAULT_WILL,
     DEFAULT_WS_PATH,
@@ -368,10 +369,6 @@ COMMON_ENTITY_FIELDS = {
     CONF_ENTITY_PICTURE: PlatformField(TEXT_SELECTOR, False, cv.url, "invalid_url"),
 }
 
-COMMON_MQTT_FIELDS = {
-    CONF_QOS: PlatformField(QOS_SELECTOR, False, valid_qos_schema, default=0),
-}
-
 PLATFORM_ENTITY_FIELDS = {
     Platform.NOTIFY.value: {},
     Platform.SENSOR.value: {
@@ -431,16 +428,17 @@ ENTITY_CONFIG_VALIDATOR: dict[
     Platform.SENSOR.value: validate_sensor_platform_config,
 }
 
-MQTT_DEVICE_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_NAME): TEXT_SELECTOR,
-        vol.Optional(ATTR_SW_VERSION): TEXT_SELECTOR,
-        vol.Optional(ATTR_HW_VERSION): TEXT_SELECTOR,
-        vol.Optional(ATTR_MODEL): TEXT_SELECTOR,
-        vol.Optional(ATTR_MODEL_ID): TEXT_SELECTOR,
-        vol.Optional(ATTR_CONFIGURATION_URL): TEXT_SELECTOR,
-    }
-)
+MQTT_DEVICE_PLATFORM_FIELDS = {
+    ATTR_NAME: PlatformField(TEXT_SELECTOR, False, str),
+    ATTR_SW_VERSION: PlatformField(TEXT_SELECTOR, False, str),
+    ATTR_HW_VERSION: PlatformField(TEXT_SELECTOR, False, str),
+    ATTR_MODEL: PlatformField(TEXT_SELECTOR, False, str),
+    ATTR_MODEL_ID: PlatformField(TEXT_SELECTOR, False, str),
+    ATTR_CONFIGURATION_URL: PlatformField(TEXT_SELECTOR, False, cv.url, "invalid_url"),
+    CONF_QOS: PlatformField(
+        QOS_SELECTOR, False, int, default=DEFAULT_QOS, section="mqtt_settings"
+    ),
+}
 
 REAUTH_SCHEMA = vol.Schema(
     {
@@ -527,7 +525,7 @@ def calculate_merged_config(
 def validate_user_input(
     user_input: dict[str, Any],
     data_schema_fields: dict[str, PlatformField],
-    component_data: dict[str, Any] | None,
+    component_data: dict[str, Any] | None = None,
     config_validator: Callable[[dict[str, Any]], dict[str, str]] | None = None,
 ) -> tuple[dict[str, Any], dict[str, str]]:
     """Validate user input."""
@@ -566,11 +564,21 @@ def data_schema_from_fields(
     reconfig: bool,
     component_data: dict[str, Any] | None = None,
     user_input: dict[str, Any] | None = None,
+    device_data: MqttDeviceData | None = None,
 ) -> vol.Schema:
-    """Generate custom data schema from platform fields."""
-    component_data_with_user_input = deepcopy(component_data)
+    """Generate custom data schema from platform fields or device data."""
+    if device_data is not None:
+        component_data_with_user_input: dict[str, Any] | None = dict(device_data)
+        if TYPE_CHECKING:
+            assert component_data_with_user_input is not None
+        component_data_with_user_input.update(
+            component_data_with_user_input.pop("mqtt_settings", {})
+        )
+    else:
+        component_data_with_user_input = deepcopy(component_data)
     if component_data_with_user_input is not None and user_input is not None:
         component_data_with_user_input |= user_input
+
     sections: dict[str | None, None] = {
         field_details.section: None for field_details in data_schema_fields.values()
     }
@@ -1221,17 +1229,26 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Add a new MQTT device."""
-        errors: dict[str, str] = {}
-        validate_field("configuration_url", cv.url, user_input, errors, "invalid_url")
-        if not errors and user_input is not None:
-            self._subentry_data[CONF_DEVICE] = cast(MqttDeviceData, user_input)
-            if self.source == SOURCE_RECONFIGURE:
-                return await self.async_step_summary_menu()
-            return await self.async_step_entity()
-
+        errors: dict[str, Any] = {}
+        device_data = self._subentry_data[CONF_DEVICE]
+        data_schema = data_schema_from_fields(
+            MQTT_DEVICE_PLATFORM_FIELDS,
+            device_data=device_data,
+            reconfig=True,
+        )
+        if user_input is not None:
+            merged_user_input, errors = validate_user_input(
+                user_input, MQTT_DEVICE_PLATFORM_FIELDS
+            )
+            if not errors:
+                self._subentry_data[CONF_DEVICE] = cast(
+                    MqttDeviceData, merged_user_input
+                )
+                if self.source == SOURCE_RECONFIGURE:
+                    return await self.async_step_summary_menu()
+                return await self.async_step_entity()
         data_schema = self.add_suggested_values_to_schema(
-            MQTT_DEVICE_SCHEMA,
-            self._subentry_data[CONF_DEVICE] if user_input is None else user_input,
+            data_schema, device_data if user_input is None else user_input
         )
         return self.async_show_form(
             step_id=CONF_DEVICE,
@@ -1395,7 +1412,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             assert self._component_id is not None
         component_data = self._subentry_data["components"][self._component_id]
         platform = component_data[CONF_PLATFORM]
-        data_schema_fields = PLATFORM_MQTT_FIELDS[platform] | COMMON_MQTT_FIELDS
+        data_schema_fields = PLATFORM_MQTT_FIELDS[platform]
         data_schema = data_schema_from_fields(
             data_schema_fields,
             reconfig=bool(

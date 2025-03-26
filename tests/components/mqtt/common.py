@@ -70,7 +70,6 @@ MOCK_SUBENTRY_NOTIFY_COMPONENT1 = {
     "363a7ecad6be4a19b939a016ea93e994": {
         "platform": "notify",
         "name": "Milkman alert",
-        "qos": 0,
         "command_topic": "test-topic",
         "command_template": "{{ value }}",
         "entity_picture": "https://example.com/363a7ecad6be4a19b939a016ea93e994",
@@ -81,7 +80,6 @@ MOCK_SUBENTRY_NOTIFY_COMPONENT2 = {
     "6494827dac294fa0827c54b02459d309": {
         "platform": "notify",
         "name": "The second notifier",
-        "qos": 0,
         "command_topic": "test-topic2",
         "entity_picture": "https://example.com/6494827dac294fa0827c54b02459d309",
     },
@@ -89,7 +87,6 @@ MOCK_SUBENTRY_NOTIFY_COMPONENT2 = {
 MOCK_SUBENTRY_NOTIFY_COMPONENT_NO_NAME = {
     "5269352dd9534c908d22812ea5d714cd": {
         "platform": "notify",
-        "qos": 0,
         "command_topic": "test-topic",
         "command_template": "{{ value }}",
         "entity_picture": "https://example.com/5269352dd9534c908d22812ea5d714cd",
@@ -102,7 +99,6 @@ MOCK_SUBENTRY_SENSOR_COMPONENT = {
         "platform": "sensor",
         "name": "Energy",
         "device_class": "enum",
-        "qos": 1,
         "state_topic": "test-topic",
         "options": ["low", "medium", "high"],
         "expire_after": 30,
@@ -117,7 +113,6 @@ MOCK_SUBENTRY_SENSOR_COMPONENT_STATE_CLASS = {
         "state_class": "measurement",
         "state_topic": "test-topic",
         "entity_picture": "https://example.com/a0f85790a95d4889924602effff06b6e",
-        "qos": 0,
     },
 }
 MOCK_SUBENTRY_SENSOR_COMPONENT_LAST_RESET = {
@@ -128,7 +123,6 @@ MOCK_SUBENTRY_SENSOR_COMPONENT_LAST_RESET = {
         "last_reset_value_template": "{{ value_json.value }}",
         "state_topic": "test-topic",
         "entity_picture": "https://example.com/e9261f6feed443e7b7d5f3fbe2a47412",
-        "qos": 0,
     },
 }
 
@@ -139,7 +133,6 @@ MOCK_SUBENTRY_LIGHT_COMPONENT = {
     "8131babc5e8d4f44b82e0761d39091a2": {
         "platform": "light",
         "name": "Test light",
-        "qos": 1,
         "command_topic": "test-topic4",
         "schema": "basic",
         "entity_picture": "https://example.com/8131babc5e8d4f44b82e0761d39091a2",
@@ -149,7 +142,6 @@ MOCK_SUBENTRY_NOTIFY_BAD_SCHEMA = {
     "b10b531e15244425a74bb0abb1e9d2c6": {
         "platform": "notify",
         "name": "Test",
-        "qos": 1,
         "command_topic": "bad#topic",
     },
 }
@@ -183,6 +175,7 @@ MOCK_NOTIFY_SUBENTRY_DATA_SINGLE = {
         "model": "Model XL",
         "model_id": "mn002",
         "configuration_url": "https://example.com",
+        "mqtt_settings": {"qos": 1},
     },
     "components": MOCK_SUBENTRY_NOTIFY_COMPONENT1,
 }
