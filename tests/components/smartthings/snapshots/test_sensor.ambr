@@ -8379,7 +8379,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'brightness_intensity',
-    'unique_id': '5cc1c096-98b9-460c-8f1c-1045509ec605.brightnessIntensity',
+    'unique_id': '5cc1c096-98b9-460c-8f1c-1045509ec605_main_relativeBrightness_brightnessIntensity_brightnessIntensity',
     'unit_of_measurement': 'level',
   })
 # ---

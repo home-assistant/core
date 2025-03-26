@@ -268,7 +268,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '2bad3237-4886-e699-1b90-4a51a3d55c8a.switch',
+    'unique_id': '2bad3237-4886-e699-1b90-4a51a3d55c8a_main_switch_switch_switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -838,7 +838,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676.switch',
+    'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_switch_switch_switch',
     'unit_of_measurement': None,
   })
 # ---
