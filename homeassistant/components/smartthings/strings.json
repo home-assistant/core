@@ -482,7 +482,7 @@
     },
     "deprecated_binary_fridge_door": {
       "title": "Deprecated refrigerator door binary sensor detected in some automations or scripts",
-      "description": "The refrigerator door binary sensor `{entity}` is deprecated and is used in the following automations or scripts:\n{items}\n\nSeparate entities for cooler and freezer door are available and should be used going forward. Please use it in the above automations or scripts to fix this issue."
+      "description": "The refrigerator door binary sensor `{entity}` is deprecated and is used in the following automations or scripts:\n{items}\n\nSeparate entities for cooler and freezer door are available and should be used going forward. Please use them in the above automations or scripts to fix this issue."
     },
     "deprecated_machine_state": {
       "title": "Deprecated machine state sensor detected in some automations or scripts",
