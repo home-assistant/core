@@ -96,6 +96,8 @@ WARN_STATISTICS_MEAN_CHANGED: HassKey[set[str]] = HassKey(
 )
 # Link to dev statistics where issues around LTS can be fixed
 LINK_DEV_STATISTICS = "https://my.home-assistant.io/redirect/developer_statistics"
+STATE_CLASS_REMOVED_ISSUE = "state_class_removed"
+UNITS_CHANGED_ISSUE = "units_changed"
 MEAN_TYPE_CHANGED_ISSUE = "mean_type_changed"
 
 
@@ -796,7 +798,7 @@ def _update_issues(
             if numeric and state_class is None:
                 # Sensor no longer has a valid state class
                 report_issue(
-                    "state_class_removed",
+                    STATE_CLASS_REMOVED_ISSUE,
                     entity_id,
                     {"statistic_id": entity_id},
                 )
@@ -807,7 +809,7 @@ def _update_issues(
                 if numeric and not _equivalent_units({state_unit, metadata_unit}):
                     # The unit has changed, and it's not possible to convert
                     report_issue(
-                        "units_changed",
+                        UNITS_CHANGED_ISSUE,
                         entity_id,
                         {
                             "statistic_id": entity_id,
@@ -821,7 +823,7 @@ def _update_issues(
                 valid_units = (unit or "<None>" for unit in converter.VALID_UNITS)
                 valid_units_str = ", ".join(sorted(valid_units))
                 report_issue(
-                    "units_changed",
+                    UNITS_CHANGED_ISSUE,
                     entity_id,
                     {
                         "statistic_id": entity_id,
@@ -870,7 +872,11 @@ def update_statistics_issues(
                 issue.domain != DOMAIN
                 or not (issue_data := issue.data)
                 or issue_data.get("issue_type")
-                not in ("state_class_removed", "units_changed", MEAN_TYPE_CHANGED_ISSUE)
+                not in (
+                    STATE_CLASS_REMOVED_ISSUE,
+                    UNITS_CHANGED_ISSUE,
+                    MEAN_TYPE_CHANGED_ISSUE,
+                )
             ):
                 continue
             issues.add(issue.issue_id)

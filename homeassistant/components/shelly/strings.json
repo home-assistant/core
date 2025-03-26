@@ -17,12 +17,20 @@
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "Username for the device's web panel.",
+          "password": "Password for the device's web panel."
         }
       },
       "reauth_confirm": {
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "[%key:component::shelly::config::step::credentials::data_description::username%]",
+          "password": "[%key:component::shelly::config::step::credentials::data_description::password%]"
         }
       },
       "confirm_discovery": {
@@ -87,6 +95,9 @@
         "description": "Bluetooth scanning can be active or passive. With active, the Shelly requests data from nearby devices; with passive, the Shelly receives unsolicited data from nearby devices.",
         "data": {
           "ble_scanner_mode": "Bluetooth scanner mode"
+        },
+        "data_description": {
+          "ble_scanner_mode": "The scanner mode to use for Bluetooth scanning."
         }
       }
     }
@@ -201,6 +212,47 @@
           "opening": "Opening"
         }
       }
+    }
+  },
+  "exceptions": {
+    "auth_error": {
+      "message": "Authentication failed for {device}, please update your credentials"
+    },
+    "device_communication_error": {
+      "message": "Device communication error occurred for {device}"
+    },
+    "device_communication_action_error": {
+      "message": "Device communication error occurred while calling action for {entity} of {device}"
+    },
+    "device_not_found": {
+      "message": "{device} not found while configuring device automation triggers"
+    },
+    "firmware_unsupported": {
+      "message": "{device} is running an unsupported firmware, please update the firmware"
+    },
+    "invalid_trigger": {
+      "message": "Invalid device automation trigger (type, subtype): {trigger}"
+    },
+    "ota_update_connection_error": {
+      "message": "Device communication error occurred while triggering OTA update for {device}"
+    },
+    "ota_update_rpc_error": {
+      "message": "RPC call error occurred while triggering OTA update for {device}"
+    },
+    "rpc_call_action_error": {
+      "message": "RPC call error occurred while calling action for {entity} of {device}"
+    },
+    "update_error": {
+      "message": "An error occurred while retrieving data from {device}"
+    },
+    "update_error_device_disconnected": {
+      "message": "An error occurred while retrieving data from {device} because it is disconnected"
+    },
+    "update_error_reconnect_error": {
+      "message": "An error occurred while reconnecting to {device}"
+    },
+    "update_error_sleeping_device": {
+      "message": "Sleeping device did not update within {period} seconds interval"
     }
   },
   "issues": {

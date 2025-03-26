@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools==77.0.1"]
+requires = ["setuptools==77.0.3"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -33,7 +33,7 @@ dependencies    = [
     "aiohttp-fast-zlib==0.2.3",
     "aiohttp-asyncmdnsresolver==0.1.1",
     "aiozoneinfo==0.2.3",
-    "annotatedyaml==0.4.4",
+    "annotatedyaml==0.4.5",
     "astral==2.2",
     "async-interrupt==1.2.2",
     "attrs==25.1.0",
@@ -61,7 +61,7 @@ dependencies    = [
     "Pillow==11.1.0",
     "propcache==0.3.0",
     "pyOpenSSL==25.0.0",
-    "orjson==3.10.15",
+    "orjson==3.10.16",
     "packaging>=23.1",
     "psutil-home-assistant==0.0.1",
     "python-slugify==8.0.4",
@@ -77,7 +77,7 @@ dependencies    = [
     # Temporary setting an upper bound, to prevent compat issues with urllib3>=2
     # https://github.com/home-assistant/core/issues/97248
     "urllib3>=1.26.5,<2",
-    "uv==0.6.1",
+    "uv==0.6.8",
     "voluptuous==0.15.2",
     "voluptuous-serialize==2.6.0",
     "voluptuous-openapi==0.0.6",
