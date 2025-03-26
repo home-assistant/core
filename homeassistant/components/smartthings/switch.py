@@ -164,7 +164,12 @@ class SmartThingsSwitch(SmartThingsEntity, SwitchEntity):
         await super().async_added_to_hass()
         if self.entity_description != SWITCH or self.device.device.components[
             MAIN
-        ].manufacturer_category not in {Category.DRYER, Category.WASHER}:
+        ].manufacturer_category not in {
+            Category.DRYER,
+            Category.WASHER,
+            Category.MICROWAVE,
+            Category.DISHWASHER,
+        }:
             return
         automations = automations_with_entity(self.hass, self.entity_id)
         scripts = scripts_with_entity(self.hass, self.entity_id)
@@ -174,7 +179,10 @@ class SmartThingsSwitch(SmartThingsEntity, SwitchEntity):
         entity_reg: er.EntityRegistry = er.async_get(self.hass)
         items_list = [
             f"- [{item.original_name}](/config/{integration}/edit/{item.unique_id})"
-            for integration, entities in (("automation", automations), ("script", scripts))
+            for integration, entities in (
+                ("automation", automations),
+                ("script", scripts),
+            )
             for entity_id in entities
             if (item := entity_reg.async_get(entity_id))
         ]
@@ -198,7 +206,12 @@ class SmartThingsSwitch(SmartThingsEntity, SwitchEntity):
         await super().async_will_remove_from_hass()
         if self.entity_description != SWITCH or self.device.device.components[
             MAIN
-        ].manufacturer_category not in {Category.DRYER, Category.WASHER}:
+        ].manufacturer_category not in {
+            Category.DRYER,
+            Category.WASHER,
+            Category.MICROWAVE,
+            Category.DISHWASHER,
+        }:
             return
         async_delete_issue(self.hass, DOMAIN, f"deprecated_switch_{self.entity_id}")
 
