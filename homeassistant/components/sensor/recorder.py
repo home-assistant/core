@@ -118,7 +118,7 @@ def _get_sensor_states(hass: HomeAssistant) -> list[State]:
     ]
 
 
-def _time_weighted_average(
+def _time_weighted_arithmetic_mean(
     fstates: list[tuple[float, State]], start: datetime.datetime, end: datetime.datetime
 ) -> float:
     """Calculate a time weighted average.
@@ -178,21 +178,17 @@ def _time_weighted_circular_mean(
             start = start_time
         else:
             duration = (start_time - old_start_time).total_seconds()
-            if duration != 0:
-                # No need to add if duration is 0 as it won't affect the result
-                # Append same value for each second between state changes
-                assert old_fstate is not None
-                values.append((old_fstate, duration))
+            assert old_fstate is not None
+            values.append((old_fstate, duration))
 
         old_fstate = fstate
         old_start_time = start_time
 
     if old_fstate is not None:
-        # Accumulate the value, weighted by duration until end of the period
+        # Add last value weighted by duration until end of the period
         assert old_start_time is not None
         duration = (end - old_start_time).total_seconds()
-        if duration != 0:
-            values.append((old_fstate, duration))
+        values.append((old_fstate, duration))
 
     return statistics.weighted_circular_mean(values)
 
@@ -620,7 +616,9 @@ def compile_statistics(  # noqa: C901
 
         match mean_type:
             case StatisticMeanType.ARITHMETIC:
-                stat["mean"] = _time_weighted_average(valid_float_states, start, end)
+                stat["mean"] = _time_weighted_arithmetic_mean(
+                    valid_float_states, start, end
+                )
             case StatisticMeanType.CIRCULAR:
                 stat["mean"] = _time_weighted_circular_mean(
                     valid_float_states, start, end
