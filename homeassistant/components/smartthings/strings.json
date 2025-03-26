@@ -469,6 +469,9 @@
       },
       "wrinkle_prevent": {
         "name": "Wrinkle prevent"
+      },
+      "ice_maker": {
+        "name": "Ice maker"
       }
     }
   },
