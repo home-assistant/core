@@ -77,7 +77,7 @@ dependencies    = [
     # Temporary setting an upper bound, to prevent compat issues with urllib3>=2
     # https://github.com/home-assistant/core/issues/97248
     "urllib3>=1.26.5,<2",
-    "uv==0.6.8",
+    "uv==0.6.10",
     "voluptuous==0.15.2",
     "voluptuous-serialize==2.6.0",
     "voluptuous-openapi==0.0.6",
