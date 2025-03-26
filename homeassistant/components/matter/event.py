@@ -173,7 +173,7 @@ DOOR_LOCK_EVENT_TYPES_EXTENDED_MAP = {
         3: "Lock Operation Error: Forced User Event",  # [O]
         4: "Lock Operation Error: Unlatch",  # [M]
     },
-    4: {  # Lock User Chage (USR)
+    4: {  # Lock User Change (USR)
         0: "Lock User Change: Unspecified",  # [O]
         1: "Lock User Change: Programming Code",  # [O]
         2: "Lock User Change: User Index",  # [M]
