@@ -4,7 +4,7 @@
       "user": {
         "title": "Add Imeon inverter",
         "data": {
-          "address": "[%key:common::config_flow::data::url%]",
+          "address": "[%key:common::config_flow::data::ip%]",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
         },
@@ -38,7 +38,7 @@
         "name": "Battery power"
       },
       "battery_soc": {
-        "name": "Battery SOC"
+        "name": "Battery state of charge"
       },
       "battery_stored": {
         "name": "Battery stored"
