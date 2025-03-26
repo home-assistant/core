@@ -186,21 +186,20 @@ async def test_new_pipeline_cancels_pipeline(
     ("service_data", "expected_params"),
     [
         (
-            {"message": "Hello", "preannounce_media_id": ""},
+            {"message": "Hello", "preannounce_media_id": None},
             AssistSatelliteAnnouncement(
                 message="Hello",
                 media_id="http://10.10.10.10:8123/api/tts_proxy/test-token",
                 original_media_id="media-source://bla",
                 tts_token="test-token",
                 media_id_source="tts",
-                preannounce_media_id="",
             ),
         ),
         (
             {
                 "message": "Hello",
                 "media_id": "media-source://given",
-                "preannounce_media_id": "",
+                "preannounce_media_id": None,
             },
             AssistSatelliteAnnouncement(
                 message="Hello",
@@ -208,18 +207,16 @@ async def test_new_pipeline_cancels_pipeline(
                 original_media_id="media-source://given",
                 tts_token=None,
                 media_id_source="media_id",
-                preannounce_media_id="",
             ),
         ),
         (
-            {"media_id": "http://example.com/bla.mp3", "preannounce_media_id": ""},
+            {"media_id": "http://example.com/bla.mp3", "preannounce_media_id": None},
             AssistSatelliteAnnouncement(
                 message="",
                 media_id="http://example.com/bla.mp3",
                 original_media_id="http://example.com/bla.mp3",
                 tts_token=None,
                 media_id_source="url",
-                preannounce_media_id="",
             ),
         ),
         (
@@ -544,7 +541,7 @@ async def test_vad_sensitivity_entity_not_found(
             {
                 "start_message": "Hello",
                 "extra_system_prompt": "Better system prompt",
-                "preannounce_media_id": "",
+                "preannounce_media_id": None,
             },
             (
                 "mock-conversation-id",
@@ -555,7 +552,6 @@ async def test_vad_sensitivity_entity_not_found(
                     tts_token="test-token",
                     original_media_id="media-source://generated",
                     media_id_source="tts",
-                    preannounce_media_id="",
                 ),
             ),
         ),
@@ -563,7 +559,7 @@ async def test_vad_sensitivity_entity_not_found(
             {
                 "start_message": "Hello",
                 "start_media_id": "media-source://given",
-                "preannounce_media_id": "",
+                "preannounce_media_id": None,
             },
             (
                 "mock-conversation-id",
@@ -574,14 +570,13 @@ async def test_vad_sensitivity_entity_not_found(
                     tts_token=None,
                     original_media_id="media-source://given",
                     media_id_source="media_id",
-                    preannounce_media_id="",
                 ),
             ),
         ),
         (
             {
                 "start_media_id": "http://example.com/given.mp3",
-                "preannounce_media_id": "",
+                "preannounce_media_id": None,
             },
             (
                 "mock-conversation-id",
@@ -592,7 +587,6 @@ async def test_vad_sensitivity_entity_not_found(
                     tts_token=None,
                     original_media_id="http://example.com/given.mp3",
                     media_id_source="url",
-                    preannounce_media_id="",
                 ),
             ),
         ),

@@ -182,7 +182,7 @@ class AssistSatelliteEntity(entity.Entity):
         message: str | None = None,
         media_id: str | None = None,
         play_preannounce: bool = True,
-        preannounce_media_id: str | None = None,
+        preannounce_media_id: str | None = PREANNOUNCE_URL,
     ) -> None:
         """Play and show an announcement on the satellite.
 
@@ -231,7 +231,7 @@ class AssistSatelliteEntity(entity.Entity):
         start_message: str | None = None,
         start_media_id: str | None = None,
         extra_system_prompt: str | None = None,
-        preannounce_media_id: str | None = None,
+        preannounce_media_id: str | None = PREANNOUNCE_URL,
     ) -> None:
         """Start a conversation from the satellite.
 
@@ -550,10 +550,6 @@ class AssistSatelliteEntity(entity.Entity):
         media_id = async_process_play_media_url(self.hass, media_id)
 
         # Resolve preannounce media id
-        if preannounce_media_id is None:
-            # Default sound
-            preannounce_media_id = PREANNOUNCE_URL
-
         if preannounce_media_id:
             if media_source.is_media_source_id(preannounce_media_id):
                 preannounce_media = await media_source.async_resolve_media(
