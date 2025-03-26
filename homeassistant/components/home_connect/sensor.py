@@ -551,8 +551,8 @@ def _remove_event_sensor_listeners_on_depaired(
     entry: HomeConnectConfigEntry,
     remove_event_sensor_listener_dict: dict[str, list[CALLBACK_TYPE]],
 ) -> None:
-    registered_listeners_ha_id = set(remove_event_sensor_listener_dict.keys())
-    actual_appliances = set(entry.runtime_data.data.keys())
+    registered_listeners_ha_id = set(remove_event_sensor_listener_dict)
+    actual_appliances = set(entry.runtime_data.data)
     for appliance_ha_id in registered_listeners_ha_id - actual_appliances:
         for listener in remove_event_sensor_listener_dict.pop(appliance_ha_id):
             listener()
