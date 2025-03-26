@@ -315,12 +315,14 @@ ENTITY_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
+        suggested_display_precision=2,
     ),
     SensorEntityDescription(
         key="monitoring_economy_factor",
         translation_key="monitoring_economy_factor",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL,
+        suggested_display_precision=2,
     ),
     SensorEntityDescription(
         key="monitoring_grid_consumption",
@@ -328,6 +330,7 @@ ENTITY_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
+        suggested_display_precision=2,
     ),
     SensorEntityDescription(
         key="monitoring_grid_injection",
@@ -335,6 +338,7 @@ ENTITY_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
+        suggested_display_precision=2,
     ),
     SensorEntityDescription(
         key="monitoring_grid_power_flow",
@@ -342,18 +346,21 @@ ENTITY_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
+        suggested_display_precision=2,
     ),
     SensorEntityDescription(
         key="monitoring_self_consumption",
         translation_key="monitoring_self_consumption",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
     ),
     SensorEntityDescription(
         key="monitoring_self_sufficiency",
         translation_key="monitoring_self_sufficiency",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
     ),
     SensorEntityDescription(
         key="monitoring_solar_production",
@@ -361,6 +368,7 @@ ENTITY_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
+        suggested_display_precision=2,
     ),
     # Monitoring (instant minute data)
     SensorEntityDescription(
@@ -369,6 +377,7 @@ ENTITY_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
     ),
     SensorEntityDescription(
         key="monitoring_minute_grid_consumption",
@@ -376,6 +385,7 @@ ENTITY_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
     ),
     SensorEntityDescription(
         key="monitoring_minute_grid_injection",
@@ -383,6 +393,7 @@ ENTITY_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
     ),
     SensorEntityDescription(
         key="monitoring_minute_grid_power_flow",
@@ -390,6 +401,7 @@ ENTITY_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
     ),
     SensorEntityDescription(
         key="monitoring_minute_solar_production",
@@ -397,6 +409,7 @@ ENTITY_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
     ),
 )
 
