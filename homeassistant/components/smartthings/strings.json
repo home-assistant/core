@@ -497,7 +497,7 @@
     },
     "deprecated_switch_media_player": {
       "title": "[%key:component::smartthings::issues::deprecated_switch_appliance::title%]",
-      "description": "The switch `{entity}` is deprecated and a media player entity has been added to replace it.\n\nThe switch was used in the following automations or scripts:\n{items}\n\nPlease use it in the above automations or scripts to fix this issue."
+      "description": "The switch `{entity}` is deprecated and a media player entity has been added to replace it.\n\nThe switch was used in the following automations or scripts:\n{items}\n\nPlease use the new media player entity in the above automations or scripts to fix this issue."
     },
     "deprecated_media_player": {
       "title": "Deprecated sensor detected in some automations or scripts",
