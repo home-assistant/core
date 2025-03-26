@@ -128,7 +128,6 @@ class SmartThingsSensorEntityDescription(SensorEntityDescription):
 
     value_fn: Callable[[Any], str | float | int | datetime | None] = lambda value: value
     extra_state_attributes_fn: Callable[[Any], dict[str, Any]] | None = None
-    unique_id_separator: str = "."
     capability_ignore_list: list[set[Capability]] | None = None
     options_attribute: Attribute | None = None
     exists_fn: Callable[[Status], bool] | None = None
@@ -675,6 +674,15 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
+    Capability.RELATIVE_BRIGHTNESS: {
+        Attribute.BRIGHTNESS_INTENSITY: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.BRIGHTNESS_INTENSITY,
+                translation_key="brightness_intensity",
+                state_class=SensorStateClass.MEASUREMENT,
+            )
+        ]
+    },
     Capability.RELATIVE_HUMIDITY_MEASUREMENT: {
         Attribute.HUMIDITY: [
             SmartThingsSensorEntityDescription(
@@ -846,21 +854,18 @@ CAPABILITY_TO_SENSORS: dict[
     Capability.THREE_AXIS: {
         Attribute.THREE_AXIS: [
             SmartThingsSensorEntityDescription(
-                key="X Coordinate",
+                key="x_coordinate",
                 translation_key="x_coordinate",
-                unique_id_separator=" ",
                 value_fn=lambda value: value[0],
             ),
             SmartThingsSensorEntityDescription(
-                key="Y Coordinate",
+                key="y_coordinate",
                 translation_key="y_coordinate",
-                unique_id_separator=" ",
                 value_fn=lambda value: value[1],
             ),
             SmartThingsSensorEntityDescription(
-                key="Z Coordinate",
+                key="z_coordinate",
                 translation_key="z_coordinate",
-                unique_id_separator=" ",
                 value_fn=lambda value: value[2],
             ),
         ]
@@ -1037,7 +1042,7 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
         if entity_description.use_temperature_unit:
             capabilities_to_subscribe.add(Capability.TEMPERATURE_MEASUREMENT)
         super().__init__(client, device, capabilities_to_subscribe)
-        self._attr_unique_id = f"{device.device.device_id}{entity_description.unique_id_separator}{entity_description.key}"
+        self._attr_unique_id = f"{device.device.device_id}_{MAIN}_{capability}_{attribute}_{entity_description.key}"
         self._attribute = attribute
         self.capability = capability
         self.entity_description = entity_description
