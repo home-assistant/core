@@ -480,7 +480,7 @@
     },
     "deprecated_switch_appliance": {
       "title": "Deprecated switch detected in some automations or scripts",
-      "description": "The switch `{entity}` is deprecated and is used in the following automations or scripts:\n{items}\n\nThe actions of the switch did not work, and it has been replaced with a binary sensor instead. Please use them in the above automations or scripts to fix this issue."
+      "description": "The switch `{entity}` is deprecated because the actions did not work, so it has been replaced with a binary sensor instead.\n\nThe switch was used in the following automations or scripts:\n{items}\n\nPlease use them in the above automations or scripts to fix this issue."
     }
   }
 }
