@@ -81,8 +81,10 @@ class JewishCalendarBinarySensor(JewishCalendarEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return true if sensor is on."""
-        zmanim = self.make_zmanim(dt.date.today())
-        return self.entity_description.is_on(zmanim, dt_util.now())
+        assert self.coordinator.data.results is not None, "Data not available"
+        return self.entity_description.is_on(
+            self.coordinator.data.results.zmanim, dt_util.now()
+        )
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
@@ -106,7 +108,8 @@ class JewishCalendarBinarySensor(JewishCalendarEntity, BinarySensorEntity):
     def _schedule_update(self) -> None:
         """Schedule the next update of the sensor."""
         now = dt_util.now()
-        zmanim = self.make_zmanim(dt.date.today())
+        assert self.coordinator.data.results is not None, "Data not available"
+        zmanim = self.coordinator.data.results.zmanim
         update = zmanim.netz_hachama.local + dt.timedelta(days=1)
         candle_lighting = zmanim.candle_lighting
         if candle_lighting is not None and now < candle_lighting < update:
