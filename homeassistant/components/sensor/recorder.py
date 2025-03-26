@@ -78,6 +78,8 @@ WARN_UNSUPPORTED_UNIT: HassKey[set[str]] = HassKey(f"{DOMAIN}_warn_unsupported_u
 WARN_UNSTABLE_UNIT: HassKey[set[str]] = HassKey(f"{DOMAIN}_warn_unstable_unit")
 # Link to dev statistics where issues around LTS can be fixed
 LINK_DEV_STATISTICS = "https://my.home-assistant.io/redirect/developer_statistics"
+STATE_CLASS_REMOVED_ISSUE = "state_class_removed"
+UNITS_CHANGED_ISSUE = "units_changed"
 
 
 def _get_sensor_states(hass: HomeAssistant) -> list[State]:
@@ -134,16 +136,7 @@ def _time_weighted_average(
         duration = end - old_start_time
         accumulated += old_fstate * duration.total_seconds()
 
-    period_seconds = (end - start).total_seconds()
-    if period_seconds == 0:
-        # If the only state changed that happened was at the exact moment
-        # at the end of the period, we can't calculate a meaningful average
-        # so we return 0.0 since it represents a time duration smaller than
-        # we can measure. This probably means the precision of statistics
-        # column schema in the database is incorrect but it is actually possible
-        # to happen if the state change event fired at the exact microsecond
-        return 0.0
-    return accumulated / period_seconds
+    return accumulated / (end - start).total_seconds()
 
 
 def _get_units(fstates: list[tuple[float, State]]) -> set[str | None]:
@@ -447,7 +440,11 @@ def compile_statistics(  # noqa: C901
         entity_id = _state.entity_id
         # If there are no recent state changes, the sensor's state may already be pruned
         # from the recorder. Get the state from the state machine instead.
-        if not (entity_history := history_list.get(entity_id, [_state])):
+        try:
+            entity_history = history_list[entity_id]
+        except KeyError:
+            entity_history = [_state] if _state.last_changed < end else []
+        if not entity_history:
             continue
         if not (float_states := _entity_history_to_float_and_state(entity_history)):
             continue
@@ -702,7 +699,7 @@ def _update_issues(
             if numeric and state_class is None:
                 # Sensor no longer has a valid state class
                 report_issue(
-                    "state_class_removed",
+                    STATE_CLASS_REMOVED_ISSUE,
                     entity_id,
                     {"statistic_id": entity_id},
                 )
@@ -713,7 +710,7 @@ def _update_issues(
                 if numeric and not _equivalent_units({state_unit, metadata_unit}):
                     # The unit has changed, and it's not possible to convert
                     report_issue(
-                        "units_changed",
+                        UNITS_CHANGED_ISSUE,
                         entity_id,
                         {
                             "statistic_id": entity_id,
@@ -727,7 +724,7 @@ def _update_issues(
                 valid_units = (unit or "<None>" for unit in converter.VALID_UNITS)
                 valid_units_str = ", ".join(sorted(valid_units))
                 report_issue(
-                    "units_changed",
+                    UNITS_CHANGED_ISSUE,
                     entity_id,
                     {
                         "statistic_id": entity_id,
@@ -759,7 +756,7 @@ def update_statistics_issues(
                 issue.domain != DOMAIN
                 or not (issue_data := issue.data)
                 or issue_data.get("issue_type")
-                not in ("state_class_removed", "units_changed")
+                not in (STATE_CLASS_REMOVED_ISSUE, UNITS_CHANGED_ISSUE)
             ):
                 continue
             issues.add(issue.issue_id)

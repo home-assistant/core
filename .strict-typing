@@ -136,6 +136,7 @@ homeassistant.components.clicksend.*
 homeassistant.components.climate.*
 homeassistant.components.cloud.*
 homeassistant.components.co2signal.*
+homeassistant.components.comelit.*
 homeassistant.components.command_line.*
 homeassistant.components.config.*
 homeassistant.components.configurator.*
@@ -411,6 +412,7 @@ homeassistant.components.recollect_waste.*
 homeassistant.components.recorder.*
 homeassistant.components.remember_the_milk.*
 homeassistant.components.remote.*
+homeassistant.components.remote_calendar.*
 homeassistant.components.renault.*
 homeassistant.components.reolink.*
 homeassistant.components.repairs.*

@@ -345,6 +345,11 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "apollo_automation": {
+      "name": "Apollo Automation",
+      "integration_type": "virtual",
+      "supported_by": "esphome"
+    },
     "appalachianpower": {
       "name": "Appalachian Power",
       "integration_type": "virtual",
@@ -605,6 +610,13 @@
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
+    },
+    "backup": {
+      "name": "Backup",
+      "integration_type": "service",
+      "config_flow": false,
+      "iot_class": "calculated",
+      "single_config_entry": true
     },
     "baf": {
       "name": "Big Ass Fans",
@@ -2484,6 +2496,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "hardkernel": {
+      "name": "Hardkernel",
+      "integration_type": "hardware",
+      "config_flow": false,
+      "single_config_entry": true
+    },
     "harman_kardon_avr": {
       "name": "Harman Kardon AVR",
       "integration_type": "hub",
@@ -2626,6 +2644,23 @@
       "name": "Legrand Home+ Control",
       "integration_type": "virtual",
       "supported_by": "netatmo"
+    },
+    "homeassistant_green": {
+      "name": "Home Assistant Green",
+      "integration_type": "hardware",
+      "config_flow": false,
+      "single_config_entry": true
+    },
+    "homeassistant_sky_connect": {
+      "name": "Home Assistant Connect ZBT-1",
+      "integration_type": "hardware",
+      "config_flow": true
+    },
+    "homeassistant_yellow": {
+      "name": "Home Assistant Yellow",
+      "integration_type": "hardware",
+      "config_flow": false,
+      "single_config_entry": true
     },
     "homee": {
       "name": "Homee",
@@ -3651,7 +3686,7 @@
       "iot_class": "cloud_push"
     },
     "matter": {
-      "name": "Matter (BETA)",
+      "name": "Matter",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
@@ -4001,7 +4036,10 @@
           "iot_class": "assumed_state",
           "name": "Motionblinds Bluetooth"
         }
-      }
+      },
+      "iot_standards": [
+        "matter"
+      ]
     },
     "motioneye": {
       "name": "motionEye",
@@ -4426,6 +4464,11 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
+    },
+    "ogemray": {
+      "name": "Ogemray",
+      "integration_type": "virtual",
+      "supported_by": "shelly"
     },
     "ohmconnect": {
       "name": "OhmConnect",
@@ -4984,6 +5027,12 @@
       "integration_type": "virtual",
       "supported_by": "opower"
     },
+    "pterodactyl": {
+      "name": "Pterodactyl",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "pulseaudio_loopback": {
       "name": "PulseAudio Loopback",
       "integration_type": "hub",
@@ -5188,6 +5237,11 @@
     "raspberry_pi": {
       "name": "Raspberry Pi",
       "integrations": {
+        "raspberry_pi": {
+          "integration_type": "hardware",
+          "config_flow": false,
+          "name": "Raspberry Pi"
+        },
         "rpi_camera": {
           "integration_type": "hub",
           "config_flow": false,
@@ -5260,6 +5314,11 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_push"
+    },
+    "remote_calendar": {
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "renault": {
       "name": "Renault",
@@ -7686,6 +7745,7 @@
     "plant",
     "proximity",
     "random",
+    "remote_calendar",
     "rpi_power",
     "schedule",
     "season",
