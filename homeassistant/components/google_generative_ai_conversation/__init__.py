@@ -6,6 +6,7 @@ import mimetypes
 from pathlib import Path
 
 from google import genai  # type: ignore[attr-defined]
+from google.genai import Client
 from google.genai.errors import APIError, ClientError
 from requests.exceptions import Timeout
 import voluptuous as vol
@@ -139,7 +140,7 @@ async def async_setup_entry(
     """Set up Google Generative AI Conversation from a config entry."""
 
     try:
-        client: genai.Client | None = None
+        client: Client | None = None
 
         def init_client():
             nonlocal client
