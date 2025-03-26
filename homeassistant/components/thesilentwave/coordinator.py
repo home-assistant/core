@@ -1,4 +1,5 @@
 """Coordinator for TheSilentWave integration."""
+
 from datetime import timedelta
 import logging
 
@@ -7,6 +8,7 @@ import aiohttp
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 _LOGGER = logging.getLogger(__name__)
+
 
 class TheSilentWaveCoordinator(DataUpdateCoordinator):
     """Class to manage fetching the data from the API."""
