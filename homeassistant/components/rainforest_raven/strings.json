@@ -12,7 +12,7 @@
     "step": {
       "meters": {
         "data": {
-          "mac": "Meter MAC Addresses"
+          "mac": "Meter MAC addresses"
         }
       },
       "user": {
@@ -32,7 +32,7 @@
         }
       },
       "power_demand": {
-        "name": "Meter power demand"
+        "name": "Power demand"
       },
       "signal_strength": {
         "name": "Meter signal strength",
@@ -41,10 +41,10 @@
         }
       },
       "total_energy_delivered": {
-        "name": "Total meter energy delivered"
+        "name": "Total energy delivered"
       },
       "total_energy_received": {
-        "name": "Total meter energy received"
+        "name": "Total energy received"
       }
     }
   }
