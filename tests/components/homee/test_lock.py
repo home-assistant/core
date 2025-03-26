@@ -100,14 +100,13 @@ async def test_lock_changed_by(
     expected: str,
 ) -> None:
     """Test lock changed by entries."""
-    await setup_lock(hass, mock_config_entry, mock_homee)
+    mock_homee.nodes = [build_mock_node("lock.json")]
+    mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
     mock_homee.get_user_by_id.return_value = MagicMock(username="testuser")
-
     attribute = mock_homee.nodes[0].attributes[0]
     attribute.changed_by = attr_changed_by
     attribute.changed_by_id = changed_by_id
-    attribute.add_on_changed_listener.call_args_list[0][0][0](attribute)
-    await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get("lock.test_lock").attributes["changed_by"] == expected
 
