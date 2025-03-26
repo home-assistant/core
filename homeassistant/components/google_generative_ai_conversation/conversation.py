@@ -171,17 +171,27 @@ def _escape_decode(value: Any) -> Any:
     return value
 
 
+def _create_google_tool_response_parts(
+    parts: list[conversation.ToolResultContent],
+) -> list[Part]:
+    """Create Google tool response parts."""
+    return [
+        Part.from_function_response(
+            name=tool_result.tool_name, response=tool_result.tool_result
+        )
+        for tool_result in parts
+    ]
+
+
 def _create_google_tool_response_content(
     content: list[conversation.ToolResultContent],
 ) -> Content:
     """Create a Google tool response content."""
     return Content(
+        role="user",
         parts=[
-            Part.from_function_response(
-                name=tool_result.tool_name, response=tool_result.tool_result
-            )
-            for tool_result in content
-        ]
+            _create_google_tool_response_parts(content),
+        ],
     )
 
 
