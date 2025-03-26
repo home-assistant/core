@@ -187,7 +187,7 @@ class OpenAIOptionsFlow(OptionsFlow):
             if user_input[CONF_RECOMMENDED]:
                 return self.async_create_entry(title="", data=user_input)
 
-            self.options = user_input
+            options.update(user_input)
             return await self.async_step_advanced()
 
         return self.async_show_form(
@@ -263,6 +263,8 @@ class OpenAIOptionsFlow(OptionsFlow):
                     ),
                 }
             )
+        elif CONF_REASONING_EFFORT in options:
+            options.pop(CONF_REASONING_EFFORT)
 
         if model.startswith("gpt-4o"):
             step_schema.update(
@@ -287,6 +289,8 @@ class OpenAIOptionsFlow(OptionsFlow):
                     ): bool,
                 }
             )
+        elif CONF_WEB_SEARCH in options:
+            options.pop(CONF_WEB_SEARCH)
 
         if not step_schema:
             return self.async_create_entry(title="", data=options)
