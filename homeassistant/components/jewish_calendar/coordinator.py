@@ -121,25 +121,23 @@ class JewishCalendarUpdateCoordinator(DataUpdateCoordinator[JewishCalendarData])
         if today_times.havdalah and now > today_times.havdalah:
             after_tzais_date = daytime_date.next_day
 
-        self.async_schedule_future_update()
         self.config_data.results = JewishCalendarResults(
             daytime_date, after_shkia_date, after_tzais_date, today_times
         )
+        self.async_schedule_future_update()
         return self.config_data
 
     @callback
     def async_schedule_future_update(self) -> None:
         """Schedule the next update of the sensor."""
-        _LOGGER.debug("Scheduling next update for Jewish Calendar")
+        assert self.config_data.results, "No results to schedule"
+        zmanim = self.config_data.results.zmanim
+        updates = [zmanim.netz_hachama.local + dt.timedelta(days=1), zmanim.shkia.local]
+        if zmanim.candle_lighting:
+            updates.append(zmanim.candle_lighting)
+        if zmanim.havdalah:
+            updates.append(zmanim.havdalah)
 
         now = dt_util.now()
-        zmanim = self.config_data.make_zmanim(now)
-        updates = [
-            zmanim.netz_hachama.local + dt.timedelta(days=1),
-            zmanim.shkia.local,
-            zmanim.candle_lighting,
-            zmanim.havdalah,
-        ]
-
         next_update = min([upd for upd in updates if upd], key=lambda x: x - now)
         self.update_interval = next_update - now
