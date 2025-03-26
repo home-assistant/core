@@ -472,8 +472,6 @@ filterwarnings = [
     # Ignore custom pytest marks
     "ignore:Unknown pytest.mark.disable_autouse_fixture:pytest.PytestUnknownMarkWarning:tests.components.met",
     "ignore:Unknown pytest.mark.dataset:pytest.PytestUnknownMarkWarning:tests.components.screenlogic",
-    # https://github.com/rokam/sunweg/blob/3.1.0/sunweg/plant.py#L96 - v3.1.0 - 2024-10-02
-    "ignore:The '(kwh_per_kwp|performance_rate)' property is deprecated and will return 0:DeprecationWarning:tests.components.sunweg.test_init",
 
     # -- design choice 3rd party
     # https://github.com/gwww/elkm1/blob/2.2.10/elkm1_lib/util.py#L8-L19
