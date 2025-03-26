@@ -11,5 +11,6 @@
   "documentation": "https://www.home-assistant.io/integrations/airzone",
   "iot_class": "local_polling",
   "loggers": ["aioairzone"],
+  "quality_scale": "bronze",
   "requirements": ["aioairzone==0.9.9"]
 }
