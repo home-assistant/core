@@ -1080,7 +1080,7 @@ async def test_options_flow_ble(hass: HomeAssistant, mock_rpc_device: Mock) -> N
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_BLE_SCANNER_MODE] == BLEScannerMode.DISABLED
+    assert result["data"][CONF_BLE_SCANNER_MODE] is BLEScannerMode.DISABLED
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
     assert result["type"] is FlowResultType.FORM
@@ -1096,7 +1096,7 @@ async def test_options_flow_ble(hass: HomeAssistant, mock_rpc_device: Mock) -> N
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_BLE_SCANNER_MODE] == BLEScannerMode.ACTIVE
+    assert result["data"][CONF_BLE_SCANNER_MODE] is BLEScannerMode.ACTIVE
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
     assert result["type"] is FlowResultType.FORM
@@ -1112,7 +1112,7 @@ async def test_options_flow_ble(hass: HomeAssistant, mock_rpc_device: Mock) -> N
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_BLE_SCANNER_MODE] == BLEScannerMode.PASSIVE
+    assert result["data"][CONF_BLE_SCANNER_MODE] is BLEScannerMode.PASSIVE
 
     await hass.config_entries.async_unload(entry.entry_id)
 
