@@ -23,6 +23,10 @@
       "connectable": false
     },
     {
+      "local_name": "ITH-11-B",
+      "connectable": false
+    },
+    {
       "local_name": "ITH-13-B",
       "connectable": false
     },
@@ -36,5 +40,5 @@
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/inkbird",
   "iot_class": "local_push",
-  "requirements": ["inkbird-ble==0.8.0"]
+  "requirements": ["inkbird-ble==0.9.0"]
 }
