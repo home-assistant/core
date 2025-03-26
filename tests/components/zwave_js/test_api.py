@@ -69,6 +69,7 @@ from homeassistant.components.zwave_js.api import (
     PRODUCT_TYPE,
     PROPERTY,
     PROPERTY_KEY,
+    PROTOCOL,
     QR_CODE_STRING,
     QR_PROVISIONING_INFORMATION,
     REQUESTED_SECURITY_CLASSES,
@@ -1131,20 +1132,9 @@ async def test_provision_smart_start_node(
     assert len(client.async_send_command.call_args_list) == 1
     assert client.async_send_command.call_args[0][0] == {
         "command": "controller.provision_smart_start_node",
-        "entry": QRProvisioningInformation(
-            version=QRCodeVersion.SMART_START,
-            security_classes=[SecurityClass.S2_UNAUTHENTICATED],
+        "entry": ProvisioningEntry(
             dsk="test",
-            generic_device_class=1,
-            specific_device_class=1,
-            installer_icon_type=1,
-            manufacturer_id=1,
-            product_type=1,
-            product_id=1,
-            application_version="test",
-            max_inclusion_request_interval=None,
-            uuid=None,
-            supported_protocols=None,
+            security_classes=[SecurityClass.S2_UNAUTHENTICATED],
             additional_properties={"name": "test"},
         ).to_dict(),
     }
@@ -1161,6 +1151,7 @@ async def test_provision_smart_start_node(
             QR_PROVISIONING_INFORMATION: {
                 **valid_qr_info,
             },
+            PROTOCOL: Protocols.ZWAVE_LONG_RANGE,
             DEVICE_NAME: "test_name",
             AREA_ID: "test_area",
         }
@@ -1185,20 +1176,10 @@ async def test_provision_smart_start_node(
     }
     assert client.async_send_command.call_args_list[1][0][0] == {
         "command": "controller.provision_smart_start_node",
-        "entry": QRProvisioningInformation(
-            version=QRCodeVersion.SMART_START,
-            security_classes=[SecurityClass.S2_UNAUTHENTICATED],
+        "entry": ProvisioningEntry(
             dsk="test",
-            generic_device_class=1,
-            specific_device_class=1,
-            installer_icon_type=1,
-            manufacturer_id=1,
-            product_type=1,
-            product_id=1,
-            application_version="test",
-            max_inclusion_request_interval=None,
-            uuid=None,
-            supported_protocols=None,
+            security_classes=[SecurityClass.S2_UNAUTHENTICATED],
+            protocol=Protocols.ZWAVE_LONG_RANGE,
             additional_properties={
                 "name": "test",
                 "device_id": device.id,

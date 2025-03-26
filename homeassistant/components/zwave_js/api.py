@@ -174,6 +174,7 @@ ADDITIONAL_PROPERTIES = "additional_properties"
 STATUS = "status"
 REQUESTED_SECURITY_CLASSES = "requestedSecurityClasses"
 
+PROTOCOL = "protocol"
 DEVICE_NAME = "device_name"
 AREA_ID = "area_id"
 
@@ -983,6 +984,7 @@ async def websocket_validate_dsk_and_enter_pin(
         vol.Required(TYPE): "zwave_js/provision_smart_start_node",
         vol.Required(ENTRY_ID): str,
         vol.Required(QR_PROVISIONING_INFORMATION): QR_PROVISIONING_INFORMATION_SCHEMA,
+        vol.Optional(PROTOCOL): vol.Coerce(Protocols),
         vol.Optional(DEVICE_NAME): str,
         vol.Optional(AREA_ID): str,
     }
@@ -999,9 +1001,9 @@ async def websocket_provision_smart_start_node(
     driver: Driver,
 ) -> None:
     """Pre-provision a smart start node."""
-    provisioning_info = msg[QR_PROVISIONING_INFORMATION]
+    qr_info = msg[QR_PROVISIONING_INFORMATION]
 
-    if provisioning_info.version == QRCodeVersion.S2:
+    if qr_info.version == QRCodeVersion.S2:
         connection.send_error(
             msg[ID],
             ERR_INVALID_FORMAT,
@@ -1009,21 +1011,29 @@ async def websocket_provision_smart_start_node(
         )
         return
 
+    provisioning_info = ProvisioningEntry(
+        dsk=qr_info.dsk,
+        security_classes=qr_info.security_classes,
+        requested_security_classes=qr_info.requested_security_classes,
+        protocol=msg.get(PROTOCOL),
+        additional_properties=qr_info.additional_properties,
+    )
+
     device = None
     # Create an empty device if device_name is provided
     if device_name := msg.get(DEVICE_NAME):
         dev_reg = dr.async_get(hass)
 
         # Create a unique device identifier using the DSK
-        device_identifier = (DOMAIN, f"provision_{provisioning_info.dsk}")
+        device_identifier = (DOMAIN, f"provision_{qr_info.dsk}")
 
         manufacturer = None
         model = None
 
         device_info = await driver.config_manager.lookup_device(
-            provisioning_info.manufacturer_id,
-            provisioning_info.product_type,
-            provisioning_info.product_id,
+            qr_info.manufacturer_id,
+            qr_info.product_type,
+            qr_info.product_id,
         )
         if device_info:
             manufacturer = device_info.manufacturer
