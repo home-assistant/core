@@ -97,7 +97,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         gps_accuracy_threshold,
         entry,
     )
-    await hass.async_add_executor_job(account.setup)
+    hass.async_add_executor_job(account.setup)
 
     hass.data[DOMAIN][entry.unique_id] = account
 
@@ -181,7 +181,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     return True
-
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
