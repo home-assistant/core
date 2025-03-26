@@ -852,8 +852,8 @@ class _StatisticsMeta:
     has_mean: Mapped[bool | None] = mapped_column(Boolean)
     has_sum: Mapped[bool | None] = mapped_column(Boolean)
     name: Mapped[str | None] = mapped_column(String(255))
-    mean_type: Mapped[StatisticMeanType | None] = mapped_column(
-        SmallInteger
+    mean_type: Mapped[StatisticMeanType] = mapped_column(
+        SmallInteger, nullable=False, default=StatisticMeanType.NONE.value
     )  # See StatisticMeanType
 
     @staticmethod

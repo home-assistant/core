@@ -55,6 +55,7 @@ class StatisticDataTimestamp(StatisticDataTimestampBase, StatisticMixIn, total=F
 class StatisticMeanType(IntEnum):
     """Statistic mean type."""
 
+    NONE = 0
     ARITHMETIC = 1
     CIRCULAR = 2
 
@@ -64,7 +65,7 @@ class StatisticMetaData(TypedDict):
 
     # has_mean is deprecated, use mean_type instead. has_mean will be removed in 2026.4
     has_mean: NotRequired[bool]
-    mean_type: StatisticMeanType | None
+    mean_type: StatisticMeanType
     has_sum: bool
     name: str | None
     source: str

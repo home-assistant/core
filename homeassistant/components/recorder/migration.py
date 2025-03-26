@@ -168,7 +168,7 @@ _SQLITE_COLUMN_TYPES = _ColumnTypesForDialect(
     big_int_type="INTEGER",
     timestamp_type="FLOAT",
     context_bin_type="BLOB",
-    small_int_type="INTEGER",
+    small_int_type="SMALLINT",
     double_type="FLOAT",
 )
 
@@ -2007,7 +2007,9 @@ class _SchemaVersion49Migrator(_SchemaVersionMigrator, target_version=49):
         _add_columns(
             self.session_maker,
             "statistics_meta",
-            [f"mean_type {self.column_types.small_int_type}"],
+            [
+                f"mean_type {self.column_types.small_int_type} NOT NULL DEFAULT {StatisticMeanType.NONE.value}"
+            ],
         )
 
         for table in ("statistics", "statistics_short_term"):

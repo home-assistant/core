@@ -126,9 +126,18 @@ class StatisticsMetaManager:
                 row_id = row[INDEX_ID]
                 if self.recorder.schema_version >= CIRCULAR_MEAN_SCHEMA_VERSION:
                     mean_type = try_parse_enum(StatisticMeanType, row[INDEX_MEAN_TYPE])
+                    if mean_type is None:
+                        _LOGGER.warning(
+                            "Invalid mean type found for statistic_id: %s, mean_type: %s. Skipping",
+                            statistic_id,
+                            row[INDEX_MEAN_TYPE],
+                        )
+                        continue
                 else:
                     mean_type = (
-                        StatisticMeanType.ARITHMETIC if row[INDEX_MEAN_TYPE] else None
+                        StatisticMeanType.ARITHMETIC
+                        if row[INDEX_MEAN_TYPE]
+                        else StatisticMeanType.NONE
                     )
                 meta = {
                     "has_mean": mean_type is StatisticMeanType.ARITHMETIC,
@@ -187,7 +196,9 @@ class StatisticsMetaManager:
             # we must still check for its presence. Even though type hints suggest it should always exist,
             # custom integrations might omit it, so we need to guard against that.
             new_metadata["mean_type"] = (  # type: ignore[unreachable]
-                StatisticMeanType.ARITHMETIC if new_metadata["has_mean"] else None
+                StatisticMeanType.ARITHMETIC
+                if new_metadata["has_mean"]
+                else StatisticMeanType.NONE
             )
         metadata_id, old_metadata = old_metadata_dict[statistic_id]
         if not (

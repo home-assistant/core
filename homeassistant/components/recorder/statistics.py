@@ -1038,14 +1038,13 @@ def _reduce_statistics(
                     "end": end,
                 }
                 if _want_mean:
+                    row["mean"] = None
                     if mean_values:
                         match metadata[statistic_id][1]["mean_type"]:
                             case StatisticMeanType.ARITHMETIC:
                                 row["mean"] = mean(mean_values)
                             case StatisticMeanType.CIRCULAR:
                                 row["mean"] = circular_mean(mean_values)
-                    else:
-                        row["mean"] = None
                     mean_values.clear()
                 if _want_min:
                     row["min"] = min(min_values) if min_values else None
@@ -1776,7 +1775,7 @@ def _extract_metadata_and_discard_impossible_columns(
     has_sum = False
     for metadata_id, stats_metadata in metadata.values():
         metadata_ids.append(metadata_id)
-        has_mean |= stats_metadata["mean_type"] is not None
+        has_mean |= stats_metadata["mean_type"] is not StatisticMeanType.NONE
         has_sum |= stats_metadata["has_sum"]
     if not has_mean:
         types.discard("mean")

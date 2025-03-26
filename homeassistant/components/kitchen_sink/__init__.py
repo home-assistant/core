@@ -260,7 +260,7 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
         "name": "Energy consumption 1",
         "statistic_id": f"{DOMAIN}:energy_consumption_kwh",
         "unit_of_measurement": UnitOfEnergy.KILO_WATT_HOUR,
-        "mean_type": None,
+        "mean_type": StatisticMeanType.NONE,
         "has_sum": True,
     }
     await _insert_sum_statistics(hass, metadata, yesterday_midnight, today_midnight, 1)
@@ -272,7 +272,7 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
         "name": "Energy consumption 2",
         "statistic_id": f"{DOMAIN}:energy_consumption_mwh",
         "unit_of_measurement": UnitOfEnergy.MEGA_WATT_HOUR,
-        "mean_type": None,
+        "mean_type": StatisticMeanType.NONE,
         "has_sum": True,
     }
     await _insert_sum_statistics(
@@ -286,7 +286,7 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
         "name": "Gas consumption 1",
         "statistic_id": f"{DOMAIN}:gas_consumption_m3",
         "unit_of_measurement": UnitOfVolume.CUBIC_METERS,
-        "mean_type": None,
+        "mean_type": StatisticMeanType.NONE,
         "has_sum": True,
     }
     await _insert_sum_statistics(
@@ -300,7 +300,7 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
         "name": "Gas consumption 2",
         "statistic_id": f"{DOMAIN}:gas_consumption_ft3",
         "unit_of_measurement": UnitOfVolume.CUBIC_FEET,
-        "mean_type": None,
+        "mean_type": StatisticMeanType.NONE,
         "has_sum": True,
     }
     await _insert_sum_statistics(hass, metadata, yesterday_midnight, today_midnight, 15)

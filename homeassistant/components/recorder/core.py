@@ -621,7 +621,9 @@ class Recorder(threading.Thread):
             # Backwards compatibility for old metadata format
             # Can be removed after 2026.4
             metadata["mean_type"] = (  # type: ignore[unreachable]
-                StatisticMeanType.ARITHMETIC if metadata.get("has_mean") else None
+                StatisticMeanType.ARITHMETIC
+                if metadata.get("has_mean")
+                else StatisticMeanType.NONE
             )
         # Remove deprecated has_mean as it's not needed anymore in core
         metadata.pop("has_mean", None)

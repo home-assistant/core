@@ -58,7 +58,7 @@ _LOGGER = logging.getLogger(__name__)
 @dataclass
 class _StatisticsConfig:
     types: set[str]
-    mean_type: StatisticMeanType | None = None
+    mean_type: StatisticMeanType = StatisticMeanType.NONE
 
 
 DEFAULT_STATISTICS = {
@@ -543,7 +543,7 @@ def compile_statistics(  # noqa: C901
         state_class,
         valid_float_states,
     ) in to_process:
-        mean_type = None
+        mean_type = StatisticMeanType.NONE
         if "mean" in wanted_statistics[entity_id].types:
             mean_type = wanted_statistics[entity_id].mean_type
 
@@ -573,8 +573,9 @@ def compile_statistics(  # noqa: C901
                 continue
 
             if (
-                mean_type is not None
-                and (old_mean_type := old_metadata[1]["mean_type"]) is not None
+                mean_type is not StatisticMeanType.NONE
+                and (old_mean_type := old_metadata[1]["mean_type"])
+                is not StatisticMeanType.NONE
                 and mean_type != old_mean_type
             ):
                 if WARN_STATISTICS_MEAN_CHANGED not in hass.data:
@@ -763,7 +764,7 @@ def list_statistic_ids(
         ):
             continue
 
-        mean_type = None
+        mean_type = StatisticMeanType.NONE
         if "mean" in provided_statistics.types:
             mean_type = provided_statistics.mean_type
 

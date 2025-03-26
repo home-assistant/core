@@ -2285,7 +2285,7 @@ async def test_list_statistic_ids(
     """Test list_statistic_ids."""
     now = get_start_time(dt_util.utcnow())
     has_mean = attributes["state_class"] == "measurement"
-    mean_type = StatisticMeanType.ARITHMETIC if has_mean else None
+    mean_type = StatisticMeanType.ARITHMETIC if has_mean else StatisticMeanType.NONE
     has_sum = not has_mean
 
     hass.config.units = units
@@ -2463,7 +2463,7 @@ async def test_list_statistic_ids_unit_change(
     """Test list_statistic_ids."""
     now = get_start_time(dt_util.utcnow())
     has_mean = attributes["state_class"] == "measurement"
-    mean_type = StatisticMeanType.ARITHMETIC if has_mean else None
+    mean_type = StatisticMeanType.ARITHMETIC if has_mean else StatisticMeanType.NONE
     has_sum = not has_mean
 
     await async_setup_component(hass, "sensor", {})
@@ -3307,7 +3307,7 @@ async def test_get_statistics_metadata(
     """Test get_statistics_metadata."""
     now = get_start_time(dt_util.utcnow())
     has_mean = attributes["state_class"] == "measurement"
-    mean_type = StatisticMeanType.ARITHMETIC if has_mean else None
+    mean_type = StatisticMeanType.ARITHMETIC if has_mean else StatisticMeanType.NONE
     has_sum = not has_mean
 
     hass.config.units = units
@@ -3532,7 +3532,7 @@ async def test_import_statistics(
         {
             "display_unit_of_measurement": "kWh",
             "has_mean": False,
-            "mean_type": None,
+            "mean_type": StatisticMeanType.NONE,
             "has_sum": True,
             "statistic_id": statistic_id,
             "name": "Total imported energy",
@@ -3547,7 +3547,7 @@ async def test_import_statistics(
             1,
             {
                 "has_mean": False,
-                "mean_type": None,
+                "mean_type": StatisticMeanType.NONE,
                 "has_sum": True,
                 "name": "Total imported energy",
                 "source": source,
@@ -3752,7 +3752,7 @@ async def test_adjust_sum_statistics_energy(
         {
             "display_unit_of_measurement": "kWh",
             "has_mean": False,
-            "mean_type": None,
+            "mean_type": StatisticMeanType.NONE,
             "has_sum": True,
             "statistic_id": statistic_id,
             "name": "Total imported energy",
@@ -3767,7 +3767,7 @@ async def test_adjust_sum_statistics_energy(
             1,
             {
                 "has_mean": False,
-                "mean_type": None,
+                "mean_type": StatisticMeanType.NONE,
                 "has_sum": True,
                 "name": "Total imported energy",
                 "source": source,
@@ -3947,7 +3947,7 @@ async def test_adjust_sum_statistics_gas(
         {
             "display_unit_of_measurement": "m³",
             "has_mean": False,
-            "mean_type": None,
+            "mean_type": StatisticMeanType.NONE,
             "has_sum": True,
             "statistic_id": statistic_id,
             "name": "Total imported energy",
@@ -3962,7 +3962,7 @@ async def test_adjust_sum_statistics_gas(
             1,
             {
                 "has_mean": False,
-                "mean_type": None,
+                "mean_type": StatisticMeanType.NONE,
                 "has_sum": True,
                 "name": "Total imported energy",
                 "source": source,
@@ -4160,7 +4160,7 @@ async def test_adjust_sum_statistics_errors(
         {
             "display_unit_of_measurement": state_unit,
             "has_mean": False,
-            "mean_type": None,
+            "mean_type": StatisticMeanType.NONE,
             "has_sum": True,
             "statistic_id": statistic_id,
             "name": "Total imported energy",
@@ -4175,7 +4175,7 @@ async def test_adjust_sum_statistics_errors(
             1,
             {
                 "has_mean": False,
-                "mean_type": None,
+                "mean_type": StatisticMeanType.NONE,
                 "has_sum": True,
                 "name": "Total imported energy",
                 "source": source,

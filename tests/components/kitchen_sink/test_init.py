@@ -57,7 +57,7 @@ async def test_demo_statistics(hass: HomeAssistant) -> None:
     assert {
         "display_unit_of_measurement": "kWh",
         "has_mean": False,
-        "mean_type": None,
+        "mean_type": StatisticMeanType.NONE,
         "has_sum": True,
         "name": "Energy consumption 1",
         "source": DOMAIN,
