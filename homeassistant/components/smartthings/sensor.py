@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, cast
 
-from pysmartthings import Attribute, Capability, SmartThings, Status, ComponentStatus
+from pysmartthings import Attribute, Capability, ComponentStatus, SmartThings, Status
 
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.script import scripts_with_entity
@@ -140,7 +140,7 @@ class SmartThingsSensorEntityDescription(SensorEntityDescription):
     options_attribute: Attribute | None = None
     exists_fn: Callable[[Status], bool] | None = None
     use_temperature_unit: bool = False
-    deprecated: Callable[[ComponentStatus], str] | None = None
+    deprecated: Callable[[ComponentStatus], str | None] | None = None
 
 
 CAPABILITY_TO_SENSORS: dict[
@@ -197,7 +197,17 @@ CAPABILITY_TO_SENSORS: dict[
                 key=Attribute.VOLUME,
                 translation_key="audio_volume",
                 native_unit_of_measurement=PERCENTAGE,
-                deprecated=(lambda status: "media_player" if all(capability in status for capability in (Capability.AUDIO_MUTE, Capability.MEDIA_PLAYBACK)) else None)
+                deprecated=(
+                    lambda status: "media_player"
+                    if all(
+                        capability in status
+                        for capability in (
+                            Capability.AUDIO_MUTE,
+                            Capability.MEDIA_PLAYBACK,
+                        )
+                    )
+                    else None
+                ),
             )
         ]
     },
@@ -321,7 +331,7 @@ CAPABILITY_TO_SENSORS: dict[
                 translation_key="dryer_machine_state",
                 options=WASHER_OPTIONS,
                 device_class=SensorDeviceClass.ENUM,
-                deprecated=lambda _: "machine_state"
+                deprecated=lambda _: "machine_state",
             )
         ],
         Attribute.DRYER_JOB_STATE: [
@@ -473,7 +483,7 @@ CAPABILITY_TO_SENSORS: dict[
                 device_class=SensorDeviceClass.ENUM,
                 options_attribute=Attribute.SUPPORTED_INPUT_SOURCES,
                 value_fn=lambda value: value.lower() if value else None,
-                deprecated=lambda _: "media_player"
+                deprecated=lambda _: "media_player",
             )
         ]
     },
@@ -482,7 +492,7 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.PLAYBACK_REPEAT_MODE,
                 translation_key="media_playback_repeat",
-                deprecated=lambda _: "media_player"
+                deprecated=lambda _: "media_player",
             )
         ]
     },
@@ -491,7 +501,7 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.PLAYBACK_SHUFFLE,
                 translation_key="media_playback_shuffle",
-                deprecated=lambda _: "media_player"
+                deprecated=lambda _: "media_player",
             )
         ]
     },
@@ -510,7 +520,7 @@ CAPABILITY_TO_SENSORS: dict[
                 ],
                 device_class=SensorDeviceClass.ENUM,
                 value_fn=lambda value: MEDIA_PLAYBACK_STATE_MAP.get(value, value),
-                deprecated=lambda _: "media_player"
+                deprecated=lambda _: "media_player",
             )
         ]
     },
@@ -956,7 +966,7 @@ CAPABILITY_TO_SENSORS: dict[
                 translation_key="washer_machine_state",
                 options=WASHER_OPTIONS,
                 device_class=SensorDeviceClass.ENUM,
-                deprecated=lambda _: "machine_state"
+                deprecated=lambda _: "machine_state",
             )
         ],
         Attribute.WASHER_JOB_STATE: [
@@ -1109,7 +1119,11 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         await super().async_added_to_hass()
-        if not self.entity_description.deprecated or (reason := self.entity_description.deprecated(self.device.status[MAIN])) is None:
+        if (
+            not self.entity_description.deprecated
+            or (reason := self.entity_description.deprecated(self.device.status[MAIN]))
+            is None
+        ):
             return
         automations = automations_with_entity(self.hass, self.entity_id)
         scripts = scripts_with_entity(self.hass, self.entity_id)
@@ -1144,8 +1158,10 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Call when entity will be removed from hass."""
         await super().async_will_remove_from_hass()
-        if not self.entity_description.deprecated or (reason := self.entity_description.deprecated(self.device.status[MAIN])) is None:
+        if (
+            not self.entity_description.deprecated
+            or (reason := self.entity_description.deprecated(self.device.status[MAIN]))
+            is None
+        ):
             return
-        async_delete_issue(
-            self.hass, DOMAIN, f"deprecated_{reason}_{self.entity_id}"
-        )
+        async_delete_issue(self.hass, DOMAIN, f"deprecated_{reason}_{self.entity_id}")
