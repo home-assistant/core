@@ -491,6 +491,9 @@ class SensorStateClass(StrEnum):
     MEASUREMENT = "measurement"
     """The state represents a measurement in present time."""
 
+    MEASUREMENT_ANGLE = "measurement_angle"
+    """The state represents a angle measurement in present time. Currently only degrees are supported."""
+
     TOTAL = "total"
     """The state represents a total amount.
 
@@ -693,6 +696,11 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {
         SensorStateClass.TOTAL,
         SensorStateClass.TOTAL_INCREASING,
     },
-    SensorDeviceClass.WIND_DIRECTION: set(),
+    SensorDeviceClass.WIND_DIRECTION: {SensorStateClass.MEASUREMENT_ANGLE},
     SensorDeviceClass.WIND_SPEED: {SensorStateClass.MEASUREMENT},
+}
+
+
+STATE_CLASS_UNITS: dict[SensorStateClass | str, set[type[StrEnum] | str | None]] = {
+    SensorStateClass.MEASUREMENT_ANGLE: {DEGREE},
 }

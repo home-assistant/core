@@ -89,7 +89,7 @@ async def test_cover_services(
     # Vent Windows
     entity_id = "cover.test_windows"
     with patch(
-        "homeassistant.components.teslemetry.VehicleSpecific.window_control",
+        "tesla_fleet_api.tesla.VehicleFleet.window_control",
         return_value=COMMAND_OK,
     ) as call:
         await hass.services.async_call(
@@ -118,7 +118,7 @@ async def test_cover_services(
     # Charge Port Door
     entity_id = "cover.test_charge_port_door"
     with patch(
-        "homeassistant.components.teslemetry.VehicleSpecific.charge_port_door_open",
+        "tesla_fleet_api.tesla.VehicleFleet.charge_port_door_open",
         return_value=COMMAND_OK,
     ) as call:
         await hass.services.async_call(
@@ -133,7 +133,7 @@ async def test_cover_services(
         assert state.state == CoverState.OPEN
 
     with patch(
-        "homeassistant.components.teslemetry.VehicleSpecific.charge_port_door_close",
+        "tesla_fleet_api.tesla.VehicleFleet.charge_port_door_close",
         return_value=COMMAND_OK,
     ) as call:
         await hass.services.async_call(
@@ -150,7 +150,7 @@ async def test_cover_services(
     # Frunk
     entity_id = "cover.test_frunk"
     with patch(
-        "homeassistant.components.teslemetry.VehicleSpecific.actuate_trunk",
+        "tesla_fleet_api.tesla.VehicleFleet.actuate_trunk",
         return_value=COMMAND_OK,
     ) as call:
         await hass.services.async_call(
@@ -167,7 +167,7 @@ async def test_cover_services(
     # Trunk
     entity_id = "cover.test_trunk"
     with patch(
-        "homeassistant.components.teslemetry.VehicleSpecific.actuate_trunk",
+        "tesla_fleet_api.tesla.VehicleFleet.actuate_trunk",
         return_value=COMMAND_OK,
     ) as call:
         await hass.services.async_call(
@@ -196,7 +196,7 @@ async def test_cover_services(
     # Sunroof
     entity_id = "cover.test_sunroof"
     with patch(
-        "homeassistant.components.teslemetry.VehicleSpecific.sun_roof_control",
+        "tesla_fleet_api.tesla.VehicleFleet.sun_roof_control",
         return_value=COMMAND_OK,
     ) as call:
         await hass.services.async_call(

@@ -2,10 +2,11 @@
   "config": {
     "step": {
       "user": {
-        "title": "Define the Velbus connection type",
-        "data": {
-          "name": "The name for this Velbus connection",
-          "port": "Connection string"
+        "title": "Define the Velbus connection",
+        "description": "How do you want to configure the Velbus hub?",
+        "menu_options": {
+          "network": "Via network connection",
+          "usbselect": "Via USB device"
         }
       },
       "network": {

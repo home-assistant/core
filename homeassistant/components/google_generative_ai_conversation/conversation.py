@@ -171,17 +171,25 @@ def _escape_decode(value: Any) -> Any:
     return value
 
 
+def _create_google_tool_response_parts(
+    parts: list[conversation.ToolResultContent],
+) -> list[Part]:
+    """Create Google tool response parts."""
+    return [
+        Part.from_function_response(
+            name=tool_result.tool_name, response=tool_result.tool_result
+        )
+        for tool_result in parts
+    ]
+
+
 def _create_google_tool_response_content(
     content: list[conversation.ToolResultContent],
 ) -> Content:
     """Create a Google tool response content."""
     return Content(
-        parts=[
-            Part.from_function_response(
-                name=tool_result.tool_name, response=tool_result.tool_result
-            )
-            for tool_result in content
-        ]
+        role="user",
+        parts=_create_google_tool_response_parts(content),
     )
 
 
@@ -402,7 +410,7 @@ class GoogleGenerativeAIConversationEntity(
         chat = self._genai_client.aio.chats.create(
             model=model_name, history=messages, config=generateContentConfig
         )
-        chat_request: str | Content = user_input.text
+        chat_request: str | list[Part] = user_input.text
         # To prevent infinite loops, we limit the number of iterations
         for _iteration in range(MAX_TOOL_ITERATIONS):
             try:
@@ -456,7 +464,7 @@ class GoogleGenerativeAIConversationEntity(
                     )
                 )
 
-            chat_request = _create_google_tool_response_content(
+            chat_request = _create_google_tool_response_parts(
                 [
                     tool_response
                     async for tool_response in chat_log.async_add_assistant_content(

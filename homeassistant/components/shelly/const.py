@@ -25,6 +25,7 @@ from aioshelly.const import (
     MODEL_VALVE,
     MODEL_VINTAGE_V2,
     MODEL_WALL_DISPLAY,
+    MODEL_WALL_DISPLAY_X2,
 )
 
 from homeassistant.components.number import NumberMode
@@ -245,6 +246,7 @@ GEN2_RELEASE_URL = "https://shelly-api-docs.shelly.cloud/gen2/changelog/"
 GEN2_BETA_RELEASE_URL = f"{GEN2_RELEASE_URL}#unreleased"
 DEVICES_WITHOUT_FIRMWARE_CHANGELOG = (
     MODEL_WALL_DISPLAY,
+    MODEL_WALL_DISPLAY_X2,
     MODEL_MOTION,
     MODEL_MOTION_2,
     MODEL_VALVE,

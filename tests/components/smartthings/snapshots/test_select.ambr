@@ -1,4 +1,120 @@
 # serializer version: 1
+# name: test_all_entities[da_wm_dw_000001][select.dishwasher-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'stop',
+        'run',
+        'pause',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.dishwasher',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'operating_state',
+    'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_dishwasherOperatingState_machineState_machineState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_dw_000001][select.dishwasher-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dishwasher',
+      'options': list([
+        'stop',
+        'run',
+        'pause',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.dishwasher',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'stop',
+  })
+# ---
+# name: test_all_entities[da_wm_sc_000001][select.airdresser-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'stop',
+        'run',
+        'pause',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.airdresser',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'operating_state',
+    'unique_id': 'b93211bf-9d96-bd21-3b2f-964fcc87f5cc_main_dryerOperatingState_machineState_machineState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_sc_000001][select.airdresser-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'AirDresser',
+      'options': list([
+        'stop',
+        'run',
+        'pause',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.airdresser',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'stop',
+  })
+# ---
 # name: test_all_entities[da_wm_wd_000001][select.dryer-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -35,7 +151,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'operating_state',
-    'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b_main_dryerOperatingState',
+    'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b_main_dryerOperatingState_machineState_machineState',
     'unit_of_measurement': None,
   })
 # ---
@@ -93,7 +209,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'operating_state',
-    'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd_main_dryerOperatingState',
+    'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd_main_dryerOperatingState_machineState_machineState',
     'unit_of_measurement': None,
   })
 # ---
@@ -151,7 +267,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'operating_state',
-    'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47_main_washerOperatingState',
+    'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47_main_washerOperatingState_machineState_machineState',
     'unit_of_measurement': None,
   })
 # ---
@@ -209,7 +325,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'operating_state',
-    'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7_main_washerOperatingState',
+    'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7_main_washerOperatingState_machineState_machineState',
     'unit_of_measurement': None,
   })
 # ---

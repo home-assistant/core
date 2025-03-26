@@ -331,7 +331,6 @@ async def test_discovery_already_setup(
     hass: HomeAssistant,
     bypass_api_fixture,
     mock_roborock_entry: MockConfigEntry,
-    cleanup_map_storage_manual,
 ) -> None:
     """Handle aborting if the device is already setup."""
     await hass.config_entries.async_setup(mock_roborock_entry.entry_id)

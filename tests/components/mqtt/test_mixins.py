@@ -1,7 +1,7 @@
 """The tests for shared code of the MQTT platform."""
 
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 import pytest
 
@@ -21,7 +21,11 @@ from homeassistant.helpers import (
 )
 from homeassistant.util import slugify
 
-from .common import MOCK_SUBENTRY_DATA_BAD_COMPONENT_SCHEMA, MOCK_SUBENTRY_DATA_SET_MIX
+from .common import (
+    MOCK_NOTIFY_SUBENTRY_DATA_SINGLE,
+    MOCK_SUBENTRY_DATA_BAD_COMPONENT_SCHEMA,
+    MOCK_SUBENTRY_DATA_SET_MIX,
+)
 
 from tests.common import MockConfigEntry, async_capture_events, async_fire_mqtt_message
 from tests.typing import MqttMockHAClientGenerator
@@ -547,3 +551,39 @@ async def test_loading_subentry_with_bad_component_schema(
         "Schema violation occurred when trying to set up entity from subentry"
         in caplog.text
     )
+
+
+@pytest.mark.parametrize(
+    "mqtt_config_subentries_data",
+    [
+        (
+            ConfigSubentryData(
+                data=MOCK_NOTIFY_SUBENTRY_DATA_SINGLE,
+                subentry_type="device",
+                title="Mock subentry",
+            ),
+        )
+    ],
+)
+async def test_qos_on_mqt_device_from_subentry(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    mqtt_config_subentries_data: tuple[dict[str, Any]],
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test QoS is set correctly on entities from MQTT device."""
+    mqtt_mock = await mqtt_mock_entry()
+    entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    subentry_id = next(iter(entry.subentries))
+    # Each subentry has one device
+    device = device_registry.async_get_device({("mqtt", subentry_id)})
+    assert device is not None
+    assert hass.states.get("notify.milk_notifier_milkman_alert") is not None
+    await hass.services.async_call(
+        "notify",
+        "send_message",
+        {"entity_id": "notify.milk_notifier_milkman_alert", "message": "Test message"},
+    )
+    await hass.async_block_till_done()
+    assert len(mqtt_mock.async_publish.mock_calls) == 1
+    mqtt_mock.async_publish.mock_calls[0] = call("test-topic", "Test message", 1, False)

@@ -1,0 +1,50 @@
+# serializer version: 1
+# name: test_lock_snapshot[lock.test_lock-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'lock',
+    'entity_category': None,
+    'entity_id': 'lock.test_lock',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'homee',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00055511EECC-1-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_lock_snapshot[lock.test_lock-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'changed_by': 'unknown-5',
+      'friendly_name': 'Test Lock',
+      'supported_features': <LockEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'lock.test_lock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unlocked',
+  })
+# ---

@@ -212,8 +212,7 @@
       "ups_timer_shutdown": { "name": "Load shutdown timer" },
       "ups_timer_start": { "name": "Load start timer" },
       "ups_type": { "name": "UPS type" },
-      "ups_watchdog_status": { "name": "Watchdog status" },
-      "watts": { "name": "Watts" }
+      "ups_watchdog_status": { "name": "Watchdog status" }
     },
     "switch": {
       "outlet_number_load_poweronoff": { "name": "Power outlet {outlet_name}" }

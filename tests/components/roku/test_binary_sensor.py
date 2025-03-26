@@ -50,7 +50,7 @@ async def test_roku_binary_sensors(
     assert entry.unique_id == f"{UPNP_SERIAL}_supports_ethernet"
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
     assert state.state == STATE_ON
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Roku 3 Supports ethernet"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Roku 3 Supports Ethernet"
     assert ATTR_DEVICE_CLASS not in state.attributes
 
     state = hass.states.get("binary_sensor.my_roku_3_supports_find_remote")
@@ -125,7 +125,7 @@ async def test_rokutv_binary_sensors(
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
     assert state.state == STATE_ON
     assert (
-        state.attributes.get(ATTR_FRIENDLY_NAME) == '58" Onn Roku TV Supports ethernet'
+        state.attributes.get(ATTR_FRIENDLY_NAME) == '58" Onn Roku TV Supports Ethernet'
     )
     assert ATTR_DEVICE_CLASS not in state.attributes
 

@@ -174,7 +174,7 @@ async def test_remove_from_hass(
     bypass_api_fixture,
     setup_entry: MockConfigEntry,
     hass_client: ClientSessionGenerator,
-    cleanup_map_storage: pathlib.Path,
+    storage_path: pathlib.Path,
 ) -> None:
     """Test that removing from hass removes any existing images."""
 
@@ -184,17 +184,18 @@ async def test_remove_from_hass(
     resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
     assert resp.status == HTTPStatus.OK
 
-    assert not cleanup_map_storage.exists()
+    config_entry_storage = storage_path / setup_entry.entry_id
+    assert not config_entry_storage.exists()
 
     # Flush to disk
     await hass.config_entries.async_unload(setup_entry.entry_id)
-    assert cleanup_map_storage.exists()
-    paths = list(cleanup_map_storage.walk())
+    assert config_entry_storage.exists()
+    paths = list(config_entry_storage.walk())
     assert len(paths) == 4  # Two map image and two directories
 
     await hass.config_entries.async_remove(setup_entry.entry_id)
     # After removal, directories should be empty.
-    assert not cleanup_map_storage.exists()
+    assert not config_entry_storage.exists()
 
 
 @pytest.mark.parametrize("platforms", [[Platform.IMAGE]])
@@ -202,7 +203,7 @@ async def test_oserror_remove_image(
     hass: HomeAssistant,
     bypass_api_fixture,
     setup_entry: MockConfigEntry,
-    cleanup_map_storage: pathlib.Path,
+    storage_path: pathlib.Path,
     hass_client: ClientSessionGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -215,11 +216,12 @@ async def test_oserror_remove_image(
     assert resp.status == HTTPStatus.OK
 
     # Image content is saved when unloading
-    assert not cleanup_map_storage.exists()
+    config_entry_storage = storage_path / setup_entry.entry_id
+    assert not config_entry_storage.exists()
     await hass.config_entries.async_unload(setup_entry.entry_id)
 
-    assert cleanup_map_storage.exists()
-    paths = list(cleanup_map_storage.walk())
+    assert config_entry_storage.exists()
+    paths = list(config_entry_storage.walk())
     assert len(paths) == 4  # Two map image and two directories
 
     with patch(

@@ -17,12 +17,20 @@
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "Username for the device's web panel.",
+          "password": "Password for the device's web panel."
         }
       },
       "reauth_confirm": {
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "[%key:component::shelly::config::step::credentials::data_description::username%]",
+          "password": "[%key:component::shelly::config::step::credentials::data_description::password%]"
         }
       },
       "confirm_discovery": {
@@ -87,8 +95,15 @@
         "description": "Bluetooth scanning can be active or passive. With active, the Shelly requests data from nearby devices; with passive, the Shelly receives unsolicited data from nearby devices.",
         "data": {
           "ble_scanner_mode": "Bluetooth scanner mode"
+        },
+        "data_description": {
+          "ble_scanner_mode": "The scanner mode to use for Bluetooth scanning."
         }
       }
+    },
+    "abort": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_scripts_support": "Device does not support scripts and cannot be used as a Bluetooth scanner."
     }
   },
   "selector": {
