@@ -16,7 +16,7 @@ from vacuum_map_parser_base.config.drawable import Drawable
 
 from homeassistant import config_entries
 from homeassistant.components.roborock.const import CONF_ENTRY_CODE, DOMAIN, DRAWABLES
-from homeassistant.const import CONF_USERNAME
+from homeassistant.const import CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
@@ -382,6 +382,7 @@ async def test_discovery_not_setup(
     assert result["result"]
 
 
+@pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
 async def test_discovery_already_setup(
     hass: HomeAssistant,
     bypass_api_fixture,

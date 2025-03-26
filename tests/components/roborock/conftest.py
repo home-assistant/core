@@ -20,6 +20,7 @@ from homeassistant.components.roborock.const import (
 )
 from homeassistant.const import CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from .mock_data import (
     BASE_URL,
@@ -195,19 +196,25 @@ def config_entry_unique_id_fixture() -> str:
     return ROBOROCK_RRUID
 
 
+@pytest.fixture(name="config_entry_data")
+def config_entry_data_fixture() -> dict[str, Any]:
+    """Fixture that returns the unique id for the config entry."""
+    return {
+        CONF_USERNAME: USER_EMAIL,
+        CONF_USER_DATA: USER_DATA.as_dict(),
+        CONF_BASE_URL: BASE_URL,
+    }
+
+
 @pytest.fixture
 def mock_roborock_entry(
-    hass: HomeAssistant, config_entry_unique_id: str
+    hass: HomeAssistant, config_entry_unique_id: str, config_entry_data: dict[str, Any]
 ) -> MockConfigEntry:
     """Create a Roborock Entry that has not been setup."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
         title=USER_EMAIL,
-        data={
-            CONF_USERNAME: USER_EMAIL,
-            CONF_USER_DATA: USER_DATA.as_dict(),
-            CONF_BASE_URL: BASE_URL,
-        },
+        data=config_entry_data,
         unique_id=config_entry_unique_id,
     )
     mock_entry.add_to_hass(hass)
@@ -220,18 +227,33 @@ def mock_platforms() -> list[Platform]:
     return []
 
 
+@pytest.fixture(autouse=True)
+async def mock_patforms_fixture(
+    hass: HomeAssistant,
+    platforms: list[Platform],
+) -> Generator[None]:
+    """Set up the Roborock platform."""
+    with patch("homeassistant.components.roborock.PLATFORMS", platforms):
+        yield
+
+
+@pytest.fixture
+async def setup_component(hass: HomeAssistant, bypass_api_fixture: Any) -> None:
+    """Set up the Roborock component, useful when you went to set up one config entry at a time."""
+    await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+
 @pytest.fixture
 async def setup_entry(
     hass: HomeAssistant,
     bypass_api_fixture,
     mock_roborock_entry: MockConfigEntry,
-    platforms: list[Platform],
 ) -> Generator[MockConfigEntry]:
     """Set up the Roborock platform."""
-    with patch("homeassistant.components.roborock.PLATFORMS", platforms):
-        await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
-        await hass.async_block_till_done()
-        yield mock_roborock_entry
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+    return mock_roborock_entry
 
 
 @pytest.fixture(autouse=True, name="storage_path")

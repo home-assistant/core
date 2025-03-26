@@ -180,17 +180,16 @@ async def _async_fix_unique_id(
         return True
 
     entries = hass.config_entries.async_entries(DOMAIN)
-    for existing_entry in entries:
-        if existing_entry.unique_id == new_unique_id:
-            _LOGGER.warning(
-                "Found duplicate unique id (%s); Removing duplicate entry",
-                new_unique_id,
-            )
-            hass.async_create_background_task(
-                hass.config_entries.async_remove(entry.entry_id),
-                "Remove roborock config entry",
-            )
-            return False
+    if any(entry.unique_id == new_unique_id for entry in entries):
+        _LOGGER.warning(
+            "Found existing duplicate config entry with unique id (%s); Removing this entry",
+            new_unique_id,
+        )
+        hass.async_create_background_task(
+            hass.config_entries.async_remove(entry.entry_id),
+            "Remove roborock config entry",
+        )
+        return False
 
     _LOGGER.debug("Updating unique id to %s", new_unique_id)
     hass.config_entries.async_update_entry(entry, unique_id=new_unique_id)

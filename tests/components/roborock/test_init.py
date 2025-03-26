@@ -3,6 +3,7 @@
 from copy import deepcopy
 from http import HTTPStatus
 import pathlib
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -306,6 +307,7 @@ async def test_no_user_agreement(
         assert mock_roborock_entry.error_reason_translation_key == "no_user_agreement"
 
 
+@pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
 async def test_stale_device(
     hass: HomeAssistant,
     bypass_api_fixture,
@@ -347,6 +349,7 @@ async def test_stale_device(
     # therefore not deleted.
 
 
+@pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
 async def test_no_stale_device(
     hass: HomeAssistant,
     bypass_api_fixture,
@@ -394,3 +397,54 @@ async def test_migrate_config_entry_unique_id(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert setup_entry.state is ConfigEntryState.LOADED
     assert setup_entry.unique_id == expected_unique_id
+
+
+async def test_remove_duplicate_config_entry(
+    hass: HomeAssistant,
+    setup_component: None,
+    bypass_api_fixture,
+    config_entry_data: dict[str, Any],
+) -> None:
+    """Test that during migration any duplicate config entries are removed."""
+
+    # Set up two config entries with the same rruid but different unique ids. This is unlikely
+    # to happen, but could have happened if a user changed their email address and created
+    # a second account that has the same user id.
+    config_entry1 = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="unique-id-1",
+        data=config_entry_data,
+    )
+    config_entry1.add_to_hass(hass)
+    config_entry2 = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="unique-id-2",
+        data=config_entry_data,
+    )
+    config_entry2.add_to_hass(hass)
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 2
+    assert config_entry1.state is ConfigEntryState.NOT_LOADED
+    assert config_entry1.unique_id == "unique-id-1"
+    assert config_entry2.state is ConfigEntryState.NOT_LOADED
+    assert config_entry2.unique_id == "unique-id-2"
+
+    # Setup the first entry which gets migrated to the new unique id.
+    await hass.config_entries.async_setup(config_entry1.entry_id)
+    await hass.async_block_till_done()
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 2
+    assert config_entry1.state is ConfigEntryState.LOADED
+    assert config_entry1.unique_id == ROBOROCK_RRUID
+    assert config_entry2.state is ConfigEntryState.NOT_LOADED
+    assert config_entry2.unique_id == "unique-id-2"
+
+    # Setting up the second entry should remove it rather than
+    # trying to migrate it since the roborock user id already exists.
+    await hass.config_entries.async_setup(config_entry2.entry_id)
+    await hass.async_block_till_done()
+
+    # Only one config entry now exists and is loaded.
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert config_entry1.state is ConfigEntryState.LOADED
+    assert config_entry1.unique_id == ROBOROCK_RRUID
+    assert config_entry2.state is ConfigEntryState.NOT_LOADED
+    assert config_entry2.unique_id == "unique-id-2"
