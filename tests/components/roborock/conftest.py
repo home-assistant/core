@@ -216,6 +216,8 @@ def mock_roborock_entry(
         title=USER_EMAIL,
         data=config_entry_data,
         unique_id=config_entry_unique_id,
+        version=1,
+        minor_version=2,
     )
     mock_entry.add_to_hass(hass)
     return mock_entry

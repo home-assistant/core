@@ -43,12 +43,9 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> bool:
     """Set up roborock from a config entry."""
 
-    user_data = UserData.from_dict(entry.data[CONF_USER_DATA])
-    if not (await _async_fix_unique_id(hass, entry, user_data)):
-        return False
-
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
+    user_data = UserData.from_dict(entry.data[CONF_USER_DATA])
     api_client = RoborockApiClient(
         entry.data[CONF_USERNAME],
         entry.data[CONF_BASE_URL],
@@ -167,32 +164,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
     return True
 
 
-async def _async_fix_unique_id(
-    hass: HomeAssistant,
-    entry: RoborockConfigEntry,
-    user_data: UserData,
-) -> bool:
-    """Update the config entry with a unique id based on the rruid."""
-    _LOGGER.debug("Checking for migration of config entry (%s)", entry.unique_id)
-    new_unique_id = user_data.rruid
-    if entry.unique_id == new_unique_id:
-        _LOGGER.debug("Config entry already in correct state")
-        return True
-
-    entries = hass.config_entries.async_entries(DOMAIN)
-    if any(entry.unique_id == new_unique_id for entry in entries):
-        _LOGGER.warning(
-            "Found existing duplicate config entry with unique id (%s); Removing this entry",
-            new_unique_id,
-        )
-        hass.async_create_background_task(
-            hass.config_entries.async_remove(entry.entry_id),
-            "Remove roborock config entry",
-        )
+async def async_migrate_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> bool:
+    """Migrate old configuration entries to the new format."""
+    _LOGGER.debug(
+        "Migrating configuration from version %s.%s",
+        entry.version,
+        entry.minor_version,
+    )
+    if entry.version > 1:
+        # Downgrade from future version
         return False
 
-    _LOGGER.debug("Updating unique id to %s", new_unique_id)
-    hass.config_entries.async_update_entry(entry, unique_id=new_unique_id)
+    # 1->2: Migrate from unique id as email address to unique id as rruid
+    if entry.minor_version == 1:
+        user_data = UserData.from_dict(entry.data[CONF_USER_DATA])
+        _LOGGER.debug("Updating unique id to %s", user_data.rruid)
+        hass.config_entries.async_update_entry(
+            entry,
+            unique_id=user_data.rruid,
+            version=1,
+            minor_version=2,
+        )
+
     return True
 
 
