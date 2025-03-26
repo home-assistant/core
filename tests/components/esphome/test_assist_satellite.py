@@ -1579,9 +1579,9 @@ async def test_start_conversation_media_id(
             assert satellite.state == AssistSatelliteState.IDLE
 
         mock_async_create_proxy_url.assert_called_once_with(
-            hass,
-            dev.id,
-            "https://www.home-assistant.io/resolved.mp3",
+            hass=hass,
+            device_id=dev.id,
+            media_url="https://www.home-assistant.io/resolved.mp3",
             media_format="flac",
             rate=48000,
             channels=2,
