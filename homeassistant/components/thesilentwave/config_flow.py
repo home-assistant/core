@@ -2,6 +2,7 @@
 
 import ipaddress
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -16,7 +17,9 @@ class TheSilentWaveConfigFlow(config_entries.ConfigFlow, domain="thesilentwave")
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None) -> config_entries.FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.ConfigFlowResult:  # Updated return type to ConfigFlowResult
         """Handle the user input for the configuration."""
         errors = {}
 
@@ -24,6 +27,7 @@ class TheSilentWaveConfigFlow(config_entries.ConfigFlow, domain="thesilentwave")
             try:
                 # Validate IP address
                 ipaddress.ip_address(user_input[CONF_HOST])
+
                 return self.async_create_entry(
                     title=user_input[CONF_NAME],
                     data={
@@ -32,14 +36,16 @@ class TheSilentWaveConfigFlow(config_entries.ConfigFlow, domain="thesilentwave")
                         CONF_SCAN_INTERVAL: user_input.get(CONF_SCAN_INTERVAL, 10),
                     },
                 )
+
             except ValueError:
+                _LOGGER.warning("Invalid IP address entered: %s", user_input[CONF_HOST])
                 errors[CONF_HOST] = "invalid_ip"
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_NAME, default="TheSilentWaveSensor"): str,
+                    vol.Required(CONF_NAME, default="TheSilentWave"): str,
                     vol.Required(CONF_HOST): str,
                     vol.Optional(CONF_SCAN_INTERVAL, default=10): vol.All(
                         vol.Coerce(int), vol.Range(min=5, max=300)
