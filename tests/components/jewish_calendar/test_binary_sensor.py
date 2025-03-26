@@ -12,7 +12,7 @@ from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import async_fire_time_changed
 
 MELACHA_PARAMS = [
     pytest.param(
@@ -105,20 +105,13 @@ MELACHA_PARAMS = [
 @pytest.mark.parametrize(
     ("location_data", "test_time", "results"), MELACHA_PARAMS, indirect=True
 )
-@pytest.mark.usefixtures("location_data")
+@pytest.mark.usefixtures("setup_at_time")
 async def test_issur_melacha_sensor(
-    hass: HomeAssistant,
-    test_time: dt,
-    results: dict[str, Any],
-    config_entry: MockConfigEntry,
+    hass: HomeAssistant, results: dict[str, Any]
 ) -> None:
     """Test Issur Melacha sensor output."""
     sensor_id = "binary_sensor.jewish_calendar_issur_melacha_in_effect"
-    with freeze_time(test_time):
-        config_entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-        assert hass.states.get(sensor_id).state == results["state"]
+    assert hass.states.get(sensor_id).state == results["state"]
 
     with freeze_time(results["update"]):
         async_fire_time_changed(hass, results["update"])
@@ -135,20 +128,13 @@ async def test_issur_melacha_sensor(
     ids=["before_candle_lighting", "before_havdalah"],
     indirect=True,
 )
-@pytest.mark.usefixtures("location_data")
+@pytest.mark.usefixtures("setup_at_time")
 async def test_issur_melacha_sensor_update(
-    hass: HomeAssistant,
-    test_time: dt,
-    results: list[str],
-    config_entry: MockConfigEntry,
+    hass: HomeAssistant, test_time: dt, results: list[str]
 ) -> None:
     """Test Issur Melacha sensor output."""
     sensor_id = "binary_sensor.jewish_calendar_issur_melacha_in_effect"
-    with freeze_time(test_time):
-        config_entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-        assert hass.states.get(sensor_id).state == results[0]
+    assert hass.states.get(sensor_id).state == results[0]
 
     test_time += timedelta(microseconds=1)
     with freeze_time(test_time):
