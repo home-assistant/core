@@ -158,7 +158,7 @@
                 "qos": "QoS"
               },
               "data_description": {
-                "qos": "The QoS value the device's entities should use."
+                "qos": "The Quality of Service value the device's entities should use."
               }
             }
           }
@@ -247,8 +247,7 @@
             "last_reset_value_template": "Last reset value template",
             "force_update": "Force update",
             "optimistic": "Optimistic",
-            "retain": "Retain",
-            "qos": "QoS"
+            "retain": "Retain"
           },
           "data_description": {
             "command_topic": "The publishing topic that will be used to control the {platform} entity. [Learn more.]({url}#command_topic)",
@@ -258,8 +257,7 @@
             "last_reset_value_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the last reset. When Last reset template is set, the State class option must be Total. [Learn more.]({url}#last_reset_value_template)",
             "force_update": "Sends update events even if the value hasn’t changed. Useful if you want to have meaningful value graphs in history. [Learn more.]({url}#force_update)",
             "optimistic": "Flag that defines if the {platform} entity works in optimistic mode. [Learn more.]({url}#optimistic)",
-            "retain": "Select if values published by the {platform} entity should be retained at the MQTT broker.",
-            "qos": "The QoS value {platform} entity should use."
+            "retain": "Select if values published by the {platform} entity should be retained at the MQTT broker."
           },
           "sections": {
             "advanced_settings": {
