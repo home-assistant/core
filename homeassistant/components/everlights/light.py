@@ -116,7 +116,7 @@ class EverLightsLight(LightEntity):
             rgb = color_int_to_rgb(colors[0])
             hsv = color_util.color_RGB_to_hsv(*rgb)
             hs_color = hsv[:2]
-            brightness = hsv[2] / 100 * 255
+            brightness = round(hsv[2] / 100 * 255)
 
         else:
             rgb = color_util.color_hsv_to_RGB(

@@ -483,7 +483,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             red = multi_color.get(COLOR_SWITCH_COMBINED_RED, red_val.value)
             green = multi_color.get(COLOR_SWITCH_COMBINED_GREEN, green_val.value)
             blue = multi_color.get(COLOR_SWITCH_COMBINED_BLUE, blue_val.value)
-            if None not in (red, green, blue):
+            if red is not None and green is not None and blue is not None:
                 # convert to HS
                 self._hs_color = color_util.color_RGB_to_hs(red, green, blue)
                 # Light supports color, set color mode to hs
