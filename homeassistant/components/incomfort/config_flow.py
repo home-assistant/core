@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+import logging
 from typing import Any
 
 from incomfortclient import InvalidGateway, InvalidHeaterList
@@ -31,6 +32,7 @@ from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from .const import CONF_LEGACY_SETPOINT_STATUS, DOMAIN
 from .coordinator import InComfortConfigEntry, async_connect_gateway
 
+_LOGGER = logging.getLogger(__name__)
 TITLE = "Intergas InComfort/Intouch Lan2RF gateway"
 
 CONFIG_SCHEMA = vol.Schema(
@@ -88,7 +90,8 @@ async def async_try_connect_gateway(
         return {"base": "no_heaters"}
     except TimeoutError:
         return {"base": "timeout_error"}
-    except Exception:  # noqa: BLE001
+    except Exception:
+        _LOGGER.exception("Unexpected exception")
         return {"base": "unknown"}
 
     return None

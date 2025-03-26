@@ -1,0 +1,81 @@
+{
+  "items": [
+    {
+      "deviceId": "5cc1c096-98b9-460c-8f1c-1045509ec605",
+      "name": "VD-Sensor.Light-2023",
+      "label": "Light Sensor - 55\" The Frame",
+      "manufacturerName": "Samsung Electronics",
+      "presentationId": "VD-Sensor.Light-2023",
+      "deviceManufacturerCode": "Samsung Electronics",
+      "locationId": "df59873c-4e2c-43ba-bcd4-ade4efb0504a",
+      "ownerId": "71254e90-c144-45b6-aabe-709f78f48376",
+      "roomId": "8a4fac38-48d1-4a8c-922b-92620442363b",
+      "deviceTypeName": "x.com.st.d.sensor.light",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "ocf",
+              "version": 1
+            },
+            {
+              "id": "switch",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            },
+            {
+              "id": "execute",
+              "version": 1
+            },
+            {
+              "id": "relativeBrightness",
+              "version": 1
+            },
+            {
+              "id": "samsungvd.deviceCategory",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "LightSensor",
+              "categoryType": "manufacturer"
+            }
+          ]
+        }
+      ],
+      "createTime": "2024-11-15T22:21:27.908Z",
+      "parentDeviceId": "425ac77a-f7c9-a62d-ff12-cdad144952e3",
+      "profile": {
+        "id": "5f1633fb-0c63-34d3-9d04-a314d393d225"
+      },
+      "ocf": {
+        "ocfDeviceType": "x.com.st.d.sensor.light",
+        "name": "Light Sensor - 55 The Frame",
+        "specVersion": "core.1.1.0",
+        "verticalDomainSpecVersion": "res.1.1.0,sh.1.1.0",
+        "manufacturerName": "Samsung Electronics",
+        "modelNumber": "QE55LS03DAUXXN",
+        "platformVersion": "8.0",
+        "platformOS": "Tizen",
+        "hwVersion": "",
+        "firmwareVersion": "latest",
+        "vendorId": "VD-Sensor.Light-2023",
+        "vendorResourceClientServerVersion": "4.0.26",
+        "lastSignupTime": "2024-11-15T22:21:27.933740026Z",
+        "transferCandidate": false,
+        "additionalAuthCodeRequired": false
+      },
+      "type": "OCF",
+      "restrictionTier": 0,
+      "allowed": [],
+      "executionContext": "CLOUD"
+    }
+  ],
+  "_links": {}
+}

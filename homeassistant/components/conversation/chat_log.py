@@ -8,7 +8,7 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import asdict, dataclass, field, replace
 import logging
-from typing import Literal, TypedDict
+from typing import Any, Literal, TypedDict
 
 import voluptuous as vol
 
@@ -51,8 +51,7 @@ def async_get_chat_log(
             )
         if user_input is not None and (
             (content := chat_log.content[-1]).role != "user"
-            # MyPy doesn't understand that content is a UserContent here
-            or content.content != user_input.text  # type: ignore[union-attr]
+            or content.content != user_input.text
         ):
             chat_log.async_add_user_content(UserContent(content=user_input.text))
 
@@ -128,7 +127,7 @@ class ConverseError(HomeAssistantError):
 class SystemContent:
     """Base class for chat messages."""
 
-    role: str = field(init=False, default="system")
+    role: Literal["system"] = field(init=False, default="system")
     content: str
 
 
@@ -136,7 +135,7 @@ class SystemContent:
 class UserContent:
     """Assistant content."""
 
-    role: str = field(init=False, default="user")
+    role: Literal["user"] = field(init=False, default="user")
     content: str
 
 
@@ -144,7 +143,7 @@ class UserContent:
 class AssistantContent:
     """Assistant content."""
 
-    role: str = field(init=False, default="assistant")
+    role: Literal["assistant"] = field(init=False, default="assistant")
     agent_id: str
     content: str | None = None
     tool_calls: list[llm.ToolInput] | None = None
@@ -154,7 +153,7 @@ class AssistantContent:
 class ToolResultContent:
     """Tool result content."""
 
-    role: str = field(init=False, default="tool_result")
+    role: Literal["tool_result"] = field(init=False, default="tool_result")
     agent_id: str
     tool_call_id: str
     tool_name: str
@@ -193,8 +192,8 @@ class ChatLog:
 
         return (
             last_msg.role == "assistant"
-            and last_msg.content is not None  # type: ignore[union-attr]
-            and last_msg.content.strip().endswith(  # type: ignore[union-attr]
+            and last_msg.content is not None
+            and last_msg.content.strip().endswith(
                 (
                     "?",
                     ";",  # Greek question mark
@@ -457,10 +456,16 @@ class ChatLog:
         LOGGER.debug("Prompt: %s", self.content)
         LOGGER.debug("Tools: %s", self.llm_api.tools if self.llm_api else None)
 
-        trace.async_conversation_trace_append(
-            trace.ConversationTraceEventType.AGENT_DETAIL,
+        self.async_trace(
             {
                 "messages": self.content,
                 "tools": self.llm_api.tools if self.llm_api else None,
-            },
+            }
+        )
+
+    def async_trace(self, agent_details: dict[str, Any]) -> None:
+        """Append agent specific details to the conversation trace."""
+        trace.async_conversation_trace_append(
+            trace.ConversationTraceEventType.AGENT_DETAIL,
+            agent_details,
         )
