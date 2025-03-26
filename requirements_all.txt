@@ -1217,7 +1217,7 @@ igloohome-api==0.1.0
 ihcsdk==2.8.5
 
 # homeassistant.components.imgw_pib
-imgw_pib==1.0.9
+imgw_pib==1.0.10
 
 # homeassistant.components.incomfort
 incomfort-client==0.6.7
