@@ -117,9 +117,15 @@ async def test_cover(hass: HomeAssistant, setup_zha, zigpy_device_mock) -> None:
     assert state.attributes[ATTR_CURRENT_POSITION] == 100
     assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 58
 
-    # test that the state has changed from unavailable to off
+    # test that the state has changed from unavailable to open (lift closed, tilt open)
     await send_attributes_report(
         hass, cluster, {WCAttrs.current_position_lift_percentage.id: 100}
+    )
+    assert hass.states.get(entity_id).state == CoverState.OPEN
+
+    # now also close the tilt
+    await send_attributes_report(
+        hass, cluster, {WCAttrs.current_position_tilt_percentage.id: 100}
     )
     assert hass.states.get(entity_id).state == CoverState.CLOSED
 
@@ -154,11 +160,11 @@ async def test_cover(hass: HomeAssistant, setup_zha, zigpy_device_mock) -> None:
 
         assert hass.states.get(entity_id).state == CoverState.CLOSING
 
+        # close lift only, tilt still open
         await send_attributes_report(
             hass, cluster, {WCAttrs.current_position_lift_percentage.id: 100}
         )
-
-        assert hass.states.get(entity_id).state == CoverState.CLOSED
+        assert hass.states.get(entity_id).state == CoverState.OPEN
 
     with patch("zigpy.zcl.Cluster.request", return_value=[0x1, zcl_f.Status.SUCCESS]):
         await hass.services.async_call(
@@ -179,6 +185,7 @@ async def test_cover(hass: HomeAssistant, setup_zha, zigpy_device_mock) -> None:
 
         assert hass.states.get(entity_id).state == CoverState.CLOSING
 
+        # now also close tilt
         await send_attributes_report(
             hass, cluster, {WCAttrs.current_position_tilt_percentage.id: 100}
         )
@@ -281,13 +288,13 @@ async def test_cover(hass: HomeAssistant, setup_zha, zigpy_device_mock) -> None:
         assert hass.states.get(entity_id).state == CoverState.CLOSING
 
         await send_attributes_report(
-            hass, cluster, {WCAttrs.current_position_lift_percentage.id: 35}
+            hass, cluster, {WCAttrs.current_position_tilt_percentage.id: 35}
         )
 
         assert hass.states.get(entity_id).state == CoverState.CLOSING
 
         await send_attributes_report(
-            hass, cluster, {WCAttrs.current_position_lift_percentage.id: 53}
+            hass, cluster, {WCAttrs.current_position_tilt_percentage.id: 53}
         )
 
         assert hass.states.get(entity_id).state == CoverState.OPEN
@@ -351,8 +358,8 @@ async def test_cover_failures(
     entity_id = find_entity_id(Platform.COVER, zha_device_proxy, hass)
     assert entity_id is not None
 
-    # test that the state has changed from unavailable to closed
-    await send_attributes_report(hass, cluster, {0: 0, 8: 100, 1: 1})
+    # test that the state has changed from unavailable to closed (lift and tilt closed)
+    await send_attributes_report(hass, cluster, {0: 0, 8: 100, 9: 100, 1: 1})
     assert hass.states.get(entity_id).state == CoverState.CLOSED
 
     # test to see if it opens
