@@ -84,7 +84,7 @@ def mock_config_entry(token_entry: dict[str, Any]) -> MockConfigEntry:
             "auth_implementation": FAKE_AUTH_IMPL,
             "token": token_entry,
         },
-        minor_version=2,
+        minor_version=3,
     )
 
 
@@ -98,6 +98,19 @@ def mock_config_entry_v1_1(token_entry: dict[str, Any]) -> MockConfigEntry:
             "token": token_entry,
         },
         minor_version=1,
+    )
+
+
+@pytest.fixture(name="config_entry_v1_2")
+def mock_config_entry_v1_2(token_entry: dict[str, Any]) -> MockConfigEntry:
+    """Fixture for a config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "auth_implementation": FAKE_AUTH_IMPL,
+            "token": token_entry,
+        },
+        minor_version=2,
     )
 
 

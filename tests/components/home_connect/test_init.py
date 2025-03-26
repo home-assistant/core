@@ -20,6 +20,7 @@ from homeassistant.components.home_connect.utils import bsh_key_to_translation_k
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.time import DOMAIN as TIME_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -351,6 +352,43 @@ async def test_entity_migration(
             domain, DOMAIN, f"{appliance.ha_id}-{expected_unique_id_suffix}"
         )
     assert config_entry_v1_1.minor_version == 2
+
+
+@pytest.mark.parametrize("appliance", ["Oven"], indirect=True)
+async def test_entity_migration_time_alarm_clock(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    config_entry_v1_2: MockConfigEntry,
+    appliance: HomeAppliance,
+) -> None:
+    """Test entity migration."""
+
+    config_entry_v1_2.add_to_hass(hass)
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry_v1_2.entry_id,
+        identifiers={(DOMAIN, appliance.ha_id)},
+    )
+
+    entity_registry.async_get_or_create(
+        TIME_DOMAIN,
+        DOMAIN,
+        f"{appliance.ha_id}-{SettingKey.BSH_COMMON_ALARM_CLOCK.value}",
+        device_id=device_entry.id,
+        config_entry=config_entry_v1_2,
+    )
+
+    with patch("homeassistant.components.home_connect.PLATFORMS", [Platform.TIME]):
+        await hass.config_entries.async_setup(config_entry_v1_2.entry_id)
+        await hass.async_block_till_done()
+
+    assert entity_registry.async_get_entity_id(
+        TIME_DOMAIN,
+        DOMAIN,
+        f"{appliance.ha_id}-{SettingKey.BSH_COMMON_ALARM_CLOCK.value}-time",
+    )
+    assert config_entry_v1_2.minor_version == 3
 
 
 async def test_bsh_key_transformations() -> None:
