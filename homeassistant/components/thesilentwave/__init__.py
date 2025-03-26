@@ -2,7 +2,11 @@
 
 import logging
 
+from homeassistant.helpers import config_validation as cv
+
 from .coordinator import TheSilentWaveCoordinator
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(domain="thesilentwave")
 
 _LOGGER = logging.getLogger(__name__)
 
