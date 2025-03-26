@@ -29,7 +29,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '10e06a70-ee7d-4832-85e9-a0a06a7a05bd.motion',
+    'unique_id': '10e06a70-ee7d-4832-85e9-a0a06a7a05bd_main_motionSensor_motion_motion',
     'unit_of_measurement': None,
   })
 # ---
@@ -77,7 +77,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '10e06a70-ee7d-4832-85e9-a0a06a7a05bd.sound',
+    'unique_id': '10e06a70-ee7d-4832-85e9-a0a06a7a05bd_main_soundSensor_sound_sound',
     'unit_of_measurement': None,
   })
 # ---
@@ -125,7 +125,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '2d9a892b-1c93-45a5-84cb-0e81889498c6.contact',
+    'unique_id': '2d9a892b-1c93-45a5-84cb-0e81889498c6_main_contactSensor_contact_contact',
     'unit_of_measurement': None,
   })
 # ---
@@ -173,7 +173,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': '2bad3237-4886-e699-1b90-4a51a3d55c8a.lockState',
+    'unique_id': '2bad3237-4886-e699-1b90-4a51a3d55c8a_main_samsungce.kidsLock_lockState_lockState',
     'unit_of_measurement': None,
   })
 # ---
@@ -220,7 +220,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'door',
-    'unique_id': '2bad3237-4886-e699-1b90-4a51a3d55c8a.doorState',
+    'unique_id': '2bad3237-4886-e699-1b90-4a51a3d55c8a_main_samsungce.doorState_doorState_doorState',
     'unit_of_measurement': None,
   })
 # ---
@@ -232,6 +232,54 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.microwave_door',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[da_ks_microwave_0101x][binary_sensor.microwave_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.microwave_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '2bad3237-4886-e699-1b90-4a51a3d55c8a_main_switch_switch_switch',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ks_microwave_0101x][binary_sensor.microwave_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Microwave Power',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.microwave_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -268,7 +316,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'remote_control',
-    'unique_id': '2bad3237-4886-e699-1b90-4a51a3d55c8a.remoteControlEnabled',
+    'unique_id': '2bad3237-4886-e699-1b90-4a51a3d55c8a_main_remoteControlStatus_remoteControlEnabled_remoteControlEnabled',
     'unit_of_measurement': None,
   })
 # ---
@@ -315,7 +363,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': '9447959a-0dfa-6b27-d40d-650da525c53f.lockState',
+    'unique_id': '9447959a-0dfa-6b27-d40d-650da525c53f_main_samsungce.kidsLock_lockState_lockState',
     'unit_of_measurement': None,
   })
 # ---
@@ -362,7 +410,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'door',
-    'unique_id': '9447959a-0dfa-6b27-d40d-650da525c53f.doorState',
+    'unique_id': '9447959a-0dfa-6b27-d40d-650da525c53f_main_samsungce.doorState_doorState_doorState',
     'unit_of_measurement': None,
   })
 # ---
@@ -410,7 +458,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'remote_control',
-    'unique_id': '9447959a-0dfa-6b27-d40d-650da525c53f.remoteControlEnabled',
+    'unique_id': '9447959a-0dfa-6b27-d40d-650da525c53f_main_remoteControlStatus_remoteControlEnabled_remoteControlEnabled',
     'unit_of_measurement': None,
   })
 # ---
@@ -457,7 +505,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': '2c3cbaa0-1899-5ddc-7b58-9d657bd48f18.lockState',
+    'unique_id': '2c3cbaa0-1899-5ddc-7b58-9d657bd48f18_main_samsungce.kidsLock_lockState_lockState',
     'unit_of_measurement': None,
   })
 # ---
@@ -504,7 +552,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'door',
-    'unique_id': '2c3cbaa0-1899-5ddc-7b58-9d657bd48f18.doorState',
+    'unique_id': '2c3cbaa0-1899-5ddc-7b58-9d657bd48f18_main_samsungce.doorState_doorState_doorState',
     'unit_of_measurement': None,
   })
 # ---
@@ -552,7 +600,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'remote_control',
-    'unique_id': '2c3cbaa0-1899-5ddc-7b58-9d657bd48f18.remoteControlEnabled',
+    'unique_id': '2c3cbaa0-1899-5ddc-7b58-9d657bd48f18_main_remoteControlStatus_remoteControlEnabled_remoteControlEnabled',
     'unit_of_measurement': None,
   })
 # ---
@@ -599,7 +647,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'cooler_door',
-    'unique_id': '7db87911-7dce-1cf2-7119-b953432a2f09_cooler_contactSensor_contact',
+    'unique_id': '7db87911-7dce-1cf2-7119-b953432a2f09_cooler_contactSensor_contact_contact',
     'unit_of_measurement': None,
   })
 # ---
@@ -647,7 +695,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '7db87911-7dce-1cf2-7119-b953432a2f09.contact',
+    'unique_id': '7db87911-7dce-1cf2-7119-b953432a2f09_main_contactSensor_contact_contact',
     'unit_of_measurement': None,
   })
 # ---
@@ -695,7 +743,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'freezer_door',
-    'unique_id': '7db87911-7dce-1cf2-7119-b953432a2f09_freezer_contactSensor_contact',
+    'unique_id': '7db87911-7dce-1cf2-7119-b953432a2f09_freezer_contactSensor_contact_contact',
     'unit_of_measurement': None,
   })
 # ---
@@ -743,7 +791,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676.lockState',
+    'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_samsungce.kidsLock_lockState_lockState',
     'unit_of_measurement': None,
   })
 # ---
@@ -754,6 +802,54 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.dishwasher_child_lock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[da_wm_dw_000001][binary_sensor.dishwasher_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.dishwasher_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_switch_switch_switch',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_dw_000001][binary_sensor.dishwasher_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Dishwasher Power',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.dishwasher_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -790,7 +886,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'remote_control',
-    'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676.remoteControlEnabled',
+    'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_remoteControlStatus_remoteControlEnabled_remoteControlEnabled',
     'unit_of_measurement': None,
   })
 # ---
@@ -837,7 +933,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b.lockState',
+    'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b_main_samsungce.kidsLock_lockState_lockState',
     'unit_of_measurement': None,
   })
 # ---
@@ -884,7 +980,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b.switch',
+    'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b_main_switch_switch_switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -932,7 +1028,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'remote_control',
-    'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b.remoteControlEnabled',
+    'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b_main_remoteControlStatus_remoteControlEnabled_remoteControlEnabled',
     'unit_of_measurement': None,
   })
 # ---
@@ -979,7 +1075,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'dryer_wrinkle_prevent_active',
-    'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b.operatingState',
+    'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b_main_custom.dryerWrinklePrevent_operatingState_operatingState',
     'unit_of_measurement': None,
   })
 # ---
@@ -1026,7 +1122,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd.lockState',
+    'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd_main_samsungce.kidsLock_lockState_lockState',
     'unit_of_measurement': None,
   })
 # ---
@@ -1073,7 +1169,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd.switch',
+    'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd_main_switch_switch_switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -1121,7 +1217,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'remote_control',
-    'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd.remoteControlEnabled',
+    'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd_main_remoteControlStatus_remoteControlEnabled_remoteControlEnabled',
     'unit_of_measurement': None,
   })
 # ---
@@ -1168,7 +1264,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'dryer_wrinkle_prevent_active',
-    'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd.operatingState',
+    'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd_main_custom.dryerWrinklePrevent_operatingState_operatingState',
     'unit_of_measurement': None,
   })
 # ---
@@ -1215,7 +1311,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47.lockState',
+    'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47_main_samsungce.kidsLock_lockState_lockState',
     'unit_of_measurement': None,
   })
 # ---
@@ -1262,7 +1358,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47.switch',
+    'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47_main_switch_switch_switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -1310,7 +1406,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'remote_control',
-    'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47.remoteControlEnabled',
+    'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47_main_remoteControlStatus_remoteControlEnabled_remoteControlEnabled',
     'unit_of_measurement': None,
   })
 # ---
@@ -1357,7 +1453,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7.lockState',
+    'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7_main_samsungce.kidsLock_lockState_lockState',
     'unit_of_measurement': None,
   })
 # ---
@@ -1404,7 +1500,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7.switch',
+    'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7_main_switch_switch_switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -1452,7 +1548,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'remote_control',
-    'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7.remoteControlEnabled',
+    'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7_main_remoteControlStatus_remoteControlEnabled_remoteControlEnabled',
     'unit_of_measurement': None,
   })
 # ---
@@ -1499,7 +1595,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'd5dc3299-c266-41c7-bd08-f540aea54b89.motion',
+    'unique_id': 'd5dc3299-c266-41c7-bd08-f540aea54b89_main_motionSensor_motion_motion',
     'unit_of_measurement': None,
   })
 # ---
@@ -1547,7 +1643,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'd5dc3299-c266-41c7-bd08-f540aea54b89.presence',
+    'unique_id': 'd5dc3299-c266-41c7-bd08-f540aea54b89_main_presenceSensor_presence_presence',
     'unit_of_measurement': None,
   })
 # ---
@@ -1595,7 +1691,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '184c67cc-69e2-44b6-8f73-55c963068ad9.presence',
+    'unique_id': '184c67cc-69e2-44b6-8f73-55c963068ad9_main_presenceSensor_presence_presence',
     'unit_of_measurement': None,
   })
 # ---
@@ -1643,7 +1739,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '7d246592-93db-4d72-a10d-5a51793ece8c.contact',
+    'unique_id': '7d246592-93db-4d72-a10d-5a51793ece8c_main_contactSensor_contact_contact',
     'unit_of_measurement': None,
   })
 # ---
@@ -1691,7 +1787,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'acceleration',
-    'unique_id': '7d246592-93db-4d72-a10d-5a51793ece8c.acceleration',
+    'unique_id': '7d246592-93db-4d72-a10d-5a51793ece8c_main_accelerationSensor_acceleration_acceleration',
     'unit_of_measurement': None,
   })
 # ---
@@ -1739,7 +1835,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'valve',
-    'unique_id': '612ab3c2-3bb0-48f7-b2c0-15b169cb2fc3.valve',
+    'unique_id': '612ab3c2-3bb0-48f7-b2c0-15b169cb2fc3_main_valve_valve_valve',
     'unit_of_measurement': None,
   })
 # ---
@@ -1787,7 +1883,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'a2a6018b-2663-4727-9d1d-8f56953b5116.water',
+    'unique_id': 'a2a6018b-2663-4727-9d1d-8f56953b5116_main_waterSensor_water_water',
     'unit_of_measurement': None,
   })
 # ---
