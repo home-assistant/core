@@ -1,10 +1,12 @@
 """Config flow for TheSilentWave integration."""
 
-import logging
-import voluptuous as vol
-from homeassistant import config_entries
-from homeassistant.const import CONF_NAME, CONF_HOST, CONF_SCAN_INTERVAL
 import ipaddress
+import logging
+
+import voluptuous as vol
+
+from homeassistant import config_entries
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
