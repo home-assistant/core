@@ -79,47 +79,46 @@ class HomeConnectTimeEntity(HomeConnectEntity, TimeEntity):
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         await super().async_added_to_hass()
-        if self.bsh_key != SettingKey.BSH_COMMON_ALARM_CLOCK:
-            return
-        automations = automations_with_entity(self.hass, self.entity_id)
-        scripts = scripts_with_entity(self.hass, self.entity_id)
-        items = automations + scripts
-        if not items:
-            return
+        if self.bsh_key == SettingKey.BSH_COMMON_ALARM_CLOCK:
+            automations = automations_with_entity(self.hass, self.entity_id)
+            scripts = scripts_with_entity(self.hass, self.entity_id)
+            items = automations + scripts
+            if not items:
+                return
 
-        entity_reg: er.EntityRegistry = er.async_get(self.hass)
-        entity_automations = [
-            automation_entity
-            for automation_id in automations
-            if (automation_entity := entity_reg.async_get(automation_id))
-        ]
-        entity_scripts = [
-            script_entity
-            for script_id in scripts
-            if (script_entity := entity_reg.async_get(script_id))
-        ]
+            entity_reg: er.EntityRegistry = er.async_get(self.hass)
+            entity_automations = [
+                automation_entity
+                for automation_id in automations
+                if (automation_entity := entity_reg.async_get(automation_id))
+            ]
+            entity_scripts = [
+                script_entity
+                for script_id in scripts
+                if (script_entity := entity_reg.async_get(script_id))
+            ]
 
-        items_list = [
-            f"- [{item.original_name}](/config/automation/edit/{item.unique_id})"
-            for item in entity_automations
-        ] + [
-            f"- [{item.original_name}](/config/script/edit/{item.unique_id})"
-            for item in entity_scripts
-        ]
+            items_list = [
+                f"- [{item.original_name}](/config/automation/edit/{item.unique_id})"
+                for item in entity_automations
+            ] + [
+                f"- [{item.original_name}](/config/script/edit/{item.unique_id})"
+                for item in entity_scripts
+            ]
 
-        async_create_issue(
-            self.hass,
-            DOMAIN,
-            f"deprecated_time_alarm_clock_in_automations_scripts_{self.entity_id}",
-            breaks_in_ha_version="2025.10.0",
-            is_fixable=True,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_time_alarm_clock",
-            translation_placeholders={
-                "entity_id": self.entity_id,
-                "items": "\n".join(items_list),
-            },
-        )
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"deprecated_time_alarm_clock_in_automations_scripts_{self.entity_id}",
+                breaks_in_ha_version="2025.10.0",
+                is_fixable=True,
+                severity=IssueSeverity.WARNING,
+                translation_key="deprecated_time_alarm_clock",
+                translation_placeholders={
+                    "entity_id": self.entity_id,
+                    "items": "\n".join(items_list),
+                },
+            )
 
     async def async_will_remove_from_hass(self) -> None:
         """Call when entity will be removed from hass."""
