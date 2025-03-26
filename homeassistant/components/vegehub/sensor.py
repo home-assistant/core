@@ -2,19 +2,39 @@
 
 from itertools import count
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.const import UnitOfElectricPotential
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import VegeHubCoordinator
+from .coordinator import VegeHubConfigEntry, VegeHubCoordinator
 from .entity import VegeHubEntity
+
+SENSOR_TYPES: dict[str, SensorEntityDescription] = {
+    "analog_sensor": SensorEntityDescription(
+        key="analog_sensor",
+        translation_key="analog_sensor",
+        device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        suggested_display_precision=2,
+    ),
+    "battery": SensorEntityDescription(
+        key="battery",
+        translation_key="battery",
+        device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        suggested_display_precision=1,
+    ),
+}
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: VegeHubConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Vegetronix sensors from a config entry."""
@@ -30,6 +50,7 @@ async def async_setup_entry(
         sensor = VegeHubSensor(
             index=next(update_index),
             coordinator=coordinator,
+            description=SENSOR_TYPES["analog_sensor"],
         )
         sensors.append(sensor)
 
@@ -38,7 +59,7 @@ async def async_setup_entry(
         VegeHubSensor(
             index=next(update_index),
             coordinator=coordinator,
-            translation_key="battery",
+            description=SENSOR_TYPES["battery"],
         )
     )
 
@@ -48,36 +69,28 @@ async def async_setup_entry(
 class VegeHubSensor(VegeHubEntity, SensorEntity):
     """Class for VegeHub Analog Sensors."""
 
-    _attr_has_entity_name = True
-    _unit_of_measurement = UnitOfElectricPotential.VOLT
     _attr_device_class = SensorDeviceClass.VOLTAGE
-    _attr_native_unit_of_measurement = _unit_of_measurement
+    _attr_native_unit_of_measurement = UnitOfElectricPotential.VOLT
     _attr_suggested_display_precision = 2
 
     def __init__(
         self,
         index: int,
         coordinator: VegeHubCoordinator,
-        translation_key: str = "analog_sensor",
+        description: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._attr_translation_key = translation_key
-        if translation_key == "analog_sensor":
+        self.entity_description = description
+        # Set unique ID for pulling data from the coordinator
+        self._attr_unique_id = f"{self._mac_address}_{index}".lower()
+        if description.key == "analog_sensor":
             self._attr_translation_placeholders = {"index": str(index)}
         self._attr_available = False
-        self._attr_unique_id = (
-            f"{self._mac_address}_{index}".lower()
-        )  # Set unique ID for pulling data from the coordinator
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        if (
-            self.coordinator.data is not None
-            and self._attr_unique_id is not None
-            and self._attr_unique_id in self.coordinator.data
-        ):
-            self._attr_native_value = self.coordinator.data[self._attr_unique_id]
-            self._attr_available = True
-        super()._handle_coordinator_update()
+    @property
+    def native_value(self) -> float | None:
+        """Return the sensor's current value."""
+        if self.coordinator.data is None or self._attr_unique_id is None:
+            return None
+        return self.coordinator.data.get(self._attr_unique_id)

@@ -6,7 +6,7 @@ from typing import Any
 
 from aiohttp.hdrs import METH_POST
 from aiohttp.web import Request, Response
-from vegehub import VegeHub, update_data_to_latest_dict
+from vegehub import VegeHub
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.webhook import (
@@ -26,11 +26,9 @@ from .const import DOMAIN, NAME, PLATFORMS
 from .coordinator import VegeHubConfigEntry, VegeHubCoordinator
 
 
-# The integration is only set up through the UI (config flow)
 async def async_setup_entry(hass: HomeAssistant, entry: VegeHubConfigEntry) -> bool:
     """Set up VegeHub from a config entry."""
 
-    # Register the device in the device registry
     device_mac = entry.data[CONF_MAC]
 
     assert entry.unique_id
@@ -69,9 +67,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: VegeHubConfigEntry) -> b
     # Now add in all the entities for this device.
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    entry.async_create_background_task(
-        hass, register_webhook(), "vegehub_register_webhook"
-    )
+    await register_webhook()
 
     return True
 
@@ -97,9 +93,9 @@ def get_webhook_handler(
                 result="No Body", status_code=HTTPStatus.BAD_REQUEST
             )
         data = await request.json()
-        sensor_data = update_data_to_latest_dict(data)
-        if coordinator and sensor_data:
-            coordinator.async_set_updated_data(sensor_data)
+
+        if coordinator:
+            await coordinator.update_from_webhook(data)
 
         return HomeAssistantView.json(result="OK", status_code=HTTPStatus.OK)
 

@@ -51,6 +51,10 @@ async def test_sensor_entities(
     client = await hass_client_no_auth()
     resp = await client.post(f"/api/webhook/{TEST_WEBHOOK_ID}", json=UPDATE_DATA)
 
+    # Send the same update again so that the coordinator modifies existing data
+    # instead of creating new data.
+    resp = await client.post(f"/api/webhook/{TEST_WEBHOOK_ID}", json=UPDATE_DATA)
+
     # Wait for remaining tasks to complete.
     await hass.async_block_till_done()
     assert resp.status == 200, f"Unexpected status code: {resp.status}"

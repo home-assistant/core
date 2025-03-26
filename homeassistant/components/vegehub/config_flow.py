@@ -6,12 +6,11 @@ from typing import Any
 from vegehub import VegeHub
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components.webhook import (
     async_generate_id as webhook_generate_id,
     async_generate_url as webhook_generate_url,
 )
-from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_DEVICE,
     CONF_HOST,
@@ -27,7 +26,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class VegeHubConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for VegeHub integration."""
 
     _hub: VegeHub
@@ -83,14 +82,11 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             await self._hub.retrieve_mac_address(retries=2)
         except ConnectionError:
-            _LOGGER.error("Failed to connect to %s", self._hub.ip_address)
             return self.async_abort(reason="cannot_connect")
         except TimeoutError:
-            _LOGGER.error("Timed out trying to connect to %s", self._hub.ip_address)
             return self.async_abort(reason="timeout_connect")
 
-        if len(self._hub.mac_address) <= 0:
-            _LOGGER.error("Failed to get MAC address for %s", device_ip)
+        if not self._hub.mac_address:
             return self.async_abort(reason="cannot_connect")
 
         # Check if this device already exists
@@ -137,19 +133,17 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         # Send the webhook address to the hub as its server target.
-        # This step should only happen when the config flow happens, not
-        # in the async_setup_entry, which happens again during boot.
+        # This step can happen in the init, because that gets executed
+        # every time Home Assistant starts up, and this step should
+        # only happen in the initial setup of the VegeHub.
         try:
             await self._hub.setup("", webhook_url, retries=1)
         except ConnectionError:
-            _LOGGER.error("Failed to connect to %s", self._hub.ip_address)
             errors["base"] = "cannot_connect"
         except TimeoutError:
-            _LOGGER.error("Timed out trying to connect to %s", self._hub.ip_address)
             errors["base"] = "timeout_connect"
 
         if not self._hub.mac_address:
-            _LOGGER.error("Failed to get MAC address for %s", self._hub.ip_address)
             errors["base"] = "cannot_connect"
 
         return errors
@@ -171,4 +165,4 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         }
 
         # Create the config entry for the new device
-        return self.async_create_entry(title=f"{self._hostname}", data=info_data)
+        return self.async_create_entry(title=self._hostname, data=info_data)
