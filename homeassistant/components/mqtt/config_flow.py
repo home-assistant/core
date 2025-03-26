@@ -1267,13 +1267,9 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             reconfig=True,
         )
         if user_input is not None:
-            merged_user_input, errors = validate_user_input(
-                user_input, MQTT_DEVICE_PLATFORM_FIELDS
-            )
+            _, errors = validate_user_input(user_input, MQTT_DEVICE_PLATFORM_FIELDS)
             if not errors:
-                self._subentry_data[CONF_DEVICE] = cast(
-                    MqttDeviceData, merged_user_input
-                )
+                self._subentry_data[CONF_DEVICE] = cast(MqttDeviceData, user_input)
                 if self.source == SOURCE_RECONFIGURE:
                     return await self.async_step_summary_menu()
                 return await self.async_step_entity()
