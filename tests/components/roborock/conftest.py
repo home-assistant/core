@@ -20,7 +20,6 @@ from homeassistant.components.roborock.const import (
 )
 from homeassistant.const import CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from .mock_data import (
     BASE_URL,
@@ -190,12 +189,6 @@ def bypass_api_fixture_v1_only(bypass_api_fixture) -> None:
         yield
 
 
-@pytest.fixture(name="config_entry_unique_id")
-def config_entry_unique_id_fixture() -> str:
-    """Fixture that returns the unique id for the config entry."""
-    return ROBOROCK_RRUID
-
-
 @pytest.fixture(name="config_entry_data")
 def config_entry_data_fixture() -> dict[str, Any]:
     """Fixture that returns the unique id for the config entry."""
@@ -208,14 +201,14 @@ def config_entry_data_fixture() -> dict[str, Any]:
 
 @pytest.fixture
 def mock_roborock_entry(
-    hass: HomeAssistant, config_entry_unique_id: str, config_entry_data: dict[str, Any]
+    hass: HomeAssistant, config_entry_data: dict[str, Any]
 ) -> MockConfigEntry:
     """Create a Roborock Entry that has not been setup."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
         title=USER_EMAIL,
         data=config_entry_data,
-        unique_id=config_entry_unique_id,
+        unique_id=ROBOROCK_RRUID,
         version=1,
         minor_version=2,
     )
@@ -237,13 +230,6 @@ async def mock_patforms_fixture(
     """Set up the Roborock platform."""
     with patch("homeassistant.components.roborock.PLATFORMS", platforms):
         yield
-
-
-@pytest.fixture
-async def setup_component(hass: HomeAssistant, bypass_api_fixture: Any) -> None:
-    """Set up the Roborock component, useful when you went to set up one config entry at a time."""
-    await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
 
 
 @pytest.fixture
