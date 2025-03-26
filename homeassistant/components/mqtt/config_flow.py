@@ -153,7 +153,6 @@ from .util import (
     learn_more_url,
     valid_birth_will,
     valid_publish_topic,
-    valid_qos_schema,
     valid_subscribe_topic,
     valid_subscribe_topic_template,
 )
@@ -182,7 +181,6 @@ PASSWORD_SELECTOR = TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWO
 QOS_SELECTOR = NumberSelector(
     NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=0, max=2)
 )
-QOS_DATA_SCHEMA = vol.All(QOS_SELECTOR, valid_qos_schema)
 KEEPALIVE_SELECTOR = vol.All(
     NumberSelector(
         NumberSelectorConfig(
@@ -1145,7 +1143,7 @@ class MQTTOptionsFlowHandler(OptionsFlow):
                 "birth_payload", description={"suggested_value": birth[CONF_PAYLOAD]}
             )
         ] = TEXT_SELECTOR
-        fields[vol.Optional("birth_qos", default=birth[ATTR_QOS])] = QOS_DATA_SCHEMA
+        fields[vol.Optional("birth_qos", default=birth[ATTR_QOS])] = QOS_SELECTOR
         fields[vol.Optional("birth_retain", default=birth[ATTR_RETAIN])] = (
             BOOLEAN_SELECTOR
         )
@@ -1168,7 +1166,7 @@ class MQTTOptionsFlowHandler(OptionsFlow):
                 "will_payload", description={"suggested_value": will[CONF_PAYLOAD]}
             )
         ] = TEXT_SELECTOR
-        fields[vol.Optional("will_qos", default=will[ATTR_QOS])] = QOS_DATA_SCHEMA
+        fields[vol.Optional("will_qos", default=will[ATTR_QOS])] = QOS_SELECTOR
         fields[vol.Optional("will_retain", default=will[ATTR_RETAIN])] = (
             BOOLEAN_SELECTOR
         )
