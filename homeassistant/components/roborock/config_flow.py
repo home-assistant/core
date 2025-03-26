@@ -124,7 +124,6 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
                 if self.source == SOURCE_REAUTH:
                     self._abort_if_unique_id_mismatch(reason="wrong_account")
                     reauth_entry = self._get_reauth_entry()
-                    _LOGGER.debug("Existing=%s", reauth_entry.unique_id)
                     self.hass.config_entries.async_update_entry(
                         reauth_entry,
                         data={
