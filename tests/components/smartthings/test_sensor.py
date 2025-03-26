@@ -58,10 +58,11 @@ async def test_state_update(
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
-    ("device_fixture", "entity_id"),
+    ("device_fixture", "entity_id", "translation_key"),
     [
         ("da_wm_wm_000001", "sensor.washer_machine_state"),
         ("da_wm_wd_000001", "sensor.dryer_machine_state"),
+        ("hw_q80r_soundbar", "sensor.soundbar_volume"),
     ],
 )
 async def test_create_issue(
