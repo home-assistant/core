@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import (
@@ -496,7 +496,8 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             # Calculate color temps based on whites
             if cold_white or warm_white:
                 self._color_temp = color_util.color_temperature_mired_to_kelvin(
-                    MAX_MIREDS - ((cold_white / 255) * (MAX_MIREDS - MIN_MIREDS))
+                    MAX_MIREDS
+                    - ((cast(int, cold_white) / 255) * (MAX_MIREDS - MIN_MIREDS))
                 )
                 # White channels turned on, set color mode to color_temp
                 self._color_mode = ColorMode.COLOR_TEMP
@@ -505,6 +506,13 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         # only one white channel (warm white) = rgbw support
         elif red_val and green_val and blue_val and ww_val:
             white = multi_color.get(COLOR_SWITCH_COMBINED_WARM_WHITE, ww_val.value)
+            if TYPE_CHECKING:
+                assert (
+                    red is not None
+                    and green is not None
+                    and blue is not None
+                    and white is not None
+                )
             self._rgbw_color = (red, green, blue, white)
             # Light supports rgbw, set color mode to rgbw
             self._color_mode = ColorMode.RGBW
@@ -512,6 +520,13 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         elif cw_val:
             self._supports_rgbw = True
             white = multi_color.get(COLOR_SWITCH_COMBINED_COLD_WHITE, cw_val.value)
+            if TYPE_CHECKING:
+                assert (
+                    red is not None
+                    and green is not None
+                    and blue is not None
+                    and white is not None
+                )
             self._rgbw_color = (red, green, blue, white)
             # Light supports rgbw, set color mode to rgbw
             self._color_mode = ColorMode.RGBW
