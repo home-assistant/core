@@ -189,9 +189,7 @@ def _create_google_tool_response_content(
     """Create a Google tool response content."""
     return Content(
         role="user",
-        parts=[
-            _create_google_tool_response_parts(content),
-        ],
+        parts=_create_google_tool_response_parts(content),
     )
 
 
@@ -412,7 +410,7 @@ class GoogleGenerativeAIConversationEntity(
         chat = self._genai_client.aio.chats.create(
             model=model_name, history=messages, config=generateContentConfig
         )
-        chat_request: str | Content = user_input.text
+        chat_request: str | list[Part] = user_input.text
         # To prevent infinite loops, we limit the number of iterations
         for _iteration in range(MAX_TOOL_ITERATIONS):
             try:
@@ -466,7 +464,7 @@ class GoogleGenerativeAIConversationEntity(
                     )
                 )
 
-            chat_request = _create_google_tool_response_content(
+            chat_request = _create_google_tool_response_parts(
                 [
                     tool_response
                     async for tool_response in chat_log.async_add_assistant_content(
