@@ -72,7 +72,9 @@ class JewishCalendarBinarySensor(JewishCalendarEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return true if sensor is on."""
-        zmanim = self.make_zmanim(dt.date.today())
+        assert self.coordinator.data.results is not None, "Data not available"
+
+        zmanim = self.coordinator.data.results.zmanim
         return self.entity_description.is_on(zmanim)(dt_util.now())
 
     def _update_times(self, zmanim: Zmanim) -> list[dt.datetime | None]:
