@@ -112,11 +112,25 @@
   "issues": {
     "deprecated_time_alarm_clock_in_automations_scripts": {
       "title": "Deprecated alarm clock entity detected in some automations or scripts",
-      "description": "The alarm clock entity `{entity_id}`, which is deprecated because it's being moved to the `number` platform, is used in the following automations or scripts:\n{items}\n\nPlease, fix this issue by updating your automations or scripts to use the new `number` entity."
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::home_connect::issues::deprecated_time_alarm_clock_in_automations_scripts::title%]",
+            "description": "The alarm clock entity `{entity_id}`, which is deprecated because it's being moved to the `number` platform, is used in the following automations or scripts:\n{items}\n\nPlease, fix this issue by updating your automations or scripts to use the new `number` entity."
+          }
+        }
+      }
     },
     "deprecated_time_alarm_clock": {
       "title": "Deprecated alarm clock entity",
-      "description": "The alarm clock entity `{entity_id}` is deprecated because it's being moved to the `number` platform.\n\nPlease use the new `number` entity."
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::home_connect::issues::deprecated_time_alarm_clock::title%]",
+            "description": "The alarm clock entity `{entity_id}` is deprecated because it's being moved to the `number` platform.\n\nPlease use the new `number` entity."
+          }
+        }
+      }
     },
     "deprecated_binary_common_door_sensor": {
       "title": "Deprecated binary door sensor detected in some automations or scripts",

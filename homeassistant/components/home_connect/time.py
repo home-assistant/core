@@ -112,7 +112,7 @@ class HomeConnectTimeEntity(HomeConnectEntity, TimeEntity):
             DOMAIN,
             f"deprecated_time_alarm_clock_in_automations_scripts_{self.entity_id}",
             breaks_in_ha_version="2025.10.0",
-            is_fixable=False,
+            is_fixable=True,
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_time_alarm_clock",
             translation_placeholders={
@@ -140,7 +140,7 @@ class HomeConnectTimeEntity(HomeConnectEntity, TimeEntity):
             DOMAIN,
             f"deprecated_time_alarm_clock_{self.entity_id}",
             breaks_in_ha_version="2025.10.0",
-            is_fixable=False,
+            is_fixable=True,
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_time_alarm_clock",
             translation_placeholders={
