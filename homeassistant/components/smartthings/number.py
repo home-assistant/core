@@ -36,9 +36,7 @@ class SmartThingsWasherRinseCyclesNumberEntity(SmartThingsEntity, NumberEntity):
     def __init__(self, client: SmartThings, device: FullDevice) -> None:
         """Initialize the instance."""
         super().__init__(client, device, {Capability.CUSTOM_WASHER_RINSE_CYCLES})
-        self._attr_unique_id = (
-            f"{device.device.device_id}_{MAIN}_{Capability.CUSTOM_WASHER_RINSE_CYCLES}"
-        )
+        self._attr_unique_id = f"{device.device.device_id}_{MAIN}_{Capability.CUSTOM_WASHER_RINSE_CYCLES}_{Attribute.WASHER_RINSE_CYCLES}_{Attribute.WASHER_RINSE_CYCLES}"
 
     @property
     def options(self) -> list[int]:
