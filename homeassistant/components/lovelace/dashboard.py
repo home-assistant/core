@@ -32,8 +32,8 @@ from .const import (
     MODE_YAML,
     STORAGE_DASHBOARD_CREATE_FIELDS,
     STORAGE_DASHBOARD_UPDATE_FIELDS,
-    ConfigNotFound,
 )
+from .exceptions import ConfigNotFound
 
 CONFIG_STORAGE_KEY_DEFAULT = DOMAIN
 CONFIG_STORAGE_KEY = "lovelace.{}"
