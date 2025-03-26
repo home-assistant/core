@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import logging
-from types import MappingProxyType
 from typing import Any
 
 import openai
@@ -140,53 +139,176 @@ class OpenAIOptionsFlow(OptionsFlow):
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
-        self.last_rendered_recommended = config_entry.options.get(
-            CONF_RECOMMENDED, False
-        )
+        self.options = config_entry.options.copy()
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Manage the options."""
-        options: dict[str, Any] | MappingProxyType[str, Any] = self.config_entry.options
-        errors: dict[str, str] = {}
+        """Manage initial options."""
+        options = self.options
+
+        hass_apis: list[SelectOptionDict] = [
+            SelectOptionDict(
+                label="No control",
+                value="none",
+            )
+        ]
+        hass_apis.extend(
+            SelectOptionDict(
+                label=api.name,
+                value=api.id,
+            )
+            for api in llm.async_get_apis(self.hass)
+        )
+
+        step_schema: VolDictType = {
+            vol.Optional(
+                CONF_PROMPT,
+                description={
+                    "suggested_value": options.get(
+                        CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT
+                    )
+                },
+            ): TemplateSelector(),
+            vol.Optional(
+                CONF_LLM_HASS_API,
+                description={"suggested_value": options.get(CONF_LLM_HASS_API)},
+                default="none",
+            ): SelectSelector(SelectSelectorConfig(options=hass_apis)),
+            vol.Required(
+                CONF_RECOMMENDED, default=options.get(CONF_RECOMMENDED, False)
+            ): bool,
+        }
 
         if user_input is not None:
-            if user_input[CONF_RECOMMENDED] == self.last_rendered_recommended:
-                if user_input[CONF_LLM_HASS_API] == "none":
-                    user_input.pop(CONF_LLM_HASS_API)
+            if user_input[CONF_LLM_HASS_API] == "none":
+                user_input.pop(CONF_LLM_HASS_API)
 
-                if user_input.get(CONF_CHAT_MODEL) in UNSUPPORTED_MODELS:
-                    errors[CONF_CHAT_MODEL] = "model_not_supported"
+            if user_input[CONF_RECOMMENDED]:
+                return self.async_create_entry(title="", data=user_input)
 
-                if user_input.get(CONF_WEB_SEARCH):
-                    if not user_input.get(
-                        CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL
-                    ).startswith("gpt-4o"):
-                        errors[CONF_WEB_SEARCH] = "web_search_not_supported"
-                    elif user_input.get(CONF_WEB_SEARCH_USER_LOCATION):
-                        user_input.update(await self.get_location_data())
+            self.options = user_input
+            return await self.async_step_advanced()
 
-                if not errors:
-                    return self.async_create_entry(title="", data=user_input)
-            else:
-                # Re-render the options again, now with the recommended options shown/hidden
-                self.last_rendered_recommended = user_input[CONF_RECOMMENDED]
-
-                options = {
-                    CONF_RECOMMENDED: user_input[CONF_RECOMMENDED],
-                    CONF_PROMPT: user_input[CONF_PROMPT],
-                    CONF_LLM_HASS_API: user_input[CONF_LLM_HASS_API],
-                }
-
-        schema = openai_config_option_schema(self.hass, options)
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(schema),
+            data_schema=vol.Schema(step_schema),
+        )
+
+    async def async_step_advanced(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage advanced options."""
+        options = self.options
+        errors: dict[str, str] = {}
+
+        step_schema: VolDictType = {
+            vol.Optional(
+                CONF_CHAT_MODEL,
+                default=RECOMMENDED_CHAT_MODEL,
+            ): str,
+            vol.Optional(
+                CONF_MAX_TOKENS,
+                default=RECOMMENDED_MAX_TOKENS,
+            ): int,
+            vol.Optional(
+                CONF_TOP_P,
+                default=RECOMMENDED_TOP_P,
+            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+            vol.Optional(
+                CONF_TEMPERATURE,
+                default=RECOMMENDED_TEMPERATURE,
+            ): NumberSelector(NumberSelectorConfig(min=0, max=2, step=0.05)),
+        }
+
+        if user_input is not None:
+            options.update(user_input)
+            if user_input.get(CONF_CHAT_MODEL) in UNSUPPORTED_MODELS:
+                errors[CONF_CHAT_MODEL] = "model_not_supported"
+
+            if not errors:
+                return await self.async_step_model()
+
+        return self.async_show_form(
+            step_id="advanced",
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(step_schema), options
+            ),
             errors=errors,
         )
 
-    async def get_location_data(self) -> dict[str, str]:
+    async def async_step_model(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage model-specific options."""
+        options = self.options
+        errors: dict[str, str] = {}
+
+        step_schema: VolDictType = {}
+
+        model = options[CONF_CHAT_MODEL]
+
+        if model.startswith("o"):
+            step_schema.update(
+                {
+                    vol.Optional(
+                        CONF_REASONING_EFFORT,
+                        default=RECOMMENDED_REASONING_EFFORT,
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=["low", "medium", "high"],
+                            translation_key=CONF_REASONING_EFFORT,
+                            mode=SelectSelectorMode.DROPDOWN,
+                        )
+                    ),
+                }
+            )
+
+        if model.startswith("gpt-4o"):
+            step_schema.update(
+                {
+                    vol.Optional(
+                        CONF_WEB_SEARCH,
+                        default=RECOMMENDED_WEB_SEARCH,
+                    ): bool,
+                    vol.Optional(
+                        CONF_WEB_SEARCH_CONTEXT_SIZE,
+                        default=RECOMMENDED_WEB_SEARCH_CONTEXT_SIZE,
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=["low", "medium", "high"],
+                            translation_key=CONF_WEB_SEARCH_CONTEXT_SIZE,
+                            mode=SelectSelectorMode.DROPDOWN,
+                        )
+                    ),
+                    vol.Optional(
+                        CONF_WEB_SEARCH_USER_LOCATION,
+                        default=RECOMMENDED_WEB_SEARCH_USER_LOCATION,
+                    ): bool,
+                }
+            )
+
+        if not step_schema:
+            return self.async_create_entry(title="", data=options)
+
+        if user_input is not None:
+            if user_input.get(CONF_WEB_SEARCH) and user_input.get(
+                CONF_WEB_SEARCH_USER_LOCATION
+            ):
+                user_input.update(await self._get_location_data())
+
+            options.update(user_input)
+            return self.async_create_entry(title="", data=options)
+
+        return self.async_show_form(
+            step_id="model",
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(step_schema), options
+            ),
+            errors=errors,
+        )
+
+    async def _get_location_data(self) -> dict[str, str]:
         """Get approximate location data of the user."""
         location_data: dict[str, str] = {}
         zone_home = self.hass.states.get(ENTITY_ID_HOME)
@@ -238,107 +360,3 @@ class OpenAIOptionsFlow(OptionsFlow):
         _LOGGER.debug("Location data: %s", location_data)
 
         return location_data
-
-
-def openai_config_option_schema(
-    hass: HomeAssistant,
-    options: dict[str, Any] | MappingProxyType[str, Any],
-) -> VolDictType:
-    """Return a schema for OpenAI completion options."""
-    hass_apis: list[SelectOptionDict] = [
-        SelectOptionDict(
-            label="No control",
-            value="none",
-        )
-    ]
-    hass_apis.extend(
-        SelectOptionDict(
-            label=api.name,
-            value=api.id,
-        )
-        for api in llm.async_get_apis(hass)
-    )
-
-    schema: VolDictType = {
-        vol.Optional(
-            CONF_PROMPT,
-            description={
-                "suggested_value": options.get(
-                    CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT
-                )
-            },
-        ): TemplateSelector(),
-        vol.Optional(
-            CONF_LLM_HASS_API,
-            description={"suggested_value": options.get(CONF_LLM_HASS_API)},
-            default="none",
-        ): SelectSelector(SelectSelectorConfig(options=hass_apis)),
-        vol.Required(
-            CONF_RECOMMENDED, default=options.get(CONF_RECOMMENDED, False)
-        ): bool,
-    }
-
-    if options.get(CONF_RECOMMENDED):
-        return schema
-
-    schema.update(
-        {
-            vol.Optional(
-                CONF_CHAT_MODEL,
-                description={"suggested_value": options.get(CONF_CHAT_MODEL)},
-                default=RECOMMENDED_CHAT_MODEL,
-            ): str,
-            vol.Optional(
-                CONF_MAX_TOKENS,
-                description={"suggested_value": options.get(CONF_MAX_TOKENS)},
-                default=RECOMMENDED_MAX_TOKENS,
-            ): int,
-            vol.Optional(
-                CONF_TOP_P,
-                description={"suggested_value": options.get(CONF_TOP_P)},
-                default=RECOMMENDED_TOP_P,
-            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
-            vol.Optional(
-                CONF_TEMPERATURE,
-                description={"suggested_value": options.get(CONF_TEMPERATURE)},
-                default=RECOMMENDED_TEMPERATURE,
-            ): NumberSelector(NumberSelectorConfig(min=0, max=2, step=0.05)),
-            vol.Optional(
-                CONF_REASONING_EFFORT,
-                description={"suggested_value": options.get(CONF_REASONING_EFFORT)},
-                default=RECOMMENDED_REASONING_EFFORT,
-            ): SelectSelector(
-                SelectSelectorConfig(
-                    options=["low", "medium", "high"],
-                    translation_key=CONF_REASONING_EFFORT,
-                    mode=SelectSelectorMode.DROPDOWN,
-                )
-            ),
-            vol.Optional(
-                CONF_WEB_SEARCH,
-                description={"suggested_value": options.get(CONF_WEB_SEARCH)},
-                default=RECOMMENDED_WEB_SEARCH,
-            ): bool,
-            vol.Optional(
-                CONF_WEB_SEARCH_CONTEXT_SIZE,
-                description={
-                    "suggested_value": options.get(CONF_WEB_SEARCH_CONTEXT_SIZE)
-                },
-                default=RECOMMENDED_WEB_SEARCH_CONTEXT_SIZE,
-            ): SelectSelector(
-                SelectSelectorConfig(
-                    options=["low", "medium", "high"],
-                    translation_key=CONF_WEB_SEARCH_CONTEXT_SIZE,
-                    mode=SelectSelectorMode.DROPDOWN,
-                )
-            ),
-            vol.Optional(
-                CONF_WEB_SEARCH_USER_LOCATION,
-                description={
-                    "suggested_value": options.get(CONF_WEB_SEARCH_USER_LOCATION)
-                },
-                default=RECOMMENDED_WEB_SEARCH_USER_LOCATION,
-            ): bool,
-        }
-    )
-    return schema

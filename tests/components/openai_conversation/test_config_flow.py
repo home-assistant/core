@@ -27,7 +27,6 @@ from homeassistant.components.openai_conversation.const import (
     DOMAIN,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_MAX_TOKENS,
-    RECOMMENDED_REASONING_EFFORT,
     RECOMMENDED_TOP_P,
 )
 from homeassistant.const import CONF_LLM_HASS_API
@@ -77,10 +76,10 @@ async def test_form(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_options(
+async def test_options_recommended(
     hass: HomeAssistant, mock_config_entry, mock_init_component
 ) -> None:
-    """Test the options form."""
+    """Test the options flow with recommended settings."""
     options_flow = await hass.config_entries.options.async_init(
         mock_config_entry.entry_id
     )
@@ -88,14 +87,12 @@ async def test_options(
         options_flow["flow_id"],
         {
             "prompt": "Speak like a pirate",
-            "max_tokens": 200,
+            "recommended": True,
         },
     )
     await hass.async_block_till_done()
     assert options["type"] is FlowResultType.CREATE_ENTRY
     assert options["data"]["prompt"] == "Speak like a pirate"
-    assert options["data"]["max_tokens"] == 200
-    assert options["data"][CONF_CHAT_MODEL] == RECOMMENDED_CHAT_MODEL
 
 
 async def test_options_unsupported_model(
@@ -105,18 +102,32 @@ async def test_options_unsupported_model(
     options_flow = await hass.config_entries.options.async_init(
         mock_config_entry.entry_id
     )
-    result = await hass.config_entries.options.async_configure(
+    assert options_flow["type"] == FlowResultType.FORM
+    assert options_flow["step_id"] == "init"
+
+    # Configure initial step
+    options_flow = await hass.config_entries.options.async_configure(
         options_flow["flow_id"],
         {
             CONF_RECOMMENDED: False,
             CONF_PROMPT: "Speak like a pirate",
-            CONF_CHAT_MODEL: "o1-mini",
             CONF_LLM_HASS_API: "assist",
         },
     )
     await hass.async_block_till_done()
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"chat_model": "model_not_supported"}
+    assert options_flow["type"] == FlowResultType.FORM
+    assert options_flow["step_id"] == "advanced"
+
+    # Configure advanced step
+    options_flow = await hass.config_entries.options.async_configure(
+        options_flow["flow_id"],
+        {
+            CONF_CHAT_MODEL: "o1-mini",
+        },
+    )
+    await hass.async_block_till_done()
+    assert options_flow["type"] is FlowResultType.FORM
+    assert options_flow["errors"] == {"chat_model": "model_not_supported"}
 
 
 @pytest.mark.parametrize(
@@ -162,96 +173,195 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
     assert result2["errors"] == {"base": error}
 
 
-@pytest.mark.parametrize(
-    ("current_options", "new_options", "expected_options"),
-    [
-        (
-            {
-                CONF_RECOMMENDED: True,
-                CONF_LLM_HASS_API: "none",
-                CONF_PROMPT: "bla",
-            },
-            {
-                CONF_RECOMMENDED: False,
-                CONF_PROMPT: "Speak like a pirate",
-                CONF_TEMPERATURE: 0.3,
-            },
-            {
-                CONF_RECOMMENDED: False,
-                CONF_PROMPT: "Speak like a pirate",
-                CONF_TEMPERATURE: 0.3,
-                CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
-                CONF_TOP_P: RECOMMENDED_TOP_P,
-                CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
-                CONF_REASONING_EFFORT: RECOMMENDED_REASONING_EFFORT,
-                CONF_WEB_SEARCH: False,
-                CONF_WEB_SEARCH_CONTEXT_SIZE: "medium",
-                CONF_WEB_SEARCH_USER_LOCATION: False,
-            },
-        ),
-        (
-            {
-                CONF_RECOMMENDED: False,
-                CONF_PROMPT: "Speak like a pirate",
-                CONF_TEMPERATURE: 0.3,
-                CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
-                CONF_TOP_P: RECOMMENDED_TOP_P,
-                CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
-                CONF_REASONING_EFFORT: RECOMMENDED_REASONING_EFFORT,
-                CONF_WEB_SEARCH: False,
-                CONF_WEB_SEARCH_CONTEXT_SIZE: "medium",
-                CONF_WEB_SEARCH_USER_LOCATION: False,
-            },
-            {
-                CONF_RECOMMENDED: True,
-                CONF_LLM_HASS_API: "assist",
-                CONF_PROMPT: "",
-            },
-            {
-                CONF_RECOMMENDED: True,
-                CONF_LLM_HASS_API: "assist",
-                CONF_PROMPT: "",
-            },
-        ),
-    ],
-)
-async def test_options_switching(
-    hass: HomeAssistant,
-    mock_config_entry,
-    mock_init_component,
-    current_options,
-    new_options,
-    expected_options,
+async def test_options_no_model_settings(
+    hass: HomeAssistant, mock_config_entry, mock_init_component
 ) -> None:
-    """Test the options form."""
-    hass.config_entries.async_update_entry(mock_config_entry, options=current_options)
-    options_flow = await hass.config_entries.options.async_init(
-        mock_config_entry.entry_id
-    )
-    if current_options.get(CONF_RECOMMENDED) != new_options.get(CONF_RECOMMENDED):
-        options_flow = await hass.config_entries.options.async_configure(
-            options_flow["flow_id"],
-            {
-                **current_options,
-                CONF_RECOMMENDED: new_options[CONF_RECOMMENDED],
-            },
-        )
+    """Test options with no model-specific settings."""
+    options = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    assert options["type"] == FlowResultType.FORM
+    assert options["step_id"] == "init"
+
+    # Configure initial step
     options = await hass.config_entries.options.async_configure(
-        options_flow["flow_id"],
-        new_options,
+        options["flow_id"],
+        {
+            CONF_RECOMMENDED: False,
+            CONF_PROMPT: "Speak like a pirate",
+            CONF_LLM_HASS_API: "none",
+        },
+    )
+    assert options["type"] == FlowResultType.FORM
+    assert options["step_id"] == "advanced"
+
+    # Configure advanced step
+    options = await hass.config_entries.options.async_configure(
+        options["flow_id"],
+        {
+            CONF_TEMPERATURE: 1.0,
+            CONF_CHAT_MODEL: "gpt-4.5-preview",
+            CONF_TOP_P: RECOMMENDED_TOP_P,
+            CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+        },
     )
     await hass.async_block_till_done()
+
     assert options["type"] is FlowResultType.CREATE_ENTRY
-    assert options["data"] == expected_options
+    assert options["data"] == {
+        CONF_RECOMMENDED: False,
+        CONF_PROMPT: "Speak like a pirate",
+        CONF_TEMPERATURE: 1.0,
+        CONF_CHAT_MODEL: "gpt-4.5-preview",
+        CONF_TOP_P: RECOMMENDED_TOP_P,
+        CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+    }
+
+
+async def test_options_reasoning_model(
+    hass: HomeAssistant, mock_config_entry, mock_init_component
+) -> None:
+    """Test options for reasoning models."""
+    options = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    assert options["type"] == FlowResultType.FORM
+    assert options["step_id"] == "init"
+
+    # Configure initial step
+    options = await hass.config_entries.options.async_configure(
+        options["flow_id"],
+        {
+            CONF_RECOMMENDED: False,
+            CONF_PROMPT: "Speak like a pirate",
+            CONF_LLM_HASS_API: "none",
+        },
+    )
+    assert options["type"] == FlowResultType.FORM
+    assert options["step_id"] == "advanced"
+
+    # Configure advanced step
+    options = await hass.config_entries.options.async_configure(
+        options["flow_id"],
+        {
+            CONF_TEMPERATURE: 1.0,
+            CONF_CHAT_MODEL: "o1-pro",
+            CONF_TOP_P: RECOMMENDED_TOP_P,
+            CONF_MAX_TOKENS: 10000,
+        },
+    )
+    assert options["type"] == FlowResultType.FORM
+    assert options["step_id"] == "model"
+
+    # Configure model step
+    options = await hass.config_entries.options.async_configure(
+        options["flow_id"],
+        {
+            CONF_REASONING_EFFORT: "high",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert options["type"] is FlowResultType.CREATE_ENTRY
+    assert options["data"] == {
+        CONF_RECOMMENDED: False,
+        CONF_PROMPT: "Speak like a pirate",
+        CONF_TEMPERATURE: 1.0,
+        CONF_CHAT_MODEL: "o1-pro",
+        CONF_TOP_P: RECOMMENDED_TOP_P,
+        CONF_MAX_TOKENS: 10000,
+        CONF_REASONING_EFFORT: "high",
+    }
+
+
+async def test_options_web_search_no_user_location(
+    hass: HomeAssistant, mock_config_entry, mock_init_component
+) -> None:
+    """Test options for web search without user location."""
+    options = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    assert options["type"] == FlowResultType.FORM
+    assert options["step_id"] == "init"
+
+    # Configure initial step
+    options = await hass.config_entries.options.async_configure(
+        options["flow_id"],
+        {
+            CONF_RECOMMENDED: False,
+            CONF_PROMPT: "Speak like a pirate",
+            CONF_LLM_HASS_API: "none",
+        },
+    )
+    assert options["type"] == FlowResultType.FORM
+    assert options["step_id"] == "advanced"
+
+    # Configure advanced step
+    options = await hass.config_entries.options.async_configure(
+        options["flow_id"],
+        {
+            CONF_TEMPERATURE: 1.0,
+            CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
+            CONF_TOP_P: RECOMMENDED_TOP_P,
+            CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+        },
+    )
+    assert options["type"] == FlowResultType.FORM
+    assert options["step_id"] == "model"
+
+    # Configure model step
+    options = await hass.config_entries.options.async_configure(
+        options["flow_id"],
+        {
+            CONF_WEB_SEARCH: True,
+            CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
+            CONF_WEB_SEARCH_USER_LOCATION: False,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert options["type"] is FlowResultType.CREATE_ENTRY
+    assert options["data"] == {
+        CONF_RECOMMENDED: False,
+        CONF_PROMPT: "Speak like a pirate",
+        CONF_TEMPERATURE: 1.0,
+        CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
+        CONF_TOP_P: RECOMMENDED_TOP_P,
+        CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+        CONF_WEB_SEARCH: True,
+        CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
+        CONF_WEB_SEARCH_USER_LOCATION: False,
+    }
 
 
 async def test_options_web_search_user_location(
     hass: HomeAssistant, mock_config_entry, mock_init_component
 ) -> None:
     """Test fetching user location."""
-    options_flow = await hass.config_entries.options.async_init(
-        mock_config_entry.entry_id
+    options = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    assert options["type"] == FlowResultType.FORM
+    assert options["step_id"] == "init"
+
+    # Configure initial step
+    options = await hass.config_entries.options.async_configure(
+        options["flow_id"],
+        {
+            CONF_RECOMMENDED: False,
+            CONF_PROMPT: "Speak like a pirate",
+            CONF_LLM_HASS_API: "none",
+        },
     )
+    assert options["type"] == FlowResultType.FORM
+    assert options["step_id"] == "advanced"
+
+    # Configure advanced step
+    options = await hass.config_entries.options.async_configure(
+        options["flow_id"],
+        {
+            CONF_TEMPERATURE: 1.0,
+            CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
+            CONF_TOP_P: RECOMMENDED_TOP_P,
+            CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+        },
+    )
+    await hass.async_block_till_done()
+    assert options["type"] == FlowResultType.FORM
+    assert options["step_id"] == "model"
+
     hass.config.country = "US"
     hass.config.time_zone = "America/Los_Angeles"
     hass.states.async_set(
@@ -286,16 +396,10 @@ async def test_options_web_search_user_location(
             ],
         )
 
+        # Configure model step
         options = await hass.config_entries.options.async_configure(
-            options_flow["flow_id"],
+            options["flow_id"],
             {
-                CONF_RECOMMENDED: False,
-                CONF_PROMPT: "Speak like a pirate",
-                CONF_TEMPERATURE: 1.0,
-                CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
-                CONF_TOP_P: RECOMMENDED_TOP_P,
-                CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
-                CONF_REASONING_EFFORT: RECOMMENDED_REASONING_EFFORT,
                 CONF_WEB_SEARCH: True,
                 CONF_WEB_SEARCH_CONTEXT_SIZE: "medium",
                 CONF_WEB_SEARCH_USER_LOCATION: True,
@@ -314,7 +418,6 @@ async def test_options_web_search_user_location(
         CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
         CONF_TOP_P: RECOMMENDED_TOP_P,
         CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
-        CONF_REASONING_EFFORT: RECOMMENDED_REASONING_EFFORT,
         CONF_WEB_SEARCH: True,
         CONF_WEB_SEARCH_CONTEXT_SIZE: "medium",
         CONF_WEB_SEARCH_USER_LOCATION: True,
@@ -323,25 +426,3 @@ async def test_options_web_search_user_location(
         CONF_WEB_SEARCH_COUNTRY: "US",
         CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
     }
-
-
-async def test_options_web_search_unsupported_model(
-    hass: HomeAssistant, mock_config_entry, mock_init_component
-) -> None:
-    """Test the options form giving error about web search not being available."""
-    options_flow = await hass.config_entries.options.async_init(
-        mock_config_entry.entry_id
-    )
-    result = await hass.config_entries.options.async_configure(
-        options_flow["flow_id"],
-        {
-            CONF_RECOMMENDED: False,
-            CONF_PROMPT: "Speak like a pirate",
-            CONF_CHAT_MODEL: "o1-pro",
-            CONF_LLM_HASS_API: "assist",
-            CONF_WEB_SEARCH: True,
-        },
-    )
-    await hass.async_block_till_done()
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"web_search": "web_search_not_supported"}
