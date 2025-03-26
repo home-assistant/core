@@ -168,15 +168,28 @@ class SmartThingsSwitch(SmartThingsEntity, SwitchEntity):
             return
         automations = automations_with_entity(self.hass, self.entity_id)
         scripts = scripts_with_entity(self.hass, self.entity_id)
-        if not automations and not scripts:
+        items = automations + scripts
+        if not items:
             return
 
         entity_reg: er.EntityRegistry = er.async_get(self.hass)
+        entity_automations = [
+            automation_entity
+            for automation_id in automations
+            if (automation_entity := entity_reg.async_get(automation_id))
+        ]
+        entity_scripts = [
+            script_entity
+            for script_id in scripts
+            if (script_entity := entity_reg.async_get(script_id))
+        ]
+
         items_list = [
-            f"- [{item.original_name}](/config/{integration}/edit/{item.unique_id})"
-            for integration, entities in (("automation", automations), ("script", scripts))
-            for entity_id in entities
-            if (item := entity_reg.async_get(entity_id))
+            f"- [{item.original_name}](/config/automation/edit/{item.unique_id})"
+            for item in entity_automations
+        ] + [
+            f"- [{item.original_name}](/config/script/edit/{item.unique_id})"
+            for item in entity_scripts
         ]
 
         async_create_issue(
