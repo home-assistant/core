@@ -5887,6 +5887,47 @@ async def test_stop_action_response_variables(
 
 
 @pytest.mark.parametrize(
+    ("var", "response"),
+    [(1, "If: Then"), (2, "Testing 123")],
+)
+async def test_stop_action_response_variables_queued(
+    hass: HomeAssistant,
+    var: int,
+    response: str,
+) -> None:
+    """Test setting stop response_variable in a subscript."""
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"variables": {"output": {"value": "Testing 123"}}},
+            {
+                "if": {
+                    "condition": "template",
+                    "value_template": "{{ var == 1 }}",
+                },
+                "then": [
+                    {"variables": {"output": {"value": "If: Then"}}},
+                    {"stop": "In the name of love", "response_variable": "output"},
+                ],
+            },
+            {"stop": "In the name of love", "response_variable": "output"},
+        ]
+    )
+    script_obj = script.Script(
+        hass,
+        sequence,
+        "Test Name",
+        "test_domain",
+        script_mode="queued",
+        max_runs=2,
+        logger=logger,
+    )
+
+    run_vars = MappingProxyType({"var": var})
+    result = await script_obj.async_run(run_vars, context=Context())
+    assert result.service_response == {"value": response}
+
+
+@pytest.mark.parametrize(
     ("var", "if_result", "choice", "response"),
     [(1, True, "then", "If: Then"), (2, False, "else", "If: Else")],
 )
