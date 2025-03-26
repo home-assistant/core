@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
-from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
@@ -89,88 +88,51 @@ _PLATFORM_SCHEMA_BASE = MQTT_RO_SCHEMA.extend(
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
 
-@callback
-def validate_sensor_state_and_device_class_config(
-    config: ConfigType,
-    errors: dict[str, str] | None = None,
-    reset_fields: list[str] | None = None,
-) -> ConfigType:
+def validate_sensor_state_and_device_class_config(config: ConfigType) -> ConfigType:
     """Validate the sensor options, state and device class config."""
     if (
         CONF_LAST_RESET_VALUE_TEMPLATE in config
         and (state_class := config.get(CONF_STATE_CLASS)) != SensorStateClass.TOTAL
     ):
-        if errors is None:
-            raise vol.Invalid(
-                f"The option `{CONF_LAST_RESET_VALUE_TEMPLATE}` cannot be used "
-                f"together with state class `{state_class}`"
-            )
-        if reset_fields is not None:
-            reset_fields.append(CONF_LAST_RESET_VALUE_TEMPLATE)
+        raise vol.Invalid(
+            f"The option `{CONF_LAST_RESET_VALUE_TEMPLATE}` cannot be used "
+            f"together with state class `{state_class}`"
+        )
 
     # Only allow `options` to be set for `enum` sensors
     # to limit the possible sensor values
     if (options := config.get(CONF_OPTIONS)) is not None:
         if not options:
-            if reset_fields is None:
-                raise vol.Invalid("An empty options list is not allowed")
-            reset_fields.append(CONF_OPTIONS)
+            raise vol.Invalid("An empty options list is not allowed")
         if config.get(CONF_STATE_CLASS) or config.get(CONF_UNIT_OF_MEASUREMENT):
-            if errors is None:
-                raise vol.Invalid(
-                    f"Specifying `{CONF_OPTIONS}` is not allowed together with "
-                    f"the `{CONF_STATE_CLASS}` or `{CONF_UNIT_OF_MEASUREMENT}` option"
-                )
-            errors[CONF_OPTIONS] = "options_not_allowed_with_state_class_or_uom"
+            raise vol.Invalid(
+                f"Specifying `{CONF_OPTIONS}` is not allowed together with "
+                f"the `{CONF_STATE_CLASS}` or `{CONF_UNIT_OF_MEASUREMENT}` option"
+            )
 
         if (device_class := config.get(CONF_DEVICE_CLASS)) != SensorDeviceClass.ENUM:
-            if errors is None:
-                raise vol.Invalid(
-                    f"The option `{CONF_OPTIONS}` must be used "
-                    f"together with device class `{SensorDeviceClass.ENUM}`, "
-                    f"got `{CONF_DEVICE_CLASS}` '{device_class}'"
-                )
-            if TYPE_CHECKING:
-                assert reset_fields is not None
-            errors[CONF_DEVICE_CLASS] = "options_device_class_enum"
-            reset_fields.append(CONF_OPTIONS)
+            raise vol.Invalid(
+                f"The option `{CONF_OPTIONS}` must be used "
+                f"together with device class `{SensorDeviceClass.ENUM}`, "
+                f"got `{CONF_DEVICE_CLASS}` '{device_class}'"
+            )
 
-    if (
-        (device_class := config.get(CONF_DEVICE_CLASS)) == SensorDeviceClass.ENUM
-        and errors is not None
-        and CONF_OPTIONS not in config
-    ):
-        errors[CONF_OPTIONS] = "options_with_enum_device_class"
-
-    if (
-        device_class in DEVICE_CLASS_UNITS
-        and (unit_of_measurement := config.get(CONF_UNIT_OF_MEASUREMENT)) is None
-        and errors is not None
-    ):
-        # Do not allow an empty unit of measurement in a subentry data flow
-        errors[CONF_UNIT_OF_MEASUREMENT] = "uom_required_for_device_class"
-        return config
-
-    if (
-        device_class is None
-        or (unit_of_measurement := config.get(CONF_UNIT_OF_MEASUREMENT)) is None
-    ):
+    if (device_class := config.get(CONF_DEVICE_CLASS)) is None or (
+        unit_of_measurement := config.get(CONF_UNIT_OF_MEASUREMENT)
+    ) is None:
         return config
 
     if (
         device_class in DEVICE_CLASS_UNITS
         and unit_of_measurement not in DEVICE_CLASS_UNITS[device_class]
     ):
-        if errors is None:
-            _LOGGER.warning(
-                "The unit of measurement `%s` is not valid "
-                "together with device class `%s`. "
-                "this will stop working in HA Core 2025.7.0",
-                unit_of_measurement,
-                device_class,
-            )
-            return config
-        errors[CONF_UNIT_OF_MEASUREMENT] = "invalid_uom"
+        _LOGGER.warning(
+            "The unit of measurement `%s` is not valid "
+            "together with device class `%s`. "
+            "this will stop working in HA Core 2025.7.0",
+            unit_of_measurement,
+            device_class,
+        )
 
     return config
 

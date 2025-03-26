@@ -144,7 +144,6 @@ from .const import (
     Platform,
 )
 from .models import MqttAvailabilityData, MqttDeviceData, MqttSubentryData
-from .sensor import validate_sensor_state_and_device_class_config
 from .util import (
     async_create_certificate_temp_files,
     get_file_path,
@@ -282,9 +281,61 @@ OPTIONS_SELECTOR = SelectSelector(
 SUGGESTED_DISPLAY_PRECISION_SELECTOR = NumberSelector(
     NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=0, max=9)
 )
-EXIRE_AFTER_SELECTOR = NumberSelector(
+EXPIRE_AFTER_SELECTOR = NumberSelector(
     NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=0)
 )
+
+
+@callback
+def validate_sensor_state_and_device_class_config(
+    config: dict[str, Any], errors: dict[str, str], reset_fields: list[str]
+) -> None:
+    """Validate the sensor options, state and device class config."""
+    if (
+        CONF_LAST_RESET_VALUE_TEMPLATE in config
+        and config.get(CONF_STATE_CLASS) != SensorStateClass.TOTAL
+    ):
+        if reset_fields is not None:
+            reset_fields.append(CONF_LAST_RESET_VALUE_TEMPLATE)
+
+    # Only allow `options` to be set for `enum` sensors
+    # to limit the possible sensor values
+    if (options := config.get(CONF_OPTIONS)) is not None:
+        if not options:
+            reset_fields.append(CONF_OPTIONS)
+        if config.get(CONF_STATE_CLASS) or config.get(CONF_UNIT_OF_MEASUREMENT):
+            errors[CONF_OPTIONS] = "options_not_allowed_with_state_class_or_uom"
+
+        if (device_class := config.get(CONF_DEVICE_CLASS)) != SensorDeviceClass.ENUM:
+            if TYPE_CHECKING:
+                assert reset_fields is not None
+            errors[CONF_DEVICE_CLASS] = "options_device_class_enum"
+            reset_fields.append(CONF_OPTIONS)
+
+    if (
+        (device_class := config.get(CONF_DEVICE_CLASS)) == SensorDeviceClass.ENUM
+        and errors is not None
+        and CONF_OPTIONS not in config
+    ):
+        errors[CONF_OPTIONS] = "options_with_enum_device_class"
+
+    if (
+        device_class in DEVICE_CLASS_UNITS
+        and (unit_of_measurement := config.get(CONF_UNIT_OF_MEASUREMENT)) is None
+        and errors is not None
+    ):
+        # Do not allow an empty unit of measurement in a subentry data flow
+        errors[CONF_UNIT_OF_MEASUREMENT] = "uom_required_for_device_class"
+        return
+
+    if (
+        device_class is not None
+        and device_class in DEVICE_CLASS_UNITS
+        and unit_of_measurement not in DEVICE_CLASS_UNITS[device_class]
+    ):
+        errors[CONF_UNIT_OF_MEASUREMENT] = "invalid_uom"
+
+    return
 
 
 @dataclass(frozen=True)
@@ -379,13 +430,13 @@ PLATFORM_MQTT_FIELDS = {
             conditions=({CONF_STATE_CLASS: "total"},),
         ),
         CONF_EXPIRE_AFTER: PlatformField(
-            EXIRE_AFTER_SELECTOR, False, cv.positive_int, section="advanced_settings"
+            EXPIRE_AFTER_SELECTOR, False, cv.positive_int, section="advanced_settings"
         ),
     },
 }
 ENTITY_CONFIG_VALIDATOR: dict[
     str,
-    Callable[[dict[str, Any], dict[str, str], list[str] | None], dict[str, Any]] | None,
+    Callable[[dict[str, Any], dict[str, str], list[str]], None] | None,
 ] = {
     Platform.NOTIFY.value: None,
     Platform.SENSOR.value: validate_sensor_state_and_device_class_config,
@@ -489,9 +540,7 @@ def validate_user_input(
     data_schema_fields: dict[str, PlatformField],
     errors: dict[str, str],
     component_data: dict[str, Any] | None,
-    config_validator: Callable[
-        [dict[str, Any], dict[str, str], list[str] | None], dict[str, str]
-    ]
+    config_validator: Callable[[dict[str, Any], dict[str, str], list[str]], None]
     | None = None,
 ) -> dict[str, Any]:
     """Validate user input."""
