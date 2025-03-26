@@ -26,7 +26,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Meter power demand',
+    'original_name': 'Power demand',
     'platform': 'rainforest_raven',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -39,7 +39,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'RAVEn Device Meter power demand',
+      'friendly_name': 'RAVEn Device Power demand',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
@@ -183,7 +183,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Total meter energy delivered',
+    'original_name': 'Total energy delivered',
     'platform': 'rainforest_raven',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -196,7 +196,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'RAVEn Device Total meter energy delivered',
+      'friendly_name': 'RAVEn Device Total energy delivered',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
@@ -235,7 +235,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Total meter energy received',
+    'original_name': 'Total energy received',
     'platform': 'rainforest_raven',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -248,7 +248,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'RAVEn Device Total meter energy received',
+      'friendly_name': 'RAVEn Device Total energy received',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
