@@ -2328,7 +2328,7 @@ pysmhi==1.0.0
 pysml==0.0.12
 
 # homeassistant.components.smlight
-pysmlight==0.2.3
+pysmlight==0.2.4
 
 # homeassistant.components.snmp
 pysnmp==6.2.6
@@ -3152,7 +3152,7 @@ zeroconf==0.146.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.53
+zha==0.0.54
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.13
