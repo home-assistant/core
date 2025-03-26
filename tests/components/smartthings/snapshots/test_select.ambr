@@ -35,7 +35,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'operating_state',
-    'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b_main_dryerOperatingState',
+    'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b_main_dryerOperatingState_machineState_machineState',
     'unit_of_measurement': None,
   })
 # ---
@@ -93,7 +93,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'operating_state',
-    'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd_main_dryerOperatingState',
+    'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd_main_dryerOperatingState_machineState_machineState',
     'unit_of_measurement': None,
   })
 # ---
@@ -151,7 +151,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'operating_state',
-    'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47_main_washerOperatingState',
+    'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47_main_washerOperatingState_machineState_machineState',
     'unit_of_measurement': None,
   })
 # ---
@@ -209,7 +209,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'operating_state',
-    'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7_main_washerOperatingState',
+    'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7_main_washerOperatingState_machineState_machineState',
     'unit_of_measurement': None,
   })
 # ---

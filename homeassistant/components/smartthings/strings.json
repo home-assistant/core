@@ -469,6 +469,9 @@
       },
       "wrinkle_prevent": {
         "name": "Wrinkle prevent"
+      },
+      "ice_maker": {
+        "name": "Ice maker"
       }
     }
   },
@@ -480,6 +483,14 @@
     "deprecated_binary_fridge_door": {
       "title": "Deprecated refrigerator door binary sensor detected in some automations or scripts",
       "description": "The refrigerator door binary sensor `{entity}` is deprecated and is used in the following automations or scripts:\n{items}\n\nSeparate entities for cooler and freezer door are available and should be used going forward. Please use them in the above automations or scripts to fix this issue."
+    },
+    "deprecated_machine_state": {
+      "title": "Deprecated machine state sensor detected in some automations or scripts",
+      "description": "The machine state sensor `{entity}` is deprecated and is used in the following automations or scripts:\n{items}\n\nA select entity is now available for the machine state and should be used going forward. Please use them in the above automations or scripts to fix this issue."
+    },
+    "deprecated_switch_appliance": {
+      "title": "Deprecated switch detected in some automations or scripts",
+      "description": "The switch `{entity}` is deprecated because the actions did not work, so it has been replaced with a binary sensor instead.\n\nThe switch was used in the following automations or scripts:\n{items}\n\nPlease use them in the above automations or scripts to fix this issue."
     }
   }
 }
