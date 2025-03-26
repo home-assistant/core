@@ -36,6 +36,10 @@ from homeassistant.components.recorder.statistics import (
 )
 from homeassistant.components.recorder.util import get_instance, session_scope
 from homeassistant.components.sensor import ATTR_OPTIONS, DOMAIN, SensorDeviceClass
+from homeassistant.components.sensor.recorder import (
+    STATE_CLASS_REMOVED_ISSUE,
+    UNITS_CHANGED_ISSUE,
+)
 from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import issue_registry as ir
@@ -4428,11 +4432,11 @@ async def test_validate_unit_change_convertible(
                     "statistic_id": "sensor.test",
                     "supported_unit": supported_unit,
                 },
-                "type": "units_changed",
+                "type": UNITS_CHANGED_ISSUE,
             }
         ],
     }
-    await assert_validation_result(hass, client, expected, {"units_changed"})
+    await assert_validation_result(hass, client, expected, {UNITS_CHANGED_ISSUE})
 
     # Unavailable state - empty response
     hass.states.async_set(
@@ -4653,11 +4657,11 @@ async def test_validate_statistics_unit_change_no_device_class(
                     "statistic_id": "sensor.test",
                     "supported_unit": supported_unit,
                 },
-                "type": "units_changed",
+                "type": UNITS_CHANGED_ISSUE,
             }
         ],
     }
-    await assert_validation_result(hass, client, expected, {"units_changed"})
+    await assert_validation_result(hass, client, expected, {UNITS_CHANGED_ISSUE})
 
     # Unavailable state - empty response
     hass.states.async_set(
@@ -4769,11 +4773,11 @@ async def test_validate_statistics_state_class_removed(
         "sensor.test": [
             {
                 "data": {"statistic_id": "sensor.test"},
-                "type": "state_class_removed",
+                "type": STATE_CLASS_REMOVED_ISSUE,
             }
         ],
     }
-    await assert_validation_result(hass, client, expected, {"state_class_removed"})
+    await assert_validation_result(hass, client, expected, {STATE_CLASS_REMOVED_ISSUE})
 
     # Unavailable state - empty response
     hass.states.async_set(
@@ -4837,11 +4841,11 @@ async def test_validate_statistics_state_class_removed_issue_cleaned_up(
         "sensor.test": [
             {
                 "data": {"statistic_id": "sensor.test"},
-                "type": "state_class_removed",
+                "type": STATE_CLASS_REMOVED_ISSUE,
             }
         ],
     }
-    await assert_validation_result(hass, client, expected, {"state_class_removed"})
+    await assert_validation_result(hass, client, expected, {STATE_CLASS_REMOVED_ISSUE})
 
     # Remove the statistics - empty response
     get_instance(hass).async_clear_statistics(["sensor.test"])
@@ -5086,11 +5090,11 @@ async def test_validate_statistics_unit_change_no_conversion(
                     "statistic_id": "sensor.test",
                     "supported_unit": unit1,
                 },
-                "type": "units_changed",
+                "type": UNITS_CHANGED_ISSUE,
             }
         ],
     }
-    await assert_validation_result(hass, client, expected, {"units_changed"})
+    await assert_validation_result(hass, client, expected, {UNITS_CHANGED_ISSUE})
 
     # Unavailable state - empty response
     hass.states.async_set(
@@ -5267,11 +5271,11 @@ async def test_validate_statistics_unit_change_equivalent_units_2(
                     "statistic_id": "sensor.test",
                     "supported_unit": supported_unit,
                 },
-                "type": "units_changed",
+                "type": UNITS_CHANGED_ISSUE,
             }
         ],
     }
-    await assert_validation_result(hass, client, expected, {"units_changed"})
+    await assert_validation_result(hass, client, expected, {UNITS_CHANGED_ISSUE})
 
     # Run statistics one hour later, metadata will not be updated
     await async_recorder_block_till_done(hass)
@@ -5280,7 +5284,7 @@ async def test_validate_statistics_unit_change_equivalent_units_2(
     await assert_statistic_ids(
         hass, [{"statistic_id": "sensor.test", "unit_of_measurement": unit1}]
     )
-    await assert_validation_result(hass, client, expected, {"units_changed"})
+    await assert_validation_result(hass, client, expected, {UNITS_CHANGED_ISSUE})
 
 
 async def test_validate_statistics_other_domain(
@@ -5369,7 +5373,7 @@ async def test_update_statistics_issues(
     now = await one_hour_stats(now)
     expected = {
         "state_class_removed_sensor.test": {
-            "issue_type": "state_class_removed",
+            "issue_type": STATE_CLASS_REMOVED_ISSUE,
             "statistic_id": "sensor.test",
         }
     }
@@ -5573,8 +5577,8 @@ async def test_clean_up_repairs(
     create_issue("test", "test_issue", None)
     create_issue(DOMAIN, "test_issue_1", None)
     create_issue(DOMAIN, "test_issue_2", {"issue_type": "another_issue"})
-    create_issue(DOMAIN, "test_issue_3", {"issue_type": "state_class_removed"})
-    create_issue(DOMAIN, "test_issue_4", {"issue_type": "units_changed"})
+    create_issue(DOMAIN, "test_issue_3", {"issue_type": STATE_CLASS_REMOVED_ISSUE})
+    create_issue(DOMAIN, "test_issue_4", {"issue_type": UNITS_CHANGED_ISSUE})
 
     # Check the issues
     assert set(issue_registry.issues) == {
