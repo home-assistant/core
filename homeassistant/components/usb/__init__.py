@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine
+from collections.abc import Callable, Coroutine, Sequence
 import dataclasses
 from datetime import datetime, timedelta
 import fnmatch
@@ -421,13 +421,14 @@ class USBDiscovery:
                 service_info,
             )
 
-    async def _async_process_ports(self, usb_devices: set[USBDevice]) -> None:
+    async def _async_process_ports(self, usb_devices: Sequence[USBDevice]) -> None:
         """Process each discovered port."""
         _LOGGER.debug("USB devices: %r", usb_devices)
 
-        added_devices = usb_devices - self._last_processed_devices
-        removed_devices = self._last_processed_devices - usb_devices
-        self._last_processed_devices = usb_devices
+        devices = set(usb_devices)
+        added_devices = devices - self._last_processed_devices
+        removed_devices = self._last_processed_devices - devices
+        self._last_processed_devices = devices
 
         _LOGGER.debug(
             "Added devices: %r, removed devices: %r", added_devices, removed_devices
@@ -440,7 +441,7 @@ class USBDiscovery:
                 except Exception:
                     _LOGGER.exception("Error in USB port event callback")
 
-        for usb_device in usb_devices:
+        for usb_device in devices:
             await self._async_process_discovered_usb_device(usb_device)
 
     @hass_callback

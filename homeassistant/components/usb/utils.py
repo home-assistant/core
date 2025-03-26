@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 import dataclasses
 import os.path
 import sys
@@ -38,26 +39,23 @@ def get_serial_by_id_mapping() -> dict[str, str]:
     return mapping
 
 
-def scan_serial_ports() -> set[USBDevice]:
+def scan_serial_ports() -> Sequence[USBDevice]:
     """Scan for serial ports."""
     ports = comports()
     serial_by_id_mapping = get_serial_by_id_mapping()
 
-    usb_devices = {
+    usb_devices = [
         usb_device_from_port(port)
         for port in ports
         if port.vid is not None or port.pid is not None
-    }
+    ]
 
     # Update the USB device path to point to the unique serial port, if one exists
-    usb_devices = {
-        (
-            dataclasses.replace(device, device=serial_by_id_mapping[device.device])
-            if device.device in serial_by_id_mapping
-            else device
-        )
-        for device in usb_devices
-    }
+    for index, device in enumerate(usb_devices):
+        if device.device in serial_by_id_mapping:
+            usb_devices[index] = dataclasses.replace(
+                device, device=serial_by_id_mapping[device.device]
+            )
 
     # CP2102N chips create *two* serial ports on macOS: `/dev/cu.usbserial-` and
     # `/dev/cu.SLAB_USBtoUART*`. The former does not work and we should ignore them.
@@ -68,7 +66,7 @@ def scan_serial_ports() -> set[USBDevice]:
             if dev.device.startswith("/dev/cu.SLAB_USBtoUART")
         }
 
-        usb_devices = {
+        usb_devices = [
             dev
             for dev in usb_devices
             if dev.serial_number not in silabs_serials
@@ -76,6 +74,6 @@ def scan_serial_ports() -> set[USBDevice]:
                 dev.serial_number in silabs_serials
                 and dev.device.startswith("/dev/cu.SLAB_USBtoUART")
             )
-        }
+        ]
 
     return usb_devices
