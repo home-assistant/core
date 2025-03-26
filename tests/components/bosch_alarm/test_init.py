@@ -1,12 +1,13 @@
 """Tests for bosch alarm integration init."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from .conftest import MockBoschAlarmConfig
+from . import setup_integration
 
 from tests.common import MockConfigEntry
 
@@ -18,18 +19,15 @@ def disable_platform_only():
         yield
 
 
-@pytest.mark.parametrize(
-    ("bosch_alarm_test_data", "exception"),
-    [("Solution 3000", PermissionError()), ("Solution 3000", TimeoutError())],
-    indirect=["bosch_alarm_test_data"],
-)
+@pytest.mark.parametrize("model", ["solution_3000"])
+@pytest.mark.parametrize("exception", [PermissionError(), TimeoutError()])
 async def test_incorrect_auth(
     hass: HomeAssistant,
-    bosch_alarm_test_data: MockBoschAlarmConfig,
-    bosch_config_entry: MockConfigEntry,
+    mock_panel: AsyncMock,
+    mock_config_entry: MockConfigEntry,
     exception: Exception,
 ) -> None:
     """Test errors with incorrect auth."""
-    bosch_alarm_test_data.side_effect = exception
-    bosch_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(bosch_config_entry.entry_id) is False
+    mock_panel.connect.side_effect = exception
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY

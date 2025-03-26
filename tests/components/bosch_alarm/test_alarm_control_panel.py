@@ -1,7 +1,7 @@
 """Tests for Bosch Alarm component."""
 
 from collections.abc import AsyncGenerator
-from unittest.mock import patch, AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -12,15 +12,16 @@ from homeassistant.components.alarm_control_panel import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    Platform,
     SERVICE_ALARM_ARM_AWAY,
+    SERVICE_ALARM_ARM_HOME,
     SERVICE_ALARM_DISARM,
+    STATE_UNAVAILABLE,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from . import call_observable
 
-from .conftest import MockBoschAlarmConfig
+from . import call_observable, setup_integration
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -41,9 +42,7 @@ async def test_update_alarm_device(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that alarm panel state changes after arming the panel."""
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
     entity_id = "alarm_control_panel.area1"
     assert hass.states.get(entity_id).state == AlarmControlPanelState.DISARMED
 
@@ -74,54 +73,73 @@ async def test_update_alarm_device(
         blocking=True,
     )
 
-    area.is_arming.return_value = False
-    area.is_all_armed.return_value = True
+    area.is_all_armed.return_value = False
+    area.is_disarmed.return_value = True
 
     await call_observable(hass, area.status_observer)
 
     assert hass.states.get(entity_id).state == AlarmControlPanelState.DISARMED
     await hass.services.async_call(
         ALARM_CONTROL_PANEL_DOMAIN,
-        "alarm_arm_home",
+        SERVICE_ALARM_ARM_HOME,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    await hass.async_block_till_done()
+
+    area.is_disarmed.return_value = False
+    area.is_arming.return_value = True
+
+    await call_observable(hass, area.status_observer)
+
     assert hass.states.get(entity_id).state == AlarmControlPanelState.ARMING
-    # bosch_alarm_test_data.process_updates()
-    await hass.async_block_till_done()
+
+    area.is_arming.return_value = False
+    area.is_part_armed.return_value = True
+
+    await call_observable(hass, area.status_observer)
+
     assert hass.states.get(entity_id).state == AlarmControlPanelState.ARMED_HOME
     await hass.services.async_call(
         ALARM_CONTROL_PANEL_DOMAIN,
-        "alarm_disarm",
+        SERVICE_ALARM_DISARM,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    await hass.async_block_till_done()
+    area.is_part_armed.return_value = False
+    area.is_disarmed.return_value = True
+
+    await call_observable(hass, area.status_observer)
     assert hass.states.get(entity_id).state == AlarmControlPanelState.DISARMED
-    # assert await hass.config_entries.async_unload(bosch_config_entry.entry_id)
-#
-#
-# @pytest.mark.parametrize(
-#     "bosch_alarm_test_data",
-#     [
-#         "Solution 3000",
-#         "AMAX 3000",
-#         "B5512 (US1B)",
-#     ],
-#     indirect=True,
-# )
-# async def test_alarm_control_panel(
-#     hass: HomeAssistant,
-#     entity_registry: er.EntityRegistry,
-#     snapshot: SnapshotAssertion,
-#     bosch_config_entry: MockConfigEntry,
-# ) -> None:
-#     """Test the alarm_control_panel state."""
-#     bosch_config_entry.add_to_hass(hass)
-#     assert await hass.config_entries.async_setup(bosch_config_entry.entry_id)
-#     await hass.async_block_till_done()
-#
-#     await snapshot_platform(
-#         hass, entity_registry, snapshot, bosch_config_entry.entry_id
-#     )
+
+
+async def test_alarm_control_panel(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    mock_panel: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the alarm_control_panel state."""
+    await setup_integration(hass, mock_config_entry)
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+async def test_alarm_control_panel_availability(
+    hass: HomeAssistant,
+    mock_panel: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the alarm_control_panel availability."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert (
+        hass.states.get("alarm_control_panel.area1").state
+        == AlarmControlPanelState.DISARMED
+    )
+
+    mock_panel.connection_status.return_value = False
+
+    await call_observable(hass, mock_panel.connection_status_observer)
+
+    assert hass.states.get("alarm_control_panel.area1").state == STATE_UNAVAILABLE

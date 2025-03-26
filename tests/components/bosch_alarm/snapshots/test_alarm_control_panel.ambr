@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_alarm_control_panel[AMAX 3000][alarm_control_panel.bosch_amax_3000_area1-entry]
+# name: test_alarm_control_panel[amax_3000][alarm_control_panel.area1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,7 +12,7 @@
     'disabled_by': None,
     'domain': 'alarm_control_panel',
     'entity_category': None,
-    'entity_id': 'alarm_control_panel.bosch_amax_3000_area1',
+    'entity_id': 'alarm_control_panel.area1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -24,33 +24,33 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Area1',
+    'original_name': None,
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': <AlarmControlPanelEntityFeature: 3>,
     'translation_key': None,
-    'unique_id': 'AMAX 3000_area_1',
+    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_area_1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_alarm_control_panel[AMAX 3000][alarm_control_panel.bosch_amax_3000_area1-state]
+# name: test_alarm_control_panel[amax_3000][alarm_control_panel.area1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'changed_by': None,
       'code_arm_required': False,
       'code_format': None,
-      'friendly_name': 'Bosch AMAX 3000 Area1',
+      'friendly_name': 'Area1',
       'supported_features': <AlarmControlPanelEntityFeature: 3>,
     }),
     'context': <ANY>,
-    'entity_id': 'alarm_control_panel.bosch_amax_3000_area1',
+    'entity_id': 'alarm_control_panel.area1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'disarmed',
   })
 # ---
-# name: test_alarm_control_panel[B5512 (US1B)][alarm_control_panel.bosch_b5512_us1b_area1-entry]
+# name: test_alarm_control_panel[b5512][alarm_control_panel.area1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -63,7 +63,7 @@
     'disabled_by': None,
     'domain': 'alarm_control_panel',
     'entity_category': None,
-    'entity_id': 'alarm_control_panel.bosch_b5512_us1b_area1',
+    'entity_id': 'alarm_control_panel.area1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -75,33 +75,33 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Area1',
+    'original_name': None,
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': <AlarmControlPanelEntityFeature: 3>,
     'translation_key': None,
-    'unique_id': 'B5512 (US1B)_area_1',
+    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_area_1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_alarm_control_panel[B5512 (US1B)][alarm_control_panel.bosch_b5512_us1b_area1-state]
+# name: test_alarm_control_panel[b5512][alarm_control_panel.area1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'changed_by': None,
       'code_arm_required': False,
       'code_format': None,
-      'friendly_name': 'Bosch B5512 (US1B) Area1',
+      'friendly_name': 'Area1',
       'supported_features': <AlarmControlPanelEntityFeature: 3>,
     }),
     'context': <ANY>,
-    'entity_id': 'alarm_control_panel.bosch_b5512_us1b_area1',
+    'entity_id': 'alarm_control_panel.area1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'disarmed',
   })
 # ---
-# name: test_alarm_control_panel[Solution 3000][alarm_control_panel.bosch_solution_3000_area1-entry]
+# name: test_alarm_control_panel[solution_3000][alarm_control_panel.area1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -114,7 +114,7 @@
     'disabled_by': None,
     'domain': 'alarm_control_panel',
     'entity_category': None,
-    'entity_id': 'alarm_control_panel.bosch_solution_3000_area1',
+    'entity_id': 'alarm_control_panel.area1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -126,26 +126,26 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Area1',
+    'original_name': None,
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': <AlarmControlPanelEntityFeature: 3>,
     'translation_key': None,
-    'unique_id': 'Solution 3000_area_1',
+    'unique_id': '1234567890_area_1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_alarm_control_panel[Solution 3000][alarm_control_panel.bosch_solution_3000_area1-state]
+# name: test_alarm_control_panel[solution_3000][alarm_control_panel.area1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'changed_by': None,
       'code_arm_required': False,
       'code_format': None,
-      'friendly_name': 'Bosch Solution 3000 Area1',
+      'friendly_name': 'Area1',
       'supported_features': <AlarmControlPanelEntityFeature: 3>,
     }),
     'context': <ANY>,
-    'entity_id': 'alarm_control_panel.bosch_solution_3000_area1',
+    'entity_id': 'alarm_control_panel.area1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
