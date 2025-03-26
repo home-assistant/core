@@ -281,6 +281,53 @@
     'state': 'off',
   })
 # ---
+# name: test_all_entities[da_wm_wd_000001][switch.dryer_wrinkle_prevent-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.dryer_wrinkle_prevent',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Wrinkle prevent',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'wrinkle_prevent',
+    'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b_main_custom.dryerWrinklePrevent',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_wd_000001][switch.dryer_wrinkle_prevent-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dryer Wrinkle prevent',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.dryer_wrinkle_prevent',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_all_entities[da_wm_wd_000001_1][switch.seca_roupa-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -322,6 +369,53 @@
     }),
     'context': <ANY>,
     'entity_id': 'switch.seca_roupa',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[da_wm_wd_000001_1][switch.seca_roupa_wrinkle_prevent-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.seca_roupa_wrinkle_prevent',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Wrinkle prevent',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'wrinkle_prevent',
+    'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd_main_custom.dryerWrinklePrevent',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_wd_000001_1][switch.seca_roupa_wrinkle_prevent-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Seca-Roupa Wrinkle prevent',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.seca_roupa_wrinkle_prevent',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -422,6 +516,53 @@
     'state': 'on',
   })
 # ---
+# name: test_all_entities[da_wm_wm_000001_1][switch.washing_machine_bubble_soak-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.washing_machine_bubble_soak',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Bubble Soak',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'bubble_soak',
+    'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7_main_samsungce.washerBubbleSoak',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_wm_000001_1][switch.washing_machine_bubble_soak-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Washing Machine Bubble Soak',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.washing_machine_bubble_soak',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_all_entities[generic_ef00_v1][switch.thermostat_kuche-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -467,6 +608,53 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
+  })
+# ---
+# name: test_all_entities[hw_q80r_soundbar][switch.soundbar-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.soundbar',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'afcf3b91-0000-1111-2222-ddff2a0a6577',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[hw_q80r_soundbar][switch.soundbar-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Soundbar',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.soundbar',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
   })
 # ---
 # name: test_all_entities[sensibo_airconditioner_1][switch.office-entry]
@@ -655,6 +843,53 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
+  })
+# ---
+# name: test_all_entities[vd_sensor_light_2023][switch.light_sensor_55_the_frame-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.light_sensor_55_the_frame',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '5cc1c096-98b9-460c-8f1c-1045509ec605',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[vd_sensor_light_2023][switch.light_sensor_55_the_frame-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Light Sensor - 55" The Frame',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.light_sensor_55_the_frame',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
   })
 # ---
 # name: test_all_entities[vd_stv_2017_k][switch.tv_samsung_8_series_49-entry]
