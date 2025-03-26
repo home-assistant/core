@@ -13,8 +13,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.const import EntityCategory
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.helpers import event
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
@@ -81,51 +80,5 @@ class JewishCalendarBinarySensor(JewishCalendarEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return true if sensor is on."""
-        zmanim = self._get_zmanim()
+        zmanim = self.coordinator.data.make_zmanim()
         return self.entity_description.is_on(zmanim, dt_util.now())
-
-    def _get_zmanim(self) -> Zmanim:
-        """Return the Zmanim object for now()."""
-        return Zmanim(
-            date=dt.date.today(),
-            location=self._location,
-            candle_lighting_offset=self._candle_lighting_offset,
-            havdalah_offset=self._havdalah_offset,
-            language=self._language,
-        )
-
-    async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added to hass."""
-        await super().async_added_to_hass()
-        self._schedule_update()
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Run when entity will be removed from hass."""
-        if self._update_unsub:
-            self._update_unsub()
-            self._update_unsub = None
-        return await super().async_will_remove_from_hass()
-
-    @callback
-    def _update(self, now: dt.datetime | None = None) -> None:
-        """Update the state of the sensor."""
-        self._update_unsub = None
-        self._schedule_update()
-        self.async_write_ha_state()
-
-    def _schedule_update(self) -> None:
-        """Schedule the next update of the sensor."""
-        now = dt_util.now()
-        zmanim = self._get_zmanim()
-        update = zmanim.netz_hachama.local + dt.timedelta(days=1)
-        candle_lighting = zmanim.candle_lighting
-        if candle_lighting is not None and now < candle_lighting < update:
-            update = candle_lighting
-        havdalah = zmanim.havdalah
-        if havdalah is not None and now < havdalah < update:
-            update = havdalah
-        if self._update_unsub:
-            self._update_unsub()
-        self._update_unsub = event.async_track_point_in_time(
-            self.hass, self._update, update
-        )
