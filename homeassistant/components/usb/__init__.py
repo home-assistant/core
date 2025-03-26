@@ -3,19 +3,16 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine, Sequence
+from collections.abc import Callable, Coroutine
 import dataclasses
 from datetime import datetime, timedelta
 import fnmatch
 from functools import partial
 import logging
 import os
-import sys
 from typing import Any, overload
 
 from aiousbwatcher import AIOUSBWatcher, InotifyNotAvailableError
-from serial.tools.list_ports import comports
-from serial.tools.list_ports_common import ListPortInfo
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -43,7 +40,7 @@ from homeassistant.loader import USBMatcher, async_get_usb
 
 from .const import DOMAIN
 from .models import USBDevice
-from .utils import usb_device_from_port
+from .utils import scan_serial_ports
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -241,6 +238,13 @@ def _is_matching(device: USBDevice, matcher: USBMatcher | USBCallbackMatcher) ->
     return True
 
 
+async def async_request_scan(hass: HomeAssistant) -> None:
+    """Request a serial scan."""
+    usb_discovery: USBDiscovery = hass.data[DOMAIN]
+    if not usb_discovery.observer_active:
+        await usb_discovery.async_request_scan()
+
+
 class USBDiscovery:
     """Manage USB Discovery."""
 
@@ -417,34 +421,9 @@ class USBDiscovery:
                 service_info,
             )
 
-    async def _async_process_ports(self, ports: Sequence[ListPortInfo]) -> None:
+    async def _async_process_ports(self, usb_devices: set[USBDevice]) -> None:
         """Process each discovered port."""
-        _LOGGER.debug("Processing ports: %r", ports)
-        usb_devices = {
-            usb_device_from_port(port)
-            for port in ports
-            if port.vid is not None or port.pid is not None
-        }
         _LOGGER.debug("USB devices: %r", usb_devices)
-
-        # CP2102N chips create *two* serial ports on macOS: `/dev/cu.usbserial-` and
-        # `/dev/cu.SLAB_USBtoUART*`. The former does not work and we should ignore them.
-        if sys.platform == "darwin":
-            silabs_serials = {
-                dev.serial_number
-                for dev in usb_devices
-                if dev.device.startswith("/dev/cu.SLAB_USBtoUART")
-            }
-
-            usb_devices = {
-                dev
-                for dev in usb_devices
-                if dev.serial_number not in silabs_serials
-                or (
-                    dev.serial_number in silabs_serials
-                    and dev.device.startswith("/dev/cu.SLAB_USBtoUART")
-                )
-            }
 
         added_devices = usb_devices - self._last_processed_devices
         removed_devices = self._last_processed_devices - usb_devices
@@ -480,11 +459,10 @@ class USBDiscovery:
 
     async def _async_scan_serial(self) -> None:
         """Scan serial ports."""
-        _LOGGER.debug("Executing comports scan")
+        _LOGGER.debug("Executing serial port scan")
         async with self._scan_lock:
-            await self._async_process_ports(
-                await self.hass.async_add_executor_job(comports)
-            )
+            ports = await self.hass.async_add_executor_job(scan_serial_ports)
+            await self._async_process_ports(ports)
         if self.initial_scan_done:
             return
 
@@ -521,9 +499,7 @@ async def websocket_usb_scan(
     msg: dict[str, Any],
 ) -> None:
     """Scan for new usb devices."""
-    usb_discovery: USBDiscovery = hass.data[DOMAIN]
-    if not usb_discovery.observer_active:
-        await usb_discovery.async_request_scan()
+    await async_request_scan(hass)
     connection.send_result(msg["id"])
 
 
