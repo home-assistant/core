@@ -452,7 +452,7 @@ airtouch4pyapi==1.0.5
 airtouch5py==0.2.11
 
 # homeassistant.components.airzone_mqtt
-airzone-mqtt==0.0.3
+airzone-mqtt==0.0.4
 
 # homeassistant.components.alpha_vantage
 alpha-vantage==2.3.1
