@@ -65,7 +65,9 @@ def _generate_get_metadata_stmt(
         stmt += lambda q: q.where(StatisticsMeta.source == statistic_source)
     if statistic_type == "mean":
         if schema_version >= CIRCULAR_MEAN_SCHEMA_VERSION:
-            stmt += lambda q: q.where(StatisticsMeta.mean_type.isnot(None))
+            stmt += lambda q: q.where(
+                StatisticsMeta.mean_type != StatisticMeanType.NONE
+            )
         else:
             stmt += lambda q: q.where(StatisticsMeta.has_mean == true())
     elif statistic_type == "sum":
