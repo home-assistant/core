@@ -168,7 +168,7 @@ _SQLITE_COLUMN_TYPES = _ColumnTypesForDialect(
     big_int_type="INTEGER",
     timestamp_type="FLOAT",
     context_bin_type="BLOB",
-    small_int_type="SMALLINT",
+    small_int_type="INTEGER",
     double_type="FLOAT",
 )
 

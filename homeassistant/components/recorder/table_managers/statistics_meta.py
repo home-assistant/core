@@ -13,8 +13,6 @@ from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.expression import true
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 
-from homeassistant.util.enum import try_parse_enum
-
 from ..const import CIRCULAR_MEAN_SCHEMA_VERSION
 from ..db_schema import StatisticsMeta
 from ..models import StatisticMeanType, StatisticMetaData
@@ -125,8 +123,9 @@ class StatisticsMetaManager:
                 statistic_id = row[INDEX_STATISTIC_ID]
                 row_id = row[INDEX_ID]
                 if self.recorder.schema_version >= CIRCULAR_MEAN_SCHEMA_VERSION:
-                    mean_type = try_parse_enum(StatisticMeanType, row[INDEX_MEAN_TYPE])
-                    if mean_type is None:
+                    try:
+                        mean_type = StatisticMeanType(row[INDEX_MEAN_TYPE])
+                    except ValueError:
                         _LOGGER.warning(
                             "Invalid mean type found for statistic_id: %s, mean_type: %s. Skipping",
                             statistic_id,
