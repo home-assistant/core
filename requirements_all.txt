@@ -45,7 +45,7 @@ ProgettiHWSW==0.1.3
 # PyBluez==0.22
 
 # homeassistant.components.cast
-PyChromecast==14.0.6
+PyChromecast==14.0.7
 
 # homeassistant.components.flick_electric
 PyFlick==1.1.3
@@ -84,7 +84,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-PySwitchbot==0.57.1
+PySwitchbot==0.58.0
 
 # homeassistant.components.switchmate
 PySwitchmate==0.5.1
@@ -179,7 +179,7 @@ aioacaia==0.1.14
 aioairq==0.4.4
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.6.10
+aioairzone-cloud==0.6.11
 
 # homeassistant.components.airzone
 aioairzone==0.9.9
@@ -213,7 +213,7 @@ aiobafi6==0.9.0
 aiobotocore==2.13.1
 
 # homeassistant.components.comelit
-aiocomelit==0.11.2
+aiocomelit==0.11.3
 
 # homeassistant.components.dhcp
 aiodhcpwatcher==1.1.1
@@ -643,6 +643,9 @@ bluetooth-data-tools==1.26.1
 
 # homeassistant.components.bond
 bond-async==0.2.1
+
+# homeassistant.components.bosch_alarm
+bosch-alarm-mode2==0.4.3
 
 # homeassistant.components.bosch_shc
 boschshcpy==0.2.91
@@ -1151,13 +1154,13 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.68
+holidays==0.69
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250306.0
+home-assistant-frontend==20250326.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2025.3.23
+home-assistant-intents==2025.3.24
 
 # homeassistant.components.homematicip_cloud
 homematicip==1.1.7
@@ -1217,7 +1220,7 @@ igloohome-api==0.1.0
 ihcsdk==2.8.5
 
 # homeassistant.components.imgw_pib
-imgw_pib==1.0.9
+imgw_pib==1.0.10
 
 # homeassistant.components.incomfort
 incomfort-client==0.6.7
@@ -1402,7 +1405,7 @@ messagebird==1.2.0
 meteoalertapi==0.3.1
 
 # homeassistant.components.meteo_france
-meteofrance-api==1.3.0
+meteofrance-api==1.4.0
 
 # homeassistant.components.mfi
 mficlient==0.5.0
@@ -1707,7 +1710,7 @@ proxmoxer==2.0.1
 psutil-home-assistant==0.0.1
 
 # homeassistant.components.systemmonitor
-psutil==6.1.1
+psutil==7.0.0
 
 # homeassistant.components.pulseaudio_loopback
 pulsectl==23.5.2
@@ -1732,6 +1735,9 @@ py-ccm15==0.0.9
 
 # homeassistant.components.cpuspeed
 py-cpuinfo==9.0.0
+
+# homeassistant.components.pterodactyl
+py-dactyl==2.0.4
 
 # homeassistant.components.dormakaba_dkey
 py-dormakaba-dkey==1.0.5
@@ -2325,7 +2331,7 @@ pysmhi==1.0.0
 pysml==0.0.12
 
 # homeassistant.components.smlight
-pysmlight==0.2.3
+pysmlight==0.2.4
 
 # homeassistant.components.snmp
 pysnmp==6.2.6
@@ -2621,7 +2627,7 @@ renault-api==0.2.9
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.12.3
+reolink-aio==0.13.0
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
@@ -2875,7 +2881,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==0.9.13
+tesla-fleet-api==1.0.16
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.2
@@ -3134,7 +3140,7 @@ youless-api==2.2.0
 youtubeaio==1.1.5
 
 # homeassistant.components.media_extractor
-yt-dlp[default]==2025.02.19
+yt-dlp[default]==2025.03.26
 
 # homeassistant.components.zabbix
 zabbix-utils==2.0.2
@@ -3149,7 +3155,7 @@ zeroconf==0.146.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.53
+zha==0.0.54
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.13

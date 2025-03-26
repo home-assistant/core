@@ -110,6 +110,28 @@
     }
   },
   "issues": {
+    "deprecated_time_alarm_clock_in_automations_scripts": {
+      "title": "Deprecated alarm clock entity detected in some automations or scripts",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::home_connect::issues::deprecated_time_alarm_clock_in_automations_scripts::title%]",
+            "description": "The alarm clock entity `{entity_id}`, which is deprecated because it's being moved to the `number` platform, is used in the following automations or scripts:\n{items}\n\nPlease, fix this issue by updating your automations or scripts to use the new `number` entity."
+          }
+        }
+      }
+    },
+    "deprecated_time_alarm_clock": {
+      "title": "Deprecated alarm clock entity",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::home_connect::issues::deprecated_time_alarm_clock::title%]",
+            "description": "The alarm clock entity `{entity_id}` is deprecated because it's being moved to the `number` platform.\n\nPlease use the new `number` entity."
+          }
+        }
+      }
+    },
     "deprecated_binary_common_door_sensor": {
       "title": "Deprecated binary door sensor detected in some automations or scripts",
       "description": "The binary door sensor `{entity}`, which is deprecated, is used in the following automations or scripts:\n{items}\n\nA sensor entity with additional possible states is available and should be used going forward; Please use it on the above automations or scripts to fix this issue."
@@ -868,6 +890,9 @@
       }
     },
     "number": {
+      "alarm_clock": {
+        "name": "Alarm clock"
+      },
       "refrigerator_setpoint_temperature": {
         "name": "Refrigerator temperature"
       },
@@ -1545,30 +1570,6 @@
       "oven_current_cavity_temperature": {
         "name": "Current oven cavity temperature"
       },
-      "freezer_door_alarm": {
-        "name": "Freezer door alarm",
-        "state": {
-          "off": "[%key:common::state::off%]",
-          "confirmed": "[%key:component::home_connect::common::confirmed%]",
-          "present": "[%key:component::home_connect::common::present%]"
-        }
-      },
-      "refrigerator_door_alarm": {
-        "name": "Refrigerator door alarm",
-        "state": {
-          "off": "[%key:common::state::off%]",
-          "confirmed": "[%key:component::home_connect::common::confirmed%]",
-          "present": "[%key:component::home_connect::common::present%]"
-        }
-      },
-      "freezer_temperature_alarm": {
-        "name": "Freezer temperature alarm",
-        "state": {
-          "off": "[%key:common::state::off%]",
-          "confirmed": "[%key:component::home_connect::common::confirmed%]",
-          "present": "[%key:component::home_connect::common::present%]"
-        }
-      },
       "program_aborted": {
         "name": "Program aborted",
         "state": {
@@ -1611,6 +1612,22 @@
       },
       "drying_process_finished": {
         "name": "Drying process finished",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "salt_nearly_empty": {
+        "name": "Salt nearly empty",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "rinse_aid_nearly_empty": {
+        "name": "Rinse aid nearly empty",
         "state": {
           "off": "[%key:common::state::off%]",
           "confirmed": "[%key:component::home_connect::common::confirmed%]",
@@ -1777,6 +1794,30 @@
           "present": "[%key:component::home_connect::common::present%]"
         }
       },
+      "freezer_door_alarm": {
+        "name": "Freezer door alarm",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "refrigerator_door_alarm": {
+        "name": "Refrigerator door alarm",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "freezer_temperature_alarm": {
+        "name": "Freezer temperature alarm",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
       "empty_dust_box_and_clean_filter": {
         "name": "Empty dust box and clean filter",
         "state": {
@@ -1827,22 +1868,6 @@
       },
       "grease_filter_max_saturation_reached": {
         "name": "Grease filter max saturation reached",
-        "state": {
-          "off": "[%key:common::state::off%]",
-          "confirmed": "[%key:component::home_connect::common::confirmed%]",
-          "present": "[%key:component::home_connect::common::present%]"
-        }
-      },
-      "salt_nearly_empty": {
-        "name": "Salt nearly empty",
-        "state": {
-          "off": "[%key:common::state::off%]",
-          "confirmed": "[%key:component::home_connect::common::confirmed%]",
-          "present": "[%key:component::home_connect::common::present%]"
-        }
-      },
-      "rinse_aid_nearly_empty": {
-        "name": "Rinse aid nearly empty",
         "state": {
           "off": "[%key:common::state::off%]",
           "confirmed": "[%key:component::home_connect::common::confirmed%]",

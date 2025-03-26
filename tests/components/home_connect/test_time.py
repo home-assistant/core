@@ -2,6 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from datetime import time
+from http import HTTPStatus
 from unittest.mock import AsyncMock, MagicMock
 
 from aiohomeconnect.model import (
@@ -16,15 +17,26 @@ from aiohomeconnect.model import (
 from aiohomeconnect.model.error import HomeConnectApiError, HomeConnectError
 import pytest
 
+from homeassistant.components.automation import (
+    DOMAIN as AUTOMATION_DOMAIN,
+    automations_with_entity,
+)
 from homeassistant.components.home_connect.const import DOMAIN
+from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN, scripts_with_entity
 from homeassistant.components.time import DOMAIN as TIME_DOMAIN, SERVICE_SET_VALUE
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TIME, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
+from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture
@@ -45,6 +57,7 @@ async def test_time(
     assert config_entry.state is ConfigEntryState.LOADED
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize("appliance", ["Oven"], indirect=True)
 async def test_paired_depaired_devices_flow(
     appliance: HomeAppliance,
@@ -99,6 +112,7 @@ async def test_paired_depaired_devices_flow(
         assert entity_registry.async_get(entity_entry.entity_id)
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize("appliance", ["Oven"], indirect=True)
 async def test_connected_devices(
     appliance: HomeAppliance,
@@ -151,6 +165,7 @@ async def test_connected_devices(
     assert len(new_entity_entries) > len(entity_entries)
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize("appliance", ["Oven"], indirect=True)
 async def test_time_entity_availability(
     hass: HomeAssistant,
@@ -204,6 +219,7 @@ async def test_time_entity_availability(
         assert state.state != STATE_UNAVAILABLE
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize("appliance", ["Oven"], indirect=True)
 @pytest.mark.parametrize(
     ("entity_id", "setting_key"),
@@ -248,6 +264,7 @@ async def test_time_entity_functionality(
     assert hass.states.is_state(entity_id, str(time(second=value)))
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     ("entity_id", "setting_key", "mock_attr"),
     [
@@ -299,3 +316,170 @@ async def test_time_entity_error(
             blocking=True,
         )
     assert getattr(client_with_exception, mock_attr).call_count == 2
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize("appliance", ["Oven"], indirect=True)
+async def test_create_issue(
+    hass: HomeAssistant,
+    appliance: HomeAppliance,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    setup_credentials: None,
+    client: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test we create an issue when an automation or script is using a deprecated entity."""
+    entity_id = f"{TIME_DOMAIN}.oven_alarm_clock"
+    automation_script_issue_id = (
+        f"deprecated_time_alarm_clock_in_automations_scripts_{entity_id}"
+    )
+    action_handler_issue_id = f"deprecated_time_alarm_clock_{entity_id}"
+
+    assert await async_setup_component(
+        hass,
+        AUTOMATION_DOMAIN,
+        {
+            AUTOMATION_DOMAIN: {
+                "alias": "test",
+                "trigger": {"platform": "state", "entity_id": entity_id},
+                "action": {
+                    "action": "automation.turn_on",
+                    "target": {
+                        "entity_id": "automation.test",
+                    },
+                },
+            }
+        },
+    )
+    assert await async_setup_component(
+        hass,
+        SCRIPT_DOMAIN,
+        {
+            SCRIPT_DOMAIN: {
+                "test": {
+                    "sequence": [
+                        {
+                            "action": "switch.turn_on",
+                            "entity_id": entity_id,
+                        },
+                    ],
+                }
+            }
+        },
+    )
+
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert await integration_setup(client)
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    await hass.services.async_call(
+        TIME_DOMAIN,
+        SERVICE_SET_VALUE,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_TIME: time(minute=1),
+        },
+        blocking=True,
+    )
+
+    assert automations_with_entity(hass, entity_id)[0] == "automation.test"
+    assert scripts_with_entity(hass, entity_id)[0] == "script.test"
+
+    assert len(issue_registry.issues) == 2
+    assert issue_registry.async_get_issue(DOMAIN, automation_script_issue_id)
+    assert issue_registry.async_get_issue(DOMAIN, action_handler_issue_id)
+
+    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Assert the issue is no longer present
+    assert not issue_registry.async_get_issue(DOMAIN, automation_script_issue_id)
+    assert not issue_registry.async_get_issue(DOMAIN, action_handler_issue_id)
+    assert len(issue_registry.issues) == 0
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize("appliance", ["Oven"], indirect=True)
+async def test_issue_fix(
+    hass: HomeAssistant,
+    appliance: HomeAppliance,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    setup_credentials: None,
+    client: MagicMock,
+    issue_registry: ir.IssueRegistry,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test we create an issue when an automation or script is using a deprecated entity."""
+    entity_id = f"{TIME_DOMAIN}.oven_alarm_clock"
+    automation_script_issue_id = (
+        f"deprecated_time_alarm_clock_in_automations_scripts_{entity_id}"
+    )
+    action_handler_issue_id = f"deprecated_time_alarm_clock_{entity_id}"
+
+    assert await async_setup_component(
+        hass,
+        AUTOMATION_DOMAIN,
+        {
+            AUTOMATION_DOMAIN: {
+                "alias": "test",
+                "trigger": {"platform": "state", "entity_id": entity_id},
+                "action": {
+                    "action": "automation.turn_on",
+                    "target": {
+                        "entity_id": "automation.test",
+                    },
+                },
+            }
+        },
+    )
+    assert await async_setup_component(
+        hass,
+        SCRIPT_DOMAIN,
+        {
+            SCRIPT_DOMAIN: {
+                "test": {
+                    "sequence": [
+                        {
+                            "action": "switch.turn_on",
+                            "entity_id": entity_id,
+                        },
+                    ],
+                }
+            }
+        },
+    )
+
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert await integration_setup(client)
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    await hass.services.async_call(
+        TIME_DOMAIN,
+        SERVICE_SET_VALUE,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_TIME: time(minute=1),
+        },
+        blocking=True,
+    )
+
+    assert len(issue_registry.issues) == 2
+    assert issue_registry.async_get_issue(DOMAIN, automation_script_issue_id)
+    assert issue_registry.async_get_issue(DOMAIN, action_handler_issue_id)
+
+    for issue in issue_registry.issues.copy().values():
+        _client = await hass_client()
+        resp = await _client.post(
+            "/api/repairs/issues/fix",
+            json={"handler": DOMAIN, "issue_id": issue.issue_id},
+        )
+        assert resp.status == HTTPStatus.OK
+        flow_id = (await resp.json())["flow_id"]
+        resp = await _client.post(f"/api/repairs/issues/fix/{flow_id}")
+
+    # Assert the issue is no longer present
+    assert not issue_registry.async_get_issue(DOMAIN, automation_script_issue_id)
+    assert not issue_registry.async_get_issue(DOMAIN, action_handler_issue_id)
+    assert len(issue_registry.issues) == 0
