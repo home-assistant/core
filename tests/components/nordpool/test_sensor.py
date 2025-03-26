@@ -45,10 +45,10 @@ async def test_sensor_current_and_average_price_is_0(
     average_price_se4 = hass.states.get("sensor.nord_pool_se4_daily_average")
 
     assert current_price is not None
-    assert current_price.state == "0.0"  # SE4 2024-11-05T18:00:00Z
     assert average_price_se3 is not None
-    assert average_price_se3.state == "0.90074"
     assert average_price_se4 is not None
+    assert current_price.state == "0.0"  # SE4 2024-11-05T18:00:00Z
+    assert average_price_se3.state == "0.90074"
     assert average_price_se4.state == "0.0"
 
 
