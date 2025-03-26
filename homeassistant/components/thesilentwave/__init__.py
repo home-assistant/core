@@ -13,10 +13,10 @@ async def async_setup(hass, config):
 
 
 async def async_setup_entry(hass, entry):
-    """Set up a sensor from a config entry."""
+    """Fetch the configuration data from the entry."""
 
     # Fetch the configuration data from the entry
-    name = entry.data.get("name", "TheSilentWaveSensor")
+    name = entry.data.get("name", "TheSilentWave")
     host = entry.data.get("host", "")
     scan_interval = entry.data.get("scan_interval", 10)
     url = f"http://{host}:8080/api/status"
