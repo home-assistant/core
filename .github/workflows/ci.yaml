@@ -1035,8 +1035,8 @@ jobs:
         with:
           name: test-results-full-${{ matrix.python-version }}-${{ matrix.group }}
           path: junit.xml
-      - name: Remove pytest_buckets
-        run: rm pytest_buckets.txt
+      - name: Remove pytest_buckets and pytest-time-report
+        run: rm pytest_buckets.txt pytest-time-report-${{ matrix.python-version }}-${{ matrix.group }}.json
       - name: Check dirty
         run: |
           ./script/check_dirty
