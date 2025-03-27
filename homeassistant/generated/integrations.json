@@ -759,17 +759,28 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
-    "bosch_alarm": {
-      "name": "Bosch Alarm",
-      "integration_type": "device",
-      "config_flow": true,
-      "iot_class": "local_push"
-    },
-    "bosch_shc": {
-      "name": "Bosch SHC",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "local_push"
+    "bosch": {
+      "name": "Bosch",
+      "integrations": {
+        "bosch_alarm": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "Bosch Alarm"
+        },
+        "bosch_shc": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "Bosch SHC"
+        },
+        "home_connect": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_push",
+          "name": "Home Connect"
+        }
+      }
     },
     "brandt": {
       "name": "Brandt Smart Control",
@@ -2638,13 +2649,6 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
-    },
-    "home_connect": {
-      "name": "Home Connect",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_push",
-      "single_config_entry": true
     },
     "home_plus_control": {
       "name": "Legrand Home+ Control",
