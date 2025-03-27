@@ -42,6 +42,10 @@ class RemoteCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
         self._async_abort_entries_match(
             {CONF_CALENDAR_NAME: user_input[CONF_CALENDAR_NAME]}
         )
+        if user_input[CONF_URL].startswith("webcal://"):
+            user_input[CONF_URL] = user_input[CONF_URL].replace(
+                "webcal://", "https://", 1
+            )
         self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
         client = get_async_client(self.hass)
         try:
