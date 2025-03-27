@@ -897,8 +897,7 @@ jobs:
             ${{ runner.os }}-${{ env.DEFAULT_PYTHON }}-${{
             steps.generate-pytest-execution-time-key.outputs.key }}
           restore-keys: |
-            ${{ runner.os }}-${{ env.DEFAULT_PYTHON }}-pytest-pytest-execution-time
-            -${{ env.HA_SHORT_VERSION }}-
+            ${{ runner.os }}-${{ env.DEFAULT_PYTHON }}-pytest-pytest-execution-time-${{ env.HA_SHORT_VERSION }}-
       - name: Restore base Python virtual environment
         id: cache-venv
         uses: actions/cache/restore@v4.2.3
@@ -1064,7 +1063,7 @@ jobs:
       - name: Upload combined pytest execution time artifact
         uses: actions/upload-artifact@v4.6.2
         with:
-          name: pytest-${{ github.run_number }}-${{ env.DEFAULT_PYTHON }}-time-report
+          name: pytest-execution-time-report-${{ github.run_number }}-${{ env.DEFAULT_PYTHON }}
           path: pytest-execution-time-report-${{ env.DEFAULT_PYTHON }}.json
       - name: Save pytest execution time cache
         uses: actions/cache/save@v4.2.3
