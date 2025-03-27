@@ -495,10 +495,12 @@ jobs:
           pip install build
           python -m build
 
-      - name: Upload package to PyPI
-        uses: pypa/gh-action-pypi-publish@v1.12.4
-        with:
-          skip-existing: true
+      - name: Upload package
+        shell: bash
+        run: |
+          export TWINE_USERNAME="__token__"
+          export TWINE_PASSWORD="${{ secrets.TWINE_TOKEN }}"
+          twine upload dist/* --skip-existing
 
   # hassfest-image:
   #   name: Build and test hassfest image
