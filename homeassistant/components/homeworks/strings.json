@@ -14,7 +14,7 @@
     },
     "step": {
       "import_finish": {
-        "description": "The existing YAML configuration has succesfully been imported.\n\nYou can now remove the `homeworks` configuration from your configuration.yaml file."
+        "description": "The existing YAML configuration has successfully been imported.\n\nYou can now remove the `homeworks` configuration from your configuration.yaml file."
       },
       "import_controller_name": {
         "description": "Lutron Homeworks is no longer configured through configuration.yaml.\n\nPlease fill in the form to import the existing configuration to the UI.",
@@ -57,7 +57,7 @@
   },
   "exceptions": {
     "invalid_controller_id": {
-      "message": "Invalid controller_id \"{controller_id}\", expected one of \"{controller_ids}\""
+      "message": "Invalid controller ID \"{controller_id}\", expected one of \"{controller_ids}\""
     }
   },
   "options": {

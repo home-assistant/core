@@ -15,6 +15,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -44,7 +45,7 @@
 # name: test_entities[event.overseerr_last_media_event-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'comment': None,
+      'entity_picture': 'https://image.tmdb.org/t/p/w600_and_h900_bestv2/something.jpg',
       'event_type': 'auto_approved',
       'event_types': list([
         'pending',
@@ -55,19 +56,16 @@
         'auto_approved',
       ]),
       'friendly_name': 'Overseerr Last media event',
-      'image': 'https://image.tmdb.org/t/p/w600_and_h900_bestv2/something.jpg',
-      'issue': None,
       'media': dict({
         'media_type': 'movie',
-        'status': 'PENDING',
-        'status4k': 'UNKNOWN',
-        'tmdb_id': '123',
-        'tvdb_id': '',
+        'status': 'pending',
+        'status4k': 'unknown',
+        'tmdb_id': 123,
+        'tvdb_id': None,
       }),
       'message': 'Here is an interesting Linux ISO that was automatically approved.',
-      'notification_type': 'MEDIA_AUTO_APPROVED',
       'request': dict({
-        'request_id': '16',
+        'request_id': 16,
         'requested_by_avatar': 'https://plex.tv/users/abc/avatar?c=123',
         'requested_by_email': 'my@email.com',
         'requested_by_settings_discord_id': '123',

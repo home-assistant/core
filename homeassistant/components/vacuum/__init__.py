@@ -9,7 +9,7 @@ from functools import partial
 import logging
 from typing import TYPE_CHECKING, Any, final
 
-from propcache import cached_property
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry

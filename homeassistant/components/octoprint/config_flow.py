@@ -24,7 +24,7 @@ from homeassistant.const import (
 )
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.util.ssl import get_default_context, get_default_no_verify_context
@@ -85,7 +85,8 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
                 raise err from None
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except Exception:  # noqa: BLE001
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
             if errors:

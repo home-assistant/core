@@ -85,6 +85,7 @@ from homeassistant.util.json import json_loads
 from .common import (
     async_block_recorder,
     async_recorder_block_till_done,
+    async_wait_recorder,
     async_wait_recording_done,
     convert_pending_states_to_meta,
     corrupt_db_file,
@@ -98,12 +99,12 @@ from tests.common import (
     async_test_home_assistant,
     mock_platform,
 )
-from tests.typing import RecorderInstanceGenerator
+from tests.typing import RecorderInstanceContextManager, RecorderInstanceGenerator
 
 
 @pytest.fixture
 async def mock_recorder_before_hass(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
 ) -> None:
     """Set up recorder."""
 
@@ -155,7 +156,7 @@ async def test_shutdown_before_startup_finishes(
 
     recorder_helper.async_initialize_recorder(hass)
     hass.async_create_task(async_setup_recorder_instance(hass, config))
-    await recorder_helper.async_wait_recorder(hass)
+    await async_wait_recorder(hass)
     instance = get_instance(hass)
 
     session = await instance.async_add_executor_job(instance.get_session)
@@ -188,7 +189,7 @@ async def test_canceled_before_startup_finishes(
     hass.set_state(CoreState.not_running)
     recorder_helper.async_initialize_recorder(hass)
     hass.async_create_task(async_setup_recorder_instance(hass))
-    await recorder_helper.async_wait_recorder(hass)
+    await async_wait_recorder(hass)
 
     instance = get_instance(hass)
     instance._hass_started.cancel()
@@ -240,7 +241,7 @@ async def test_state_gets_saved_when_set_before_start_event(
 
     recorder_helper.async_initialize_recorder(hass)
     hass.async_create_task(async_setup_recorder_instance(hass))
-    await recorder_helper.async_wait_recorder(hass)
+    await async_wait_recorder(hass)
 
     entity_id = "test.recorder"
     state = "restoring_from_db"
@@ -1373,7 +1374,7 @@ async def test_statistics_runs_initiated(
 @pytest.mark.parametrize("enable_missing_statistics", [True])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_compile_missing_statistics(
-    async_test_recorder: RecorderInstanceGenerator, freezer: FrozenDateTimeFactory
+    async_test_recorder: RecorderInstanceContextManager, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test missing statistics are compiled on startup."""
     now = dt_util.utcnow().replace(minute=0, second=0, microsecond=0)
@@ -1632,7 +1633,7 @@ async def test_service_disable_states_not_recording(
 @pytest.mark.parametrize("persistent_database", [True])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_service_disable_run_information_recorded(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
 ) -> None:
     """Test that runs are still recorded when recorder is disabled."""
 
@@ -2724,7 +2725,7 @@ async def test_commit_before_commits_pending_writes(
 
     recorder_helper.async_initialize_recorder(hass)
     hass.async_create_task(async_setup_recorder_instance(hass, config))
-    await recorder_helper.async_wait_recorder(hass)
+    await async_wait_recorder(hass)
     instance = get_instance(hass)
     assert instance.commit_interval == 60
     verify_states_in_queue_future = hass.loop.create_future()

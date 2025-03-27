@@ -16,10 +16,9 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import HomeWizardConfigEntry
-from .coordinator import HWEnergyDeviceUpdateCoordinator
+from .coordinator import HomeWizardConfigEntry, HWEnergyDeviceUpdateCoordinator
 from .entity import HomeWizardEntity
 from .helpers import homewizard_exception_handler
 
@@ -59,7 +58,7 @@ SWITCHES = [
         key="cloud_connection",
         translation_key="cloud_connection",
         entity_category=EntityCategory.CONFIG,
-        create_fn=lambda _: True,
+        create_fn=lambda x: x.device.supports_cloud_enable(),
         available_fn=lambda x: x.system is not None,
         is_on_fn=lambda x: x.system.cloud_enabled if x.system else None,
         set_fn=lambda api, active: api.system(cloud_enabled=active),
@@ -70,7 +69,7 @@ SWITCHES = [
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: HomeWizardConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switches."""
     async_add_entities(

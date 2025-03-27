@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from switchbot import ColorMode as SwitchBotColorMode, SwitchbotBaseLight
 
@@ -14,7 +14,7 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import SwitchbotConfigEntry, SwitchbotDataUpdateCoordinator
 from .entity import SwitchbotEntity
@@ -30,7 +30,7 @@ PARALLEL_UPDATES = 0
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SwitchbotConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the switchbot light."""
     async_add_entities([SwitchbotLightEntity(entry.runtime_data)])
@@ -68,7 +68,9 @@ class SwitchbotLightEntity(SwitchbotEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
-        brightness = round(kwargs.get(ATTR_BRIGHTNESS, self.brightness) / 255 * 100)
+        brightness = round(
+            cast(int, kwargs.get(ATTR_BRIGHTNESS, self.brightness)) / 255 * 100
+        )
 
         if (
             self.supported_color_modes

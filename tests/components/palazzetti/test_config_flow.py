@@ -4,12 +4,12 @@ from unittest.mock import AsyncMock
 
 from pypalazzetti.exceptions import CommunicationError
 
-from homeassistant.components import dhcp
 from homeassistant.components.palazzetti.const import DOMAIN
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from tests.common import MockConfigEntry
 
@@ -101,7 +101,7 @@ async def test_dhcp_flow(
     """Test the DHCP flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        data=dhcp.DhcpServiceInfo(
+        data=DhcpServiceInfo(
             hostname="connbox1234", ip="192.168.1.1", macaddress="11:22:33:44:55:66"
         ),
         context={"source": SOURCE_DHCP},
@@ -130,7 +130,7 @@ async def test_dhcp_flow_error(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        data=dhcp.DhcpServiceInfo(
+        data=DhcpServiceInfo(
             hostname="connbox1234", ip="192.168.1.1", macaddress="11:22:33:44:55:66"
         ),
         context={"source": SOURCE_DHCP},

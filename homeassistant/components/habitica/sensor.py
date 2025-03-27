@@ -28,18 +28,18 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.issue_registry import (
     IssueSeverity,
     async_create_issue,
     async_delete_issue,
 )
 from homeassistant.helpers.typing import StateType
+from homeassistant.util import dt as dt_util
 
 from .const import ASSETS_URL, DOMAIN
-from .coordinator import HabiticaDataUpdateCoordinator
+from .coordinator import HabiticaConfigEntry, HabiticaDataUpdateCoordinator
 from .entity import HabiticaBase
-from .types import HabiticaConfigEntry
 from .util import get_attribute_points, get_attributes_total, inventory_list
 
 _LOGGER = logging.getLogger(__name__)
@@ -106,6 +106,20 @@ SENSOR_DESCRIPTIONS: tuple[HabiticaSensorEntityDescription, ...] = (
         key=HabiticaSensorEntity.DISPLAY_NAME,
         translation_key=HabiticaSensorEntity.DISPLAY_NAME,
         value_fn=lambda user, _: user.profile.name,
+        attributes_fn=lambda user, _: {
+            "blurb": user.profile.blurb,
+            "joined": (
+                dt_util.as_local(joined).date()
+                if (joined := user.auth.timestamps.created)
+                else None
+            ),
+            "last_login": (
+                dt_util.as_local(last).date()
+                if (last := user.auth.timestamps.loggedin)
+                else None
+            ),
+            "total_logins": user.loginIncentives,
+        },
     ),
     HabiticaSensorEntityDescription(
         key=HabiticaSensorEntity.HEALTH,
@@ -306,7 +320,7 @@ def entity_used_in(hass: HomeAssistant, entity_id: str) -> list[str]:
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: HabiticaConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the habitica sensors."""
 
@@ -393,6 +407,11 @@ class HabiticaSensor(HabiticaBase, SensorEntity):
             _class := self.coordinator.data.user.stats.Class
         ):
             return SVG_CLASS[_class]
+
+        if self.entity_description.key is HabiticaSensorEntity.DISPLAY_NAME and (
+            img_url := self.coordinator.data.user.profile.imageUrl
+        ):
+            return img_url
 
         if entity_picture := self.entity_description.entity_picture:
             return (

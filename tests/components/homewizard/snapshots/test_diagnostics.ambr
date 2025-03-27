@@ -1,9 +1,100 @@
 # serializer version: 1
+# name: test_diagnostics[HWE-BAT]
+  dict({
+    'data': dict({
+      'device': dict({
+        'api_version': '1.0.0',
+        'firmware_version': '1.00',
+        'id': '**REDACTED**',
+        'model_name': 'Plug-In Battery',
+        'product_name': 'Plug-In Battery',
+        'product_type': 'HWE-BAT',
+        'serial': '**REDACTED**',
+      }),
+      'measurement': dict({
+        'active_liter_lpm': None,
+        'any_power_fail_count': None,
+        'apparent_power_l1_va': None,
+        'apparent_power_l2_va': None,
+        'apparent_power_l3_va': None,
+        'apparent_power_va': None,
+        'average_power_15m_w': None,
+        'current_a': 1.5,
+        'current_l1_a': None,
+        'current_l2_a': None,
+        'current_l3_a': None,
+        'cycles': 123,
+        'energy_export_kwh': 123.456,
+        'energy_export_t1_kwh': None,
+        'energy_export_t2_kwh': None,
+        'energy_export_t3_kwh': None,
+        'energy_export_t4_kwh': None,
+        'energy_import_kwh': 123.456,
+        'energy_import_t1_kwh': None,
+        'energy_import_t2_kwh': None,
+        'energy_import_t3_kwh': None,
+        'energy_import_t4_kwh': None,
+        'external_devices': None,
+        'frequency_hz': 50.0,
+        'long_power_fail_count': None,
+        'meter_model': None,
+        'monthly_power_peak_timestamp': None,
+        'monthly_power_peak_w': None,
+        'power_factor': None,
+        'power_factor_l1': None,
+        'power_factor_l2': None,
+        'power_factor_l3': None,
+        'power_l1_w': None,
+        'power_l2_w': None,
+        'power_l3_w': None,
+        'power_w': 123.0,
+        'protocol_version': None,
+        'reactive_power_l1_var': None,
+        'reactive_power_l2_var': None,
+        'reactive_power_l3_var': None,
+        'reactive_power_var': None,
+        'state_of_charge_pct': 50.0,
+        'tariff': None,
+        'timestamp': None,
+        'total_liter_m3': None,
+        'unique_id': None,
+        'voltage_l1_v': None,
+        'voltage_l2_v': None,
+        'voltage_l3_v': None,
+        'voltage_sag_l1_count': None,
+        'voltage_sag_l2_count': None,
+        'voltage_sag_l3_count': None,
+        'voltage_swell_l1_count': None,
+        'voltage_swell_l2_count': None,
+        'voltage_swell_l3_count': None,
+        'voltage_v': 230.0,
+        'wifi_ssid': '**REDACTED**',
+        'wifi_strength': 100,
+      }),
+      'state': None,
+      'system': dict({
+        'api_v1_enabled': None,
+        'cloud_enabled': False,
+        'status_led_brightness_pct': 100,
+        'uptime_s': 356,
+        'wifi_rssi_db': -77,
+        'wifi_ssid': '**REDACTED**',
+        'wifi_strength_pct': 100,
+      }),
+    }),
+    'entry': dict({
+      'ip_address': '**REDACTED**',
+      'product_name': 'P1 Meter',
+      'product_type': 'HWE-P1',
+      'serial': '**REDACTED**',
+    }),
+  })
+# ---
 # name: test_diagnostics[HWE-KWH1]
   dict({
     'data': dict({
       'device': dict({
-        'api_version': 'v1',
+        'api_version': '1.0.0',
         'firmware_version': '3.06',
         'id': '**REDACTED**',
         'model_name': 'Wi-Fi kWh Meter 1-phase',
@@ -79,6 +170,7 @@
         'uptime_s': None,
         'wifi_rssi_db': None,
         'wifi_ssid': '**REDACTED**',
+        'wifi_strength_pct': 92,
       }),
     }),
     'entry': dict({
@@ -93,7 +185,7 @@
   dict({
     'data': dict({
       'device': dict({
-        'api_version': 'v1',
+        'api_version': '1.0.0',
         'firmware_version': '3.06',
         'id': '**REDACTED**',
         'model_name': 'Wi-Fi kWh Meter 3-phase',
@@ -169,6 +261,7 @@
         'uptime_s': None,
         'wifi_rssi_db': None,
         'wifi_ssid': '**REDACTED**',
+        'wifi_strength_pct': 92,
       }),
     }),
     'entry': dict({
@@ -183,7 +276,7 @@
   dict({
     'data': dict({
       'device': dict({
-        'api_version': 'v1',
+        'api_version': '1.0.0',
         'firmware_version': '4.19',
         'id': '**REDACTED**',
         'model_name': 'Wi-Fi P1 Meter',
@@ -295,6 +388,7 @@
         'uptime_s': None,
         'wifi_rssi_db': None,
         'wifi_ssid': '**REDACTED**',
+        'wifi_strength_pct': 100,
       }),
     }),
     'entry': dict({
@@ -309,7 +403,7 @@
   dict({
     'data': dict({
       'device': dict({
-        'api_version': 'v1',
+        'api_version': '1.0.0',
         'firmware_version': '3.03',
         'id': '**REDACTED**',
         'model_name': 'Wi-Fi Energy Socket',
@@ -389,6 +483,7 @@
         'uptime_s': None,
         'wifi_rssi_db': None,
         'wifi_ssid': '**REDACTED**',
+        'wifi_strength_pct': 94,
       }),
     }),
     'entry': dict({
@@ -403,7 +498,7 @@
   dict({
     'data': dict({
       'device': dict({
-        'api_version': 'v1',
+        'api_version': '1.0.0',
         'firmware_version': '4.07',
         'id': '**REDACTED**',
         'model_name': 'Wi-Fi Energy Socket',
@@ -483,6 +578,7 @@
         'uptime_s': None,
         'wifi_rssi_db': None,
         'wifi_ssid': '**REDACTED**',
+        'wifi_strength_pct': 100,
       }),
     }),
     'entry': dict({
@@ -497,7 +593,7 @@
   dict({
     'data': dict({
       'device': dict({
-        'api_version': 'v1',
+        'api_version': '1.0.0',
         'firmware_version': '2.03',
         'id': '**REDACTED**',
         'model_name': 'Wi-Fi Watermeter',
@@ -573,6 +669,7 @@
         'uptime_s': None,
         'wifi_rssi_db': None,
         'wifi_ssid': '**REDACTED**',
+        'wifi_strength_pct': 84,
       }),
     }),
     'entry': dict({
@@ -587,7 +684,7 @@
   dict({
     'data': dict({
       'device': dict({
-        'api_version': 'v1',
+        'api_version': '1.0.0',
         'firmware_version': '3.06',
         'id': '**REDACTED**',
         'model_name': 'Wi-Fi kWh Meter 1-phase',
@@ -663,6 +760,7 @@
         'uptime_s': None,
         'wifi_rssi_db': None,
         'wifi_ssid': '**REDACTED**',
+        'wifi_strength_pct': 92,
       }),
     }),
     'entry': dict({
@@ -677,7 +775,7 @@
   dict({
     'data': dict({
       'device': dict({
-        'api_version': 'v1',
+        'api_version': '1.0.0',
         'firmware_version': '3.06',
         'id': '**REDACTED**',
         'model_name': 'Wi-Fi kWh Meter 3-phase',
@@ -753,6 +851,7 @@
         'uptime_s': None,
         'wifi_rssi_db': None,
         'wifi_ssid': '**REDACTED**',
+        'wifi_strength_pct': 92,
       }),
     }),
     'entry': dict({

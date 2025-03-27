@@ -10,7 +10,7 @@ from functools import wraps
 from typing import Any
 
 from homeassistant.core import ServiceResponse
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .typing import TemplateVarsType
 

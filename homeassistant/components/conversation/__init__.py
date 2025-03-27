@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 import logging
-import re
 from typing import Literal
 
+from hassil.recognize import RecognizeResult
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -29,6 +30,17 @@ from .agent_manager import (
     async_converse,
     async_get_agent,
     get_agent_manager,
+)
+from .chat_log import (
+    AssistantContent,
+    AssistantContentDeltaDict,
+    ChatLog,
+    Content,
+    ConverseError,
+    SystemContent,
+    ToolResultContent,
+    UserContent,
+    async_get_chat_log,
 )
 from .const import (
     ATTR_AGENT_ID,
@@ -54,22 +66,29 @@ __all__ = [
     "DOMAIN",
     "HOME_ASSISTANT_AGENT",
     "OLD_HOME_ASSISTANT_AGENT",
+    "AssistantContent",
+    "AssistantContentDeltaDict",
+    "ChatLog",
+    "Content",
     "ConversationEntity",
     "ConversationEntityFeature",
     "ConversationInput",
     "ConversationResult",
     "ConversationTraceEventType",
+    "ConverseError",
+    "SystemContent",
+    "ToolResultContent",
+    "UserContent",
     "async_conversation_trace_append",
     "async_converse",
     "async_get_agent_info",
+    "async_get_chat_log",
     "async_set_agent",
     "async_setup",
     "async_unset_agent",
 ]
 
 _LOGGER = logging.getLogger(__name__)
-
-REGEX_TYPE = type(re.compile(""))
 
 SERVICE_PROCESS_SCHEMA = vol.Schema(
     {
@@ -221,7 +240,10 @@ async def async_handle_sentence_triggers(
 
 
 async def async_handle_intents(
-    hass: HomeAssistant, user_input: ConversationInput
+    hass: HomeAssistant,
+    user_input: ConversationInput,
+    *,
+    intent_filter: Callable[[RecognizeResult], bool] | None = None,
 ) -> intent.IntentResponse | None:
     """Try to match input against registered intents and return response.
 
@@ -230,7 +252,9 @@ async def async_handle_intents(
     default_agent = async_get_agent(hass)
     assert isinstance(default_agent, DefaultAgent)
 
-    return await default_agent.async_handle_intents(user_input)
+    return await default_agent.async_handle_intents(
+        user_input, intent_filter=intent_filter
+    )
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

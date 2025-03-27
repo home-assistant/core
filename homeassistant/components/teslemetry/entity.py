@@ -3,9 +3,9 @@
 from abc import abstractmethod
 from typing import Any
 
-from propcache import cached_property
-from tesla_fleet_api import EnergySpecific, VehicleSpecific
+from propcache.api import cached_property
 from tesla_fleet_api.const import Scope
+from tesla_fleet_api.teslemetry import EnergySite, Vehicle
 from teslemetry_stream import Signal
 
 from homeassistant.exceptions import ServiceValidationError
@@ -29,7 +29,7 @@ class TeslemetryRootEntity(Entity):
 
     _attr_has_entity_name = True
     scoped: bool
-    api: VehicleSpecific | EnergySpecific
+    api: Vehicle | EnergySite
 
     def raise_for_scope(self, scope: Scope):
         """Raise an error if a scope is not available."""
@@ -105,7 +105,7 @@ class TeslemetryVehicleEntity(TeslemetryEntity):
     """Parent class for Teslemetry Vehicle entities."""
 
     _last_update: int = 0
-    api: VehicleSpecific
+    api: Vehicle
     vehicle: TeslemetryVehicleData
 
     def __init__(
@@ -134,7 +134,7 @@ class TeslemetryVehicleEntity(TeslemetryEntity):
 class TeslemetryEnergyLiveEntity(TeslemetryEntity):
     """Parent class for Teslemetry Energy Site Live entities."""
 
-    api: EnergySpecific
+    api: EnergySite
 
     def __init__(
         self,
@@ -155,7 +155,7 @@ class TeslemetryEnergyLiveEntity(TeslemetryEntity):
 class TeslemetryEnergyInfoEntity(TeslemetryEntity):
     """Parent class for Teslemetry Energy Site Info Entities."""
 
-    api: EnergySpecific
+    api: EnergySite
 
     def __init__(
         self,
@@ -194,7 +194,7 @@ class TeslemetryWallConnectorEntity(TeslemetryEntity):
     """Parent class for Teslemetry Wall Connector Entities."""
 
     _attr_has_entity_name = True
-    api: EnergySpecific
+    api: EnergySite
 
     def __init__(
         self,

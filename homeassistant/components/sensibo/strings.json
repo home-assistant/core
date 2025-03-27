@@ -18,7 +18,7 @@
           "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
-          "api_key": "Follow the [documentation]({url}) to get your api key"
+          "api_key": "Follow the [documentation]({url}) to get your API key"
         }
       },
       "reauth_confirm": {
@@ -330,7 +330,7 @@
       "timer_on_switch": {
         "name": "Timer",
         "state_attributes": {
-          "id": { "name": "Id" },
+          "id": { "name": "ID" },
           "turn_on": {
             "name": "Turns on",
             "state": {
@@ -429,16 +429,16 @@
       }
     },
     "enable_pure_boost": {
-      "name": "Enable pure boost",
+      "name": "Enable Pure Boost",
       "description": "Enables and configures Pure Boost settings.",
       "fields": {
         "ac_integration": {
           "name": "AC integration",
-          "description": "Integrate with Air Conditioner."
+          "description": "Integrate with air conditioner."
         },
         "geo_integration": {
           "name": "Geo integration",
-          "description": "Integrate with Presence."
+          "description": "Integrate with presence."
         },
         "indoor_integration": {
           "name": "Indoor air quality",
@@ -468,7 +468,7 @@
         },
         "fan_mode": {
           "name": "Fan mode",
-          "description": "set fan mode."
+          "description": "Set fan mode."
         },
         "swing_mode": {
           "name": "Swing mode",
@@ -485,8 +485,8 @@
       }
     },
     "enable_climate_react": {
-      "name": "Enable climate react",
-      "description": "Enables and configures climate react.",
+      "name": "Enable Climate React",
+      "description": "Enables and configures Climate React.",
       "fields": {
         "high_temperature_threshold": {
           "name": "Threshold high",
@@ -576,7 +576,7 @@
       "message": "Could not perform action for {name} with error {error}"
     },
     "climate_react_not_available": {
-      "message": "Use Sensibo 'Enable climate react' action once to enable switch or the Sensibo app"
+      "message": "Use the Sensibo 'Enable Climate React' action once to enable the switch, or use the Sensibo app"
     },
     "auth_error": {
       "message": "Authentication failed, please update your API key"
@@ -594,7 +594,7 @@
   "issues": {
     "deprecated_entity_horizontalswing": {
       "title": "The Sensibo {name} entity is deprecated",
-      "description": "The Sensibo entity `{entity}` is deprecated and will be removed in a future release.\nPlease update your automations and scripts to use the `horizontal_swing` attribute part of the `climate` entity instead.\n, Disable the `{entity}` and reload the config entry or restart Home Assistant to fix this issue."
+      "description": "The Sensibo entity `{entity}` is deprecated and will be removed in a future release.\nPlease update your automations and scripts to use the `horizontal_swing` attribute part of the `climate` entity instead.\nDisable `{entity}` and reload the config entry or restart Home Assistant to fix this issue."
     }
   }
 }
