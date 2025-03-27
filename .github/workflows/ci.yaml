@@ -1009,7 +1009,7 @@ jobs:
             ${cov_params[@]} \
             -o console_output_style=count \
             -p no:sugar \
-            --time-report-name pytest-time-report-${{ matrix.python-version }}-${{ matrix.group }}.json \
+            --execution-time-report-name pytest-time-report-${{ matrix.python-version }}-${{ matrix.group }}.json \
             --exclude-warning-annotations \
             $(sed -n "${{ matrix.group }},1p" pytest_buckets.txt) \
               2>&1 | tee pytest-${{ matrix.python-version }}-${{ matrix.group }}.txt
