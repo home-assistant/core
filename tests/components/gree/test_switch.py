@@ -24,9 +24,9 @@ from tests.common import MockConfigEntry
 
 ENTITY_ID_LIGHT_PANEL = f"{SWITCH_DOMAIN}.fake_device_1_panel_light"
 ENTITY_ID_HEALTH_MODE = f"{SWITCH_DOMAIN}.fake_device_1_health_mode"
-ENTITY_ID_QUIET = f"{SWITCH_DOMAIN}.fake_device_1_quiet"
+ENTITY_ID_QUIET_MODE = f"{SWITCH_DOMAIN}.fake_device_1_quiet_mode"
 ENTITY_ID_FRESH_AIR = f"{SWITCH_DOMAIN}.fake_device_1_fresh_air"
-ENTITY_ID_XFAN = f"{SWITCH_DOMAIN}.fake_device_1_xfan"
+ENTITY_ID_XTRA_FAN = f"{SWITCH_DOMAIN}.fake_device_1_xtra_fan"
 
 
 async def async_setup_gree(hass: HomeAssistant) -> MockConfigEntry:
@@ -56,9 +56,9 @@ async def test_registry_settings(
     [
         ENTITY_ID_LIGHT_PANEL,
         ENTITY_ID_HEALTH_MODE,
-        ENTITY_ID_QUIET,
+        ENTITY_ID_QUIET_MODE,
         ENTITY_ID_FRESH_AIR,
-        ENTITY_ID_XFAN,
+        ENTITY_ID_XTRA_FAN,
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -83,9 +83,9 @@ async def test_send_switch_on(hass: HomeAssistant, entity: str) -> None:
     [
         ENTITY_ID_LIGHT_PANEL,
         ENTITY_ID_HEALTH_MODE,
-        ENTITY_ID_QUIET,
+        ENTITY_ID_QUIET_MODE,
         ENTITY_ID_FRESH_AIR,
-        ENTITY_ID_XFAN,
+        ENTITY_ID_XTRA_FAN,
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -114,9 +114,9 @@ async def test_send_switch_on_device_timeout(
     [
         ENTITY_ID_LIGHT_PANEL,
         ENTITY_ID_HEALTH_MODE,
-        ENTITY_ID_QUIET,
+        ENTITY_ID_QUIET_MODE,
         ENTITY_ID_FRESH_AIR,
-        ENTITY_ID_XFAN,
+        ENTITY_ID_XTRA_FAN,
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -141,9 +141,9 @@ async def test_send_switch_off(hass: HomeAssistant, entity: str) -> None:
     [
         ENTITY_ID_LIGHT_PANEL,
         ENTITY_ID_HEALTH_MODE,
-        ENTITY_ID_QUIET,
+        ENTITY_ID_QUIET_MODE,
         ENTITY_ID_FRESH_AIR,
-        ENTITY_ID_XFAN,
+        ENTITY_ID_XTRA_FAN,
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
