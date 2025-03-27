@@ -1,0 +1,25 @@
+set_zone_temperature:
+  name: Set Zone Temperature
+  description: "Set a zone's temperature on a Daikin device"
+  target:
+    entity:
+      domain: climate
+  fields:
+    zone_id:
+      required: true
+      description: "ID of the climate zone (0-10) to set the temperature for"
+      selector:
+        number:
+          min: 0
+          max: 10
+          mode: box
+          step: 1
+    temperature:
+      required: true
+      description: "Specify the zone temperature (within +/- 2 degrees of the target's set temperature)"
+      selector:
+        number:
+          min: 0
+          max: 250
+          mode: box
+          step: 1

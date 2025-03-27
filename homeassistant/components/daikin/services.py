@@ -13,20 +13,22 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-# Name of the custom service, e.g. "daikin.set_zone_temperature"
+# Name of the custom service
 SERVICE_SET_ZONE_TEMPERATURE = "set_zone_temperature"
 
-# Define the schema of the service arguments
+# Define the schema of the service arguments; allow extra keys to accommodate target data merge
 SERVICE_SET_ZONE_TEMPERATURE_SCHEMA = vol.Schema(
     {
-        vol.Required("zone_id"): vol.Coerce(int),       # Which zone to set
-        vol.Required("temperature"): vol.Coerce(float), # Desired temperature
-        vol.Optional("entry_id"): cv.string             # Daikin device to target
-    }
+        vol.Required("zone_id"): vol.Coerce(int),  # Which zone to set
+        vol.Required("temperature"): vol.Coerce(float),  # Desired temperature
+        vol.Optional("entry_id"): cv.string,  # Optional Daikin device target
+    },
+    extra=vol.ALLOW_EXTRA,
 )
 
+
 async def async_setup_services(hass: HomeAssistant) -> None:
-    """Register custom Daikin services. Called typically from __init__.py or async_setup_entry once the integration is initialized."""
+    """Register custom Daikin services."""
 
     async def async_handle_set_zone_temperature(call: ServiceCall) -> None:
         """Handle the set_zone_temperature service call."""
@@ -56,24 +58,24 @@ async def async_setup_services(hass: HomeAssistant) -> None:
                 _LOGGER.warning("No device found in coordinator for entry %s", entry_id)
                 continue
 
-# Retrieve the device's target_temperature (default 22 if missing)
+            # Retrieve the device's target_temperature (default 22 if missing)
             try:
                 target_temp = device.target_temperature
             except AttributeError:
                 target_temp = 22
-                _LOGGER.debug("Using default target temperature of 22 for range check.")
+                _LOGGER.debug("Using default target temperature of 22 for range check")
 
-# Define allowed range: [target_temp - 2, target_temp + 2]
+            # Define allowed range: [target_temp - 2, target_temp + 2]
             min_temp = target_temp - 2
             max_temp = target_temp + 2
 
-# Enforce the range limit
+            # Enforce the range limit
             if not (min_temp <= temperature <= max_temp):
                 raise HomeAssistantError(
                     f"Value {temperature}°C out of range ({min_temp}°C - {max_temp}°C)."
                 )
 
-# Set zone temp with retry logic
+            # Set zone temp with retry logic (updated to match number.py)
             retries = 3
             for attempt in range(retries):
                 try:
@@ -85,6 +87,12 @@ async def async_setup_services(hass: HomeAssistant) -> None:
                         attempt + 1,
                     )
                     await device.set_zone(zone_id, "lztemp_h", str(round(temperature)))
+                    _LOGGER.debug(
+                        "Successfully set temperature for zone %s to %s°C on device %s",
+                        zone_id,
+                        temperature,
+                        device.mac,
+                    )
                     break
                 except (IndexError, KeyError, AttributeError) as err:
                     _LOGGER.error(
@@ -94,13 +102,10 @@ async def async_setup_services(hass: HomeAssistant) -> None:
                         err,
                     )
                     if attempt == retries - 1:
-                        _LOGGER.error(
-                            "Failed to set zone temperature after %s attempts: %s",
-                            retries,
-                            err,
-                        )
-                    else:
-                        await asyncio.sleep(1)  # small delay before next attempt
+                        raise HomeAssistantError(
+                            f"Failed to set zone temperature after {retries} attempts: {err}"
+                        ) from err
+                    await asyncio.sleep(1)
 
     # Register the service with Home Assistant
     hass.services.async_register(
@@ -110,10 +115,10 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         schema=SERVICE_SET_ZONE_TEMPERATURE_SCHEMA,
     )
 
-    _LOGGER.info("Daikin custom services registered.")
+    _LOGGER.info("Daikin custom services registered")
 
 
 async def async_unload_services(hass: HomeAssistant) -> None:
     """Unregister Daikin custom services. Called if the integration is fully unloaded (e.g., last config entry removed)."""
     hass.services.async_remove(DOMAIN, SERVICE_SET_ZONE_TEMPERATURE)
-    _LOGGER.info("Daikin custom services unregistered.")
+    _LOGGER.info("Daikin custom services unregistered")
