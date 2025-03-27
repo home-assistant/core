@@ -22,7 +22,7 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
-ENTITY_ID_LIGHT_PANEL = f"{SWITCH_DOMAIN}.fake_device_1_panel_light"
+ENTITY_ID_PANEL_LIGHT = f"{SWITCH_DOMAIN}.fake_device_1_panel_light"
 ENTITY_ID_HEALTH_MODE = f"{SWITCH_DOMAIN}.fake_device_1_health_mode"
 ENTITY_ID_QUIET_MODE = f"{SWITCH_DOMAIN}.fake_device_1_quiet_mode"
 ENTITY_ID_FRESH_AIR = f"{SWITCH_DOMAIN}.fake_device_1_fresh_air"
@@ -54,7 +54,7 @@ async def test_registry_settings(
 @pytest.mark.parametrize(
     "entity",
     [
-        ENTITY_ID_LIGHT_PANEL,
+        ENTITY_ID_PANEL_LIGHT,
         ENTITY_ID_HEALTH_MODE,
         ENTITY_ID_QUIET_MODE,
         ENTITY_ID_FRESH_AIR,
@@ -81,7 +81,7 @@ async def test_send_switch_on(hass: HomeAssistant, entity: str) -> None:
 @pytest.mark.parametrize(
     "entity",
     [
-        ENTITY_ID_LIGHT_PANEL,
+        ENTITY_ID_PANEL_LIGHT,
         ENTITY_ID_HEALTH_MODE,
         ENTITY_ID_QUIET_MODE,
         ENTITY_ID_FRESH_AIR,
@@ -112,7 +112,7 @@ async def test_send_switch_on_device_timeout(
 @pytest.mark.parametrize(
     "entity",
     [
-        ENTITY_ID_LIGHT_PANEL,
+        ENTITY_ID_PANEL_LIGHT,
         ENTITY_ID_HEALTH_MODE,
         ENTITY_ID_QUIET_MODE,
         ENTITY_ID_FRESH_AIR,
@@ -139,7 +139,7 @@ async def test_send_switch_off(hass: HomeAssistant, entity: str) -> None:
 @pytest.mark.parametrize(
     "entity",
     [
-        ENTITY_ID_LIGHT_PANEL,
+        ENTITY_ID_PANEL_LIGHT,
         ENTITY_ID_HEALTH_MODE,
         ENTITY_ID_QUIET_MODE,
         ENTITY_ID_FRESH_AIR,
