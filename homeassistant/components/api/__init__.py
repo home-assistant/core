@@ -268,13 +268,14 @@ class APIEntityStateView(HomeAssistantView):
             return self.json_message(
                 "State data should be valid JSON.", HTTPStatus.BAD_REQUEST
             )
-
-        if data is not None and not isinstance(data, dict):
+        if not isinstance(data, dict):
             return self.json_message(
                 "State data should be a JSON object", HTTPStatus.BAD_REQUEST
             )
         if (new_state := data.get("state")) is None:
-            return self.json_message("No state specified.", HTTPStatus.BAD_REQUEST)
+            return self.json_message(
+                "No state attribute specified.", HTTPStatus.BAD_REQUEST
+            )
 
         attributes = data.get("attributes")
         force_update = data.get("force_update", False)
@@ -493,7 +494,7 @@ class APITemplateView(HomeAssistantView):
                 return self.json_message(
                     "Template data should be valid JSON.", HTTPStatus.BAD_REQUEST
                 )
-            if data is not None and not isinstance(data, dict):
+            if not isinstance(data, dict):
                 return self.json_message(
                     "Template data should be a JSON object", HTTPStatus.BAD_REQUEST
                 )

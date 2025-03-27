@@ -141,7 +141,6 @@ async def test_api_state_change_with_string_body(
     assert resp.status == HTTPStatus.BAD_REQUEST
 
 
-
 async def test_api_state_change_to_zero_value(
     hass: HomeAssistant, mock_api_client: TestClient
 ) -> None:
@@ -549,7 +548,8 @@ async def test_api_template_error_with_string_body(
     hass.states.async_set("sensor.temperature", 10)
 
     resp = await mock_api_client.post(
-        const.URL_API_TEMPLATE, json='"{"template": "{{ states.sensor.temperature.state"}"'
+        const.URL_API_TEMPLATE,
+        json='"{"template": "{{ states.sensor.temperature.state"}"',
     )
 
     assert resp.status == HTTPStatus.BAD_REQUEST
