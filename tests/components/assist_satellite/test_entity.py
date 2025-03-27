@@ -376,7 +376,7 @@ async def test_announce_default_preannounce(
     """Test announcing on a device with the default preannouncement sound."""
 
     async def async_announce(announcement):
-        assert PREANNOUNCE_URL in announcement.preannounce_media_id
+        assert announcement.preannounce_media_id.endswith(PREANNOUNCE_URL)
 
     with patch.object(entity, "async_announce", new=async_announce):
         await hass.services.async_call(
