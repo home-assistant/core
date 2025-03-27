@@ -55,7 +55,8 @@
               "activity": "Activity press",
               "power": "Power button pressed",
               "status_requested": "Status requested",
-              "sticky_white_noise_updated": "Sleepytime sounds updated"
+              "sticky_white_noise_updated": "Sleepytime sounds updated",
+              "config_change": "Config changed"
             }
           }
         }

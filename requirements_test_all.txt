@@ -984,7 +984,7 @@ hole==0.8.0
 holidays==0.69
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250327.0
+home-assistant-frontend==20250327.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.3.24
@@ -2007,7 +2007,7 @@ python-roborock==2.16.1
 python-smarttub==0.0.39
 
 # homeassistant.components.snoo
-python-snoo==0.6.4
+python-snoo==0.6.5
 
 # homeassistant.components.songpal
 python-songpal==0.16.2
@@ -2080,7 +2080,7 @@ pywemo==1.4.0
 pywilight==0.0.74
 
 # homeassistant.components.wiz
-pywizlight==0.5.14
+pywizlight==0.6.2
 
 # homeassistant.components.wmspro
 pywmspro==0.2.1
