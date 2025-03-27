@@ -5,11 +5,10 @@ from __future__ import annotations
 
 import argparse
 from dataclasses import dataclass, field
-from math import ceil
 from pathlib import Path
-import subprocess
-import sys
-from typing import Final
+from typing import Final, cast
+
+from homeassistant.util.json import load_json_object
 
 
 class Bucket:
@@ -19,13 +18,15 @@ class Bucket:
         self,
     ):
         """Initialize bucket."""
-        self.total_tests = 0
+        self.approx_execution_time = 0.0
+        self.not_measured_files = 0
         self._paths: list[str] = []
 
     def add(self, part: TestFolder | TestFile) -> None:
         """Add tests to bucket."""
         part.add_to_bucket()
-        self.total_tests += part.total_tests
+        self.approx_execution_time += part.approx_execution_time
+        self.not_measured_files += part.not_measured_files
         self._paths.append(str(part.path))
 
     def get_paths_line(self) -> str:
@@ -36,40 +37,62 @@ class Bucket:
 class BucketHolder:
     """Class to hold buckets."""
 
-    def __init__(self, tests_per_bucket: int, bucket_count: int) -> None:
+    def __init__(self, bucket_count: int) -> None:
         """Initialize bucket holder."""
-        self._tests_per_bucket = tests_per_bucket
         self._bucket_count = bucket_count
         self._buckets: list[Bucket] = [Bucket() for _ in range(bucket_count)]
 
     def split_tests(self, test_folder: TestFolder) -> None:
         """Split tests into buckets."""
-        digits = len(str(test_folder.total_tests))
+        avg_execution_time = test_folder.approx_execution_time / self._bucket_count
+        avg_not_measured_files = test_folder.not_measured_files / self._bucket_count
+        digits = len(str(test_folder.approx_execution_time))
         sorted_tests = sorted(
-            test_folder.get_all_flatten(), reverse=True, key=lambda x: x.total_tests
+            test_folder.get_all_flatten(),
+            key=lambda x: (x.not_measured_files, -x.approx_execution_time),
         )
         for tests in sorted_tests:
             if tests.added_to_bucket:
                 # Already added to bucket
                 continue
 
-            print(f"{tests.total_tests:>{digits}} tests in {tests.path}")
-            smallest_bucket = min(self._buckets, key=lambda x: x.total_tests)
+            print(
+                f"{tests.approx_execution_time:>{digits}} approx execution time for {tests.path}"
+            )
             is_file = isinstance(tests, TestFile)
-            if (
-                smallest_bucket.total_tests + tests.total_tests < self._tests_per_bucket
-            ) or is_file:
-                smallest_bucket.add(tests)
-                # Ensure all files from the same folder are in the same bucket
-                # to ensure that syrupy correctly identifies unused snapshots
-                if is_file:
-                    for other_test in tests.parent.children.values():
-                        if other_test is tests or isinstance(other_test, TestFolder):
-                            continue
-                        print(
-                            f"{other_test.total_tests:>{digits}} tests in {other_test.path} (same bucket)"
-                        )
-                        smallest_bucket.add(other_test)
+            for smallest_bucket in (
+                min(
+                    self._buckets,
+                    key=lambda x: (x.not_measured_files, x.approx_execution_time),
+                ),
+                min(
+                    self._buckets,
+                    key=lambda x: (x.approx_execution_time, x.not_measured_files),
+                ),
+            ):
+                if (
+                    (
+                        smallest_bucket.approx_execution_time
+                        + tests.approx_execution_time
+                    )
+                    < avg_execution_time
+                    and (smallest_bucket.not_measured_files + tests.not_measured_files)
+                    < avg_not_measured_files
+                ) or is_file:
+                    smallest_bucket.add(tests)
+                    # Ensure all files from the same folder are in the same bucket
+                    # to ensure that syrupy correctly identifies unused snapshots
+                    if is_file:
+                        for other_test in tests.parent.children.values():
+                            if other_test is tests or isinstance(
+                                other_test, TestFolder
+                            ):
+                                continue
+                            print(
+                                f"Adding {other_test.path} tests to same bucket due syrupy"
+                            )
+                            smallest_bucket.add(other_test)
+                    break
 
         # verify that all tests are added to a bucket
         if not test_folder.added_to_bucket:
@@ -79,7 +102,9 @@ class BucketHolder:
         """Create output file."""
         with Path("pytest_buckets.txt").open("w") as file:
             for idx, bucket in enumerate(self._buckets):
-                print(f"Bucket {idx + 1} has {bucket.total_tests} tests")
+                print(
+                    f"Bucket {idx + 1} execution time is ~{bucket.approx_execution_time}s with {bucket.not_measured_files} not measured files"
+                )
                 file.write(bucket.get_paths_line())
 
 
@@ -87,10 +112,11 @@ class BucketHolder:
 class TestFile:
     """Class represents a single test file and the number of tests it has."""
 
-    total_tests: int
     path: Path
+    parent: TestFolder
+    # 0 means not measured
+    approx_execution_time: float = 0.0
     added_to_bucket: bool = field(default=False, init=False)
-    parent: TestFolder | None = field(default=None, init=False)
 
     def add_to_bucket(self) -> None:
         """Add test file to bucket."""
@@ -98,9 +124,14 @@ class TestFile:
             raise ValueError("Already added to bucket")
         self.added_to_bucket = True
 
+    @property
+    def not_measured_files(self) -> int:
+        """Return files not measured."""
+        return 1 if self.approx_execution_time == 0 else 0
+
     def __gt__(self, other: TestFile) -> bool:
         """Return if greater than."""
-        return self.total_tests > other.total_tests
+        return self.approx_execution_time > other.approx_execution_time
 
 
 class TestFolder:
@@ -112,9 +143,14 @@ class TestFolder:
         self.children: dict[Path, TestFolder | TestFile] = {}
 
     @property
-    def total_tests(self) -> int:
-        """Return total tests."""
-        return sum([test.total_tests for test in self.children.values()])
+    def approx_execution_time(self) -> float:
+        """Return approximate execution time."""
+        return sum([test.approx_execution_time for test in self.children.values()])
+
+    @property
+    def not_measured_files(self) -> int:
+        """Return files not measured."""
+        return sum([test.not_measured_files for test in self.children.values()])
 
     @property
     def added_to_bucket(self) -> bool:
@@ -130,11 +166,13 @@ class TestFolder:
 
     def __repr__(self) -> str:
         """Return representation."""
-        return (
-            f"TestFolder(total_tests={self.total_tests}, children={len(self.children)})"
-        )
+        return f"TestFolder(approx_execution_time={self.approx_execution_time}, children={len(self.children)})"
 
-    def add_test_file(self, file: TestFile) -> None:
+    def add_test_file(self, path: Path, execution_time: float) -> None:
+        """Add test file to folder."""
+        self._add_test_file(TestFile(path, self, execution_time))
+
+    def _add_test_file(self, file: TestFile) -> None:
         """Add test file to folder."""
         path = file.path
         file.parent = self
@@ -142,7 +180,7 @@ class TestFolder:
         if not relative_path.parts:
             raise ValueError("Path is not a child of this folder")
 
-        if len(relative_path.parts) == 1:
+        if len(relative_path.parts) == 1 and path not in self.children:
             self.children[path] = file
             return
 
@@ -151,7 +189,7 @@ class TestFolder:
             self.children[child_path] = child = TestFolder(child_path)
         elif not isinstance(child, TestFolder):
             raise ValueError("Child is not a folder")
-        child.add_test_file(file)
+        child._add_test_file(file)
 
     def get_all_flatten(self) -> list[TestFolder | TestFile]:
         """Return self and all children as flatten list."""
@@ -164,35 +202,21 @@ class TestFolder:
         return result
 
 
-def collect_tests(path: Path) -> TestFolder:
-    """Collect all tests."""
-    result = subprocess.run(
-        ["pytest", "--collect-only", "-qq", "-p", "no:warnings", path],
-        check=False,
-        capture_output=True,
-        text=True,
-    )
+def process_execution_time_file(
+    execution_time_file: Path, test_folder: TestFolder
+) -> None:
+    """Process the execution time file."""
+    for file, execution_time in load_json_object(execution_time_file).items():
+        test_folder.add_test_file(Path(file), cast(float, execution_time))
 
-    if result.returncode != 0:
-        print("Failed to collect tests:")
-        print(result.stderr)
-        print(result.stdout)
-        sys.exit(1)
 
-    folder = TestFolder(path)
-
-    for line in result.stdout.splitlines():
-        if not line.strip():
-            continue
-        file_path, _, total_tests = line.partition(": ")
-        if not path or not total_tests:
-            print(f"Unexpected line: {line}")
-            sys.exit(1)
-
-        file = TestFile(int(total_tests), Path(file_path))
-        folder.add_test_file(file)
-
-    return folder
+def add_missing_test_files(folder: Path, test_folder: TestFolder) -> None:
+    """Scan test folder for missing files."""
+    for path in folder.iterdir():
+        if path.is_dir():
+            add_missing_test_files(path, test_folder)
+        elif path.name.startswith("test_") and path.suffix == ".py":
+            test_folder.add_test_file(path, 0.0)
 
 
 def main() -> None:
@@ -213,23 +237,30 @@ def main() -> None:
         type=check_greater_0,
     )
     parser.add_argument(
-        "path",
+        "test_folder",
         help="Path to the test files to split into buckets",
+        type=Path,
+    )
+    parser.add_argument(
+        "execution_time_file",
+        help="Path to the file containing the execution time of each test",
         type=Path,
     )
 
     arguments = parser.parse_args()
 
-    print("Collecting tests...")
-    tests = collect_tests(arguments.path)
-    tests_per_bucket = ceil(tests.total_tests / arguments.bucket_count)
+    tests = TestFolder(arguments.test_folder)
 
-    bucket_holder = BucketHolder(tests_per_bucket, arguments.bucket_count)
+    if arguments.execution_time_file.exists():
+        print(f"Using execution time file: {arguments.execution_time_file}")
+        process_execution_time_file(arguments.execution_time_file, tests)
+
+    print("Scanning test files...")
+    add_missing_test_files(arguments.test_folder, tests)
+
+    bucket_holder = BucketHolder(arguments.bucket_count)
     print("Splitting tests...")
     bucket_holder.split_tests(tests)
-
-    print(f"Total tests: {tests.total_tests}")
-    print(f"Estimated tests per bucket: {tests_per_bucket}")
 
     bucket_holder.create_ouput_file()
 

@@ -138,3 +138,6 @@ tmp_cache
 
 # Will be created from script/split_tests.py
 pytest_buckets.txt
+
+# Contains test execution times used for splitting tests
+pytest-execution-time-report.json
