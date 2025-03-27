@@ -76,7 +76,7 @@ class MillHistoricDataUpdateCoordinator(DataUpdateCoordinator):
         """Update historic data via API."""
         now = dt_util.utcnow()
         self.update_interval = (
-            timedelta(hours=1) + now.replace(minute=0, second=0) - now
+            timedelta(hours=1) + now.replace(minute=1, second=0) - now
         )
 
         recoder_instance = get_instance(self.hass)
