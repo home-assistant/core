@@ -252,8 +252,8 @@ async def test_setup_after_deps_all_present(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_setup_after_deps_in_stage_1(hass: HomeAssistant) -> None:
-    """Test after_dependencies are promoted in stage 1."""
+async def test_setup_after_deps_in_stage_1_ignored(hass: HomeAssistant) -> None:
+    """Test after_dependencies are ignored in stage 1."""
     # This test relies on this
     assert "cloud" in bootstrap.STAGE_1_INTEGRATIONS
     order = []
@@ -295,7 +295,7 @@ async def test_setup_after_deps_in_stage_1(hass: HomeAssistant) -> None:
 
     assert "normal_integration" in hass.config.components
     assert "cloud" in hass.config.components
-    assert order == ["an_after_dep", "normal_integration", "cloud"]
+    assert order == ["cloud", "an_after_dep", "normal_integration"]
 
 
 @pytest.mark.parametrize("load_registries", [False])
@@ -304,7 +304,7 @@ async def test_setup_after_deps_manifests_are_loaded_even_if_not_setup(
 ) -> None:
     """Ensure we preload manifests for after deps even if they are not setup.
 
-    It's important that we preload the after dep manifests even if they are not setup
+    Its important that we preload the after dep manifests even if they are not setup
     since we will always have to check their requirements since any integration
     that lists an after dep may import it and we have to ensure requirements are
     up to date before the after dep can be imported.
@@ -371,7 +371,7 @@ async def test_setup_after_deps_manifests_are_loaded_even_if_not_setup(
     assert "an_after_dep" not in hass.config.components
     assert "an_after_dep_of_after_dep" not in hass.config.components
     assert "an_after_dep_of_after_dep_of_after_dep" not in hass.config.components
-    assert order == ["normal_integration", "cloud"]
+    assert order == ["cloud", "normal_integration"]
     assert loader.async_get_loaded_integration(hass, "an_after_dep") is not None
     assert (
         loader.async_get_loaded_integration(hass, "an_after_dep_of_after_dep")
@@ -456,9 +456,9 @@ async def test_setup_frontend_before_recorder(hass: HomeAssistant) -> None:
 
     assert order == [
         "http",
-        "an_after_dep",
         "frontend",
         "recorder",
+        "an_after_dep",
         "normal_integration",
     ]
 
@@ -1582,10 +1582,8 @@ async def test_no_base_platforms_loaded_before_recorder(hass: HomeAssistant) -> 
         assert not isinstance(integrations_or_excs, Exception)
         integrations[domain] = integration
 
-    integrations_all_dependencies = (
-        await loader.resolve_integrations_after_dependencies(
-            hass, integrations.values(), ignore_exceptions=True
-        )
+    integrations_all_dependencies = await loader.resolve_integrations_dependencies(
+        hass, integrations.values()
     )
     all_integrations = integrations.copy()
     all_integrations.update(

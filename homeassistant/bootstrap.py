@@ -860,22 +860,14 @@ async def _async_set_up_integrations(
     integrations, all_integrations = await _async_resolve_domains_and_preload(
         hass, config
     )
-    # Detect all cycles
-    integrations_after_dependencies = (
-        await loader.resolve_integrations_after_dependencies(
-            hass, all_integrations.values(), set(all_integrations)
-        )
-    )
-    all_domains = set(integrations_after_dependencies)
-    domains = set(integrations) & all_domains
+    all_domains = set(all_integrations)
+    domains = set(integrations)
 
     _LOGGER.info(
         "Domains to be set up: %s | %s",
         domains,
         all_domains - domains,
     )
-
-    async_set_domains_to_be_loaded(hass, all_domains)
 
     # Initialize recorder
     if "recorder" in all_domains:
@@ -909,12 +901,24 @@ async def _async_set_up_integrations(
         stage_dep_domains_unfiltered = {
             dep
             for domain in stage_domains
-            for dep in integrations_after_dependencies[domain]
+            for dep in all_integrations[domain].all_dependencies
             if dep not in stage_domains
         }
         stage_dep_domains = stage_dep_domains_unfiltered - hass.config.components
 
         stage_all_domains = stage_domains | stage_dep_domains
+        stage_all_integrations = {
+            domain: all_integrations[domain] for domain in stage_all_domains
+        }
+        # Detect all cycles
+        stage_integrations_after_dependencies = (
+            await loader.resolve_integrations_after_dependencies(
+                hass, stage_all_integrations.values(), stage_all_domains
+            )
+        )
+        stage_all_domains = set(stage_integrations_after_dependencies)
+        stage_domains &= stage_all_domains
+        stage_dep_domains &= stage_all_domains
 
         _LOGGER.info(
             "Setting up stage %s: %s | %s\nDependencies: %s | %s",
@@ -924,6 +928,8 @@ async def _async_set_up_integrations(
             stage_dep_domains,
             stage_dep_domains_unfiltered - stage_dep_domains,
         )
+
+        async_set_domains_to_be_loaded(hass, stage_all_domains)
 
         if timeout is None:
             await _async_setup_multi_components(hass, stage_all_domains, config)
