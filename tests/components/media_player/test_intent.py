@@ -125,6 +125,7 @@ async def test_next_media_player_intent(hass: HomeAssistant) -> None:
     entity_id = f"{DOMAIN}.test_media_player"
     attributes = {ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature.NEXT_TRACK}
 
+    # Test when playing
     hass.states.async_set(entity_id, STATE_PLAYING, attributes=attributes)
 
     calls = async_mock_service(hass, DOMAIN, SERVICE_MEDIA_NEXT_TRACK)
@@ -143,7 +144,26 @@ async def test_next_media_player_intent(hass: HomeAssistant) -> None:
     assert call.service == SERVICE_MEDIA_NEXT_TRACK
     assert call.data == {"entity_id": entity_id}
 
-    # Test if not playing
+    # Test when paused
+
+    hass.states.async_set(entity_id, STATE_PAUSED, attributes=attributes)
+    calls = async_mock_service(hass, DOMAIN, SERVICE_MEDIA_NEXT_TRACK)
+
+    response = await intent.async_handle(
+        hass,
+        "test",
+        media_player_intent.INTENT_MEDIA_NEXT,
+    )
+    await hass.async_block_till_done()
+
+    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert len(calls) == 1
+    call = calls[0]
+    assert call.domain == DOMAIN
+    assert call.service == SERVICE_MEDIA_NEXT_TRACK
+    assert call.data == {"entity_id": entity_id}
+
+    # Test when idle
     hass.states.async_set(entity_id, STATE_IDLE, attributes=attributes)
 
     with pytest.raises(intent.MatchFailedError):
