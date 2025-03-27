@@ -46,10 +46,18 @@ class BucketHolder:
         """Split tests into buckets."""
         avg_execution_time = test_folder.approx_execution_time / self._bucket_count
         avg_not_measured_files = test_folder.not_measured_files / self._bucket_count
-        digits = len(str(test_folder.approx_execution_time))
+        digits = len(str(round(test_folder.approx_execution_time, 0)))
         sorted_tests = sorted(
             test_folder.get_all_flatten(),
-            key=lambda x: (x.not_measured_files, -x.approx_execution_time),
+            key=lambda x: (
+                -x.approx_execution_time,
+                -x.count_children() if isinstance(x, TestFolder) else 0,
+                x.not_measured_files,
+            ),
+        )
+        bucket_sort_keys = (
+            lambda x: (x.not_measured_files, x.approx_execution_time),
+            lambda x: (x.approx_execution_time, x.not_measured_files),
         )
         for tests in sorted_tests:
             if tests.added_to_bucket:
@@ -57,19 +65,13 @@ class BucketHolder:
                 continue
 
             print(
-                f"{tests.approx_execution_time:>{digits}} approx execution time for {tests.path}"
+                f"~{round(tests.approx_execution_time, 2):>{digits}}s execution time for {tests.path}"
             )
             is_file = isinstance(tests, TestFile)
-            for smallest_bucket in (
-                min(
-                    self._buckets,
-                    key=lambda x: (x.not_measured_files, x.approx_execution_time),
-                ),
-                min(
-                    self._buckets,
-                    key=lambda x: (x.approx_execution_time, x.not_measured_files),
-                ),
-            ):
+
+            for sort_key in bucket_sort_keys:
+                smallest_bucket = min(self._buckets, key=sort_key)
+
                 if (
                     (
                         smallest_bucket.approx_execution_time
@@ -103,7 +105,8 @@ class BucketHolder:
         with Path("pytest_buckets.txt").open("w") as file:
             for idx, bucket in enumerate(self._buckets):
                 print(
-                    f"Bucket {idx + 1} execution time is ~{bucket.approx_execution_time}s with {bucket.not_measured_files} not measured files"
+                    f"Bucket {idx + 1} execution time should be ~{bucket.approx_execution_time}s"
+                    f" with {bucket.not_measured_files} not measured files"
                 )
                 file.write(bucket.get_paths_line())
 
@@ -157,6 +160,14 @@ class TestFolder:
         """Return if added to bucket."""
         return all(test.added_to_bucket for test in self.children.values())
 
+    def count_children(self) -> int:
+        """Return the number of children."""
+        return len(self.children) + sum(
+            child.count_children()
+            for child in self.children.values()
+            if isinstance(child, TestFolder)
+        )
+
     def add_to_bucket(self) -> None:
         """Add test file to bucket."""
         if self.added_to_bucket:
@@ -168,11 +179,13 @@ class TestFolder:
         """Return representation."""
         return f"TestFolder(approx_execution_time={self.approx_execution_time}, children={len(self.children)})"
 
-    def add_test_file(self, path: Path, execution_time: float) -> None:
+    def add_test_file(
+        self, path: Path, execution_time: float, skip_file_if_present: bool
+    ) -> None:
         """Add test file to folder."""
-        self._add_test_file(TestFile(path, self, execution_time))
+        self._add_test_file(TestFile(path, self, execution_time), skip_file_if_present)
 
-    def _add_test_file(self, file: TestFile) -> None:
+    def _add_test_file(self, file: TestFile, skip_file_if_present: bool) -> None:
         """Add test file to folder."""
         path = file.path
         file.parent = self
@@ -180,7 +193,11 @@ class TestFolder:
         if not relative_path.parts:
             raise ValueError("Path is not a child of this folder")
 
-        if len(relative_path.parts) == 1 and path not in self.children:
+        if len(relative_path.parts) == 1:
+            if path in self.children:
+                if skip_file_if_present:
+                    return
+                raise ValueError(f"File already exists: {path}")
             self.children[path] = file
             return
 
@@ -189,7 +206,7 @@ class TestFolder:
             self.children[child_path] = child = TestFolder(child_path)
         elif not isinstance(child, TestFolder):
             raise ValueError("Child is not a folder")
-        child._add_test_file(file)
+        child._add_test_file(file, skip_file_if_present)
 
     def get_all_flatten(self) -> list[TestFolder | TestFile]:
         """Return self and all children as flatten list."""
@@ -207,7 +224,7 @@ def process_execution_time_file(
 ) -> None:
     """Process the execution time file."""
     for file, execution_time in load_json_object(execution_time_file).items():
-        test_folder.add_test_file(Path(file), cast(float, execution_time))
+        test_folder.add_test_file(Path(file), cast(float, execution_time), False)
 
 
 def add_missing_test_files(folder: Path, test_folder: TestFolder) -> None:
@@ -216,7 +233,7 @@ def add_missing_test_files(folder: Path, test_folder: TestFolder) -> None:
         if path.is_dir():
             add_missing_test_files(path, test_folder)
         elif path.name.startswith("test_") and path.suffix == ".py":
-            test_folder.add_test_file(path, 0.0)
+            test_folder.add_test_file(path, 0.0, True)
 
 
 def main() -> None:
