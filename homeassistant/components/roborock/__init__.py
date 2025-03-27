@@ -23,6 +23,8 @@ from roborock.web_api import RoborockApiClient
 from homeassistant.const import CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_BASE_URL, CONF_USER_DATA, DOMAIN, PLATFORMS
 from .coordinator import (
@@ -44,7 +46,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
     user_data = UserData.from_dict(entry.data[CONF_USER_DATA])
-    api_client = RoborockApiClient(entry.data[CONF_USERNAME], entry.data[CONF_BASE_URL])
+    api_client = RoborockApiClient(
+        entry.data[CONF_USERNAME],
+        entry.data[CONF_BASE_URL],
+        session=async_get_clientsession(hass),
+    )
     _LOGGER.debug("Getting home data")
     try:
         home_data = await api_client.get_home_data_v2(user_data)
@@ -133,6 +139,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
     entry.runtime_data = valid_coordinators
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    device_registry = dr.async_get(hass)
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, config_entry_id=entry.entry_id
+    )
+    for device in device_entries:
+        # Remove any devices that are no longer in the account.
+        # The API returns all devices, even if they are offline
+        device_duids = {
+            identifier[1].replace("_dock", "") for identifier in device.identifiers
+        }
+        if any(device_duid in device_map for device_duid in device_duids):
+            continue
+        _LOGGER.info(
+            "Removing device: %s because it is no longer exists in your account",
+            device.name,
+        )
+        device_registry.async_update_device(
+            device_id=device.id,
+            remove_config_entry_id=entry.entry_id,
+        )
 
     return True
 

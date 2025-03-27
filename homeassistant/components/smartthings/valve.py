@@ -30,7 +30,7 @@ async def async_setup_entry(
     """Add valves for a config entry."""
     entry_data = entry.runtime_data
     async_add_entities(
-        SmartThingsValve(entry_data.client, entry_data.rooms, device)
+        SmartThingsValve(entry_data.client, device)
         for device in entry_data.devices.values()
         if Capability.VALVE in device.status[MAIN]
     )
@@ -43,14 +43,12 @@ class SmartThingsValve(SmartThingsEntity, ValveEntity):
     _attr_reports_position = False
     _attr_name = None
 
-    def __init__(
-        self, client: SmartThings, rooms: dict[str, str], device: FullDevice
-    ) -> None:
+    def __init__(self, client: SmartThings, device: FullDevice) -> None:
         """Init the class."""
-        super().__init__(client, device, rooms, {Capability.VALVE})
+        super().__init__(client, device, {Capability.VALVE})
         self._attr_device_class = DEVICE_CLASS_MAP.get(
-            device.device.components[0].user_category
-            or device.device.components[0].manufacturer_category
+            device.device.components[MAIN].user_category
+            or device.device.components[MAIN].manufacturer_category
         )
 
     async def async_open_valve(self) -> None:
