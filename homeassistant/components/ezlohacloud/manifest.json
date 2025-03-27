@@ -7,7 +7,12 @@
   "documentation": "https://www.home-assistant.io/integrations/ezlohacloud",
   "homekit": {},
   "iot_class": "cloud_polling",
-  "requirements": ["requests", "tomli", "tomlkit", "aiohttp"],
+  "requirements": [
+    "requests",
+    "tomli==2.0.1",
+    "tomlkit==0.12.4",
+    "aiohttp"
+  ],
   "ssdp": [],
   "zeroconf": []
 }
