@@ -180,23 +180,15 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 if not await mower.connect(device):
                     errors["base"] = "invalid_auth"
-
-                    return self.async_show_form(
-                        step_id="reauth_confirm",
-                        data_schema=vol.Schema(
-                            {
-                                vol.Required(CONF_ADDRESS): str,
-                                vol.Required(CONF_PIN): str,
-                            },
-                        ),
-                        errors=errors,
+                else:
+                    await self.async_set_unique_id(
+                        self.address, raise_on_progress=False
                     )
+                    self._abort_if_unique_id_configured()
+                    return await self.async_step_confirm()
+
             except (TimeoutError, BleakError):
                 return self.async_abort(reason="cannot_connect")
-
-            await self.async_set_unique_id(self.address, raise_on_progress=False)
-            self._abort_if_unique_id_configured()
-            return await self.async_step_confirm()
 
         return self.async_show_form(
             step_id="reauth_confirm",
