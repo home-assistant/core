@@ -10,6 +10,11 @@ from pyiotdevice import (
     CommunicationErrorException,
     InvalidDataException,
     async_send_operation_data,
+    get_fan_mode_value,
+    get_hvac_mode_value,
+    map_fan_speed,
+    map_hvac_mode,
+    prepare_device_payload,
 )
 
 from homeassistant.components.climate import (
@@ -80,7 +85,10 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
         self._ip_address = self._host
         self._poll_interval = device_data.get("poll_interval")  # For future use
         self._command_suffix = device_data.get("command_suffix")
-        self._device_info = dict(device_data)
+        self._device_info = dict(
+            device_data,
+            fw_ver=self.coordinator.data.get("port1", {}).get("fw_ver", "unknown"),
+        )
         self._unique_id = str(device_data.get("device_apn", ""))
         self._power_state = 0  # default is Off
         self._attr_temperature_unit = UnitOfTemperature.CELSIUS
@@ -216,59 +224,22 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
         """Return the supported step size for target temperature."""
         return 1.0  # Set the step size to 1 degree
 
-    def map_hvac_mode(self, hvac_value):
-        """Map device HVAC mode value to Home Assistant HVAC modes."""
-        hvac_mapping = {
-            0: HVACMode.OFF,
-            6: HVACMode.FAN_ONLY,
-            3: HVACMode.COOL,
-            2: HVACMode.DRY,
-            4: HVACMode.HEAT,
-            1: HVACMode.AUTO,
-        }
-        return hvac_mapping.get(
-            hvac_value, HVACMode.OFF
-        )  # Default to HVAC_MODE_OFF if value is unknown
-
-    def map_fan_speed(self, fan_value):
-        """Map device fan speed value to Home Assistant fan modes."""
-        fan_mapping = {
-            17: "auto",
-            7: "high",
-            6: "medium_high",
-            5: "medium",
-            4: "low_medium",
-            3: "low",
-            18: "quiet",
-        }
-        return fan_mapping.get(
-            fan_value, "auto"
-        )  # Default to "auto" if value is unknown
-
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC mode on the AC device."""
-        # Map Home Assistant HVAC modes to device modes
-        hvac_mode_mapping = {
-            HVACMode.OFF: 0,
-            HVACMode.FAN_ONLY: 6,
-            HVACMode.COOL: 3,
-            HVACMode.DRY: 2,
-            HVACMode.HEAT: 4,
-            HVACMode.AUTO: 1,
-        }
-
         # Get the corresponding mode value
-        mode_value = hvac_mode_mapping.get(hvac_mode)
+        mode_str = str(hvac_mode).lower()
+        mode_value = get_hvac_mode_value(mode_str)
 
         if mode_value is None:
             _LOGGER.error("Unsupported HVAC mode: %s", hvac_mode)
             return
 
         if mode_value == 0:
-            data = {"port1": {"power": 0}}
+            data = prepare_device_payload(power=0)
         else:
             # Prepare the payload for the device
-            data = {"port1": {"mode": mode_value, "power": 1}}
+            # E.g: {"port1": {"mode": mode_value, "power": 1}}
+            data = prepare_device_payload(mode=mode_value, power=1)
 
         # Serialize the payload to JSON
         json_data = json.dumps(data)
@@ -278,17 +249,6 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set the fan mode on the AC device."""
-        # Map Home Assistant fan modes to device fan modes
-        fan_mode_mapping = {
-            "auto": 17,
-            "high": 7,
-            "medium_high": 6,
-            "medium": 5,
-            "low_medium": 4,
-            "low": 3,
-            "quiet": 18,
-        }
-
         # Fan speed cannot be changed in DRY MODE
         if self._hvac_mode == HVACMode.DRY:
             message = (
@@ -299,14 +259,14 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
             return
 
         # Get the corresponding fan mode value
-        fan_mode_value = fan_mode_mapping.get(fan_mode)
+        fan_mode_value = get_fan_mode_value(fan_mode)
 
         if fan_mode_value is None:
             _LOGGER.error("Unsupported fan mode")
             return
 
         # Prepare the payload for the device
-        data = {"port1": {"fan": fan_mode_value}}
+        data = prepare_device_payload(fan=fan_mode_value)
 
         # Serialize the payload to JSON
         json_data = json.dumps(data)
@@ -342,7 +302,7 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
             return
 
         # Prepare the payload for the device
-        data = {"port1": {"temperature": temperature}}
+        data = prepare_device_payload(temperature=temperature)
 
         # Serialize the payload to JSON
         json_data = json.dumps(data)
@@ -356,17 +316,17 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
         if self._power_state == 1:  # Check if the device is ON
             if preset_mode == PRESET_ECO:
                 # Prepare the payload for the device
-                data = {"port1": {"powerchill": 0, "econo": 1}}
+                data = prepare_device_payload(powerchill=0, econo=1)
                 self._attr_preset_mode = PRESET_ECO
                 self.schedule_update_ha_state()
             elif preset_mode == PRESET_BOOST:
                 # Prepare the payload for the device
-                data = {"port1": {"powerchill": 1, "econo": 0}}
+                data = prepare_device_payload(powerchill=1, econo=0)
                 self._attr_preset_mode = PRESET_BOOST
                 self.schedule_update_ha_state()
             elif preset_mode == PRESET_NONE:
                 # Prepare the payload for the device
-                data = {"port1": {"powerchill": 0, "econo": 0}}
+                data = prepare_device_payload(powerchill=0, econo=0)
                 self._attr_preset_mode = PRESET_NONE
                 self.schedule_update_ha_state()
         else:
@@ -406,7 +366,7 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
             v_swing_value = 0
 
         # Prepare the payload
-        data = {"port1": {"v_swing": v_swing_value}}
+        data = prepare_device_payload(v_swing=v_swing_value)
 
         # Serialize the payload to JSON
         json_data = json.dumps(data)
@@ -432,11 +392,11 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
             self._power_state = port_status.get("power")
             mode_value = port_status.get("mode")
             self._hvac_mode = (
-                self.map_hvac_mode(mode_value) if self._power_state else HVACMode.OFF
+                map_hvac_mode(mode_value) if self._power_state else HVACMode.OFF
             )
             self._target_temperature = port_status.get("temperature")
             self._current_temperature = port_status.get("sensors", {}).get("room_temp")
-            self._fan_mode = self.map_fan_speed(port_status.get("fan"))
+            self._fan_mode = map_fan_speed(port_status.get("fan"))
             # Update vertical swing state
             v_swing_value = port_status.get("v_swing", 0)  # Default to 0 if not present
             self._attr_swing_mode = SWING_VERTICAL if v_swing_value == 1 else SWING_OFF
@@ -481,10 +441,10 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
             self._hvac_mode = HVACMode.OFF
         else:
             mode_value = port_status.get("mode", 0)  # Default to 0 if not present
-            self._hvac_mode = self.map_hvac_mode(mode_value)
+            self._hvac_mode = map_hvac_mode(mode_value)
 
         # Update fan mode
-        self._fan_mode = self.map_fan_speed(port_status.get("fan"))
+        self._fan_mode = map_fan_speed(port_status.get("fan"))
 
         # Update vertical swing state
         v_swing_value = port_status.get("v_swing", 0)  # Default to 0 if not present

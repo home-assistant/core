@@ -8,6 +8,6 @@
   "iot_class": "local_polling",
   "loggers": ["pyiotdevice"],
   "quality_scale": "silver",
-  "requirements": ["pyiotdevice==1.0.14"],
+  "requirements": ["pyiotdevice==1.0.17"],
   "zeroconf": ["_iota._tcp.local."]
 }

@@ -4,7 +4,7 @@ import json
 import logging
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pyiotdevice import InvalidDataException
+from pyiotdevice import InvalidDataException, map_fan_speed, map_hvac_mode
 import pytest
 
 from homeassistant.components.climate import (
@@ -548,16 +548,14 @@ async def test_update_entity_properties_device_off(
         (99, HVACMode.OFF),  # Unknown value should default to HVACMode.OFF
     ],
 )
-def test_map_hvac_mode(mock_config_entry, hvac_value, expected_mode) -> None:
+def test_map_hvac_mode(hvac_value, expected_mode) -> None:
     """Test map_hvac_mode method.
 
     This ensures that device-specific HVAC mode values are correctly mapped
     to Home Assistant HVAC modes.
     """
-    # Create a DaikinClimate instance using the mock_config_entry.
-    climate_entity = DaikinClimate(mock_config_entry)
     # Call map_hvac_mode and check that it returns the expected mode.
-    assert climate_entity.map_hvac_mode(hvac_value) == expected_mode
+    assert map_hvac_mode(hvac_value) == expected_mode
 
 
 @pytest.mark.parametrize(
@@ -573,16 +571,14 @@ def test_map_hvac_mode(mock_config_entry, hvac_value, expected_mode) -> None:
         (99, "auto"),  # Unknown value should default to "auto"
     ],
 )
-def test_map_fan_speed(mock_config_entry, fan_value, expected_mode) -> None:
+def test_map_fan_speed(fan_value, expected_mode) -> None:
     """Test map_fan_speed method for correct fan speed mappings.
 
     This ensures that the device-specific fan speed values are correctly mapped
     to Home Assistant fan mode strings.
     """
-    # Create a DaikinClimate instance using the valid config entry.
-    climate_entity = DaikinClimate(mock_config_entry)
     # Call map_fan_speed and check that it returns the expected mode.
-    assert climate_entity.map_fan_speed(fan_value) == expected_mode
+    assert map_fan_speed(fan_value) == expected_mode
 
 
 @pytest.mark.parametrize(
@@ -691,7 +687,7 @@ def test_device_info(mock_config_entry) -> None:
     expected_manufacturer = "Daikin"
     expected_model = "Smart AC Series"
     # Our fixture doesn't set a firmware version so we expect None.
-    expected_sw_version = None
+    expected_sw_version = "1.0.0"
 
     # Retrieve the device_info property.
     device_info = climate_entity.device_info
