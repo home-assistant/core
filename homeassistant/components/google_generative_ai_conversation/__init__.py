@@ -139,17 +139,11 @@ async def async_setup_entry(
     """Set up Google Generative AI Conversation from a config entry."""
 
     try:
-        client: Client | None = None
 
-        def init_client():
-            nonlocal client
-            client = Client(api_key=entry.data[CONF_API_KEY])
+        def _init_client() -> Client:
+            return Client(api_key=entry.data[CONF_API_KEY])
 
-        await hass.async_add_executor_job(init_client)
-
-        if client is None:
-            raise HomeAssistantError("Google Generative AI client is not initialized")
-
+        client = await hass.async_add_executor_job(_init_client)
         await client.aio.models.get(
             model=entry.options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
             config={"http_options": {"timeout": TIMEOUT_MILLIS}},
