@@ -714,7 +714,8 @@ def _circular_mean_approx(
         # In this case the angles are uniformly distributed and the mean is undefined.
         # This edge case is not handled by the current implementation, but the test
         # checks the behavior is consistent.
-        # We could consider returning None in this case in the future.
+        # We could consider returning None in this case, or returning also an estimate
+        # of the variance.
         (120, 10),
     ],
 )
