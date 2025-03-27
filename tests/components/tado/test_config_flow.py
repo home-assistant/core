@@ -240,6 +240,7 @@ async def test_homekit(hass: HomeAssistant, mock_tado_api: MagicMock) -> None:
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "1"
 
 
 async def test_homekit_already_setup(
