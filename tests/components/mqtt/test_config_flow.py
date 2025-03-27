@@ -39,6 +39,7 @@ from .common import (
     MOCK_SENSOR_SUBENTRY_DATA_SINGLE,
     MOCK_SENSOR_SUBENTRY_DATA_SINGLE_LAST_RESET_TEMPLATE,
     MOCK_SENSOR_SUBENTRY_DATA_SINGLE_STATE_CLASS,
+    MOCK_SWITCH_SUBENTRY_DATA_SINGLE_STATE_CLASS,
 )
 
 from tests.common import MockConfigEntry, MockMqttReasonCode
@@ -2616,6 +2617,7 @@ async def test_migrate_of_incompatible_config_entry(
 @pytest.mark.parametrize(
     (
         "config_subentries_data",
+        "mock_device_user_input",
         "mock_entity_user_input",
         "mock_entity_details_user_input",
         "mock_entity_details_failed_user_input",
@@ -2626,13 +2628,13 @@ async def test_migrate_of_incompatible_config_entry(
     [
         (
             MOCK_NOTIFY_SUBENTRY_DATA_SINGLE,
+            {"name": "Milk notifier", "mqtt_settings": {"qos": 1}},
             {"name": "Milkman alert"},
             None,
             None,
             {
                 "command_topic": "test-topic",
                 "command_template": "{{ value }}",
-                "qos": 0,
                 "retain": False,
             },
             (
@@ -2645,13 +2647,13 @@ async def test_migrate_of_incompatible_config_entry(
         ),
         (
             MOCK_NOTIFY_SUBENTRY_DATA_NO_NAME,
+            {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
             {},
             None,
             None,
             {
                 "command_topic": "test-topic",
                 "command_template": "{{ value }}",
-                "qos": 0,
                 "retain": False,
             },
             (
@@ -2664,6 +2666,7 @@ async def test_migrate_of_incompatible_config_entry(
         ),
         (
             MOCK_SENSOR_SUBENTRY_DATA_SINGLE,
+            {"name": "Test sensor", "mqtt_settings": {"qos": 0}},
             {"name": "Energy"},
             {"device_class": "enum", "options": ["low", "medium", "high"]},
             (
@@ -2708,7 +2711,6 @@ async def test_migrate_of_incompatible_config_entry(
                 "state_topic": "test-topic",
                 "value_template": "{{ value_json.value }}",
                 "advanced_settings": {"expire_after": 30},
-                "qos": 1,
             },
             (
                 (
@@ -2720,6 +2722,7 @@ async def test_migrate_of_incompatible_config_entry(
         ),
         (
             MOCK_SENSOR_SUBENTRY_DATA_SINGLE_STATE_CLASS,
+            {"name": "Test sensor", "mqtt_settings": {"qos": 0}},
             {"name": "Energy"},
             {
                 "state_class": "measurement",
@@ -2731,18 +2734,48 @@ async def test_migrate_of_incompatible_config_entry(
             (),
             "Test sensor Energy",
         ),
+        (
+            MOCK_SWITCH_SUBENTRY_DATA_SINGLE_STATE_CLASS,
+            {"name": "Test switch", "mqtt_settings": {"qos": 0}},
+            {"name": "Outlet"},
+            {"device_class": "outlet"},
+            (),
+            {
+                "command_topic": "test-topic",
+                "command_template": "{{ value }}",
+                "state_topic": "test-topic",
+                "value_template": "{{ value_json.value }}",
+                "optimistic": True,
+            },
+            (
+                (
+                    {"command_topic": "test-topic#invalid"},
+                    {"command_topic": "invalid_publish_topic"},
+                ),
+                (
+                    {
+                        "command_topic": "test-topic",
+                        "state_topic": "test-topic#invalid",
+                    },
+                    {"state_topic": "invalid_subscribe_topic"},
+                ),
+            ),
+            "Test switch Outlet",
+        ),
     ],
     ids=[
         "notify_with_entity_name",
         "notify_no_entity_name",
         "sensor_options",
         "sensor_total",
+        "switch",
     ],
 )
 async def test_subentry_configflow(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     config_subentries_data: dict[str, Any],
+    mock_device_user_input: dict[str, Any],
     mock_entity_user_input: dict[str, Any],
     mock_entity_details_user_input: dict[str, Any],
     mock_entity_details_failed_user_input: tuple[
@@ -2753,7 +2786,7 @@ async def test_subentry_configflow(
     entity_name: str,
 ) -> None:
     """Test the subentry ConfigFlow."""
-    device_name = config_subentries_data["device"]["name"]
+    device_name = mock_device_user_input["name"]
     component = next(iter(config_subentries_data["components"].values()))
 
     await mqtt_mock_entry()
@@ -2780,14 +2813,7 @@ async def test_subentry_configflow(
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        user_input={
-            "name": device_name,
-            "sw_version": "1.0",
-            "hw_version": "2.1 rev a",
-            "model": "Model XL",
-            "model_id": "mn002",
-            "configuration_url": "https://example.com",
-        },
+        user_input=mock_device_user_input,
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "entity"
@@ -2881,6 +2907,10 @@ async def test_subentry_configflow(
     assert subentry_component == next(
         iter(config_subentries_data["components"].values())
     )
+
+    subentry_device_data = next(iter(config_entry.subentries.values())).data["device"]
+    for option, value in mock_device_user_input.items():
+        assert subentry_device_data[option] == value
 
     await hass.async_block_till_done()
 
@@ -3471,7 +3501,6 @@ async def test_subentry_reconfigure_edit_entity_reset_fields(
             },
             {
                 "command_topic": "test-topic2",
-                "qos": 0,
             },
         )
     ],
