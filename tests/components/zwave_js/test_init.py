@@ -455,6 +455,7 @@ async def test_on_node_added_preprovisioned(
             get_device_id(client.driver, node),
             get_device_id_ext(client.driver, node),
         }
+        assert device.sw_version == node.firmware_version
         # There should only be the controller and the preprovisioned device
         assert len(device_registry.devices) == 2
 
