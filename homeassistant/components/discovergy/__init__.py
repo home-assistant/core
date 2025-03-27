@@ -9,7 +9,7 @@ import pydiscovergy.error as discovergyError
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.httpx_client import create_async_httpx_client
 
 from .coordinator import DiscovergyConfigEntry, DiscovergyUpdateCoordinator
 
@@ -21,7 +21,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DiscovergyConfigEntry) -
     client = Discovergy(
         email=entry.data[CONF_EMAIL],
         password=entry.data[CONF_PASSWORD],
-        httpx_client=get_async_client(hass),
+        httpx_client=create_async_httpx_client(hass),
         authentication=BasicAuth(),
     )
 

@@ -3,12 +3,12 @@
 from unittest.mock import Mock
 
 from google.genai.errors import ClientError
-import requests
+import httpx
 
 CLIENT_ERROR_500 = ClientError(
     500,
     Mock(
-        __class__=requests.Response,
+        __class__=httpx.Response,
         json=Mock(
             return_value={
                 "message": "Internal Server Error",
@@ -20,7 +20,7 @@ CLIENT_ERROR_500 = ClientError(
 CLIENT_ERROR_API_KEY_INVALID = ClientError(
     400,
     Mock(
-        __class__=requests.Response,
+        __class__=httpx.Response,
         json=Mock(
             return_value={
                 "message": "'reason': API_KEY_INVALID",
