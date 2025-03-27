@@ -7,14 +7,37 @@ import logging
 from homeassistant.components.homeassistant_hardware.util import guess_firmware_info
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
-from .const import DESCRIPTION, DEVICE, FIRMWARE, FIRMWARE_VERSION, PRODUCT
+from .const import (
+    DESCRIPTION,
+    DEVICE,
+    DOMAIN,
+    FIRMWARE,
+    FIRMWARE_VERSION,
+    PRODUCT,
+    SERIAL_NUMBER,
+    HardwareVariant,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a Home Assistant SkyConnect config entry."""
+
+    variant = HardwareVariant.from_usb_product_name(entry.data[PRODUCT])
+    serial_number = entry.data[SERIAL_NUMBER]
+
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, entry.data[SERIAL_NUMBER])},
+        name="{variant.full_name} ({serial_number[:8]})",
+        model=variant.full_name,
+        manufacturer="Nabu Casa",
+        serial_number=serial_number,
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, ["update"])
 

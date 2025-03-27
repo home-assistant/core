@@ -21,11 +21,20 @@ from homeassistant.components.update import UpdateDeviceClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import FIRMWARE, FIRMWARE_VERSION, NABU_CASA_FIRMWARE_RELEASES_URL
+from .const import (
+    DOMAIN,
+    FIRMWARE,
+    FIRMWARE_VERSION,
+    NABU_CASA_FIRMWARE_RELEASES_URL,
+    PRODUCT,
+    SERIAL_NUMBER,
+    HardwareVariant,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -130,6 +139,7 @@ class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
     """SkyConnect firmware update entity."""
 
     bootloader_reset_type = None
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -141,8 +151,17 @@ class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
         """Initialize the SkyConnect firmware update entity."""
         super().__init__(device, config_entry, update_coordinator, entity_description)
 
-        self._attr_unique_id = (
-            f"{self._config_entry.data['serial_number']}_{self.entity_description.key}"
+        variant = HardwareVariant.from_usb_product_name(
+            self._config_entry.data[PRODUCT]
+        )
+        serial_number = self._config_entry.data[SERIAL_NUMBER]
+
+        self._attr_unique_id = f"{serial_number}_{self.entity_description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, serial_number)},
+            model=variant.full_name,
+            manufacturer="Nabu Casa",
+            serial_number=serial_number,
         )
 
         # Use the cached firmware info if it exists
@@ -154,6 +173,17 @@ class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
                 owners=[],
                 source="homeassistant_sky_connect",
             )
+
+    def _update_attributes(self) -> None:
+        """Recompute the attributes of the entity."""
+        super()._update_attributes()
+
+        assert self.device_entry is not None
+        device_registry = dr.async_get(self.hass)
+        device_registry.async_update_device(
+            device_id=self.device_entry.id,
+            sw_version=self._attr_installed_version,
+        )
 
     @callback
     def _firmware_info_callback(self, firmware_info: FirmwareInfo) -> None:
