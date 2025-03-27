@@ -6,8 +6,8 @@ from typing import Any
 from imeon_inverter_api.inverter import Inverter
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_ADDRESS, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.config_entries import HANDLERS, ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
 from .const import DOMAIN
 
@@ -15,24 +15,28 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_ADDRESS): str,
+        vol.Required(CONF_HOST): str,
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
     }
 )
 
 
+@HANDLERS.register(DOMAIN)
 class ImeonInverterConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle the initial setup flow for Imeon Inverters."""
+
+    VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the user step for creating a new configuration entry."""
+
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            async with Inverter(user_input[CONF_ADDRESS]) as client:
+            async with Inverter(user_input[CONF_HOST]) as client:
                 try:
                     # Check connection
                     if await client.login(
@@ -66,7 +70,7 @@ class ImeonInverterConfigFlow(ConfigFlow, domain=DOMAIN):
 
                     # Create a new configuration entry if login succeeds
                     return self.async_create_entry(
-                        title=user_input[CONF_ADDRESS], data=user_input
+                        title=user_input[CONF_HOST], data=user_input
                     )
 
         return self.async_show_form(

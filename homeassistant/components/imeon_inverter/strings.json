@@ -4,12 +4,12 @@
       "user": {
         "title": "Add Imeon inverter",
         "data": {
-          "address": "[%key:common::config_flow::data::host%]",
+          "host": "[%key:common::config_flow::data::host%]",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "address": "The hostname or IP of your inverter",
+          "host": "The hostname or IP of your inverter",
           "username": "The username of your OS One account",
           "password": "The password of your OS One account"
         }

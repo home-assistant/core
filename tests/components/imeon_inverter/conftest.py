@@ -6,13 +6,13 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from homeassistant.components.imeon_inverter.const import DOMAIN
-from homeassistant.const import CONF_ADDRESS, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
 from tests.common import MockConfigEntry, load_json_object_fixture, patch
 
 # Sample test data
 TEST_USER_INPUT = {
-    CONF_ADDRESS: "192.168.200.1",
+    CONF_HOST: "192.168.200.1",
     CONF_USERNAME: "user@local",
     CONF_PASSWORD: "password",
 }

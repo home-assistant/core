@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant.components.imeon_inverter.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_ADDRESS
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -33,7 +33,7 @@ async def test_form_valid(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == TEST_USER_INPUT[CONF_ADDRESS]
+    assert result["title"] == TEST_USER_INPUT[CONF_HOST]
     assert result["data"] == TEST_USER_INPUT
     assert result["result"].unique_id == TEST_SERIAL
     assert mock_async_setup_entry.call_count == 1

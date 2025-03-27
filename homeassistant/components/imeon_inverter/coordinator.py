@@ -9,7 +9,7 @@ import logging
 from imeon_inverter_api.inverter import Inverter
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ADDRESS, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -47,7 +47,7 @@ class InverterCoordinator(DataUpdateCoordinator[dict[str, str | float | int]]):
             config_entry=entry,
         )
 
-        self._api = Inverter(entry.data[CONF_ADDRESS])
+        self._api = Inverter(entry.data[CONF_HOST])
 
     @property
     def api(self) -> Inverter:
