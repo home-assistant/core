@@ -928,7 +928,11 @@ async def _async_set_up_integrations(
             await _async_setup_multi_components(hass, stage_all_domains, config)
             continue
         try:
-            async with hass.timeout.async_timeout(timeout, cool_down=COOLDOWN_TIME):
+            async with hass.timeout.async_timeout(
+                timeout,
+                cool_down=COOLDOWN_TIME,
+                cancel_message=f"Bootstrap stage {name} timeout",
+            ):
                 await _async_setup_multi_components(hass, stage_all_domains, config)
         except TimeoutError:
             _LOGGER.warning(
@@ -940,7 +944,11 @@ async def _async_set_up_integrations(
     # Wrap up startup
     _LOGGER.debug("Waiting for startup to wrap up")
     try:
-        async with hass.timeout.async_timeout(WRAP_UP_TIMEOUT, cool_down=COOLDOWN_TIME):
+        async with hass.timeout.async_timeout(
+            WRAP_UP_TIMEOUT,
+            cool_down=COOLDOWN_TIME,
+            cancel_message="Bootstrap startup wrap up timeout",
+        ):
             await hass.async_block_till_done()
     except TimeoutError:
         _LOGGER.warning(
