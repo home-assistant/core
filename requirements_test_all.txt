@@ -2004,7 +2004,7 @@ python-roborock==2.16.1
 python-smarttub==0.0.39
 
 # homeassistant.components.snoo
-python-snoo==0.6.4
+python-snoo==0.6.5
 
 # homeassistant.components.songpal
 python-songpal==0.16.2
