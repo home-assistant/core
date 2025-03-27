@@ -18,6 +18,9 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, entry):
     """Fetch the configuration data from the entry."""
+    # Prevent duplicate setups
+    if entry.entry_id in hass.data.get("thesilentwave", {}):
+        return False
 
     # Fetch the configuration data from the entry
     name = entry.data.get("name", "TheSilentWave")
@@ -32,6 +35,9 @@ async def async_setup_entry(hass, entry):
     # Register the sensor entity
     hass.data.setdefault("thesilentwave", {})
     hass.data["thesilentwave"][entry.entry_id] = coordinator
+
+    # Set runtime data
+    entry.runtime_data = {"coordinator": coordinator}
 
     # Add the sensor entity to Home Assistant
     await hass.config_entries.async_forward_entry_setups(entry, ["sensor"])
