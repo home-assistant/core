@@ -43,7 +43,8 @@ FIRMWARE_ENTITY_DESCRIPTIONS: dict[
     ApplicationType | None, FirmwareUpdateEntityDescription
 ] = {
     ApplicationType.EZSP: FirmwareUpdateEntityDescription(
-        key="firmware",
+        key="radio_firmware",
+        translation_key="radio_firmware",
         display_precision=0,
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
@@ -54,7 +55,8 @@ FIRMWARE_ENTITY_DESCRIPTIONS: dict[
         firmware_name="EmberZNet",
     ),
     ApplicationType.SPINEL: FirmwareUpdateEntityDescription(
-        key="firmware",
+        key="radio_firmware",
+        translation_key="radio_firmware",
         display_precision=0,
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
@@ -65,7 +67,8 @@ FIRMWARE_ENTITY_DESCRIPTIONS: dict[
         firmware_name="OpenThread RCP",
     ),
     None: FirmwareUpdateEntityDescription(
-        key="firmware",
+        key="radio_firmware",
+        translation_key="radio_firmware",
         display_precision=0,
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
