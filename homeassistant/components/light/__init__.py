@@ -465,7 +465,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             ):
                 params.pop(_DEPRECATED_ATTR_COLOR_TEMP.value)
                 color_temp = params.pop(ATTR_COLOR_TEMP_KELVIN)
-                brightness = params.get(ATTR_BRIGHTNESS, light.brightness)
+                brightness = cast(int, params.get(ATTR_BRIGHTNESS, light.brightness))
                 params[ATTR_RGBWW_COLOR] = color_util.color_temperature_to_rgbww(
                     color_temp,
                     brightness,

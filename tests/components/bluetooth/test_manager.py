@@ -1019,8 +1019,6 @@ async def test_goes_unavailable_dismisses_discovery_and_makes_discoverable(
 
         def clear_all_devices(self) -> None:
             """Clear all devices."""
-            self._discovered_device_advertisement_datas.clear()
-            self._discovered_device_timestamps.clear()
             self._previous_service_info.clear()
 
     connector = (
@@ -1446,8 +1444,6 @@ async def test_bluetooth_rediscover(
 
         def clear_all_devices(self) -> None:
             """Clear all devices."""
-            self._discovered_device_advertisement_datas.clear()
-            self._discovered_device_timestamps.clear()
             self._previous_service_info.clear()
 
     connector = (
@@ -1625,8 +1621,6 @@ async def test_bluetooth_rediscover_no_match(
 
         def clear_all_devices(self) -> None:
             """Clear all devices."""
-            self._discovered_device_advertisement_datas.clear()
-            self._discovered_device_timestamps.clear()
             self._previous_service_info.clear()
 
     connector = (
