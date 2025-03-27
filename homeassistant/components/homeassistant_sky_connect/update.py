@@ -159,7 +159,8 @@ class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
         self._attr_unique_id = f"{serial_number}_{self.entity_description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, serial_number)},
-            name=variant.full_name,
+            name=f"{variant.full_name} ({serial_number[:8]})",
+            model=variant.full_name,
             manufacturer="Nabu Casa",
             serial_number=serial_number,
         )

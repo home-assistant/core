@@ -65,7 +65,7 @@ async def test_yellow_update_entity(hass: HomeAssistant) -> None:
     state_ezsp = hass.states.get(UPDATE_ENTITY_ID)
     assert state_ezsp is not None
     assert state_ezsp.state == "unknown"
-    assert state_ezsp.attributes["title"] == "EmberZNet"
+    assert state_ezsp.attributes["title"] == "EmberZNet Zigbee"
     assert state_ezsp.attributes["installed_version"] == "7.3.1.0"
     assert state_ezsp.attributes["latest_version"] is None
 
