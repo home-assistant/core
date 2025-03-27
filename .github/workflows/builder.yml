@@ -492,7 +492,7 @@ jobs:
         run: |
           # Remove dist, build, and homeassistant.egg-info
           # when build locally for testing!
-          pip install build
+          pip install twine build
           python -m build
 
       - name: Upload package
