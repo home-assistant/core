@@ -28,6 +28,15 @@ class SmartThingsSelectDescription(SelectEntityDescription):
 
 
 CAPABILITIES_TO_SELECT: dict[Capability | str, SmartThingsSelectDescription] = {
+    Capability.DISHWASHER_OPERATING_STATE: SmartThingsSelectDescription(
+        key=Capability.DISHWASHER_OPERATING_STATE,
+        name=None,
+        translation_key="operating_state",
+        requires_remote_control_status=True,
+        options_attribute=Attribute.SUPPORTED_MACHINE_STATES,
+        status_attribute=Attribute.MACHINE_STATE,
+        command=Command.SET_MACHINE_STATE,
+    ),
     Capability.DRYER_OPERATING_STATE: SmartThingsSelectDescription(
         key=Capability.DRYER_OPERATING_STATE,
         name=None,
