@@ -159,8 +159,7 @@ class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
         self._attr_unique_id = f"{serial_number}_{self.entity_description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, serial_number)},
-            name=f"{variant.full_name} ({serial_number[:8]})",
-            model=variant.full_name,
+            name=variant.full_name,
             manufacturer="Nabu Casa",
             serial_number=serial_number,
         )
@@ -183,7 +182,7 @@ class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
         device_registry = dr.async_get(self.hass)
         device_registry.async_update_device(
             device_id=self.device_entry.id,
-            sw_version=self._attr_installed_version,
+            sw_version=f"{self.entity_description.firmware_name} {self._attr_installed_version}",
         )
 
     @callback

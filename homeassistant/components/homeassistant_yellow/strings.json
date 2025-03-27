@@ -152,7 +152,7 @@
   },
   "entity": {
     "update": {
-      "radio_firmware": {
+      "firmware": {
         "name": "Radio firmware"
       }
     }

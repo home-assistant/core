@@ -44,7 +44,6 @@ FIRMWARE_ENTITY_DESCRIPTIONS: dict[
 ] = {
     ApplicationType.EZSP: FirmwareUpdateEntityDescription(
         key="radio_firmware",
-        translation_key="radio_firmware",
         display_precision=0,
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
@@ -56,7 +55,6 @@ FIRMWARE_ENTITY_DESCRIPTIONS: dict[
     ),
     ApplicationType.SPINEL: FirmwareUpdateEntityDescription(
         key="radio_firmware",
-        translation_key="radio_firmware",
         display_precision=0,
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
@@ -68,7 +66,6 @@ FIRMWARE_ENTITY_DESCRIPTIONS: dict[
     ),
     None: FirmwareUpdateEntityDescription(
         key="radio_firmware",
-        translation_key="radio_firmware",
         display_precision=0,
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
@@ -157,7 +154,6 @@ class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, "yellow")},
             name=MODEL,
-            model=MODEL,
             manufacturer=MANUFACTURER,
         )
 
@@ -179,7 +175,7 @@ class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
         device_registry = dr.async_get(self.hass)
         device_registry.async_update_device(
             device_id=self.device_entry.id,
-            sw_version=self._attr_installed_version,
+            sw_version=f"{self.entity_description.firmware_name} {self._attr_installed_version}",
         )
 
     @callback
