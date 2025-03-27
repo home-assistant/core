@@ -140,4 +140,4 @@ tmp_cache
 pytest_buckets.txt
 
 # Contains test execution times used for splitting tests
-pytest-execution-time-report.json
+pytest-execution-time-report*.json
