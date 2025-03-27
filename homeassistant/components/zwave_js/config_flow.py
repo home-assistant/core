@@ -23,7 +23,6 @@ from homeassistant.config_entries import (
     SOURCE_USB,
     ConfigEntry,
     ConfigEntryBaseFlow,
-    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
@@ -784,7 +783,21 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
                     {CONF_USE_ADDON: self.config_entry.data.get(CONF_USE_ADDON, True)}
                 ),
             )
+
         if not user_input[CONF_USE_ADDON]:
+            if self.config_entry.data.get(CONF_USE_ADDON):
+                # Unload the config entry before stopping the add-on.
+                await self.hass.config_entries.async_unload(self.config_entry.entry_id)
+                addon_manager = get_addon_manager(self.hass)
+                _LOGGER.debug("Stopping Z-Wave JS add-on")
+                try:
+                    await addon_manager.async_stop_addon()
+                except AddonError as err:
+                    _LOGGER.error(err)
+                    self.hass.config_entries.async_schedule_reload(
+                        self.config_entry.entry_id
+                    )
+                    raise AbortFlow("addon_stop_failed") from err
             return await self.async_step_manual()
 
         addon_info = await self._async_get_addon_info()
@@ -837,10 +850,7 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
             if addon_info.state == AddonState.RUNNING and not self.restart_addon:
                 return await self.async_step_finish_addon_setup()
 
-            if (
-                self.config_entry.data.get(CONF_USE_ADDON)
-                and self.config_entry.state == ConfigEntryState.LOADED
-            ):
+            if self.config_entry.data.get(CONF_USE_ADDON):
                 # Disconnect integration before restarting add-on.
                 await self.hass.config_entries.async_unload(self.config_entry.entry_id)
 
