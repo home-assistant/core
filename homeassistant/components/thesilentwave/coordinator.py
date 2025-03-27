@@ -30,6 +30,7 @@ class TheSilentWaveCoordinator(DataUpdateCoordinator):
             try:
                 async with session.get(self._url) as response:
                     response.raise_for_status()
+                    # Use await for the coroutine
                     data = await response.text()
                     # Convert "1" to "on" and "0" to "off"
                     return "on" if data.strip() == "1" else "off"
