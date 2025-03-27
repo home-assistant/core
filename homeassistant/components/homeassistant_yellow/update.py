@@ -52,7 +52,7 @@ FIRMWARE_ENTITY_DESCRIPTIONS: dict[
         fw_type="yellow_zigbee_ncp",
         version_key="ezsp_version",
         expected_firmware_type=ApplicationType.EZSP,
-        firmware_name="EmberZNet",
+        firmware_name="EmberZNet Zigbee",
     ),
     ApplicationType.SPINEL: FirmwareUpdateEntityDescription(
         key="radio_firmware",
