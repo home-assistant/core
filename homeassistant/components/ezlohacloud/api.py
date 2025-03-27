@@ -1,7 +1,7 @@
 import logging
 import requests
 
-from .const import EZLO_API_URI
+from .const import EZLO_API_URI, SIGNUP_UUID
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,7 +60,7 @@ def signup(username, email, password):
         "username": username,
         "password": password,
         "email": email,
-        "uuid": "ad58a0a0-3517-11ed-890c-31443f0b6e4c",
+        "uuid": SIGNUP_UUID,
     }
 
     try:
