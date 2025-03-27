@@ -94,10 +94,12 @@ from homeassistant.components.zwave_js.const import (
     CONF_DATA_COLLECTION_OPTED_IN,
     CONF_INSTALLER_MODE,
     DOMAIN,
+    EVENT_DEVICE_ADDED_TO_REGISTRY,
 )
 from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, MockUser
@@ -5765,3 +5767,47 @@ async def test_lookup_device(
         assert not msg["success"]
         assert msg["error"]["code"] == error_message
         assert msg["error"]["message"] == f"Command failed: {error_message}"
+
+
+async def test_subscribe_new_devices(
+    hass: HomeAssistant, integration, client, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test the subscribe_new_devices websocket command."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json_auto_id(
+        {
+            TYPE: "zwave_js/subscribe_new_devices",
+            ENTRY_ID: entry.entry_id,
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    assert msg["result"] is None
+
+    # Simulate a device being registered
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "test-device-id")},
+        name="Test Device",
+        manufacturer="Test Manufacturer",
+        model="Test Model",
+    )
+
+    # Dispatch the event
+    async_dispatcher_send(hass, EVENT_DEVICE_ADDED_TO_REGISTRY, device)
+
+    # Verify we receive the expected message
+    msg = await ws_client.receive_json()
+    assert msg["event"] == {
+        "event": "device registered",
+        "device": {
+            "name": "Test Device",
+            "id": device.id,
+            "manufacturer": "Test Manufacturer",
+            "model": "Test Model",
+        },
+    }

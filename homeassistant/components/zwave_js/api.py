@@ -72,10 +72,7 @@ from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .config_validation import BITMASK_SCHEMA
 from .const import (
@@ -405,6 +402,7 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_subscribe_s2_inclusion)
     websocket_api.async_register_command(hass, websocket_grant_security_classes)
     websocket_api.async_register_command(hass, websocket_validate_dsk_and_enter_pin)
+    websocket_api.async_register_command(hass, websocket_subscribe_new_devices)
     websocket_api.async_register_command(hass, websocket_provision_smart_start_node)
     websocket_api.async_register_command(hass, websocket_unprovision_smart_start_node)
     websocket_api.async_register_command(hass, websocket_get_provisioning_entries)
@@ -981,6 +979,49 @@ async def websocket_validate_dsk_and_enter_pin(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
+        vol.Required(TYPE): "zwave_js/subscribe_new_devices",
+        vol.Required(ENTRY_ID): str,
+    }
+)
+@websocket_api.async_response
+async def websocket_subscribe_new_devices(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Subscribe to new devices."""
+
+    @callback
+    def async_cleanup() -> None:
+        for unsub in unsubs:
+            unsub()
+
+    @callback
+    def device_registered(device: dr.DeviceEntry) -> None:
+        device_details = {
+            "name": device.name,
+            "id": device.id,
+            "manufacturer": device.manufacturer,
+            "model": device.model,
+        }
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID], {"event": "device registered", "device": device_details}
+            )
+        )
+
+    connection.subscriptions[msg["id"]] = async_cleanup
+    msg[DATA_UNSUBSCRIBE] = unsubs = [
+        async_dispatcher_connect(
+            hass, EVENT_DEVICE_ADDED_TO_REGISTRY, device_registered
+        ),
+    ]
+    connection.send_result(msg[ID])
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
         vol.Required(TYPE): "zwave_js/provision_smart_start_node",
         vol.Required(ENTRY_ID): str,
         vol.Required(QR_PROVISIONING_INFORMATION): QR_PROVISIONING_INFORMATION_SCHEMA,
@@ -1056,9 +1097,6 @@ async def websocket_provision_smart_start_node(
         if provisioning_info.additional_properties is None:
             provisioning_info.additional_properties = {}
         provisioning_info.additional_properties["device_id"] = device.id
-
-        # Dispatch event that device was added to registry
-        async_dispatcher_send(hass, EVENT_DEVICE_ADDED_TO_REGISTRY, device)
 
     await driver.controller.async_provision_smart_start_node(provisioning_info)
     if device:
