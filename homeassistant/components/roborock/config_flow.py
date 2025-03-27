@@ -143,6 +143,7 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow started by a dhcp discovery."""
+        await self._async_handle_discovery_without_unique_id()
         device_registry = dr.async_get(self.hass)
         device = device_registry.async_get_device(
             connections={
