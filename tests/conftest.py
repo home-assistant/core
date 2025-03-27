@@ -44,14 +44,13 @@ from syrupy.session import SnapshotSession
 
 from homeassistant import block_async_io
 from homeassistant.exceptions import ServiceNotFound
+from homeassistant.helpers.json import save_json
 
 # Setup patching of recorder functions before any other Home Assistant imports
 from . import patch_recorder
 
 # Setup patching of dt_util time functions before any other Home Assistant imports
 from . import patch_time  # noqa: F401, isort:skip
-
-import json
 
 from _pytest.terminal import TerminalReporter
 
@@ -178,17 +177,18 @@ class PytestExecutionTimeReport:
         if config.option.collectonly:
             return
 
-        raw_data: dict[str, list[float]] = {}
+        data: dict[str, float] = {}
         for replist in terminalreporter.stats.values():
             for rep in replist:
                 if isinstance(rep, pytest.TestReport):
-                    raw_data.setdefault(rep.location[0], []).append(rep.duration)
+                    location = rep.location[0]
+                    if location not in data:
+                        data[location] = rep.duration
+                    else:
+                        data[location] += rep.duration
 
-        data = {filename: sum(values) for filename, values in raw_data.items()}
         time_report_filename = config.option.execution_time_report_name
-        file = pathlib.Path(__file__).parents[1].joinpath(time_report_filename)
-        with open(file, "w", encoding="utf-8") as fp:
-            json.dump(data, fp, indent=2)
+        save_json(time_report_filename, data)
 
 
 def pytest_configure(config: pytest.Config) -> None:
