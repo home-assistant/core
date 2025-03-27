@@ -20,6 +20,7 @@ PLATFORMS = [
     Platform.CLIMATE,
     Platform.COVER,
     Platform.LIGHT,
+    Platform.LOCK,
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,

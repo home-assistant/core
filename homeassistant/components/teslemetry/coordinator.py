@@ -5,13 +5,13 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
-from tesla_fleet_api import EnergySpecific, VehicleSpecific
 from tesla_fleet_api.const import TeslaEnergyPeriod, VehicleDataEndpoint
 from tesla_fleet_api.exceptions import (
     InvalidToken,
     SubscriptionRequired,
     TeslaFleetError,
 )
+from tesla_fleet_api.teslemetry import EnergySite, Vehicle
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -49,7 +49,7 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self,
         hass: HomeAssistant,
         config_entry: TeslemetryConfigEntry,
-        api: VehicleSpecific,
+        api: Vehicle,
         product: dict,
     ) -> None:
         """Initialize Teslemetry Vehicle Update Coordinator."""
@@ -87,7 +87,7 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
         self,
         hass: HomeAssistant,
         config_entry: TeslemetryConfigEntry,
-        api: EnergySpecific,
+        api: EnergySite,
         data: dict,
     ) -> None:
         """Initialize Teslemetry Energy Site Live coordinator."""
@@ -133,7 +133,7 @@ class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
         self,
         hass: HomeAssistant,
         config_entry: TeslemetryConfigEntry,
-        api: EnergySpecific,
+        api: EnergySite,
         product: dict,
     ) -> None:
         """Initialize Teslemetry Energy Info coordinator."""
@@ -169,7 +169,7 @@ class TeslemetryEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self,
         hass: HomeAssistant,
         config_entry: TeslemetryConfigEntry,
-        api: EnergySpecific,
+        api: EnergySite,
     ) -> None:
         """Initialize Teslemetry Energy Info coordinator."""
         super().__init__(

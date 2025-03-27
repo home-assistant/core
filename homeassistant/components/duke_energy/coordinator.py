@@ -8,7 +8,11 @@ from aiodukeenergy import DukeEnergy
 from aiohttp import ClientError
 
 from homeassistant.components.recorder import get_instance
-from homeassistant.components.recorder.models import StatisticData, StatisticMetaData
+from homeassistant.components.recorder.models import (
+    StatisticData,
+    StatisticMeanType,
+    StatisticMetaData,
+)
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
     get_last_statistics,
@@ -137,7 +141,7 @@ class DukeEnergyCoordinator(DataUpdateCoordinator[None]):
                 f"Duke Energy {meter['serviceType'].capitalize()} {serial_number}"
             )
             consumption_metadata = StatisticMetaData(
-                has_mean=False,
+                mean_type=StatisticMeanType.NONE,
                 has_sum=True,
                 name=f"{name_prefix} Consumption",
                 source=DOMAIN,
