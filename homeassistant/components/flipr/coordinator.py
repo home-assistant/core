@@ -1,5 +1,8 @@
 """DataUpdateCoordinator for flipr integration."""
 
+from __future__ import annotations
+
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import Any
@@ -14,13 +17,28 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 _LOGGER = logging.getLogger(__name__)
 
 
+@dataclass
+class FliprData:
+    """The Flipr data class."""
+
+    flipr_coordinators: list[FliprDataUpdateCoordinator]
+    hub_coordinators: list[FliprHubDataUpdateCoordinator]
+
+
+type FliprConfigEntry = ConfigEntry[FliprData]
+
+
 class BaseDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     """Parent class to hold Flipr and Hub data retrieval."""
 
-    config_entry: ConfigEntry
+    config_entry: FliprConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, client: FliprAPIRestClient, flipr_or_hub_id: str
+        self,
+        hass: HomeAssistant,
+        config_entry: FliprConfigEntry,
+        client: FliprAPIRestClient,
+        flipr_or_hub_id: str,
     ) -> None:
         """Initialize."""
         self.device_id = flipr_or_hub_id
@@ -29,6 +47,7 @@ class BaseDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=f"Flipr or Hub data measure for {self.device_id}",
             update_interval=timedelta(minutes=15),
         )

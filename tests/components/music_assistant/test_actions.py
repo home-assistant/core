@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock
 
 from music_assistant_models.media_items import SearchResults
+import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.music_assistant.actions import (
@@ -47,9 +48,22 @@ async def test_search_action(
     assert response == snapshot
 
 
+@pytest.mark.parametrize(
+    "media_type",
+    [
+        "artist",
+        "album",
+        "track",
+        "playlist",
+        "audiobook",
+        "podcast",
+        "radio",
+    ],
+)
 async def test_get_library_action(
     hass: HomeAssistant,
     music_assistant_client: MagicMock,
+    media_type: str,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test music assistant get_library action."""
@@ -60,7 +74,7 @@ async def test_get_library_action(
         {
             ATTR_CONFIG_ENTRY_ID: entry.entry_id,
             ATTR_FAVORITE: False,
-            ATTR_MEDIA_TYPE: "track",
+            ATTR_MEDIA_TYPE: media_type,
         },
         blocking=True,
         return_response=True,

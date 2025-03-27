@@ -175,6 +175,7 @@ BASE_SERVICE_SCHEMA = vol.Schema(
         vol.Optional(ATTR_KEYBOARD_INLINE): cv.ensure_list,
         vol.Optional(ATTR_TIMEOUT): cv.positive_int,
         vol.Optional(ATTR_MESSAGE_TAG): cv.string,
+        vol.Optional(ATTR_MESSAGE_THREAD_ID): vol.Coerce(int),
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -216,6 +217,7 @@ SERVICE_SCHEMA_SEND_POLL = vol.Schema(
         vol.Optional(ATTR_ALLOWS_MULTIPLE_ANSWERS, default=False): cv.boolean,
         vol.Optional(ATTR_DISABLE_NOTIF): cv.boolean,
         vol.Optional(ATTR_TIMEOUT): cv.positive_int,
+        vol.Optional(ATTR_MESSAGE_THREAD_ID): vol.Coerce(int),
     }
 )
 
@@ -546,7 +548,7 @@ class TelegramNotificationService:
         """Initialize the service."""
         self.allowed_chat_ids = allowed_chat_ids
         self._default_user = self.allowed_chat_ids[0]
-        self._last_message_id = {user: None for user in self.allowed_chat_ids}
+        self._last_message_id = dict.fromkeys(self.allowed_chat_ids)
         self._parsers = {
             PARSER_HTML: ParseMode.HTML,
             PARSER_MD: ParseMode.MARKDOWN,
@@ -754,7 +756,8 @@ class TelegramNotificationService:
                 message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
                 context=context,
             )
-            msg_ids[chat_id] = msg.id
+            if msg is not None:
+                msg_ids[chat_id] = msg.id
         return msg_ids
 
     async def delete_message(self, chat_id=None, context=None, **kwargs):

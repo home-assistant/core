@@ -7,6 +7,7 @@ import logging
 
 from pyvesync import VeSync
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -18,13 +19,18 @@ _LOGGER = logging.getLogger(__name__)
 class VeSyncDataCoordinator(DataUpdateCoordinator[None]):
     """Class representing data coordinator for VeSync devices."""
 
-    def __init__(self, hass: HomeAssistant, manager: VeSync) -> None:
+    config_entry: ConfigEntry
+
+    def __init__(
+        self, hass: HomeAssistant, config_entry: ConfigEntry, manager: VeSync
+    ) -> None:
         """Initialize."""
         self._manager = manager
 
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name="VeSyncDataCoordinator",
             update_interval=timedelta(seconds=UPDATE_INTERVAL),
         )

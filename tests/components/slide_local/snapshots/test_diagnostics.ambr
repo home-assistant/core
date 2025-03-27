@@ -19,6 +19,8 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': 'slide',
       'unique_id': '12:34:56:78:90:ab',
       'version': 1,

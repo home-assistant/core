@@ -2,11 +2,38 @@
   "config": {
     "step": {
       "user": {
-        "title": "Define the velbus connection type",
-        "data": {
-          "name": "The name for this velbus connection",
-          "port": "Connection string"
+        "title": "Define the Velbus connection",
+        "description": "How do you want to configure the Velbus hub?",
+        "menu_options": {
+          "network": "Via network connection",
+          "usbselect": "Via USB device"
         }
+      },
+      "network": {
+        "title": "TCP/IP configuration",
+        "data": {
+          "tls": "Use TLS (secure connection)",
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "tls": "Enable this if you use a secure connection to your Velbus interface, like a Signum.",
+          "host": "The IP address or hostname of the Velbus interface.",
+          "port": "The port number of the Velbus interface.",
+          "password": "The password of the Velbus interface, this is only needed if the interface is password protected."
+        },
+        "description": "TCP/IP configuration, in case you use a Signum, VelServ, velbus-tcp or any other Velbus to TCP/IP interface."
+      },
+      "usbselect": {
+        "title": "USB configuration",
+        "data": {
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "port": "Select the serial port for your Velbus USB interface."
+        },
+        "description": "Select the serial port for your Velbus USB interface."
       }
     },
     "error": {
@@ -31,21 +58,21 @@
   "services": {
     "sync_clock": {
       "name": "Sync clock",
-      "description": "Syncs the velbus modules clock to the Home Assistant clock, this is the same as the 'sync clock' from VelbusLink.",
+      "description": "Syncs the Velbus modules clock to the Home Assistant clock, this is the same as the 'sync clock' from VelbusLink.",
       "fields": {
         "interface": {
           "name": "Interface",
-          "description": "The velbus interface to send the command to, this will be the same value as used during configuration."
+          "description": "The Velbus interface to send the command to, this will be the same value as used during configuration."
         },
         "config_entry": {
           "name": "Config entry",
-          "description": "The config entry of the velbus integration"
+          "description": "The config entry of the Velbus integration"
         }
       }
     },
     "scan": {
       "name": "Scan",
-      "description": "Scans the velbus modules, this will be needed if you see unknown module warnings in the logs, or when you added new modules.",
+      "description": "Scans the Velbus modules, this will be needed if you see unknown module warnings in the logs, or when you added new modules.",
       "fields": {
         "interface": {
           "name": "[%key:component::velbus::services::sync_clock::fields::interface::name%]",
@@ -59,7 +86,7 @@
     },
     "clear_cache": {
       "name": "Clear cache",
-      "description": "Clears the velbuscache and then starts a new scan.",
+      "description": "Clears the Velbus cache and then starts a new scan.",
       "fields": {
         "interface": {
           "name": "[%key:component::velbus::services::sync_clock::fields::interface::name%]",
@@ -101,7 +128,7 @@
   "issues": {
     "deprecated_interface_parameter": {
       "title": "Deprecated 'interface' parameter",
-      "description": "The 'interface' parameter in the Velbus service calls is deprecated. The 'config_entry' parameter should be used going forward.\n\nPlease adjust your automations or scripts to fix this issue."
+      "description": "The 'interface' parameter in the Velbus actions is deprecated. The 'config_entry' parameter should be used going forward.\n\nPlease adjust your automations or scripts to fix this issue."
     }
   }
 }

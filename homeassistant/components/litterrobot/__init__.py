@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from pylitterbot import FeederRobot, LitterRobot, LitterRobot3, LitterRobot4, Robot
+import itertools
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -11,29 +11,16 @@ from homeassistant.helpers.device_registry import DeviceEntry
 from .const import DOMAIN
 from .coordinator import LitterRobotConfigEntry, LitterRobotDataUpdateCoordinator
 
-PLATFORMS_BY_TYPE = {
-    Robot: (
-        Platform.BINARY_SENSOR,
-        Platform.SELECT,
-        Platform.SENSOR,
-        Platform.SWITCH,
-    ),
-    LitterRobot: (Platform.VACUUM,),
-    LitterRobot3: (Platform.BUTTON, Platform.TIME),
-    LitterRobot4: (Platform.UPDATE,),
-    FeederRobot: (Platform.BUTTON,),
-}
-
-
-def get_platforms_for_robots(robots: list[Robot]) -> set[Platform]:
-    """Get platforms for robots."""
-    return {
-        platform
-        for robot in robots
-        for robot_type, platforms in PLATFORMS_BY_TYPE.items()
-        if isinstance(robot, robot_type)
-        for platform in platforms
-    }
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.TIME,
+    Platform.UPDATE,
+    Platform.VACUUM,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: LitterRobotConfigEntry) -> bool:
@@ -41,9 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LitterRobotConfigEntry) 
     coordinator = LitterRobotDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
-
-    if platforms := get_platforms_for_robots(coordinator.account.robots):
-        await hass.config_entries.async_forward_entry_setups(entry, platforms)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
@@ -52,9 +37,7 @@ async def async_unload_entry(
 ) -> bool:
     """Unload a config entry."""
     await entry.runtime_data.account.disconnect()
-
-    platforms = get_platforms_for_robots(entry.runtime_data.account.robots)
-    return await hass.config_entries.async_unload_platforms(entry, platforms)
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_remove_config_entry_device(
@@ -65,6 +48,9 @@ async def async_remove_config_entry_device(
         identifier
         for identifier in device_entry.identifiers
         if identifier[0] == DOMAIN
-        for robot in entry.runtime_data.account.robots
-        if robot.serial == identifier[1]
+        for _id in itertools.chain(
+            (robot.serial for robot in entry.runtime_data.account.robots),
+            (pet.id for pet in entry.runtime_data.account.pets),
+        )
+        if _id == identifier[1]
     )

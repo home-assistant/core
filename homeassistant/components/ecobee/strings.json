@@ -25,7 +25,7 @@
         "state_attributes": {
           "preset_mode": {
             "state": {
-              "away_indefinitely": "Away Indefinitely"
+              "away_indefinitely": "Away indefinitely"
             }
           }
         }
@@ -91,7 +91,7 @@
         },
         "fan_min_on_time": {
           "name": "Fan minimum on time",
-          "description": "Minimum number of minutes to run the fan each hour (0 to 60) during the vacation."
+          "description": "Minimum number of minutes to run the fan each hour during the vacation."
         }
       }
     },
@@ -125,7 +125,7 @@
     },
     "set_fan_min_on_time": {
       "name": "Set fan minimum on time",
-      "description": "Sets the minimum fan on time.",
+      "description": "Sets the minimum amount of time that the fan will run per hour.",
       "fields": {
         "entity_id": {
           "name": "Entity",
@@ -133,12 +133,12 @@
         },
         "fan_min_on_time": {
           "name": "[%key:component::ecobee::services::create_vacation::fields::fan_min_on_time::name%]",
-          "description": "New value of fan min on time."
+          "description": "Minimum number of minutes to run the fan each hour."
         }
       }
     },
     "set_dst_mode": {
-      "name": "Set Daylight savings time mode",
+      "name": "Set daylight savings time mode",
       "description": "Enables/disables automatic daylight savings time.",
       "fields": {
         "dst_enabled": {
@@ -172,8 +172,8 @@
       }
     },
     "set_sensors_used_in_climate": {
-      "name": "Set Sensors Used in Climate",
-      "description": "Sets the participating sensors for a climate.",
+      "name": "Set sensors used in climate",
+      "description": "Sets the participating sensors for a climate program.",
       "fields": {
         "entity_id": {
           "name": "Entity",
@@ -198,7 +198,7 @@
       "message": "Invalid sensor for thermostat, available options are: {options}"
     },
     "sensor_lookup_failed": {
-      "message": "There was an error getting the sensor ids from sensor names. Try reloading the ecobee integration."
+      "message": "There was an error getting the sensor IDs from sensor names. Try reloading the ecobee integration."
     }
   },
   "issues": {

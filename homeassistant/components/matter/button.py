@@ -16,7 +16,7 @@ from homeassistant.components.button import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
@@ -26,7 +26,7 @@ from .models import MatterDiscoverySchema
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter Button platform."""
     matter = get_matter(hass)
@@ -49,11 +49,7 @@ class MatterCommandButton(MatterEntity, ButtonEntity):
         """Handle the button press leveraging a Matter command."""
         if TYPE_CHECKING:
             assert self.entity_description.command is not None
-        await self.matter_client.send_device_command(
-            node_id=self._endpoint.node.node_id,
-            endpoint_id=self._endpoint.endpoint_id,
-            command=self.entity_description.command(),
-        )
+        await self.send_device_command(self.entity_description.command())
 
 
 # Discovery schema(s) to map Matter Attributes to HA entities
@@ -67,8 +63,8 @@ DISCOVERY_SCHEMAS = [
             command=lambda: clusters.Identify.Commands.Identify(identifyTime=15),
         ),
         entity_class=MatterCommandButton,
-        required_attributes=(clusters.Identify.Attributes.AcceptedCommandList,),
-        value_contains=clusters.Identify.Commands.Identify.command_id,
+        required_attributes=(clusters.Identify.Attributes.IdentifyType,),
+        value_is_not=clusters.Identify.Enums.IdentifyTypeEnum.kNone,
         allow_multi=True,
     ),
     MatterDiscoverySchema(

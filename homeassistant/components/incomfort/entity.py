@@ -29,4 +29,7 @@ class IncomfortBoilerEntity(IncomfortEntity):
             serial_number=heater.serial_no,
         )
         if coordinator.unique_id:
-            self._attr_device_info["via_device"] = (DOMAIN, coordinator.unique_id)
+            self._attr_device_info["via_device"] = (
+                DOMAIN,
+                coordinator.config_entry.entry_id,
+            )

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import logging
 
 from aiohttp import ClientError
@@ -10,7 +9,6 @@ from imgw_pib import ImgwPib
 from imgw_pib.exceptions import ApiError
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_PLATFORM
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -18,20 +16,11 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_STATION_ID, DOMAIN
-from .coordinator import ImgwPibDataUpdateCoordinator
+from .coordinator import ImgwPibConfigEntry, ImgwPibData, ImgwPibDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
-
-type ImgwPibConfigEntry = ConfigEntry[ImgwPibData]
-
-
-@dataclass
-class ImgwPibData:
-    """Data for the IMGW-PIB integration."""
-
-    coordinator: ImgwPibDataUpdateCoordinator
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ImgwPibConfigEntry) -> bool:
@@ -49,9 +38,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ImgwPibConfigEntry) -> b
             hydrological_details=False,
         )
     except (ClientError, TimeoutError, ApiError) as err:
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={
+                "entry": entry.title,
+                "error": repr(err),
+            },
+        ) from err
 
-    coordinator = ImgwPibDataUpdateCoordinator(hass, imgwpib, station_id)
+    coordinator = ImgwPibDataUpdateCoordinator(hass, entry, imgwpib, station_id)
     await coordinator.async_config_entry_first_refresh()
 
     # Remove binary_sensor entities for which the endpoint has been blocked by IMGW-PIB API

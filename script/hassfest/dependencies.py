@@ -153,8 +153,6 @@ ALLOWED_USED_COMPONENTS = {
 }
 
 IGNORE_VIOLATIONS = {
-    # Has same requirement, gets defaults.
-    ("sql", "recorder"),
     # Sharing a base class
     ("lutron_caseta", "lutron"),
     ("ffmpeg_noise", "ffmpeg_motion"),
@@ -175,6 +173,11 @@ IGNORE_VIOLATIONS = {
     "logbook",
     # Temporary needed for migration until 2024.10
     ("conversation", "assist_pipeline"),
+    # The onboarding integration provides limited backup and cloud APIs for use
+    # during onboarding. The onboarding integration waits for the backup manager
+    # and cloud to be ready before calling any backup or cloud functionality.
+    ("onboarding", "backup"),
+    ("onboarding", "cloud"),
 }
 
 
