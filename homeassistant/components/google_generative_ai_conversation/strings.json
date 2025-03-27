@@ -66,6 +66,27 @@
           "example": "/config/www/image.jpg"
         }
       }
+    },
+    "generate_image": {
+      "name": "Generate image",
+      "description": "Generate an image from a text prompt and optionally images",
+      "fields": {
+        "prompt": {
+          "name": "Prompt",
+          "description": "The prompt",
+          "example": "Draw a cat walking towards the car"
+        },
+        "filenames": {
+          "name": "Attachment filenames",
+          "description": "Attachments to add to the prompt (images, PDFs, etc)",
+          "example": "/config/www/car.jpg"
+        },
+        "output_filename": {
+          "name": "Output filename",
+          "description": "The path to save the generated image",
+          "example": "/config/www/car-with-cat.jpg"
+        }
+      }
     }
   },
   "issues": {
