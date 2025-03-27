@@ -1066,6 +1066,11 @@
       "integration_type": "virtual",
       "supported_by": "opower"
     },
+    "constructa": {
+      "name": "Constructa",
+      "integration_type": "virtual",
+      "supported_by": "home_connect"
+    },
     "control4": {
       "name": "Control4",
       "integration_type": "hub",
