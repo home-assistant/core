@@ -57,6 +57,11 @@
           "problem": "Problem"
         }
       }
+    },
+    "alarm_control_panel": {
+      "zone": {
+        "name": "Zone {index}"
+      }
     }
   }
 }
