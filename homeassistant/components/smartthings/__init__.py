@@ -352,7 +352,10 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                         return {
                             "new_unique_id": f"{device_id}_{MAIN}_{Capability.THREE_AXIS}_{Attribute.THREE_AXIS}_{new_attribute}",
                         }
-                    if attribute == Attribute.MACHINE_STATE:
+                    if attribute in {
+                        Attribute.MACHINE_STATE,
+                        Attribute.COMPLETION_TIME,
+                    }:
                         capability = determine_machine_type(
                             hass, entry.entry_id, device_id
                         )
