@@ -24,9 +24,43 @@
   "exceptions": {
     "select_failed": {
       "message": "Error while updating {name} to {option}"
+    },
+    "switch_on_failed": {
+      "message": "Turning {name} on failed"
+    },
+    "switch_off_failed": {
+      "message": "Turning {name} off failed"
     }
   },
   "entity": {
+    "binary_sensor": {
+      "left_clip": {
+        "name": "Left safety clip"
+      },
+      "right_clip": {
+        "name": "Right safety clip"
+      }
+    },
+    "event": {
+      "event": {
+        "name": "Snoo event",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "timer": "Timer",
+              "cry": "Cry",
+              "command": "Command sent",
+              "safety_clip": "Safety clip changed",
+              "long_activity_press": "Long activity press",
+              "activity": "Activity press",
+              "power": "Power button pressed",
+              "status_requested": "Status requested",
+              "sticky_white_noise_updated": "Sleepytime sounds updated"
+            }
+          }
+        }
+      }
+    },
     "sensor": {
       "state": {
         "name": "State",
@@ -56,6 +90,14 @@
           "level4": "[%key:component::snoo::entity::sensor::state::state::level4%]",
           "stop": "[%key:component::snoo::entity::sensor::state::state::stop%]"
         }
+      }
+    },
+    "switch": {
+      "sticky_white_noise": {
+        "name": "Sleepytime sounds"
+      },
+      "hold": {
+        "name": "Level lock"
       }
     }
   }
