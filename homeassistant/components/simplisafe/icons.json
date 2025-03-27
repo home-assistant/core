@@ -8,6 +8,12 @@
     },
     "set_system_properties": {
       "service": "mdi:cog"
+    },
+    "capture_motion_clip": {
+      "service": "mdi:video"
+    },
+    "capture_motion_image": {
+      "service": "mdi:camera-image"
     }
   }
 }
