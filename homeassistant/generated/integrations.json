@@ -4894,6 +4894,11 @@
       "integration_type": "virtual",
       "supported_by": "wyoming"
     },
+    "pitsos": {
+      "name": "Pitsos",
+      "integration_type": "virtual",
+      "supported_by": "home_connect"
+    },
     "pjlink": {
       "name": "PJLink",
       "integration_type": "hub",
