@@ -547,8 +547,10 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             flow.cur_step = result
             return result
 
-        # Abort and Success results both finish the flow
-        self._async_remove_flow_progress(flow.flow_id)
+        # Abort and Success results both finish the flow.
+        # Suppress UnknownFlow in case the flow is already aborted
+        with suppress(UnknownFlow):
+            self._async_remove_flow_progress(flow.flow_id)
 
         return result
 
