@@ -153,6 +153,7 @@ class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
         self._attr_unique_id = self.entity_description.key
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, "yellow")},
+            name=MODEL,
             model=MODEL,
             manufacturer=MANUFACTURER,
         )
