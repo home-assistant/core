@@ -26,6 +26,9 @@
       "light": {
         "name": "Light"
       },
+      "lux": {
+        "name": "Lux"
+      },
       "virus_risk": {
         "name": "Virus Risk"
       },

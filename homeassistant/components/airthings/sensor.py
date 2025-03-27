@@ -73,6 +73,12 @@ SENSORS: dict[str, SensorEntityDescription] = {
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    "light": SensorEntityDescription(
+        key="light",
+        native_unit_of_measurement=PERCENTAGE,
+        translation_key="light",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
     "lux": SensorEntityDescription(
         key="lux",
         device_class=SensorDeviceClass.ILLUMINANCE,
