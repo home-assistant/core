@@ -33,11 +33,16 @@ from homeassistant.components.mqtt.climate import (
     MQTT_CLIMATE_ATTRIBUTES_BLOCKED,
     VALUE_TEMPLATE_KEYS,
 )
-from homeassistant.const import ATTR_TEMPERATURE, STATE_UNKNOWN, UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.util.unit_system import (
+    METRIC_SYSTEM,
+    US_CUSTOMARY_SYSTEM,
+    UnitSystem,
+)
 
-from .test_common import (
+from .common import (
     help_custom_config,
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
@@ -1823,7 +1828,7 @@ async def test_temperature_unit(
 
 
 @pytest.mark.parametrize(
-    ("hass_config", "temperature_unit", "initial", "min", "max", "current"),
+    ("hass_config", "units", "initial", "min", "max", "current"),
     [
         (
             help_custom_config(
@@ -1836,7 +1841,7 @@ async def test_temperature_unit(
                     },
                 ),
             ),
-            UnitOfTemperature.CELSIUS,
+            METRIC_SYSTEM,
             DEFAULT_INITIAL_TEMPERATURE,
             DEFAULT_MIN_TEMP,
             DEFAULT_MAX_TEMP,
@@ -1854,7 +1859,7 @@ async def test_temperature_unit(
                     },
                 ),
             ),
-            UnitOfTemperature.CELSIUS,
+            METRIC_SYSTEM,
             20.5,
             DEFAULT_MIN_TEMP,
             DEFAULT_MAX_TEMP,
@@ -1871,24 +1876,7 @@ async def test_temperature_unit(
                     },
                 ),
             ),
-            UnitOfTemperature.KELVIN,
-            294,
-            280,
-            308,
-            298,
-        ),
-        (
-            help_custom_config(
-                climate.DOMAIN,
-                DEFAULT_CONFIG,
-                (
-                    {
-                        "temperature_unit": "F",
-                        "current_temperature_topic": "current_temperature",
-                    },
-                ),
-            ),
-            UnitOfTemperature.FAHRENHEIT,
+            US_CUSTOMARY_SYSTEM,
             70,
             45,
             95,
@@ -1899,25 +1887,25 @@ async def test_temperature_unit(
 async def test_alt_temperature_unit(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
-    temperature_unit: UnitOfTemperature,
+    units: UnitSystem,
     initial: float,
     min: float,
     max: float,
     current: float,
 ) -> None:
     """Test deriving the systems temperature unit."""
-    with patch.object(hass.config.units, "temperature_unit", temperature_unit):
-        await mqtt_mock_entry()
+    hass.config.units = units
+    await mqtt_mock_entry()
 
-        state = hass.states.get(ENTITY_CLIMATE)
-        assert state.attributes.get("temperature") == initial
-        assert state.attributes.get("min_temp") == min
-        assert state.attributes.get("max_temp") == max
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get("temperature") == initial
+    assert state.attributes.get("min_temp") == min
+    assert state.attributes.get("max_temp") == max
 
-        async_fire_mqtt_message(hass, "current_temperature", "77")
+    async_fire_mqtt_message(hass, "current_temperature", "77")
 
-        state = hass.states.get(ENTITY_CLIMATE)
-        assert state.attributes.get("current_temperature") == current
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get("current_temperature") == current
 
 
 async def test_setting_attribute_via_mqtt_json_message(

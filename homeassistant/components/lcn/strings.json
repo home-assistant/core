@@ -396,19 +396,19 @@
     },
     "address_to_device_id": {
       "name": "Address to device ID",
-      "description": "Convert LCN address to device ID.",
+      "description": "Converts an LCN address into a device ID.",
       "fields": {
         "id": {
           "name": "Module or group ID",
-          "description": "Target module or group ID."
+          "description": "Module or group number of the target."
         },
         "segment_id": {
           "name": "Segment ID",
-          "description": "Target segment ID."
+          "description": "Segment number of the target."
         },
         "type": {
           "name": "Type",
-          "description": "Target type."
+          "description": "Module type of the target."
         },
         "host": {
           "name": "Host name",

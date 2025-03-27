@@ -108,6 +108,7 @@ PYLUTRON_TYPE_TO_CLASSES = {
     "QsWirelessHorizontalSheerBlind": LutronCasetaShade,
     "Shade": LutronCasetaShade,
     "PalladiomWireFreeShade": LutronCasetaShade,
+    "SerenaEssentialsRollerShade": LutronCasetaShade,
 }
 
 

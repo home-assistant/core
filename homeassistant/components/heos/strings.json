@@ -86,6 +86,10 @@
         }
       }
     },
+    "get_queue": {
+      "name": "Get queue",
+      "description": "Retrieves the queue of the media player."
+    },
     "group_volume_down": {
       "name": "Turn down group volume",
       "description": "Turns down the group volume."
@@ -146,6 +150,9 @@
     },
     "unknown_source": {
       "message": "Unknown source: {source}"
+    },
+    "unsupported_media_content_id": {
+      "message": "Unsupported media_content_id: {media_content_id}"
     }
   },
   "issues": {

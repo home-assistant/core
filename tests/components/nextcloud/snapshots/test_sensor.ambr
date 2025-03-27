@@ -1424,7 +1424,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Cache ttl',
+    'original_name': 'Cache TTL',
     'platform': 'nextcloud',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1436,7 +1436,7 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_cache_ttl-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Cache ttl',
+      'friendly_name': 'my.nc_url.local Cache TTL',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_nc_url_local_cache_ttl',
@@ -1474,7 +1474,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'CPU Load last 15 minutes',
+    'original_name': 'CPU load last 15 minutes',
     'platform': 'nextcloud',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1486,7 +1486,7 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_cpu_load_last_15_minutes-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local CPU Load last 15 minutes',
+      'friendly_name': 'my.nc_url.local CPU load last 15 minutes',
       'unit_of_measurement': 'load',
     }),
     'context': <ANY>,
@@ -1525,7 +1525,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'CPU Load last 1 minute',
+    'original_name': 'CPU load last 1 minute',
     'platform': 'nextcloud',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1537,7 +1537,7 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_cpu_load_last_1_minute-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local CPU Load last 1 minute',
+      'friendly_name': 'my.nc_url.local CPU load last 1 minute',
       'unit_of_measurement': 'load',
     }),
     'context': <ANY>,
@@ -1576,7 +1576,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'CPU Load last 5 minutes',
+    'original_name': 'CPU load last 5 minutes',
     'platform': 'nextcloud',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1588,7 +1588,7 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_cpu_load_last_5_minutes-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local CPU Load last 5 minutes',
+      'friendly_name': 'my.nc_url.local CPU load last 5 minutes',
       'unit_of_measurement': 'load',
     }),
     'context': <ANY>,

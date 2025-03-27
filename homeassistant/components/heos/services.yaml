@@ -1,3 +1,9 @@
+get_queue:
+  target:
+    entity:
+      integration: heos
+      domain: media_player
+
 group_volume_set:
   target:
     entity:

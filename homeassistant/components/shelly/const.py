@@ -25,6 +25,7 @@ from aioshelly.const import (
     MODEL_VALVE,
     MODEL_VINTAGE_V2,
     MODEL_WALL_DISPLAY,
+    MODEL_WALL_DISPLAY_X2,
 )
 
 from homeassistant.components.number import NumberMode
@@ -245,6 +246,7 @@ GEN2_RELEASE_URL = "https://shelly-api-docs.shelly.cloud/gen2/changelog/"
 GEN2_BETA_RELEASE_URL = f"{GEN2_RELEASE_URL}#unreleased"
 DEVICES_WITHOUT_FIRMWARE_CHANGELOG = (
     MODEL_WALL_DISPLAY,
+    MODEL_WALL_DISPLAY_X2,
     MODEL_MOTION,
     MODEL_MOTION_2,
     MODEL_VALVE,
@@ -270,9 +272,6 @@ VIRTUAL_NUMBER_MODE_MAP = {
 API_WS_URL = "/api/shelly/ws"
 
 COMPONENT_ID_PATTERN = re.compile(r"[a-z\d]+:\d+")
-
-# value confirmed by Shelly team
-BLU_TRV_TIMEOUT = 60
 
 ROLE_TO_DEVICE_CLASS_MAP = {
     "current_humidity": SensorDeviceClass.HUMIDITY,

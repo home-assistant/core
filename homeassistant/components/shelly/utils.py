@@ -28,7 +28,12 @@ from yarl import URL
 from homeassistant.components import network
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PORT, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_MODEL,
+    CONF_PORT,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import (
     device_registry as dr,
@@ -54,6 +59,7 @@ from .const import (
     GEN2_RELEASE_URL,
     LOGGER,
     RPC_INPUTS_EVENTS_TYPES,
+    SHAIR_MAX_WORK_HOURS,
     SHBTN_INPUTS_EVENTS_TYPES,
     SHBTN_MODELS,
     SHELLY_EMIT_EVENT_PATTERN,
@@ -322,7 +328,7 @@ def get_info_gen(info: dict[str, Any]) -> int:
 def get_model_name(info: dict[str, Any]) -> str:
     """Return the device model name."""
     if get_info_gen(info) in RPC_GENERATIONS:
-        return cast(str, MODEL_NAMES.get(info["model"], info["model"]))
+        return cast(str, MODEL_NAMES.get(info[CONF_MODEL], info[CONF_MODEL]))
 
     return cast(str, MODEL_NAMES.get(info["type"], info["type"]))
 
@@ -514,7 +520,7 @@ def async_create_issue_unsupported_firmware(
         translation_key="unsupported_firmware",
         translation_placeholders={
             "device_name": entry.title,
-            "ip_address": entry.data["host"],
+            "ip_address": entry.data[CONF_HOST],
         },
     )
 
@@ -650,3 +656,28 @@ def is_rpc_exclude_from_relay(
         return True
 
     return is_rpc_channel_type_light(settings, ch)
+
+
+def get_shelly_air_lamp_life(lamp_seconds: int) -> float:
+    """Return Shelly Air lamp life in percentage."""
+    lamp_hours = lamp_seconds / 3600
+    if lamp_hours >= SHAIR_MAX_WORK_HOURS:
+        return 0.0
+    return 100 * (1 - lamp_hours / SHAIR_MAX_WORK_HOURS)
+
+
+async def get_rpc_scripts_event_types(
+    device: RpcDevice, ignore_scripts: list[str]
+) -> dict[int, list[str]]:
+    """Return a dict of all scripts and their event types."""
+    script_instances = get_rpc_key_instances(device.status, "script")
+    script_events = {}
+    for script in script_instances:
+        script_name = get_rpc_entity_name(device, script)
+        if script_name in ignore_scripts:
+            continue
+
+        script_id = int(script.split(":")[-1])
+        script_events[script_id] = await get_rpc_script_event_types(device, script_id)
+
+    return script_events

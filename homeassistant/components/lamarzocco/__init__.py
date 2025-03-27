@@ -61,6 +61,42 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
         client=client,
     )
 
+    # initialize the firmware update coordinator early to check the firmware version
+    firmware_device = LaMarzoccoMachine(
+        model=entry.data[CONF_MODEL],
+        serial_number=entry.unique_id,
+        name=entry.data[CONF_NAME],
+        cloud_client=cloud_client,
+    )
+
+    firmware_coordinator = LaMarzoccoFirmwareUpdateCoordinator(
+        hass, entry, firmware_device
+    )
+    await firmware_coordinator.async_config_entry_first_refresh()
+    gateway_version = version.parse(
+        firmware_device.firmware[FirmwareType.GATEWAY].current_version
+    )
+
+    if gateway_version >= version.parse("v5.0.9"):
+        # remove host from config entry, it is not supported anymore
+        data = {k: v for k, v in entry.data.items() if k != CONF_HOST}
+        hass.config_entries.async_update_entry(
+            entry,
+            data=data,
+        )
+
+    elif gateway_version < version.parse("v3.4-rc5"):
+        # incompatible gateway firmware, create an issue
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "unsupported_gateway_firmware",
+            is_fixable=False,
+            severity=ir.IssueSeverity.ERROR,
+            translation_key="unsupported_gateway_firmware",
+            translation_placeholders={"gateway_version": str(gateway_version)},
+        )
+
     # initialize local API
     local_client: LaMarzoccoLocalClient | None = None
     if (host := entry.data.get(CONF_HOST)) is not None:
@@ -117,29 +153,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
 
     coordinators = LaMarzoccoRuntimeData(
         LaMarzoccoConfigUpdateCoordinator(hass, entry, device, local_client),
-        LaMarzoccoFirmwareUpdateCoordinator(hass, entry, device),
+        firmware_coordinator,
         LaMarzoccoStatisticsUpdateCoordinator(hass, entry, device),
     )
 
     # API does not like concurrent requests, so no asyncio.gather here
     await coordinators.config_coordinator.async_config_entry_first_refresh()
-    await coordinators.firmware_coordinator.async_config_entry_first_refresh()
     await coordinators.statistics_coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinators
-
-    gateway_version = device.firmware[FirmwareType.GATEWAY].current_version
-    if version.parse(gateway_version) < version.parse("v3.4-rc5"):
-        # incompatible gateway firmware, create an issue
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            "unsupported_gateway_firmware",
-            is_fixable=False,
-            severity=ir.IssueSeverity.ERROR,
-            translation_key="unsupported_gateway_firmware",
-            translation_placeholders={"gateway_version": gateway_version},
-        )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

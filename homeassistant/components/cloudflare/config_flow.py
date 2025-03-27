@@ -9,7 +9,6 @@ from typing import Any
 import pycfdns
 import voluptuous as vol
 
-from homeassistant.components import persistent_notification
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_TOKEN, CONF_ZONE
 from homeassistant.core import HomeAssistant
@@ -118,8 +117,6 @@ class CloudflareConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
-        persistent_notification.async_dismiss(self.hass, "cloudflare_setup")
-
         errors: dict[str, str] = {}
 
         if user_input is not None:

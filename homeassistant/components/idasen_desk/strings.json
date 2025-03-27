@@ -7,7 +7,7 @@
           "address": "Device"
         },
         "data_description": {
-          "address": "The bluetooth device for the desk."
+          "address": "The Bluetooth device for the desk."
         }
       }
     },

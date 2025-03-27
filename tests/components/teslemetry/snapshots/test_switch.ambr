@@ -495,3 +495,21 @@
     'state': 'off',
   })
 # ---
+# name: test_switch_streaming[switch.test_auto_seat_climate_left]
+  'on'
+# ---
+# name: test_switch_streaming[switch.test_auto_seat_climate_right]
+  'off'
+# ---
+# name: test_switch_streaming[switch.test_auto_steering_wheel_heater]
+  'on'
+# ---
+# name: test_switch_streaming[switch.test_charge]
+  'on'
+# ---
+# name: test_switch_streaming[switch.test_defrost]
+  'off'
+# ---
+# name: test_switch_streaming[switch.test_sentry_mode]
+  'on'
+# ---
