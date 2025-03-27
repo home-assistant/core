@@ -27,8 +27,14 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 if TYPE_CHECKING:
     from . import RenaultConfigEntry
 
-from .const import CONF_KAMEREON_ACCOUNT_ID, DEFAULT_SCAN_INTERVAL
-from .renault_vehicle import RenaultVehicleProxy
+from time import time
+
+from .const import (
+    CONF_KAMEREON_ACCOUNT_ID,
+    COOLING_UPDATES_SECONDS,
+    MAX_CALLS_PER_HOURS,
+)
+from .renault_vehicle import COORDINATORS, RenaultVehicleProxy
 
 LOGGER = logging.getLogger(__name__)
 
@@ -45,6 +51,49 @@ class RenaultHub:
         self._account: RenaultAccount | None = None
         self._vehicles: dict[str, RenaultVehicleProxy] = {}
 
+        self.rolling_hour: list[
+            float
+        ] = []  # used to store API calls and have a rolling windows of calls
+
+        self._got_throttled_at_time: float | None = None
+
+    def add_api_call(self, n: int = 1) -> None:
+        """Add an API call to the rolling window of calls."""
+        current = time()
+        for _ in range(n):
+            self.rolling_hour.append(current)
+
+        while len(self.rolling_hour) > 0 and current - self.rolling_hour[0] > 3600:
+            self.rolling_hour.pop(0)
+
+    def get_current_calls_count_per_hour(self) -> int:
+        """Return the number of calls in the last hour."""
+        return int(len(self.rolling_hour))
+
+    def get_wait_time_for_next_call(self) -> float:
+        """Adjust the rolling buffer of calls."""
+        self.add_api_call(0)
+        if self.get_current_calls_count_per_hour() <= MAX_CALLS_PER_HOURS:
+            return 0.0
+
+        return 3600.0 - (time() - self.rolling_hour[0])
+
+    def got_throttled(self) -> None:
+        """We got throttled, we need to adjust the rate limit."""
+        if self._got_throttled_at_time is None:
+            self._got_throttled_at_time = time()
+
+    def check_throttled(self) -> bool:
+        """Check if we are throttled."""
+        if self._got_throttled_at_time is None:
+            return False
+
+        if time() - self._got_throttled_at_time > COOLING_UPDATES_SECONDS:
+            self._got_throttled_at_time = None
+            return False
+
+        return True
+
     async def attempt_login(self, username: str, password: str) -> bool:
         """Attempt login to Renault servers."""
         try:
@@ -58,11 +107,25 @@ class RenaultHub:
     async def async_initialise(self, config_entry: RenaultConfigEntry) -> None:
         """Set up proxy."""
         account_id: str = config_entry.data[CONF_KAMEREON_ACCOUNT_ID]
-        scan_interval = timedelta(seconds=DEFAULT_SCAN_INTERVAL)
 
         self._account = await self._client.get_api_account(account_id)
         vehicles = await self._account.get_vehicles()
-        if vehicles.vehicleLinks:
+
+        if vehicles.vehicleLinks is None:
+            num_vehicle = 0
+        else:
+            num_vehicle = len(vehicles.vehicleLinks)
+
+        if num_vehicle > 0:
+            num_call_per_scan = len(COORDINATORS) * num_vehicle
+        else:
+            num_call_per_scan = len(COORDINATORS)
+
+        scan_interval = timedelta(
+            seconds=(3600 * num_call_per_scan) / MAX_CALLS_PER_HOURS
+        )
+
+        if num_vehicle > 0 and vehicles.vehicleLinks is not None:
             if any(
                 vehicle_link.vehicleDetails is None
                 for vehicle_link in vehicles.vehicleLinks
@@ -84,6 +147,21 @@ class RenaultHub:
                 )
             )
 
+            # all vehicles have been initiated with the right number of active coordinators
+            num_call_per_scan = 0
+            for vehicle_link in vehicles.vehicleLinks:
+                vehicle = self._vehicles[str(vehicle_link.vin)]
+                num_call_per_scan += len(vehicle.coordinators)
+
+            new_scan_interval = timedelta(
+                seconds=(3600 * num_call_per_scan) / MAX_CALLS_PER_HOURS
+            )
+            if new_scan_interval != scan_interval:
+                # we need to change the vehicles with the right scan interval
+                for vehicle_link in vehicles.vehicleLinks:
+                    vehicle = self._vehicles[str(vehicle_link.vin)]
+                    vehicle.update_interval = new_scan_interval
+
     async def async_initialise_vehicle(
         self,
         vehicle_link: KamereonVehiclesLink,
@@ -99,6 +177,7 @@ class RenaultHub:
         vehicle = RenaultVehicleProxy(
             hass=self._hass,
             config_entry=config_entry,
+            hub=self,
             vehicle=await renault_account.get_api_vehicle(vehicle_link.vin),
             details=vehicle_link.vehicleDetails,
             scan_interval=scan_interval,
@@ -113,6 +192,8 @@ class RenaultHub:
             model_id=vehicle.device_info[ATTR_MODEL_ID],
         )
         self._vehicles[vehicle_link.vin] = vehicle
+
+        # the vehicle has been initiated with the right number of active coordinators
 
     async def get_account_ids(self) -> list[str]:
         """Get Kamereon account ids."""

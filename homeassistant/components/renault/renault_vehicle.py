@@ -20,6 +20,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 
 if TYPE_CHECKING:
     from . import RenaultConfigEntry
+    from .renault_hub import RenaultHub
 
 from .const import DOMAIN
 from .coordinator import RenaultDataUpdateCoordinator
@@ -68,6 +69,7 @@ class RenaultVehicleProxy:
         self,
         hass: HomeAssistant,
         config_entry: RenaultConfigEntry,
+        hub: RenaultHub,
         vehicle: RenaultVehicle,
         details: models.KamereonVehicleDetails,
         scan_interval: timedelta,
@@ -87,6 +89,20 @@ class RenaultVehicleProxy:
         self.coordinators: dict[str, RenaultDataUpdateCoordinator] = {}
         self.hvac_target_temperature = 21
         self._scan_interval = scan_interval
+        self._hub = hub
+
+    @property
+    def update_interval(self) -> timedelta:
+        """Return the scan interval for the vehicle."""
+        return self._scan_interval
+
+    @update_interval.setter
+    def update_interval(self, scan_interval: timedelta) -> None:
+        """Set the scan interval for the vehicle."""
+        if scan_interval != self._scan_interval:
+            self._scan_interval = scan_interval
+            for coordinator in self.coordinators.values():
+                coordinator.update_interval = scan_interval
 
     @property
     def details(self) -> models.KamereonVehicleDetails:
@@ -104,6 +120,7 @@ class RenaultVehicleProxy:
             coord.key: RenaultDataUpdateCoordinator(
                 self.hass,
                 self.config_entry,
+                self._hub,
                 LOGGER,
                 name=f"{self.details.vin} {coord.key}",
                 update_method=coord.update_method(self._vehicle),
