@@ -13,7 +13,7 @@
       "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
       "missing_configuration": "The Spotify integration is not configured. Please follow the documentation.",
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
-      "reauth_account_mismatch": "The Spotify account authenticated with, does not match the account needed re-authentication.",
+      "reauth_account_mismatch": "The Spotify account authenticated with does not match the account that needed re-authentication.",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",

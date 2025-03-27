@@ -4,6 +4,9 @@
       "user": {
         "data": {
           "station_id": "Hydrological station"
+        },
+        "data_description": {
+          "station_id": "Select a hydrological station from the list."
         }
       }
     },
@@ -24,6 +27,14 @@
       "water_temperature": {
         "name": "Water temperature"
       }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "An error occurred while connecting to the IMGW-PIB API for {entry}: {error}"
+    },
+    "update_error": {
+      "message": "An error occurred while retrieving data from the IMGW-PIB API for {entry}: {error}"
     }
   }
 }
