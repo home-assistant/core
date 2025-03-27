@@ -172,7 +172,7 @@ class OpenAIOptionsFlow(OptionsFlow):
             ): TemplateSelector(),
             vol.Optional(
                 CONF_LLM_HASS_API,
-                description={"suggested_value": options.get(CONF_LLM_HASS_API)},
+                description={"suggested_value": options.get(CONF_LLM_HASS_API, "none")},
                 default="none",
             ): SelectSelector(SelectSelectorConfig(options=hass_apis)),
             vol.Required(
@@ -188,11 +188,15 @@ class OpenAIOptionsFlow(OptionsFlow):
                 return self.async_create_entry(title="", data=user_input)
 
             options.update(user_input)
+            if CONF_LLM_HASS_API in options and CONF_LLM_HASS_API not in user_input:
+                options.pop(CONF_LLM_HASS_API)
             return await self.async_step_advanced()
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(step_schema),
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(step_schema), options
+            ),
         )
 
     async def async_step_advanced(
@@ -290,7 +294,20 @@ class OpenAIOptionsFlow(OptionsFlow):
                 }
             )
         elif CONF_WEB_SEARCH in options:
-            options.pop(CONF_WEB_SEARCH)
+            options = {
+                k: v
+                for k, v in options.items()
+                if k
+                not in (
+                    CONF_WEB_SEARCH,
+                    CONF_WEB_SEARCH_CONTEXT_SIZE,
+                    CONF_WEB_SEARCH_USER_LOCATION,
+                    CONF_WEB_SEARCH_CITY,
+                    CONF_WEB_SEARCH_REGION,
+                    CONF_WEB_SEARCH_COUNTRY,
+                    CONF_WEB_SEARCH_TIMEZONE,
+                )
+            }
 
         if not step_schema:
             return self.async_create_entry(title="", data=options)
