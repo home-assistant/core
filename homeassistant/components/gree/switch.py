@@ -64,7 +64,7 @@ GREE_SWITCHES: tuple[GreeSwitchEntityDescription, ...] = (
     ),
     GreeSwitchEntityDescription(
         key="Quiet",
-        translation_key="quiet",
+        translation_key="quiet_mode",
         get_value_fn=lambda d: d.quiet,
         set_value_fn=_set_quiet,
     ),
@@ -76,7 +76,7 @@ GREE_SWITCHES: tuple[GreeSwitchEntityDescription, ...] = (
     ),
     GreeSwitchEntityDescription(
         key="XFan",
-        translation_key="xfan",
+        translation_key="xtra_fan",
         get_value_fn=lambda d: d.xfan,
         set_value_fn=_set_xfan,
     ),
