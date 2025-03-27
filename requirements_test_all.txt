@@ -198,7 +198,7 @@ aioazuredevops==2.2.1
 aiobafi6==0.9.0
 
 # homeassistant.components.aws
-aiobotocore==2.13.1
+aiobotocore==2.21.1
 
 # homeassistant.components.comelit
 aiocomelit==0.11.3
@@ -576,7 +576,7 @@ bosch-alarm-mode2==0.4.3
 boschshcpy==0.2.91
 
 # homeassistant.components.aws
-botocore==1.34.131
+botocore==1.37.1
 
 # homeassistant.components.bring
 bring-api==1.1.0
@@ -1967,7 +1967,7 @@ python-juicenet==1.1.0
 python-kasa[speedups]==0.10.2
 
 # homeassistant.components.linkplay
-python-linkplay==0.2.1
+python-linkplay==0.2.2
 
 # homeassistant.components.matter
 python-matter-server==7.0.0

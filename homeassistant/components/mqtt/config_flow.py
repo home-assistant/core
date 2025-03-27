@@ -153,7 +153,6 @@ from .util import (
     learn_more_url,
     valid_birth_will,
     valid_publish_topic,
-    valid_qos_schema,
     valid_subscribe_topic,
     valid_subscribe_topic_template,
 )
@@ -182,7 +181,6 @@ PASSWORD_SELECTOR = TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWO
 QOS_SELECTOR = NumberSelector(
     NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=0, max=2)
 )
-QOS_DATA_SCHEMA = vol.All(QOS_SELECTOR, valid_qos_schema)
 KEEPALIVE_SELECTOR = vol.All(
     NumberSelector(
         NumberSelectorConfig(
@@ -339,7 +337,7 @@ def validate_sensor_platform_config(
     return errors
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class PlatformField:
     """Stores a platform config field schema, required flag and validator."""
 
@@ -374,80 +372,132 @@ def unit_of_measurement_selector(user_data: dict[str, Any | None]) -> Selector:
 
 COMMON_ENTITY_FIELDS = {
     CONF_PLATFORM: PlatformField(
-        SUBENTRY_PLATFORM_SELECTOR, True, str, exclude_from_reconfig=True
+        selector=SUBENTRY_PLATFORM_SELECTOR,
+        required=True,
+        validator=str,
+        exclude_from_reconfig=True,
     ),
-    CONF_NAME: PlatformField(TEXT_SELECTOR, False, str, exclude_from_reconfig=True),
-    CONF_ENTITY_PICTURE: PlatformField(TEXT_SELECTOR, False, cv.url, "invalid_url"),
+    CONF_NAME: PlatformField(
+        selector=TEXT_SELECTOR,
+        required=False,
+        validator=str,
+        exclude_from_reconfig=True,
+    ),
+    CONF_ENTITY_PICTURE: PlatformField(
+        selector=TEXT_SELECTOR, required=False, validator=cv.url, error="invalid_url"
+    ),
 }
 
 PLATFORM_ENTITY_FIELDS = {
     Platform.NOTIFY.value: {},
     Platform.SENSOR.value: {
-        CONF_DEVICE_CLASS: PlatformField(SENSOR_DEVICE_CLASS_SELECTOR, False, str),
-        CONF_STATE_CLASS: PlatformField(SENSOR_STATE_CLASS_SELECTOR, False, str),
+        CONF_DEVICE_CLASS: PlatformField(
+            selector=SENSOR_DEVICE_CLASS_SELECTOR, required=False, validator=str
+        ),
+        CONF_STATE_CLASS: PlatformField(
+            selector=SENSOR_STATE_CLASS_SELECTOR, required=False, validator=str
+        ),
         CONF_UNIT_OF_MEASUREMENT: PlatformField(
-            unit_of_measurement_selector, False, str, custom_filtering=True
+            selector=unit_of_measurement_selector,
+            required=False,
+            validator=str,
+            custom_filtering=True,
         ),
         CONF_SUGGESTED_DISPLAY_PRECISION: PlatformField(
-            SUGGESTED_DISPLAY_PRECISION_SELECTOR,
-            False,
-            cv.positive_int,
+            selector=SUGGESTED_DISPLAY_PRECISION_SELECTOR,
+            required=False,
+            validator=cv.positive_int,
             section="advanced_settings",
         ),
         CONF_OPTIONS: PlatformField(
-            OPTIONS_SELECTOR,
-            False,
-            cv.ensure_list,
+            selector=OPTIONS_SELECTOR,
+            required=False,
+            validator=cv.ensure_list,
             conditions=({"device_class": "enum"},),
         ),
     },
     Platform.SWITCH.value: {
-        CONF_DEVICE_CLASS: PlatformField(SWITCH_DEVICE_CLASS_SELECTOR, False, str),
+        CONF_DEVICE_CLASS: PlatformField(
+            selector=SWITCH_DEVICE_CLASS_SELECTOR, required=False, validator=str
+        ),
     },
 }
 PLATFORM_MQTT_FIELDS = {
     Platform.NOTIFY.value: {
         CONF_COMMAND_TOPIC: PlatformField(
-            TEXT_SELECTOR, True, valid_publish_topic, "invalid_publish_topic"
+            selector=TEXT_SELECTOR,
+            required=True,
+            validator=valid_publish_topic,
+            error="invalid_publish_topic",
         ),
         CONF_COMMAND_TEMPLATE: PlatformField(
-            TEMPLATE_SELECTOR, False, cv.template, "invalid_template"
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=cv.template,
+            error="invalid_template",
         ),
-        CONF_RETAIN: PlatformField(BOOLEAN_SELECTOR, False, bool),
+        CONF_RETAIN: PlatformField(
+            selector=BOOLEAN_SELECTOR, required=False, validator=bool
+        ),
     },
     Platform.SENSOR.value: {
         CONF_STATE_TOPIC: PlatformField(
-            TEXT_SELECTOR, True, valid_subscribe_topic, "invalid_subscribe_topic"
+            selector=TEXT_SELECTOR,
+            required=True,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
         ),
         CONF_VALUE_TEMPLATE: PlatformField(
-            TEMPLATE_SELECTOR, False, cv.template, "invalid_template"
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=cv.template,
+            error="invalid_template",
         ),
         CONF_LAST_RESET_VALUE_TEMPLATE: PlatformField(
-            TEMPLATE_SELECTOR,
-            False,
-            cv.template,
-            "invalid_template",
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=cv.template,
+            error="invalid_template",
             conditions=({CONF_STATE_CLASS: "total"},),
         ),
         CONF_EXPIRE_AFTER: PlatformField(
-            EXPIRE_AFTER_SELECTOR, False, cv.positive_int, section="advanced_settings"
+            selector=EXPIRE_AFTER_SELECTOR,
+            required=False,
+            validator=cv.positive_int,
+            section="advanced_settings",
         ),
     },
     Platform.SWITCH.value: {
         CONF_COMMAND_TOPIC: PlatformField(
-            TEXT_SELECTOR, True, valid_publish_topic, "invalid_publish_topic"
+            selector=TEXT_SELECTOR,
+            required=True,
+            validator=valid_publish_topic,
+            error="invalid_publish_topic",
         ),
         CONF_COMMAND_TEMPLATE: PlatformField(
-            TEMPLATE_SELECTOR, False, cv.template, "invalid_template"
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=cv.template,
+            error="invalid_template",
         ),
         CONF_STATE_TOPIC: PlatformField(
-            TEXT_SELECTOR, False, valid_subscribe_topic, "invalid_subscribe_topic"
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
         ),
         CONF_VALUE_TEMPLATE: PlatformField(
-            TEMPLATE_SELECTOR, False, cv.template, "invalid_template"
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=cv.template,
+            error="invalid_template",
         ),
-        CONF_RETAIN: PlatformField(BOOLEAN_SELECTOR, False, bool),
-        CONF_OPTIMISTIC: PlatformField(BOOLEAN_SELECTOR, False, bool),
+        CONF_RETAIN: PlatformField(
+            selector=BOOLEAN_SELECTOR, required=False, validator=bool
+        ),
+        CONF_OPTIMISTIC: PlatformField(
+            selector=BOOLEAN_SELECTOR, required=False, validator=bool
+        ),
     },
 }
 ENTITY_CONFIG_VALIDATOR: dict[
@@ -460,14 +510,24 @@ ENTITY_CONFIG_VALIDATOR: dict[
 }
 
 MQTT_DEVICE_PLATFORM_FIELDS = {
-    ATTR_NAME: PlatformField(TEXT_SELECTOR, False, str),
-    ATTR_SW_VERSION: PlatformField(TEXT_SELECTOR, False, str),
-    ATTR_HW_VERSION: PlatformField(TEXT_SELECTOR, False, str),
-    ATTR_MODEL: PlatformField(TEXT_SELECTOR, False, str),
-    ATTR_MODEL_ID: PlatformField(TEXT_SELECTOR, False, str),
-    ATTR_CONFIGURATION_URL: PlatformField(TEXT_SELECTOR, False, cv.url, "invalid_url"),
+    ATTR_NAME: PlatformField(selector=TEXT_SELECTOR, required=False, validator=str),
+    ATTR_SW_VERSION: PlatformField(
+        selector=TEXT_SELECTOR, required=False, validator=str
+    ),
+    ATTR_HW_VERSION: PlatformField(
+        selector=TEXT_SELECTOR, required=False, validator=str
+    ),
+    ATTR_MODEL: PlatformField(selector=TEXT_SELECTOR, required=False, validator=str),
+    ATTR_MODEL_ID: PlatformField(selector=TEXT_SELECTOR, required=False, validator=str),
+    ATTR_CONFIGURATION_URL: PlatformField(
+        selector=TEXT_SELECTOR, required=False, validator=cv.url, error="invalid_url"
+    ),
     CONF_QOS: PlatformField(
-        QOS_SELECTOR, False, int, default=DEFAULT_QOS, section="mqtt_settings"
+        selector=QOS_SELECTOR,
+        required=False,
+        validator=int,
+        default=DEFAULT_QOS,
+        section="mqtt_settings",
     ),
 }
 
@@ -1145,7 +1205,7 @@ class MQTTOptionsFlowHandler(OptionsFlow):
                 "birth_payload", description={"suggested_value": birth[CONF_PAYLOAD]}
             )
         ] = TEXT_SELECTOR
-        fields[vol.Optional("birth_qos", default=birth[ATTR_QOS])] = QOS_DATA_SCHEMA
+        fields[vol.Optional("birth_qos", default=birth[ATTR_QOS])] = QOS_SELECTOR
         fields[vol.Optional("birth_retain", default=birth[ATTR_RETAIN])] = (
             BOOLEAN_SELECTOR
         )
@@ -1168,7 +1228,7 @@ class MQTTOptionsFlowHandler(OptionsFlow):
                 "will_payload", description={"suggested_value": will[CONF_PAYLOAD]}
             )
         ] = TEXT_SELECTOR
-        fields[vol.Optional("will_qos", default=will[ATTR_QOS])] = QOS_DATA_SCHEMA
+        fields[vol.Optional("will_qos", default=will[ATTR_QOS])] = QOS_SELECTOR
         fields[vol.Optional("will_retain", default=will[ATTR_RETAIN])] = (
             BOOLEAN_SELECTOR
         )
@@ -1269,13 +1329,9 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             reconfig=True,
         )
         if user_input is not None:
-            merged_user_input, errors = validate_user_input(
-                user_input, MQTT_DEVICE_PLATFORM_FIELDS
-            )
+            _, errors = validate_user_input(user_input, MQTT_DEVICE_PLATFORM_FIELDS)
             if not errors:
-                self._subentry_data[CONF_DEVICE] = cast(
-                    MqttDeviceData, merged_user_input
-                )
+                self._subentry_data[CONF_DEVICE] = cast(MqttDeviceData, user_input)
                 if self.source == SOURCE_RECONFIGURE:
                     return await self.async_step_summary_menu()
                 return await self.async_step_entity()

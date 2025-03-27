@@ -210,7 +210,7 @@ aioazuredevops==2.2.1
 aiobafi6==0.9.0
 
 # homeassistant.components.aws
-aiobotocore==2.13.1
+aiobotocore==2.21.1
 
 # homeassistant.components.comelit
 aiocomelit==0.11.3
@@ -652,10 +652,10 @@ boschshcpy==0.2.91
 
 # homeassistant.components.amazon_polly
 # homeassistant.components.route53
-boto3==1.34.131
+boto3==1.37.1
 
 # homeassistant.components.aws
-botocore==1.34.131
+botocore==1.37.1
 
 # homeassistant.components.bring
 bring-api==1.1.0
@@ -2289,7 +2289,7 @@ pyschlage==2024.11.0
 pysensibo==1.1.0
 
 # homeassistant.components.serial
-pyserial-asyncio-fast==0.14
+pyserial-asyncio-fast==0.16
 
 # homeassistant.components.acer_projector
 # homeassistant.components.crownstone
@@ -2430,7 +2430,7 @@ python-juicenet==1.1.0
 python-kasa[speedups]==0.10.2
 
 # homeassistant.components.linkplay
-python-linkplay==0.2.1
+python-linkplay==0.2.2
 
 # homeassistant.components.lirc
 # python-lirc==1.2.3
