@@ -9,6 +9,7 @@ import pytest
 
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
+    ATTR_MEDIA_SEEK_POSITION,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MP_DOMAIN,
@@ -16,6 +17,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    SERVICE_MEDIA_SEEK,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     SERVICE_VOLUME_DOWN,
@@ -232,3 +234,22 @@ async def test_power_service(
     await hass.services.async_call(MP_DOMAIN, SERVICE_TURN_OFF, data, blocking=True)
 
     mock_russound_client.controllers[1].zones[1].zone_off.assert_called_once()
+
+
+async def test_media_seek(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_russound_client: AsyncMock,
+) -> None:
+    """Test media seek service."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_MEDIA_SEEK,
+        {ATTR_ENTITY_ID: ENTITY_ID_ZONE_1, ATTR_MEDIA_SEEK_POSITION: 100},
+    )
+
+    mock_russound_client.controllers[1].zones[1].set_seek_time.assert_called_once_with(
+        100
+    )

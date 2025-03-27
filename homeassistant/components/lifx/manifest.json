@@ -51,8 +51,8 @@
   "iot_class": "local_polling",
   "loggers": ["aiolifx", "aiolifx_effects", "bitstring"],
   "requirements": [
-    "aiolifx==1.1.2",
+    "aiolifx==1.1.4",
     "aiolifx-effects==0.3.2",
-    "aiolifx-themes==0.5.5"
+    "aiolifx-themes==0.6.4"
   ]
 }

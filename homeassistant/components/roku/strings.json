@@ -23,7 +23,7 @@
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "wrong_device": "This Roku device does not match the existing device id. Please make sure you entered the correct host information."
+      "wrong_device": "This Roku device does not match the existing device ID. Please make sure you entered the correct host information."
     }
   },
   "options": {
@@ -47,7 +47,7 @@
         "name": "Supports AirPlay"
       },
       "supports_ethernet": {
-        "name": "Supports ethernet"
+        "name": "Supports Ethernet"
       },
       "supports_find_remote": {
         "name": "Supports find remote"

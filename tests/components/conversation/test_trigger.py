@@ -5,7 +5,7 @@ import logging
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.conversation import default_agent
+from homeassistant.components.conversation import HOME_ASSISTANT_AGENT, default_agent
 from homeassistant.components.conversation.const import DATA_DEFAULT_ENTITY
 from homeassistant.components.conversation.models import ConversationInput
 from homeassistant.core import Context, HomeAssistant, ServiceCall
@@ -82,12 +82,13 @@ async def test_if_fires_on_event(
         "details": {},
         "device_id": None,
         "user_input": {
-            "agent_id": None,
+            "agent_id": HOME_ASSISTANT_AGENT,
             "context": context.as_dict(),
             "conversation_id": None,
             "device_id": None,
             "language": "en",
             "text": "Ha ha ha",
+            "extra_system_prompt": None,
         },
     }
 
@@ -103,6 +104,7 @@ async def test_response(hass: HomeAssistant) -> None:
                 "trigger": {
                     "platform": "conversation",
                     "command": ["Open the pod bay door Hal"],
+                    "variables": {"name": "Dr. David Bowman"},
                 },
                 "action": {
                     "set_conversation_response": response,
@@ -229,12 +231,13 @@ async def test_response_same_sentence(
         "details": {},
         "device_id": None,
         "user_input": {
-            "agent_id": None,
+            "agent_id": HOME_ASSISTANT_AGENT,
             "context": context.as_dict(),
             "conversation_id": None,
             "device_id": None,
             "language": "en",
             "text": "test sentence",
+            "extra_system_prompt": None,
         },
     }
 
@@ -406,12 +409,13 @@ async def test_same_trigger_multiple_sentences(
         "details": {},
         "device_id": None,
         "user_input": {
-            "agent_id": None,
+            "agent_id": HOME_ASSISTANT_AGENT,
             "context": context.as_dict(),
             "conversation_id": None,
             "device_id": None,
             "language": "en",
             "text": "hello",
+            "extra_system_prompt": None,
         },
     }
 
@@ -633,12 +637,13 @@ async def test_wildcards(hass: HomeAssistant, service_calls: list[ServiceCall]) 
         },
         "device_id": None,
         "user_input": {
-            "agent_id": None,
+            "agent_id": HOME_ASSISTANT_AGENT,
             "context": context.as_dict(),
             "conversation_id": None,
             "device_id": None,
             "language": "en",
             "text": "play the white album by the beatles",
+            "extra_system_prompt": None,
         },
     }
 

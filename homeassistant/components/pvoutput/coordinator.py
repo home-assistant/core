@@ -21,14 +21,15 @@ class PVOutputDataUpdateCoordinator(DataUpdateCoordinator[Status]):
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the PVOutput coordinator."""
-        self.config_entry = entry
         self.pvoutput = PVOutput(
             api_key=entry.data[CONF_API_KEY],
             system_id=entry.data[CONF_SYSTEM_ID],
             session=async_get_clientsession(hass),
         )
 
-        super().__init__(hass, LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
+        super().__init__(
+            hass, LOGGER, config_entry=entry, name=DOMAIN, update_interval=SCAN_INTERVAL
+        )
 
     async def _async_update_data(self) -> Status:
         """Fetch system status from PVOutput."""

@@ -61,6 +61,9 @@
       "total_cleaning_area": {
         "default": "mdi:texture-box"
       },
+      "total_cleaning_count": {
+        "default": "mdi:counter"
+      },
       "vacuum_error": {
         "default": "mdi:alert-circle"
       },

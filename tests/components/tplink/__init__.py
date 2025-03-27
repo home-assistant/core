@@ -2,177 +2,49 @@
 
 from collections import namedtuple
 from dataclasses import replace
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from kasa import (
     BaseProtocol,
     Device,
-    DeviceConfig,
-    DeviceConnectionParameters,
-    DeviceEncryptionType,
-    DeviceFamily,
     DeviceType,
     Feature,
     KasaException,
     Module,
+    ThermostatState,
 )
-from kasa.interfaces import Fan, Light, LightEffect, LightState
+from kasa.interfaces import Fan, Light, LightEffect, LightState, Thermostat
+from kasa.smart.modules import Speaker
 from kasa.smart.modules.alarm import Alarm
+from kasa.smart.modules.clean import AreaUnit, Clean, ErrorCode, Status
 from kasa.smartcam.modules.camera import LOCAL_STREAMING_PORT, Camera
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
-from homeassistant.components.tplink import (
-    CONF_AES_KEYS,
-    CONF_ALIAS,
-    CONF_CAMERA_CREDENTIALS,
-    CONF_CONNECTION_PARAMETERS,
-    CONF_CREDENTIALS_HASH,
-    CONF_HOST,
-    CONF_LIVE_VIEW,
-    CONF_MODEL,
-    CONF_USES_HTTP,
-    Credentials,
-)
 from homeassistant.components.tplink.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.setup import async_setup_component
 
+from .const import (
+    ALIAS,
+    CREDENTIALS_HASH_LEGACY,
+    DEVICE_CONFIG_LEGACY,
+    DEVICE_ID,
+    IP_ADDRESS,
+    MAC_ADDRESS,
+    MODEL,
+)
+
 from tests.common import MockConfigEntry, load_json_value_fixture
 
 ColorTempRange = namedtuple("ColorTempRange", ["min", "max"])  # noqa: PYI024
-
-MODULE = "homeassistant.components.tplink"
-MODULE_CONFIG_FLOW = "homeassistant.components.tplink.config_flow"
-IP_ADDRESS = "127.0.0.1"
-IP_ADDRESS2 = "127.0.0.2"
-IP_ADDRESS3 = "127.0.0.3"
-ALIAS = "My Bulb"
-ALIAS_CAMERA = "My Camera"
-MODEL = "HS100"
-MODEL_CAMERA = "C210"
-MAC_ADDRESS = "aa:bb:cc:dd:ee:ff"
-DEVICE_ID = "123456789ABCDEFGH"
-DEVICE_ID_MAC = "AA:BB:CC:DD:EE:FF"
-DHCP_FORMATTED_MAC_ADDRESS = MAC_ADDRESS.replace(":", "")
-MAC_ADDRESS2 = "11:22:33:44:55:66"
-MAC_ADDRESS3 = "66:55:44:33:22:11"
-DEFAULT_ENTRY_TITLE = f"{ALIAS} {MODEL}"
-DEFAULT_ENTRY_TITLE_CAMERA = f"{ALIAS_CAMERA} {MODEL_CAMERA}"
-CREDENTIALS_HASH_LEGACY = ""
-CONN_PARAMS_LEGACY = DeviceConnectionParameters(
-    DeviceFamily.IotSmartPlugSwitch, DeviceEncryptionType.Xor
-)
-DEVICE_CONFIG_LEGACY = DeviceConfig(IP_ADDRESS)
-DEVICE_CONFIG_DICT_LEGACY = {
-    k: v for k, v in DEVICE_CONFIG_LEGACY.to_dict().items() if k != "credentials"
-}
-CREDENTIALS = Credentials("foo", "bar")
-CREDENTIALS_HASH_AES = "AES/abcdefghijklmnopqrstuvabcdefghijklmnopqrstuv=="
-CREDENTIALS_HASH_KLAP = "KLAP/abcdefghijklmnopqrstuv=="
-CONN_PARAMS_KLAP = DeviceConnectionParameters(
-    DeviceFamily.SmartTapoPlug, DeviceEncryptionType.Klap
-)
-DEVICE_CONFIG_KLAP = DeviceConfig(
-    IP_ADDRESS,
-    credentials=CREDENTIALS,
-    connection_type=CONN_PARAMS_KLAP,
-    uses_http=True,
-)
-CONN_PARAMS_AES = DeviceConnectionParameters(
-    DeviceFamily.SmartTapoPlug, DeviceEncryptionType.Aes
-)
-_test_privkey = (
-    "MIICdwIBADANBgkqhkiG9w0BAQEFAASCAmEwggJdAgEAAoGBAKLJKmBWGj6WYo9sewI8vkqar"
-    "Ed5H1JUr8Jj/LEWLTtV6+Mm4mfyEk6YKFHSmIG4AGgrVsGK/EbEkTZk9CwtixNQpBVc36oN2R"
-    "vuWWV38YnP4vI63mNxTA/gQonCsahjN4HfwE87pM7O5z39aeunoYm6Be663t33DbJH1ZUbZjm"
-    "tAgMBAAECgYB1Bn1KaFvRprcQOIJt51E9vNghQbf8rhj0fIEKpdC6mVhNIoUdCO+URNqnh+hP"
-    "SQIx4QYreUlHbsSeABFxOQSDJm6/kqyQsp59nCVDo/bXTtlvcSJ/sU3riqJNxYqEU1iJ0xMvU"
-    "N1VKKTmik89J8e5sN9R0AFfUSJIk7MpdOoD2QJBANTbV27nenyvbqee/ul4frdt2rrPGcGpcV"
-    "QmY87qbbrZgqgL5LMHHD7T/v/I8D1wRog1sBz/AiZGcnv/ox8dHKsCQQDDx8DCGPySSVqKVua"
-    "yUkBNpglN83wiCXZjyEtWIt+aB1A2n5ektE/o8oHnnOuvMdooxvtid7Mdapi2VLHV7VMHAkAE"
-    "d0GjWwnv2cJpk+VnQpbuBEkFiFjS/loZWODZM4Pv2qZqHi3DL9AA5XPBLBcWQufH7dBvG06RP"
-    "QMj5N4oRfUXAkEAuJJkVliqHNvM4OkGewzyFII4+WVYHNqg43dcFuuvtA27AJQ6qYtYXrvp3k"
-    "phI3yzOIhHTNCea1goepSkR5ODFwJBAJCTRbB+P47aEr/xA51ZFHE6VefDBJG9yg6yK4jcOxg"
-    "5ficXEpx8442okNtlzwa+QHpm/L3JOFrHwiEeVqXtiqY="
-)
-_test_pubkey = (
-    "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCiySpgVho+lmKPbHsCPL5KmqxHeR9SVK/CY"
-    "/yxFi07VevjJuJn8hJOmChR0piBuABoK1bBivxGxJE2ZPQsLYsTUKQVXN+qDdkb7llld/GJz+"
-    "LyOt5jcUwP4EKJwrGoYzeB38BPO6TOzuc9/Wnrp6GJugXuut7d9w2yR9WVG2Y5rQIDAQAB"
-)
-AES_KEYS = {"private": _test_privkey, "public": _test_pubkey}
-DEVICE_CONFIG_AES = DeviceConfig(
-    IP_ADDRESS2,
-    credentials=CREDENTIALS,
-    connection_type=CONN_PARAMS_AES,
-    uses_http=True,
-    aes_keys=AES_KEYS,
-)
-CONN_PARAMS_AES_CAMERA = DeviceConnectionParameters(
-    DeviceFamily.SmartIpCamera, DeviceEncryptionType.Aes, https=True, login_version=2
-)
-DEVICE_CONFIG_AES_CAMERA = DeviceConfig(
-    IP_ADDRESS3,
-    credentials=CREDENTIALS,
-    connection_type=CONN_PARAMS_AES_CAMERA,
-    uses_http=True,
-)
-
-DEVICE_CONFIG_DICT_KLAP = {
-    k: v for k, v in DEVICE_CONFIG_KLAP.to_dict().items() if k != "credentials"
-}
-DEVICE_CONFIG_DICT_AES = {
-    k: v for k, v in DEVICE_CONFIG_AES.to_dict().items() if k != "credentials"
-}
-CREATE_ENTRY_DATA_LEGACY = {
-    CONF_HOST: IP_ADDRESS,
-    CONF_ALIAS: ALIAS,
-    CONF_MODEL: MODEL,
-    CONF_CONNECTION_PARAMETERS: CONN_PARAMS_LEGACY.to_dict(),
-    CONF_USES_HTTP: False,
-}
-
-CREATE_ENTRY_DATA_KLAP = {
-    CONF_HOST: IP_ADDRESS,
-    CONF_ALIAS: ALIAS,
-    CONF_MODEL: MODEL,
-    CONF_CREDENTIALS_HASH: CREDENTIALS_HASH_KLAP,
-    CONF_CONNECTION_PARAMETERS: CONN_PARAMS_KLAP.to_dict(),
-    CONF_USES_HTTP: True,
-}
-CREATE_ENTRY_DATA_AES = {
-    CONF_HOST: IP_ADDRESS2,
-    CONF_ALIAS: ALIAS,
-    CONF_MODEL: MODEL,
-    CONF_CREDENTIALS_HASH: CREDENTIALS_HASH_AES,
-    CONF_CONNECTION_PARAMETERS: CONN_PARAMS_AES.to_dict(),
-    CONF_USES_HTTP: True,
-    CONF_AES_KEYS: AES_KEYS,
-}
-CREATE_ENTRY_DATA_AES_CAMERA = {
-    CONF_HOST: IP_ADDRESS3,
-    CONF_ALIAS: ALIAS_CAMERA,
-    CONF_MODEL: MODEL_CAMERA,
-    CONF_CREDENTIALS_HASH: CREDENTIALS_HASH_AES,
-    CONF_CONNECTION_PARAMETERS: CONN_PARAMS_AES_CAMERA.to_dict(),
-    CONF_USES_HTTP: True,
-    CONF_LIVE_VIEW: True,
-    CONF_CAMERA_CREDENTIALS: {"username": "camuser", "password": "campass"},
-}
-SMALLEST_VALID_JPEG = (
-    "ffd8ffe000104a46494600010101004800480000ffdb00430003020202020203020202030303030406040404040408060"
-    "6050609080a0a090809090a0c0f0c0a0b0e0b09090d110d0e0f101011100a0c12131210130f101010ffc9000b08000100"
-    "0101011100ffcc000600101005ffda0008010100003f00d2cf20ffd9"
-)
-SMALLEST_VALID_JPEG_BYTES = bytes.fromhex(SMALLEST_VALID_JPEG)
 
 
 def _load_feature_fixtures():
@@ -188,6 +60,7 @@ def _load_feature_fixtures():
 
 
 FEATURES_FIXTURE = _load_feature_fixtures()
+FIXTURE_ENUM_TYPES = {"CleanErrorCode": ErrorCode, "CleanAreaUnit": AreaUnit}
 
 
 async def setup_platform_for_device(
@@ -201,7 +74,7 @@ async def setup_platform_for_device(
         _patch_discovery(device=device),
         _patch_connect(device=device),
     ):
-        await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+        await hass.config_entries.async_setup(config_entry.entry_id)
         # Good practice to wait background tasks in tests see PR #112726
         await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -217,15 +90,15 @@ async def snapshot_platform(
     device_entries = dr.async_entries_for_config_entry(device_registry, config_entry_id)
     assert device_entries
     for device_entry in device_entries:
-        assert device_entry == snapshot(
-            name=f"{device_entry.name}-entry"
-        ), f"device entry snapshot failed for {device_entry.name}"
+        assert device_entry == snapshot(name=f"{device_entry.name}-entry"), (
+            f"device entry snapshot failed for {device_entry.name}"
+        )
 
     entity_entries = er.async_entries_for_config_entry(entity_registry, config_entry_id)
     assert entity_entries
-    assert (
-        len({entity_entry.domain for entity_entry in entity_entries}) == 1
-    ), "Please limit the loaded platforms to 1 platform."
+    assert len({entity_entry.domain for entity_entry in entity_entries}) == 1, (
+        "Please limit the loaded platforms to 1 platform."
+    )
 
     translations = await async_get_translations(hass, "en", "entity", [DOMAIN])
     unique_device_classes = []
@@ -233,22 +106,22 @@ async def snapshot_platform(
         if entity_entry.translation_key:
             key = f"component.{DOMAIN}.entity.{entity_entry.domain}.{entity_entry.translation_key}.name"
             single_device_class_translation = False
-            if key not in translations and entity_entry.original_device_class:
+            if key not in translations:  # No name translation
                 if entity_entry.original_device_class not in unique_device_classes:
                     single_device_class_translation = True
                     unique_device_classes.append(entity_entry.original_device_class)
-            assert (
-                (key in translations) or single_device_class_translation
-            ), f"No translation or non unique device_class for entity {entity_entry.unique_id}, expected {key}"
-        assert entity_entry == snapshot(
-            name=f"{entity_entry.entity_id}-entry"
-        ), f"entity entry snapshot failed for {entity_entry.entity_id}"
+            assert (key in translations) or single_device_class_translation, (
+                f"No translation or non unique device_class for entity {entity_entry.unique_id}, expected {key}"
+            )
+        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry"), (
+            f"entity entry snapshot failed for {entity_entry.entity_id}"
+        )
         if entity_entry.disabled_by is None:
             state = hass.states.get(entity_entry.entity_id)
             assert state, f"State not found for {entity_entry.entity_id}"
-            assert state == snapshot(
-                name=f"{entity_entry.entity_id}-state"
-            ), f"state snapshot failed for {entity_entry.entity_id}"
+            assert state == snapshot(name=f"{entity_entry.entity_id}-state"), (
+                f"state snapshot failed for {entity_entry.entity_id}"
+            )
 
 
 async def setup_automation(hass: HomeAssistant, alias: str, entity_id: str) -> None:
@@ -308,12 +181,6 @@ def _mocked_device(
         device_config.host = ip_address
     device.host = ip_address
 
-    if modules:
-        device.modules = {
-            module_name: MODULE_TO_MOCK_GEN[module_name](device)
-            for module_name in modules
-        }
-
     device_features = {}
     if features:
         device_features = {
@@ -331,14 +198,40 @@ def _mocked_device(
         )
     device.features = device_features
 
-    for mod in device.modules.values():
-        mod.get_feature.side_effect = device_features.get
-        mod.has_feature.side_effect = lambda id: id in device_features
+    # Add modules after features so modules can add any required features
+    if modules:
+        device.modules = {
+            module_name: MODULE_TO_MOCK_GEN[module_name](device)
+            for module_name in modules
+        }
 
+    # module features are accessed from a module via get_feature which is
+    # keyed on the module attribute name. Usually this is the same as the
+    # feature.id but not always so accept overrides.
+    module_features = {
+        mod_key if (mod_key := v.expected_module_key) else k: v
+        for k, v in device_features.items()
+    }
+    for mod in device.modules.values():
+        # Some tests remove the feature from device_features to test missing
+        # features, so check the key is still present there.
+        mod.get_feature.side_effect = (
+            lambda mod_id: mod_feat
+            if (mod_feat := module_features.get(mod_id))
+            and mod_feat.id in device_features
+            else None
+        )
+        mod.has_feature.side_effect = (
+            lambda mod_id: (mod_feat := module_features.get(mod_id))
+            and mod_feat.id in device_features
+        )
+
+    device.parent = None
     device.children = []
     if children:
         for child in children:
             child.mac = mac
+            child.parent = device
         device.children = children
     device.device_type = device_type if device_type else DeviceType.Unknown
     if (
@@ -370,6 +263,7 @@ def _mocked_feature(
     unit=None,
     minimum_value=None,
     maximum_value=None,
+    expected_module_key=None,
 ) -> Feature:
     """Get a mocked feature.
 
@@ -379,15 +273,30 @@ def _mocked_feature(
     feature.id = id
     feature.name = name or id.upper()
     feature.set_value = AsyncMock()
-    if not (fixture := FEATURES_FIXTURE.get(id)):
-        assert (
-            require_fixture is False
-        ), f"No fixture defined for feature {id} and require_fixture is True"
-        assert (
-            value is not UNDEFINED
-        ), f"Value must be provided if feature {id} not defined in features.json"
+    if fixture := FEATURES_FIXTURE.get(id):
+        # copy the fixture so tests do not interfere with each other
+        fixture = dict(fixture)
+
+        if enum_type := fixture.get("enum_type"):
+            val = FIXTURE_ENUM_TYPES[enum_type](fixture["value"])
+            fixture["value"] = val
+        if timedelta_type := fixture.get("timedelta_type"):
+            fixture["value"] = timedelta(**{timedelta_type: fixture["value"]})
+
+        if unit_enum_type := fixture.get("unit_enum_type"):
+            val = FIXTURE_ENUM_TYPES[unit_enum_type](fixture["unit"])
+            fixture["unit"] = val
+
+    else:
+        assert require_fixture is False, (
+            f"No fixture defined for feature {id} and require_fixture is True"
+        )
+        assert value is not UNDEFINED, (
+            f"Value must be provided if feature {id} not defined in features.json"
+        )
         fixture = {"value": value, "category": "Primary", "type": "Sensor"}
-    elif value is not UNDEFINED:
+
+    if value is not UNDEFINED:
         fixture["value"] = value
     feature.value = fixture["value"]
 
@@ -406,6 +315,16 @@ def _mocked_feature(
 
     # select
     feature.choices = choices or fixture.get("choices")
+
+    # module features are accessed from a module via get_feature which is
+    # keyed on the module attribute name. Usually this is the same as the
+    # feature.id but not always. module_key indicates the key of the feature
+    # in the module.
+    feature.expected_module_key = (
+        mod_key
+        if (mod_key := fixture.get("expected_module_key", expected_module_key))
+        else None
+    )
 
     return feature
 
@@ -456,12 +375,12 @@ def _mocked_light_effect_module(device) -> LightEffect:
     effect.effect_list = ["Off", "Effect1", "Effect2"]
 
     async def _set_effect(effect_name, *_, **__):
-        assert (
-            effect_name in effect.effect_list
-        ), f"set_effect '{effect_name}' not in {effect.effect_list}"
-        assert device.modules[
-            Module.Light
-        ], "Need a light module to test set_effect method"
+        assert effect_name in effect.effect_list, (
+            f"set_effect '{effect_name}' not in {effect.effect_list}"
+        )
+        assert device.modules[Module.Light], (
+            "Need a light module to test set_effect method"
+        )
         device.modules[Module.Light].state.light_on = True
         effect.effect = effect_name
 
@@ -480,8 +399,22 @@ def _mocked_fan_module(effect) -> Fan:
 def _mocked_alarm_module(device):
     alarm = MagicMock(auto_spec=Alarm, name="Mocked alarm")
     alarm.active = False
+    alarm.alarm_sounds = "Foo", "Bar"
     alarm.play = AsyncMock()
     alarm.stop = AsyncMock()
+
+    device.features["alarm_volume"] = _mocked_feature(
+        "alarm_volume",
+        minimum_value=0,
+        maximum_value=3,
+        value=None,
+    )
+    device.features["alarm_duration"] = _mocked_feature(
+        "alarm_duration",
+        minimum_value=0,
+        maximum_value=300,
+        value=None,
+    )
 
     return alarm
 
@@ -495,6 +428,55 @@ def _mocked_camera_module(device):
     )
 
     return camera
+
+
+def _mocked_thermostat_module(device):
+    therm = MagicMock(auto_spec=Thermostat, name="Mocked thermostat")
+    therm.state = True
+    therm.temperature = 20.2
+    therm.target_temperature = 22.2
+    therm.mode = ThermostatState.Heating
+    therm.set_state = AsyncMock()
+    therm.set_target_temperature = AsyncMock()
+
+    return therm
+
+
+def _mocked_clean_module(device):
+    clean = MagicMock(auto_spec=Clean, name="Mocked clean")
+
+    # methods
+    clean.start = AsyncMock()
+    clean.pause = AsyncMock()
+    clean.resume = AsyncMock()
+    clean.return_home = AsyncMock()
+    clean.set_fan_speed_preset = AsyncMock()
+
+    # properties
+    clean.fan_speed_preset = "Max"
+    clean.error = ErrorCode.Ok
+    clean.battery = 100
+    clean.status = Status.Charged
+
+    # Need to manually create the fan speed preset feature,
+    # as we are going to read its choices through it
+    device.features["vacuum_fan_speed"] = _mocked_feature(
+        "vacuum_fan_speed",
+        type_=Feature.Type.Choice,
+        category=Feature.Category.Config,
+        choices=["Quiet", "Max"],
+        value="Max",
+        expected_module_key="fan_speed_preset",
+    )
+
+    return clean
+
+
+def _mocked_speaker_module(device):
+    speaker = MagicMock(auto_spec=Speaker, name="Mocked speaker")
+    speaker.locate = AsyncMock()
+
+    return speaker
 
 
 def _mocked_strip_children(features=None, alias=None) -> list[Device]:
@@ -565,6 +547,9 @@ MODULE_TO_MOCK_GEN = {
     Module.Fan: _mocked_fan_module,
     Module.Alarm: _mocked_alarm_module,
     Module.Camera: _mocked_camera_module,
+    Module.Thermostat: _mocked_thermostat_module,
+    Module.Clean: _mocked_clean_module,
+    Module.Speaker: _mocked_speaker_module,
 }
 
 

@@ -52,7 +52,7 @@ class MinutPointEntity(Entity):
         )
         await self._update_callback()
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Disconnect dispatcher listener when removed."""
         if self._async_unsub_dispatcher_connect:
             self._async_unsub_dispatcher_connect()
@@ -61,7 +61,7 @@ class MinutPointEntity(Entity):
         """Update the value of the sensor."""
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return true if device is not offline."""
         return self._client.is_available(self.device_id)
 

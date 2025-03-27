@@ -66,10 +66,14 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'bluetooth',
+      'subentries': list([
+      ]),
       'title': 'Gardena Water Computer',
       'unique_id': '00000000-0000-0000-0000-000000000001',
       'version': 1,
     }),
+    'subentries': tuple(
+    ),
     'title': 'Gardena Water Computer',
     'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
     'version': 1,
@@ -223,10 +227,14 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': 'Gardena Water Computer',
       'unique_id': '00000000-0000-0000-0000-000000000001',
       'version': 1,
     }),
+    'subentries': tuple(
+    ),
     'title': 'Gardena Water Computer',
     'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
     'version': 1,

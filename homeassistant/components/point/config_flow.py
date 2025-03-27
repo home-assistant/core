@@ -11,6 +11,8 @@ from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHan
 
 from .const import DOMAIN
 
+_LOGGER = logging.getLogger(__name__)
+
 
 class OAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
     """Config flow to handle Minut Point OAuth2 authentication."""
@@ -56,7 +58,7 @@ class OAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         if reauth_entry.unique_id is not None:
             self._abort_if_unique_id_mismatch(reason="wrong_account")
 
-        logging.debug("user_id: %s", user_id)
+        _LOGGER.debug("user_id: %s", user_id)
         return self.async_update_reload_and_abort(
             reauth_entry, data_updates=data, unique_id=user_id
         )

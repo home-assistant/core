@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from teslemetry_stream import Signal
 
 from homeassistant.components.cover import (
     DOMAIN as COVER_DOMAIN,
@@ -25,6 +26,7 @@ async def test_cover(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
+    mock_legacy: AsyncMock,
 ) -> None:
     """Tests that the cover entities are correct."""
 
@@ -38,6 +40,7 @@ async def test_cover_alt(
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     mock_vehicle_data: AsyncMock,
+    mock_legacy: AsyncMock,
 ) -> None:
     """Tests that the cover entities are correct with alternate values."""
 
@@ -52,6 +55,7 @@ async def test_cover_noscope(
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     mock_metadata: AsyncMock,
+    mock_legacy: AsyncMock,
 ) -> None:
     """Tests that the cover entities are correct without scopes."""
 
@@ -71,7 +75,7 @@ async def test_cover_services(
     # Vent Windows
     entity_id = "cover.test_windows"
     with patch(
-        "homeassistant.components.teslemetry.VehicleSpecific.window_control",
+        "tesla_fleet_api.teslemetry.Vehicle.window_control",
         return_value=COMMAND_OK,
     ) as call:
         await hass.services.async_call(
@@ -100,7 +104,7 @@ async def test_cover_services(
     # Charge Port Door
     entity_id = "cover.test_charge_port_door"
     with patch(
-        "homeassistant.components.teslemetry.VehicleSpecific.charge_port_door_open",
+        "tesla_fleet_api.teslemetry.Vehicle.charge_port_door_open",
         return_value=COMMAND_OK,
     ) as call:
         await hass.services.async_call(
@@ -115,7 +119,7 @@ async def test_cover_services(
         assert state.state == CoverState.OPEN
 
     with patch(
-        "homeassistant.components.teslemetry.VehicleSpecific.charge_port_door_close",
+        "tesla_fleet_api.teslemetry.Vehicle.charge_port_door_close",
         return_value=COMMAND_OK,
     ) as call:
         await hass.services.async_call(
@@ -132,7 +136,7 @@ async def test_cover_services(
     # Frunk
     entity_id = "cover.test_frunk"
     with patch(
-        "homeassistant.components.teslemetry.VehicleSpecific.actuate_trunk",
+        "tesla_fleet_api.teslemetry.Vehicle.actuate_trunk",
         return_value=COMMAND_OK,
     ) as call:
         await hass.services.async_call(
@@ -149,7 +153,7 @@ async def test_cover_services(
     # Trunk
     entity_id = "cover.test_trunk"
     with patch(
-        "homeassistant.components.teslemetry.VehicleSpecific.actuate_trunk",
+        "tesla_fleet_api.teslemetry.Vehicle.actuate_trunk",
         return_value=COMMAND_OK,
     ) as call:
         await hass.services.async_call(
@@ -178,7 +182,7 @@ async def test_cover_services(
     # Sunroof
     entity_id = "cover.test_sunroof"
     with patch(
-        "homeassistant.components.teslemetry.VehicleSpecific.sun_roof_control",
+        "tesla_fleet_api.teslemetry.Vehicle.sun_roof_control",
         return_value=COMMAND_OK,
     ) as call:
         await hass.services.async_call(
@@ -215,3 +219,127 @@ async def test_cover_services(
         state = hass.states.get(entity_id)
         assert state
         assert state.state == CoverState.CLOSED
+
+
+async def test_cover_streaming(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    mock_vehicle_data: AsyncMock,
+    mock_add_listener: AsyncMock,
+) -> None:
+    """Tests that the binary sensor entities with streaming are correct."""
+
+    entry = await setup_platform(hass, [Platform.COVER])
+
+    # Stream update
+    mock_add_listener.send(
+        {
+            "vin": VEHICLE_DATA_ALT["response"]["vin"],
+            "data": {
+                Signal.FD_WINDOW: "WindowStateClosed",
+                Signal.FP_WINDOW: "WindowStateClosed",
+                Signal.RD_WINDOW: "WindowStateClosed",
+                Signal.RP_WINDOW: "WindowStateClosed",
+                Signal.CHARGE_PORT_DOOR_OPEN: False,
+                Signal.DOOR_STATE: {
+                    "DoorState": {
+                        "DriverFront": False,
+                        "DriverRear": False,
+                        "PassengerFront": False,
+                        "PassengerRear": False,
+                        "TrunkFront": False,
+                        "TrunkRear": False,
+                    }
+                },
+            },
+            "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+
+    # Reload the entry
+    await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Assert the entities restored their values
+    for entity_id in (
+        "cover.test_windows",
+        "cover.test_charge_port_door",
+        "cover.test_frunk",
+        "cover.test_trunk",
+    ):
+        state = hass.states.get(entity_id)
+        assert state.state == snapshot(name=f"{entity_id}-closed")
+
+    # Send some alternative data with everything open
+    mock_add_listener.send(
+        {
+            "vin": VEHICLE_DATA_ALT["response"]["vin"],
+            "data": {
+                Signal.FD_WINDOW: "WindowStateOpened",
+                Signal.FP_WINDOW: "WindowStateOpened",
+                Signal.RD_WINDOW: "WindowStateOpened",
+                Signal.RP_WINDOW: "WindowStateOpened",
+                Signal.CHARGE_PORT_DOOR_OPEN: False,
+                Signal.DOOR_STATE: {
+                    "DoorState": {
+                        "DriverFront": True,
+                        "DriverRear": True,
+                        "PassengerFront": True,
+                        "PassengerRear": True,
+                        "TrunkFront": True,
+                        "TrunkRear": True,
+                    }
+                },
+            },
+            "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+
+    # Assert the entities get new values
+    for entity_id in (
+        "cover.test_windows",
+        "cover.test_charge_port_door",
+        "cover.test_frunk",
+        "cover.test_trunk",
+    ):
+        state = hass.states.get(entity_id)
+        assert state.state == snapshot(name=f"{entity_id}-open")
+
+    # Send some alternative data with everything unknown
+    mock_add_listener.send(
+        {
+            "vin": VEHICLE_DATA_ALT["response"]["vin"],
+            "data": {
+                Signal.FD_WINDOW: "WindowStateUnknown",
+                Signal.FP_WINDOW: "WindowStateUnknown",
+                Signal.RD_WINDOW: "WindowStateUnknown",
+                Signal.RP_WINDOW: "WindowStateUnknown",
+                Signal.CHARGE_PORT_DOOR_OPEN: None,
+                Signal.DOOR_STATE: {
+                    "DoorState": {
+                        "DriverFront": None,
+                        "DriverRear": None,
+                        "PassengerFront": None,
+                        "PassengerRear": None,
+                        "TrunkFront": None,
+                        "TrunkRear": None,
+                    }
+                },
+            },
+            "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+
+    # Assert the entities get UNKNOWN values
+    for entity_id in (
+        "cover.test_windows",
+        "cover.test_charge_port_door",
+        "cover.test_frunk",
+        "cover.test_trunk",
+    ):
+        state = hass.states.get(entity_id)
+        assert state.state == snapshot(name=f"{entity_id}-unknown")

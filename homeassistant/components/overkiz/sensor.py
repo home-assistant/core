@@ -30,7 +30,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import OverkizDataConfigEntry
@@ -68,6 +68,15 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         icon="mdi:battery",
         device_class=SensorDeviceClass.ENUM,
         options=["full", "normal", "medium", "low", "verylow"],
+        translation_key="battery",
+    ),
+    OverkizSensorDescription(
+        key=OverkizState.CORE_BATTERY_DISCRETE_LEVEL,
+        name="Battery",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        icon="mdi:battery",
+        device_class=SensorDeviceClass.ENUM,
+        options=["good", "medium", "low", "critical"],
         translation_key="battery",
     ),
     OverkizSensorDescription(
@@ -483,7 +492,7 @@ SUPPORTED_STATES = {description.key: description for description in SENSOR_DESCR
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: OverkizDataConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Overkiz sensors from a config entry."""
     data = entry.runtime_data
@@ -534,8 +543,7 @@ class OverkizStateSensor(OverkizDescriptiveEntity, SensorEntity):
             # This is probably incorrect and should be fixed in a follow up PR.
             # To ensure measurement sensors do not get an `unknown` state on
             # a falsy value (e.g. 0 or 0.0) we also check the state_class.
-            or self.state_class != SensorStateClass.MEASUREMENT
-            and not state.value
+            or (self.state_class != SensorStateClass.MEASUREMENT and not state.value)
         ):
             return None
 

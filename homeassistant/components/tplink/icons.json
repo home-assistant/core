@@ -32,7 +32,20 @@
       },
       "tilt_down": {
         "default": "mdi:chevron-down"
-      }
+      },
+      "main_brush_reset": {
+        "default": "mdi:brush"
+      },
+      "side_brush_reset": {
+        "default": "mdi:brush"
+      },
+      "sensor_reset": {
+        "default": "mdi:eye-outline"
+      },
+      "filter_reset": {
+        "default": "mdi:air-filter"
+      },
+      "charging_contacts_reset": {}
     },
     "select": {
       "light_preset": {
@@ -113,6 +126,9 @@
         "state": {
           "on": "mdi:baby-face"
         }
+      },
+      "carpet_boost": {
+        "default": "mdi:rug"
       }
     },
     "sensor": {
@@ -125,17 +141,40 @@
       "signal_level": {
         "default": "mdi:signal"
       },
-      "current_firmware_version": {
-        "default": "mdi:information"
-      },
-      "available_firmware_version": {
-        "default": "mdi:information-outline"
-      },
       "alarm_source": {
         "default": "mdi:bell"
       },
       "water_alert_timestamp": {
         "default": "mdi:clock-alert-outline"
+      },
+      "main_brush_remaining": {
+        "default": "mdi:brush"
+      },
+      "main_brush_used": {
+        "default": "mdi:brush"
+      },
+      "side_brush_remaining": {
+        "default": "mdi:brush"
+      },
+      "side_brush_used": {
+        "default": "mdi:brush"
+      },
+      "filter_remaining": {
+        "default": "mdi:air-filter"
+      },
+      "filter_used": {
+        "default": "mdi:air-filter"
+      },
+      "sensor_remaining": {
+        "default": "mdi:eye-outline"
+      },
+      "sensor_used": {
+        "default": "mdi:eye-outline"
+      },
+      "charging_contacts_remaining": {},
+      "charging_contacts_used": {},
+      "vacuum_error": {
+        "default": "mdi:alert-circle"
       }
     },
     "number": {
@@ -151,14 +190,14 @@
       "temperature_offset": {
         "default": "mdi:contrast"
       },
-      "target_temperature": {
-        "default": "mdi:thermometer"
-      },
       "pan_step": {
         "default": "mdi:unfold-more-vertical"
       },
       "tilt_step": {
         "default": "mdi:unfold-more-horizontal"
+      },
+      "clean_count": {
+        "default": "mdi:counter"
       }
     }
   },

@@ -15,7 +15,7 @@ from homeassistant.components.update import (
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import LaMarzoccoConfigEntry
@@ -55,7 +55,7 @@ ENTITIES: tuple[LaMarzoccoUpdateEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: LaMarzoccoConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Create update entities."""
 

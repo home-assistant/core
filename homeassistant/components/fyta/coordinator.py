@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
-from typing import TYPE_CHECKING
 
 from fyta_cli.fyta_connector import FytaConnector
 from fyta_cli.fyta_exceptions import (
@@ -16,18 +15,18 @@ from fyta_cli.fyta_exceptions import (
 )
 from fyta_cli.fyta_models import Plant
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_EXPIRATION, DOMAIN
 
-if TYPE_CHECKING:
-    from . import FytaConfigEntry
-
 _LOGGER = logging.getLogger(__name__)
+
+type FytaConfigEntry = ConfigEntry[FytaCoordinator]
 
 
 class FytaCoordinator(DataUpdateCoordinator[dict[int, Plant]]):
@@ -35,11 +34,14 @@ class FytaCoordinator(DataUpdateCoordinator[dict[int, Plant]]):
 
     config_entry: FytaConfigEntry
 
-    def __init__(self, hass: HomeAssistant, fyta: FytaConnector) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: FytaConfigEntry, fyta: FytaConnector
+    ) -> None:
         """Initialize my coordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name="FYTA Coordinator",
             update_interval=timedelta(minutes=4),
         )

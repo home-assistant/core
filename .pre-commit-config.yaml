@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.8.3
+    rev: v0.11.0
     hooks:
       - id: ruff
         args:
@@ -8,7 +8,7 @@ repos:
       - id: ruff-format
         files: ^((homeassistant|pylint|script|tests)/.+)?[^/]+\.(py|pyi)$
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.3.0
+    rev: v2.4.1
     hooks:
       - id: codespell
         args:
@@ -61,13 +61,14 @@ repos:
         name: mypy
         entry: script/run-in-env.sh mypy
         language: script
-        types_or: [python, pyi]
         require_serial: true
+        types_or: [python, pyi]
         files: ^(homeassistant|pylint)/.+\.(py|pyi)$
       - id: pylint
         name: pylint
-        entry: script/run-in-env.sh pylint -j 0 --ignore-missing-annotations=y
+        entry: script/run-in-env.sh pylint --ignore-missing-annotations=y
         language: script
+        require_serial: true
         types_or: [python, pyi]
         files: ^(homeassistant|tests)/.+\.(py|pyi)$
       - id: gen_requirements_all

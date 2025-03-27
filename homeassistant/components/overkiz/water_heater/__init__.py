@@ -6,12 +6,15 @@ from pyoverkiz.enums.ui import UIWidget
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .. import OverkizDataConfigEntry
 from ..entity import OverkizEntity
 from .atlantic_domestic_hot_water_production_mlb_component import (
     AtlanticDomesticHotWaterProductionMBLComponent,
+)
+from .atlantic_domestic_hot_water_production_v2_io_component import (
+    AtlanticDomesticHotWaterProductionV2IOComponent,
 )
 from .atlantic_pass_apc_dhw import AtlanticPassAPCDHW
 from .domestic_hot_water_production import DomesticHotWaterProduction
@@ -21,7 +24,7 @@ from .hitachi_dhw import HitachiDHW
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: OverkizDataConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Overkiz DHW from a config entry."""
     data = entry.runtime_data
@@ -52,4 +55,5 @@ WIDGET_TO_WATER_HEATER_ENTITY = {
 
 CONTROLLABLE_NAME_TO_WATER_HEATER_ENTITY = {
     "modbuslink:AtlanticDomesticHotWaterProductionMBLComponent": AtlanticDomesticHotWaterProductionMBLComponent,
+    "io:AtlanticDomesticHotWaterProductionV2_CV4E_IOComponent": AtlanticDomesticHotWaterProductionV2IOComponent,
 }

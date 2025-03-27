@@ -14,7 +14,7 @@ from zha.application.const import RadioType
 import zigpy.backups
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 
-from homeassistant.components import onboarding, usb, zeroconf
+from homeassistant.components import onboarding, usb
 from homeassistant.components.file_upload import process_uploaded_file
 from homeassistant.components.hassio import AddonError, AddonState
 from homeassistant.components.homeassistant_hardware import silabs_multiprotocol_addon
@@ -35,6 +35,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.selector import FileSelector, FileSelectorConfig
+from homeassistant.helpers.service_info.usb import UsbServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.util import dt as dt_util
 
 from .const import CONF_BAUDRATE, CONF_FLOW_CONTROL, CONF_RADIO_TYPE, DOMAIN
@@ -102,7 +104,8 @@ def _format_backup_choice(
 
 async def list_serial_ports(hass: HomeAssistant) -> list[ListPortInfo]:
     """List all serial ports, including the Yellow radio and the multi-PAN addon."""
-    ports = await hass.async_add_executor_job(serial.tools.list_ports.comports)
+    ports: list[ListPortInfo] = []
+    ports.extend(await hass.async_add_executor_job(serial.tools.list_ports.comports))
 
     # Add useful info to the Yellow's serial port selection screen
     try:
@@ -110,9 +113,14 @@ async def list_serial_ports(hass: HomeAssistant) -> list[ListPortInfo]:
     except HomeAssistantError:
         pass
     else:
-        yellow_radio = next(p for p in ports if p.device == "/dev/ttyAMA1")
-        yellow_radio.description = "Yellow Zigbee module"
-        yellow_radio.manufacturer = "Nabu Casa"
+        # PySerial does not properly handle the Yellow's serial port with the CM5
+        # so we manually include it
+        port = ListPortInfo(device="/dev/ttyAMA1", skip_link_detection=True)
+        port.description = "Yellow Zigbee module"
+        port.manufacturer = "Nabu Casa"
+
+        ports = [p for p in ports if not p.device.startswith("/dev/ttyAMA")]
+        ports.insert(0, port)
 
     if is_hassio(hass):
         # Present the multi-PAN addon as a setup option, if it's available
@@ -585,9 +593,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
             description_placeholders={CONF_NAME: self._title},
         )
 
-    async def async_step_usb(
-        self, discovery_info: usb.UsbServiceInfo
-    ) -> ConfigFlowResult:
+    async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle usb discovery."""
         vid = discovery_info.vid
         pid = discovery_info.pid
@@ -622,7 +628,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
         return await self.async_step_confirm()
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
 
@@ -648,7 +654,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
             fallback_title = name.split("._", 1)[0]
             title = discovery_info.properties.get("name", fallback_title)
 
-            discovery_info = zeroconf.ZeroconfServiceInfo(
+            discovery_info = ZeroconfServiceInfo(
                 ip_address=discovery_info.ip_address,
                 ip_addresses=discovery_info.ip_addresses,
                 port=port,

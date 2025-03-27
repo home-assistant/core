@@ -7,5 +7,5 @@
   "documentation": "https://www.home-assistant.io/integrations/generic",
   "integration_type": "device",
   "iot_class": "local_push",
-  "requirements": ["av==13.1.0", "Pillow==11.0.0"]
+  "requirements": ["av==13.1.0", "Pillow==11.1.0"]
 }

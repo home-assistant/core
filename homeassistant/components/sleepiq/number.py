@@ -17,7 +17,7 @@ from asyncsleepiq import (
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     ACTUATOR,
@@ -58,14 +58,14 @@ def _get_actuator_name(bed: SleepIQBed, actuator: SleepIQActuator) -> str:
             f" {bed.name} {actuator.side_full} {actuator.actuator_full} {ENTITY_TYPES[ACTUATOR]}"
         )
 
-    return f"SleepNumber {bed.name} {actuator.actuator_full} {ENTITY_TYPES[ACTUATOR]}"  # type: ignore[unreachable]
+    return f"SleepNumber {bed.name} {actuator.actuator_full} {ENTITY_TYPES[ACTUATOR]}"
 
 
 def _get_actuator_unique_id(bed: SleepIQBed, actuator: SleepIQActuator) -> str:
     if actuator.side:
         return f"{bed.id}_{actuator.side.value}_{actuator.actuator}"
 
-    return f"{bed.id}_{actuator.actuator}"  # type: ignore[unreachable]
+    return f"{bed.id}_{actuator.actuator}"
 
 
 def _get_sleeper_name(bed: SleepIQBed, sleeper: SleepIQSleeper) -> str:
@@ -138,7 +138,7 @@ NUMBER_DESCRIPTIONS: dict[str, SleepIQNumberEntityDescription] = {
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the SleepIQ bed sensors."""
     data: SleepIQData = hass.data[DOMAIN][entry.entry_id]

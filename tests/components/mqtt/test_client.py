@@ -27,11 +27,12 @@ from homeassistant.core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.dt import utcnow
 
+from .common import help_all_subscribe_calls
 from .conftest import ENTRY_DEFAULT_BIRTH_MESSAGE
-from .test_common import help_all_subscribe_calls
 
 from tests.common import (
     MockConfigEntry,
+    MockMqttReasonCode,
     async_fire_mqtt_message,
     async_fire_time_changed,
 )
@@ -94,7 +95,7 @@ async def test_mqtt_await_ack_at_disconnect(hass: HomeAssistant) -> None:
         mqtt_client.connect = MagicMock(
             return_value=0,
             side_effect=lambda *args, **kwargs: hass.loop.call_soon_threadsafe(
-                mqtt_client.on_connect, mqtt_client, None, 0, 0, 0
+                mqtt_client.on_connect, mqtt_client, None, 0, MockMqttReasonCode()
             ),
         )
         mqtt_client.publish = MagicMock(return_value=FakeInfo())
@@ -105,6 +106,8 @@ async def test_mqtt_await_ack_at_disconnect(hass: HomeAssistant) -> None:
                 mqtt.CONF_BROKER: "test-broker",
                 mqtt.CONF_DISCOVERY: False,
             },
+            version=mqtt.CONFIG_ENTRY_VERSION,
+            minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
         )
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -117,7 +120,7 @@ async def test_mqtt_await_ack_at_disconnect(hass: HomeAssistant) -> None:
         )
         await asyncio.sleep(0)
         # Simulate late ACK callback from client with mid 100
-        mqtt_client.on_publish(0, 0, 100)
+        mqtt_client.on_publish(0, 0, 100, MockMqttReasonCode(), None)
         # disconnect the MQTT client
         await hass.async_stop()
         await hass.async_block_till_done()
@@ -132,7 +135,7 @@ async def test_mqtt_await_ack_at_disconnect(hass: HomeAssistant) -> None:
         await hass.async_block_till_done(wait_background_tasks=True)
 
 
-@pytest.mark.parametrize("mqtt_config_entry_data", [ENTRY_DEFAULT_BIRTH_MESSAGE])
+@pytest.mark.parametrize("mqtt_config_entry_options", [ENTRY_DEFAULT_BIRTH_MESSAGE])
 async def test_publish(
     hass: HomeAssistant, setup_with_birth_msg_client_mock: MqttMockPahoClient
 ) -> None:
@@ -776,10 +779,10 @@ async def test_replaying_payload_same_topic(
     calls_a = []
     calls_b = []
     mqtt_client_mock.reset_mock()
-    mqtt_client_mock.on_disconnect(None, None, 0)
+    mqtt_client_mock.on_disconnect(None, None, 0, MockMqttReasonCode())
 
     mock_debouncer.clear()
-    mqtt_client_mock.on_connect(None, None, None, 0)
+    mqtt_client_mock.on_connect(None, None, None, MockMqttReasonCode())
     await mock_debouncer.wait()
     mqtt_client_mock.subscribe.assert_called()
     # Simulate a (retained) message played back after reconnecting
@@ -906,10 +909,10 @@ async def test_replaying_payload_wildcard_topic(
     calls_a = []
     calls_b = []
     mqtt_client_mock.reset_mock()
-    mqtt_client_mock.on_disconnect(None, None, 0)
+    mqtt_client_mock.on_disconnect(None, None, 0, MockMqttReasonCode())
 
     mock_debouncer.clear()
-    mqtt_client_mock.on_connect(None, None, None, 0)
+    mqtt_client_mock.on_connect(None, None, None, MockMqttReasonCode())
     await mock_debouncer.wait()
 
     mqtt_client_mock.subscribe.assert_called()
@@ -1022,8 +1025,8 @@ async def test_unsubscribe_race(
 
 
 @pytest.mark.parametrize(
-    "mqtt_config_entry_data",
-    [{mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_DISCOVERY: False}],
+    ("mqtt_config_entry_data", "mqtt_config_entry_options"),
+    [({mqtt.CONF_BROKER: "mock-broker"}, {mqtt.CONF_DISCOVERY: False})],
 )
 async def test_restore_subscriptions_on_reconnect(
     hass: HomeAssistant,
@@ -1043,7 +1046,7 @@ async def test_restore_subscriptions_on_reconnect(
     assert ("test/state", 0) in help_all_subscribe_calls(mqtt_client_mock)
 
     mqtt_client_mock.reset_mock()
-    mqtt_client_mock.on_disconnect(None, None, 0)
+    mqtt_client_mock.on_disconnect(None, None, 0, MockMqttReasonCode())
 
     # Test to subscribe orther topic while the client is not connected
     await mqtt.async_subscribe(hass, "test/other", record_calls)
@@ -1051,7 +1054,7 @@ async def test_restore_subscriptions_on_reconnect(
     assert ("test/other", 0) not in help_all_subscribe_calls(mqtt_client_mock)
 
     mock_debouncer.clear()
-    mqtt_client_mock.on_connect(None, None, None, 0)
+    mqtt_client_mock.on_connect(None, None, None, MockMqttReasonCode())
     await mock_debouncer.wait()
     # Assert all subscriptions are performed at the broker
     assert ("test/state", 0) in help_all_subscribe_calls(mqtt_client_mock)
@@ -1059,8 +1062,8 @@ async def test_restore_subscriptions_on_reconnect(
 
 
 @pytest.mark.parametrize(
-    "mqtt_config_entry_data",
-    [{mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_DISCOVERY: False}],
+    ("mqtt_config_entry_data", "mqtt_config_entry_options"),
+    [({mqtt.CONF_BROKER: "mock-broker"}, {mqtt.CONF_DISCOVERY: False})],
 )
 async def test_restore_all_active_subscriptions_on_reconnect(
     hass: HomeAssistant,
@@ -1087,10 +1090,10 @@ async def test_restore_all_active_subscriptions_on_reconnect(
     unsub()
     assert mqtt_client_mock.unsubscribe.call_count == 0
 
-    mqtt_client_mock.on_disconnect(None, None, 0)
+    mqtt_client_mock.on_disconnect(None, None, 0, MockMqttReasonCode())
 
     mock_debouncer.clear()
-    mqtt_client_mock.on_connect(None, None, None, 0)
+    mqtt_client_mock.on_connect(None, None, None, MockMqttReasonCode())
     # wait for cooldown
     await mock_debouncer.wait()
 
@@ -1100,8 +1103,8 @@ async def test_restore_all_active_subscriptions_on_reconnect(
 
 
 @pytest.mark.parametrize(
-    "mqtt_config_entry_data",
-    [{mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_DISCOVERY: False}],
+    ("mqtt_config_entry_data", "mqtt_config_entry_options"),
+    [({mqtt.CONF_BROKER: "mock-broker"}, {mqtt.CONF_DISCOVERY: False})],
 )
 async def test_subscribed_at_highest_qos(
     hass: HomeAssistant,
@@ -1136,7 +1139,12 @@ async def test_initial_setup_logs_error(
     mqtt_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test for setup failure if initial client connection fails."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
+    entry = MockConfigEntry(
+        domain=mqtt.DOMAIN,
+        data={mqtt.CONF_BROKER: "test-broker"},
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
+    )
     entry.add_to_hass(hass)
     mqtt_client_mock.connect.side_effect = MagicMock(return_value=1)
     try:
@@ -1153,27 +1161,37 @@ async def test_logs_error_if_no_connect_broker(
 ) -> None:
     """Test for setup failure if connection to broker is missing."""
     mqtt_client_mock = setup_with_birth_msg_client_mock
-    # test with rc = 3 -> broker unavailable
-    mqtt_client_mock.on_disconnect(Mock(), None, 0)
-    mqtt_client_mock.on_connect(Mock(), None, None, 3)
-    await hass.async_block_till_done()
-    assert (
-        "Unable to connect to the MQTT broker: Connection Refused: broker unavailable."
-        in caplog.text
+    # test with reason code = 136 -> server unavailable
+    mqtt_client_mock.on_disconnect(Mock(), None, None, MockMqttReasonCode())
+    mqtt_client_mock.on_connect(
+        Mock(),
+        None,
+        None,
+        MockMqttReasonCode(value=136, is_failure=True, name="Server unavailable"),
     )
+    await hass.async_block_till_done()
+    assert "Unable to connect to the MQTT broker: Server unavailable" in caplog.text
 
 
-@pytest.mark.parametrize("return_code", [4, 5])
+@pytest.mark.parametrize(
+    "reason_code",
+    [
+        MockMqttReasonCode(
+            value=134, is_failure=True, name="Bad user name or password"
+        ),
+        MockMqttReasonCode(value=135, is_failure=True, name="Not authorized"),
+    ],
+)
 async def test_triggers_reauth_flow_if_auth_fails(
     hass: HomeAssistant,
     setup_with_birth_msg_client_mock: MqttMockPahoClient,
-    return_code: int,
+    reason_code: MockMqttReasonCode,
 ) -> None:
     """Test re-auth is triggered if authentication is failing."""
     mqtt_client_mock = setup_with_birth_msg_client_mock
     # test with rc = 4 -> CONNACK_REFUSED_NOT_AUTHORIZED and 5 -> CONNACK_REFUSED_BAD_USERNAME_PASSWORD
-    mqtt_client_mock.on_disconnect(Mock(), None, 0)
-    mqtt_client_mock.on_connect(Mock(), None, None, return_code)
+    mqtt_client_mock.on_disconnect(Mock(), None, 0, MockMqttReasonCode(), None)
+    mqtt_client_mock.on_connect(Mock(), None, None, reason_code)
     await hass.async_block_till_done()
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
@@ -1190,7 +1208,9 @@ async def test_handle_mqtt_on_callback(
     mqtt_client_mock = setup_with_birth_msg_client_mock
     with patch.object(mqtt_client_mock, "get_mid", return_value=100):
         # Simulate an ACK for mid == 100, this will call mqtt_mock._async_get_mid_future(mid)
-        mqtt_client_mock.on_publish(mqtt_client_mock, None, 100)
+        mqtt_client_mock.on_publish(
+            mqtt_client_mock, None, 100, MockMqttReasonCode(), None
+        )
         await hass.async_block_till_done()
         # Make sure the ACK has been received
         await hass.async_block_till_done()
@@ -1212,7 +1232,7 @@ async def test_handle_mqtt_on_callback_after_cancellation(
     # Simulate the mid future getting a cancellation
     mqtt_mock()._async_get_mid_future(101).cancel()
     # Simulate an ACK for mid == 101, being received after the cancellation
-    mqtt_client_mock.on_publish(mqtt_client_mock, None, 101)
+    mqtt_client_mock.on_publish(mqtt_client_mock, None, 101, MockMqttReasonCode(), None)
     await hass.async_block_till_done()
     assert "No ACK from MQTT server" not in caplog.text
     assert "InvalidStateError" not in caplog.text
@@ -1229,7 +1249,7 @@ async def test_handle_mqtt_on_callback_after_timeout(
     # Simulate the mid future getting a timeout
     mqtt_mock()._async_get_mid_future(101).set_exception(asyncio.TimeoutError)
     # Simulate an ACK for mid == 101, being received after the timeout
-    mqtt_client_mock.on_publish(mqtt_client_mock, None, 101)
+    mqtt_client_mock.on_publish(mqtt_client_mock, None, 101, MockMqttReasonCode(), None)
     await hass.async_block_till_done()
     assert "No ACK from MQTT server" not in caplog.text
     assert "InvalidStateError" not in caplog.text
@@ -1239,14 +1259,19 @@ async def test_publish_error(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test publish error."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
+    entry = MockConfigEntry(
+        domain=mqtt.DOMAIN,
+        data={mqtt.CONF_BROKER: "test-broker"},
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
+    )
     entry.add_to_hass(hass)
 
     # simulate an Out of memory error
     with patch(
         "homeassistant.components.mqtt.async_client.AsyncMQTTClient"
     ) as mock_client:
-        mock_client().connect = lambda *args: 1
+        mock_client().connect = lambda **kwargs: 1
         mock_client().publish().rc = 1
         assert await hass.config_entries.async_setup(entry.entry_id)
         with pytest.raises(HomeAssistantError):
@@ -1305,7 +1330,7 @@ async def test_handle_message_callback(
 
 
 @pytest.mark.parametrize(
-    ("mqtt_config_entry_data", "protocol"),
+    ("mqtt_config_entry_data", "protocol", "clean_session"),
     [
         (
             {
@@ -1313,6 +1338,7 @@ async def test_handle_message_callback(
                 CONF_PROTOCOL: "3.1",
             },
             3,
+            True,
         ),
         (
             {
@@ -1320,6 +1346,7 @@ async def test_handle_message_callback(
                 CONF_PROTOCOL: "3.1.1",
             },
             4,
+            True,
         ),
         (
             {
@@ -1327,20 +1354,70 @@ async def test_handle_message_callback(
                 CONF_PROTOCOL: "5",
             },
             5,
+            None,
         ),
     ],
+    ids=["v3.1", "v3.1.1", "v5"],
 )
-async def test_setup_mqtt_client_protocol(
-    mqtt_mock_entry: MqttMockHAClientGenerator, protocol: int
+async def test_setup_mqtt_client_clean_session_and_protocol(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    mqtt_client_mock: MqttMockPahoClient,
+    protocol: int,
+    clean_session: bool | None,
 ) -> None:
-    """Test MQTT client protocol setup."""
+    """Test MQTT client clean_session and protocol setup."""
     with patch(
         "homeassistant.components.mqtt.async_client.AsyncMQTTClient"
     ) as mock_client:
         await mqtt_mock_entry()
 
+    # check if clean_session was correctly
+    assert mock_client.call_args[1]["clean_session"] == clean_session
+
     # check if protocol setup was correctly
     assert mock_client.call_args[1]["protocol"] == protocol
+
+
+@pytest.mark.parametrize(
+    ("mqtt_config_entry_data", "connect_args"),
+    [
+        (
+            {
+                mqtt.CONF_BROKER: "mock-broker",
+                CONF_PROTOCOL: "3.1",
+            },
+            call(host="mock-broker", port=1883, keepalive=60, clean_start=3),
+        ),
+        (
+            {
+                mqtt.CONF_BROKER: "mock-broker",
+                CONF_PROTOCOL: "3.1.1",
+            },
+            call(host="mock-broker", port=1883, keepalive=60, clean_start=3),
+        ),
+        (
+            {
+                mqtt.CONF_BROKER: "mock-broker",
+                CONF_PROTOCOL: "5",
+            },
+            call(host="mock-broker", port=1883, keepalive=60, clean_start=True),
+        ),
+    ],
+    ids=["v3.1", "v3.1.1", "v5"],
+)
+async def test_setup_mqtt_client_clean_start(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    mqtt_client_mock: MqttMockPahoClient,
+    connect_args: tuple[Any],
+) -> None:
+    """Test MQTT client protocol connects with `clean_start` set correctly."""
+    await mqtt_mock_entry()
+
+    # check if clean_start was set correctly
+    assert len(mqtt_client_mock.connect.mock_calls) == 1
+    assert mqtt_client_mock.connect.mock_calls[0] == connect_args
 
 
 @patch("homeassistant.components.mqtt.client.TIMEOUT_ACK", 0.2)
@@ -1376,12 +1453,15 @@ async def test_handle_mqtt_timeout_on_callback(
         mock_client.connect = MagicMock(
             return_value=0,
             side_effect=lambda *args, **kwargs: hass.loop.call_soon_threadsafe(
-                mock_client.on_connect, mock_client, None, 0, 0, 0
+                mock_client.on_connect, mock_client, None, 0, MockMqttReasonCode()
             ),
         )
 
         entry = MockConfigEntry(
-            domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"}
+            domain=mqtt.DOMAIN,
+            data={mqtt.CONF_BROKER: "test-broker"},
+            version=mqtt.CONFIG_ENTRY_VERSION,
+            minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
         )
         entry.add_to_hass(hass)
 
@@ -1414,7 +1494,12 @@ async def test_setup_raises_config_entry_not_ready_if_no_connect_broker(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, exception: Exception
 ) -> None:
     """Test for setup failure if connection to broker is missing."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
+    entry = MockConfigEntry(
+        domain=mqtt.DOMAIN,
+        data={mqtt.CONF_BROKER: "test-broker"},
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
+    )
     entry.add_to_hass(hass)
 
     with patch(
@@ -1472,6 +1557,42 @@ async def test_setup_uses_certificate_on_certificate_set_to_auto_and_insecure(
 
 
 @pytest.mark.parametrize(
+    ("mqtt_config_entry_data", "client_id"),
+    [
+        (
+            {
+                mqtt.CONF_BROKER: "mock-broker",
+                "client_id": "random01234random0124",
+            },
+            "random01234random0124",
+        ),
+        (
+            {
+                mqtt.CONF_BROKER: "mock-broker",
+            },
+            None,
+        ),
+    ],
+)
+async def test_client_id_is_set(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    client_id: str | None,
+) -> None:
+    """Test setup defaults for tls."""
+    with patch(
+        "homeassistant.components.mqtt.async_client.AsyncMQTTClient"
+    ) as async_client_mock:
+        await mqtt_mock_entry()
+        await hass.async_block_till_done()
+    assert async_client_mock.call_count == 1
+    call_params: dict[str, Any] = async_client_mock.call_args[1]
+    assert "client_id" in call_params
+    assert client_id is None or client_id == call_params["client_id"]
+    assert call_params["client_id"] is not None
+
+
+@pytest.mark.parametrize(
     "mqtt_config_entry_data",
     [
         {
@@ -1495,17 +1616,19 @@ async def test_tls_version(
 
 
 @pytest.mark.parametrize(
-    "mqtt_config_entry_data",
+    ("mqtt_config_entry_data", "mqtt_config_entry_options"),
     [
-        {
-            mqtt.CONF_BROKER: "mock-broker",
-            mqtt.CONF_BIRTH_MESSAGE: {
-                mqtt.ATTR_TOPIC: "birth",
-                mqtt.ATTR_PAYLOAD: "birth",
-                mqtt.ATTR_QOS: 0,
-                mqtt.ATTR_RETAIN: False,
+        (
+            {mqtt.CONF_BROKER: "mock-broker"},
+            {
+                mqtt.CONF_BIRTH_MESSAGE: {
+                    mqtt.ATTR_TOPIC: "birth",
+                    mqtt.ATTR_PAYLOAD: "birth",
+                    mqtt.ATTR_QOS: 0,
+                    mqtt.ATTR_RETAIN: False,
+                }
             },
-        }
+        )
     ],
 )
 @patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
@@ -1515,11 +1638,18 @@ async def test_custom_birth_message(
     hass: HomeAssistant,
     mock_debouncer: asyncio.Event,
     mqtt_config_entry_data: dict[str, Any],
+    mqtt_config_entry_options: dict[str, Any],
     mqtt_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test sending birth message."""
 
-    entry = MockConfigEntry(domain=mqtt.DOMAIN, data=mqtt_config_entry_data)
+    entry = MockConfigEntry(
+        domain=mqtt.DOMAIN,
+        data=mqtt_config_entry_data,
+        options=mqtt_config_entry_options,
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
+    )
     entry.add_to_hass(hass)
     hass.config.components.add(mqtt.DOMAIN)
     assert await hass.config_entries.async_setup(entry.entry_id)
@@ -1533,7 +1663,7 @@ async def test_custom_birth_message(
 
 
 @pytest.mark.parametrize(
-    "mqtt_config_entry_data",
+    "mqtt_config_entry_options",
     [ENTRY_DEFAULT_BIRTH_MESSAGE],
 )
 async def test_default_birth_message(
@@ -1548,8 +1678,8 @@ async def test_default_birth_message(
 
 
 @pytest.mark.parametrize(
-    "mqtt_config_entry_data",
-    [{mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_BIRTH_MESSAGE: {}}],
+    ("mqtt_config_entry_data", "mqtt_config_entry_options"),
+    [({mqtt.CONF_BROKER: "mock-broker"}, {mqtt.CONF_BIRTH_MESSAGE: {}})],
 )
 @patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
 @patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.0)
@@ -1559,10 +1689,17 @@ async def test_no_birth_message(
     record_calls: MessageCallbackType,
     mock_debouncer: asyncio.Event,
     mqtt_config_entry_data: dict[str, Any],
+    mqtt_config_entry_options: dict[str, Any],
     mqtt_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test disabling birth message."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN, data=mqtt_config_entry_data)
+    entry = MockConfigEntry(
+        domain=mqtt.DOMAIN,
+        data=mqtt_config_entry_data,
+        options=mqtt_config_entry_options,
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
+    )
     entry.add_to_hass(hass)
     hass.config.components.add(mqtt.DOMAIN)
     mock_debouncer.clear()
@@ -1582,20 +1719,27 @@ async def test_no_birth_message(
 
 
 @pytest.mark.parametrize(
-    "mqtt_config_entry_data",
-    [ENTRY_DEFAULT_BIRTH_MESSAGE],
+    ("mqtt_config_entry_data", "mqtt_config_entry_options"),
+    [({mqtt.CONF_BROKER: "mock-broker"}, ENTRY_DEFAULT_BIRTH_MESSAGE)],
 )
 @patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.2)
 async def test_delayed_birth_message(
     hass: HomeAssistant,
     mqtt_config_entry_data: dict[str, Any],
+    mqtt_config_entry_options: dict[str, Any],
     mqtt_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test sending birth message does not happen until Home Assistant starts."""
     hass.set_state(CoreState.starting)
     await hass.async_block_till_done()
     birth = asyncio.Event()
-    entry = MockConfigEntry(domain=mqtt.DOMAIN, data=mqtt_config_entry_data)
+    entry = MockConfigEntry(
+        domain=mqtt.DOMAIN,
+        data=mqtt_config_entry_data,
+        options=mqtt_config_entry_options,
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
+    )
     entry.add_to_hass(hass)
     hass.config.components.add(mqtt.DOMAIN)
     assert await hass.config_entries.async_setup(entry.entry_id)
@@ -1619,7 +1763,7 @@ async def test_delayed_birth_message(
 
 
 @pytest.mark.parametrize(
-    "mqtt_config_entry_data",
+    "mqtt_config_entry_options",
     [ENTRY_DEFAULT_BIRTH_MESSAGE],
 )
 async def test_subscription_done_when_birth_message_is_sent(
@@ -1637,26 +1781,37 @@ async def test_subscription_done_when_birth_message_is_sent(
 
 
 @pytest.mark.parametrize(
-    "mqtt_config_entry_data",
+    ("mqtt_config_entry_data", "mqtt_config_entry_options"),
     [
-        {
-            mqtt.CONF_BROKER: "mock-broker",
-            mqtt.CONF_WILL_MESSAGE: {
-                mqtt.ATTR_TOPIC: "death",
-                mqtt.ATTR_PAYLOAD: "death",
-                mqtt.ATTR_QOS: 0,
-                mqtt.ATTR_RETAIN: False,
+        (
+            {
+                mqtt.CONF_BROKER: "mock-broker",
             },
-        }
+            {
+                mqtt.CONF_WILL_MESSAGE: {
+                    mqtt.ATTR_TOPIC: "death",
+                    mqtt.ATTR_PAYLOAD: "death",
+                    mqtt.ATTR_QOS: 0,
+                    mqtt.ATTR_RETAIN: False,
+                },
+            },
+        )
     ],
 )
 async def test_custom_will_message(
     hass: HomeAssistant,
     mqtt_config_entry_data: dict[str, Any],
+    mqtt_config_entry_options: dict[str, Any],
     mqtt_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test will message."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN, data=mqtt_config_entry_data)
+    entry = MockConfigEntry(
+        domain=mqtt.DOMAIN,
+        data=mqtt_config_entry_data,
+        options=mqtt_config_entry_options,
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
+    )
     entry.add_to_hass(hass)
     hass.config.components.add(mqtt.DOMAIN)
     assert await hass.config_entries.async_setup(entry.entry_id)
@@ -1678,16 +1833,23 @@ async def test_default_will_message(
 
 
 @pytest.mark.parametrize(
-    "mqtt_config_entry_data",
-    [{mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_WILL_MESSAGE: {}}],
+    ("mqtt_config_entry_data", "mqtt_config_entry_options"),
+    [({mqtt.CONF_BROKER: "mock-broker"}, {mqtt.CONF_WILL_MESSAGE: {}})],
 )
 async def test_no_will_message(
     hass: HomeAssistant,
     mqtt_config_entry_data: dict[str, Any],
+    mqtt_config_entry_options: dict[str, Any],
     mqtt_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test will message."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN, data=mqtt_config_entry_data)
+    entry = MockConfigEntry(
+        domain=mqtt.DOMAIN,
+        data=mqtt_config_entry_data,
+        options=mqtt_config_entry_options,
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
+    )
     entry.add_to_hass(hass)
     hass.config.components.add(mqtt.DOMAIN)
     assert await hass.config_entries.async_setup(entry.entry_id)
@@ -1697,7 +1859,7 @@ async def test_no_will_message(
 
 
 @pytest.mark.parametrize(
-    "mqtt_config_entry_data",
+    "mqtt_config_entry_options",
     [ENTRY_DEFAULT_BIRTH_MESSAGE | {mqtt.CONF_DISCOVERY: False}],
 )
 async def test_mqtt_subscribes_topics_on_connect(
@@ -1716,12 +1878,12 @@ async def test_mqtt_subscribes_topics_on_connect(
     await mqtt.async_subscribe(hass, "still/pending", record_calls, 1)
     await mock_debouncer.wait()
 
-    mqtt_client_mock.on_disconnect(Mock(), None, 0)
+    mqtt_client_mock.on_disconnect(Mock(), None, 0, MockMqttReasonCode())
 
     mqtt_client_mock.reset_mock()
 
     mock_debouncer.clear()
-    mqtt_client_mock.on_connect(Mock(), None, 0, 0)
+    mqtt_client_mock.on_connect(Mock(), None, 0, MockMqttReasonCode())
     await mock_debouncer.wait()
 
     subscribe_calls = help_all_subscribe_calls(mqtt_client_mock)
@@ -1730,7 +1892,7 @@ async def test_mqtt_subscribes_topics_on_connect(
     assert ("still/pending", 1) in subscribe_calls
 
 
-@pytest.mark.parametrize("mqtt_config_entry_data", [ENTRY_DEFAULT_BIRTH_MESSAGE])
+@pytest.mark.parametrize("mqtt_config_entry_options", [ENTRY_DEFAULT_BIRTH_MESSAGE])
 async def test_mqtt_subscribes_wildcard_topics_in_correct_order(
     hass: HomeAssistant,
     mock_debouncer: asyncio.Event,
@@ -1776,12 +1938,12 @@ async def test_mqtt_subscribes_wildcard_topics_in_correct_order(
     # Assert the initial wildcard topic subscription order
     _assert_subscription_order()
 
-    mqtt_client_mock.on_disconnect(Mock(), None, 0)
+    mqtt_client_mock.on_disconnect(Mock(), None, 0, MockMqttReasonCode())
 
     mqtt_client_mock.reset_mock()
 
     mock_debouncer.clear()
-    mqtt_client_mock.on_connect(Mock(), None, 0, 0)
+    mqtt_client_mock.on_connect(Mock(), None, 0, MockMqttReasonCode())
     await mock_debouncer.wait()
 
     # Assert the wildcard topic subscription order after a reconnect
@@ -1789,7 +1951,7 @@ async def test_mqtt_subscribes_wildcard_topics_in_correct_order(
 
 
 @pytest.mark.parametrize(
-    "mqtt_config_entry_data",
+    "mqtt_config_entry_options",
     [ENTRY_DEFAULT_BIRTH_MESSAGE | {mqtt.CONF_DISCOVERY: False}],
 )
 async def test_mqtt_discovery_not_subscribes_when_disabled(
@@ -1807,12 +1969,12 @@ async def test_mqtt_discovery_not_subscribes_when_disabled(
         assert (f"homeassistant/{component}/+/config", 0) not in subscribe_calls
         assert (f"homeassistant/{component}/+/+/config", 0) not in subscribe_calls
 
-    mqtt_client_mock.on_disconnect(Mock(), None, 0)
+    mqtt_client_mock.on_disconnect(Mock(), None, 0, MockMqttReasonCode())
 
     mqtt_client_mock.reset_mock()
 
     mock_debouncer.clear()
-    mqtt_client_mock.on_connect(Mock(), None, 0, 0)
+    mqtt_client_mock.on_connect(Mock(), None, 0, MockMqttReasonCode())
     await mock_debouncer.wait()
 
     subscribe_calls = help_all_subscribe_calls(mqtt_client_mock)
@@ -1822,7 +1984,7 @@ async def test_mqtt_discovery_not_subscribes_when_disabled(
 
 
 @pytest.mark.parametrize(
-    "mqtt_config_entry_data",
+    "mqtt_config_entry_options",
     [ENTRY_DEFAULT_BIRTH_MESSAGE],
 )
 async def test_mqtt_subscribes_in_single_call(
@@ -1848,7 +2010,7 @@ async def test_mqtt_subscribes_in_single_call(
     ]
 
 
-@pytest.mark.parametrize("mqtt_config_entry_data", [ENTRY_DEFAULT_BIRTH_MESSAGE])
+@pytest.mark.parametrize("mqtt_config_entry_options", [ENTRY_DEFAULT_BIRTH_MESSAGE])
 @patch("homeassistant.components.mqtt.client.MAX_SUBSCRIBES_PER_CALL", 2)
 @patch("homeassistant.components.mqtt.client.MAX_UNSUBSCRIBES_PER_CALL", 2)
 async def test_mqtt_subscribes_and_unsubscribes_in_chunks(
@@ -1907,7 +2069,7 @@ async def test_auto_reconnect(
     mqtt_client_mock.reconnect.reset_mock()
 
     mqtt_client_mock.disconnect()
-    mqtt_client_mock.on_disconnect(None, None, 0)
+    mqtt_client_mock.on_disconnect(None, None, 0, MockMqttReasonCode())
     await hass.async_block_till_done()
 
     mqtt_client_mock.reconnect.side_effect = exception("foo")
@@ -1928,7 +2090,7 @@ async def test_auto_reconnect(
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
 
     mqtt_client_mock.disconnect()
-    mqtt_client_mock.on_disconnect(None, None, 0)
+    mqtt_client_mock.on_disconnect(None, None, 0, MockMqttReasonCode())
     await hass.async_block_till_done()
 
     async_fire_time_changed(
@@ -1970,7 +2132,7 @@ async def test_server_sock_connect_and_disconnect(
     mqtt_client_mock.loop_misc.return_value = paho_mqtt.MQTT_ERR_CONN_LOST
     mqtt_client_mock.on_socket_unregister_write(mqtt_client_mock, None, client)
     mqtt_client_mock.on_socket_close(mqtt_client_mock, None, client)
-    mqtt_client_mock.on_disconnect(mqtt_client_mock, None, client)
+    mqtt_client_mock.on_disconnect(mqtt_client_mock, None, None, MockMqttReasonCode())
     await hass.async_block_till_done()
     mock_debouncer.clear()
     unsub()
@@ -2021,7 +2183,7 @@ async def test_server_sock_buffer_size_with_websocket(
     client.setblocking(False)
     server.setblocking(False)
 
-    class FakeWebsocket(paho_mqtt.WebsocketWrapper):
+    class FakeWebsocket(paho_mqtt._WebsocketWrapper):
         def _do_handshake(self, *args, **kwargs):
             pass
 
@@ -2108,4 +2270,4 @@ async def test_loop_write_failure(
     # Final for the disconnect callback
     await hass.async_block_till_done()
 
-    assert "Disconnected from MQTT server test-broker:1883" in caplog.text
+    assert "Error returned from MQTT server: The connection was lost." in caplog.text

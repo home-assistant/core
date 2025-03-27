@@ -6,13 +6,13 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import dhcp
 from homeassistant.components.onvif import DOMAIN, config_flow
 from homeassistant.config_entries import SOURCE_DHCP
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from . import (
     HOST,
@@ -44,10 +44,10 @@ DISCOVERY = [
         "MAC": "ff:ee:dd:cc:bb:aa",
     },
 ]
-DHCP_DISCOVERY = dhcp.DhcpServiceInfo(
+DHCP_DISCOVERY = DhcpServiceInfo(
     hostname="any", ip="5.6.7.8", macaddress=MAC.lower().replace(":", "")
 )
-DHCP_DISCOVERY_SAME_IP = dhcp.DhcpServiceInfo(
+DHCP_DISCOVERY_SAME_IP = DhcpServiceInfo(
     hostname="any", ip="1.2.3.4", macaddress=MAC.lower().replace(":", "")
 )
 

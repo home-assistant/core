@@ -25,12 +25,15 @@ from homeassistant.components.button import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import ASSETS_URL, DOMAIN
-from .coordinator import HabiticaData, HabiticaDataUpdateCoordinator
+from .coordinator import (
+    HabiticaConfigEntry,
+    HabiticaData,
+    HabiticaDataUpdateCoordinator,
+)
 from .entity import HabiticaBase
-from .types import HabiticaConfigEntry
 
 PARALLEL_UPDATES = 1
 
@@ -45,7 +48,7 @@ class HabiticaButtonEntityDescription(ButtonEntityDescription):
     entity_picture: str | None = None
 
 
-class HabitipyButtonEntity(StrEnum):
+class HabiticaButtonEntity(StrEnum):
     """Habitica button entities."""
 
     RUN_CRON = "run_cron"
@@ -68,14 +71,14 @@ class HabitipyButtonEntity(StrEnum):
 
 BUTTON_DESCRIPTIONS: tuple[HabiticaButtonEntityDescription, ...] = (
     HabiticaButtonEntityDescription(
-        key=HabitipyButtonEntity.RUN_CRON,
-        translation_key=HabitipyButtonEntity.RUN_CRON,
+        key=HabiticaButtonEntity.RUN_CRON,
+        translation_key=HabiticaButtonEntity.RUN_CRON,
         press_fn=lambda coordinator: coordinator.habitica.run_cron(),
         available_fn=lambda data: data.user.needsCron is True,
     ),
     HabiticaButtonEntityDescription(
-        key=HabitipyButtonEntity.BUY_HEALTH_POTION,
-        translation_key=HabitipyButtonEntity.BUY_HEALTH_POTION,
+        key=HabiticaButtonEntity.BUY_HEALTH_POTION,
+        translation_key=HabiticaButtonEntity.BUY_HEALTH_POTION,
         press_fn=lambda coordinator: coordinator.habitica.buy_health_potion(),
         available_fn=(
             lambda data: (data.user.stats.gp or 0) >= 25
@@ -84,8 +87,8 @@ BUTTON_DESCRIPTIONS: tuple[HabiticaButtonEntityDescription, ...] = (
         entity_picture="shop_potion.png",
     ),
     HabiticaButtonEntityDescription(
-        key=HabitipyButtonEntity.ALLOCATE_ALL_STAT_POINTS,
-        translation_key=HabitipyButtonEntity.ALLOCATE_ALL_STAT_POINTS,
+        key=HabiticaButtonEntity.ALLOCATE_ALL_STAT_POINTS,
+        translation_key=HabiticaButtonEntity.ALLOCATE_ALL_STAT_POINTS,
         press_fn=lambda coordinator: coordinator.habitica.allocate_stat_points(),
         available_fn=(
             lambda data: data.user.preferences.automaticAllocation is True
@@ -93,8 +96,8 @@ BUTTON_DESCRIPTIONS: tuple[HabiticaButtonEntityDescription, ...] = (
         ),
     ),
     HabiticaButtonEntityDescription(
-        key=HabitipyButtonEntity.REVIVE,
-        translation_key=HabitipyButtonEntity.REVIVE,
+        key=HabiticaButtonEntity.REVIVE,
+        translation_key=HabiticaButtonEntity.REVIVE,
         press_fn=lambda coordinator: coordinator.habitica.revive(),
         available_fn=lambda data: data.user.stats.hp == 0,
     ),
@@ -103,8 +106,8 @@ BUTTON_DESCRIPTIONS: tuple[HabiticaButtonEntityDescription, ...] = (
 
 CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
     HabiticaButtonEntityDescription(
-        key=HabitipyButtonEntity.MPHEAL,
-        translation_key=HabitipyButtonEntity.MPHEAL,
+        key=HabiticaButtonEntity.MPHEAL,
+        translation_key=HabiticaButtonEntity.MPHEAL,
         press_fn=(
             lambda coordinator: coordinator.habitica.cast_skill(Skill.ETHEREAL_SURGE)
         ),
@@ -116,8 +119,8 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
         entity_picture="shop_mpheal.png",
     ),
     HabiticaButtonEntityDescription(
-        key=HabitipyButtonEntity.EARTH,
-        translation_key=HabitipyButtonEntity.EARTH,
+        key=HabiticaButtonEntity.EARTH,
+        translation_key=HabiticaButtonEntity.EARTH,
         press_fn=lambda coordinator: coordinator.habitica.cast_skill(Skill.EARTHQUAKE),
         available_fn=(
             lambda data: (data.user.stats.lvl or 0) >= 13
@@ -127,8 +130,8 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
         entity_picture="shop_earth.png",
     ),
     HabiticaButtonEntityDescription(
-        key=HabitipyButtonEntity.FROST,
-        translation_key=HabitipyButtonEntity.FROST,
+        key=HabiticaButtonEntity.FROST,
+        translation_key=HabiticaButtonEntity.FROST,
         press_fn=(
             lambda coordinator: coordinator.habitica.cast_skill(Skill.CHILLING_FROST)
         ),
@@ -142,8 +145,8 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
         entity_picture="shop_frost.png",
     ),
     HabiticaButtonEntityDescription(
-        key=HabitipyButtonEntity.DEFENSIVE_STANCE,
-        translation_key=HabitipyButtonEntity.DEFENSIVE_STANCE,
+        key=HabiticaButtonEntity.DEFENSIVE_STANCE,
+        translation_key=HabiticaButtonEntity.DEFENSIVE_STANCE,
         press_fn=(
             lambda coordinator: coordinator.habitica.cast_skill(Skill.DEFENSIVE_STANCE)
         ),
@@ -155,8 +158,8 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
         entity_picture="shop_defensiveStance.png",
     ),
     HabiticaButtonEntityDescription(
-        key=HabitipyButtonEntity.VALOROUS_PRESENCE,
-        translation_key=HabitipyButtonEntity.VALOROUS_PRESENCE,
+        key=HabiticaButtonEntity.VALOROUS_PRESENCE,
+        translation_key=HabiticaButtonEntity.VALOROUS_PRESENCE,
         press_fn=(
             lambda coordinator: coordinator.habitica.cast_skill(Skill.VALOROUS_PRESENCE)
         ),
@@ -168,8 +171,8 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
         entity_picture="shop_valorousPresence.png",
     ),
     HabiticaButtonEntityDescription(
-        key=HabitipyButtonEntity.INTIMIDATE,
-        translation_key=HabitipyButtonEntity.INTIMIDATE,
+        key=HabiticaButtonEntity.INTIMIDATE,
+        translation_key=HabiticaButtonEntity.INTIMIDATE,
         press_fn=(
             lambda coordinator: coordinator.habitica.cast_skill(Skill.INTIMIDATING_GAZE)
         ),
@@ -181,8 +184,8 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
         entity_picture="shop_intimidate.png",
     ),
     HabiticaButtonEntityDescription(
-        key=HabitipyButtonEntity.TOOLS_OF_TRADE,
-        translation_key=HabitipyButtonEntity.TOOLS_OF_TRADE,
+        key=HabiticaButtonEntity.TOOLS_OF_TRADE,
+        translation_key=HabiticaButtonEntity.TOOLS_OF_TRADE,
         press_fn=(
             lambda coordinator: coordinator.habitica.cast_skill(
                 Skill.TOOLS_OF_THE_TRADE
@@ -196,8 +199,8 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
         entity_picture="shop_toolsOfTrade.png",
     ),
     HabiticaButtonEntityDescription(
-        key=HabitipyButtonEntity.STEALTH,
-        translation_key=HabitipyButtonEntity.STEALTH,
+        key=HabiticaButtonEntity.STEALTH,
+        translation_key=HabiticaButtonEntity.STEALTH,
         press_fn=lambda coordinator: coordinator.habitica.cast_skill(Skill.STEALTH),
         # Stealth buffs stack and it can only be cast if the amount of
         # buffs is smaller than the amount of unfinished dailies
@@ -219,8 +222,8 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
         entity_picture="shop_stealth.png",
     ),
     HabiticaButtonEntityDescription(
-        key=HabitipyButtonEntity.HEAL,
-        translation_key=HabitipyButtonEntity.HEAL,
+        key=HabiticaButtonEntity.HEAL,
+        translation_key=HabiticaButtonEntity.HEAL,
         press_fn=(
             lambda coordinator: coordinator.habitica.cast_skill(Skill.HEALING_LIGHT)
         ),
@@ -233,8 +236,8 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
         entity_picture="shop_heal.png",
     ),
     HabiticaButtonEntityDescription(
-        key=HabitipyButtonEntity.BRIGHTNESS,
-        translation_key=HabitipyButtonEntity.BRIGHTNESS,
+        key=HabiticaButtonEntity.BRIGHTNESS,
+        translation_key=HabiticaButtonEntity.BRIGHTNESS,
         press_fn=(
             lambda coordinator: coordinator.habitica.cast_skill(
                 Skill.SEARING_BRIGHTNESS
@@ -248,8 +251,8 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
         entity_picture="shop_brightness.png",
     ),
     HabiticaButtonEntityDescription(
-        key=HabitipyButtonEntity.PROTECT_AURA,
-        translation_key=HabitipyButtonEntity.PROTECT_AURA,
+        key=HabiticaButtonEntity.PROTECT_AURA,
+        translation_key=HabiticaButtonEntity.PROTECT_AURA,
         press_fn=(
             lambda coordinator: coordinator.habitica.cast_skill(Skill.PROTECTIVE_AURA)
         ),
@@ -261,8 +264,8 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
         entity_picture="shop_protectAura.png",
     ),
     HabiticaButtonEntityDescription(
-        key=HabitipyButtonEntity.HEAL_ALL,
-        translation_key=HabitipyButtonEntity.HEAL_ALL,
+        key=HabiticaButtonEntity.HEAL_ALL,
+        translation_key=HabiticaButtonEntity.HEAL_ALL,
         press_fn=lambda coordinator: coordinator.habitica.cast_skill(Skill.BLESSING),
         available_fn=(
             lambda data: (data.user.stats.lvl or 0) >= 14
@@ -277,7 +280,7 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: HabiticaConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up buttons from a config entry."""
 
@@ -335,16 +338,24 @@ class HabiticaButton(HabiticaBase, ButtonEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="setup_rate_limit_exception",
+                translation_placeholders={"retry_after": str(e.retry_after)},
             ) from e
         except NotAuthorizedError as e:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="service_call_unallowed",
             ) from e
-        except (HabiticaException, ClientError) as e:
+        except HabiticaException as e:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="service_call_exception",
+                translation_placeholders={"reason": e.error.message},
+            ) from e
+        except ClientError as e:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="service_call_exception",
+                translation_placeholders={"reason": str(e)},
             ) from e
         else:
             await self.coordinator.async_request_refresh()

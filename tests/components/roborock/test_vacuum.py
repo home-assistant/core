@@ -40,6 +40,15 @@ ENTITY_ID = "vacuum.roborock_s7_maxv"
 DEVICE_ID = "abc123"
 
 
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Fixture to set platforms used in the test."""
+    # Note: Currently the Image platform is required to make these tests pass since
+    # some initialization of the coordinator happens as a side effect of loading
+    # image platform. Fix that and remove IMAGE here.
+    return [Platform.VACUUM, Platform.IMAGE]
+
+
 async def test_registry_entries(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -106,6 +115,30 @@ async def test_commands(
         assert mock_send_command.call_count == 1
         assert mock_send_command.call_args[0][0] == command
         assert mock_send_command.call_args[0][1] == called_params
+
+
+async def test_cloud_command(
+    hass: HomeAssistant,
+    bypass_api_fixture,
+    setup_entry: MockConfigEntry,
+) -> None:
+    """Test sending commands to the vacuum."""
+
+    vacuum = hass.states.get(ENTITY_ID)
+    assert vacuum
+
+    data = {ATTR_ENTITY_ID: ENTITY_ID, "command": "get_map_v1"}
+    with patch(
+        "homeassistant.components.roborock.coordinator.RoborockMqttClientV1.send_command"
+    ) as mock_send_command:
+        await hass.services.async_call(
+            Platform.VACUUM,
+            SERVICE_SEND_COMMAND,
+            data,
+            blocking=True,
+        )
+        assert mock_send_command.call_count == 1
+        assert mock_send_command.call_args[0][0] == RoborockCommand.GET_MAP_V1
 
 
 @pytest.mark.parametrize(
@@ -228,7 +261,7 @@ async def test_get_current_position(
             return_value=b"",
         ),
         patch(
-            "homeassistant.components.roborock.image.RoborockMapDataParser.parse",
+            "homeassistant.components.roborock.coordinator.RoborockMapDataParser.parse",
             return_value=map_data,
         ),
     ):
@@ -258,7 +291,9 @@ async def test_get_current_position_no_map_data(
             "homeassistant.components.roborock.coordinator.RoborockMqttClientV1.get_map_v1",
             return_value=None,
         ),
-        pytest.raises(HomeAssistantError, match="Failed to retrieve map data."),
+        pytest.raises(
+            HomeAssistantError, match="Something went wrong creating the map"
+        ),
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -283,7 +318,7 @@ async def test_get_current_position_no_robot_position(
             return_value=b"",
         ),
         patch(
-            "homeassistant.components.roborock.image.RoborockMapDataParser.parse",
+            "homeassistant.components.roborock.coordinator.RoborockMapDataParser.parse",
             return_value=map_data,
         ),
         pytest.raises(HomeAssistantError, match="Robot position not found"),

@@ -33,19 +33,20 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from . import HabiticaConfigEntry
 from .const import (
     CONF_API_USER,
     DEFAULT_URL,
     DOMAIN,
     FORGOT_PASSWORD_URL,
     HABITICANS_URL,
+    SECTION_DANGER_ZONE,
     SECTION_REAUTH_API_KEY,
     SECTION_REAUTH_LOGIN,
     SIGN_UP_URL,
     SITE_DATA_URL,
     X_CLIENT,
 )
+from .coordinator import HabiticaConfigEntry
 
 STEP_ADVANCED_DATA_SCHEMA = vol.Schema(
     {
@@ -98,6 +99,21 @@ STEP_REAUTH_DATA_SCHEMA = vol.Schema(
             vol.Schema(
                 {
                     vol.Optional(CONF_API_KEY): str,
+                },
+            ),
+            {"collapsed": True},
+        ),
+    }
+)
+
+STEP_RECONF_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_API_KEY): str,
+        vol.Required(SECTION_DANGER_ZONE): data_entry_flow.section(
+            vol.Schema(
+                {
+                    vol.Required(CONF_URL): str,
+                    vol.Required(CONF_VERIFY_SSL): bool,
                 },
             ),
             {"collapsed": True},
@@ -258,6 +274,50 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
                 "habiticans": HABITICANS_URL,
             },
             errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        errors: dict[str, str] = {}
+        reconf_entry = self._get_reconfigure_entry()
+        suggested_values = {
+            CONF_API_KEY: reconf_entry.data[CONF_API_KEY],
+            SECTION_DANGER_ZONE: {
+                CONF_URL: reconf_entry.data[CONF_URL],
+                CONF_VERIFY_SSL: reconf_entry.data.get(CONF_VERIFY_SSL, True),
+            },
+        }
+
+        if user_input:
+            errors, user = await self.validate_api_key(
+                {
+                    **reconf_entry.data,
+                    **user_input,
+                    **user_input[SECTION_DANGER_ZONE],
+                }
+            )
+            if not errors and user is not None:
+                return self.async_update_reload_and_abort(
+                    reconf_entry,
+                    data_updates={
+                        CONF_API_KEY: user_input[CONF_API_KEY],
+                        **user_input[SECTION_DANGER_ZONE],
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=STEP_RECONF_DATA_SCHEMA,
+                suggested_values=user_input or suggested_values,
+            ),
+            errors=errors,
+            description_placeholders={
+                "site_data": SITE_DATA_URL,
+                "habiticans": HABITICANS_URL,
+            },
         )
 
     async def validate_login(

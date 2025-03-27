@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from unittest.mock import patch
+from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
-from pysensibo.model import SensiboData
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -26,8 +25,7 @@ from tests.common import async_fire_time_changed, snapshot_platform
 async def test_update(
     hass: HomeAssistant,
     load_int: ConfigEntry,
-    monkeypatch: pytest.MonkeyPatch,
-    get_data: SensiboData,
+    mock_client: MagicMock,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
     freezer: FrozenDateTimeFactory,
@@ -36,15 +34,13 @@ async def test_update(
 
     await snapshot_platform(hass, entity_registry, snapshot, load_int.entry_id)
 
-    monkeypatch.setattr(get_data.parsed["ABC999111"], "fw_ver", "SKY30048")
+    mock_client.async_get_devices_data.return_value.parsed[
+        "ABC999111"
+    ].fw_ver = "SKY30048"
 
-    with patch(
-        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
-        return_value=get_data,
-    ):
-        freezer.tick(timedelta(minutes=5))
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-    state1 = hass.states.get("update.hallway_firmware")
-    assert state1.state == STATE_OFF
+    state = hass.states.get("update.hallway_firmware")
+    assert state.state == STATE_OFF

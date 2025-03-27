@@ -8,21 +8,21 @@ from pyControl4.account import C4Account
 from pyControl4.director import C4Director
 from pyControl4.error_handling import BadToken
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 
-from .const import CONF_ACCOUNT, CONF_CONTROLLER_UNIQUE_ID, CONF_DIRECTOR, DOMAIN
+from . import Control4ConfigEntry
+from .const import CONF_CONTROLLER_UNIQUE_ID
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def _update_variables_for_config_entry(
-    hass: HomeAssistant, entry: ConfigEntry, variable_names: set[str]
+    hass: HomeAssistant, entry: Control4ConfigEntry, variable_names: set[str]
 ) -> dict[int, dict[str, Any]]:
     """Retrieve data from the Control4 director."""
-    director: C4Director = hass.data[DOMAIN][entry.entry_id][CONF_DIRECTOR]
+    director = entry.runtime_data.director
     data = await director.getAllItemVariableValue(variable_names)
     result_dict: defaultdict[int, dict[str, Any]] = defaultdict(dict)
     for item in data:
@@ -31,7 +31,7 @@ async def _update_variables_for_config_entry(
 
 
 async def update_variables_for_config_entry(
-    hass: HomeAssistant, entry: ConfigEntry, variable_names: set[str]
+    hass: HomeAssistant, entry: Control4ConfigEntry, variable_names: set[str]
 ) -> dict[int, dict[str, Any]]:
     """Try to Retrieve data from the Control4 director for update_coordinator."""
     try:
@@ -42,8 +42,8 @@ async def update_variables_for_config_entry(
         return await _update_variables_for_config_entry(hass, entry, variable_names)
 
 
-async def refresh_tokens(hass: HomeAssistant, entry: ConfigEntry):
-    """Store updated authentication and director tokens in hass.data."""
+async def refresh_tokens(hass: HomeAssistant, entry: Control4ConfigEntry):
+    """Store updated authentication and director tokens in runtime_data."""
     config = entry.data
     account_session = aiohttp_client.async_get_clientsession(hass)
 
@@ -59,6 +59,5 @@ async def refresh_tokens(hass: HomeAssistant, entry: ConfigEntry):
     )
 
     _LOGGER.debug("Saving new tokens in hass data")
-    entry_data = hass.data[DOMAIN][entry.entry_id]
-    entry_data[CONF_ACCOUNT] = account
-    entry_data[CONF_DIRECTOR] = director
+    entry.runtime_data.account = account
+    entry.runtime_data.director = director

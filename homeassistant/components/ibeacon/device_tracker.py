@@ -9,7 +9,7 @@ from homeassistant.components.device_tracker.config_entry import BaseTrackerEnti
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import IBeaconConfigEntry
 from .const import SIGNAL_IBEACON_DEVICE_NEW
@@ -20,7 +20,7 @@ from .entity import IBeaconEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: IBeaconConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up device tracker for iBeacon Tracker component."""
     coordinator = entry.runtime_data

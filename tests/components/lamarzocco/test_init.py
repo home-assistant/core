@@ -38,9 +38,7 @@ async def test_load_unload_config_entry(
     mock_lamarzocco: MagicMock,
 ) -> None:
     """Test loading and unloading the integration."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await async_init_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
@@ -58,9 +56,7 @@ async def test_config_entry_not_ready(
     """Test the La Marzocco configuration entry not ready."""
     mock_lamarzocco.get_config.side_effect = RequestNotSuccessful("")
 
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await async_init_integration(hass, mock_config_entry)
 
     assert len(mock_lamarzocco.get_config.mock_calls) == 1
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
@@ -73,9 +69,7 @@ async def test_invalid_auth(
 ) -> None:
     """Test auth error during setup."""
     mock_lamarzocco.get_config.side_effect = AuthFail("")
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await async_init_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
     assert len(mock_lamarzocco.get_config.mock_calls) == 1
@@ -176,12 +170,18 @@ async def test_bluetooth_is_set_from_discovery(
             "homeassistant.components.lamarzocco.async_discovered_service_info",
             return_value=[service_info],
         ) as discovery,
-        patch("homeassistant.components.lamarzocco.LaMarzoccoMachine") as init_device,
+        patch(
+            "homeassistant.components.lamarzocco.LaMarzoccoMachine"
+        ) as mock_machine_class,
     ):
+        mock_machine = MagicMock()
+        mock_machine.get_firmware = AsyncMock()
+        mock_machine.firmware = mock_lamarzocco.firmware
+        mock_machine_class.return_value = mock_machine
         await async_init_integration(hass, mock_config_entry)
     discovery.assert_called_once()
-    init_device.assert_called_once()
-    _, kwargs = init_device.call_args
+    assert mock_machine_class.call_count == 2
+    _, kwargs = mock_machine_class.call_args
     assert kwargs["bluetooth_client"] is not None
     assert mock_config_entry.data[CONF_NAME] == service_info.name
     assert mock_config_entry.data[CONF_MAC] == service_info.address
@@ -227,6 +227,19 @@ async def test_gateway_version_issue(
     issue_registry = ir.async_get(hass)
     issue = issue_registry.async_get_issue(DOMAIN, "unsupported_gateway_firmware")
     assert (issue is not None) == issue_exists
+
+
+async def test_conf_host_removed_for_new_gateway(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_lamarzocco: MagicMock,
+) -> None:
+    """Make sure we get the issue for certain gateway firmware versions."""
+    mock_lamarzocco.firmware[FirmwareType.GATEWAY].current_version = "v5.0.9"
+
+    await async_init_integration(hass, mock_config_entry)
+
+    assert CONF_HOST not in mock_config_entry.data
 
 
 async def test_device(
