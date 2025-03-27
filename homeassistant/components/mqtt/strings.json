@@ -280,7 +280,7 @@
             "green_template": "[Template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract green color from the state payload value. Expected result of the template is an integer from 0-255 range.",
             "last_reset_value_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the last reset. When Last reset template is set, the State class option must be Total. [Learn more.]({url}#last_reset_value_template)",
             "force_update": "Sends update events even if the value hasn’t changed. Useful if you want to have meaningful value graphs in history. [Learn more.]({url}#force_update)",
-            "on_command_type": "Defines when on the `payload on` is sent. Using `last` (the default) will send any style (brightness, color, etc) topics first and then a `payload on` to the command_topic. Using `first` will send the `payload on` and then any style topics. Using `brightness` will only send brightness commands instead of the `Payload on` to turn the light on.",
+            "on_command_type": "Defines when the `payload on` is sent. Using `last` (the default) will send any style (brightness, color, etc) topics first and then a `payload on` to the command_topic. Using `first` will send the `payload on` and then any style topics. Using `brightness` will only send brightness commands instead of the `Payload on` to turn the light on.",
             "optimistic": "Flag that defines if the {platform} entity works in optimistic mode. [Learn more.]({url}#optimistic)",
             "payload_off": "The payload that represents the off state.",
             "payload_on": "The payload that represents the on state.",
