@@ -1,7 +1,11 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "This device is already configured"
+        },
         "error": {
-            "invalid_ip": "Invalid IP address format"
+            "invalid_ip": "Invalid IP address format",
+            "cannot_connect": "Cannot connect to the device"
         },
         "step": {
             "user": {
