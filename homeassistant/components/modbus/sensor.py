@@ -122,11 +122,11 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreSensor, SensorEntity):
                 self._coordinator.async_set_updated_data(None)
             self.async_write_ha_state()
             return
-
+        self._attr_available = True
         result = self.unpack_structure_result(raw_result.registers)
         if self._coordinator:
+            result_array: list[float | None] = []
             if result:
-                result_array: list[float | None] = []
                 for i in result.split(","):
                     if i != "None":
                         result_array.append(
@@ -139,10 +139,10 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreSensor, SensorEntity):
                 self._coordinator.async_set_updated_data(result_array)
             else:
                 self._attr_native_value = None
-                self._coordinator.async_set_updated_data(None)
+                result_array = (self._slave_count + 1) * [None]
+                self._coordinator.async_set_updated_data(result_array)
         else:
             self._attr_native_value = result
-        self._attr_available = self._attr_native_value is not None
         self.async_write_ha_state()
 
 
@@ -188,5 +188,5 @@ class SlaveSensor(
         """Handle updated data from the coordinator."""
         result = self.coordinator.data
         self._attr_native_value = result[self._idx] if result else None
-        self._attr_available = self._attr_native_value is not None
+        self._attr_available = result is not None
         super()._handle_coordinator_update()
