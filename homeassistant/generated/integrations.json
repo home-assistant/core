@@ -2174,6 +2174,11 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "gaggenau": {
+      "name": "Gaggenau",
+      "integration_type": "virtual",
+      "supported_by": "home_connect"
+    },
     "garadget": {
       "name": "Garadget",
       "integration_type": "hub",
