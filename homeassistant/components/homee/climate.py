@@ -152,8 +152,7 @@ class HomeeClimate(HomeeNodeEntity, ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new target preset mode."""
-        if self._heating_mode is not None:
-            assert self._attr_preset_modes is not None
+        if self._heating_mode is not None and self._attr_preset_modes is not None:
             await self.async_set_homee_value(
                 self._heating_mode, self._attr_preset_modes.index(preset_mode) + 1
             )

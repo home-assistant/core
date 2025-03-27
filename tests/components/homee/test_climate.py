@@ -134,17 +134,14 @@ async def test_hvac_action(
     expected: HVACAction,
 ) -> None:
     """Test hvac action of climate entities."""
-    await setup_mock_climate(
-        hass, mock_config_entry, mock_homee, "thermostat_with_heating_mode.json"
-    )
-
+    mock_homee.nodes = [build_mock_node("thermostat_with_heating_mode.json")]
+    mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
     node = mock_homee.nodes[0]
     # set target temperature to 24.0
     node.attributes[0].current_value = 24.0
     attribute = node.get_attribute_by_type(attribute_type)
     attribute.current_value = value
-    node.add_on_changed_listener.call_args_list[0][0][0](node)
-    await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
 
     attributes = hass.states.get("climate.test_thermostat_3").attributes
     assert attributes[ATTR_HVAC_ACTION] == expected
@@ -168,14 +165,11 @@ async def test_current_preset_mode(
     expected: str,
 ) -> None:
     """Test current preset mode of climate entities."""
-    await setup_mock_climate(
-        hass, mock_config_entry, mock_homee, "thermostat_with_preset.json"
-    )
-
+    mock_homee.nodes = [build_mock_node("thermostat_with_preset.json")]
+    mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
     node = mock_homee.nodes[0]
     node.attributes[2].current_value = preset_mode_int
-    node.add_on_changed_listener.call_args_list[0][0][0](node)
-    await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
 
     attributes = hass.states.get("climate.test_thermostat_4").attributes
     assert attributes[ATTR_PRESET_MODE] == expected
