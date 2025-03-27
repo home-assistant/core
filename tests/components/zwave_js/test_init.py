@@ -25,7 +25,7 @@ from homeassistant.components.hassio import HassioAPIError
 from homeassistant.components.logger import DOMAIN as LOGGER_DOMAIN, SERVICE_SET_LEVEL
 from homeassistant.components.persistent_notification import async_dismiss
 from homeassistant.components.zwave_js import DOMAIN
-from homeassistant.components.zwave_js.helpers import get_device_id
+from homeassistant.components.zwave_js.helpers import get_device_id, get_device_id_ext
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import CoreState, HomeAssistant
@@ -451,8 +451,12 @@ async def test_on_node_added_preprovisioned(
 
         device = device_registry.async_get(device.id)
         assert device
-        assert len(device.identifiers) > 0
-        assert (DOMAIN, f"provision_{dsk}") not in device.identifiers
+        assert device.identifiers == {
+            get_device_id(client.driver, node),
+            get_device_id_ext(client.driver, node),
+        }
+        # There should only be the controller and the preprovisioned device
+        assert len(device_registry.devices) == 2
 
 
 async def test_on_node_added_not_ready(
