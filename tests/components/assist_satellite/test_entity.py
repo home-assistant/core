@@ -22,8 +22,8 @@ from homeassistant.components.assist_satellite import (
     AssistSatelliteAnnouncement,
     SatelliteBusyError,
 )
+from homeassistant.components.assist_satellite.const import PREANNOUNCE_URL
 from homeassistant.components.assist_satellite.entity import AssistSatelliteState
-from homeassistant.components.assist_satellite.http import PREANNOUNCE_URL
 from homeassistant.components.media_source import PlayMedia
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Context, HomeAssistant

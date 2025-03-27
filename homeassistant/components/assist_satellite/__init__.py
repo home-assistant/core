@@ -1,9 +1,11 @@
 """Base class for assist satellite entities."""
 
 import logging
+from pathlib import Path
 
 import voluptuous as vol
 
+from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
@@ -15,6 +17,8 @@ from .const import (
     CONNECTION_TEST_DATA,
     DATA_COMPONENT,
     DOMAIN,
+    PREANNOUNCE_FILENAME,
+    PREANNOUNCE_URL,
     AssistSatelliteEntityFeature,
 )
 from .entity import (
@@ -25,7 +29,6 @@ from .entity import (
     AssistSatelliteWakeWord,
 )
 from .errors import SatelliteBusyError
-from .http import PreannounceSoundView
 from .websocket_api import async_register_websocket_api
 
 __all__ = [
@@ -84,7 +87,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[CONNECTION_TEST_DATA] = {}
     async_register_websocket_api(hass)
     hass.http.register_view(ConnectionTestView())
-    hass.http.register_view(PreannounceSoundView())
+
+    # Default preannounce sound
+    await hass.http.async_register_static_paths(
+        [
+            StaticPathConfig(
+                PREANNOUNCE_URL, str(Path(__file__).parent / PREANNOUNCE_FILENAME)
+            )
+        ]
+    )
 
     return True
 
