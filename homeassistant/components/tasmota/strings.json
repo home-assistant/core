@@ -24,7 +24,7 @@
     },
     "topic_no_prefix": {
       "title": "Tasmota device {name} has an invalid MQTT topic",
-      "description": "Tasmota device {name} with IP {ip} does not include `%prefix%` in its FullTopic.\n\nEntities for this devices are disabled until the configuration has been corrected."
+      "description": "Tasmota device {name} with IP {ip} does not include `%prefix%` in its FullTopic.\n\nEntities for this device are disabled until the configuration has been corrected."
     }
   }
 }
