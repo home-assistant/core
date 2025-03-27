@@ -4,10 +4,12 @@ import ipaddress
 import logging
 from typing import Any
 
+from aiohttp import ClientError, ClientSession
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_SCAN_INTERVAL
+from homeassistant.exceptions import ConfigEntryNotReady
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,7 +21,7 @@ class TheSilentWaveConfigFlow(config_entries.ConfigFlow, domain="thesilentwave")
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:  # Updated return type to ConfigFlowResult
+    ) -> config_entries.ConfigFlowResult:
         """Handle the user input for the configuration."""
         errors = {}
 
@@ -27,6 +29,13 @@ class TheSilentWaveConfigFlow(config_entries.ConfigFlow, domain="thesilentwave")
             try:
                 # Validate IP address
                 ipaddress.ip_address(user_input[CONF_HOST])
+
+                # Check for duplicate entries
+                await self.async_set_unique_id(user_input[CONF_HOST])
+                self._abort_if_unique_id_configured()
+
+                # Check if device is reachable
+                await self._async_check_device(user_input[CONF_HOST])
 
                 return self.async_create_entry(
                     title=user_input[CONF_NAME],
@@ -40,6 +49,8 @@ class TheSilentWaveConfigFlow(config_entries.ConfigFlow, domain="thesilentwave")
             except ValueError:
                 _LOGGER.warning("Invalid IP address entered: %s", user_input[CONF_HOST])
                 errors[CONF_HOST] = "invalid_ip"
+            except ConfigEntryNotReady:
+                errors[CONF_HOST] = "cannot_connect"
 
         return self.async_show_form(
             step_id="user",
@@ -54,3 +65,13 @@ class TheSilentWaveConfigFlow(config_entries.ConfigFlow, domain="thesilentwave")
             ),
             errors=errors,
         )
+
+    async def _async_check_device(self, host: str) -> None:
+        """Check if the device is reachable."""
+        url = f"http://{host}:8080/api/status"
+        async with ClientSession() as session:
+            try:
+                async with session.get(url) as response:
+                    response.raise_for_status()
+            except ClientError as err:
+                raise ConfigEntryNotReady(f"Cannot connect to device: {err}") from err
