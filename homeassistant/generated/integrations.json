@@ -4969,6 +4969,11 @@
       "config_flow": true,
       "single_config_entry": true
     },
+    "profilo": {
+      "name": "Profilo",
+      "integration_type": "virtual",
+      "supported_by": "home_connect"
+    },
     "progettihwsw": {
       "name": "ProgettiHWSW Automation",
       "integration_type": "hub",
