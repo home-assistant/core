@@ -410,7 +410,9 @@ def create_devices(
     rooms: dict[str, str],
 ) -> None:
     """Create devices in the device registry."""
-    for device in devices.values():
+    for device in sorted(
+        devices.values(), key=lambda d: d.device.parent_device_id or ""
+    ):
         kwargs: dict[str, Any] = {}
         if device.device.hub is not None:
             kwargs = {

@@ -387,6 +387,15 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
             await self._player.play_preset_station(index)
             return
 
+        if media_type == "queue":
+            # media_id must be an int
+            try:
+                queue_id = int(media_id)
+            except ValueError:
+                raise ValueError(f"Invalid queue id '{media_id}'") from None
+            await self._player.play_queue(queue_id)
+            return
+
         raise ValueError(f"Unsupported media type '{media_type}'")
 
     @catch_action_error("select source")

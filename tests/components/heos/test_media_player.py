@@ -1321,6 +1321,51 @@ async def test_play_media_music_source_url(
     controller.play_url.assert_called_once()
 
 
+async def test_play_media_queue(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    controller: MockHeos,
+) -> None:
+    """Test the play media service with type queue."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: "media_player.test_player",
+            ATTR_MEDIA_CONTENT_TYPE: "queue",
+            ATTR_MEDIA_CONTENT_ID: "2",
+        },
+        blocking=True,
+    )
+    controller.player_play_queue.assert_called_once_with(1, 2)
+
+
+async def test_play_media_queue_invalid(
+    hass: HomeAssistant, config_entry: MockConfigEntry, controller: MockHeos
+) -> None:
+    """Test the play media service with an invalid queue id."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    with pytest.raises(
+        HomeAssistantError,
+        match=re.escape("Unable to play media: Invalid queue id 'Invalid'"),
+    ):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.test_player",
+                ATTR_MEDIA_CONTENT_TYPE: "queue",
+                ATTR_MEDIA_CONTENT_ID: "Invalid",
+            },
+            blocking=True,
+        )
+    assert controller.player_play_queue.call_count == 0
+
+
 async def test_browse_media_root(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
