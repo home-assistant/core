@@ -5853,16 +5853,9 @@ async def test_stop_action_subscript(
     )
 
 
+@pytest.mark.parametrize(("var", "response"), [(1, "If: Then"), (2, "Testing 123")])
 @pytest.mark.parametrize(
-    ("var", "response", "script_mode", "max_runs"),
-    [
-        (1, "If: Then", "single", 1),
-        (2, "Testing 123", "single", 1),
-        (1, "If: Then", "parallel", 2),
-        (2, "Testing 123", "parallel", 2),
-        (1, "If: Then", "queued", 2),
-        (2, "Testing 123", "queued", 2),
-    ],
+    ("script_mode", "max_runs"), [("single", 1), ("parallel", 2), ("queued", 2)]
 )
 async def test_stop_action_response_variables(
     hass: HomeAssistant,
@@ -5888,7 +5881,6 @@ async def test_stop_action_response_variables(
             {"stop": "In the name of love", "response_variable": "output"},
         ]
     )
-    logger = logging.getLogger("TEST")
     script_obj = script.Script(
         hass,
         sequence,
@@ -5896,7 +5888,6 @@ async def test_stop_action_response_variables(
         "test_domain",
         script_mode=script_mode,
         max_runs=max_runs,
-        logger=logger,
     )
 
     run_vars = MappingProxyType({"var": var})
