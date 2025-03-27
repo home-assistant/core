@@ -167,7 +167,7 @@ aioacaia==0.1.14
 aioairq==0.4.4
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.6.10
+aioairzone-cloud==0.6.11
 
 # homeassistant.components.airzone
 aioairzone==0.9.9
@@ -198,7 +198,7 @@ aioazuredevops==2.2.1
 aiobafi6==0.9.0
 
 # homeassistant.components.aws
-aiobotocore==2.13.1
+aiobotocore==2.21.1
 
 # homeassistant.components.comelit
 aiocomelit==0.11.3
@@ -576,7 +576,7 @@ bosch-alarm-mode2==0.4.3
 boschshcpy==0.2.91
 
 # homeassistant.components.aws
-botocore==1.34.131
+botocore==1.37.1
 
 # homeassistant.components.bring
 bring-api==1.1.0
@@ -649,7 +649,7 @@ dbus-fast==2.43.0
 debugpy==1.8.13
 
 # homeassistant.components.ecovacs
-deebot-client==12.3.1
+deebot-client==12.4.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -1032,7 +1032,7 @@ ifaddr==0.2.0
 igloohome-api==0.1.0
 
 # homeassistant.components.imgw_pib
-imgw_pib==1.0.9
+imgw_pib==1.0.10
 
 # homeassistant.components.incomfort
 incomfort-client==0.6.7
@@ -1175,7 +1175,7 @@ medcom-ble==0.1.1
 melnor-bluetooth==0.0.25
 
 # homeassistant.components.meteo_france
-meteofrance-api==1.3.0
+meteofrance-api==1.4.0
 
 # homeassistant.components.mfi
 mficlient==0.5.0
@@ -2533,7 +2533,7 @@ youless-api==2.2.0
 youtubeaio==1.1.5
 
 # homeassistant.components.media_extractor
-yt-dlp[default]==2025.02.19
+yt-dlp[default]==2025.03.26
 
 # homeassistant.components.zamg
 zamg==0.3.6
