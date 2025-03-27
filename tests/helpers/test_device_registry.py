@@ -1450,12 +1450,11 @@ async def test_migration_from_1_9(
     # Test data was loaded
     entry = registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
-        connections={("mac", "123456ABCDEF")},
         identifiers={("serial", "123456ABCDEF")},
     )
     assert entry.id == "abcdefghijklm"
     deleted_entry = registry._async_get_deleted_device(
-        connections={("mac", "123456ABCDAB")},
+        connections=set(),
         identifiers={("serial", "123456ABCDAB")},
     )
     assert deleted_entry.id == "abcdefghijklm2"
@@ -1463,7 +1462,6 @@ async def test_migration_from_1_9(
     # Update to trigger a store
     entry = registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
-        connections={("mac", "123456ABCDEF")},
         identifiers={("serial", "123456ABCDEF")},
         sw_version="new_version",
     )
