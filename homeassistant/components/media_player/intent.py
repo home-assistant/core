@@ -58,20 +58,7 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
 
     intent.async_register(hass, MediaUnpauseHandler(last_paused))
     intent.async_register(hass, MediaPauseHandler(last_paused))
-    intent.async_register(
-        hass,
-        intent.ServiceIntentHandler(
-            INTENT_MEDIA_NEXT,
-            DOMAIN,
-            SERVICE_MEDIA_NEXT_TRACK,
-            required_domains={DOMAIN},
-            required_features=MediaPlayerEntityFeature.NEXT_TRACK,
-            required_states={MediaPlayerState.PLAYING, MediaPlayerState.PAUSED},
-            description="Skips a media player to the next item",
-            platforms={DOMAIN},
-            device_classes={MediaPlayerDeviceClass},
-        ),
-    )
+    intent.async_register(hass, MediaNextHandler())
     intent.async_register(
         hass,
         intent.ServiceIntentHandler(
@@ -205,6 +192,60 @@ class MediaUnpauseHandler(intent.ServiceIntentHandler):
                     ]
 
             self.last_paused.clear()
+
+        return await super().async_handle_states(
+            intent_obj, match_result, match_constraints
+        )
+
+
+class MediaNextHandler(intent.ServiceIntentHandler):
+    """Handler for media next intent."""
+
+    def __init__(self) -> None:
+        """Initialize handler."""
+        super().__init__(
+            INTENT_MEDIA_NEXT,
+            DOMAIN,
+            SERVICE_MEDIA_NEXT_TRACK,
+            required_domains={DOMAIN},
+            required_features=MediaPlayerEntityFeature.NEXT_TRACK,
+            required_states={MediaPlayerState.PLAYING, MediaPlayerState.PAUSED},
+            description="Plays the next item for a media player",
+            platforms={DOMAIN},
+            device_classes={MediaPlayerDeviceClass},
+        )
+
+    async def async_handle_states(
+        self,
+        intent_obj: intent.Intent,
+        match_result: intent.MatchTargetsResult,
+        match_constraints: intent.MatchTargetsConstraints,
+        match_preferences: intent.MatchTargetsPreferences | None = None,
+    ) -> intent.IntentResponse:
+        """Play next media item."""
+        if match_result.is_match and (not match_constraints.name):
+            if len(match_result.states) == 1:
+                return await super().async_handle_states(
+                    intent_obj, match_result, match_constraints
+                )
+            if len(match_result.states) > 1:
+                playing_players = [
+                    state
+                    for state in match_result.states
+                    if state.state == MediaPlayerState.PLAYING
+                ]
+                if len(playing_players) == 1:
+                    match_result.states = playing_players
+                    return await super().async_handle_states(
+                        intent_obj, match_result, match_constraints
+                    )
+
+                resp = intent.IntentResponse(intent_obj.language, intent_obj)
+                resp.async_set_error(
+                    intent.IntentResponseErrorCode.NO_VALID_TARGETS,
+                    "Too many possible targets",
+                )
+                return resp
 
         return await super().async_handle_states(
             intent_obj, match_result, match_constraints
