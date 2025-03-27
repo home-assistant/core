@@ -541,7 +541,7 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                         for config_entry_id in device["config_entries"]
                     }
             if old_minor_version < 10:
-                # Introduced in 2025.4
+                # Introduced in 2025.5
                 for device in old_data["devices"]:
                     device["connections"] = _normalize_connections(
                         device["connections"]
