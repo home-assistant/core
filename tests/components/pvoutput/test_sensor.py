@@ -87,7 +87,8 @@ async def test_sensors(
     assert state.state == "2500.0"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.POWER
     assert (
-        state.attributes.get(ATTR_FRIENDLY_NAME) == "Frenck's Solar Farm Power consumption"
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == "Frenck's Solar Farm Power consumption"
     )
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPower.WATT
