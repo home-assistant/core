@@ -93,7 +93,10 @@
           "name": "Color temperature (Kelvin)"
         },
         "effect": {
-          "name": "Effect"
+          "name": "Effect",
+          "state": {
+            "off": "[%key:common::state::off%]"
+          }
         },
         "effect_list": {
           "name": "Available effects"
