@@ -66,7 +66,7 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
             SERVICE_MEDIA_NEXT_TRACK,
             required_domains={DOMAIN},
             required_features=MediaPlayerEntityFeature.NEXT_TRACK,
-            required_states={MediaPlayerState.PLAYING},
+            required_states={MediaPlayerState.PLAYING, MediaPlayerState.PAUSED},
             description="Skips a media player to the next item",
             platforms={DOMAIN},
             device_classes={MediaPlayerDeviceClass},
