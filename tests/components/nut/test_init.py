@@ -1,26 +1,21 @@
 """Test init of Nut integration."""
 
 from copy import deepcopy
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 from aionut import NUTError, NUTLoginError
 import pytest
 
-from homeassistant.components import device_automation
-from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.nut.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
-    CONF_DEVICE_ID,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
-    CONF_TYPE,
     CONF_USERNAME,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
 from .util import _get_mock_nutclient, async_init_integration
@@ -73,7 +68,8 @@ async def test_config_not_ready(
     )
     entry.add_to_hass(hass)
 
-    error_message = "Error fetching UPS state: "
+    nut_error_message = "Something wrong happened"
+    error_message = f"Error fetching UPS state: {nut_error_message}"
     with (
         patch(
             "homeassistant.components.nut.AIONUTClient.list_ups",
@@ -81,7 +77,7 @@ async def test_config_not_ready(
         ),
         patch(
             "homeassistant.components.nut.AIONUTClient.list_vars",
-            side_effect=NUTError,
+            side_effect=NUTError(nut_error_message),
         ),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -102,7 +98,8 @@ async def test_auth_fails(
     )
     entry.add_to_hass(hass)
 
-    error_message = "Device authentication error: "
+    nut_error_message = "Something wrong happened"
+    error_message = f"Device authentication error: {nut_error_message}"
     with (
         patch(
             "homeassistant.components.nut.AIONUTClient.list_ups",
@@ -110,7 +107,7 @@ async def test_auth_fails(
         ),
         patch(
             "homeassistant.components.nut.AIONUTClient.list_vars",
-            side_effect=NUTLoginError,
+            side_effect=NUTLoginError(nut_error_message),
         ),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -122,47 +119,6 @@ async def test_auth_fails(
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
     assert flows[0]["context"]["source"] == "reauth"
-
-
-async def test_run_command_fails(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Test that run command fails with NUTError and translation message."""
-    run_command = AsyncMock(side_effect=NUTError())
-    command_name = "beeper.enable"
-    await async_init_integration(
-        hass,
-        username="someuser",
-        password="somepassword",
-        list_vars={"ups.status": "OL"},
-        list_ups={"ups1": "UPS 1"},
-        list_commands_return_value={command_name: None},
-        run_command=run_command,
-    )
-
-    with (
-        patch(
-            "homeassistant.components.nut.AIONUTClient.run_command",
-            side_effect=NUTError,
-        ),
-    ):
-        device_entry = next(device for device in device_registry.devices.values())
-        platform = await device_automation.async_get_device_automation_platform(
-            hass, DOMAIN, DeviceAutomationType.ACTION
-        )
-
-        error_message = f"Error running command {command_name}"
-        with pytest.raises(HomeAssistantError, match=error_message):
-            await platform.async_call_action_from_config(
-                hass,
-                {
-                    CONF_TYPE: command_name,
-                    CONF_DEVICE_ID: device_entry.id,
-                },
-                {},
-                None,
-            )
 
 
 async def test_serial_number(hass: HomeAssistant) -> None:

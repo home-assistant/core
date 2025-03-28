@@ -1,6 +1,6 @@
 """The tests for Network UPS Tools (NUT) device actions."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from aionut import NUTError
 import pytest
@@ -199,7 +199,8 @@ async def test_run_command_exception(
     """Test if run command raises exception with translation."""
 
     command_name = "beeper.enable"
-    run_command = AsyncMock(side_effect=NUTError())
+    nut_error_message = "Something wrong happened"
+    run_command = AsyncMock(side_effect=NUTError(nut_error_message))
     await async_init_integration(
         hass,
         list_vars={"ups.status": "OL"},
@@ -213,14 +214,8 @@ async def test_run_command_exception(
         hass, DOMAIN, DeviceAutomationType.ACTION
     )
 
-    error_message = f"Error running command {command_name}"
-    with (
-        patch(
-            "homeassistant.components.nut.AIONUTClient.run_command",
-            side_effect=NUTError,
-        ),
-        pytest.raises(HomeAssistantError, match=error_message),
-    ):
+    error_message = f"Error running command {command_name}, {nut_error_message}"
+    with pytest.raises(HomeAssistantError, match=error_message):
         await platform.async_call_action_from_config(
             hass,
             {
