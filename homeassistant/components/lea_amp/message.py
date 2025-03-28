@@ -204,6 +204,7 @@ class MessageResponseFactory:
             value = data.replace('"', "")
             command_type = "mute"
         elif "output/enable" in data:
+            _LOGGER.log(logging.INFO, "find channels: %s", str(data.find("channels/")))
             zoneId = data[(data.find("channels/") + 9) : (data.find("/output") - 1)]
             _LOGGER.log(logging.INFO, "zoneId: %s", str(zoneId))
             value = data.replace("/amp/channels/" + zoneId + "/output/enable", "")
