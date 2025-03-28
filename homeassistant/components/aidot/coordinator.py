@@ -1,7 +1,6 @@
 """Coordinator for Aidot."""
 
 import logging
-from typing import Any
 
 from aidot.client import AidotClient
 from aidot.const import (
@@ -34,9 +33,6 @@ UPDATE_DEVICE_LIST_INTERVAL = timedelta(hours=6)
 
 class AidotDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceStatusData]):
     """Class to manage Aidot data."""
-
-    device: dict[str, Any]
-    device_client: DeviceClient
 
     def __init__(
         self,
@@ -77,7 +73,6 @@ class AidotDeviceManagerCoordinator(DataUpdateCoordinator[None]):
     """Class to manage fetching Aidot data."""
 
     config_entry: AidotConfigEntry
-    client: AidotClient
 
     def __init__(
         self,

@@ -4,7 +4,7 @@
       "already_configured": "The account in the current region has already configured"
     },
     "error": {
-      "account_pwd_incorrect": "The password or email address is incorrect."
+      "invalid_auth": "Authentication failed, please ensure that the network is functioning properly and the account password is correct."
     },
     "step": {
       "user": {

@@ -67,7 +67,7 @@ async def test_config_flow_login_user_password_incorrect(
     )
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "account_pwd_incorrect"}
+    assert result["errors"] == {"base": "invalid_auth"}
 
     mocked_aidot_client.async_post_login.side_effect = None
     mocked_aidot_client.async_post_login.return_value = TEST_LOGIN_RESP

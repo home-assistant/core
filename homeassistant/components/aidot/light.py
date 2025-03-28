@@ -91,19 +91,19 @@ class AidotLight(CoordinatorEntity[AidotDeviceUpdateCoordinator], LightEntity):
         else:
             self._attr_color_mode = ColorMode.BRIGHTNESS
             self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+        self._update_status()
+
+    def _update_status(self) -> None:
         self._attr_available = self.coordinator.data.online
         self._attr_is_on = self.coordinator.data.on
         self._attr_brightness = self.coordinator.data.dimming
         self._attr_color_temp_kelvin = self.coordinator.data.cct
         self._attr_rgbw_color = self.coordinator.data.rgbw
 
+    @callback
     def _handle_coordinator_update(self) -> None:
         """Update."""
-        self._attr_available = self.coordinator.data.online
-        self._attr_is_on = self.coordinator.data.on
-        self._attr_brightness = self.coordinator.data.dimming
-        self._attr_color_temp_kelvin = self.coordinator.data.cct
-        self._attr_rgbw_color = self.coordinator.data.rgbw
+        self._update_status()
         super()._handle_coordinator_update()
 
     async def async_turn_on(self, **kwargs: Any) -> None:

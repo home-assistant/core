@@ -9,15 +9,14 @@ from aidot.const import CONF_LOGIN_INFO, DEFAULT_COUNTRY_NAME, SUPPORTED_COUNTRY
 from aidot.exceptions import AidotUserOrPassIncorrect
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_COUNTRY, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 
 
-class AidotConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class AidotConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle aidot config flow."""
 
     async def async_step_user(
@@ -37,7 +36,7 @@ class AidotConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 login_info = await client.async_post_login()
             except AidotUserOrPassIncorrect:
-                errors["base"] = "account_pwd_incorrect"
+                errors["base"] = "invalid_auth"
 
             if not errors:
                 return self.async_create_entry(
