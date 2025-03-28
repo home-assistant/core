@@ -5,15 +5,13 @@ from datetime import datetime
 import logging
 from typing import Any
 
-from .controller import LeaController
-
 _LOGGER = logging.getLogger(__name__)
 
 
 class LeaZone:
     """LeaZone."""
 
-    def __init__(self, controller: LeaController, zone_id: str) -> None:
+    def __init__(self, controller, zone_id: str) -> None:
         """Init."""
 
         self._zone_id = zone_id
