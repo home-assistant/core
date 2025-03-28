@@ -201,7 +201,7 @@ class LeaController:
                 _LOGGER.log(logging.INFO, "response data: %s", str(data))
                 await self._handle_num_inputs(data.decode())
                 # self._handle_response_received(data)
-            self._transport.close()
+            # self._transport.close()
         if self._registry.has_queued_zones:
             for zone_id in self._registry.zones_queue:
                 self._transport.sendto(message, (zone_id, self._port))
@@ -252,18 +252,6 @@ class LeaController:
     def zones(self) -> list[LeaZone]:
         """Return zones."""
         return list(self._registry.discovered_zones.values())
-
-    def connection_made(self, command):
-        """Create Connection."""
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect((self._ip_address, int(self._port)))
-        s.send(command)
-
-        while True:
-            data = s.recv(1024)
-            if data:
-                # print(data)
-                return data
 
     def connection_lost(self, *args, **kwargs) -> None:
         """Connection Lost."""  # noqa: D401
