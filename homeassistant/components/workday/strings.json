@@ -217,7 +217,7 @@
   "services": {
     "check_date": {
       "name": "Check date",
-      "description": "Checks if a date is a workday.",
+      "description": "Checks if a given date is a workday.",
       "fields": {
         "check_date": {
           "name": "Date",
