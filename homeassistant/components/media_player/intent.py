@@ -67,7 +67,7 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
             SERVICE_MEDIA_PREVIOUS_TRACK,
             required_domains={DOMAIN},
             required_features=MediaPlayerEntityFeature.PREVIOUS_TRACK,
-            required_states={MediaPlayerState.PLAYING},
+            required_states={MediaPlayerState.PLAYING, MediaPlayerState.PAUSED},
             description="Replays the previous item for a media player",
             platforms={DOMAIN},
             device_classes={MediaPlayerDeviceClass},
