@@ -36,6 +36,42 @@ SLEEP_SWITCH_DESCRIPTION = SwitchEntityDescription(
     icon="mdi:sleep",
 )
 
+WHITE_LIGHT_SWITCH_DESCRIPTION = SwitchEntityDescription(
+    key="is_openWhiteLight",
+    name="WhiteLight switch",
+    icon="mdi:light-flood-down",
+)
+
+SIREN_ALARM_SWITCH_DESCRIPTION = SwitchEntityDescription(
+    key="is_sirenalarm",
+    name="SirenAlarm switch",
+    icon="mdi:alarm-note",
+)
+
+TURN_OFF_VOLUME_SWITCH_DESCRIPTION = SwitchEntityDescription(
+    key="is_TurnOffVolume",
+    name="TurnOffVolume switch",
+    icon="mdi:volume-off",
+)
+
+LIGHT_STATUS_SWITCH_DESCRIPTION = SwitchEntityDescription(
+    key="is_TurnOffLight",
+    name="TurnOffLight switch",
+    icon="mdi:lightbulb-fluorescent-tube",
+)
+
+HDR_SWITCH_DESCRIPTION = SwitchEntityDescription(
+    key="is_OpenHdr",
+    name="Hdr switch",
+    icon="mdi:hdr",
+)
+
+WDR_SWITCH_DESCRIPTION = SwitchEntityDescription(
+    key="is_OpenWdr",
+    name="Wdr switch",
+    icon="mdi:alpha-w-box",
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -51,11 +87,31 @@ async def async_setup_entry(
         async_add_entities(
             [FoscamGenericSwitch(coordinator, config_entry, SLEEP_SWITCH_DESCRIPTION)]
         )
+    if ((1 << 8) & int(coordinator.data["product_info"]["reserve3"])) != 0:
+        async_add_entities(
+            [FoscamGenericSwitch(coordinator, config_entry, WDR_SWITCH_DESCRIPTION)]
+        )
+    else:
+        async_add_entities(
+            [FoscamGenericSwitch(coordinator, config_entry, HDR_SWITCH_DESCRIPTION)]
+        )
     async_add_entities(
         [
             FoscamGenericSwitch(coordinator, config_entry, IR_SWITCH_DESCRIPTION),
             FoscamGenericSwitch(coordinator, config_entry, FLIP_SWITCH_DESCRIPTION),
             FoscamGenericSwitch(coordinator, config_entry, MIRROR_SWITCH_DESCRIPTION),
+            FoscamGenericSwitch(
+                coordinator, config_entry, WHITE_LIGHT_SWITCH_DESCRIPTION
+            ),
+            FoscamGenericSwitch(
+                coordinator, config_entry, SIREN_ALARM_SWITCH_DESCRIPTION
+            ),
+            FoscamGenericSwitch(
+                coordinator, config_entry, TURN_OFF_VOLUME_SWITCH_DESCRIPTION
+            ),
+            FoscamGenericSwitch(
+                coordinator, config_entry, LIGHT_STATUS_SWITCH_DESCRIPTION
+            ),
         ]
     )
 
@@ -106,6 +162,30 @@ class FoscamGenericSwitch(FoscamEntity, SwitchEntity):
             ret, _ = await self.hass.async_add_executor_job(
                 getattr(self.coordinator.session, "wake_up"), 0
             )
+        elif self.entity_description.key == "is_openWhiteLight":
+            ret, _ = await self.hass.async_add_executor_job(
+                getattr(self.coordinator.session, "closeWhiteLight")
+            )
+        elif self.entity_description.key == "is_sirenalarm":
+            ret, _ = await self.hass.async_add_executor_job(
+                getattr(self.coordinator.session, "setSirenConfig"), 0, 100, 0
+            )
+        elif self.entity_description.key == "is_TurnOffVolume":
+            ret, _ = await self.hass.async_add_executor_job(
+                getattr(self.coordinator.session, "setVoiceEnableState"), 1
+            )
+        elif self.entity_description.key == "is_TurnOffLight":
+            ret, _ = await self.hass.async_add_executor_job(
+                getattr(self.coordinator.session, "setLedEnableState"), 1
+            )
+        elif self.entity_description.key == "is_OpenWdr":
+            ret, _ = await self.hass.async_add_executor_job(
+                getattr(self.coordinator.session, "setWdrMode"), 0
+            )
+        elif self.entity_description.key == "is_OpenHdr":
+            ret, _ = await self.hass.async_add_executor_job(
+                getattr(self.coordinator.session, "setHdrMode"), 0
+            )
         if ret != 0:
             raise HomeAssistantError(f"Error turning off: {ret}")
         self._state = False
@@ -130,7 +210,31 @@ class FoscamGenericSwitch(FoscamEntity, SwitchEntity):
             )
         elif self.entity_description.key == "is_asleep":
             ret, _ = await self.hass.async_add_executor_job(
-                getattr(self.coordinator.session, "sleep"), 0
+                getattr(self.coordinator.session, "sleep")
+            )
+        elif self.entity_description.key == "is_openWhiteLight":
+            ret, _ = await self.hass.async_add_executor_job(
+                getattr(self.coordinator.session, "openWhiteLight")
+            )
+        elif self.entity_description.key == "is_sirenalarm":
+            ret, _ = await self.hass.async_add_executor_job(
+                getattr(self.coordinator.session, "setSirenConfig"), 1, 100, 0
+            )
+        elif self.entity_description.key == "is_TurnOffVolume":
+            ret, _ = await self.hass.async_add_executor_job(
+                getattr(self.coordinator.session, "setVoiceEnableState"), 0
+            )
+        elif self.entity_description.key == "is_TurnOffLight":
+            ret, _ = await self.hass.async_add_executor_job(
+                getattr(self.coordinator.session, "setLedEnableState"), 0
+            )
+        elif self.entity_description.key == "is_OpenWdr":
+            ret, _ = await self.hass.async_add_executor_job(
+                getattr(self.coordinator.session, "setWdrMode"), 1
+            )
+        elif self.entity_description.key == "is_OpenHdr":
+            ret, _ = await self.hass.async_add_executor_job(
+                getattr(self.coordinator.session, "setHdrMode"), 1
             )
         if ret != 0:
             raise HomeAssistantError(f"Error turning on: {ret}")

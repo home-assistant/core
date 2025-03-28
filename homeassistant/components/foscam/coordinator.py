@@ -53,10 +53,33 @@ class FoscamCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         ret, sleep_setting = self.session.is_asleep()
         configs["is_asleep"] = {"supported": ret == 0, "status": sleep_setting}
+
+        ret, is_openWhiteLight = self.session.getWhiteLightBrightness()
+        configs["is_openWhiteLight"] = is_openWhiteLight["enable"]
+
+        ret, is_sirenalarm = self.session.getSirenConfig()
+        configs["is_sirenalarm"] = is_sirenalarm["sirenEnable"]
+
+        ret, Volume = self.session.getAudioVolume()
+        configs["Volume"] = Volume["volume"]
+
+        ret, SpeakVolume = self.session.getSpeakVolume()
+        configs["SpeakVolume"] = SpeakVolume["SpeakVolume"]
+
+        ret, is_TurnOffVolume = self.session.getVoiceEnableState()
+        configs["is_TurnOffVolume"] = 0 if int(is_TurnOffVolume["isEnable"]) == 1 else 1
+
+        ret, is_TurnOffLight = self.session.getLedEnableState()
+        configs["is_TurnOffLight"] = 0 if int(is_TurnOffLight["isEnable"]) == 1 else 1
+        if ((1 << 8) & int(all_info["reserve3"])) != 0:
+            ret, is_OpenWdr = self.session.getWdrMode()
+            configs["is_OpenWdr"] = is_OpenWdr["mode"]
+        else:
+            ret, is_OpenHdr = self.session.getHdrMode()
+            configs["is_OpenHdr"] = is_OpenHdr["mode"]
         return configs
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from API endpoint."""
-
         async with asyncio.timeout(30):
             return await self.hass.async_add_executor_job(self.gather_all_configs)
