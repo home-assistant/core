@@ -315,6 +315,7 @@ async def test_media_browse(
         "media_content_id": "mock-id",
         "can_play": False,
         "can_expand": True,
+        "can_search": False,
         "children_media_class": None,
         "thumbnail": None,
         "not_shown": 0,
