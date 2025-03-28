@@ -14,9 +14,6 @@ from .message import (
     MessageResponseFactory,
     OnOffMessage,
     ZoneEnabledMsg,
-    getMuteMessage,
-    getSourceMessage,
-    getVolumeMessage,
     setMuteMessage,
     setSourceMessage,
     setVolumeMessage,
@@ -304,6 +301,9 @@ class LeaController:
 
     def _send_message(self, message: str) -> None:
         _LOGGER.log(logging.INFO, "_send_message message:%s", message)
+        if not self._transport:
+            _LOGGER.log(logging.INFO, "Transport not available")
+            return
         self._transport.send(message.encode())
         data = self._transport.recv(2048)
         if data:
@@ -312,6 +312,6 @@ class LeaController:
 
     def _send_update_message(self, zone: LeaZone):
         self._send_message(ZoneEnabledMsg(zone.zone_id))
-        self._send_message(getMuteMessage(zone.zone_id))
-        self._send_message(getVolumeMessage(zone.zone_id))
-        self._send_message(getSourceMessage(zone.zone_id))
+        # self._send_message(getMuteMessage(zone.zone_id))
+        # self._send_message(getVolumeMessage(zone.zone_id))
+        # self._send_message(getSourceMessage(zone.zone_id))
