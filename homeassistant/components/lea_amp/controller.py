@@ -312,7 +312,8 @@ class LeaController:
         data = self._transport.recv(2048)
         if data:
             _LOGGER.log(logging.INFO, "response data: %s", str(data))
-            await self._handle_response_received(data.decode())
+            if "OK" not in data.decode():
+                await self._handle_response_received(data.decode())
 
     async def _send_update_message(self, zone_id: str):
         await self._send_message(ZoneEnabledMsg(zone_id))
