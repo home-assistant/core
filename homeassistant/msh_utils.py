@@ -3,7 +3,6 @@
 import asyncio
 import base64
 from http import HTTPStatus
-import json
 import os
 from typing import Any
 
@@ -455,33 +454,8 @@ async def ring_dashboard_create() -> None:
     if os.path.exists(dashboard_path):
         return
 
-    dashboard_registry = {
-        "version": 1,
-        "minor_version": 1,
-        "key": "lovelace_dashboards",
-        "data": {
-            "items": [
-                {
-                    "id": "help_ring_setup",
-                    "show_in_sidebar": False,
-                    "icon": "mdi:note-text",
-                    "title": "Help Ring Setup",
-                    "require_admin": True,
-                    "mode": "storage",
-                    "url_path": "help_ring_setup",
-                }
-            ]
-        },
-    }
+    async with aiofiles.open(dashboard_path, "w", encoding="utf-8") as file:
+        await file.write(msh_large_strings.dashboard_registry)
 
-    try:
-        async with aiofiles.open(dashboard_path, "w", encoding="utf-8") as file:
-            json.dump(dashboard_registry, file, indent=2)
-    except (OSError, json.JSONDecodeError, PermissionError):
-        return
-
-    try:
-        async with aiofiles.open(ring_doc_path, "w", encoding="utf-8") as file:
-            json.dump(msh_large_strings.mshls_help_ring_setup, file, indent=2)
-    except (OSError, json.JSONDecodeError, PermissionError):
-        return
+    async with aiofiles.open(ring_doc_path, "w", encoding="utf-8") as file:
+        await file.write(msh_large_strings.mshls_help_ring_setup)
