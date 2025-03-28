@@ -275,9 +275,9 @@ class LeaController:
         elif commandType == "mute":
             if zone := self.get_zone_by_id(zone_id):
                 zone.updateMute(bool(value))
-        elif commandType == "source":
-            if zone := self.get_zone_by_id(zone_id):
-                zone.updateSource(int(value))
+        # elif commandType == "source":
+        # if zone := self.get_zone_by_id(zone_id):
+        # zone.updateSource(int(value))
         elif commandType == "power":
             if zone := self.get_zone_by_id(zone_id):
                 zone.updatePower(bool(value))
