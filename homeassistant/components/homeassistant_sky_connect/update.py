@@ -168,6 +168,7 @@ class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
     """SkyConnect firmware update entity."""
 
     bootloader_reset_type = None
+    _attr_has_entity_name = True
 
     def __init__(
         self,
