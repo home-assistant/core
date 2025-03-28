@@ -55,7 +55,7 @@ rules:
   docs-known-limitations: todo
   docs-supported-devices:
     status: exempt
-    comment: This is an service, which doesn't integrate with any devices.
+    comment: This is a service, which doesn't integrate with any devices.
   docs-supported-functions: todo
   docs-troubleshooting:
     status: exempt
