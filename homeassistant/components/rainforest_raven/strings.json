@@ -24,8 +24,8 @@
   },
   "entity": {
     "sensor": {
-      "meter_price": {
-        "name": "Meter price",
+      "energy_price": {
+        "name": "Energy price",
         "state_attributes": {
           "rate_label": { "name": "Rate" },
           "tier": { "name": "Tier" }
