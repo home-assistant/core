@@ -178,6 +178,7 @@ class MessageResponseFactory:
 
     def create_message(self, data: str):
         """Create message."""
+        data = data.replace("/", " ")
         if "deviceName" in data:
             zoneId = "0"
             value = data[data.find("deviceName") + 12 : len(data) - 2]
@@ -204,18 +205,11 @@ class MessageResponseFactory:
             value = data.replace('"', "")
             command_type = "mute"
         elif "output/enable" in data:
-            # _LOGGER.log(logging.INFO, "find channels: %s", str(data.find("channels/")))
-            # zoneId = data[(data.find("channels/") + 9) : (data.find("/output") - 1)]
-            # _LOGGER.log(logging.INFO, "zoneId: %s", str(zoneId))
-            value = data.replace("/amp/channels/", "")
-            value = data.replace("/output/enable", "")
-            _LOGGER.log(logging.INFO, "value: %s", value)
-            zoneId = value.split(" ")[0]
+            zoneId = data.split(" ")[3]
             _LOGGER.log(logging.INFO, "zoneId: %s", zoneId)
-            value = data.replace("/amp/channels/" + zoneId + "/output/enable", "")
-            # value = data.replace('"', "")
-            _LOGGER.log(logging.INFO, "value: %s", str(value))
+            value = data.split(" ")[6]
             command_type = "power"
+            _LOGGER.log(logging.INFO, "value: %s", value)
         elif "inputSelector/primary" in data:
             zoneId = data[data.find("channels/") + 9 : data.find("/inputSelector") - 1]
 
