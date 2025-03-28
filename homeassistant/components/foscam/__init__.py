@@ -1,7 +1,5 @@
 """The foscam component."""
 
-from libpyfoscam import FoscamCamera
-
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -15,6 +13,7 @@ from homeassistant.helpers.entity_registry import async_migrate_entries
 from .config_flow import DEFAULT_RTSP_PORT
 from .const import CONF_RTSP_PORT, LOGGER
 from .coordinator import FoscamConfigEntry, FoscamCoordinator
+from .foscamcgi import FoscamCamera
 
 PLATFORMS = [Platform.CAMERA, Platform.NOTIFY, Platform.NUMBER, Platform.SWITCH]
 

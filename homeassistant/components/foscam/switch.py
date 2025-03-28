@@ -4,13 +4,13 @@ from __future__ import annotations
 
 from typing import Any
 
-from coordinator import FoscamConfigEntry, FoscamCoordinator
-from entity import FoscamEntity
-
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from .coordinator import FoscamConfigEntry, FoscamCoordinator
+from .entity import FoscamEntity
 
 FLIP_SWITCH_DESCRIPTION = SwitchEntityDescription(
     key="is_Flip",

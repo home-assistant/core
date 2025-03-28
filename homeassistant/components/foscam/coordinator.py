@@ -4,13 +4,12 @@ import asyncio
 from datetime import timedelta
 from typing import Any
 
-from libpyfoscam import FoscamCamera
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, LOGGER
+from .foscamcgi import FoscamCamera
 
 type FoscamConfigEntry = ConfigEntry[FoscamCoordinator]
 

@@ -4,14 +4,14 @@ import base64
 from datetime import datetime
 import logging
 
-from coordinator import FoscamConfigEntry
-
 from homeassistant.components import webhook
 from homeassistant.components.persistent_notification import (
     create as create_notification,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from .coordinator import FoscamConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = "my_custom_integration"

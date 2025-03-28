@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from coordinator import FoscamConfigEntry, FoscamCoordinator
-from entity import FoscamEntity
-
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from .coordinator import FoscamConfigEntry, FoscamCoordinator
+from .entity import FoscamEntity
 
 VOLUME_DESCRIPTION = NumberEntityDescription(
     key="Volume",
@@ -80,6 +80,7 @@ class FoscamVolumeNumberEntity(FoscamEntity, NumberEntity):
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
+        await super().async_added_to_hass()
         self.async_on_remove(
             self.coordinator.async_add_listener(self._handle_coordinator_update)
         )
