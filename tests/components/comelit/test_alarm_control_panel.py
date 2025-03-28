@@ -110,7 +110,7 @@ async def test_arming_disarming(
     service: str,
     alarm_state: AlarmControlPanelState,
 ) -> None:
-    """Test all entities."""
+    """Test arming and disarming."""
 
     await setup_integration(hass, mock_vedo_config_entry)
 
@@ -135,7 +135,7 @@ async def test_wrong_code(
     mock_vedo: AsyncMock,
     mock_vedo_config_entry: MockConfigEntry,
 ) -> None:
-    """Test all entities."""
+    """Test disarm service with wrong code."""
 
     await setup_integration(hass, mock_vedo_config_entry)
 
