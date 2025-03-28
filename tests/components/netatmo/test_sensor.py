@@ -136,7 +136,7 @@ async def test_process_wifi(strength: int, expected: str) -> None:
     [(50, "Full"), (70, "High"), (80, "Medium"), (90, "Low")],
 )
 async def test_process_rf(strength: int, expected: str) -> None:
-    """Test rf strength translation."""
+    """Test radio strength translation."""
     assert sensor.process_rf(strength) == expected
 
 
