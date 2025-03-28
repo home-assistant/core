@@ -91,6 +91,7 @@ from .const import (
 from .helpers import (
     async_enable_statistics,
     async_get_node_from_device_id,
+    async_get_provisioning_entry_from_device_id,
     get_device_id,
 )
 
@@ -636,14 +637,33 @@ async def websocket_node_metadata(
     }
 )
 @websocket_api.async_response
-@async_get_node
 async def websocket_node_alerts(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict[str, Any],
-    node: Node,
 ) -> None:
     """Get the alerts for a Z-Wave JS node."""
+    try:
+        node = async_get_node_from_device_id(hass, msg[DEVICE_ID])
+    except ValueError as err:
+        provisioning_entry = await async_get_provisioning_entry_from_device_id(
+            hass, msg[DEVICE_ID]
+        )
+        if provisioning_entry:
+            connection.send_result(
+                msg[ID],
+                {
+                    "comments": [
+                        {
+                            "level": "info",
+                            "text": "This device has been provisioned but is not yet included in the network.",
+                        }
+                    ],
+                },
+            )
+            return
+        raise web_exceptions.HTTPNotFound from err
+
     connection.send_result(
         msg[ID],
         {
