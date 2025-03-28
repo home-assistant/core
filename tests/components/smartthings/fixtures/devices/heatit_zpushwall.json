@@ -1,0 +1,155 @@
+{
+  "items": [
+    {
+      "deviceId": "5e5b97f3-3094-44e6-abc0-f61283412d6a",
+      "name": "heatit-zpushwall",
+      "label": "Livingroom smart switch",
+      "manufacturerName": "SmartThingsCommunity",
+      "presentationId": "52933933-7123-3315-a441-92d65df5f031",
+      "deviceManufacturerCode": "019B-0004-2403",
+      "locationId": "c85a9f8a-5d2e-4cdd-8bdb-bc49ba4a3544",
+      "ownerId": "7b68139b-d068-45d8-bf27-961320350024",
+      "roomId": "56e43461-2f7d-4c43-ba7c-29465f991289",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "battery",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "RemoteController",
+              "categoryType": "manufacturer"
+            }
+          ]
+        },
+        {
+          "id": "button1",
+          "label": "button1",
+          "capabilities": [
+            {
+              "id": "button",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "RemoteController",
+              "categoryType": "manufacturer"
+            }
+          ]
+        },
+        {
+          "id": "button2",
+          "label": "button2",
+          "capabilities": [
+            {
+              "id": "button",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "RemoteController",
+              "categoryType": "manufacturer"
+            }
+          ]
+        },
+        {
+          "id": "button3",
+          "label": "button3",
+          "capabilities": [
+            {
+              "id": "button",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "RemoteController",
+              "categoryType": "manufacturer"
+            }
+          ]
+        },
+        {
+          "id": "button4",
+          "label": "button4",
+          "capabilities": [
+            {
+              "id": "button",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "RemoteController",
+              "categoryType": "manufacturer"
+            }
+          ]
+        },
+        {
+          "id": "button5",
+          "label": "button5",
+          "capabilities": [
+            {
+              "id": "button",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "RemoteController",
+              "categoryType": "manufacturer"
+            }
+          ]
+        },
+        {
+          "id": "button6",
+          "label": "button6",
+          "capabilities": [
+            {
+              "id": "button",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "RemoteController",
+              "categoryType": "manufacturer"
+            }
+          ]
+        }
+      ],
+      "createTime": "2023-12-04T16:51:15.774Z",
+      "parentDeviceId": "4869d882-e898-40c3-a198-7611b72187a5",
+      "profile": {
+        "id": "2d6e59af-63df-3102-8515-66f3d75c9323"
+      },
+      "zwave": {
+        "networkId": "12",
+        "driverId": "1d39c140-ce10-490d-bf52-4de7b72caab6",
+        "executingLocally": true,
+        "hubId": "4869d882-e898-40c3-a198-7611b72187a5",
+        "networkSecurityLevel": "ZWAVE_S2_AUTHENTICATED",
+        "provisioningState": "NONFUNCTIONAL",
+        "manufacturerId": 411,
+        "productType": 4,
+        "productId": 9219
+      },
+      "type": "ZWAVE",
+      "restrictionTier": 0,
+      "allowed": null,
+      "executionContext": "LOCAL",
+      "relationships": []
+    }
+  ],
+  "_links": {}
+}

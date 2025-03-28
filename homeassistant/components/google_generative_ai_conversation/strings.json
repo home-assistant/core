@@ -36,7 +36,8 @@
           "harassment_block_threshold": "Negative or harmful comments targeting identity and/or protected attributes",
           "hate_block_threshold": "Content that is rude, disrespectful, or profane",
           "sexual_block_threshold": "Contains references to sexual acts or other lewd content",
-          "dangerous_block_threshold": "Promotes, facilitates, or encourages harmful acts"
+          "dangerous_block_threshold": "Promotes, facilitates, or encourages harmful acts",
+          "enable_google_search_tool": "Enable Google Search tool"
         },
         "data_description": {
           "prompt": "Instruct how the LLM should respond. This can be a template."
@@ -70,7 +71,7 @@
   "issues": {
     "deprecated_image_filename_parameter": {
       "title": "Deprecated 'image_filename' parameter",
-      "description": "The 'image_filename' parameter in Google Generative AI actions is deprecated. Please edit scripts and automations to use 'filenames' intead."
+      "description": "The 'image_filename' parameter in Google Generative AI actions is deprecated. Please edit scripts and automations to use 'filenames' instead."
     }
   }
 }

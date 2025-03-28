@@ -39,7 +39,6 @@ async def async_setup_entry(
     entry.async_on_unload(unsub)
 
     entry.runtime_data = coordinator
-    entry.async_on_unload(coordinator.close)
 
     return True
 

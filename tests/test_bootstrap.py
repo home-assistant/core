@@ -1546,41 +1546,68 @@ def test_should_rollover_is_always_false() -> None:
 async def test_no_base_platforms_loaded_before_recorder(hass: HomeAssistant) -> None:
     """Verify stage 0 not load base platforms before recorder.
 
-    If a stage 0 integration has a base platform in its dependencies and
-    it loads before the recorder, it may load integrations that expect
-    the recorder to be loaded. We need to ensure that no stage 0 integration
-    has a base platform in its dependencies that loads before the recorder.
+    If a stage 0 integration implements base platforms or has a base
+    platform in its dependencies and it loads before the recorder,
+    because of platform-based YAML schema, it may inadvertently
+    load integrations that expect the recorder to already be loaded.
+    We need to ensure that doesn't happen.
     """
+    IGNORE_BASE_PLATFORM_FILES = {
+        # config/scene.py is not a platform
+        "config": {"scene.py"},
+        # websocket_api/sensor.py is using the platform YAML schema
+        # we must not migrate it to an integration key until
+        # we remove the platform YAML schema support for sensors
+        "websocket_api": {"sensor.py"},
+    }
+
     integrations_before_recorder: set[str] = set()
     for _, integrations, _ in bootstrap.STAGE_0_INTEGRATIONS:
         integrations_before_recorder |= integrations
         if "recorder" in integrations:
             break
+    else:
+        pytest.fail("recorder not in stage 0")
 
-    integrations_or_execs = await loader.async_get_integrations(
+    integrations_or_excs = await loader.async_get_integrations(
         hass, integrations_before_recorder
     )
-    integrations: list[Integration] = []
-    resolve_deps_tasks: list[asyncio.Task[bool]] = []
-    for integration in integrations_or_execs.values():
-        assert not isinstance(integrations_or_execs, Exception)
-        integrations.append(integration)
-        resolve_deps_tasks.append(integration.resolve_dependencies())
+    integrations: dict[str, Integration] = {}
+    for domain, integration in integrations_or_excs.items():
+        assert not isinstance(integrations_or_excs, Exception)
+        integrations[domain] = integration
 
-    await asyncio.gather(*resolve_deps_tasks)
+    integrations_all_dependencies = await loader.resolve_integrations_dependencies(
+        hass, integrations.values()
+    )
+    all_integrations = integrations.copy()
+    all_integrations.update(
+        (domain, loader.async_get_loaded_integration(hass, domain))
+        for domains in integrations_all_dependencies.values()
+        for domain in domains
+    )
+
+    problems: dict[str, set[str]] = {}
+    for domain in integrations:
+        domain_with_base_platforms_deps = (
+            integrations_all_dependencies[domain] & BASE_PLATFORMS
+        )
+        if domain_with_base_platforms_deps:
+            problems[domain] = domain_with_base_platforms_deps
+    assert not problems, (
+        f"Integrations that are setup before recorder have base platforms in their dependencies: {problems}"
+    )
+
     base_platform_py_files = {f"{base_platform}.py" for base_platform in BASE_PLATFORMS}
-    for integration in integrations:
-        domain_with_base_platforms_deps = BASE_PLATFORMS.intersection(
-            integration.all_dependencies
+
+    for domain, integration in all_integrations.items():
+        integration_base_platforms_files = (
+            integration._top_level_files & base_platform_py_files
         )
-        assert not domain_with_base_platforms_deps, (
-            f"{integration.domain} has base platforms in dependencies: "
-            f"{domain_with_base_platforms_deps}"
-        )
-        integration_top_level_files = base_platform_py_files.intersection(
-            integration._top_level_files
-        )
-        assert not integration_top_level_files, (
-            f"{integration.domain} has base platform files in top level files: "
-            f"{integration_top_level_files}"
-        )
+        if ignore := IGNORE_BASE_PLATFORM_FILES.get(domain):
+            integration_base_platforms_files -= ignore
+        if integration_base_platforms_files:
+            problems[domain] = integration_base_platforms_files
+    assert not problems, (
+        f"Integrations that are setup before recorder implement base platforms: {problems}"
+    )

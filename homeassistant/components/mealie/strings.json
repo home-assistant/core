@@ -146,11 +146,11 @@
   "services": {
     "get_mealplan": {
       "name": "Get mealplan",
-      "description": "Get mealplan from Mealie",
+      "description": "Gets a mealplan from Mealie",
       "fields": {
         "config_entry_id": {
           "name": "Mealie instance",
-          "description": "Select the Mealie instance to get mealplan from"
+          "description": "The Mealie instance to use for this action."
         },
         "start_date": {
           "name": "Start date",
@@ -164,7 +164,7 @@
     },
     "get_recipe": {
       "name": "Get recipe",
-      "description": "Get recipe from Mealie",
+      "description": "Gets a recipe from Mealie",
       "fields": {
         "config_entry_id": {
           "name": "[%key:component::mealie::services::get_mealplan::fields::config_entry_id::name%]",
@@ -178,7 +178,7 @@
     },
     "import_recipe": {
       "name": "Import recipe",
-      "description": "Import recipe from an URL",
+      "description": "Imports a recipe from an URL",
       "fields": {
         "config_entry_id": {
           "name": "[%key:component::mealie::services::get_mealplan::fields::config_entry_id::name%]",
@@ -196,7 +196,7 @@
     },
     "set_random_mealplan": {
       "name": "Set random mealplan",
-      "description": "Set a random mealplan for a specific date",
+      "description": "Sets a random mealplan for a specific date",
       "fields": {
         "config_entry_id": {
           "name": "[%key:component::mealie::services::get_mealplan::fields::config_entry_id::name%]",
@@ -214,7 +214,7 @@
     },
     "set_mealplan": {
       "name": "Set a mealplan",
-      "description": "Set a mealplan for a specific date",
+      "description": "Sets a mealplan for a specific date",
       "fields": {
         "config_entry_id": {
           "name": "[%key:component::mealie::services::get_mealplan::fields::config_entry_id::name%]",

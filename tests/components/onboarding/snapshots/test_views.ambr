@@ -62,7 +62,7 @@
         'with_automatic_settings': None,
       }),
     ]),
-    'last_non_idle_event': None,
+    'last_action_event': None,
     'state': 'idle',
   })
 # ---

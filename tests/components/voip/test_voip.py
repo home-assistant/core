@@ -27,6 +27,8 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.setup import async_setup_component
 
+from tests.components.tts.common import MockResultStream
+
 _ONE_SECOND = 16000 * 2  # 16Khz 16-bit
 _MEDIA_ID = "12345"
 
@@ -879,6 +881,7 @@ async def test_announce(
     announcement = assist_satellite.AssistSatelliteAnnouncement(
         message="test announcement",
         media_id=_MEDIA_ID,
+        tts_token="test-token",
         original_media_id=_MEDIA_ID,
         media_id_source="tts",
     )
@@ -926,6 +929,7 @@ async def test_voip_id_is_ip_address(
     announcement = assist_satellite.AssistSatelliteAnnouncement(
         message="test announcement",
         media_id=_MEDIA_ID,
+        tts_token="test-token",
         original_media_id=_MEDIA_ID,
         media_id_source="tts",
     )
@@ -978,6 +982,7 @@ async def test_announce_timeout(
     announcement = assist_satellite.AssistSatelliteAnnouncement(
         message="test announcement",
         media_id=_MEDIA_ID,
+        tts_token="test-token",
         original_media_id=_MEDIA_ID,
         media_id_source="tts",
     )
@@ -1018,6 +1023,7 @@ async def test_start_conversation(
     announcement = assist_satellite.AssistSatelliteAnnouncement(
         message="test announcement",
         media_id=_MEDIA_ID,
+        tts_token="test-token",
         original_media_id=_MEDIA_ID,
         media_id_source="tts",
     )
@@ -1162,8 +1168,16 @@ async def test_start_conversation_user_doesnt_pick_up(
             new=async_pipeline_from_audio_stream,
         ),
         patch(
-            "homeassistant.components.assist_satellite.entity.tts_generate_media_source_id",
-            return_value="test media id",
+            "homeassistant.components.tts.generate_media_source_id",
+            return_value="media-source://bla",
+        ),
+        patch(
+            "homeassistant.components.tts.async_resolve_engine",
+            return_value="test tts",
+        ),
+        patch(
+            "homeassistant.components.tts.async_create_stream",
+            return_value=MockResultStream(hass, "wav", b""),
         ),
     ):
         satellite.transport = Mock()

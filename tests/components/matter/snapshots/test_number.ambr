@@ -401,8 +401,8 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'max': 25,
-      'min': -25,
+      'max': 50,
+      'min': -50,
       'mode': <NumberMode.BOX: 'box'>,
       'step': 0.5,
     }),
@@ -439,8 +439,8 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'Eve Thermo Temperature offset',
-      'max': 25,
-      'min': -25,
+      'max': 50,
+      'min': -50,
       'mode': <NumberMode.BOX: 'box'>,
       'step': 0.5,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
