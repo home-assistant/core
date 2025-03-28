@@ -493,6 +493,31 @@ async def test_discover_new_device(hass: HomeAssistant, fritz: Mock) -> None:
     assert state
 
 
+async def test_set_hvac_mode_lock(
+    hass: HomeAssistant,
+    fritz: Mock,
+    service_data: dict,
+) -> None:
+    """Test setting hvac mode while device is locked."""
+    device = FritzDeviceClimateMock()
+    device.lock = True
+
+    assert await setup_config_entry(
+        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+    )
+
+    with pytest.raises(
+        HomeAssistantError,
+        match="Can't change HVAC mode while holiday or summer mode is active on the device",
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_ENTITY_ID: ENTITY_ID, **service_data},
+            True,
+        )
+
+
 async def test_holidy_summer_mode(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory, fritz: Mock
 ) -> None:
