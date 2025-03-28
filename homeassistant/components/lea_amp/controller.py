@@ -230,19 +230,19 @@ class LeaController:
 
     async def turn_on_off(self, zone_id: str, status: str):
         """Turn on off."""
-        self._send_message(OnOffMessage(zone_id, status))
+        await self._send_message(OnOffMessage(zone_id, status))
 
     async def set_volume(self, zone_id: str, volume: int) -> None:
         """Set Volume."""
-        self._send_message(setVolumeMessage(zone_id, volume))
+        await self._send_message(setVolumeMessage(zone_id, volume))
 
     async def set_source(self, zone_id: str, source: int) -> None:
         """Set Source."""
-        self._send_message(setSourceMessage(zone_id, source))
+        await self._send_message(setSourceMessage(zone_id, source))
 
     async def set_mute(self, zone_id: str, mute: bool) -> None:
         """Set Volume."""
-        self._send_message(setMuteMessage(zone_id, mute))
+        await self._send_message(setMuteMessage(zone_id, mute))
 
     def get_zone_by_id(self, zone_id: str) -> LeaZone | None:
         """Get Zone by id."""
@@ -302,7 +302,7 @@ class LeaController:
             return True
         return self._zone_discovered_callback(zone, is_new)
 
-    def _send_message(self, message: str) -> None:
+    async def _send_message(self, message: str) -> None:
         _LOGGER.log(logging.INFO, "_send_message message:%s", message)
         if not self._transport:
             _LOGGER.log(logging.INFO, "Transport not available")
@@ -311,10 +311,10 @@ class LeaController:
         data = self._transport.recv(2048)
         if data:
             _LOGGER.log(logging.INFO, "response data: %s", str(data))
-            # self._handle_response_received(data)
+            await self._handle_response_received(data.decode())
 
-    def _send_update_message(self, zone_id: str):
-        self._send_message(ZoneEnabledMsg(zone_id))
-        self._send_message(getMuteMessage(zone_id))
-        self._send_message(getVolumeMessage(zone_id))
-        self._send_message(getSourceMessage(zone_id))
+    async def _send_update_message(self, zone_id: str):
+        await self._send_message(ZoneEnabledMsg(zone_id))
+        await self._send_message(getMuteMessage(zone_id))
+        await self._send_message(getVolumeMessage(zone_id))
+        await self._send_message(getSourceMessage(zone_id))
