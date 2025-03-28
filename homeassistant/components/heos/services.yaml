@@ -4,6 +4,19 @@ get_queue:
       integration: heos
       domain: media_player
 
+remove_from_queue:
+  target:
+    entity:
+      integration: heos
+      domain: media_player
+  fields:
+    queue_ids:
+      required: true
+      selector:
+        text:
+          multiple: true
+          type: number
+
 group_volume_set:
   target:
     entity:
