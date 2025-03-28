@@ -213,6 +213,9 @@
       "total_pollution_level": {
         "default": "mdi:air-filter"
       },
+      "carbon_dioxide": {
+        "default": "mdi:molecule-co2"
+      },
       "monitoring_enabled": {
         "default": "mdi:monitor-eye"
       },
@@ -324,7 +327,19 @@
       "hop_oil_info": {
         "default": "mdi:information-box-outline"
       },
+      "hop_oil_capsule_1": {
+        "default": "mdi:information-box-outline"
+      },
+      "hop_oil_capsule_2": {
+        "default": "mdi:information-box-outline"
+      },
       "flavor_info": {
+        "default": "mdi:information-box-outline"
+      },
+      "flavor_capsule_1": {
+        "default": "mdi:information-box-outline"
+      },
+      "flavor_capsule_2": {
         "default": "mdi:information-box-outline"
       },
       "beer_remain": {
