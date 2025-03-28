@@ -246,6 +246,7 @@ class LeaController:
 
     def get_zone_by_id(self, zone_id: str) -> LeaZone | None:
         """Get Zone by id."""
+        _LOGGER.log(logging.INFO, "get_zone_by_id: %s", str(zone_id))
         return self._registry.get_zone_by_zone_id(int(zone_id))
 
     @property

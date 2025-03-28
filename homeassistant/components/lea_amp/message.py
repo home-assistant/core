@@ -207,8 +207,9 @@ class MessageResponseFactory:
             command_type = "power"
         elif "inputSelector primary" in data:
             zoneId = data.split(" ")[3]
-            value = data.split(" ")[6]
+            value = data.split(" ")[6] + " " + data.split(" ")[7]
             command_type = "source"
+            value = value.replace('"', "")
         value = value.replace("\n", "")
 
         _LOGGER.log(logging.INFO, "value: %s", str(value))
