@@ -2,13 +2,13 @@
   "title": "Workday",
   "config": {
     "abort": {
-      "already_configured": "Workday has already been setup with chosen configuration"
+      "already_configured": "Workday has already been set up with chosen configuration"
     },
     "step": {
       "user": {
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
-          "country": "Country"
+          "country": "[%key:common::config_flow::data::country%]"
         }
       },
       "options": {
@@ -18,7 +18,7 @@
           "days_offset": "Offset",
           "workdays": "Days to include",
           "add_holidays": "Add holidays",
-          "remove_holidays": "Remove Holidays",
+          "remove_holidays": "Remove holidays",
           "province": "Subdivision of country",
           "language": "Language for named holidays",
           "category": "Additional category as holiday"
@@ -116,7 +116,7 @@
   },
   "issues": {
     "bad_country": {
-      "title": "Configured Country for {title} does not exist",
+      "title": "Configured country for {title} does not exist",
       "fix_flow": {
         "step": {
           "country": {
@@ -133,7 +133,7 @@
               "province": "[%key:component::workday::config::step::options::data::province%]"
             },
             "data_description": {
-              "province": "State, Territory, Province, Region of Country"
+              "province": "State, territory, province, region of country"
             }
           }
         }
@@ -217,7 +217,7 @@
   "services": {
     "check_date": {
       "name": "Check date",
-      "description": "Check if date is workday.",
+      "description": "Checks if a date is a workday.",
       "fields": {
         "check_date": {
           "name": "Date",
