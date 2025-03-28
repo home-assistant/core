@@ -123,7 +123,7 @@
             "title": "Select country for {title}",
             "description": "Select a country to use for your Workday sensor.",
             "data": {
-              "country": "[%key:component::workday::config::step::user::data::country%]"
+              "country": "[%key:common::config_flow::data::country%]"
             }
           },
           "province": {
@@ -133,7 +133,7 @@
               "province": "[%key:component::workday::config::step::options::data::province%]"
             },
             "data_description": {
-              "province": "State, territory, province, region of country"
+              "province": "[%key:component::workday::config::step::options::data_description::province%]"
             }
           }
         }
