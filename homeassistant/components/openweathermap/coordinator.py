@@ -1,4 +1,4 @@
-"""Weather data coordinator for the OpenWeatherMap (OWM) service."""
+"""Data coordinator for the OpenWeatherMap (OWM) service."""
 
 from __future__ import annotations
 
