@@ -493,6 +493,16 @@ async def test_discover_new_device(hass: HomeAssistant, fritz: Mock) -> None:
     assert state
 
 
+@pytest.mark.parametrize(
+    "service_data",
+    [
+        {ATTR_TEMPERATURE: 23},
+        {
+            ATTR_HVAC_MODE: HVACMode.HEAT,
+            ATTR_TEMPERATURE: 25,
+        },
+    ],
+)
 async def test_set_hvac_mode_lock(
     hass: HomeAssistant,
     fritz: Mock,
@@ -508,7 +518,7 @@ async def test_set_hvac_mode_lock(
 
     with pytest.raises(
         HomeAssistantError,
-        match="Can't change HVAC mode while holiday or summer mode is active on the device",
+        match="Can't change HVAC mode while Deactivate manual access for phone, app or user interface is enabled",
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
