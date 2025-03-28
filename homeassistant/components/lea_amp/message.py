@@ -182,39 +182,32 @@ class MessageResponseFactory:
         if "deviceName" in data:
             zoneId = "0"
             value = data[data.find("deviceName") + 12 : len(data) - 2]
+            value = data.split(" ")[5]
             command_type = "deviceName"
         elif "numInputs" in data:
             zoneId = "0"
             value = data.replace("/amp/deviceInfo/numInputs", "")
             command_type = "numInputs"
         elif "output name" in data:
-            zoneId = data[data.find("channels/") + 9 : data.find("/output") - 1]
-            value = data[data.find("output/name") + 13 : len(data) - 2]
+            zoneId = data.split(" ")[3]
+            value = data.split(" ")[6]
 
             command_type = "zoneName"
         elif "output fader" in data:
-            zoneId = data[data.find("channels/") + 9 : data.find("/output") - 1]
-
-            value = data.replace("/amp/channels/" + zoneId + "/output/fader", "")
-            value = data.replace('"', "")
+            zoneId = data.split(" ")[3]
+            value = data.split(" ")[6]
             command_type = "volume"
         elif "output mute" in data:
-            zoneId = data[data.find("channels/") + 9 : data.find("/output") - 1]
-
-            value = data.replace("/amp/channels/" + zoneId + "/output/mute", "")
-            value = data.replace('"', "")
+            zoneId = data.split(" ")[3]
+            value = data.split(" ")[6]
             command_type = "mute"
         elif "output enable" in data:
             zoneId = data.split(" ")[3]
-            _LOGGER.log(logging.INFO, "zoneId: %s", zoneId)
             value = data.split(" ")[6]
             command_type = "power"
-            _LOGGER.log(logging.INFO, "value: %s", value)
         elif "inputSelector primary" in data:
-            zoneId = data[data.find("channels/") + 9 : data.find("/inputSelector") - 1]
-
-            value = data[data.find("primary") + 9 : len(data) - 2]
-            value = data.replace('"', "")
+            zoneId = data.split(" ")[3]
+            value = data.split(" ")[6]
             command_type = "source"
         # value = value.replace(" ", "")
 
