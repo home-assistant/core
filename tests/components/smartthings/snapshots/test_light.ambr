@@ -1,4 +1,74 @@
 # serializer version: 1
+# name: test_all_entities[abl_light_b_001][light.kitchen_light_5-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max_color_temp_kelvin': 9000,
+      'max_mireds': 500,
+      'min_color_temp_kelvin': 2000,
+      'min_mireds': 111,
+      'supported_color_modes': list([
+        <ColorMode.COLOR_TEMP: 'color_temp'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': None,
+    'entity_id': 'light.kitchen_light_5',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': <LightEntityFeature: 32>,
+    'translation_key': None,
+    'unique_id': '7c16163e-c94e-482f-95f6-139ae0cd9d5e_main',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[abl_light_b_001][light.kitchen_light_5-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'brightness': None,
+      'color_mode': None,
+      'color_temp': None,
+      'color_temp_kelvin': None,
+      'friendly_name': 'Kitchen Light 5',
+      'hs_color': None,
+      'max_color_temp_kelvin': 9000,
+      'max_mireds': 500,
+      'min_color_temp_kelvin': 2000,
+      'min_mireds': 111,
+      'rgb_color': None,
+      'supported_color_modes': list([
+        <ColorMode.COLOR_TEMP: 'color_temp'>,
+      ]),
+      'supported_features': <LightEntityFeature: 32>,
+      'xy_color': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.kitchen_light_5',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_all_entities[centralite][light.dimmer_debian-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -33,7 +103,7 @@
     'previous_unique_id': None,
     'supported_features': <LightEntityFeature: 32>,
     'translation_key': None,
-    'unique_id': 'd0268a69-abfb-4c92-a646-61cec2e510ad',
+    'unique_id': 'd0268a69-abfb-4c92-a646-61cec2e510ad_main',
     'unit_of_measurement': None,
   })
 # ---
@@ -90,7 +160,7 @@
     'previous_unique_id': None,
     'supported_features': <LightEntityFeature: 32>,
     'translation_key': None,
-    'unique_id': 'aaedaf28-2ae0-4c1d-b57e-87f6a420c298',
+    'unique_id': 'aaedaf28-2ae0-4c1d-b57e-87f6a420c298_main',
     'unit_of_measurement': None,
   })
 # ---
@@ -151,7 +221,7 @@
     'previous_unique_id': None,
     'supported_features': <LightEntityFeature: 32>,
     'translation_key': None,
-    'unique_id': '440063de-a200-40b5-8a6b-f3399eaa0370',
+    'unique_id': '440063de-a200-40b5-8a6b-f3399eaa0370_main',
     'unit_of_measurement': None,
   })
 # ---
@@ -232,7 +302,7 @@
     'previous_unique_id': None,
     'supported_features': <LightEntityFeature: 32>,
     'translation_key': None,
-    'unique_id': 'cb958955-b015-498c-9e62-fc0c51abd054',
+    'unique_id': 'cb958955-b015-498c-9e62-fc0c51abd054_main',
     'unit_of_measurement': None,
   })
 # ---

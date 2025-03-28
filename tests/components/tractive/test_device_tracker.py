@@ -59,3 +59,31 @@ async def test_source_type_phone(
         hass.states.get("device_tracker.test_pet_tracker").attributes["source_type"]
         is SourceType.BLUETOOTH
     )
+
+
+async def test_source_type_gps(
+    hass: HomeAssistant,
+    mock_tractive_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test if the source type is GPS when the location sensor is KNOWN WIFI."""
+    await init_integration(hass, mock_config_entry)
+
+    mock_tractive_client.send_position_event(
+        mock_config_entry,
+        {
+            "tracker_id": "device_id_123",
+            "position": {
+                "latlong": [22.333, 44.555],
+                "accuracy": 99,
+                "sensor_used": "KNOWN_WIFI",
+            },
+        },
+    )
+    mock_tractive_client.send_hardware_event(mock_config_entry)
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("device_tracker.test_pet_tracker").attributes["source_type"]
+        is SourceType.GPS
+    )

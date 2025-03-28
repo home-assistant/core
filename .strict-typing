@@ -119,6 +119,7 @@ homeassistant.components.bluetooth_adapters.*
 homeassistant.components.bluetooth_tracker.*
 homeassistant.components.bmw_connected_drive.*
 homeassistant.components.bond.*
+homeassistant.components.bosch_alarm.*
 homeassistant.components.braviatv.*
 homeassistant.components.bring.*
 homeassistant.components.brother.*
@@ -412,6 +413,7 @@ homeassistant.components.recollect_waste.*
 homeassistant.components.recorder.*
 homeassistant.components.remember_the_milk.*
 homeassistant.components.remote.*
+homeassistant.components.remote_calendar.*
 homeassistant.components.renault.*
 homeassistant.components.reolink.*
 homeassistant.components.repairs.*
