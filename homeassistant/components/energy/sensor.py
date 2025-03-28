@@ -25,6 +25,7 @@ from homeassistant.core import (
     split_entity_id,
     valid_entity_id,
 )
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
@@ -120,6 +121,10 @@ SOURCE_ADAPTERS: Final = (
         "cost",
     ),
 )
+
+
+class EntityNotFoundError(HomeAssistantError):
+    """When a referenced entity was not found."""
 
 
 class SensorManager:
@@ -311,10 +316,14 @@ class EnergyCostSensor(SensorEntity):
         except ValueError:
             return
 
-        # Determine energy price
-        energy_price_tuple = self._get_energy_price(valid_units, default_price_unit)
-        if energy_price_tuple is None:
+        try:
+            energy_price, energy_price_unit = self._get_energy_price(
+                valid_units, default_price_unit
+            )
+        except EntityNotFoundError:
             return
+        except ValueError:
+            energy_price = None
 
         if self._last_energy_sensor_state is None:
             # Initialize as it's the first time all required entities are in place or
@@ -323,7 +332,6 @@ class EnergyCostSensor(SensorEntity):
             self._reset(energy_state)
             return
 
-        energy_price, energy_price_unit = energy_price_tuple
         if energy_price is None:
             return
 
@@ -373,21 +381,24 @@ class EnergyCostSensor(SensorEntity):
         self._last_energy_sensor_state = energy_state
 
     def _get_energy_price(
-        self,
-        valid_units: set[str],
-        default_unit: str | None,
-    ) -> tuple[float | None, str | None] | None:
+        self, valid_units: set[str], default_unit: str | None
+    ) -> tuple[float, str | None]:
+        """Get the energy price.
+
+        Raises:
+            EntityNotFoundError: When the energy price entity is not found.
+            ValueError: When the entity state is not a valid float.
+
+        """
+
         if self._config["entity_energy_price"] is None:
             return cast(float, self._config["number_energy_price"]), default_unit
 
         energy_price_state = self.hass.states.get(self._config["entity_energy_price"])
         if energy_price_state is None:
-            return None
+            raise EntityNotFoundError
 
-        try:
-            energy_price = float(energy_price_state.state)
-        except ValueError:
-            return (None, None)
+        energy_price = float(energy_price_state.state)
 
         energy_price_unit: str | None = energy_price_state.attributes.get(
             ATTR_UNIT_OF_MEASUREMENT, ""
@@ -403,6 +414,7 @@ class EnergyCostSensor(SensorEntity):
     def _convert_energy_price(
         self, energy_price: float, energy_price_unit: str | None, energy_unit: str
     ) -> float:
+        """Convert the energy price to the correct unit."""
         if energy_price_unit is None:
             return energy_price
 
