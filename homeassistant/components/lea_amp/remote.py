@@ -63,6 +63,8 @@ class LeaRemote(CoordinatorEntity[LEAAMPApiCoordinator], RemoteEntity):
     _attr_has_entity_name = True
     _attr_name = None
     _attr_supported_features = RemoteEntityFeature.ACTIVITY
+    _attr_activity_list = []
+    _attr_device_class = "remote"
 
     def __init__(
         self,
