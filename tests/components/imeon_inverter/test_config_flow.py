@@ -5,12 +5,12 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from homeassistant.components.imeon_inverter.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_HOST
+from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
+from homeassistant.const import CONF_HOST, CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import TEST_SERIAL, TEST_USER_INPUT
+from .conftest import TEST_DISCOVER, TEST_SERIAL, TEST_USER_INPUT
 
 from tests.common import MockConfigEntry
 
@@ -23,7 +23,7 @@ async def test_form_valid(
 ) -> None:
     """Test we get the form and the config is created with the good entries."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
@@ -33,7 +33,7 @@ async def test_form_valid(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == TEST_USER_INPUT[CONF_HOST]
+    assert result["title"] == f"Imeon {TEST_SERIAL}"
     assert result["data"] == TEST_USER_INPUT
     assert result["result"].unique_id == TEST_SERIAL
     assert mock_async_setup_entry.call_count == 1
@@ -44,7 +44,7 @@ async def test_form_invalid_auth(
 ) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER}
     )
 
     mock_imeon_inverter.login.return_value = False
@@ -82,7 +82,7 @@ async def test_form_exception(
 ) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER}
     )
 
     mock_imeon_inverter.login.side_effect = error
@@ -112,7 +112,7 @@ async def test_manual_setup_already_exists(
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER}
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -128,7 +128,7 @@ async def test_get_serial_timeout(
 ) -> None:
     """Test the timeout error handling of getting the serial number."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER}
     )
 
     mock_imeon_inverter.get_serial.side_effect = TimeoutError
@@ -147,3 +147,26 @@ async def test_get_serial_timeout(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_ssdp(hass: HomeAssistant) -> None:
+    """Test a ssdp discovery."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_SSDP},
+        data=TEST_DISCOVER,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    user_input = TEST_USER_INPUT.copy()
+    user_input.pop(CONF_HOST)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == f"Imeon {TEST_SERIAL}"
+    assert result["data"] == TEST_USER_INPUT

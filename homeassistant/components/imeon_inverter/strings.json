@@ -1,5 +1,6 @@
 {
   "config": {
+    "flow_title": "Imeon {model} ({serial})",
     "step": {
       "user": {
         "title": "Add Imeon inverter",
@@ -15,15 +16,15 @@
         }
       }
     },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
-      "invalid_route": "Unable to request the API, make sure 'API Module' is enabled on your device"
-    },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
+      "invalid_route": "Unable to request the API, make sure 'API Module' is enabled on your device",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
   "entity": {
