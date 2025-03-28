@@ -264,12 +264,12 @@ def async_get_node_from_device_id(
         ),
         None,
     )
-    if entry and entry.state != ConfigEntryState.LOADED:
-        raise ValueError(f"Device {device_id} config entry is not loaded")
     if entry is None:
         raise ValueError(
             f"Device {device_id} is not from an existing zwave_js config entry"
         )
+    if entry.state != ConfigEntryState.LOADED:
+        raise ValueError(f"Device {device_id} config entry is not loaded")
 
     client: ZwaveClient = entry.runtime_data[DATA_CLIENT]
     driver = client.driver
@@ -290,14 +290,13 @@ def async_get_node_from_device_id(
 
 
 async def async_get_provisioning_entry_from_device_id(
-    hass: HomeAssistant, device_id: str, dev_reg: dr.DeviceRegistry | None = None
+    hass: HomeAssistant, device_id: str
 ) -> ProvisioningEntry | None:
     """Get provisioning entry from a device ID.
 
     Raises ValueError if device is invalid
     """
-    if not dev_reg:
-        dev_reg = dr.async_get(hass)
+    dev_reg = dr.async_get(hass)
 
     if not (device_entry := dev_reg.async_get(device_id)):
         raise ValueError(f"Device ID {device_id} is not valid")
@@ -313,12 +312,12 @@ async def async_get_provisioning_entry_from_device_id(
         ),
         None,
     )
-    if entry and entry.state != ConfigEntryState.LOADED:
-        raise ValueError(f"Device {device_id} config entry is not loaded")
     if entry is None:
         raise ValueError(
             f"Device {device_id} is not from an existing zwave_js config entry"
         )
+    if entry.state != ConfigEntryState.LOADED:
+        raise ValueError(f"Device {device_id} config entry is not loaded")
 
     client: ZwaveClient = entry.runtime_data[DATA_CLIENT]
     driver = client.driver
