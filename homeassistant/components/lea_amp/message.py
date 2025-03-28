@@ -51,17 +51,14 @@ def GetNumOfInputsMessage():
     return request_type + ext1 + "\n"
 
 
-class ZoneEnabledMsg(LeaMessage):
+def ZoneEnabledMsg(zone_id: str) -> str:
     """Zone enabled msg."""
 
-    command = "enable"
     request_type = "get "
     ext1 = "/amp/channels/"
     ext2 = "/output/enable"
 
-    def __init__(self, zone_id) -> None:
-        """Init."""
-        super().__init__(self.as_dict(zone_id))
+    return request_type + ext1 + zone_id + ext2 + "\n"
 
 
 def OnOffMessage(zone_id: str, value: str) -> str:
@@ -73,17 +70,14 @@ def OnOffMessage(zone_id: str, value: str) -> str:
     return request_type + ext1 + zone_id + ext2 + " " + value + "\n"
 
 
-class getVolumeMessage(LeaMessage):
+def getVolumeMessage(zone_id: str) -> str:
     """Get volume msgs."""
 
-    command = "fader"
     request_type = "get "
     ext1 = "/amp/channels/"
     ext2 = "/output/fader"
 
-    def __init__(self, zone_id) -> None:
-        """Init."""
-        super().__init__(self.as_dict(zone_id, ""))
+    return request_type + ext1 + zone_id + ext2 + "\n"
 
 
 def setVolumeMessage(zone_id: str, volume: int) -> str:
@@ -96,17 +90,14 @@ def setVolumeMessage(zone_id: str, volume: int) -> str:
     return request_type + ext1 + zone_id + ext2 + " " + str(volume) + "\n"
 
 
-class getMuteMessage(LeaMessage):
+def getMuteMessage(zone_id: str) -> str:
     """Get Mute Message."""
 
-    command = "mute"
     request_type = "get "
     ext1 = "/amp/channels/"
     ext2 = "/output/mute"
 
-    def __init__(self, zone_id) -> None:
-        """Init."""
-        super().__init__(self.as_dict(zone_id, ""))
+    return request_type + ext1 + zone_id + ext2 + "\n"
 
 
 def setMuteMessage(zone_id: str, mute: bool) -> str:
@@ -119,17 +110,14 @@ def setMuteMessage(zone_id: str, mute: bool) -> str:
     return request_type + ext1 + zone_id + ext2 + " " + str(mute) + "\n"
 
 
-class getSourceMessage(LeaMessage):
+def getSourceMessage(zone_id: str) -> str:
     """Get Source Message."""
 
-    command = "source"
     request_type = "get "
     ext1 = "/amp/channels/"
     ext2 = "/inputSelector/primary"
 
-    def __init__(self, zone_id) -> None:
-        """Init."""
-        super().__init__(self.as_dict(zone_id, ""))
+    return request_type + ext1 + zone_id + ext2 + "\n"
 
 
 def setSourceMessage(zone_id: str, source: int) -> str:

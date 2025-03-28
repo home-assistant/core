@@ -11,7 +11,6 @@ from typing import Any
 from .message import (
     DevStatusResponse,
     GetNumOfInputsMessage,
-    LeaMessage,
     MessageResponseFactory,
     OnOffMessage,
     ZoneEnabledMsg,
@@ -243,7 +242,7 @@ class LeaController:
 
     async def set_mute(self, zone_id: str, mute: bool) -> None:
         """Set Volume."""
-        self._send_message(setMuteMessage(zone_id, str(mute)))
+        self._send_message(setMuteMessage(zone_id, mute))
 
     def get_zone_by_id(self, zone_id: str) -> LeaZone | None:
         """Get Zone by id."""
@@ -315,8 +314,8 @@ class LeaController:
             return True
         return self._zone_discovered_callback(zone, is_new)
 
-    def _send_message(self, message: LeaMessage) -> None:
-        _LOGGER.log(logging.INFO, "_send_message message:", message)
+    def _send_message(self, message: str) -> None:
+        _LOGGER.log(logging.INFO, "_send_message message:%s", message)
         self._transport.send(message)
 
     def _send_update_message(self, zone: LeaZone):
