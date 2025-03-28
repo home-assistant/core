@@ -55,10 +55,7 @@ class IPWebcamCamera(MjpegCamera):
 
     async def stream_source(self) -> str:
         """Get the stream source for the Android IP camera."""
-        coordinator_is_ssl = self._coordinator.cam.base_url.startswith(
-            "https"
-        )  # avoid accessing private attribute
-        rtsp_protocol = "rtsps" if coordinator_is_ssl else "rtsp"
+        rtsp_protocol = "rtsp"
 
         host = self._coordinator.config_entry.data[CONF_HOST]
         port = self._coordinator.config_entry.data[CONF_PORT]
