@@ -1057,6 +1057,7 @@ jobs:
           merge-multiple: true
       - name: Combine files into one
         run: |
+          ls -alh pytest-execution-time-report-*
           jq 'reduce inputs as $item ({}; . *= $item)' \
             pytest-execution-time-report-${{ env.DEFAULT_PYTHON }}-*.json \
             > pytest-execution-time-report-${{ env.DEFAULT_PYTHON }}.json

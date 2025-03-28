@@ -34,6 +34,18 @@ class Bucket:
         return " ".join(self._paths) + "\n"
 
 
+def add_not_measured_files(
+    test: TestFolder | TestFile, not_measured_files: set[TestFile]
+) -> None:
+    """Add not measured files to test folder."""
+    if test.not_measured_files > 0:
+        if isinstance(test, TestFolder):
+            for child in test.children.values():
+                add_not_measured_files(child, not_measured_files)
+        else:
+            not_measured_files.add(test)
+
+
 class BucketHolder:
     """Class to hold buckets."""
 
@@ -55,6 +67,7 @@ class BucketHolder:
                 x.not_measured_files,
             ),
         )
+        not_measured_tests = set()
         bucket_sort_keys = (
             lambda x: (x.not_measured_files, x.approx_execution_time),
             lambda x: (x.approx_execution_time, x.not_measured_files),
@@ -82,6 +95,10 @@ class BucketHolder:
                     < avg_not_measured_files
                 ) or is_file:
                     smallest_bucket.add(tests)
+                    add_not_measured_files(
+                        tests,
+                        not_measured_tests,
+                    )
                     # Ensure all files from the same folder are in the same bucket
                     # to ensure that syrupy correctly identifies unused snapshots
                     if is_file:
@@ -94,11 +111,20 @@ class BucketHolder:
                                 f"Adding {other_test.path} tests to same bucket due syrupy"
                             )
                             smallest_bucket.add(other_test)
+                            add_not_measured_files(
+                                tests,
+                                not_measured_tests,
+                            )
                     break
 
         # verify that all tests are added to a bucket
         if not test_folder.added_to_bucket:
             raise ValueError("Not all tests are added to a bucket")
+
+        if not_measured_tests:
+            print(f"Found {len(not_measured_tests)} not measured test files: ")
+            for test in sorted(not_measured_tests, key=lambda x: x.path):
+                print(f"- {test.path}")
 
     def create_ouput_file(self) -> None:
         """Create output file."""
@@ -135,6 +161,10 @@ class TestFile:
     def __gt__(self, other: TestFile) -> bool:
         """Return if greater than."""
         return self.approx_execution_time > other.approx_execution_time
+
+    def __hash__(self) -> int:
+        """Return hash."""
+        return hash(self.path)
 
 
 class TestFolder:
