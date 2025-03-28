@@ -44,9 +44,9 @@ class NtfyConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
                 )
             self._async_abort_entries_match(user_input)
+            session = async_get_clientsession(self.hass)
+            ntfy = Ntfy(user_input[CONF_URL], session)
             try:
-                session = async_get_clientsession(self.hass)
-                ntfy = Ntfy(user_input[CONF_URL], session)
                 await ntfy.publish(
                     Message(
                         topic=user_input[CONF_TOPIC],
