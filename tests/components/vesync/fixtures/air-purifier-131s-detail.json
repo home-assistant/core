@@ -1,0 +1,29 @@
+{
+  "traceId": "1741145665044",
+  "code": 0,
+  "msg": "request success",
+  "module": null,
+  "stacktrace": null,
+  "result": {
+    "screenStatus": "off",
+    "filterLife": {
+      "change": false,
+      "useHour": 2086,
+      "percent": 48
+    },
+    "activeTime": 90022,
+    "timer": null,
+    "scheduleCount": 0,
+    "schedule": null,
+    "levelNew": 0,
+    "airQuality": "excellent",
+    "level": null,
+    "mode": "sleep",
+    "deviceName": "Levoit 131S Air Purifier",
+    "currentFirmVersion": "2.0.58",
+    "childLock": "off",
+    "deviceStatus": "on",
+    "deviceImg": "https://image.vesync.com/defaultImages/deviceDefaultImages/airpurifier131_240.png",
+    "connectionStatus": "online"
+  }
+}
