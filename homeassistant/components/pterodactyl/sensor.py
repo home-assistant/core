@@ -5,7 +5,12 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
@@ -15,7 +20,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.util.unit_conversion import DurationConverter, InformationConverter
 
 from .coordinator import PterodactylConfigEntry, PterodactylCoordinator, PterodactylData
 from .entity import PterodactylEntity
@@ -47,6 +51,7 @@ SENSOR_DESCRIPTIONS = [
         translation_key=KEY_CPU_UTILIZATION,
         value_fn=lambda data: data.cpu_utilization,
         entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         suggested_display_precision=0,
     ),
@@ -55,6 +60,7 @@ SENSOR_DESCRIPTIONS = [
         translation_key=KEY_CPU_LIMIT,
         value_fn=lambda data: data.cpu_limit,
         entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         suggested_display_precision=0,
         entity_registry_enabled_default=False,
@@ -62,11 +68,12 @@ SENSOR_DESCRIPTIONS = [
     PterodactylSensorEntityDescription(
         key=KEY_MEMORY_USAGE,
         translation_key=KEY_MEMORY_USAGE,
-        value_fn=lambda data: InformationConverter.convert(
-            data.memory_usage, UnitOfInformation.BYTES, UnitOfInformation.MEGABYTES
-        ),
+        value_fn=lambda data: data.memory_usage,
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=UnitOfInformation.MEGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
         suggested_display_precision=0,
     ),
     PterodactylSensorEntityDescription(
@@ -81,11 +88,12 @@ SENSOR_DESCRIPTIONS = [
     PterodactylSensorEntityDescription(
         key=KEY_DISK_USAGE,
         translation_key=KEY_DISK_USAGE,
-        value_fn=lambda data: InformationConverter.convert(
-            data.disk_usage, UnitOfInformation.BYTES, UnitOfInformation.MEGABYTES
-        ),
+        value_fn=lambda data: data.disk_usage,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=UnitOfInformation.MEGABYTES,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
         suggested_display_precision=0,
     ),
     PterodactylSensorEntityDescription(
@@ -93,6 +101,8 @@ SENSOR_DESCRIPTIONS = [
         translation_key=KEY_DISK_LIMIT,
         value_fn=lambda data: data.disk_limit,
         entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         suggested_display_precision=0,
         entity_registry_enabled_default=False,
@@ -100,32 +110,35 @@ SENSOR_DESCRIPTIONS = [
     PterodactylSensorEntityDescription(
         key=KEY_NETWORK_INBOUND,
         translation_key=KEY_NETWORK_INBOUND,
-        value_fn=lambda data: InformationConverter.convert(
-            data.network_inbound, UnitOfInformation.BYTES, UnitOfInformation.KILOBYTES
-        ),
+        value_fn=lambda data: data.network_inbound,
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=UnitOfInformation.KILOBYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.KILOBYTES,
         suggested_display_precision=0,
         entity_registry_enabled_default=False,
     ),
     PterodactylSensorEntityDescription(
         key=KEY_NETWORK_OUTBOUND,
         translation_key=KEY_NETWORK_OUTBOUND,
-        value_fn=lambda data: InformationConverter.convert(
-            data.network_outbound, UnitOfInformation.BYTES, UnitOfInformation.KILOBYTES
-        ),
+        value_fn=lambda data: data.network_outbound,
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=UnitOfInformation.KILOBYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.KILOBYTES,
         suggested_display_precision=0,
         entity_registry_enabled_default=False,
     ),
     PterodactylSensorEntityDescription(
         key=KEY_UPTIME,
         translation_key=KEY_UPTIME,
-        value_fn=lambda data: DurationConverter.convert(
-            data.uptime, UnitOfTime.SECONDS, UnitOfTime.MINUTES
-        ),
-        native_unit_of_measurement=UnitOfTime.MINUTES,
+        value_fn=lambda data: data.uptime,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTime.MILLISECONDS,
+        suggested_unit_of_measurement=UnitOfTime.MINUTES,
         suggested_display_precision=0,
     ),
 ]
