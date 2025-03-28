@@ -726,7 +726,7 @@
         },
         "enable": {
           "description": "Enable or disable scheduled charging.",
-          "name": "Enable"
+          "name": "[%key:common::action::enable%]"
         },
         "time": {
           "description": "Time to start charging.",
@@ -748,7 +748,7 @@
         },
         "enable": {
           "description": "Enable or disable scheduled departure.",
-          "name": "Enable"
+          "name": "[%key:common::action::enable%]"
         },
         "end_off_peak_time": {
           "description": "Time to complete charging by.",
@@ -782,7 +782,7 @@
         },
         "enable": {
           "description": "Enable or disable speed limit.",
-          "name": "Enable"
+          "name": "[%key:common::action::enable%]"
         },
         "pin": {
           "description": "4 digit PIN.",
@@ -814,7 +814,7 @@
         },
         "enable": {
           "description": "Enable or disable valet mode.",
-          "name": "Enable"
+          "name": "[%key:common::action::enable%]"
         },
         "pin": {
           "description": "4 digit PIN.",
