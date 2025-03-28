@@ -49,10 +49,10 @@ def mock_serial_bridge() -> Generator[AsyncMock]:
         ),
     ):
         bridge = mock_comelit_serial_bridge.return_value
-        bridge.get_all_devices.return_value = deepcopy(BRIDGE_DEVICE_QUERY)
+        bridge.get_all_devices.return_value = BRIDGE_DEVICE_QUERY
         bridge.host = BRIDGE_HOST
         bridge.port = BRIDGE_PORT
-        bridge.device_pin = BRIDGE_PIN
+        bridge.pin = BRIDGE_PIN
         yield bridge
 
 
