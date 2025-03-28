@@ -93,7 +93,12 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
             DOMAIN,
             SERVICE_VOLUME_SET,
             required_domains={DOMAIN},
-            required_states={MediaPlayerState.PLAYING},
+            required_states={
+                MediaPlayerState.PLAYING,
+                MediaPlayerState.PAUSED,
+                MediaPlayerState.IDLE,
+                MediaPlayerState.ON,
+            },
             required_features=MediaPlayerEntityFeature.VOLUME_SET,
             required_slots={
                 ATTR_MEDIA_VOLUME_LEVEL: intent.IntentSlotInfo(
