@@ -12,8 +12,8 @@ rules:
   config-flow: done
   dependency-transparency: done
   docs-actions:
-    status: todo
-    comment: align actions to a common section
+    status: exempt
+    comment: The integration does not register services.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
