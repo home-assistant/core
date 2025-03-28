@@ -221,7 +221,7 @@ class LeaController:
         if self._transport:
             for d in self._registry.discovered_zones.values():
                 _LOGGER.log(logging.INFO, "zone id: %s", str(d.zone_id))
-                # self._send_update_message(d.zone_id)
+                self._send_update_message(d.zone_id)
 
             if self._update_enabled:
                 self._update_handle = self._loop.call_later(
