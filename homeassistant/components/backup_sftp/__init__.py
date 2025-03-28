@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 
 from .client import BackupAgentClient
@@ -72,22 +72,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: SFTPConfigEntry) -> bool
         raise ConfigEntryNotReady from e
 
     # Notify backup listeners
-    _async_notify_backup_listeners_soon(hass)
+    def _async_notify_backup_listeners() -> None:
+        for listener in hass.data.get(DATA_BACKUP_AGENT_LISTENERS, []):
+            listener()
+
+    entry.async_on_unload(entry.async_on_state_change(_async_notify_backup_listeners))
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: SFTPConfigEntry) -> bool:
     """Unload SFTP config entry."""
-    _async_notify_backup_listeners_soon(hass)
     return True
-
-
-def _async_notify_backup_listeners(hass: HomeAssistant) -> None:
-    for listener in hass.data.get(DATA_BACKUP_AGENT_LISTENERS, []):
-        listener()
-
-
-@callback
-def _async_notify_backup_listeners_soon(hass: HomeAssistant) -> None:
-    hass.loop.call_soon(_async_notify_backup_listeners, hass)
