@@ -159,5 +159,13 @@
         "name": "Last restart"
       }
     }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "An error occurred while connecting to the {device} printer: {error}"
+    },
+    "update_error": {
+      "message": "An error occurred while retrieving data from the {device} printer: {error}"
+    }
   }
 }
