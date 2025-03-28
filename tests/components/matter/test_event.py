@@ -90,7 +90,7 @@ async def test_generic_switch_multi_node(
     # name should be 'DeviceName Fancy Button' due to the label set to 'Fancy Button'
     assert state_button_2.name == "Mock Generic Switch Fancy Button"
     # check event_types from featuremap 30 (0b11110) and MultiPressMax 4
-    assert state_button_1.attributes[ATTR_EVENT_TYPES] == [
+    assert state_button_2.attributes[ATTR_EVENT_TYPES] == [
         "multi_press_1",
         "multi_press_2",
         "multi_press_3",
