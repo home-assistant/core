@@ -88,7 +88,7 @@ class LeaRemote(CoordinatorEntity[LEAAMPApiCoordinator], RemoteEntity):
     @property
     def is_on(self) -> bool:
         """Return true if zone is on."""
-        return self._zone is not None
+        return self._zone.power is not None
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the Zone on."""
@@ -96,13 +96,16 @@ class LeaRemote(CoordinatorEntity[LEAAMPApiCoordinator], RemoteEntity):
         _LOGGER.log(logging.INFO, "is one: %s", str(self.is_on))
         if not self.is_on:
             await self.coordinator.turn_on(self._zone)
+            self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the Android TV off."""
+        """Turn the Zone off."""
+        _LOGGER.log(logging.INFO, "async_turn_off")
         _LOGGER.log(logging.INFO, "zone id: %s", str(self._zone.zone_id))
-        _LOGGER.log(logging.INFO, "is one: %s", str(self.is_on))
+        _LOGGER.log(logging.INFO, "is on: %s", str(self.is_on))
         if self.is_on:
             await self.coordinator.turn_off(self._zone)
+            self.async_write_ha_state()
 
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a command to one zone."""
