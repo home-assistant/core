@@ -8,6 +8,7 @@ import logging
 
 from ismartgate import AbstractGateApi, GogoGate2InfoResponse, ISmartGateInfoResponse
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -18,9 +19,12 @@ class DeviceDataUpdateCoordinator(
 ):
     """Manages polling for state changes from the device."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: ConfigEntry,
         logger: logging.Logger,
         api: AbstractGateApi,
         *,
@@ -33,10 +37,10 @@ class DeviceDataUpdateCoordinator(
         request_refresh_debouncer: Debouncer | None = None,
     ) -> None:
         """Initialize the data update coordinator."""
-        DataUpdateCoordinator.__init__(
-            self,
+        super().__init__(
             hass,
             logger,
+            config_entry=config_entry,
             name=name,
             update_interval=update_interval,
             update_method=update_method,

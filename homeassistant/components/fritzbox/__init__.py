@@ -37,7 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FritzboxConfigEntry) -> 
 
     await async_migrate_entries(hass, entry.entry_id, _update_unique_id)
 
-    coordinator = FritzboxDataUpdateCoordinator(hass, entry.entry_id)
+    coordinator = FritzboxDataUpdateCoordinator(hass, entry)
     await coordinator.async_setup()
 
     entry.runtime_data = coordinator

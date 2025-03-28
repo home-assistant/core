@@ -55,6 +55,35 @@ async def test_form(hass: HomeAssistant) -> None:
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
+    # Now check for duplicates
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    with (
+        patch("homeassistant.components.blink.config_flow.Auth.startup"),
+        patch(
+            "homeassistant.components.blink.config_flow.Auth.check_key_required",
+            return_value=False,
+        ),
+        patch(
+            "homeassistant.components.blink.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"username": "blink@example.com", "password": "example"},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "already_configured"
+
+    assert len(mock_setup_entry.mock_calls) == 0
+
 
 async def test_form_2fa(hass: HomeAssistant) -> None:
     """Test we get the 2fa form."""

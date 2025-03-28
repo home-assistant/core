@@ -3,6 +3,7 @@
   dict({
     'config': dict({
       'backflush_enabled': False,
+      'bbw_settings': None,
       'boilers': dict({
         'CoffeeBoiler1': dict({
           'current_temperature': 96.5,
@@ -26,24 +27,49 @@
       }),
       'plumbed_in': True,
       'prebrew_configuration': dict({
-        '1': dict({
-          'off_time': 1,
-          'on_time': 0.5,
-        }),
-        '2': dict({
-          'off_time': 1,
-          'on_time': 0.5,
-        }),
-        '3': dict({
-          'off_time': 3.299999952316284,
-          'on_time': 3.299999952316284,
-        }),
-        '4': dict({
-          'off_time': 2,
-          'on_time': 2,
-        }),
+        '1': list([
+          dict({
+            'off_time': 1,
+            'on_time': 0.5,
+          }),
+          dict({
+            'off_time': 4,
+            'on_time': 0,
+          }),
+        ]),
+        '2': list([
+          dict({
+            'off_time': 1,
+            'on_time': 0.5,
+          }),
+          dict({
+            'off_time': 4,
+            'on_time': 0,
+          }),
+        ]),
+        '3': list([
+          dict({
+            'off_time': 3.3,
+            'on_time': 3.3,
+          }),
+          dict({
+            'off_time': 4,
+            'on_time': 0,
+          }),
+        ]),
+        '4': list([
+          dict({
+            'off_time': 2,
+            'on_time': 2,
+          }),
+          dict({
+            'off_time': 4,
+            'on_time': 0,
+          }),
+        ]),
       }),
       'prebrew_mode': 'TypeB',
+      'scale': None,
       'smart_standby': dict({
         'enabled': True,
         'minutes': 10,

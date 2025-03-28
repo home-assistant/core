@@ -72,10 +72,6 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
     assert config_entry.title == "Electricity meter"
 
 
-@pytest.mark.parametrize(  # Remove when translations fixed
-    "ignore_translations",
-    ["component.utility_meter.config.error.tariffs_not_unique"],
-)
 async def test_tariffs(hass: HomeAssistant) -> None:
     """Test tariffs."""
     input_sensor_entity_id = "sensor.input"
@@ -378,6 +374,7 @@ async def test_change_device_source(
 
     # Configure source entity 3 (without a device)
     source_config_entry_3 = MockConfigEntry()
+    source_config_entry_3.add_to_hass(hass)
     source_entity_3 = entity_registry.async_get_or_create(
         "sensor",
         "test",

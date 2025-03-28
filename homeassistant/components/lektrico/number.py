@@ -15,7 +15,7 @@ from homeassistant.const import (
     UnitOfElectricCurrent,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import LektricoConfigEntry, LektricoDeviceDataUpdateCoordinator
 from .entity import LektricoEntity
@@ -58,7 +58,7 @@ NUMBERS: tuple[LektricoNumberEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: LektricoConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Lektrico number entities based on a config entry."""
     coordinator = entry.runtime_data

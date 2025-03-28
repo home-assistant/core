@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Generator
+import asyncio
+from collections.abc import AsyncGenerator, Callable, Generator
+from functools import lru_cache
 from importlib.util import find_spec
 from pathlib import Path
+import re
 import string
 from typing import TYPE_CHECKING, Any
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -17,7 +20,10 @@ from aiohasupervisor.models import (
     StoreInfo,
 )
 import pytest
+import voluptuous as vol
 
+from homeassistant import components, loader
+from homeassistant.components import repairs
 from homeassistant.config_entries import (
     DISCOVERY_SOURCES,
     ConfigEntriesFlowManager,
@@ -25,9 +31,20 @@ from homeassistant.config_entries import (
     OptionsFlowManager,
 )
 from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowHandler, FlowManager, FlowResultType
+from homeassistant.core import Context, HomeAssistant, ServiceRegistry, ServiceResponse
+from homeassistant.data_entry_flow import (
+    FlowContext,
+    FlowHandler,
+    FlowManager,
+    FlowResultType,
+    section,
+)
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.translation import async_get_translations
+from homeassistant.util import yaml as yaml_util
+
+from tests.common import QualityScaleStatus, get_quality_scale
 
 if TYPE_CHECKING:
     from homeassistant.components.hassio import AddonManager
@@ -37,6 +54,9 @@ if TYPE_CHECKING:
     from .light.common import MockLight
     from .sensor.common import MockSensor
     from .switch.common import MockSwitch
+
+# Regex for accessing the integration name from the test path
+RE_REQUEST_DOMAIN = re.compile(r".*tests\/components\/([^/]+)\/.*")
 
 
 @pytest.fixture(scope="session", autouse=find_spec("zeroconf") is not None)
@@ -61,9 +81,15 @@ def prevent_io() -> Generator[None]:
 @pytest.fixture
 def entity_registry_enabled_by_default() -> Generator[None]:
     """Test fixture that ensures all entities are enabled in the registry."""
-    with patch(
-        "homeassistant.helpers.entity.Entity.entity_registry_enabled_default",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.helpers.entity.Entity.entity_registry_enabled_default",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.device_tracker.config_entry.ScannerEntity.entity_registry_enabled_default",
+            return_value=True,
+        ),
     ):
         yield
 
@@ -503,10 +529,16 @@ def resolution_suggestions_for_issue_fixture(supervisor_client: AsyncMock) -> As
 @pytest.fixture(name="supervisor_client")
 def supervisor_client() -> Generator[AsyncMock]:
     """Mock the supervisor client."""
+    mounts_info_mock = AsyncMock(spec_set=["default_backup_mount", "mounts"])
+    mounts_info_mock.default_backup_mount = None
+    mounts_info_mock.mounts = []
     supervisor_client = AsyncMock()
     supervisor_client.addons = AsyncMock()
     supervisor_client.discovery = AsyncMock()
     supervisor_client.homeassistant = AsyncMock()
+    supervisor_client.host = AsyncMock()
+    supervisor_client.jobs = AsyncMock()
+    supervisor_client.mounts.info.return_value = mounts_info_mock
     supervisor_client.os = AsyncMock()
     supervisor_client.resolution = AsyncMock()
     supervisor_client.supervisor = AsyncMock()
@@ -521,6 +553,10 @@ def supervisor_client() -> Generator[AsyncMock]:
         ),
         patch(
             "homeassistant.components.hassio.addon_manager.get_supervisor_client",
+            return_value=supervisor_client,
+        ),
+        patch(
+            "homeassistant.components.hassio.backup.get_supervisor_client",
             return_value=supervisor_client,
         ),
         patch(
@@ -539,6 +575,10 @@ def supervisor_client() -> Generator[AsyncMock]:
             "homeassistant.components.hassio.repairs.get_supervisor_client",
             return_value=supervisor_client,
         ),
+        patch(
+            "homeassistant.components.hassio.update_helper.get_supervisor_client",
+            return_value=supervisor_client,
+        ),
     ):
         yield supervisor_client
 
@@ -547,6 +587,7 @@ def _validate_translation_placeholders(
     full_key: str,
     translation: str,
     description_placeholders: dict[str, str] | None,
+    translation_errors: dict[str, str],
 ) -> str | None:
     """Raise if translation exists with missing placeholders."""
     tuples = list(string.Formatter().parse(translation))
@@ -557,14 +598,15 @@ def _validate_translation_placeholders(
             description_placeholders is None
             or placeholder not in description_placeholders
         ):
-            pytest.fail(
+            translation_errors[full_key] = (
                 f"Description not found for placeholder `{placeholder}` in {full_key}"
             )
 
 
-async def _ensure_translation_exists(
+async def _validate_translation(
     hass: HomeAssistant,
-    ignore_translations: dict[str, StoreInfo],
+    translation_errors: dict[str, str],
+    ignore_translations_for_mock_domains: set[str],
     category: str,
     component: str,
     key: str,
@@ -574,114 +616,411 @@ async def _ensure_translation_exists(
 ) -> None:
     """Raise if translation doesn't exist."""
     full_key = f"component.{component}.{category}.{key}"
+    if component in ignore_translations_for_mock_domains:
+        try:
+            integration = await loader.async_get_integration(hass, component)
+        except loader.IntegrationNotFound:
+            return
+        component_paths = components.__path__
+        if not any(
+            Path(f"{component_path}/{component}") == integration.file_path
+            for component_path in component_paths
+        ):
+            return
+        # If the integration exists, translation errors should be ignored via the
+        # ignore_missing_translations fixture instead of the
+        # ignore_translations_for_mock_domains fixture.
+        translation_errors[full_key] = f"The integration '{component}' exists"
+        return
+
     translations = await async_get_translations(hass, "en", category, [component])
+
     if (translation := translations.get(full_key)) is not None:
         _validate_translation_placeholders(
-            full_key, translation, description_placeholders
+            full_key, translation, description_placeholders, translation_errors
         )
         return
 
     if not translation_required:
         return
 
-    if full_key in ignore_translations:
-        ignore_translations[full_key] = "used"
+    if translation_errors.get(full_key) in {"used", "unused"}:
+        # If the does not integration exist, translation errors should be ignored
+        # via the ignore_translations_for_mock_domains fixture instead of the
+        # ignore_missing_translations fixture.
+        try:
+            await loader.async_get_integration(hass, component)
+        except loader.IntegrationNotFound:
+            translation_errors[full_key] = (
+                f"Translation not found for {component}: `{category}.{key}`. "
+                f"The integration '{component}' does not exist."
+            )
+            return
+
+        # This translation key is in the ignore list, mark it as used
+        translation_errors[full_key] = "used"
         return
 
-    pytest.fail(
+    translation_errors[full_key] = (
         f"Translation not found for {component}: `{category}.{key}`. "
         f"Please add to homeassistant/components/{component}/strings.json"
     )
 
 
 @pytest.fixture
-def ignore_translations() -> str | list[str]:
-    """Ignore specific translations.
+def ignore_missing_translations() -> str | list[str]:
+    """Ignore specific missing translations.
 
-    Override or parametrize this fixture with a fixture that returns,
-    a list of translation that should be ignored.
+    Override or parametrize this fixture with a fixture that returns
+    a list of missing translation that should be ignored.
     """
     return []
 
 
-@pytest.fixture(autouse=True)
-def check_config_translations(ignore_translations: str | list[str]) -> Generator[None]:
-    """Ensure config_flow translations are available."""
-    if not isinstance(ignore_translations, list):
-        ignore_translations = [ignore_translations]
+@pytest.fixture
+def ignore_translations_for_mock_domains() -> str | list[str]:
+    """Don't validate translations for specific domains.
 
-    _ignore_translations = {k: "unused" for k in ignore_translations}
-    _original = FlowManager._async_handle_step
+    Override or parametrize this fixture with a fixture that returns
+    a list of domains for which translations should not be validated.
+    This should only be used when testing mocked integrations.
+    """
+    return []
 
-    async def _async_handle_step(
-        self: FlowManager, flow: FlowHandler, *args
-    ) -> FlowResult:
-        result = await _original(self, flow, *args)
-        if isinstance(self, ConfigEntriesFlowManager):
-            category = "config"
-            component = flow.handler
-        elif isinstance(self, OptionsFlowManager):
-            category = "options"
-            component = flow.hass.config_entries.async_get_entry(flow.handler).domain
-        else:
-            return result
 
-        # Check if this flow has been seen before
-        # Gets set to False on first run, and to True on subsequent runs
-        setattr(flow, "__flow_seen_before", hasattr(flow, "__flow_seen_before"))
+@lru_cache
+def _get_integration_quality_scale(integration: str) -> dict[str, Any]:
+    """Get the quality scale for an integration."""
+    try:
+        return yaml_util.load_yaml_dict(
+            f"homeassistant/components/{integration}/quality_scale.yaml"
+        ).get("rules", {})
+    except FileNotFoundError:
+        return {}
 
-        if result["type"] is FlowResultType.FORM:
-            if step_id := result.get("step_id"):
-                # neither title nor description are required
-                # - title defaults to integration name
-                # - description is optional
-                for header in ("title", "description"):
-                    await _ensure_translation_exists(
-                        flow.hass,
-                        _ignore_translations,
-                        category,
-                        component,
-                        f"step.{step_id}.{header}",
-                        result["description_placeholders"],
-                        translation_required=False,
-                    )
-            if errors := result.get("errors"):
-                for error in errors.values():
-                    await _ensure_translation_exists(
-                        flow.hass,
-                        _ignore_translations,
-                        category,
-                        component,
-                        f"error.{error}",
-                        result["description_placeholders"],
-                    )
-            return result
 
-        if result["type"] is FlowResultType.ABORT:
-            # We don't need translations for a discovery flow which immediately
-            # aborts, since such flows won't be seen by users
-            if not flow.__flow_seen_before and flow.source in DISCOVERY_SOURCES:
-                return result
-            await _ensure_translation_exists(
-                flow.hass,
-                _ignore_translations,
+def _get_integration_quality_scale_rule(integration: str, rule: str) -> str:
+    """Get the quality scale for an integration."""
+    quality_scale = _get_integration_quality_scale(integration)
+    if not quality_scale or rule not in quality_scale:
+        return "todo"
+    status = quality_scale[rule]
+    return status if isinstance(status, str) else status["status"]
+
+
+async def _check_step_or_section_translations(
+    hass: HomeAssistant,
+    translation_errors: dict[str, str],
+    category: str,
+    integration: str,
+    translation_prefix: str,
+    description_placeholders: dict[str, str],
+    data_schema: vol.Schema | None,
+    ignore_translations_for_mock_domains: set[str],
+) -> None:
+    # neither title nor description are required
+    # - title defaults to integration name
+    # - description is optional
+    for header in ("title", "description"):
+        await _validate_translation(
+            hass,
+            translation_errors,
+            ignore_translations_for_mock_domains,
+            category,
+            integration,
+            f"{translation_prefix}.{header}",
+            description_placeholders,
+            translation_required=False,
+        )
+
+    if not data_schema:
+        return
+
+    for data_key, data_value in data_schema.schema.items():
+        if isinstance(data_value, section):
+            # check the nested section
+            await _check_step_or_section_translations(
+                hass,
+                translation_errors,
                 category,
-                component,
-                f"abort.{result["reason"]}",
-                result["description_placeholders"],
+                integration,
+                f"{translation_prefix}.sections.{data_key}",
+                description_placeholders,
+                data_value.schema,
+                ignore_translations_for_mock_domains,
+            )
+            continue
+        iqs_config_flow = _get_integration_quality_scale_rule(
+            integration, "config-flow"
+        )
+        # data and data_description are compulsory
+        for header in ("data", "data_description"):
+            await _validate_translation(
+                hass,
+                translation_errors,
+                ignore_translations_for_mock_domains,
+                category,
+                integration,
+                f"{translation_prefix}.{header}.{data_key}",
+                description_placeholders,
+                translation_required=(iqs_config_flow == "done"),
             )
 
+
+async def _check_config_flow_result_translations(
+    manager: FlowManager,
+    flow: FlowHandler,
+    result: FlowResult[FlowContext, str],
+    translation_errors: dict[str, str],
+    ignore_translations_for_mock_domains: set[str],
+) -> None:
+    if result["type"] is FlowResultType.CREATE_ENTRY:
+        # No need to check translations for a completed flow
+        return
+
+    key_prefix = ""
+    if isinstance(manager, ConfigEntriesFlowManager):
+        category = "config"
+        integration = flow.handler
+    elif isinstance(manager, OptionsFlowManager):
+        category = "options"
+        integration = flow.hass.config_entries.async_get_entry(flow.handler).domain
+    elif isinstance(manager, repairs.RepairsFlowManager):
+        category = "issues"
+        integration = flow.handler
+        issue_id = flow.issue_id
+        issue = ir.async_get(flow.hass).async_get_issue(integration, issue_id)
+        key_prefix = f"{issue.translation_key}.fix_flow."
+    else:
+        return
+
+    # Check if this flow has been seen before
+    # Gets set to False on first run, and to True on subsequent runs
+    setattr(flow, "__flow_seen_before", hasattr(flow, "__flow_seen_before"))
+
+    if result["type"] is FlowResultType.FORM:
+        if step_id := result.get("step_id"):
+            await _check_step_or_section_translations(
+                flow.hass,
+                translation_errors,
+                category,
+                integration,
+                f"{key_prefix}step.{step_id}",
+                result["description_placeholders"],
+                result["data_schema"],
+                ignore_translations_for_mock_domains,
+            )
+
+        if errors := result.get("errors"):
+            for error in errors.values():
+                await _validate_translation(
+                    flow.hass,
+                    translation_errors,
+                    ignore_translations_for_mock_domains,
+                    category,
+                    integration,
+                    f"{key_prefix}error.{error}",
+                    result["description_placeholders"],
+                )
+        return
+
+    if result["type"] is FlowResultType.ABORT:
+        # We don't need translations for a discovery flow which immediately
+        # aborts, since such flows won't be seen by users
+        if not flow.__flow_seen_before and flow.source in DISCOVERY_SOURCES:
+            return
+        await _validate_translation(
+            flow.hass,
+            translation_errors,
+            ignore_translations_for_mock_domains,
+            category,
+            integration,
+            f"{key_prefix}abort.{result['reason']}",
+            result["description_placeholders"],
+        )
+
+
+async def _check_create_issue_translations(
+    issue_registry: ir.IssueRegistry,
+    issue: ir.IssueEntry,
+    translation_errors: dict[str, str],
+    ignore_translations_for_mock_domains: set[str],
+) -> None:
+    if issue.translation_key is None:
+        # `translation_key` is only None on dismissed issues
+        return
+    await _validate_translation(
+        issue_registry.hass,
+        translation_errors,
+        ignore_translations_for_mock_domains,
+        "issues",
+        issue.domain,
+        f"{issue.translation_key}.title",
+        issue.translation_placeholders,
+    )
+    if not issue.is_fixable:
+        # Description is required for non-fixable issues
+        await _validate_translation(
+            issue_registry.hass,
+            translation_errors,
+            ignore_translations_for_mock_domains,
+            "issues",
+            issue.domain,
+            f"{issue.translation_key}.description",
+            issue.translation_placeholders,
+        )
+
+
+def _get_request_quality_scale(
+    request: pytest.FixtureRequest, rule: str
+) -> QualityScaleStatus:
+    if not (match := RE_REQUEST_DOMAIN.match(str(request.path))):
+        return QualityScaleStatus.TODO
+    integration = match.groups(1)[0]
+    return get_quality_scale(integration).get(rule, QualityScaleStatus.TODO)
+
+
+async def _check_exception_translation(
+    hass: HomeAssistant,
+    exception: HomeAssistantError,
+    translation_errors: dict[str, str],
+    request: pytest.FixtureRequest,
+    ignore_translations_for_mock_domains: set[str],
+) -> None:
+    if exception.translation_key is None:
+        if (
+            _get_request_quality_scale(request, "exception-translations")
+            is QualityScaleStatus.DONE
+        ):
+            translation_errors["quality_scale"] = (
+                f"Found untranslated {type(exception).__name__} exception: {exception}"
+            )
+        return
+    await _validate_translation(
+        hass,
+        translation_errors,
+        ignore_translations_for_mock_domains,
+        "exceptions",
+        exception.translation_domain,
+        f"{exception.translation_key}.message",
+        exception.translation_placeholders,
+    )
+
+
+@pytest.fixture(autouse=True)
+async def check_translations(
+    ignore_missing_translations: str | list[str],
+    ignore_translations_for_mock_domains: str | list[str],
+    request: pytest.FixtureRequest,
+) -> AsyncGenerator[None]:
+    """Check that translation requirements are met.
+
+    Current checks:
+    - data entry flow results (ConfigFlow/OptionsFlow/RepairFlow)
+    - issue registry entries
+    - action (service) exceptions
+    """
+    if not isinstance(ignore_missing_translations, list):
+        ignore_missing_translations = [ignore_missing_translations]
+
+    if not isinstance(ignore_translations_for_mock_domains, list):
+        ignored_domains = {ignore_translations_for_mock_domains}
+    else:
+        ignored_domains = set(ignore_translations_for_mock_domains)
+
+    # Set all ignored translation keys to "unused"
+    translation_errors = dict.fromkeys(ignore_missing_translations, "unused")
+
+    translation_coros = set()
+
+    # Keep reference to original functions
+    _original_flow_manager_async_handle_step = FlowManager._async_handle_step
+    _original_issue_registry_async_create_issue = ir.IssueRegistry.async_get_or_create
+    _original_service_registry_async_call = ServiceRegistry.async_call
+
+    # Prepare override functions
+    async def _flow_manager_async_handle_step(
+        self: FlowManager, flow: FlowHandler, *args
+    ) -> FlowResult:
+        result = await _original_flow_manager_async_handle_step(self, flow, *args)
+        await _check_config_flow_result_translations(
+            self, flow, result, translation_errors, ignored_domains
+        )
         return result
 
-    with patch(
-        "homeassistant.data_entry_flow.FlowManager._async_handle_step",
-        _async_handle_step,
+    def _issue_registry_async_create_issue(
+        self: ir.IssueRegistry, domain: str, issue_id: str, *args, **kwargs
+    ) -> None:
+        result = _original_issue_registry_async_create_issue(
+            self, domain, issue_id, *args, **kwargs
+        )
+        translation_coros.add(
+            _check_create_issue_translations(
+                self, result, translation_errors, ignored_domains
+            )
+        )
+        return result
+
+    async def _service_registry_async_call(
+        self: ServiceRegistry,
+        domain: str,
+        service: str,
+        service_data: dict[str, Any] | None = None,
+        blocking: bool = False,
+        context: Context | None = None,
+        target: dict[str, Any] | None = None,
+        return_response: bool = False,
+    ) -> ServiceResponse:
+        try:
+            return await _original_service_registry_async_call(
+                self,
+                domain,
+                service,
+                service_data,
+                blocking,
+                context,
+                target,
+                return_response,
+            )
+        except HomeAssistantError as err:
+            translation_coros.add(
+                _check_exception_translation(
+                    self._hass,
+                    err,
+                    translation_errors,
+                    request,
+                    ignored_domains,
+                )
+            )
+            raise
+
+    # Use override functions
+    with (
+        patch(
+            "homeassistant.data_entry_flow.FlowManager._async_handle_step",
+            _flow_manager_async_handle_step,
+        ),
+        patch(
+            "homeassistant.helpers.issue_registry.IssueRegistry.async_get_or_create",
+            _issue_registry_async_create_issue,
+        ),
+        patch(
+            "homeassistant.core.ServiceRegistry.async_call",
+            _service_registry_async_call,
+        ),
     ):
         yield
 
-    unused_ignore = [k for k, v in _ignore_translations.items() if v == "unused"]
+    await asyncio.gather(*translation_coros)
+
+    # Run final checks
+    unused_ignore = [k for k, v in translation_errors.items() if v == "unused"]
     if unused_ignore:
+        # Some ignored translations were not used
         pytest.fail(
             f"Unused ignore translations: {', '.join(unused_ignore)}. "
-            "Please remove them from the ignore_translations fixture."
+            "Please remove them from the ignore_missing_translations fixture."
         )
+    for description in translation_errors.values():
+        if description != "used":
+            pytest.fail(description)

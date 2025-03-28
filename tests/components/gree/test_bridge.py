@@ -12,7 +12,7 @@ from homeassistant.components.gree.const import (
     UPDATE_INTERVAL,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .common import async_setup_gree, build_device_mock
 

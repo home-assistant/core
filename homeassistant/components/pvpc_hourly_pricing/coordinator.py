@@ -21,6 +21,8 @@ _LOGGER = logging.getLogger(__name__)
 class ElecPricesDataUpdateCoordinator(DataUpdateCoordinator[EsiosApiData]):
     """Class to manage fetching Electricity prices data from API."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self, hass: HomeAssistant, entry: ConfigEntry, sensor_keys: set[str]
     ) -> None:
@@ -35,14 +37,17 @@ class ElecPricesDataUpdateCoordinator(DataUpdateCoordinator[EsiosApiData]):
             sensor_keys=tuple(sensor_keys),
         )
         super().__init__(
-            hass, _LOGGER, name=DOMAIN, update_interval=timedelta(minutes=30)
+            hass,
+            _LOGGER,
+            config_entry=entry,
+            name=DOMAIN,
+            update_interval=timedelta(minutes=30),
         )
-        self._entry = entry
 
     @property
     def entry_id(self) -> str:
         """Return entry ID."""
-        return self._entry.entry_id
+        return self.config_entry.entry_id
 
     async def _async_update_data(self) -> EsiosApiData:
         """Update electricity prices from the ESIOS API."""

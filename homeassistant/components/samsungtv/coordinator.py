@@ -15,17 +15,25 @@ from .const import DOMAIN, LOGGER
 
 SCAN_INTERVAL = 10
 
+type SamsungTVConfigEntry = ConfigEntry[SamsungTVDataUpdateCoordinator]
+
 
 class SamsungTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Coordinator for the SamsungTV integration."""
 
-    config_entry: ConfigEntry
+    config_entry: SamsungTVConfigEntry
 
-    def __init__(self, hass: HomeAssistant, bridge: SamsungTVBridge) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: SamsungTVConfigEntry,
+        bridge: SamsungTVBridge,
+    ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
             LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=SCAN_INTERVAL),
         )

@@ -20,13 +20,15 @@ SCAN_INTERVAL = timedelta(days=1)
 
 _LOGGER = logging.getLogger(__name__)
 
+type EGSConfigEntry = ConfigEntry[EGSCalendarUpdateCoordinator]
+
 
 class EGSCalendarUpdateCoordinator(
     DataUpdateCoordinator[dict[str, list[dict[str, Any]]]]
 ):
     """Class to manage fetching data from the Epic Game Store."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: EGSConfigEntry) -> None:
         """Initialize."""
         self._api = EpicGamesStoreAPI(
             entry.data[CONF_LANGUAGE],
@@ -37,6 +39,7 @@ class EGSCalendarUpdateCoordinator(
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
         )

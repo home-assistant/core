@@ -21,14 +21,17 @@ import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
 )
 from homeassistant.const import CONF_USERNAME
 from homeassistant.core import callback
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
+from . import RoborockConfigEntry
 from .const import (
     CONF_BASE_URL,
     CONF_ENTRY_CODE,
@@ -60,10 +63,12 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             username = user_input[CONF_USERNAME]
             await self.async_set_unique_id(username.lower())
-            self._abort_if_unique_id_configured()
+            self._abort_if_unique_id_configured(error="already_configured_account")
             self._username = username
             _LOGGER.debug("Requesting code for Roborock account")
-            self._client = RoborockApiClient(username)
+            self._client = RoborockApiClient(
+                username, session=async_get_clientsession(self.hass)
+            )
             errors = await self._request_code()
             if not errors:
                 return await self.async_step_code()
@@ -134,13 +139,32 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle a flow started by a dhcp discovery."""
+        await self._async_handle_discovery_without_unique_id()
+        device_registry = dr.async_get(self.hass)
+        device = device_registry.async_get_device(
+            connections={
+                (dr.CONNECTION_NETWORK_MAC, dr.format_mac(discovery_info.macaddress))
+            }
+        )
+        if device is not None and any(
+            identifier[0] == DOMAIN for identifier in device.identifiers
+        ):
+            return self.async_abort(reason="already_configured")
+        return await self.async_step_user()
+
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
         self._username = entry_data[CONF_USERNAME]
         assert self._username
-        self._client = RoborockApiClient(self._username)
+        self._client = RoborockApiClient(
+            self._username, session=async_get_clientsession(self.hass)
+        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -170,7 +194,7 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: RoborockConfigEntry,
     ) -> RoborockOptionsFlowHandler:
         """Create the options flow."""
         return RoborockOptionsFlowHandler(config_entry)
@@ -179,7 +203,7 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
 class RoborockOptionsFlowHandler(OptionsFlow):
     """Handle an option flow for Roborock."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self, config_entry: RoborockConfigEntry) -> None:
         """Initialize options flow."""
         self.options = deepcopy(dict(config_entry.options))
 

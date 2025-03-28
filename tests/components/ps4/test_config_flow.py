@@ -24,7 +24,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.util import location
+from homeassistant.util import location as location_util
 
 from tests.common import MockConfigEntry
 
@@ -64,7 +64,7 @@ MOCK_TCP_PORT = 997
 MOCK_AUTO = {"Config Mode": "Auto Discover"}
 MOCK_MANUAL = {"Config Mode": "Manual Entry", CONF_IP_ADDRESS: MOCK_HOST}
 
-MOCK_LOCATION = location.LocationInfo(
+MOCK_LOCATION = location_util.LocationInfo(
     "0.0.0.0",
     "US",
     "USD",
@@ -83,7 +83,8 @@ MOCK_LOCATION = location.LocationInfo(
 def location_info_fixture():
     """Mock location info."""
     with patch(
-        "homeassistant.components.ps4.config_flow.location.async_detect_location_info",
+        "homeassistant.components.ps4."
+        "config_flow.location_util.async_detect_location_info",
         return_value=MOCK_LOCATION,
     ):
         yield
@@ -359,7 +360,8 @@ async def test_0_pin(hass: HomeAssistant) -> None:
             "pyps4_2ndscreen.Helper.has_devices", return_value=[{"host-ip": MOCK_HOST}]
         ),
         patch(
-            "homeassistant.components.ps4.config_flow.location.async_detect_location_info",
+            "homeassistant.components.ps4."
+            "config_flow.location_util.async_detect_location_info",
             return_value=MOCK_LOCATION,
         ),
     ):

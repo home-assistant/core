@@ -11,12 +11,7 @@ from pyControl4.director import C4Director
 from pyControl4.error_handling import NotFound, Unauthorized
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -28,6 +23,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 
+from . import Control4ConfigEntry
 from .const import (
     CONF_CONTROLLER_UNIQUE_ID,
     DEFAULT_SCAN_INTERVAL,
@@ -151,7 +147,7 @@ class Control4ConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: Control4ConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler()

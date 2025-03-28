@@ -72,6 +72,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         model=sma_device_info["type"],
         name=sma_device_info["name"],
         sw_version=sma_device_info["sw_version"],
+        serial_number=sma_device_info["serial"],
     )
 
     # Define the coordinator

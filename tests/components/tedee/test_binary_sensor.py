@@ -1,19 +1,20 @@
 """Tests for the Tedee Binary Sensors."""
 
 from datetime import timedelta
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from aiotedee import TedeeLock
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
 
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import async_fire_time_changed
+from . import setup_integration
 
-pytestmark = pytest.mark.usefixtures("init_integration")
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 BINARY_SENSORS = ("charging", "semi_locked", "pullspring_enabled", "lock_uncalibrated")
 
@@ -22,21 +23,19 @@ BINARY_SENSORS = ("charging", "semi_locked", "pullspring_enabled", "lock_uncalib
 async def test_binary_sensors(
     hass: HomeAssistant,
     mock_tedee: MagicMock,
+    mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test tedee binary sensor."""
-    for key in BINARY_SENSORS:
-        state = hass.states.get(f"binary_sensor.lock_1a2b_{key}")
-        assert state
-        assert state == snapshot(name=f"state-{key}")
+    with patch("homeassistant.components.tedee.PLATFORMS", [Platform.BINARY_SENSOR]):
+        await setup_integration(hass, mock_config_entry)
 
-        entry = entity_registry.async_get(state.entity_id)
-        assert entry
-        assert entry == snapshot(name=f"entry-{key}")
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.usefixtures("init_integration")
 async def test_new_binary_sensors(
     hass: HomeAssistant,
     mock_tedee: MagicMock,

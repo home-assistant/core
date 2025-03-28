@@ -230,3 +230,92 @@ WOMETERTHPC_SERVICE_INFO = BluetoothServiceInfoBleak(
     connectable=True,
     tx_power=-127,
 )
+
+WORELAY_SWITCH_1PM_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="W1080000",
+    manufacturer_data={2409: b"$X|\x0866G\x81\x00\x00\x001\x00\x00\x00\x00"},
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"<\x00\x00\x00"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="W1080000",
+        manufacturer_data={2409: b"$X|\x0866G\x81\x00\x00\x001\x00\x00\x00\x00"},
+        service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"<\x00\x00\x00"},
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "W1080000"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+LEAK_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="Any",
+    manufacturer_data={
+        2409: b"\xd6407D1\x02V\x90\x00\x00\x00\x00\x1e\x05\x00\x00\x00\x00"
+    },
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"&\\x00V"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="Any",
+        manufacturer_data={
+            2409: b"\xd6407D1\x02V\x90\x00\x00\x00\x00\x1e\x05\x00\x00\x00\x00"
+        },
+        service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"&\\x00V"},
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Any"),
+    time=0,
+    connectable=False,
+    tx_power=-127,
+)
+
+REMOTE_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="Any",
+    manufacturer_data={89: b"\xaa\xbb\xcc\xdd\xee\xff"},
+    service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"b V\x00"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="Any",
+        manufacturer_data={89: b"\xaa\xbb\xcc\xdd\xee\xff"},
+        service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"b V\x00"},
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Any"),
+    time=0,
+    connectable=False,
+    tx_power=-127,
+)
+
+
+WOHUB2_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="WoHub2",
+    manufacturer_data={
+        2409: b"\xe7\x06\x1dx\x99y\x00\xffg\xe2\xbf]\x84\x04\x9a,\x00",
+    },
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"v\x00"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="WoHub2",
+        manufacturer_data={
+            2409: b"\xe7\x06\x1dx\x99y\x00\xffg\xe2\xbf]\x84\x04\x9a,\x00",
+        },
+        service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"v\x00"},
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "WoHub2"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)

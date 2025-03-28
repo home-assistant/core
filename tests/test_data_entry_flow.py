@@ -13,11 +13,7 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util.decorator import Registry
 
-from .common import (
-    async_capture_events,
-    help_test_all,
-    import_and_test_deprecated_constant_enum,
-)
+from .common import async_capture_events
 
 
 class MockFlowManager(data_entry_flow.FlowManager):
@@ -135,6 +131,61 @@ async def test_show_form(manager: MockFlowManager) -> None:
     assert form["type"] == data_entry_flow.FlowResultType.FORM
     assert form["data_schema"] is schema
     assert form["errors"] == {"username": "Should be unique."}
+
+
+async def test_form_shows_with_added_suggested_values(manager: MockFlowManager) -> None:
+    """Test that we can show a form with suggested values."""
+    schema = vol.Schema(
+        {
+            vol.Required("username"): str,
+            vol.Required("password"): str,
+            vol.Required("section_1"): data_entry_flow.section(
+                vol.Schema(
+                    {
+                        vol.Optional("full_name"): str,
+                    }
+                ),
+                {"collapsed": False},
+            ),
+        }
+    )
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            data_schema = self.add_suggested_values_to_schema(
+                schema,
+                {
+                    "username": "doej",
+                    "password": "verySecret1",
+                    "section_1": {"full_name": "John Doe"},
+                },
+            )
+            return self.async_show_form(
+                step_id="init",
+                data_schema=data_schema,
+            )
+
+    form = await manager.async_init("test")
+    assert form["type"] == data_entry_flow.FlowResultType.FORM
+    assert form["data_schema"].schema == schema.schema
+    markers = list(form["data_schema"].schema)
+    assert len(markers) == 3
+    assert markers[0] == "username"
+    assert markers[0].description == {"suggested_value": "doej"}
+    assert markers[1] == "password"
+    assert markers[1].description == {"suggested_value": "verySecret1"}
+    assert markers[2] == "section_1"
+    section_validator = form["data_schema"].schema["section_1"]
+    assert isinstance(section_validator, data_entry_flow.section)
+    # The section class was not replaced
+    assert section_validator is schema.schema["section_1"]
+    # The section schema was not replaced
+    assert section_validator.schema is schema.schema["section_1"].schema
+    section_markers = list(section_validator.schema.schema)
+    assert len(section_markers) == 1
+    assert section_markers[0] == "full_name"
+    assert section_markers[0].description == {"suggested_value": "John Doe"}
 
 
 async def test_abort_removes_instance(manager: MockFlowManager) -> None:
@@ -983,22 +1034,6 @@ async def test_find_flows_by_init_data_type(manager: MockFlowManager) -> None:
     )
     assert len(wifi_flows) == 0
     assert len(manager.async_progress()) == 0
-
-
-def test_all() -> None:
-    """Test module.__all__ is correctly set."""
-    help_test_all(data_entry_flow)
-
-
-@pytest.mark.parametrize(("enum"), list(data_entry_flow.FlowResultType))
-def test_deprecated_constants(
-    caplog: pytest.LogCaptureFixture,
-    enum: data_entry_flow.FlowResultType,
-) -> None:
-    """Test deprecated constants."""
-    import_and_test_deprecated_constant_enum(
-        caplog, data_entry_flow, enum, "RESULT_TYPE_", "2025.1"
-    )
 
 
 def test_section_in_serializer() -> None:

@@ -24,9 +24,18 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.generated import zeroconf as zc_gen
 from homeassistant.helpers.discovery_flow import DiscoveryKey
+from homeassistant.helpers.service_info.zeroconf import (
+    ATTR_PROPERTIES_ID,
+    ZeroconfServiceInfo,
+)
 from homeassistant.setup import ATTR_COMPONENT, async_setup_component
 
-from tests.common import MockConfigEntry, MockModule, mock_integration
+from tests.common import (
+    MockConfigEntry,
+    MockModule,
+    import_and_test_deprecated_constant,
+    mock_integration,
+)
 
 NON_UTF8_VALUE = b"ABCDEF\x8a"
 NON_ASCII_KEY = b"non-ascii-key\x8a"
@@ -1081,7 +1090,7 @@ async def test_async_detect_interfaces_setting_non_loopback_route(
         patch.object(hass.config_entries.flow, "async_init"),
         patch.object(zeroconf, "AsyncServiceBrowser", side_effect=service_update_mock),
         patch(
-            "homeassistant.components.zeroconf.network.async_get_adapters",
+            "homeassistant.components.zeroconf.network.async_get_loaded_adapters",
             return_value=_ADAPTER_WITH_DEFAULT_ENABLED,
         ),
         patch(
@@ -1169,7 +1178,7 @@ async def test_async_detect_interfaces_setting_empty_route_linux(
         patch.object(hass.config_entries.flow, "async_init"),
         patch.object(zeroconf, "AsyncServiceBrowser", side_effect=service_update_mock),
         patch(
-            "homeassistant.components.zeroconf.network.async_get_adapters",
+            "homeassistant.components.zeroconf.network.async_get_loaded_adapters",
             return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
         ),
         patch(
@@ -1203,7 +1212,7 @@ async def test_async_detect_interfaces_setting_empty_route_freebsd(
         patch.object(hass.config_entries.flow, "async_init"),
         patch.object(zeroconf, "AsyncServiceBrowser", side_effect=service_update_mock),
         patch(
-            "homeassistant.components.zeroconf.network.async_get_adapters",
+            "homeassistant.components.zeroconf.network.async_get_loaded_adapters",
             return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
         ),
         patch(
@@ -1254,7 +1263,7 @@ async def test_async_detect_interfaces_explicitly_set_ipv6_linux(
         patch.object(hass.config_entries.flow, "async_init"),
         patch.object(zeroconf, "AsyncServiceBrowser", side_effect=service_update_mock),
         patch(
-            "homeassistant.components.zeroconf.network.async_get_adapters",
+            "homeassistant.components.zeroconf.network.async_get_loaded_adapters",
             return_value=_ADAPTER_WITH_DEFAULT_ENABLED_AND_IPV6,
         ),
         patch(
@@ -1283,7 +1292,7 @@ async def test_async_detect_interfaces_explicitly_set_ipv6_freebsd(
         patch.object(hass.config_entries.flow, "async_init"),
         patch.object(zeroconf, "AsyncServiceBrowser", side_effect=service_update_mock),
         patch(
-            "homeassistant.components.zeroconf.network.async_get_adapters",
+            "homeassistant.components.zeroconf.network.async_get_loaded_adapters",
             return_value=_ADAPTER_WITH_DEFAULT_ENABLED_AND_IPV6,
         ),
         patch(
@@ -1298,6 +1307,36 @@ async def test_async_detect_interfaces_explicitly_set_ipv6_freebsd(
     assert mock_zc.mock_calls[0] == call(
         interfaces=InterfaceChoice.Default,
         ip_version=IPVersion.V4Only,
+    )
+
+
+@pytest.mark.usefixtures("mock_async_zeroconf")
+async def test_async_detect_interfaces_explicitly_before_setup(
+    hass: HomeAssistant,
+) -> None:
+    """Test interfaces are explicitly set with IPv6 before setup is called."""
+    with (
+        patch("homeassistant.components.zeroconf.sys.platform", "linux"),
+        patch("homeassistant.components.zeroconf.HaZeroconf") as mock_zc,
+        patch.object(hass.config_entries.flow, "async_init"),
+        patch.object(zeroconf, "AsyncServiceBrowser", side_effect=service_update_mock),
+        patch(
+            "homeassistant.components.zeroconf.network.async_get_loaded_adapters",
+            return_value=_ADAPTER_WITH_DEFAULT_ENABLED_AND_IPV6,
+        ),
+        patch(
+            "homeassistant.components.zeroconf.AsyncServiceInfo",
+            side_effect=get_service_info_mock,
+        ),
+    ):
+        # Call before async_setup has been called
+        await zeroconf.async_get_async_instance(hass)
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    assert mock_zc.mock_calls[0] == call(
+        interfaces=["192.168.1.5", "fe80::dead:beef:dead:beef%3"],
+        ip_version=IPVersion.All,
     )
 
 
@@ -1655,3 +1694,35 @@ async def test_zeroconf_rediscover_no_match(
 
         assert len(mock_service_browser.mock_calls) == 1
         assert len(mock_config_flow.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("constant_name", "replacement_name", "replacement"),
+    [
+        (
+            "ATTR_PROPERTIES_ID",
+            "homeassistant.helpers.service_info.zeroconf.ATTR_PROPERTIES_ID",
+            ATTR_PROPERTIES_ID,
+        ),
+        (
+            "ZeroconfServiceInfo",
+            "homeassistant.helpers.service_info.zeroconf.ZeroconfServiceInfo",
+            ZeroconfServiceInfo,
+        ),
+    ],
+)
+def test_deprecated_constants(
+    caplog: pytest.LogCaptureFixture,
+    constant_name: str,
+    replacement_name: str,
+    replacement: Any,
+) -> None:
+    """Test deprecated automation constants."""
+    import_and_test_deprecated_constant(
+        caplog,
+        zeroconf,
+        constant_name,
+        replacement_name,
+        replacement,
+        "2026.2",
+    )

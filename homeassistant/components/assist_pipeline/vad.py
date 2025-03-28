@@ -75,7 +75,7 @@ class AudioBuffer:
 class VoiceCommandSegmenter:
     """Segments an audio stream into voice commands."""
 
-    speech_seconds: float = 0.1
+    speech_seconds: float = 0.3
     """Seconds of speech before voice command has started."""
 
     command_seconds: float = 1.0
@@ -140,7 +140,7 @@ class VoiceCommandSegmenter:
 
         self._timeout_seconds_left -= chunk_seconds
         if self._timeout_seconds_left <= 0:
-            _LOGGER.warning(
+            _LOGGER.debug(
                 "VAD end of speech detection timed out after %s seconds",
                 self.timeout_seconds,
             )

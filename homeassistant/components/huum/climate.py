@@ -3,8 +3,12 @@
 from __future__ import annotations
 
 import logging
-import sys
 from typing import Any
+
+from huum.const import SaunaStatus
+from huum.exceptions import SafetyException
+from huum.huum import Huum
+from huum.schemas import HuumStatusResponse
 
 from homeassistant.components.climate import (
     ClimateEntity,
@@ -16,15 +20,9 @@ from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTempera
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-
-if sys.version_info < (3, 13):
-    from huum.const import SaunaStatus
-    from huum.exceptions import SafetyException
-    from huum.huum import Huum
-    from huum.schemas import HuumStatusResponse
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Huum sauna with config flow."""
     huum_handler = hass.data.setdefault(DOMAIN, {})[entry.entry_id]
@@ -58,7 +56,6 @@ class HuumDevice(ClimateEntity):
 
     _target_temperature: int | None = None
     _status: HuumStatusResponse | None = None
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, huum_handler: Huum, unique_id: str) -> None:
         """Initialize the heater."""
