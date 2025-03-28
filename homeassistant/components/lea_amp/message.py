@@ -64,17 +64,13 @@ class ZoneEnabledMsg(LeaMessage):
         super().__init__(self.as_dict(zone_id))
 
 
-class OnOffMessage(LeaMessage):
+def OnOffMessage(zone_id: str, value: str) -> str:
     """OnOffMsg."""
 
-    command = "enable"
     request_type = "set "
     ext1 = "/amp/channels/"
     ext2 = "/output/enable"
-
-    def __init__(self, zone_id, command) -> None:
-        """Init."""
-        super().__init__(self.as_dict(zone_id, command))
+    return request_type + ext1 + zone_id + ext2 + " " + value + "\n"
 
 
 class getVolumeMessage(LeaMessage):
@@ -90,17 +86,14 @@ class getVolumeMessage(LeaMessage):
         super().__init__(self.as_dict(zone_id, ""))
 
 
-class setVolumeMessage(LeaMessage):
+def setVolumeMessage(zone_id: str, volume: int) -> str:
     """Set Volume Message."""
 
-    command = "fader"
     request_type = "set "
     ext1 = "/amp/channels/"
     ext2 = "/output/fader"
 
-    def __init__(self, zone_id, volume) -> None:
-        """Init."""
-        super().__init__(self.as_dict(zone_id, volume))
+    return request_type + ext1 + zone_id + ext2 + " " + str(volume) + "\n"
 
 
 class getMuteMessage(LeaMessage):
@@ -116,17 +109,14 @@ class getMuteMessage(LeaMessage):
         super().__init__(self.as_dict(zone_id, ""))
 
 
-class setMuteMessage(LeaMessage):
+def setMuteMessage(zone_id: str, mute: bool) -> str:
     """Set Mute Message."""
 
-    command = "mute"
     request_type = "set "
     ext1 = "/amp/channels/"
     ext2 = "/output/mute"
 
-    def __init__(self, zone_id, mute) -> None:
-        """Init."""
-        super().__init__(self.as_dict(zone_id, mute))
+    return request_type + ext1 + zone_id + ext2 + " " + str(mute) + "\n"
 
 
 class getSourceMessage(LeaMessage):
@@ -142,17 +132,14 @@ class getSourceMessage(LeaMessage):
         super().__init__(self.as_dict(zone_id, ""))
 
 
-class setSourceMessage(LeaMessage):
+def setSourceMessage(zone_id: str, source: int) -> str:
     """Set source Message."""
 
-    command = "source"
     request_type = "set "
     ext1 = "/amp/channels/"
     ext2 = "/inputSelector/primary"
 
-    def __init__(self, zone_id, source) -> None:
-        """Init."""
-        super().__init__(self.as_dict(zone_id, source))
+    return request_type + ext1 + zone_id + ext2 + " " + str(source) + "\n"
 
 
 class ScanResponse(LeaMessage):
