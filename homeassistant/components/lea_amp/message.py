@@ -187,36 +187,36 @@ class MessageResponseFactory:
             zoneId = "0"
             value = data.replace("/amp/deviceInfo/numInputs", "")
             command_type = "numInputs"
-        elif "output/name" in data:
+        elif "output name" in data:
             zoneId = data[data.find("channels/") + 9 : data.find("/output") - 1]
             value = data[data.find("output/name") + 13 : len(data) - 2]
 
             command_type = "zoneName"
-        elif "output/fader" in data:
+        elif "output fader" in data:
             zoneId = data[data.find("channels/") + 9 : data.find("/output") - 1]
 
             value = data.replace("/amp/channels/" + zoneId + "/output/fader", "")
             value = data.replace('"', "")
             command_type = "volume"
-        elif "output/mute" in data:
+        elif "output mute" in data:
             zoneId = data[data.find("channels/") + 9 : data.find("/output") - 1]
 
             value = data.replace("/amp/channels/" + zoneId + "/output/mute", "")
             value = data.replace('"', "")
             command_type = "mute"
-        elif "output/enable" in data:
+        elif "output enable" in data:
             zoneId = data.split(" ")[3]
             _LOGGER.log(logging.INFO, "zoneId: %s", zoneId)
             value = data.split(" ")[6]
             command_type = "power"
             _LOGGER.log(logging.INFO, "value: %s", value)
-        elif "inputSelector/primary" in data:
+        elif "inputSelector primary" in data:
             zoneId = data[data.find("channels/") + 9 : data.find("/inputSelector") - 1]
 
             value = data[data.find("primary") + 9 : len(data) - 2]
             value = data.replace('"', "")
             command_type = "source"
-        value = value.replace(" ", "")
+        # value = value.replace(" ", "")
 
         _LOGGER.log(logging.INFO, "value: %s", str(value))
         _LOGGER.log(logging.INFO, "command_type: %s", str(command_type))
