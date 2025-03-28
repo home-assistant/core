@@ -3,10 +3,16 @@ requires = ["setuptools==78.1.1"]
 build-backend = "setuptools.build_meta"
 
 [project]
+<<<<<<< HEAD
 name = "my_smart_homes"
-version = "20241046.0"
+version = "20241047.0"
 license = "Apache-2.0"
 license-files = ["LICENSE*", "homeassistant/backports/LICENSE*"]
+=======
+name        = "my_smart_homes"
+version     = "20241047.0"
+license     = {text = "Apache-2.0"}
+>>>>>>> cf8b07901f5 (bump: 20241047.0)
 description = "Open-source home automation platform running on Python 3."
 readme = "README.rst"
 authors = [
@@ -103,7 +109,7 @@ include-package-data = true
 include = ["homeassistant*"]
 
 [tool.pylint.MAIN]
-py-version = "3.13"
+py-version = "20241047.0"
 # Use a conservative default here; 2 should speed up most setups and not hurt
 # any too bad. Override on command line as appropriate.
 jobs = 2
