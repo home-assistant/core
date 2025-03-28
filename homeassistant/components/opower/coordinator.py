@@ -2,7 +2,7 @@
 
 from datetime import datetime, timedelta
 import logging
-from typing import cast
+from typing import Any
 
 from opower import (
     Account,
@@ -123,11 +123,15 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                 )
             )
             cost_statistic_id = f"{DOMAIN}:{id_prefix}_energy_cost"
+            compensation_statistic_id = f"{DOMAIN}:{id_prefix}_energy_compensation"
             consumption_statistic_id = f"{DOMAIN}:{id_prefix}_energy_consumption"
+            return_statistic_id = f"{DOMAIN}:{id_prefix}_energy_return"
             _LOGGER.debug(
-                "Updating Statistics for %s and %s",
+                "Updating Statistics for %s, %s, %s, and %s",
                 cost_statistic_id,
+                compensation_statistic_id,
                 consumption_statistic_id,
+                return_statistic_id,
             )
 
             last_stat = await get_instance(self.hass).async_add_executor_job(
@@ -139,7 +143,9 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                     account, self.api.utility.timezone()
                 )
                 cost_sum = 0.0
+                compensation_sum = 0.0
                 consumption_sum = 0.0
+                return_sum = 0.0
                 last_stats_time = None
             else:
                 cost_reads = await self._async_get_cost_reads(
@@ -160,7 +166,12 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                         self.hass,
                         start,
                         end,
-                        {cost_statistic_id, consumption_statistic_id},
+                        {
+                            cost_statistic_id,
+                            compensation_statistic_id,
+                            consumption_statistic_id,
+                            return_statistic_id,
+                        },
                         "hour",
                         None,
                         {"sum"},
@@ -175,28 +186,54 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                 # We are in this code path only if get_last_statistics found a stat
                 # so statistics_during_period should also have found at least one.
                 assert stats
-                cost_sum = cast(float, stats[cost_statistic_id][0]["sum"])
-                consumption_sum = cast(float, stats[consumption_statistic_id][0]["sum"])
+
+                def _safe_get_sum(records: list[Any]) -> float:
+                    if records and "sum" in records[0]:
+                        return float(records[0]["sum"])
+                    return 0.0
+
+                cost_sum = _safe_get_sum(stats.get(cost_statistic_id, []))
+                compensation_sum = _safe_get_sum(
+                    stats.get(compensation_statistic_id, [])
+                )
+                consumption_sum = _safe_get_sum(stats.get(consumption_statistic_id, []))
+                return_sum = _safe_get_sum(stats.get(return_statistic_id, []))
                 last_stats_time = stats[consumption_statistic_id][0]["start"]
 
             cost_statistics = []
+            compensation_statistics = []
             consumption_statistics = []
+            return_statistics = []
 
             for cost_read in cost_reads:
                 start = cost_read.start_time
                 if last_stats_time is not None and start.timestamp() <= last_stats_time:
                     continue
-                cost_sum += cost_read.provided_cost
-                consumption_sum += cost_read.consumption
+                cost_sum += max(cost_read.provided_cost, 0)
+                compensation_sum += max(-cost_read.provided_cost, 0)
+                consumption_sum += max(cost_read.consumption, 0)
+                return_sum += max(-cost_read.consumption, 0)
 
                 cost_statistics.append(
                     StatisticData(
                         start=start, state=cost_read.provided_cost, sum=cost_sum
                     )
                 )
+                compensation_statistics.append(
+                    StatisticData(
+                        start=start,
+                        state=-cost_read.provided_cost,
+                        sum=compensation_sum,
+                    )
+                )
                 consumption_statistics.append(
                     StatisticData(
                         start=start, state=cost_read.consumption, sum=consumption_sum
+                    )
+                )
+                return_statistics.append(
+                    StatisticData(
+                        start=start, state=-cost_read.consumption, sum=return_sum
                     )
                 )
 
@@ -212,12 +249,30 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                 statistic_id=cost_statistic_id,
                 unit_of_measurement=None,
             )
+            compensation_metadata = StatisticMetaData(
+                has_mean=False,
+                has_sum=True,
+                name=f"{name_prefix} compensation",
+                source=DOMAIN,
+                statistic_id=compensation_statistic_id,
+                unit_of_measurement=None,
+            )
             consumption_metadata = StatisticMetaData(
                 mean_type=StatisticMeanType.NONE,
                 has_sum=True,
                 name=f"{name_prefix} consumption",
                 source=DOMAIN,
                 statistic_id=consumption_statistic_id,
+                unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR
+                if account.meter_type == MeterType.ELEC
+                else UnitOfVolume.CENTUM_CUBIC_FEET,
+            )
+            return_metadata = StatisticMetaData(
+                has_mean=False,
+                has_sum=True,
+                name=f"{name_prefix} return",
+                source=DOMAIN,
+                statistic_id=return_statistic_id,
                 unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR
                 if account.meter_type == MeterType.ELEC
                 else UnitOfVolume.CENTUM_CUBIC_FEET,
@@ -231,12 +286,26 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
             async_add_external_statistics(self.hass, cost_metadata, cost_statistics)
             _LOGGER.debug(
                 "Adding %s statistics for %s",
+                len(compensation_statistics),
+                compensation_statistic_id,
+            )
+            async_add_external_statistics(
+                self.hass, compensation_metadata, compensation_statistics
+            )
+            _LOGGER.debug(
+                "Adding %s statistics for %s",
                 len(consumption_statistics),
                 consumption_statistic_id,
             )
             async_add_external_statistics(
                 self.hass, consumption_metadata, consumption_statistics
             )
+            _LOGGER.debug(
+                "Adding %s statistics for %s",
+                len(return_statistics),
+                return_statistic_id,
+            )
+            async_add_external_statistics(self.hass, return_metadata, return_statistics)
 
     async def _async_get_cost_reads(
         self, account: Account, time_zone_str: str, start_time: float | None = None
