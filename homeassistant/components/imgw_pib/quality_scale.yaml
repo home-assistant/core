@@ -80,8 +80,7 @@ rules:
     comment: This integration doesn't have any cases where raising an issue is needed.
   stale-devices:
     status: exempt
-    comment: |
-      This integration has a fixed single service.
+    comment: This integration has a fixed single service.
 
   # Platinum
   async-dependency: done
