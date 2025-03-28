@@ -5,7 +5,10 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from psnawp_api.core.psnawp_exceptions import PSNAWPAuthenticationError
+from psnawp_api.core.psnawp_exceptions import (
+    PSNAWPAuthenticationError,
+    PSNAWPServerError,
+)
 from psnawp_api.models.user import User
 from psnawp_api.psn import PlaystationNetwork, PlaystationNetworkData
 
@@ -42,7 +45,7 @@ class PlaystationNetworkCoordinator(DataUpdateCoordinator[PlaystationNetworkData
         """Get the latest data from the PSN."""
         try:
             return await self.hass.async_add_executor_job(self.psn.get_data)
-        except PSNAWPAuthenticationError as error:
+        except (PSNAWPAuthenticationError, PSNAWPServerError) as error:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
