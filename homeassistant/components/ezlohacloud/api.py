@@ -1,4 +1,7 @@
+"""Ezlo HA Cloud integration API for Home Assistant."""
+
 import logging
+
 import requests
 
 from .const import EZLO_API_URI, SIGNUP_UUID
@@ -71,9 +74,8 @@ def signup(username, email, password):
         if data.get("status") == 1 and "data" in data:
             _LOGGER.info("Signup successful.")
             return {"success": True, "message": "Signup successful!"}
-        else:
-            _LOGGER.warning("Signup failed. Response: %s", data)
-            return {"success": False, "error": "Signup failed"}
+        _LOGGER.warning("Signup failed. Response: %s", data)
+        return {"success": False, "error": "Signup failed"}
 
     except requests.RequestException as err:
         _LOGGER.error("Signup API request failed: %s", err)

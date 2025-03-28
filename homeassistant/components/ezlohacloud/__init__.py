@@ -1,13 +1,13 @@
+"""Ezlo HA Cloud integration for Home Assistant."""
+
 import asyncio
 import logging
-import os
 from pathlib import Path
 import platform
 import shutil
 import subprocess
 import tarfile
 import tempfile
-from typing import Optional
 
 import aiohttp
 import requests
@@ -17,7 +17,7 @@ import tomli_w
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from .config_flow import ExampleConfigFlow
+
 from .const import DOMAIN, EZLO_API_URI
 from .frp_helpers import fetch_and_update_frp_config, start_frpc
 

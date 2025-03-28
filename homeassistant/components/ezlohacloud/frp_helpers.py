@@ -1,13 +1,14 @@
-import subprocess
+"""Ezlo HA Cloud integration helpers for Home Assistant."""
+
 import logging
 from pathlib import Path
-import aiohttp
-import tomli
-from tomlkit import dumps, document, table, aot
-from tomlkit.exceptions import TOMLKitError
+import subprocess
 
-from homeassistant.core import HomeAssistant
+import aiohttp
+from tomlkit import aot, document, dumps, table
+
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN, EZLO_API_URI
 

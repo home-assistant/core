@@ -1,3 +1,5 @@
+"""Ezlo HA Cloud integration options flow for Home Assistant."""
+
 from datetime import datetime, timedelta
 import logging
 
@@ -42,7 +44,7 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
             return self.async_show_menu(
                 step_id="init",
                 menu_options={
-                    "logout": f"🔓 Logout",
+                    "logout": "🔓 Logout",
                 },
             )
 
@@ -217,8 +219,7 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
 
             if signup_response.get("success"):
                 return self.async_abort(reason="signup_successful")
-            else:
-                errors["base"] = signup_response.get("error", "Signup failed")
+            errors["base"] = signup_response.get("error", "Signup failed")
 
         return self.async_show_form(
             step_id="signup",
