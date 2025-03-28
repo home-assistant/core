@@ -271,16 +271,16 @@ class LeaController:
 
         if commandType == "volume":
             if zone := self.get_zone_by_id(zone_id):
-                zone.updateVolume(value)
+                zone.updateVolume(int(value))
         elif commandType == "mute":
             if zone := self.get_zone_by_id(zone_id):
-                zone.updateMute(value)
+                zone.updateMute(bool(value))
         elif commandType == "source":
             if zone := self.get_zone_by_id(zone_id):
-                zone.updateSource(value)
+                zone.updateSource(int(value))
         elif commandType == "power":
             if zone := self.get_zone_by_id(zone_id):
-                zone.updatePower(value)
+                zone.updatePower(bool(value))
 
     async def _handle_num_inputs(self, value: str):
         _LOGGER.log(logging.INFO, "_handle_num_inputs: %s", str(value))
