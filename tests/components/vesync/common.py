@@ -29,7 +29,11 @@ DEVICE_FIXTURES: dict[str, list[tuple[str, str, str]]] = {
         ("post", "/cloud/v2/deviceManaged/bypassV2", "device-detail.json")
     ],
     "Air Purifier 131s": [
-        ("post", "/131airPurifier/v1/device/deviceDetail", "purifier-detail.json")
+        (
+            "post",
+            "/131airPurifier/v1/device/deviceDetail",
+            "air-purifier-131s-detail.json",
+        )
     ],
     "Air Purifier 200s": [
         ("post", "/cloud/v2/deviceManaged/bypassV2", "device-detail.json")

@@ -80,7 +80,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'on',
   })
 # ---
 # name: test_switch_state[Air Purifier 200s][devices]
