@@ -630,6 +630,11 @@
       "config_flow": false,
       "iot_class": "cloud_push"
     },
+    "balay": {
+      "name": "Balay",
+      "integration_type": "virtual",
+      "supported_by": "home_connect"
+    },
     "balboa": {
       "name": "Balboa Spa Client",
       "integration_type": "hub",
