@@ -51,7 +51,7 @@
     'state': '1.2345',
   })
 # ---
-# name: test_sensors[sensor.raven_device_meter_price-entry]
+# name: test_sensors[sensor.raven_device_energy_price-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -66,7 +66,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.raven_device_meter_price',
+    'entity_id': 'sensor.raven_device_energy_price',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -78,26 +78,26 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Meter price',
+    'original_name': 'Energy price',
     'platform': 'rainforest_raven',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'meter_price',
+    'translation_key': 'energy_price',
     'unique_id': '1234567890abcdef.PriceCluster.price',
     'unit_of_measurement': 'USD/kWh',
   })
 # ---
-# name: test_sensors[sensor.raven_device_meter_price-state]
+# name: test_sensors[sensor.raven_device_energy_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'RAVEn Device Meter price',
+      'friendly_name': 'RAVEn Device Energy price',
       'rate_label': 'Set by user',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'tier': 3,
       'unit_of_measurement': 'USD/kWh',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.raven_device_meter_price',
+    'entity_id': 'sensor.raven_device_energy_price',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
