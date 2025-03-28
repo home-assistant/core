@@ -204,10 +204,11 @@ class MessageResponseFactory:
             value = data.replace('"', "")
             command_type = "mute"
         elif "output/enable" in data:
-            zoneId = data[data.find("channels/") + 9 : data.find("/output") - 1]
-
+            zoneId = data[(data.find("channels/") + 9) : (data.find("/output") - 1)]
+            _LOGGER.log(logging.INFO, "zoneId: %s", str(zoneId))
             value = data.replace("/amp/channels/" + zoneId + "/output/enable", "")
-            value = data.replace('"', "")
+            # value = data.replace('"', "")
+            _LOGGER.log(logging.INFO, "value: %s", str(value))
             command_type = "power"
         elif "inputSelector/primary" in data:
             zoneId = data[data.find("channels/") + 9 : data.find("/inputSelector") - 1]
