@@ -6,8 +6,8 @@ from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.components.mjpeg import MjpegCamera, filter_urllib3_logging
 from homeassistant.const import (
     CONF_HOST,
-    CONF_PORT,
     CONF_PASSWORD,
+    CONF_PORT,
     CONF_USERNAME,
     HTTP_BASIC_AUTHENTICATION,
 )
@@ -74,7 +74,4 @@ class IPWebcamCamera(MjpegCamera):
                 f"{rtsp_protocol}://{self._cam_username}:{self._cam_password}@{host}:{port}"
                 f"/{video_codec}_{audio_codec}.sdp"
             )
-        else:
-            return (
-                f"{rtsp_protocol}://{host}:{port}" f"/{video_codec}_{audio_codec}.sdp"
-            )
+        return f"{rtsp_protocol}://{host}:{port}/{video_codec}_{audio_codec}.sdp"
