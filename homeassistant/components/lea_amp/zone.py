@@ -29,6 +29,7 @@ class LeaZone:
 
     def updatePower(self, value: bool) -> None:
         """Update zone."""
+        _LOGGER.log(logging.INFO, "set_zone_power: %s", str(value))
         self._power = value
         self.update_lastseen()
         if self._update_callback and callable(self._update_callback):
@@ -113,13 +114,12 @@ class LeaZone:
 
     async def set_zone_power(self, power: bool):
         """Set Zone Power."""
-        _LOGGER.debug("set_zone_power")
         _LOGGER.log(logging.INFO, "set_zone_power: %s", str(power))
         self._power = power
 
     async def set_zone_volume(self, volume: int):
         """Set Zone Volume."""
-        _LOGGER.debug("set_zone_volume")
+        _LOGGER.log(logging.INFO, "set_zone_volume: %s", str(volume))
         self._volume = volume
 
     async def set_zone_mute(self, mute: bool):
