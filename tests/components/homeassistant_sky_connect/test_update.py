@@ -14,9 +14,7 @@ from .common import USB_DATA_ZBT1
 
 from tests.common import MockConfigEntry
 
-UPDATE_ENTITY_ID = (
-    "update.homeassistant_sky_connect_9e2adbd75b8beb119fe564a0f320645d_firmware"
-)
+UPDATE_ENTITY_ID = "update.home_assistant_connect_zbt_1_9e2adbd7_firmware"
 
 
 async def test_zbt1_update_entity(hass: HomeAssistant) -> None:
@@ -59,8 +57,9 @@ async def test_zbt1_update_entity(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     state_ezsp = hass.states.get(UPDATE_ENTITY_ID)
+    assert state_ezsp is not None
     assert state_ezsp.state == "unknown"
-    assert state_ezsp.attributes["title"] == "EmberZNet"
+    assert state_ezsp.attributes["title"] == "EmberZNet Zigbee"
     assert state_ezsp.attributes["installed_version"] == "7.3.1.0"
     assert state_ezsp.attributes["latest_version"] is None
 
@@ -80,6 +79,7 @@ async def test_zbt1_update_entity(hass: HomeAssistant) -> None:
 
     # After the firmware update, the entity has the new version and the correct state
     state_spinel = hass.states.get(UPDATE_ENTITY_ID)
+    assert state_spinel is not None
     assert state_spinel.state == "unknown"
     assert state_spinel.attributes["title"] == "OpenThread RCP"
     assert state_spinel.attributes["installed_version"] == "2.4.4.0"
