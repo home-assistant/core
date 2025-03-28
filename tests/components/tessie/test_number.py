@@ -67,7 +67,7 @@ async def test_numbers(
 
     entity_id = "number.energy_site_backup_reserve"
     with patch(
-        "homeassistant.components.teslemetry.EnergySpecific.backup",
+        "tesla_fleet_api.tessie.EnergySite.backup",
         return_value=TEST_RESPONSE,
     ) as call:
         await hass.services.async_call(
@@ -85,7 +85,7 @@ async def test_numbers(
 
     entity_id = "number.energy_site_off_grid_reserve"
     with patch(
-        "homeassistant.components.teslemetry.EnergySpecific.off_grid_vehicle_charging_reserve",
+        "tesla_fleet_api.tessie.EnergySite.off_grid_vehicle_charging_reserve",
         return_value=TEST_RESPONSE,
     ) as call:
         await hass.services.async_call(
