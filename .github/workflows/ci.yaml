@@ -1072,7 +1072,7 @@ jobs:
       - name: Combine files into one
         run: |
           . venv/bin/activate
-          python -m merge_pytest_execution_time_reports pytest-execution-time-report-${{ env.DEFAULT_PYTHON }}-*.json
+          python -m script.merge_pytest_execution_time_reports pytest-execution-time-report-${{ env.DEFAULT_PYTHON }}-*.json
       - name: Upload combined pytest execution time artifact
         uses: actions/upload-artifact@v4.6.2
         with:
