@@ -92,11 +92,15 @@ class LeaRemote(CoordinatorEntity[LEAAMPApiCoordinator], RemoteEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the Zone on."""
+        _LOGGER.log(logging.INFO, "zone id: %s", str(self._zone.zone_id))
+        _LOGGER.log(logging.INFO, "is one: %s", str(self.is_on))
         if not self.is_on:
             await self.coordinator.turn_on(self._zone)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the Android TV off."""
+        _LOGGER.log(logging.INFO, "zone id: %s", str(self._zone.zone_id))
+        _LOGGER.log(logging.INFO, "is one: %s", str(self.is_on))
         if self.is_on:
             await self.coordinator.turn_off(self._zone)
 
