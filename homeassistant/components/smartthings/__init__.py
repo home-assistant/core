@@ -352,7 +352,10 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                         return {
                             "new_unique_id": f"{device_id}_{MAIN}_{Capability.THREE_AXIS}_{Attribute.THREE_AXIS}_{new_attribute}",
                         }
-                    if attribute == Attribute.MACHINE_STATE:
+                    if attribute in {
+                        Attribute.MACHINE_STATE,
+                        Attribute.COMPLETION_TIME,
+                    }:
                         capability = determine_machine_type(
                             hass, entry.entry_id, device_id
                         )
@@ -410,7 +413,9 @@ def create_devices(
     rooms: dict[str, str],
 ) -> None:
     """Create devices in the device registry."""
-    for device in devices.values():
+    for device in sorted(
+        devices.values(), key=lambda d: d.device.parent_device_id or ""
+    ):
         kwargs: dict[str, Any] = {}
         if device.device.hub is not None:
             kwargs = {

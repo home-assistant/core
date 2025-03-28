@@ -59,6 +59,9 @@
       }
     },
     "button": {
+      "reset_water_filter": {
+        "name": "Reset water filter"
+      },
       "stop": {
         "name": "[%key:common::action::stop%]"
       }
@@ -478,19 +481,23 @@
   "issues": {
     "deprecated_binary_valve": {
       "title": "Deprecated valve binary sensor detected in some automations or scripts",
-      "description": "The valve binary sensor `{entity}` is deprecated and is used in the following automations or scripts:\n{items}\n\nA valve entity with controls is available and should be used going forward. Please use it in the above automations or scripts to fix this issue."
+      "description": "The valve binary sensor `{entity}` is deprecated and is used in the following automations or scripts:\n{items}\n\nA valve entity with controls is available and should be used going forward. Please use the new valve entity in the above automations or scripts to fix this issue."
     },
     "deprecated_binary_fridge_door": {
       "title": "Deprecated refrigerator door binary sensor detected in some automations or scripts",
       "description": "The refrigerator door binary sensor `{entity}` is deprecated and is used in the following automations or scripts:\n{items}\n\nSeparate entities for cooler and freezer door are available and should be used going forward. Please use them in the above automations or scripts to fix this issue."
     },
-    "deprecated_machine_state": {
-      "title": "Deprecated machine state sensor detected in some automations or scripts",
-      "description": "The machine state sensor `{entity}` is deprecated and is used in the following automations or scripts:\n{items}\n\nA select entity is now available for the machine state and should be used going forward. Please use them in the above automations or scripts to fix this issue."
-    },
     "deprecated_switch_appliance": {
       "title": "Deprecated switch detected in some automations or scripts",
-      "description": "The switch `{entity}` is deprecated because the actions did not work, so it has been replaced with a binary sensor instead.\n\nThe switch was used in the following automations or scripts:\n{items}\n\nPlease use them in the above automations or scripts to fix this issue."
+      "description": "The switch `{entity}` is deprecated because the actions did not work, so it has been replaced with a binary sensor instead.\n\nThe switch was used in the following automations or scripts:\n{items}\n\nPlease use the new binary sensor in the above automations or scripts to fix this issue."
+    },
+    "deprecated_switch_media_player": {
+      "title": "[%key:component::smartthings::issues::deprecated_switch_appliance::title%]",
+      "description": "The switch `{entity}` is deprecated and a media player entity has been added to replace it.\n\nThe switch was used in the following automations or scripts:\n{items}\n\nPlease use the new media player entity in the above automations or scripts to fix this issue."
+    },
+    "deprecated_media_player": {
+      "title": "Deprecated sensor detected in some automations or scripts",
+      "description": "The sensor `{entity}` is deprecated because it has been replaced with a media player entity.\n\nThe sensor was used in the following automations or scripts:\n{items}\n\nPlease use the new media player entity in the above automations or scripts to fix this issue."
     }
   }
 }

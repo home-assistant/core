@@ -150,6 +150,17 @@
             "hw_version": "The hardware version of the device. E.g. 'v1.0 rev a'.",
             "model": "E.g. 'Cleanmaster Pro'.",
             "model_id": "E.g. '123NK2PRO'."
+          },
+          "sections": {
+            "mqtt_settings": {
+              "name": "MQTT Settings",
+              "data": {
+                "qos": "QoS"
+              },
+              "data_description": {
+                "qos": "The Quality of Service value the device's entities should use."
+              }
+            }
           }
         },
         "summary_menu": {
@@ -235,8 +246,8 @@
             "value_template": "Value template",
             "last_reset_value_template": "Last reset value template",
             "force_update": "Force update",
-            "retain": "Retain",
-            "qos": "QoS"
+            "optimistic": "Optimistic",
+            "retain": "Retain"
           },
           "data_description": {
             "command_topic": "The publishing topic that will be used to control the {platform} entity. [Learn more.]({url}#command_topic)",
@@ -245,8 +256,8 @@
             "value_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the {platform} entity value.",
             "last_reset_value_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the last reset. When Last reset template is set, the State class option must be Total. [Learn more.]({url}#last_reset_value_template)",
             "force_update": "Sends update events even if the value hasn’t changed. Useful if you want to have meaningful value graphs in history. [Learn more.]({url}#force_update)",
-            "retain": "Select if values published by the {platform} entity should be retained at the MQTT broker.",
-            "qos": "The QoS value {platform} entity should use."
+            "optimistic": "Flag that defines if the {platform} entity works in optimistic mode. [Learn more.]({url}#optimistic)",
+            "retain": "Select if values published by the {platform} entity should be retained at the MQTT broker."
           },
           "sections": {
             "advanced_settings": {
@@ -274,9 +285,9 @@
         "invalid_uom": "The unit of measurement \"{unit_of_measurement}\" is not supported by the selected device class, please either remove the device class, select a device class which supports \"{unit_of_measurement}\", or pick a supported unit of measurement from the list",
         "invalid_url": "Invalid URL",
         "options_not_allowed_with_state_class_or_uom": "The 'Options' setting is not allowed when state class or unit of measurement are used",
-        "options_device_class_enum": "The 'Options' setting must be used with the Enumeration device class'. If you continue, the existing options will be reset",
+        "options_device_class_enum": "The 'Options' setting must be used with the Enumeration device class. If you continue, the existing options will be reset",
         "options_with_enum_device_class": "Configure options for the enumeration sensor",
-        "uom_required_for_device_class": "The selected device device class requires a unit"
+        "uom_required_for_device_class": "The selected device class requires a unit"
       }
     }
   },
@@ -442,7 +453,7 @@
         "temperature": "[%key:component::sensor::entity_component::temperature::name%]",
         "timestamp": "[%key:component::sensor::entity_component::timestamp::name%]",
         "volatile_organic_compounds": "[%key:component::sensor::entity_component::volatile_organic_compounds::name%]",
-        "volatile_organic_compounds_parts": "[%key:component::sensor::entity_component::volatile_organic_compounds::name%]",
+        "volatile_organic_compounds_parts": "[%key:component::sensor::entity_component::volatile_organic_compounds_parts::name%]",
         "voltage": "[%key:component::sensor::entity_component::voltage::name%]",
         "volume": "[%key:component::sensor::entity_component::volume::name%]",
         "volume_flow_rate": "[%key:component::sensor::entity_component::volume_flow_rate::name%]",
@@ -453,10 +464,17 @@
         "wind_speed": "[%key:component::sensor::entity_component::wind_speed::name%]"
       }
     },
+    "device_class_switch": {
+      "options": {
+        "outlet": "[%key:component::switch::entity_component::outlet::name%]",
+        "switch": "[%key:component::switch::title%]"
+      }
+    },
     "platform": {
       "options": {
         "notify": "Notify",
-        "sensor": "Sensor"
+        "sensor": "Sensor",
+        "switch": "Switch"
       }
     },
     "set_ca_cert": {
