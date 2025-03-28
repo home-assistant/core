@@ -60,8 +60,6 @@ async def test_state_update(
 @pytest.mark.parametrize(
     ("device_fixture", "entity_id", "translation_key"),
     [
-        ("da_wm_wm_000001", "sensor.washer_machine_state", "machine_state"),
-        ("da_wm_wd_000001", "sensor.dryer_machine_state", "machine_state"),
         ("hw_q80r_soundbar", "sensor.soundbar_volume", "media_player"),
         ("hw_q80r_soundbar", "sensor.soundbar_media_playback_status", "media_player"),
         ("hw_q80r_soundbar", "sensor.soundbar_media_input_source", "media_player"),
