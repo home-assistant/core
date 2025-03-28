@@ -5781,6 +5781,11 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "siemens": {
+      "name": "Siemens",
+      "integration_type": "virtual",
+      "supported_by": "home_connect"
+    },
     "sigfox": {
       "name": "Sigfox",
       "integration_type": "hub",
