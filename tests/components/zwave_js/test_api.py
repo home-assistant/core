@@ -94,12 +94,10 @@ from homeassistant.components.zwave_js.const import (
     CONF_DATA_COLLECTION_OPTED_IN,
     CONF_INSTALLER_MODE,
     DOMAIN,
-    EVENT_DEVICE_ADDED_TO_REGISTRY,
 )
 from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, MockUser
@@ -5823,7 +5821,11 @@ async def test_lookup_device(
 
 
 async def test_subscribe_new_devices(
-    hass: HomeAssistant, integration, client, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    integration,
+    client,
+    hass_ws_client: WebSocketGenerator,
+    multisensor_6_state,
 ) -> None:
     """Test the subscribe_new_devices websocket command."""
     entry = integration
@@ -5841,26 +5843,14 @@ async def test_subscribe_new_devices(
     assert msg["result"] is None
 
     # Simulate a device being registered
-    device_registry = dr.async_get(hass)
-    device = device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, "test-device-id")},
-        name="Test Device",
-        manufacturer="Test Manufacturer",
-        model="Test Model",
-    )
-
-    # Dispatch the event
-    async_dispatcher_send(hass, EVENT_DEVICE_ADDED_TO_REGISTRY, device)
+    node = Node(client, deepcopy(multisensor_6_state))
+    client.driver.controller.emit("node added", {"node": node})
+    await hass.async_block_till_done()
 
     # Verify we receive the expected message
     msg = await ws_client.receive_json()
-    assert msg["event"] == {
-        "event": "device registered",
-        "device": {
-            "name": "Test Device",
-            "id": device.id,
-            "manufacturer": "Test Manufacturer",
-            "model": "Test Model",
-        },
-    }
+    assert msg["type"] == "event"
+    assert msg["event"]["event"] == "device registered"
+    assert msg["event"]["device"]["name"] == node.device_config.description
+    assert msg["event"]["device"]["manufacturer"] == node.device_config.manufacturer
+    assert msg["event"]["device"]["model"] == node.device_config.label
