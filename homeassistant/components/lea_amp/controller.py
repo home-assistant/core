@@ -271,7 +271,7 @@ class LeaController:
 
         if commandType == "volume":
             if zone := self.get_zone_by_id(zone_id):
-                zone.updateVolume(int(value))
+                zone.updateVolume(int(value.strip()))
         elif commandType == "mute":
             if zone := self.get_zone_by_id(zone_id):
                 zone.updateMute(bool(value))
