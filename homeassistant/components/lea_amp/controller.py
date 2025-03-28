@@ -14,6 +14,9 @@ from .message import (
     MessageResponseFactory,
     OnOffMessage,
     ZoneEnabledMsg,
+    getMuteMessage,
+    getSourceMessage,
+    getVolumeMessage,
     setMuteMessage,
     setSourceMessage,
     setVolumeMessage,
@@ -310,8 +313,8 @@ class LeaController:
             _LOGGER.log(logging.INFO, "response data: %s", str(data))
             # self._handle_response_received(data)
 
-    def _send_update_message(self, zone: LeaZone):
-        self._send_message(ZoneEnabledMsg(zone.zone_id))
-        # self._send_message(getMuteMessage(zone.zone_id))
-        # self._send_message(getVolumeMessage(zone.zone_id))
-        # self._send_message(getSourceMessage(zone.zone_id))
+    def _send_update_message(self, zone_id: str):
+        self._send_message(ZoneEnabledMsg(zone_id))
+        self._send_message(getMuteMessage(zone_id))
+        self._send_message(getVolumeMessage(zone_id))
+        self._send_message(getSourceMessage(zone_id))
