@@ -4,6 +4,7 @@
     dict({
       'can_expand': True,
       'can_play': False,
+      'can_search': False,
       'children_media_class': None,
       'media_class': 'contributing_artist',
       'media_content_id': 'A:ARTIST',
@@ -14,6 +15,7 @@
     dict({
       'can_expand': True,
       'can_play': False,
+      'can_search': False,
       'children_media_class': None,
       'media_class': 'artist',
       'media_content_id': 'A:ALBUMARTIST',
@@ -24,6 +26,7 @@
     dict({
       'can_expand': True,
       'can_play': False,
+      'can_search': False,
       'children_media_class': None,
       'media_class': 'album',
       'media_content_id': 'A:ALBUM',
@@ -34,6 +37,7 @@
     dict({
       'can_expand': True,
       'can_play': False,
+      'can_search': False,
       'children_media_class': None,
       'media_class': 'genre',
       'media_content_id': 'A:GENRE',
@@ -44,6 +48,7 @@
     dict({
       'can_expand': True,
       'can_play': False,
+      'can_search': False,
       'children_media_class': None,
       'media_class': 'composer',
       'media_content_id': 'A:COMPOSER',
@@ -54,6 +59,7 @@
     dict({
       'can_expand': True,
       'can_play': True,
+      'can_search': False,
       'children_media_class': None,
       'media_class': 'track',
       'media_content_id': 'A:TRACKS',
@@ -64,6 +70,7 @@
     dict({
       'can_expand': True,
       'can_play': False,
+      'can_search': False,
       'children_media_class': None,
       'media_class': 'playlist',
       'media_content_id': 'A:PLAYLISTS',
@@ -78,6 +85,7 @@
     dict({
       'can_expand': True,
       'can_play': True,
+      'can_search': False,
       'children_media_class': None,
       'media_class': 'album',
       'media_content_id': "A:ALBUM/A%20Hard%20Day's%20Night",
@@ -88,6 +96,7 @@
     dict({
       'can_expand': True,
       'can_play': True,
+      'can_search': False,
       'children_media_class': None,
       'media_class': 'album',
       'media_content_id': 'A:ALBUM/Abbey%20Road',
@@ -98,6 +107,7 @@
     dict({
       'can_expand': True,
       'can_play': True,
+      'can_search': False,
       'children_media_class': None,
       'media_class': 'album',
       'media_content_id': 'A:ALBUM/Between%20Good%20And%20Evil',
@@ -108,6 +118,7 @@
     dict({
       'can_expand': True,
       'can_play': True,
+      'can_search': False,
       'children_media_class': None,
       'media_class': 'album',
       'media_content_id': "A:ALBUM/Special%20Characters,'()+",
@@ -122,6 +133,7 @@
     dict({
       'can_expand': True,
       'can_play': False,
+      'can_search': False,
       'children_media_class': None,
       'media_class': 'directory',
       'media_content_id': '',
@@ -132,6 +144,7 @@
     dict({
       'can_expand': True,
       'can_play': False,
+      'can_search': False,
       'children_media_class': None,
       'media_class': 'directory',
       'media_content_id': '',
