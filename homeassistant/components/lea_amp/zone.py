@@ -35,11 +35,11 @@ class LeaZone:
         if self._update_callback and callable(self._update_callback):
             self._update_callback(self)
 
-    def updateVolume(self, value: int) -> None:
+    def updateVolume(self, value: float) -> None:
         """Update zone."""
         volumeLevel = (((value / -1) - 80) / 0.8) * -1
         _LOGGER.log(logging.INFO, "updateVolume: %s", str(volumeLevel))
-        self._volume = value
+        self._volume = int(value)
         self.update_lastseen()
         if self._update_callback and callable(self._update_callback):
             self._update_callback(self)
