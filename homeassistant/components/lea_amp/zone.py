@@ -114,6 +114,7 @@ class LeaZone:
     async def set_zone_power(self, power: bool):
         """Set Zone Power."""
         _LOGGER.debug("set_zone_power")
+        _LOGGER.log(logging.INFO, "set_zone_power: %s", str(power))
         self._power = power
 
     async def set_zone_volume(self, volume: int):
