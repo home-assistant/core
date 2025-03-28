@@ -6,6 +6,7 @@ from unittest.mock import patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from components.renault import RenaultHub
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -112,6 +113,29 @@ async def test_sensor_errors(
     await hass.async_block_till_done()
 
     check_entities_unavailable(hass, entity_registry, expected_entities)
+
+
+@pytest.mark.usefixtures("fixtures_with_throttling_exception")
+@pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
+async def test_sensor_throttling(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    vehicle_type: str,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test for Renault sensors with a throttling error happening."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_vehicle = MOCK_VEHICLES[vehicle_type]
+    check_device_registry(device_registry, mock_vehicle["expected_device"])
+    assert len(entity_registry.entities) == 15
+
+    hub: RenaultHub = config_entry.runtime_data
+
+    # Ensure the hub has been throttled
+    assert hub.check_throttled()
 
 
 @pytest.mark.usefixtures("fixtures_with_access_denied_exception")

@@ -235,6 +235,18 @@ def _patch_fixtures_with_side_effect(side_effect: Any) -> Iterator[None]:
         yield
 
 
+@pytest.fixture(name="fixtures_with_throttling_exception")
+def patch_fixtures_with_throttling_exception():
+    """Mock fixtures."""
+    access_denied_exception = exceptions.QuotaLimitException(
+        "err.func.wired.overloaded",
+        "You have reached your quota limit",
+    )
+
+    with _patch_fixtures_with_side_effect(access_denied_exception):
+        yield
+
+
 @pytest.fixture(name="fixtures_with_access_denied_exception")
 def patch_fixtures_with_access_denied_exception():
     """Mock fixtures."""
