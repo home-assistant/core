@@ -1,5 +1,8 @@
 {
   "services": {
+    "get_queue": {
+      "service": "mdi:playlist-music"
+    },
     "group_volume_set": {
       "service": "mdi:volume-medium"
     },

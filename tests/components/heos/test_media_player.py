@@ -15,6 +15,7 @@ from pyheos import (
     MediaType as HeosMediaType,
     PlayerUpdateResult,
     PlayState,
+    QueueItem,
     RepeatType,
     SignalHeosEvent,
     SignalType,
@@ -27,6 +28,7 @@ from syrupy.filters import props
 
 from homeassistant.components.heos.const import (
     DOMAIN,
+    SERVICE_GET_QUEUE,
     SERVICE_GROUP_VOLUME_DOWN,
     SERVICE_GROUP_VOLUME_SET,
     SERVICE_GROUP_VOLUME_UP,
@@ -1319,6 +1321,51 @@ async def test_play_media_music_source_url(
     controller.play_url.assert_called_once()
 
 
+async def test_play_media_queue(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    controller: MockHeos,
+) -> None:
+    """Test the play media service with type queue."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: "media_player.test_player",
+            ATTR_MEDIA_CONTENT_TYPE: "queue",
+            ATTR_MEDIA_CONTENT_ID: "2",
+        },
+        blocking=True,
+    )
+    controller.player_play_queue.assert_called_once_with(1, 2)
+
+
+async def test_play_media_queue_invalid(
+    hass: HomeAssistant, config_entry: MockConfigEntry, controller: MockHeos
+) -> None:
+    """Test the play media service with an invalid queue id."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    with pytest.raises(
+        HomeAssistantError,
+        match=re.escape("Unable to play media: Invalid queue id 'Invalid'"),
+    ):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.test_player",
+                ATTR_MEDIA_CONTENT_TYPE: "queue",
+                ATTR_MEDIA_CONTENT_ID: "Invalid",
+            },
+            blocking=True,
+        )
+    assert controller.player_play_queue.call_count == 0
+
+
 async def test_browse_media_root(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -1696,3 +1743,27 @@ async def test_media_player_group_fails_wrong_integration(
             blocking=True,
         )
     controller.set_group.assert_not_called()
+
+
+async def test_get_queue(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    controller: MockHeos,
+    queue: list[QueueItem],
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the get queue service."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    controller.player_get_queue.return_value = queue
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_QUEUE,
+        {
+            ATTR_ENTITY_ID: "media_player.test_player",
+        },
+        blocking=True,
+        return_response=True,
+    )
+    controller.player_get_queue.assert_called_once_with(1, None, None)
+    assert response == snapshot

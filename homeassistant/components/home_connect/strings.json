@@ -110,17 +110,71 @@
     }
   },
   "issues": {
+    "deprecated_time_alarm_clock_in_automations_scripts": {
+      "title": "Deprecated alarm clock entity detected in some automations or scripts",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::home_connect::issues::deprecated_time_alarm_clock_in_automations_scripts::title%]",
+            "description": "The alarm clock entity `{entity_id}`, which is deprecated because it's being moved to the `number` platform, is used in the following automations or scripts:\n{items}\n\nPlease, fix this issue by updating your automations or scripts to use the new `number` entity."
+          }
+        }
+      }
+    },
+    "deprecated_time_alarm_clock": {
+      "title": "Deprecated alarm clock entity",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::home_connect::issues::deprecated_time_alarm_clock::title%]",
+            "description": "The alarm clock entity `{entity_id}` is deprecated because it's being moved to the `number` platform.\n\nPlease use the new `number` entity."
+          }
+        }
+      }
+    },
     "deprecated_binary_common_door_sensor": {
       "title": "Deprecated binary door sensor detected in some automations or scripts",
-      "description": "The binary door sensor `{entity}`, which is deprecated, is used in the following automations or scripts:\n{items}\n\nA sensor entity with additional possible states is available and should be used going forward; Please use it on the above automations or scripts to fix this issue."
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::home_connect::issues::deprecated_binary_common_door_sensor::title%]",
+            "description": "The binary door sensor `{entity}`, which is deprecated, is used in the following automations or scripts:\n{items}\n\nA sensor entity with additional possible states is available and should be used going forward; Please use it on the above automations or scripts to fix this issue."
+          }
+        }
+      }
     },
     "deprecated_command_actions": {
       "title": "The command related actions are deprecated in favor of the new buttons",
-      "description": "The `pause_program` and `resume_program` actions have been deprecated in favor of new button entities, if the command is available for your appliance. Please update your automations, scripts and panels that use this action to use the button entities instead, and press on submit to fix the issue."
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::home_connect::issues::deprecated_command_actions::title%]",
+            "description": "The `pause_program` and `resume_program` actions have been deprecated in favor of new button entities, if the command is available for your appliance. Please update your automations, scripts and panels that use this action to use the button entities instead, and press on submit to fix the issue."
+          }
+        }
+      }
+    },
+    "deprecated_program_switch_in_automations_scripts": {
+      "title": "Deprecated program switch detected in some automations or scripts",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::home_connect::issues::deprecated_program_switch_in_automations_scripts::title%]",
+            "description": "Program switches are deprecated and {entity_id} is used in the following automations or scripts:\n{items}\n\nYou can use the active program select entity to run the program without any additional options and get the current running program on the above automations or scripts to fix this issue."
+          }
+        }
+      }
     },
     "deprecated_program_switch": {
-      "title": "Deprecated program switch detected in some automations or scripts",
-      "description": "Program switches are deprecated and {entity_id} is used in the following automations or scripts:\n{items}\n\nYou can use the active program select entity to run the program without any additional options and get the current running program on the above automations or scripts to fix this issue."
+      "title": "Deprecated program switch entities",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::home_connect::issues::deprecated_program_switch::title%]",
+            "description": "The switch entity `{entity_id}` and all the other program switches are deprecated.\n\nPlease use the active program select entity instead."
+          }
+        }
+      }
     },
     "deprecated_set_program_and_option_actions": {
       "title": "The executed action is deprecated",
@@ -811,8 +865,17 @@
       "bottle_cooler_door": {
         "name": "Bottle cooler door"
       },
+      "common_chiller_door": {
+        "name": "Common chiller door"
+      },
       "chiller_door": {
         "name": "Chiller door"
+      },
+      "left_chiller_door": {
+        "name": "Left chiller door"
+      },
+      "right_chiller_door": {
+        "name": "Right chiller door"
       },
       "flex_compartment_door": {
         "name": "Flex compartment door"
@@ -859,6 +922,9 @@
       }
     },
     "number": {
+      "alarm_clock": {
+        "name": "Alarm clock"
+      },
       "refrigerator_setpoint_temperature": {
         "name": "Refrigerator temperature"
       },
@@ -1536,23 +1602,64 @@
       "oven_current_cavity_temperature": {
         "name": "Current oven cavity temperature"
       },
-      "freezer_door_alarm": {
-        "name": "Freezer door alarm",
-        "state": {
-          "confirmed": "[%key:component::home_connect::common::confirmed%]",
-          "present": "[%key:component::home_connect::common::present%]"
-        }
-      },
-      "refrigerator_door_alarm": {
-        "name": "Refrigerator door alarm",
+      "program_aborted": {
+        "name": "Program aborted",
         "state": {
           "off": "[%key:common::state::off%]",
           "confirmed": "[%key:component::home_connect::common::confirmed%]",
           "present": "[%key:component::home_connect::common::present%]"
         }
       },
-      "freezer_temperature_alarm": {
-        "name": "Freezer temperature alarm",
+      "program_finished": {
+        "name": "Program finished",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "alarm_clock_elapsed": {
+        "name": "Alarm clock elapsed",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "preheat_finished": {
+        "name": "Pre-heat finished",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "regular_preheat_finished": {
+        "name": "Regular pre-heat finished",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "drying_process_finished": {
+        "name": "Drying process finished",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "salt_nearly_empty": {
+        "name": "Salt nearly empty",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "rinse_aid_nearly_empty": {
+        "name": "Rinse aid nearly empty",
         "state": {
           "off": "[%key:common::state::off%]",
           "confirmed": "[%key:component::home_connect::common::confirmed%]",
@@ -1583,16 +1690,216 @@
           "present": "[%key:component::home_connect::common::present%]"
         }
       },
-      "salt_nearly_empty": {
-        "name": "Salt nearly empty",
+      "keep_milk_tank_cool": {
+        "name": "Keep milk tank cool",
         "state": {
           "off": "[%key:common::state::off%]",
           "confirmed": "[%key:component::home_connect::common::confirmed%]",
           "present": "[%key:component::home_connect::common::present%]"
         }
       },
-      "rinse_aid_nearly_empty": {
-        "name": "Rinse aid nearly empty",
+      "descaling_in_20_cups": {
+        "name": "Descaling in 20 cups",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "descaling_in_15_cups": {
+        "name": "Descaling in 15 cups",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "descaling_in_10_cups": {
+        "name": "Descaling in 10 cups",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "descaling_in_5_cups": {
+        "name": "Descaling in 5 cups",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "device_should_be_descaled": {
+        "name": "Device should be descaled",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "device_descaling_overdue": {
+        "name": "Device descaling overdue",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "device_descaling_blockage": {
+        "name": "Device descaling blockage",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "device_should_be_cleaned": {
+        "name": "Device should be cleaned",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "device_cleaning_overdue": {
+        "name": "Device cleaning overdue",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "calc_n_clean_in20cups": {
+        "name": "Calc'N'Clean in 20 cups",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "calc_n_clean_in15cups": {
+        "name": "Calc'N'Clean in 15 cups",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "calc_n_clean_in10cups": {
+        "name": "Calc'N'Clean in 10 cups",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "calc_n_clean_in5cups": {
+        "name": "Calc'N'Clean in 5 cups",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "device_should_be_calc_n_cleaned": {
+        "name": "Device should be Calc'N'Cleaned",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "device_calc_n_clean_overdue": {
+        "name": "Device Calc'N'Clean overdue",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "device_calc_n_clean_blockage": {
+        "name": "Device Calc'N'Clean blockage",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "freezer_door_alarm": {
+        "name": "Freezer door alarm",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "refrigerator_door_alarm": {
+        "name": "Refrigerator door alarm",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "freezer_temperature_alarm": {
+        "name": "Freezer temperature alarm",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "empty_dust_box_and_clean_filter": {
+        "name": "Empty dust box and clean filter",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "robot_is_stuck": {
+        "name": "Robot is stuck",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "docking_station_not_found": {
+        "name": "Docking station not found",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "poor_i_dos_1_fill_level": {
+        "name": "Poor i-Dos 1 fill level",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "poor_i_dos_2_fill_level": {
+        "name": "Poor i-Dos 2 fill level",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "grease_filter_max_saturation_nearly_reached": {
+        "name": "Grease filter max saturation nearly reached",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "confirmed": "[%key:component::home_connect::common::confirmed%]",
+          "present": "[%key:component::home_connect::common::present%]"
+        }
+      },
+      "grease_filter_max_saturation_reached": {
+        "name": "Grease filter max saturation reached",
         "state": {
           "off": "[%key:common::state::off%]",
           "confirmed": "[%key:component::home_connect::common::confirmed%]",
