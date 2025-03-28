@@ -209,7 +209,7 @@ class MessageResponseFactory:
             zoneId = data.split(" ")[3]
             value = data.split(" ")[6]
             command_type = "source"
-        # value = value.replace(" ", "")
+        value = value.replace("\n", "")
 
         _LOGGER.log(logging.INFO, "value: %s", str(value))
         _LOGGER.log(logging.INFO, "command_type: %s", str(command_type))
