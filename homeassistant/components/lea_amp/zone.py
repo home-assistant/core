@@ -114,26 +114,21 @@ class LeaZone:
     async def set_zone_power(self, power: bool):
         """Set Zone Power."""
         _LOGGER.debug("set_zone_power")
-        await self._controller.turn_on_off(self._zone_id, str(power))
         self._power = power
 
     async def set_zone_volume(self, volume: int):
         """Set Zone Volume."""
         _LOGGER.debug("set_zone_volume")
-        volume = int((80 - (volume * 0.8)) * -1)
-        await self._controller.set_volume(self._zone_id, volume)
         self._volume = volume
 
     async def set_zone_mute(self, mute: bool):
         """Set Zone Mute."""
         _LOGGER.debug("set_zone_mute")
-        await self._controller.set_mute(self._zone_id, mute)
         self._mute = mute
 
     async def set_zone_source(self, source: int):
         """Set Zone Source."""
         _LOGGER.debug("set_zone_source")
-        await self._controller.set_source(self._zone_id, source)
         self._source = source
 
     def update_lastseen(self):
