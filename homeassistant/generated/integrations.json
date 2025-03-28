@@ -6533,6 +6533,11 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "thermador": {
+      "name": "Thermador",
+      "integration_type": "virtual",
+      "supported_by": "home_connect"
+    },
     "thermobeacon": {
       "name": "ThermoBeacon",
       "integration_type": "hub",
