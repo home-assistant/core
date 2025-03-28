@@ -106,16 +106,25 @@ class BucketHolder:
                 # Ensure all files from the same folder are in the same bucket
                 # to ensure that syrupy correctly identifies unused snapshots
                 if is_file:
+                    added_tests = []
                     for other_test in tests.parent.children.values():
                         if other_test is tests or isinstance(other_test, TestFolder):
                             continue
-                        print(
-                            f"Adding {other_test.path} tests to same bucket due syrupy"
-                        )
                         smallest_bucket.add(other_test)
+                        added_tests.append(other_test)
                         add_not_measured_files(
                             other_test,
                             not_measured_tests,
+                        )
+                    if added_tests:
+                        print(
+                            f"Added {len(added_tests)} tests to the same bucket so syrupy can identify unused snapshots"
+                        )
+                        print(
+                            "  - "
+                            + "\n  - ".join(
+                                str(test.path) for test in sorted(added_tests)
+                            )
                         )
 
         # verify that all tests are added to a bucket
@@ -125,7 +134,7 @@ class BucketHolder:
         if not_measured_tests:
             print(f"Found {len(not_measured_tests)} not measured test files: ")
             for test in sorted(not_measured_tests, key=lambda x: x.path):
-                print(f"- {test.path}")
+                print(f"  - {test.path}")
 
     def create_ouput_file(self) -> None:
         """Create output file."""
