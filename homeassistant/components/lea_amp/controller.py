@@ -18,6 +18,8 @@ from .message import (
     getMuteMessage,
     getSourceMessage,
     getVolumeMessage,
+    setMuteMessage,
+    setSourceMessage,
     setVolumeMessage,
 )
 from .zone import LeaZone
@@ -227,17 +229,21 @@ class LeaController:
                     self._update_interval, self.send_update_message
                 )
 
-    async def turn_on_off(self, zone: LeaZone, status: str):
+    async def turn_on_off(self, zone_id: str, status: str):
         """Turn on off."""
-        self._send_message(OnOffMessage(zone.zone_id, status), zone)
+        self._send_message(OnOffMessage(zone_id, status))
 
-    async def set_volume(self, zone: LeaZone, volume: int) -> None:
+    async def set_volume(self, zone_id: str, volume: int) -> None:
         """Set Volume."""
-        self._send_message(setVolumeMessage(zone.zone_id, volume), zone)
+        self._send_message(setVolumeMessage(zone_id, volume))
 
-    async def set_mute(self, zone: LeaZone, mute: bool) -> None:
+    async def set_source(self, zone_id: str, source: int) -> None:
+        """Set Source."""
+        self._send_message(setSourceMessage(zone_id, source))
+
+    async def set_mute(self, zone_id: str, mute: bool) -> None:
         """Set Volume."""
-        self._send_message(getMuteMessage(str(mute)), zone)
+        self._send_message(setMuteMessage(zone_id, str(mute)))
 
     def get_zone_by_id(self, zone_id: str) -> LeaZone | None:
         """Get Zone by id."""
@@ -309,11 +315,12 @@ class LeaController:
             return True
         return self._zone_discovered_callback(zone, is_new)
 
-    def _send_message(self, message: LeaMessage, zone: LeaZone) -> None:
+    def _send_message(self, message: LeaMessage) -> None:
+        _LOGGER.log(logging.INFO, "_send_message message:", message)
         self._transport.send(message)
 
     def _send_update_message(self, zone: LeaZone):
-        self._send_message(ZoneEnabledMsg(zone.zone_id), zone)
-        self._send_message(getMuteMessage(zone.zone_id), zone)
-        self._send_message(getVolumeMessage(zone.zone_id), zone)
-        self._send_message(getSourceMessage(zone.zone_id), zone)
+        self._send_message(ZoneEnabledMsg(zone.zone_id))
+        self._send_message(getMuteMessage(zone.zone_id))
+        self._send_message(getVolumeMessage(zone.zone_id))
+        self._send_message(getSourceMessage(zone.zone_id))
