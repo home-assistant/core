@@ -331,6 +331,7 @@ FLOWS = {
         "lastfm",
         "launch_library",
         "laundrify",
+        "lc7001",
         "lcn",
         "ld2410_ble",
         "leaone",

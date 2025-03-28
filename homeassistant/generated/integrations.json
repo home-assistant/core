@@ -3356,6 +3356,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "lc7001": {
+      "name": "Legrand Whole Home Lighting",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "lcn": {
       "name": "LCN",
       "integration_type": "hub",
