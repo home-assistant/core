@@ -246,7 +246,7 @@ async def test_action_exception_invalid_device(hass: HomeAssistant) -> None:
     )
 
     device_id = "invalid_device_id"
-    error_message = f"Unable to find a NUT device with id {device_id}"
+    error_message = f"Unable to find a NUT device with ID {device_id}"
     with pytest.raises(InvalidDeviceAutomationConfig, match=error_message):
         await platform.async_call_action_from_config(
             hass,

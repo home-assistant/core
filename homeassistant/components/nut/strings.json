@@ -227,7 +227,7 @@
       "message": "Device authentication error: {err}"
     },
     "device_invalid": {
-      "message": "Unable to find a NUT device with id {device_id}"
+      "message": "Unable to find a NUT device with ID {device_id}"
     },
     "nut_command_error": {
       "message": "Error running command {command_name}, {err}"
