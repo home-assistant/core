@@ -21,7 +21,8 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "no_services": "No services found at endpoint",
-      "no_port": "No port for endpoint"
+      "no_port": "No port for endpoint",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "entity": {
