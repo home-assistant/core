@@ -125,6 +125,11 @@ class PsnMediaPlayerEntity(
         return None
 
     @property
+    def media_content_id(self) -> str | None:
+        """Content ID of current playing media."""
+        return self.coordinator.data.title_metadata.get("npTitleId")
+
+    @property
     def media_image_url(self) -> str | None:
         """Media image url getter."""
         if self.coordinator.data.title_metadata.get(
