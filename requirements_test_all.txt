@@ -213,7 +213,7 @@ aiodiscover==2.6.1
 aiodns==3.2.0
 
 # homeassistant.components.duke_energy
-aiodukeenergy==0.2.2
+aiodukeenergy==0.3.0
 
 # homeassistant.components.eafm
 aioeafm==0.1.2
