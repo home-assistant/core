@@ -225,7 +225,7 @@ aiodiscover==2.6.1
 aiodns==3.2.0
 
 # homeassistant.components.duke_energy
-aiodukeenergy==0.2.2
+aiodukeenergy==0.3.0
 
 # homeassistant.components.eafm
 aioeafm==0.1.2
@@ -1453,7 +1453,7 @@ mozart-api==4.1.1.116.4
 mullvad-api==1.0.0
 
 # homeassistant.components.music_assistant
-music-assistant-client==1.1.1
+music-assistant-client==1.2.0
 
 # homeassistant.components.tts
 mutagen==1.47.0
