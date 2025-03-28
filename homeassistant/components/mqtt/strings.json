@@ -287,7 +287,7 @@
         "options_not_allowed_with_state_class_or_uom": "The 'Options' setting is not allowed when state class or unit of measurement are used",
         "options_device_class_enum": "The 'Options' setting must be used with the Enumeration device class'. If you continue, the existing options will be reset",
         "options_with_enum_device_class": "Configure options for the enumeration sensor",
-        "uom_required_for_device_class": "The selected device device class requires a unit"
+        "uom_required_for_device_class": "The selected device class requires a unit"
       }
     }
   },
