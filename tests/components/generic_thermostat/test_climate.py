@@ -1119,8 +1119,13 @@ async def test_precision(hass: HomeAssistant) -> None:
     assert state.attributes.get("target_temp_step") == 0.1
 
 
-@pytest.fixture
-async def setup_comp_10(hass: HomeAssistant) -> None:
+@pytest.fixture(
+    params=[
+        HVACMode.HEAT,
+        HVACMode.COOL,
+    ]
+)
+async def setup_comp_10(hass: HomeAssistant, request: pytest.FixtureRequest) -> None:
     """Initialize components."""
     assert await async_setup_component(
         hass,
@@ -1134,7 +1139,7 @@ async def setup_comp_10(hass: HomeAssistant) -> None:
                 "target_temp": 25,
                 "heater": ENT_SWITCH,
                 "target_sensor": ENT_SENSOR,
-                "initial_hvac_mode": HVACMode.HEAT,
+                "initial_hvac_mode": request.param,
             }
         },
     )
