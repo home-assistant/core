@@ -15,7 +15,7 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
-UPDATE_ENTITY_ID = "update.homeassistant_yellow_firmware"
+UPDATE_ENTITY_ID = "update.home_assistant_yellow_firmware"
 
 
 async def test_yellow_update_entity(hass: HomeAssistant) -> None:
@@ -24,6 +24,7 @@ async def test_yellow_update_entity(hass: HomeAssistant) -> None:
 
     # Set up the Yellow integration
     yellow_config_entry = MockConfigEntry(
+        title="Home Assistant Yellow",
         domain="homeassistant_yellow",
         data={
             "firmware": "ezsp",
@@ -62,8 +63,9 @@ async def test_yellow_update_entity(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     state_ezsp = hass.states.get(UPDATE_ENTITY_ID)
+    assert state_ezsp is not None
     assert state_ezsp.state == "unknown"
-    assert state_ezsp.attributes["title"] == "EmberZNet"
+    assert state_ezsp.attributes["title"] == "EmberZNet Zigbee"
     assert state_ezsp.attributes["installed_version"] == "7.3.1.0"
     assert state_ezsp.attributes["latest_version"] is None
 
@@ -83,6 +85,7 @@ async def test_yellow_update_entity(hass: HomeAssistant) -> None:
 
     # After the firmware update, the entity has the new version and the correct state
     state_spinel = hass.states.get(UPDATE_ENTITY_ID)
+    assert state_spinel is not None
     assert state_spinel.state == "unknown"
     assert state_spinel.attributes["title"] == "OpenThread RCP"
     assert state_spinel.attributes["installed_version"] == "2.4.4.0"
