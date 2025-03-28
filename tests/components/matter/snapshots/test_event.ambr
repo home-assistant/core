@@ -132,6 +132,8 @@
       'event_types': list([
         'multi_press_1',
         'multi_press_2',
+        'multi_press_3',
+        'multi_press_4',
         'long_press',
         'long_release',
       ]),
@@ -172,6 +174,8 @@
       'event_types': list([
         'multi_press_1',
         'multi_press_2',
+        'multi_press_3',
+        'multi_press_4',
         'long_press',
         'long_release',
       ]),
