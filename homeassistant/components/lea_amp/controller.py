@@ -316,7 +316,11 @@ class LeaController:
 
     def _send_message(self, message: str) -> None:
         _LOGGER.log(logging.INFO, "_send_message message:%s", message)
-        self._transport.send(message)
+        self._transport.send(message.encode)
+        data = self._transport.recv(2048)
+        if data:
+            _LOGGER.log(logging.INFO, "response data: %s", str(data))
+            # self._handle_response_received(data)
 
     def _send_update_message(self, zone: LeaZone):
         self._send_message(ZoneEnabledMsg(zone.zone_id))
