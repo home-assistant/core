@@ -704,7 +704,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "nibe_heatpump",
     "nice_go",
     "nightscout",
-    "niko_home_control",
     "nilu",
     "nina",
     "nissan_leaf",
