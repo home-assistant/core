@@ -150,7 +150,7 @@
               "province": "[%key:component::workday::config::step::options::data::province%]"
             },
             "data_description": {
-              "province": "[%key:component::workday::issues::bad_country::fix_flow::step::province::data_description::province%]"
+              "province": "[%key:component::workday::config::step::options::data_description::province%]"
             }
           }
         }
