@@ -120,6 +120,16 @@ def getSourceMessage(zone_id: str) -> str:
     return request_type + ext1 + zone_id + ext2 + "\n"
 
 
+def getZoneName(zone_id: str) -> str:
+    """Get Source Message."""
+
+    request_type = "get "
+    ext1 = "/amp/channels/"
+    ext2 = "/output/name"
+
+    return request_type + ext1 + zone_id + ext2 + "\n"
+
+
 def setSourceMessage(zone_id: str, source: int) -> str:
     """Set source Message."""
 
@@ -205,6 +215,10 @@ class MessageResponseFactory:
             zoneId = data.split(" ")[3]
             value = data.split(" ")[6]
             command_type = "power"
+        elif "output name" in data:
+            zoneId = data.split(" ")[3]
+            value = data.split(" ")[6]
+            command_type = "name"
         elif "inputSelector primary" in data:
             zoneId = data.split(" ")[3]
             value = data.split(" ")[6] + " " + data.split(" ")[7]

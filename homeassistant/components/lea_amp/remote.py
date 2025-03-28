@@ -13,6 +13,7 @@ from homeassistant.components.remote import (
     DEFAULT_HOLD_SECS,
     DEFAULT_NUM_REPEATS,
     RemoteEntity,
+    RemoteEntityFeature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -61,6 +62,7 @@ class LeaRemote(CoordinatorEntity[LEAAMPApiCoordinator], RemoteEntity):
     _attr_translation_key = "lea_zone"
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_supported_features = RemoteEntityFeature.ACTIVITY
 
     def __init__(
         self,
@@ -92,8 +94,9 @@ class LeaRemote(CoordinatorEntity[LEAAMPApiCoordinator], RemoteEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the Zone on."""
+        _LOGGER.log(logging.INFO, "async_turn_on")
         _LOGGER.log(logging.INFO, "zone id: %s", str(self._zone.zone_id))
-        _LOGGER.log(logging.INFO, "is one: %s", str(self.is_on))
+        _LOGGER.log(logging.INFO, "is on: %s", str(self.is_on))
         if not self.is_on:
             await self.coordinator.turn_on(self._zone)
             self.async_write_ha_state()

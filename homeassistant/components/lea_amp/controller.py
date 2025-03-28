@@ -17,6 +17,7 @@ from .message import (
     getMuteMessage,
     getSourceMessage,
     getVolumeMessage,
+    getZoneName,
     setMuteMessage,
     setSourceMessage,
     setVolumeMessage,
@@ -320,3 +321,4 @@ class LeaController:
         await self._send_message(getMuteMessage(zone_id))
         await self._send_message(getVolumeMessage(zone_id))
         await self._send_message(getSourceMessage(zone_id))
+        await self._send_message(getZoneName(zone_id))
