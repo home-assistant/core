@@ -1,16 +1,25 @@
 """Test the Z-Wave JS helpers module."""
 
-import voluptuous as vol
+from unittest.mock import patch
 
+import pytest
+import voluptuous as vol
+from zwave_js_server.const import SecurityClass
+from zwave_js_server.model.controller import ProvisioningEntry
+
+from homeassistant.components.zwave_js.const import DOMAIN
 from homeassistant.components.zwave_js.helpers import (
     async_get_node_status_sensor_entity_id,
     async_get_nodes_from_area_id,
+    async_get_provisioning_entry_from_device_id,
     get_value_state_schema,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import area_registry as ar, device_registry as dr
 
 from tests.common import MockConfigEntry
+
+CONTROLLER_PATCH_PREFIX = "zwave_js_server.model.controller.Controller"
 
 
 async def test_async_get_node_status_sensor_entity_id(
@@ -43,3 +52,32 @@ async def test_get_value_state_schema_boolean_config_value(
     )
     assert isinstance(schema_validator, vol.Coerce)
     assert schema_validator.type is bool
+
+
+async def test_async_get_provisioning_entry_from_device_id(
+    hass: HomeAssistant, client, device_registry: dr.DeviceRegistry, integration
+) -> None:
+    """Test async_get_provisioning_entry_from_device_id function."""
+    device = device_registry.async_get_or_create(
+        config_entry_id=integration.entry_id,
+        identifiers={(DOMAIN, "test-device")},
+    )
+
+    provisioning_entry = ProvisioningEntry.from_dict(
+        {
+            "dsk": "test",
+            "securityClasses": [SecurityClass.S2_UNAUTHENTICATED],
+            "device_id": device.id,
+        }
+    )
+
+    with patch(
+        f"{CONTROLLER_PATCH_PREFIX}.async_get_provisioning_entries",
+        return_value=[provisioning_entry],
+    ):
+        result = await async_get_provisioning_entry_from_device_id(hass, device.id)
+        assert result == provisioning_entry
+
+    # Test invalid device
+    with pytest.raises(ValueError):
+        await async_get_provisioning_entry_from_device_id(hass, "not-a-real-device")
