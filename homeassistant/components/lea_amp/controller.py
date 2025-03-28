@@ -316,7 +316,7 @@ class LeaController:
 
     def _send_message(self, message: str) -> None:
         _LOGGER.log(logging.INFO, "_send_message message:%s", message)
-        self._transport.send(message.encode)
+        self._transport.send(message.encode())
         data = self._transport.recv(2048)
         if data:
             _LOGGER.log(logging.INFO, "response data: %s", str(data))
