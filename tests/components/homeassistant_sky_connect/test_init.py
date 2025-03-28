@@ -32,10 +32,10 @@ def create_list_port_info(device: str, **kwargs) -> ListPortInfo:
 
 
 async def async_request_scan(
-    hass: HomeAssistant, ws_client: MockHAClientWebSocket
+    hass: HomeAssistant, ws_client: MockHAClientWebSocket, req_id: int
 ) -> None:
     """Request a USB scan."""
-    await ws_client.send_json({"id": 1, "type": "usb/scan"})
+    await ws_client.send_json({"id": req_id, "type": "usb/scan"})
     response = await ws_client.receive_json()
     assert response["success"]
     await hass.async_block_till_done()
@@ -188,11 +188,11 @@ async def test_usb_device_reactivity(
                 )
             ],
         ):
-            await async_request_scan(hass, ws_client)
+            await async_request_scan(hass, ws_client, req_id=1)
 
+        # It loads immediately
         await hass.async_block_till_done(wait_background_tasks=True)
-
-        # It loaded, no waiting
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert config_entry.state == ConfigEntryState.LOADED
 
         # Wait for a bit for the USB scan debouncer to cool off
@@ -202,7 +202,7 @@ async def test_usb_device_reactivity(
         mock_exists.return_value = False
 
         with patch("homeassistant.components.usb.comports", return_value=[]):
-            await async_request_scan(hass, ws_client)
+            await async_request_scan(hass, ws_client, req_id=2)
 
         # The integration has reloaded and is now in a failed state
         await hass.async_block_till_done(wait_background_tasks=True)
