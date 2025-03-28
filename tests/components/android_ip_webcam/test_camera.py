@@ -38,7 +38,7 @@ async def test_camera_stream_source(
     config: dict[str, Any],
     expected_stream_source: str,
 ) -> None:
-    """Test settings up integration from config entry."""
+    """Test camera stream source."""
     entity_id = "camera.1_1_1_1"
     entry = MockConfigEntry(domain=DOMAIN, data=config)
     entry.add_to_hass(hass)
