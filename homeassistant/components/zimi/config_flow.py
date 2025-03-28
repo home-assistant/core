@@ -7,7 +7,7 @@ import logging
 import socket
 from typing import Any
 
-from strenum import StrEnum
+from enum import StrEnum
 import voluptuous as vol
 from zcc import (
     ControlPoint,
