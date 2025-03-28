@@ -33,7 +33,7 @@ cryptography==44.0.1
 Pillow==11.1.0
 propcache==0.3.0
 pyOpenSSL==25.0.0
-orjson==3.10.15
+orjson==3.10.16
 packaging>=23.1
 psutil-home-assistant==0.0.1
 python-slugify==8.0.4
@@ -43,10 +43,10 @@ securetar==2025.2.1
 SQLAlchemy==2.0.39
 standard-aifc==3.13.0
 standard-telnetlib==3.13.0
-typing-extensions>=4.12.2,<5.0
+typing-extensions>=4.13.0,<5.0
 ulid-transform==1.4.0
 urllib3>=1.26.5,<2
-uv==0.6.8
+uv==0.6.10
 voluptuous==0.15.2
 voluptuous-serialize==2.6.0
 voluptuous-openapi==0.0.6

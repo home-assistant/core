@@ -155,7 +155,7 @@ class HomeConnectCoordinator(
             f"home_connect-events_listener_task-{self.config_entry.entry_id}",
         )
 
-    async def _event_listener(self) -> None:  # noqa: C901
+    async def _event_listener(self) -> None:
         """Match event with listener for event type."""
         retry_time = 10
         while True:
@@ -279,13 +279,6 @@ class HomeConnectCoordinator(
                 )
                 break
 
-            # Trigger to delete the possible depaired device entities
-            # from known_entities variable at common.py
-            for listener, context in self._special_listeners.values():
-                assert isinstance(context, tuple)
-                if EventKey.BSH_COMMON_APPLIANCE_DEPAIRED in context:
-                    listener()
-
     @callback
     def _call_event_listener(self, event_message: EventMessage) -> None:
         """Call listener for event."""
@@ -388,6 +381,13 @@ class HomeConnectCoordinator(
                     device_id=device.id,
                     remove_config_entry_id=self.config_entry.entry_id,
                 )
+
+        # Trigger to delete the possible depaired device entities
+        # from known_entities variable at common.py
+        for listener, context in self._special_listeners.values():
+            assert isinstance(context, tuple)
+            if EventKey.BSH_COMMON_APPLIANCE_DEPAIRED in context:
+                listener()
 
     async def _get_appliance_data(
         self,
