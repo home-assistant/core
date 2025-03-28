@@ -646,23 +646,27 @@ async def websocket_node_alerts(
     try:
         node = async_get_node_from_device_id(hass, msg[DEVICE_ID])
     except ValueError as err:
-        provisioning_entry = await async_get_provisioning_entry_from_device_id(
-            hass, msg[DEVICE_ID]
-        )
-        if provisioning_entry:
-            connection.send_result(
-                msg[ID],
-                {
-                    "comments": [
-                        {
-                            "level": "info",
-                            "text": "This device has been provisioned but is not yet included in the network.",
-                        }
-                    ],
-                },
+        if "can't be found" in err.args[0]:
+            provisioning_entry = await async_get_provisioning_entry_from_device_id(
+                hass, msg[DEVICE_ID]
             )
-            return
-        raise web_exceptions.HTTPNotFound from err
+            if provisioning_entry:
+                connection.send_result(
+                    msg[ID],
+                    {
+                        "comments": [
+                            {
+                                "level": "info",
+                                "text": "This device has been provisioned but is not yet included in the network.",
+                            }
+                        ],
+                    },
+                )
+            else:
+                connection.send_error(msg[ID], ERR_NOT_FOUND, str(err))
+        else:
+            connection.send_error(msg[ID], ERR_NOT_LOADED, str(err))
+        return
 
     connection.send_result(
         msg[ID],
