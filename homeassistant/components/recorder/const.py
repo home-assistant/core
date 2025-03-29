@@ -30,6 +30,12 @@ CONF_DB_INTEGRITY_CHECK = "db_integrity_check"
 MAX_QUEUE_BACKLOG_MIN_VALUE = 65000
 MIN_AVAILABLE_MEMORY_FOR_QUEUE_BACKLOG = 256 * 1024**2
 
+# As soon as we have more than 999 ids, split the query as the
+# MySQL optimizer handles it poorly and will no longer
+# do an index only scan with a group-by
+# https://github.com/home-assistant/core/issues/132865#issuecomment-2543160459
+MAX_IDS_FOR_INDEXED_GROUP_BY = 999
+
 # The maximum number of rows (events) we purge in one delete statement
 
 DEFAULT_MAX_BIND_VARS = 4000
@@ -48,6 +54,7 @@ CONTEXT_ID_AS_BINARY_SCHEMA_VERSION = 36
 EVENT_TYPE_IDS_SCHEMA_VERSION = 37
 STATES_META_SCHEMA_VERSION = 38
 LAST_REPORTED_SCHEMA_VERSION = 43
+CIRCULAR_MEAN_SCHEMA_VERSION = 49
 
 LEGACY_STATES_EVENT_ID_INDEX_SCHEMA_VERSION = 28
 LEGACY_STATES_EVENT_FOREIGN_KEYS_FIXED_SCHEMA_VERSION = 43

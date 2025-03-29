@@ -109,7 +109,11 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
             serializable_data = cls._serializable_issue_registry_entry(data)
         elif isinstance(data, dict) and "flow_id" in data and "handler" in data:
             serializable_data = cls._serializable_flow_result(data)
-        elif isinstance(data, dict) and set(data) == {"conversation_id", "response"}:
+        elif isinstance(data, dict) and set(data) == {
+            "conversation_id",
+            "response",
+            "continue_conversation",
+        }:
             serializable_data = cls._serializable_conversation_result(data)
         elif isinstance(data, vol.Schema):
             serializable_data = voluptuous_serialize.convert(data)

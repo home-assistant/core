@@ -18,10 +18,20 @@ from homeassistant import config_entries
 from homeassistant.components.shelly import MacAddressMismatchError, config_flow
 from homeassistant.components.shelly.const import (
     CONF_BLE_SCANNER_MODE,
+    CONF_GEN,
+    CONF_SLEEP_PERIOD,
     DOMAIN,
     BLEScannerMode,
 )
 from homeassistant.components.shelly.coordinator import ENTRY_RELOAD_COOLDOWN
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_MODEL,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import (
@@ -100,18 +110,18 @@ async def test_form(
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": "1.1.1.1", "port": port},
+            {CONF_HOST: "1.1.1.1", CONF_PORT: port},
         )
         await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Test name"
     assert result2["data"] == {
-        "host": "1.1.1.1",
-        "port": port,
-        "model": model,
-        "sleep_period": 0,
-        "gen": gen,
+        CONF_HOST: "1.1.1.1",
+        CONF_PORT: port,
+        CONF_MODEL: model,
+        CONF_SLEEP_PERIOD: 0,
+        CONF_GEN: gen,
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -163,18 +173,18 @@ async def test_user_flow_overrides_existing_discovery(
         assert result["errors"] == {}
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": "1.1.1.1", "port": 80},
+            {CONF_HOST: "1.1.1.1", CONF_PORT: 80},
         )
         await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Test name"
     assert result2["data"] == {
-        "host": "1.1.1.1",
-        "port": 80,
-        "model": MODEL_PLUS_2PM,
-        "sleep_period": 0,
-        "gen": 2,
+        CONF_HOST: "1.1.1.1",
+        CONF_PORT: 80,
+        CONF_MODEL: MODEL_PLUS_2PM,
+        CONF_SLEEP_PERIOD: 0,
+        CONF_GEN: 2,
     }
     assert result2["context"]["unique_id"] == "AABBCCDDEEFF"
     assert len(mock_setup.mock_calls) == 1
@@ -220,19 +230,19 @@ async def test_form_gen1_custom_port(
         (
             1,
             MODEL_1,
-            {"username": "test user", "password": "test1 password"},
+            {CONF_USERNAME: "test user", CONF_PASSWORD: "test1 password"},
             "test user",
         ),
         (
             2,
             MODEL_PLUS_2PM,
-            {"password": "test2 password"},
+            {CONF_PASSWORD: "test2 password"},
             "admin",
         ),
         (
             3,
             MODEL_PLUS_2PM,
-            {"password": "test2 password"},
+            {CONF_PASSWORD: "test2 password"},
             "admin",
         ),
     ],
@@ -259,7 +269,7 @@ async def test_form_auth(
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": "1.1.1.1"},
+            {CONF_HOST: "1.1.1.1"},
         )
 
     assert result2["type"] is FlowResultType.FORM
@@ -282,13 +292,13 @@ async def test_form_auth(
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "Test name"
     assert result3["data"] == {
-        "host": "1.1.1.1",
-        "port": DEFAULT_HTTP_PORT,
-        "model": model,
-        "sleep_period": 0,
-        "gen": gen,
-        "username": username,
-        "password": user_input["password"],
+        CONF_HOST: "1.1.1.1",
+        CONF_PORT: DEFAULT_HTTP_PORT,
+        CONF_MODEL: model,
+        CONF_SLEEP_PERIOD: 0,
+        CONF_GEN: gen,
+        CONF_USERNAME: username,
+        CONF_PASSWORD: user_input[CONF_PASSWORD],
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -312,7 +322,7 @@ async def test_form_errors_get_info(
     with patch("homeassistant.components.shelly.config_flow.get_info", side_effect=exc):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": "1.1.1.1"},
+            {CONF_HOST: "1.1.1.1"},
         )
 
     assert result2["type"] is FlowResultType.FORM
@@ -333,7 +343,7 @@ async def test_form_missing_model_key(
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": "1.1.1.1"},
+            {CONF_HOST: "1.1.1.1"},
         )
 
     assert result2["type"] is FlowResultType.FORM
@@ -356,7 +366,7 @@ async def test_form_missing_model_key_auth_enabled(
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": "1.1.1.1"},
+            {CONF_HOST: "1.1.1.1"},
         )
 
     assert result2["type"] is FlowResultType.FORM
@@ -364,7 +374,7 @@ async def test_form_missing_model_key_auth_enabled(
 
     monkeypatch.setattr(mock_rpc_device, "shelly", {"gen": 2})
     result3 = await hass.config_entries.flow.async_configure(
-        result2["flow_id"], {"password": "1234"}
+        result2["flow_id"], {CONF_PASSWORD: "1234"}
     )
     assert result3["type"] is FlowResultType.FORM
     assert result3["errors"] == {"base": "firmware_not_fully_provisioned"}
@@ -424,7 +434,7 @@ async def test_form_errors_test_connection(
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": "1.1.1.1"},
+            {CONF_HOST: "1.1.1.1"},
         )
 
     assert result2["type"] is FlowResultType.FORM
@@ -435,7 +445,7 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     entry = MockConfigEntry(
-        domain="shelly", unique_id="test-mac", data={"host": "0.0.0.0"}
+        domain="shelly", unique_id="test-mac", data={CONF_HOST: "0.0.0.0"}
     )
     entry.add_to_hass(hass)
 
@@ -449,14 +459,14 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": "1.1.1.1"},
+            {CONF_HOST: "1.1.1.1"},
         )
 
         assert result2["type"] is FlowResultType.ABORT
         assert result2["reason"] == "already_configured"
 
     # Test config entry got updated with latest IP
-    assert entry.data["host"] == "1.1.1.1"
+    assert entry.data[CONF_HOST] == "1.1.1.1"
 
 
 async def test_user_setup_ignored_device(
@@ -467,7 +477,7 @@ async def test_user_setup_ignored_device(
     entry = MockConfigEntry(
         domain="shelly",
         unique_id="test-mac",
-        data={"host": "0.0.0.0"},
+        data={CONF_HOST: "0.0.0.0"},
         source=config_entries.SOURCE_IGNORE,
     )
     entry.add_to_hass(hass)
@@ -491,13 +501,13 @@ async def test_user_setup_ignored_device(
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": "1.1.1.1"},
+            {CONF_HOST: "1.1.1.1"},
         )
 
         assert result2["type"] is FlowResultType.CREATE_ENTRY
 
     # Test config entry got updated with latest IP
-    assert entry.data["host"] == "1.1.1.1"
+    assert entry.data[CONF_HOST] == "1.1.1.1"
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -525,7 +535,7 @@ async def test_form_auth_errors_test_connection_gen1(
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": "1.1.1.1"},
+            {CONF_HOST: "1.1.1.1"},
         )
 
     with patch(
@@ -534,7 +544,7 @@ async def test_form_auth_errors_test_connection_gen1(
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
-            {"username": "test username", "password": "test password"},
+            {CONF_USERNAME: "test username", CONF_PASSWORD: "test password"},
         )
     assert result3["type"] is FlowResultType.FORM
     assert result3["errors"] == {"base": base_error}
@@ -563,7 +573,7 @@ async def test_form_auth_errors_test_connection_gen2(
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": "1.1.1.1"},
+            {CONF_HOST: "1.1.1.1"},
         )
 
     with patch(
@@ -571,7 +581,7 @@ async def test_form_auth_errors_test_connection_gen2(
         new=AsyncMock(side_effect=exc),
     ):
         result3 = await hass.config_entries.flow.async_configure(
-            result2["flow_id"], {"password": "test password"}
+            result2["flow_id"], {CONF_PASSWORD: "test password"}
         )
     assert result3["type"] is FlowResultType.FORM
     assert result3["errors"] == {"base": base_error}
@@ -642,10 +652,10 @@ async def test_zeroconf(
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Test name"
     assert result2["data"] == {
-        "host": "1.1.1.1",
-        "model": model,
-        "sleep_period": 0,
-        "gen": gen,
+        CONF_HOST: "1.1.1.1",
+        CONF_MODEL: model,
+        CONF_SLEEP_PERIOD: 0,
+        CONF_GEN: gen,
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -700,10 +710,10 @@ async def test_zeroconf_sleeping_device(
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Test name"
     assert result2["data"] == {
-        "host": "1.1.1.1",
-        "model": MODEL_1,
-        "sleep_period": 600,
-        "gen": 1,
+        CONF_HOST: "1.1.1.1",
+        CONF_MODEL: MODEL_1,
+        CONF_SLEEP_PERIOD: 600,
+        CONF_GEN: 1,
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -735,11 +745,43 @@ async def test_zeroconf_sleeping_device_error(hass: HomeAssistant) -> None:
         assert result["reason"] == "cannot_connect"
 
 
+async def test_options_flow_abort_setup_retry(
+    hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test ble options abort if device is in setup retry."""
+    monkeypatch.setattr(
+        mock_rpc_device, "initialize", AsyncMock(side_effect=DeviceConnectionError)
+    )
+    entry = await init_integration(hass, 2)
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
+async def test_options_flow_abort_no_scripts_support(
+    hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test ble options abort if device does not support scripts."""
+    monkeypatch.setattr(
+        mock_rpc_device, "supports_scripts", AsyncMock(return_value=False)
+    )
+    entry = await init_integration(hass, 2)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_scripts_support"
+
+
 async def test_zeroconf_already_configured(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     entry = MockConfigEntry(
-        domain="shelly", unique_id="test-mac", data={"host": "0.0.0.0"}
+        domain="shelly", unique_id="test-mac", data={CONF_HOST: "0.0.0.0"}
     )
     entry.add_to_hass(hass)
 
@@ -756,7 +798,7 @@ async def test_zeroconf_already_configured(hass: HomeAssistant) -> None:
         assert result["reason"] == "already_configured"
 
     # Test config entry got updated with latest IP
-    assert entry.data["host"] == "1.1.1.1"
+    assert entry.data[CONF_HOST] == "1.1.1.1"
 
 
 async def test_zeroconf_ignored(hass: HomeAssistant) -> None:
@@ -787,7 +829,7 @@ async def test_zeroconf_with_wifi_ap_ip(hass: HomeAssistant) -> None:
     """Test we ignore the Wi-FI AP IP."""
 
     entry = MockConfigEntry(
-        domain="shelly", unique_id="test-mac", data={"host": "2.2.2.2"}
+        domain="shelly", unique_id="test-mac", data={CONF_HOST: "2.2.2.2"}
     )
     entry.add_to_hass(hass)
 
@@ -806,7 +848,7 @@ async def test_zeroconf_with_wifi_ap_ip(hass: HomeAssistant) -> None:
         assert result["reason"] == "already_configured"
 
     # Test config entry was not updated with the wifi ap ip
-    assert entry.data["host"] == "2.2.2.2"
+    assert entry.data[CONF_HOST] == "2.2.2.2"
 
 
 async def test_zeroconf_cannot_connect(hass: HomeAssistant) -> None:
@@ -852,20 +894,20 @@ async def test_zeroconf_require_auth(
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"username": "test username", "password": "test password"},
+            {CONF_USERNAME: "test username", CONF_PASSWORD: "test password"},
         )
         await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Test name"
     assert result2["data"] == {
-        "host": "1.1.1.1",
-        "port": DEFAULT_HTTP_PORT,
-        "model": MODEL_1,
-        "sleep_period": 0,
-        "gen": 1,
-        "username": "test username",
-        "password": "test password",
+        CONF_HOST: "1.1.1.1",
+        CONF_PORT: DEFAULT_HTTP_PORT,
+        CONF_MODEL: MODEL_1,
+        CONF_SLEEP_PERIOD: 0,
+        CONF_GEN: 1,
+        CONF_USERNAME: "test username",
+        CONF_PASSWORD: "test password",
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -874,9 +916,9 @@ async def test_zeroconf_require_auth(
 @pytest.mark.parametrize(
     ("gen", "user_input"),
     [
-        (1, {"username": "test user", "password": "test1 password"}),
-        (2, {"password": "test2 password"}),
-        (3, {"password": "test2 password"}),
+        (1, {CONF_USERNAME: "test user", CONF_PASSWORD: "test1 password"}),
+        (2, {CONF_PASSWORD: "test2 password"}),
+        (3, {CONF_PASSWORD: "test2 password"}),
     ],
 )
 async def test_reauth_successful(
@@ -888,7 +930,9 @@ async def test_reauth_successful(
 ) -> None:
     """Test starting a reauthentication flow."""
     entry = MockConfigEntry(
-        domain="shelly", unique_id="test-mac", data={"host": "0.0.0.0", "gen": gen}
+        domain="shelly",
+        unique_id="test-mac",
+        data={CONF_HOST: "0.0.0.0", CONF_GEN: gen},
     )
     entry.add_to_hass(hass)
     result = await entry.start_reauth_flow(hass)
@@ -912,9 +956,9 @@ async def test_reauth_successful(
 @pytest.mark.parametrize(
     ("gen", "user_input"),
     [
-        (1, {"username": "test user", "password": "test1 password"}),
-        (2, {"password": "test2 password"}),
-        (3, {"password": "test2 password"}),
+        (1, {CONF_USERNAME: "test user", CONF_PASSWORD: "test1 password"}),
+        (2, {CONF_PASSWORD: "test2 password"}),
+        (3, {CONF_PASSWORD: "test2 password"}),
     ],
 )
 @pytest.mark.parametrize(
@@ -933,7 +977,9 @@ async def test_reauth_unsuccessful(
 ) -> None:
     """Test reauthentication flow failed."""
     entry = MockConfigEntry(
-        domain="shelly", unique_id="test-mac", data={"host": "0.0.0.0", "gen": gen}
+        domain="shelly",
+        unique_id="test-mac",
+        data={CONF_HOST: "0.0.0.0", CONF_GEN: gen},
     )
     entry.add_to_hass(hass)
     result = await entry.start_reauth_flow(hass)
@@ -943,7 +989,12 @@ async def test_reauth_unsuccessful(
     with (
         patch(
             "homeassistant.components.shelly.config_flow.get_info",
-            return_value={"mac": "test-mac", "type": MODEL_1, "auth": True, "gen": gen},
+            return_value={
+                "mac": "test-mac",
+                "type": MODEL_1,
+                "auth": True,
+                "gen": gen,
+            },
         ),
         patch(
             "aioshelly.block_device.BlockDevice.create", new=AsyncMock(side_effect=exc)
@@ -962,7 +1013,7 @@ async def test_reauth_unsuccessful(
 async def test_reauth_get_info_error(hass: HomeAssistant) -> None:
     """Test reauthentication flow failed with error in get_info()."""
     entry = MockConfigEntry(
-        domain="shelly", unique_id="test-mac", data={"host": "0.0.0.0", "gen": 2}
+        domain="shelly", unique_id="test-mac", data={CONF_HOST: "0.0.0.0", CONF_GEN: 2}
     )
     entry.add_to_hass(hass)
     result = await entry.start_reauth_flow(hass)
@@ -975,7 +1026,7 @@ async def test_reauth_get_info_error(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={"password": "test2 password"},
+            user_input={CONF_PASSWORD: "test2 password"},
         )
 
         assert result["type"] is FlowResultType.ABORT
@@ -1062,7 +1113,7 @@ async def test_options_flow_ble(hass: HomeAssistant, mock_rpc_device: Mock) -> N
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_BLE_SCANNER_MODE] == BLEScannerMode.DISABLED
+    assert result["data"][CONF_BLE_SCANNER_MODE] is BLEScannerMode.DISABLED
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
     assert result["type"] is FlowResultType.FORM
@@ -1078,7 +1129,7 @@ async def test_options_flow_ble(hass: HomeAssistant, mock_rpc_device: Mock) -> N
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_BLE_SCANNER_MODE] == BLEScannerMode.ACTIVE
+    assert result["data"][CONF_BLE_SCANNER_MODE] is BLEScannerMode.ACTIVE
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
     assert result["type"] is FlowResultType.FORM
@@ -1094,7 +1145,7 @@ async def test_options_flow_ble(hass: HomeAssistant, mock_rpc_device: Mock) -> N
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_BLE_SCANNER_MODE] == BLEScannerMode.PASSIVE
+    assert result["data"][CONF_BLE_SCANNER_MODE] is BLEScannerMode.PASSIVE
 
     await hass.config_entries.async_unload(entry.entry_id)
 
@@ -1106,7 +1157,12 @@ async def test_zeroconf_already_configured_triggers_refresh_mac_in_name(
     entry = MockConfigEntry(
         domain="shelly",
         unique_id="AABBCCDDEEFF",
-        data={"host": "1.1.1.1", "gen": 2, "sleep_period": 0, "model": MODEL_1},
+        data={
+            CONF_HOST: "1.1.1.1",
+            CONF_GEN: 2,
+            CONF_SLEEP_PERIOD: 0,
+            CONF_MODEL: MODEL_1,
+        },
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -1141,7 +1197,12 @@ async def test_zeroconf_already_configured_triggers_refresh(
     entry = MockConfigEntry(
         domain="shelly",
         unique_id="AABBCCDDEEFF",
-        data={"host": "1.1.1.1", "gen": 2, "sleep_period": 0, "model": MODEL_1},
+        data={
+            CONF_HOST: "1.1.1.1",
+            CONF_GEN: 2,
+            CONF_SLEEP_PERIOD: 0,
+            CONF_MODEL: MODEL_1,
+        },
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -1181,7 +1242,12 @@ async def test_zeroconf_sleeping_device_not_triggers_refresh(
     entry = MockConfigEntry(
         domain="shelly",
         unique_id="AABBCCDDEEFF",
-        data={"host": "1.1.1.1", "gen": 2, "sleep_period": 1000, "model": MODEL_1},
+        data={
+            CONF_HOST: "1.1.1.1",
+            CONF_GEN: 2,
+            CONF_SLEEP_PERIOD: 1000,
+            CONF_MODEL: MODEL_1,
+        },
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -1228,7 +1294,12 @@ async def test_zeroconf_sleeping_device_attempts_configure(
     entry = MockConfigEntry(
         domain="shelly",
         unique_id="AABBCCDDEEFF",
-        data={"host": "1.1.1.1", "gen": 2, "sleep_period": 1000, "model": MODEL_1},
+        data={
+            CONF_HOST: "1.1.1.1",
+            CONF_GEN: 2,
+            CONF_SLEEP_PERIOD: 1000,
+            CONF_MODEL: MODEL_1,
+        },
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -1288,7 +1359,12 @@ async def test_zeroconf_sleeping_device_attempts_configure_ws_disabled(
     entry = MockConfigEntry(
         domain="shelly",
         unique_id="AABBCCDDEEFF",
-        data={"host": "1.1.1.1", "gen": 2, "sleep_period": 1000, "model": MODEL_1},
+        data={
+            CONF_HOST: "1.1.1.1",
+            CONF_GEN: 2,
+            CONF_SLEEP_PERIOD: 1000,
+            CONF_MODEL: MODEL_1,
+        },
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -1348,7 +1424,12 @@ async def test_zeroconf_sleeping_device_attempts_configure_no_url_available(
     entry = MockConfigEntry(
         domain="shelly",
         unique_id="AABBCCDDEEFF",
-        data={"host": "1.1.1.1", "gen": 2, "sleep_period": 1000, "model": MODEL_1},
+        data={
+            CONF_HOST: "1.1.1.1",
+            CONF_GEN: 2,
+            CONF_SLEEP_PERIOD: 1000,
+            CONF_MODEL: MODEL_1,
+        },
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -1415,20 +1496,20 @@ async def test_sleeping_device_gen2_with_new_firmware(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": "1.1.1.1"},
+            {CONF_HOST: "1.1.1.1"},
         )
         await hass.async_block_till_done()
 
     assert result["data"] == {
-        "host": "1.1.1.1",
-        "port": DEFAULT_HTTP_PORT,
-        "model": MODEL_PLUS_2PM,
-        "sleep_period": 666,
-        "gen": 2,
+        CONF_HOST: "1.1.1.1",
+        CONF_PORT: DEFAULT_HTTP_PORT,
+        CONF_MODEL: MODEL_PLUS_2PM,
+        CONF_SLEEP_PERIOD: 666,
+        CONF_GEN: 2,
     }
 
 
-@pytest.mark.parametrize("gen", [1, 2, 3])
+@pytest.mark.parametrize(CONF_GEN, [1, 2, 3])
 async def test_reconfigure_successful(
     hass: HomeAssistant,
     gen: int,
@@ -1437,7 +1518,9 @@ async def test_reconfigure_successful(
 ) -> None:
     """Test starting a reconfiguration flow."""
     entry = MockConfigEntry(
-        domain="shelly", unique_id="test-mac", data={"host": "0.0.0.0", "gen": gen}
+        domain="shelly",
+        unique_id="test-mac",
+        data={CONF_HOST: "0.0.0.0", CONF_GEN: gen},
     )
     entry.add_to_hass(hass)
 
@@ -1452,12 +1535,12 @@ async def test_reconfigure_successful(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={"host": "10.10.10.10", "port": 99},
+            user_input={CONF_HOST: "10.10.10.10", CONF_PORT: 99},
         )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert entry.data == {"host": "10.10.10.10", "port": 99, "gen": gen}
+    assert entry.data == {CONF_HOST: "10.10.10.10", CONF_PORT: 99, CONF_GEN: gen}
 
 
 @pytest.mark.parametrize("gen", [1, 2, 3])
@@ -1469,7 +1552,9 @@ async def test_reconfigure_unsuccessful(
 ) -> None:
     """Test reconfiguration flow failed."""
     entry = MockConfigEntry(
-        domain="shelly", unique_id="test-mac", data={"host": "0.0.0.0", "gen": gen}
+        domain="shelly",
+        unique_id="test-mac",
+        data={CONF_HOST: "0.0.0.0", CONF_GEN: gen},
     )
     entry.add_to_hass(hass)
 
@@ -1480,11 +1565,16 @@ async def test_reconfigure_unsuccessful(
 
     with patch(
         "homeassistant.components.shelly.config_flow.get_info",
-        return_value={"mac": "another-mac", "type": MODEL_1, "auth": False, "gen": gen},
+        return_value={
+            "mac": "another-mac",
+            "type": MODEL_1,
+            "auth": False,
+            "gen": gen,
+        },
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={"host": "10.10.10.10", "port": 99},
+            user_input={CONF_HOST: "10.10.10.10", CONF_PORT: 99},
         )
 
     assert result["type"] is FlowResultType.ABORT
@@ -1506,7 +1596,7 @@ async def test_reconfigure_with_exception(
 ) -> None:
     """Test reconfiguration flow when an exception is raised."""
     entry = MockConfigEntry(
-        domain="shelly", unique_id="test-mac", data={"host": "0.0.0.0", "gen": 2}
+        domain="shelly", unique_id="test-mac", data={CONF_HOST: "0.0.0.0", CONF_GEN: 2}
     )
     entry.add_to_hass(hass)
 
@@ -1518,7 +1608,7 @@ async def test_reconfigure_with_exception(
     with patch("homeassistant.components.shelly.config_flow.get_info", side_effect=exc):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={"host": "10.10.10.10", "port": 99},
+            user_input={CONF_HOST: "10.10.10.10", CONF_PORT: 99},
         )
 
     assert result["errors"] == {"base": base_error}
