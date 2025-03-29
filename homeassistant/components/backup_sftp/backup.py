@@ -7,7 +7,12 @@ from typing import Any
 
 from asyncssh.sftp import SFTPError
 
-from homeassistant.components.backup import AgentBackup, BackupAgent, BackupAgentError
+from homeassistant.components.backup import (
+    AgentBackup,
+    BackupAgent,
+    BackupAgentError,
+    BackupNotFound,
+)
 from homeassistant.core import HomeAssistant, callback
 
 from . import SFTPConfigEntry
@@ -61,8 +66,11 @@ class SFTPBackupAgent(BackupAgent):
     ) -> AsyncIterator[bytes]:
         """Download a backup file from SFTP."""
         LOGGER.debug("Received request to download backup id: %s", backup_id)
+        backup = await self.async_get_backup(backup_id)
+        if backup is None:
+            raise BackupNotFound(f"Backup {backup_id} not found")
+
         try:
-            backup = await self.async_get_backup(backup_id)
             LOGGER.debug(
                 "Establishing SFTP connection to remote host in order to download backup"
             )
@@ -88,10 +96,10 @@ class SFTPBackupAgent(BackupAgent):
         LOGGER.debug("Received request to upload backup: %s", backup)
         iterator = await open_stream()
 
+        LOGGER.debug(
+            "Establishing SFTP connection to remote host in order to upload backup"
+        )
         try:
-            LOGGER.debug(
-                "Establishing SFTP connection to remote host in order to upload backup"
-            )
             async with BackupAgentClient(self._entry, self._hass) as client:
                 LOGGER.debug("Uploading backup: %s", backup.backup_id)
                 await client.async_upload_backup(iterator, backup)
@@ -133,10 +141,7 @@ class SFTPBackupAgent(BackupAgent):
             async with BackupAgentClient(self._entry, self._hass) as client:
                 return await client.async_list_backups()
         except Exception as e:
-            LOGGER.exception(e)
-            LOGGER.error(
-                "Listing backups failed. Please review previous exception traceback"
-            )
+            LOGGER.exception("Listing backups failed.")
             raise BackupAgentError(f"Failed to list backups: {e}") from e
 
     async def async_get_backup(
