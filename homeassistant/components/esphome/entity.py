@@ -95,7 +95,7 @@ async def platform_async_setup_entry(
     info and state updates.
     """
     entry_data = entry.runtime_data
-    entry_data.info[info_type] = {}
+    entry_data.info.setdefault(info_type, {})
     platform = entity_platform.async_get_current_platform()
     on_static_info_update = functools.partial(
         async_static_info_updated,
