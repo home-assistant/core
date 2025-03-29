@@ -175,13 +175,11 @@ class SearchMedia:
 
     version: int = field(default=1)
     result: list[BrowseMedia]
-    offset_or_next: int | str = field(default=0)
 
     def as_dict(self, *, parent: bool = True) -> dict[str, Any]:
         """Convert SearchMedia class to browse media dictionary."""
         return {
             "result": [item.as_dict(parent=parent) for item in self.result],
-            "offset_or_next": self.offset_or_next,
         }
 
 
