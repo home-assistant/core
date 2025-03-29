@@ -587,17 +587,25 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         self, player: Player, queue: PlayerQueue | None
     ) -> None:
         """Update image URL for the active queue item."""
+        # image_url is provided by an external source
+        image_url = (
+            player.current_media.image_url
+            if player.current_media and player.current_media.image_url
+            else None
+        )
+
+        # a music-assistant play queue is used
         if queue and queue.current_item:
-            if image_url := self.mass.get_media_item_image_url(queue.current_item):
-                self._attr_media_image_remotely_accessible = (
-                    self.mass.server_url not in image_url
-                )
-                self._attr_media_image_url = image_url
-                return
-        elif player.current_media and player.current_media.image_url:
-            self._attr_media_image_url = player.current_media.image_url
-        else:
-            self._attr_media_image_url = None
+            image_url = self.mass.get_media_item_image_url(queue.current_item)
+
+        # check if the image is provided via music-assistant and therefore
+        # not accessible from the outside
+        if image_url:
+            self._attr_media_image_remotely_accessible = (
+                self.mass.server_url not in image_url
+            )
+
+        self._attr_media_image_url = image_url
 
     def _update_media_attributes(
         self, player: Player, queue: PlayerQueue | None
