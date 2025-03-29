@@ -88,7 +88,7 @@ async def test_entity_availability(
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await hass.async_block_till_done()
 
     assert (state := hass.states.get(ENTITY_ID))
     assert state.state == alarm_state
