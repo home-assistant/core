@@ -7,9 +7,7 @@ from collections.abc import Iterable
 import dataclasses
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Literal, TypedDict
-
-from propcache.api import under_cached_property
+from typing import TYPE_CHECKING, Any, Literal, TypedDict
 
 from homeassistant.const import ATTR_DEVICE_CLASS
 from homeassistant.core import HomeAssistant, callback
@@ -28,6 +26,13 @@ from .registry import BaseRegistry, RegistryIndexType
 from .singleton import singleton
 from .storage import Store
 from .typing import UNDEFINED, UndefinedType
+
+if TYPE_CHECKING:
+    # mypy cannot workout _cache Protocol with dataclasses
+    from propcache.api import cached_property as under_cached_property
+else:
+    from propcache.api import under_cached_property
+
 
 DATA_REGISTRY: HassKey[AreaRegistry] = HassKey("area_registry")
 EVENT_AREA_REGISTRY_UPDATED: EventType[EventAreaRegistryUpdatedData] = EventType(
