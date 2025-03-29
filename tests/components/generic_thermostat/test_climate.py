@@ -1152,7 +1152,6 @@ async def test_zero_tolerances(hass: HomeAssistant) -> None:
 
     # if the switch is off, it should remain off
     calls = _setup_switch(hass, False)
-    await hass.async_block_till_done()
     _setup_sensor(hass, 25)
     await hass.async_block_till_done()
     await common.async_set_temperature(hass, 25)
@@ -1160,7 +1159,6 @@ async def test_zero_tolerances(hass: HomeAssistant) -> None:
 
     # if the switch is on, it should turn off
     calls = _setup_switch(hass, True)
-    await hass.async_block_till_done()
     _setup_sensor(hass, 25)
     await hass.async_block_till_done()
     await common.async_set_temperature(hass, 25)
