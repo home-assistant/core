@@ -32,11 +32,14 @@ class PterodactylData:
     uuid: str
     identifier: str
     state: str
-    memory_utilization: int
     cpu_utilization: float
-    disk_utilization: int
-    network_rx_utilization: int
-    network_tx_utilization: int
+    cpu_limit: int
+    disk_usage: int
+    disk_limit: int
+    memory_usage: int
+    memory_limit: int
+    network_inbound: int
+    network_outbound: int
     uptime: int
 
 
@@ -108,10 +111,13 @@ class PterodactylAPI:
                     identifier=identifier,
                     state=utilization["current_state"],
                     cpu_utilization=utilization["resources"]["cpu_absolute"],
-                    memory_utilization=utilization["resources"]["memory_bytes"],
-                    disk_utilization=utilization["resources"]["disk_bytes"],
-                    network_rx_utilization=utilization["resources"]["network_rx_bytes"],
-                    network_tx_utilization=utilization["resources"]["network_tx_bytes"],
+                    cpu_limit=server["limits"]["cpu"],
+                    memory_usage=utilization["resources"]["memory_bytes"],
+                    memory_limit=server["limits"]["memory"],
+                    disk_usage=utilization["resources"]["disk_bytes"],
+                    disk_limit=server["limits"]["disk"],
+                    network_inbound=utilization["resources"]["network_rx_bytes"],
+                    network_outbound=utilization["resources"]["network_tx_bytes"],
                     uptime=utilization["resources"]["uptime"],
                 )
 
