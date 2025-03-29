@@ -981,7 +981,7 @@ homeconnect==0.8.0
 homematicip==1.1.5
 
 # homeassistant.components.dreo
-hscloud==1.0.3
+hscloud==1.0.5
 
 # homeassistant.components.remember_the_milk
 httplib2==0.20.4
