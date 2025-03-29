@@ -40,11 +40,9 @@ rules:
   test-coverage: todo
 
   # Gold
-  devices: todo
+  devices: done
   diagnostics: todo
-  discovery-update-info:
-    status: exempt
-    comment: Device is not connected to an ip network. Other information from discovery is immutable and does not require updating.
+  discovery-update-info: todo
   discovery: done
   docs-data-update:
     status: exempt
@@ -62,7 +60,9 @@ rules:
   dynamic-devices: todo
   entity-category: todo
   entity-device-class: todo
-  entity-disabled-by-default: todo
+  entity-disabled-by-default:
+    status: exempt
+    comment: The integration only creates media player entities which are needed for its functioning. Therefore no entities are disabled by default
   entity-translations: todo
   exception-translations: todo
   icon-translations: todo
