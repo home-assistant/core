@@ -1,10 +1,10 @@
 """Tests for services."""
 
 from unittest.mock import AsyncMock, MagicMock
-
+from datetime import datetime
 import pytest
 from syrupy.assertion import SnapshotAssertion
-
+from ohme import ChargeSlot
 from homeassistant.components.ohme.const import DOMAIN
 from homeassistant.components.ohme.services import (
     ATTR_CONFIG_ENTRY,
@@ -30,11 +30,11 @@ async def test_list_charge_slots(
     await setup_integration(hass, mock_config_entry)
 
     mock_client.slots = [
-        {
-            "start": "2024-12-30T04:00:00+00:00",
-            "end": "2024-12-30T04:30:39+00:00",
-            "energy": 2.042,
-        }
+        ChargeSlot(
+            datetime.fromisoformat("2024-12-30T04:00:00+00:00"),
+            datetime.fromisoformat("2024-12-30T04:30:39+00:00"),
+            2.042,
+        )
     ]
 
     assert snapshot == await hass.services.async_call(

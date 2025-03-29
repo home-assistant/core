@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
-
+from typing import Any
 from ohme import ApiException, ChargerStatus, OhmeApiClient
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
@@ -23,7 +23,7 @@ PARALLEL_UPDATES = 1
 class OhmeButtonDescription(OhmeEntityDescription, ButtonEntityDescription):
     """Class describing Ohme button entities."""
 
-    press_fn: Callable[[OhmeApiClient], Awaitable[None]]
+    press_fn: Callable[[OhmeApiClient], Coroutine[Any, Any, bool]]
 
 
 BUTTON_DESCRIPTIONS = [
