@@ -1446,31 +1446,13 @@ async def resolve_integrations_dependencies(
 
     Detects circular dependencies and missing integrations.
     """
-    resolved = _ResolveDependenciesCache()
-
-    async def _resolve_deps_catch_exceptions(itg: Integration) -> set[str] | None:
-        try:
-            return await _do_resolve_dependencies(itg, cache=resolved)
-        except Exception as exc:  # noqa: BLE001
-            _LOGGER.error("Unable to resolve dependencies for %s: %s", itg.domain, exc)
-            return None
-
-    resolve_dependencies_tasks = {
-        itg.domain: create_eager_task(
-            _resolve_deps_catch_exceptions(itg),
-            name=f"resolve dependencies {itg.domain}",
-            loop=hass.loop,
-        )
-        for itg in integrations
-    }
-
-    result = await asyncio.gather(*resolve_dependencies_tasks.values())
-
-    return {
-        domain: deps
-        for domain, deps in zip(resolve_dependencies_tasks, result, strict=True)
-        if deps is not None
-    }
+    return await _resolve_integrations_dependencies(
+        hass,
+        "resolve dependencies",
+        integrations,
+        cache=_ResolveDependenciesCache(),
+        ignore_exceptions=False,
+    )
 
 
 async def resolve_integrations_after_dependencies(
@@ -1484,26 +1466,46 @@ async def resolve_integrations_after_dependencies(
 
     Detects circular dependencies and missing integrations.
     """
-    resolved: dict[Integration, set[str] | Exception] = {}
+    return await _resolve_integrations_dependencies(
+        hass,
+        "resolve (after) dependencies",
+        integrations,
+        cache={},
+        possible_after_dependencies=possible_after_dependencies,
+        ignore_exceptions=ignore_exceptions,
+    )
+
+
+async def _resolve_integrations_dependencies(
+    hass: HomeAssistant,
+    name: str,
+    integrations: Iterable[Integration],
+    *,
+    cache: _ResolveDependenciesCacheProtocol,
+    possible_after_dependencies: set[str] | None | UndefinedType = UNDEFINED,
+    ignore_exceptions: bool,
+) -> dict[str, set[str]]:
+    """Resolve all dependencies, possibly including after_dependencies, for integrations.
+
+    Detects circular dependencies and missing integrations.
+    """
 
     async def _resolve_deps_catch_exceptions(itg: Integration) -> set[str] | None:
         try:
-            return await _do_resolve_dependencies(
+            return await _resolve_integration_dependencies(
                 itg,
-                cache=resolved,
+                cache=cache,
                 possible_after_dependencies=possible_after_dependencies,
                 ignore_exceptions=ignore_exceptions,
             )
         except Exception as exc:  # noqa: BLE001
-            _LOGGER.error(
-                "Unable to resolve (after) dependencies for %s: %s", itg.domain, exc
-            )
+            _LOGGER.error("Unable to %s for %s: %s", name, itg.domain, exc)
             return None
 
     resolve_dependencies_tasks = {
         itg.domain: create_eager_task(
             _resolve_deps_catch_exceptions(itg),
-            name=f"resolve after dependencies {itg.domain}",
+            name=f"{name} {itg.domain}",
             loop=hass.loop,
         )
         for itg in integrations
@@ -1518,7 +1520,7 @@ async def resolve_integrations_after_dependencies(
     }
 
 
-async def _do_resolve_dependencies(
+async def _resolve_integration_dependencies(
     itg: Integration,
     *,
     cache: _ResolveDependenciesCacheProtocol,
@@ -1541,7 +1543,7 @@ async def _do_resolve_dependencies(
     resolved = cache
     resolving: set[str] = set()
 
-    async def do_resolve_dependencies_impl(itg: Integration) -> set[str]:
+    async def resolve_dependencies_impl(itg: Integration) -> set[str]:
         domain = itg.domain
 
         # If it's already resolved, no point doing it again.
@@ -1583,7 +1585,7 @@ async def _do_resolve_dependencies(
             all_dependencies.add(dep_domain)
 
             try:
-                dep_dependencies = await do_resolve_dependencies_impl(dep_integration)
+                dep_dependencies = await resolve_dependencies_impl(dep_integration)
             except CircularDependency as exc:
                 exc.extend_cycle(domain)
                 resolved[itg] = exc
@@ -1599,7 +1601,7 @@ async def _do_resolve_dependencies(
         resolved[itg] = all_dependencies
         return all_dependencies
 
-    return await do_resolve_dependencies_impl(itg)
+    return await resolve_dependencies_impl(itg)
 
 
 class LoaderError(Exception):
