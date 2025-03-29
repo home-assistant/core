@@ -201,6 +201,11 @@ STAGE_1_INTEGRATIONS = {
     "cloud",
     # Ensure supervisor is available
     "hassio",
+    # switch_as_x is an after dependency of switch,
+    # but we don't require integrations to explicitly list
+    # their dependency on switch or any other platform,
+    # so we have to manually add it here.
+    "switch_as_x",
 }
 
 DEFAULT_INTEGRATIONS = {
