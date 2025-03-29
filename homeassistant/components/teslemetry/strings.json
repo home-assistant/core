@@ -422,8 +422,8 @@
         "state": {
           "starting": "Starting",
           "charging": "[%key:common::state::charging%]",
-          "disconnected": "Disconnected",
-          "stopped": "Stopped",
+          "disconnected": "[%key:common::state::disconnected%]",
+          "stopped": "[%key:common::state::stopped%]",
           "complete": "Complete",
           "no_power": "No power"
         }
