@@ -43,7 +43,7 @@ async def test_all_entities(
     await snapshot_platform(
         hass,
         entity_registry,
-        snapshot(exclude=props("unique_id")),
+        snapshot(),
         mock_serial_bridge_config_entry.entry_id,
     )
 
