@@ -2,50 +2,66 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
-from typing import Any, NotRequired, TypedDict
+from collections.abc import Awaitable, Callable
+from datetime import UTC, datetime
+import logging
+from typing import Final, NotRequired
 
-from evohomeasync.auth import (
-    SZ_SESSION_ID,
-    SZ_SESSION_ID_EXPIRES,
-    AbstractSessionManager,
+import aiohttp
+from evohomeasync.auth import SZ_SESSION_ID, AbstractSessionManager, SessionIdEntryT
+from evohomeasync2.auth import (
+    SZ_ACCESS_TOKEN,
+    SZ_ACCESS_TOKEN_EXPIRES,
+    SZ_REFRESH_TOKEN,
+    AbstractTokenManager,
 )
-from evohomeasync2.auth import AbstractTokenManager
+from evohomeasync2.schemas.typedefs import EvoAuthTokensDictT as AccessTokenEntryT
 
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.storage import Store
-
-from .const import STORAGE_KEY, STORAGE_VER
+SZ_CLIENT_ID: Final = "client_id"
 
 
-class _SessionIdEntryT(TypedDict):
-    session_id: str
-    session_id_expires: NotRequired[str]  # dt.isoformat()  # TZ-aware
+class EvoTokenDataT(AccessTokenEntryT):
+    """The token data as stored in the cache."""
+
+    session_id: NotRequired[str]  # only if high-precision temperatures
+    session_id_expires: NotRequired[str]  # dt.isoformat(), TZ-aware
 
 
-class _TokenStoreT(TypedDict):
-    username: str
-    refresh_token: str
-    access_token: str
-    access_token_expires: str  # dt.isoformat()  # TZ-aware
-    session_id: NotRequired[str]
-    session_id_expires: NotRequired[str]  # dt.isoformat()  # TZ-aware
+_ACCESS_TOKEN_KEYS = AccessTokenEntryT.__annotations__.keys()
+_SESSION_ID_KEYS = SessionIdEntryT.__annotations__.keys()
+
+_NULL_TOKEN_DATA: Final[EvoTokenDataT] = {
+    SZ_ACCESS_TOKEN: "",
+    SZ_ACCESS_TOKEN_EXPIRES: datetime.min.replace(tzinfo=UTC).isoformat(),
+    SZ_REFRESH_TOKEN: "",
+}
 
 
 class TokenManager(AbstractTokenManager, AbstractSessionManager):
-    """A token manager that uses a cache file to store the tokens."""
+    """A token manager that uses a cache to store the tokens.
+
+    Loads only once, at/after initialization. Writes whenever new token data has
+    been fetched.
+    """
 
     def __init__(
         self,
-        hass: HomeAssistant,
-        *args: Any,
-        **kwargs: Any,
+        client_id: str,
+        secret: str,
+        websession: aiohttp.ClientSession,
+        /,
+        cache_loader: Callable[[str], Awaitable[EvoTokenDataT | None]],
+        cache_saver: Callable[[str, EvoTokenDataT], Awaitable[None]],
+        *,
+        logger: logging.Logger | None = None,
     ) -> None:
         """Initialise the token manager."""
-        super().__init__(*args, **kwargs)
+        super().__init__(client_id, secret, websession, logger=logger)
 
-        self._store = Store(hass, STORAGE_VER, STORAGE_KEY)  # type: ignore[var-annotated]
         self._store_initialized = False  # True once cache loaded first time
+
+        self._cache_loader = cache_loader
+        self._cache_saver = cache_saver
 
     async def get_access_token(self) -> str:
         """Return a valid access token.
@@ -54,9 +70,21 @@ class TokenManager(AbstractTokenManager, AbstractSessionManager):
         """
 
         if not self._store_initialized:
-            await self._load_cache_from_store()
+            await self._load_cache_from_entry()
 
         return await super().get_access_token()
+
+    async def fetch_access_token(self, *, clear_refresh_token: bool = False) -> None:
+        """Fetch a new access token from the vendor API.
+
+        Uses the refresh token if available, otherwise the client_id/secret.
+        """
+
+        if not self._store_initialized:
+            # otherwise, a subsequent get_access_token will be confused
+            self._store_initialized = True
+
+        return await super().fetch_access_token()
 
     async def get_session_id(self) -> str:
         """Return a valid session id.
@@ -65,54 +93,54 @@ class TokenManager(AbstractTokenManager, AbstractSessionManager):
         """
 
         if not self._store_initialized:
-            await self._load_cache_from_store()
+            await self._load_cache_from_entry()
 
         return await super().get_session_id()
 
-    async def _load_cache_from_store(self) -> None:
-        """Load the user entry from the cache.
+    async def fetch_session_id(self) -> None:
+        """Fetch a new session id from the vendor API."""
 
-        Assumes single reader/writer. Reads only once, at initialization.
-        """
+        if not self._store_initialized:
+            # otherwise, a subsequent get_session_id will be confused
+            self._store_initialized = True
 
-        cache: _TokenStoreT = await self._store.async_load() or {}  # type: ignore[assignment]
-        self._store_initialized = True
+        return await super().fetch_session_id()
 
-        if not cache or cache["username"] != self._client_id:
-            return
+    async def _load_cache_from_entry(self) -> None:
+        """Load the access token (and session id, if any) from the config entry."""
 
-        if SZ_SESSION_ID in cache:
-            self._import_session_id(cache)  # type: ignore[arg-type]
-        self._import_access_token(cache)
+        self._store_initialized = True  # only load the cache once
 
-    def _import_session_id(self, session: _SessionIdEntryT) -> None:  # type: ignore[override]
-        """Extract the session id from a (serialized) dictionary."""
-        # base class method overridden because session_id_expired is NotRequired here
+        token_data = await self._cache_loader(self.client_id)
 
-        self._session_id = session[SZ_SESSION_ID]
+        if token_data is None:
+            token_data = _NULL_TOKEN_DATA
 
-        session_id_expires = session.get(SZ_SESSION_ID_EXPIRES)
-        if session_id_expires is None:
-            self._session_id_expires = datetime.now(tz=UTC) + timedelta(minutes=15)
-        else:
-            self._session_id_expires = datetime.fromisoformat(session_id_expires)
+        elif SZ_SESSION_ID in token_data:
+            self._import_session_id(
+                {k: v for k, v in token_data.items() if k in _SESSION_ID_KEYS}  # type: ignore[arg-type]
+            )
+
+        assert token_data is not None  # mypy hint
+
+        self._import_access_token(
+            {k: v for k, v in token_data.items() if k in _ACCESS_TOKEN_KEYS}  # type: ignore[arg-type]
+        )
 
     async def save_access_token(self) -> None:  # an abstractmethod
         """Save the access token (and expiry dtm, refresh token) to the cache."""
-        await self.save_cache_to_store()
+        await self._save_cache_to_entry()
 
     async def save_session_id(self) -> None:  # an abstractmethod
         """Save the session id (and expiry dtm) to the cache."""
-        await self.save_cache_to_store()
+        await self._save_cache_to_entry()
 
-    async def save_cache_to_store(self) -> None:
-        """Save the access token (and session id, if any) to the cache.
+    async def _save_cache_to_entry(self) -> None:
+        """Save the access token (and session id, if any) to the config entry."""
 
-        Assumes a single reader/writer. Writes whenever new data has been fetched.
-        """
+        token_data: EvoTokenDataT = self._export_access_token()  # type: ignore[assignment]
 
-        cache = {"username": self._client_id} | self._export_access_token()
-        if self._session_id:
-            cache |= self._export_session_id()
+        if self.session_id:
+            token_data |= self._export_session_id()
 
-        await self._store.async_save(cache)
+        await self._cache_saver(self._client_id, token_data)
