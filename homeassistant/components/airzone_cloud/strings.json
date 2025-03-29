@@ -45,7 +45,7 @@
           "fan": "[%key:component::climate::entity_component::_::state::fan_only%]",
           "heat": "[%key:component::climate::entity_component::_::state::heat%]",
           "heat_cool": "[%key:component::climate::entity_component::_::state::heat_cool%]",
-          "stop": "[%key:common::state::stopped%]"
+          "stop": "Stop"
         }
       }
     },
