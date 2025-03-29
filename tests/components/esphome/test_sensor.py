@@ -64,35 +64,35 @@ async def test_generic_numeric_sensor(
     )
     state = hass.states.get("sensor.test_mysensor")
     assert state is not None
-    assert state.state == "50.0"
+    assert state.state == "50"
 
     # Test updating state
     mock_device.set_state(SensorState(key=1, state=60))
     await hass.async_block_till_done()
     state = hass.states.get("sensor.test_mysensor")
     assert state is not None
-    assert state.state == "60.0"
+    assert state.state == "60"
 
     # Test sending the same state again
     mock_device.set_state(SensorState(key=1, state=60))
     await hass.async_block_till_done()
     state = hass.states.get("sensor.test_mysensor")
     assert state is not None
-    assert state.state == "60.0"
+    assert state.state == "60"
 
     # Test we can still update after the same state
     mock_device.set_state(SensorState(key=1, state=70))
     await hass.async_block_till_done()
     state = hass.states.get("sensor.test_mysensor")
     assert state is not None
-    assert state.state == "70.0"
+    assert state.state == "70"
 
     # Test invalid data from the underlying api does not crash us
     mock_device.set_state(SensorState(key=1, state=object()))
     await hass.async_block_till_done()
     state = hass.states.get("sensor.test_mysensor")
     assert state is not None
-    assert state.state == "70.0"
+    assert state.state == "70"
 
 
 async def test_generic_numeric_sensor_with_entity_category_and_icon(
@@ -122,7 +122,7 @@ async def test_generic_numeric_sensor_with_entity_category_and_icon(
     )
     state = hass.states.get("sensor.test_mysensor")
     assert state is not None
-    assert state.state == "50.0"
+    assert state.state == "50"
     assert state.attributes[ATTR_ICON] == "mdi:leaf"
     entry = entity_registry.async_get("sensor.test_mysensor")
     assert entry is not None
@@ -160,7 +160,7 @@ async def test_generic_numeric_sensor_state_class_measurement(
     )
     state = hass.states.get("sensor.test_mysensor")
     assert state is not None
-    assert state.state == "50.0"
+    assert state.state == "50"
     assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
     entry = entity_registry.async_get("sensor.test_mysensor")
     assert entry is not None
@@ -224,7 +224,7 @@ async def test_generic_numeric_sensor_legacy_last_reset_convert(
     )
     state = hass.states.get("sensor.test_mysensor")
     assert state is not None
-    assert state.state == "50.0"
+    assert state.state == "50"
     assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.TOTAL_INCREASING
 
 
@@ -436,5 +436,5 @@ async def test_generic_numeric_sensor_empty_string_uom(
     )
     state = hass.states.get("sensor.test_mysensor")
     assert state is not None
-    assert state.state == "123.0"
+    assert state.state == "123"
     assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes

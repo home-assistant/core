@@ -45,7 +45,7 @@ async def test_migrate_entity_unique_id(
     )
     state = hass.states.get("sensor.old_sensor")
     assert state is not None
-    assert state.state == "50.0"
+    assert state.state == "50"
     entry = entity_registry.async_get("sensor.old_sensor")
     assert entry is not None
     assert entity_registry.async_get_entity_id("sensor", "esphome", "my_sensor") is None
@@ -95,7 +95,7 @@ async def test_migrate_entity_unique_id_downgrade_upgrade(
     )
     state = hass.states.get("sensor.new_sensor")
     assert state is not None
-    assert state.state == "50.0"
+    assert state.state == "50"
     entry = entity_registry.async_get("sensor.new_sensor")
     assert entry is not None
     # Confirm we did not touch the entity that was created
