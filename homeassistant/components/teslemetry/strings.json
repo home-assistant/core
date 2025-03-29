@@ -1,7 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "Account is already configured",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reauth_account_mismatch": "The reauthentication account does not match the original account"
     },
@@ -132,7 +132,7 @@
         "name": "Tire pressure warning rear right"
       },
       "pin_to_drive_enabled": {
-        "name": "Pin to drive enabled"
+        "name": "PIN to Drive enabled"
       },
       "drive_rail": {
         "name": "Drive rail"
@@ -225,6 +225,12 @@
               "keep": "Keep mode",
               "dog": "Dog mode",
               "camp": "Camp mode"
+            }
+          },
+          "fan_mode": {
+            "state": {
+              "off": "[%key:common::state::off%]",
+              "bioweapon": "Bioweapon defense"
             }
           }
         }
@@ -720,7 +726,7 @@
         },
         "enable": {
           "description": "Enable or disable scheduled charging.",
-          "name": "Enable"
+          "name": "[%key:common::action::enable%]"
         },
         "time": {
           "description": "Time to start charging.",
@@ -742,7 +748,7 @@
         },
         "enable": {
           "description": "Enable or disable scheduled departure.",
-          "name": "Enable"
+          "name": "[%key:common::action::enable%]"
         },
         "end_off_peak_time": {
           "description": "Time to complete charging by.",
@@ -776,7 +782,7 @@
         },
         "enable": {
           "description": "Enable or disable speed limit.",
-          "name": "Enable"
+          "name": "[%key:common::action::enable%]"
         },
         "pin": {
           "description": "4 digit PIN.",
@@ -808,7 +814,7 @@
         },
         "enable": {
           "description": "Enable or disable valet mode.",
-          "name": "Enable"
+          "name": "[%key:common::action::enable%]"
         },
         "pin": {
           "description": "4 digit PIN.",

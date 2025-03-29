@@ -37,7 +37,14 @@ from homeassistant.config_entries import (
 from homeassistant.core import HomeAssistant, async_get_hass, callback
 from homeassistant.helpers import discovery_flow, selector
 
-from .const import DOMAIN, FIRMWARE, RADIO_DEVICE, ZHA_DOMAIN, ZHA_HW_DISCOVERY_DATA
+from .const import (
+    DOMAIN,
+    FIRMWARE,
+    FIRMWARE_VERSION,
+    RADIO_DEVICE,
+    ZHA_DOMAIN,
+    ZHA_HW_DISCOVERY_DATA,
+)
 from .hardware import BOARD_NAME
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,7 +62,7 @@ class HomeAssistantYellowConfigFlow(BaseFirmwareConfigFlow, domain=DOMAIN):
     """Handle a config flow for Home Assistant Yellow."""
 
     VERSION = 1
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Instantiate config flow."""
@@ -310,6 +317,7 @@ class HomeAssistantYellowOptionsFlowHandler(
             data={
                 **self.config_entry.data,
                 FIRMWARE: self._probed_firmware_info.firmware_type.value,
+                FIRMWARE_VERSION: self._probed_firmware_info.firmware_version,
             },
         )
 
