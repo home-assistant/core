@@ -285,11 +285,11 @@ class RuntimeEntryData:
         needed_platforms: set[Platform] = set()
 
         if self.device_info:
-            # Only load the update platform is the device_info is set
-            # When we restore the entry, the device_info may not be set yet
-            # and we don't want to load the update platform since it needs
-            # a complete device_info.
             if async_get_dashboard(hass):
+                # Only load the update platform is the device_info is set
+                # When we restore the entry, the device_info may not be set yet
+                # and we don't want to load the update platform since it needs
+                # a complete device_info.
                 needed_platforms.add(Platform.UPDATE)
             if self.device_info.voice_assistant_feature_flags_compat(self.api_version):
                 needed_platforms.add(Platform.BINARY_SENSOR)
