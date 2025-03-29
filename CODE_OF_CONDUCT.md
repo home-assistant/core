@@ -18,7 +18,7 @@ Examples of behavior that contributes to a positive environment for our
 community include:
 
 * Demonstrating empathy and kindness toward other people
-* Being respectful of differing opinions, viewpoints, and experiences
+* Being respectful of differing opinions, viewpoints, and experiences[test_init.py](tests%2Fcomponents%2Ffoscam%2Ftest_init.py)
 * Giving and gracefully accepting constructive feedback
 * Accepting responsibility and apologizing to those affected by our mistakes,
   and learning from the experience

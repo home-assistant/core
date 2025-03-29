@@ -3,7 +3,11 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import AsyncIterator
+from contextlib import suppress
 
+from aiohttp import web
+import httpx
 import voluptuous as vol
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
@@ -11,6 +15,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import CONF_RTSP_PORT, CONF_STREAM, LOGGER, SERVICE_PTZ, SERVICE_PTZ_PRESET
 from .coordinator import FoscamConfigEntry, FoscamCoordinator
@@ -44,6 +49,8 @@ ATTR_TRAVELTIME = "travel_time"
 ATTR_PRESET_NAME = "preset_name"
 
 PTZ_GOTO_PRESET_COMMAND = "ptz_goto_preset"
+TIMEOUT = 10
+BUFFER_SIZE = 102400
 
 
 async def async_setup_entry(
@@ -84,6 +91,27 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data
 
     async_add_entities([HassFoscamCamera(coordinator, config_entry)])
+
+
+async def async_extract_image_from_mjpeg(stream: AsyncIterator[bytes]) -> bytes | None:
+    """Take in a MJPEG stream object, return the jpg from it."""
+    data = b""
+
+    async for chunk in stream:
+        data += chunk
+        jpg_end = data.find(b"\xff\xd9")
+
+        if jpg_end == -1:
+            continue
+
+        jpg_start = data.find(b"\xff\xd8")
+
+        if jpg_start == -1:
+            continue
+
+        return data[jpg_start : jpg_end + 2]
+
+    return None
 
 
 class HassFoscamCamera(FoscamEntity, Camera):
@@ -137,24 +165,56 @@ class HassFoscamCamera(FoscamEntity, Camera):
         else:
             self._attr_motion_detection_enabled = response == 1
 
-    def camera_image(
+    async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return a still image response from the camera."""
-        # Send the request to snap a picture and return raw jpg data
-        # Handle exception if host is not reachable or url failed
-        result, response = self._foscam_session.snap_picture_2()
-        if result != 0:
-            return None
+        return await self._async_digest_or_fallback_camera_image()
 
-        return response
+    async def _async_digest_or_fallback_camera_image(self) -> bytes | None:
+        """Return a still image response from the camera using digest authentication."""
+        client = get_async_client(self.hass)
+        try:
+            async with client.stream(
+                "get",
+                f"http://{self._foscam_session.host}:{self._foscam_session.port}/cgi-bin/CGIStream.cgi?usr={self._username}&pwd={self._password}",
+                timeout=TIMEOUT,
+            ) as stream:
+                return await async_extract_image_from_mjpeg(
+                    stream.aiter_bytes(BUFFER_SIZE)
+                )
 
-    async def stream_source(self) -> str | None:
-        """Return the stream source."""
-        if self._rtsp_port:
-            return f"rtsp://{self._username}:{self._password}@{self._foscam_session.host}:{self._rtsp_port}/video{self._stream}"
+        except TimeoutError:
+            LOGGER.error("Timeout getting camera image from %s", self.name)
 
         return None
+
+    async def _handle_async_mjpeg_digest_stream(
+        self, request: web.Request
+    ) -> web.StreamResponse | None:
+        """Generate an HTTP MJPEG stream from the camera using digest authentication."""
+        async with get_async_client(self.hass).stream(
+            "get",
+            f"http://{self._foscam_session.host}:{self._foscam_session.port}/cgi-bin/CGIStream.cgi?usr={self._username}&pwd={self._password}",
+            timeout=TIMEOUT,
+        ) as stream:
+            response = web.StreamResponse(headers=stream.headers)
+            await response.prepare(request)
+            # Stream until we are done or client disconnects
+            with suppress(TimeoutError, httpx.HTTPError):
+                async for chunk in stream.aiter_bytes(BUFFER_SIZE):
+                    if not self.hass.is_running:
+                        break
+                    async with asyncio.timeout(TIMEOUT):
+                        await response.write(chunk)
+        return response
+
+    async def handle_async_mjpeg_stream(
+        self, request: web.Request
+    ) -> web.StreamResponse | None:
+        """Generate an HTTP MJPEG stream from the camera."""
+        # aiohttp don't support DigestAuth so we use httpx
+        return await self._handle_async_mjpeg_digest_stream(request)
 
     def enable_motion_detection(self) -> None:
         """Enable motion detection in camera."""
