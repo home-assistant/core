@@ -85,7 +85,7 @@
         "name": "Z-Height"
       },
       "nozzle_diameter": {
-        "name": "Nozzle Diameter"
+        "name": "Nozzle diameter"
       }
     },
     "button": {
