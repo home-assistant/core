@@ -51,7 +51,7 @@ rules:
   docs-known-limitations: done
   docs-supported-devices:
     status: exempt
-    comment: The integration doesn't support devices directly. It presents devices that are players on the MA server so the limitation is on the server not the integration
+    comment: The integration doesn't support devices directly. It presents devices that are players on the MA server so any support or limitation is on the server not the integration
   docs-supported-functions: done
   docs-troubleshooting: todo
   docs-use-cases: done
