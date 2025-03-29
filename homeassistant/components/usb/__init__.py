@@ -241,10 +241,10 @@ def _is_matching(device: USBDevice, matcher: USBMatcher | USBCallbackMatcher) ->
     return True
 
 
-async def async_request_scan(hass: HomeAssistant) -> None:
+async def async_request_scan(hass: HomeAssistant, *, force: bool = False) -> None:
     """Request a serial scan."""
     usb_discovery: USBDiscovery = hass.data[DOMAIN]
-    if not usb_discovery.observer_active:
+    if not usb_discovery.observer_active or force:
         await usb_discovery.async_request_scan()
 
 
