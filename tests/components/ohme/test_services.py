@@ -1,10 +1,12 @@
 """Tests for services."""
 
-from unittest.mock import AsyncMock, MagicMock
 from datetime import datetime
+from unittest.mock import AsyncMock, MagicMock
+
+from ohme import ChargeSlot
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from ohme import ChargeSlot
+
 from homeassistant.components.ohme.const import DOMAIN
 from homeassistant.components.ohme.services import (
     ATTR_CONFIG_ENTRY,

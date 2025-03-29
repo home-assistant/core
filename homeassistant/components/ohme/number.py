@@ -1,10 +1,10 @@
 """Platform for number."""
 
-from collections.abc import Awaitable, Callable, Coroutine
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
+from typing import Any
 
 from ohme import ApiException, OhmeApiClient
-from typing import Any
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.const import PERCENTAGE, UnitOfTime

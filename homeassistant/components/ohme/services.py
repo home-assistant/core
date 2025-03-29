@@ -1,10 +1,10 @@
 """Ohme services."""
 
-from typing import Final, List
+from typing import Final
 
 from ohme import OhmeApiClient
 import voluptuous as vol
-from homeassistant.util.json import JsonValueType
+
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import (
     HomeAssistant,
