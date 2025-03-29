@@ -12,6 +12,7 @@ from renault_api.kamereon.exceptions import (
     AccessDeniedException,
     KamereonResponseException,
     NotSupportedException,
+    QuotaLimitException,
 )
 from renault_api.kamereon.models import KamereonVehicleDataAttributes
 
@@ -20,11 +21,14 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 if TYPE_CHECKING:
     from . import RenaultConfigEntry
+    from .renault_hub import RenaultHub
 
 T = TypeVar("T", bound=KamereonVehicleDataAttributes)
 
 # We have potentially 7 coordinators per vehicle
 _PARALLEL_SEMAPHORE = asyncio.Semaphore(1)
+
+LOGGER = logging.getLogger(__name__)
 
 
 class RenaultDataUpdateCoordinator(DataUpdateCoordinator[T]):
@@ -37,6 +41,7 @@ class RenaultDataUpdateCoordinator(DataUpdateCoordinator[T]):
         self,
         hass: HomeAssistant,
         config_entry: RenaultConfigEntry,
+        hub: RenaultHub,
         logger: logging.Logger,
         *,
         name: str,
@@ -55,9 +60,18 @@ class RenaultDataUpdateCoordinator(DataUpdateCoordinator[T]):
         self.access_denied = False
         self.not_supported = False
         self._has_already_worked = False
+        self._hub = hub
 
     async def _async_update_data(self) -> T:
         """Fetch the latest data from the source."""
+
+        if self._hub.check_throttled():
+            # we have been throttled and decided to cooldown
+            # so do not count this update as an error
+            # coordinator.last_update_success should still be ok
+            LOGGER.warning("API throttled: Waiting for next scan")
+            return self.data
+
         try:
             async with _PARALLEL_SEMAPHORE:
                 data = await self.update_method()
@@ -69,6 +83,16 @@ class RenaultDataUpdateCoordinator(DataUpdateCoordinator[T]):
                 self.update_interval = None
                 self.access_denied = True
             raise UpdateFailed(f"This endpoint is denied: {err}") from err
+
+        except QuotaLimitException as err:
+            # we got a throttling by the API : the data we got is not bad per see,
+            # we should initiate a cooldown for all coordinators
+            self._hub.got_throttled()
+            if self._has_already_worked:
+                LOGGER.warning("Renault API throttled, reuse latest received data")
+                return self.data
+
+            raise UpdateFailed(f"Renault API throttled: {err}") from err
 
         except NotSupportedException as err:
             # Disable because the vehicle does not support this Renault endpoint.

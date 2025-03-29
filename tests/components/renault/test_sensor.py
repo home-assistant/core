@@ -114,6 +114,29 @@ async def test_sensor_errors(
     check_entities_unavailable(hass, entity_registry, expected_entities)
 
 
+@pytest.mark.usefixtures("fixtures_with_throttling_exception")
+@pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
+async def test_sensor_throttling(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    vehicle_type: str,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test for Renault sensors with a throttling error happening."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_vehicle = MOCK_VEHICLES[vehicle_type]
+    check_device_registry(device_registry, mock_vehicle["expected_device"])
+    assert len(entity_registry.entities) == 15
+
+    hub = config_entry.runtime_data
+
+    # Ensure the hub has been throttled
+    assert hub.check_throttled()
+
+
 @pytest.mark.usefixtures("fixtures_with_access_denied_exception")
 @pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
 async def test_sensor_access_denied(
