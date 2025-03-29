@@ -77,4 +77,4 @@ rules:
   # Platinum
   async-dependency: done
   inject-websession: todo
-  strict-typing: todo
+  strict-typing: done
