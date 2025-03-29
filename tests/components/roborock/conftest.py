@@ -3,15 +3,13 @@
 from collections.abc import Generator
 from copy import deepcopy
 import pathlib
-import shutil
+import tempfile
 from typing import Any
 from unittest.mock import Mock, patch
-import uuid
 
 import pytest
 from roborock import RoborockCategory, RoomMapping
 from roborock.code_mappings import DyadError, RoborockDyadStateCode, ZeoError, ZeoState
-from roborock.containers import NetworkInfo
 from roborock.roborock_message import RoborockDyadDataProtocol, RoborockZeoProtocol
 from roborock.version_a01_apis import RoborockMqttClientA01
 
@@ -20,7 +18,6 @@ from homeassistant.components.roborock.const import (
     CONF_USER_DATA,
     DOMAIN,
 )
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 
@@ -30,7 +27,6 @@ from .mock_data import (
     MAP_DATA,
     MULTI_MAP_LIST,
     NETWORK_INFO,
-    NETWORK_INFO_2,
     PROP,
     SCENES,
     USER_DATA,
@@ -89,13 +85,6 @@ def bypass_api_client_fixture() -> None:
         yield
 
 
-def cycle_network_info() -> Generator[NetworkInfo]:
-    """Return the appropriate network info for the corresponding device."""
-    while True:
-        yield NETWORK_INFO
-        yield NETWORK_INFO_2
-
-
 @pytest.fixture(name="bypass_api_fixture")
 def bypass_api_fixture(bypass_api_client_fixture: Any) -> None:
     """Skip calls to the API."""
@@ -107,7 +96,7 @@ def bypass_api_fixture(bypass_api_client_fixture: Any) -> None:
         ),
         patch(
             "homeassistant.components.roborock.RoborockMqttClientV1.get_networking",
-            side_effect=cycle_network_info(),
+            return_value=NETWORK_INFO,
         ),
         patch(
             "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.get_prop",
@@ -227,7 +216,6 @@ async def setup_entry(
     hass: HomeAssistant,
     bypass_api_fixture,
     mock_roborock_entry: MockConfigEntry,
-    cleanup_map_storage: pathlib.Path,
     platforms: list[Platform],
 ) -> Generator[MockConfigEntry]:
     """Set up the Roborock platform."""
@@ -237,21 +225,18 @@ async def setup_entry(
         yield mock_roborock_entry
 
 
-@pytest.fixture(autouse=True)
-async def cleanup_map_storage(
-    hass: HomeAssistant, mock_roborock_entry: MockConfigEntry
+@pytest.fixture(autouse=True, name="storage_path")
+async def storage_path_fixture(
+    hass: HomeAssistant,
 ) -> Generator[pathlib.Path]:
     """Test cleanup, remove any map storage persisted during the test."""
-    tmp_path = str(uuid.uuid4())
-    with patch(
-        "homeassistant.components.roborock.roborock_storage.STORAGE_PATH", new=tmp_path
-    ):
-        storage_path = (
-            pathlib.Path(hass.config.path(tmp_path)) / mock_roborock_entry.entry_id
-        )
-        yield storage_path
-        # We need to first unload the config entry because unloading it will
-        # persist any unsaved maps to storage.
-        if mock_roborock_entry.state is ConfigEntryState.LOADED:
-            await hass.config_entries.async_unload(mock_roborock_entry.entry_id)
-        shutil.rmtree(str(storage_path), ignore_errors=True)
+    with tempfile.TemporaryDirectory() as tmp_path:
+
+        def get_storage_path(_: HomeAssistant, entry_id: str) -> pathlib.Path:
+            return pathlib.Path(tmp_path) / entry_id
+
+        with patch(
+            "homeassistant.components.roborock.roborock_storage._storage_path_prefix",
+            new=get_storage_path,
+        ):
+            yield pathlib.Path(tmp_path)

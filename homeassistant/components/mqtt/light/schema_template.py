@@ -40,10 +40,21 @@ from homeassistant.util import color as color_util
 from .. import subscription
 from ..config import MQTT_RW_SCHEMA
 from ..const import (
+    CONF_BLUE_TEMPLATE,
+    CONF_BRIGHTNESS_TEMPLATE,
     CONF_COLOR_TEMP_KELVIN,
+    CONF_COLOR_TEMP_TEMPLATE,
+    CONF_COMMAND_OFF_TEMPLATE,
+    CONF_COMMAND_ON_TEMPLATE,
     CONF_COMMAND_TOPIC,
+    CONF_EFFECT_LIST,
+    CONF_EFFECT_TEMPLATE,
+    CONF_GREEN_TEMPLATE,
     CONF_MAX_KELVIN,
+    CONF_MAX_MIREDS,
     CONF_MIN_KELVIN,
+    CONF_MIN_MIREDS,
+    CONF_RED_TEMPLATE,
     CONF_STATE_TOPIC,
     PAYLOAD_NONE,
 )
@@ -63,18 +74,6 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "mqtt_template"
 
 DEFAULT_NAME = "MQTT Template Light"
-
-CONF_BLUE_TEMPLATE = "blue_template"
-CONF_BRIGHTNESS_TEMPLATE = "brightness_template"
-CONF_COLOR_TEMP_TEMPLATE = "color_temp_template"
-CONF_COMMAND_OFF_TEMPLATE = "command_off_template"
-CONF_COMMAND_ON_TEMPLATE = "command_on_template"
-CONF_EFFECT_LIST = "effect_list"
-CONF_EFFECT_TEMPLATE = "effect_template"
-CONF_GREEN_TEMPLATE = "green_template"
-CONF_MAX_MIREDS = "max_mireds"
-CONF_MIN_MIREDS = "min_mireds"
-CONF_RED_TEMPLATE = "red_template"
 
 COMMAND_TEMPLATES = (CONF_COMMAND_ON_TEMPLATE, CONF_COMMAND_OFF_TEMPLATE)
 VALUE_TEMPLATES = (
