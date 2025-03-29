@@ -172,6 +172,7 @@ class GoogleGenerativeAIOptionsFlow(OptionsFlow):
         self.last_rendered_recommended = config_entry.options.get(
             CONF_RECOMMENDED, False
         )
+        self.last_rendered_assist = config_entry.options.get(CONF_LLM_HASS_API, "none")
         self._genai_client = config_entry.runtime_data
 
     async def async_step_init(
@@ -181,13 +182,20 @@ class GoogleGenerativeAIOptionsFlow(OptionsFlow):
         options: dict[str, Any] | MappingProxyType[str, Any] = self.config_entry.options
 
         if user_input is not None:
-            if user_input[CONF_RECOMMENDED] == self.last_rendered_recommended:
+            if user_input[CONF_RECOMMENDED] == self.last_rendered_recommended and (
+                user_input[CONF_LLM_HASS_API] == self.last_rendered_assist
+                or user_input[CONF_LLM_HASS_API] != "none"
+            ):
                 if user_input[CONF_LLM_HASS_API] == "none":
                     user_input.pop(CONF_LLM_HASS_API)
+                else:
+                    user_input.pop(CONF_USE_GOOGLE_SEARCH_TOOL, None)
                 return self.async_create_entry(title="", data=user_input)
 
             # Re-render the options again, now with the recommended options shown/hidden
+            # also with the google search option shown/hidden
             self.last_rendered_recommended = user_input[CONF_RECOMMENDED]
+            self.last_rendered_assist = user_input[CONF_LLM_HASS_API]
 
             options = {
                 CONF_RECOMMENDED: user_input[CONF_RECOMMENDED],
@@ -297,6 +305,24 @@ async def google_generative_ai_config_option_schema(
             ): SelectSelector(
                 SelectSelectorConfig(mode=SelectSelectorMode.DROPDOWN, options=models)
             ),
+        }
+    )
+
+    if options.get(CONF_LLM_HASS_API, "none") == "none":
+        schema.update(
+            {
+                vol.Optional(
+                    CONF_USE_GOOGLE_SEARCH_TOOL,
+                    description={
+                        "suggested_value": options.get(CONF_USE_GOOGLE_SEARCH_TOOL),
+                    },
+                    default=RECOMMENDED_USE_GOOGLE_SEARCH_TOOL,
+                ): bool,
+            }
+        )
+
+    schema.update(
+        {
             vol.Optional(
                 CONF_TEMPERATURE,
                 description={"suggested_value": options.get(CONF_TEMPERATURE)},
@@ -343,13 +369,7 @@ async def google_generative_ai_config_option_schema(
                 },
                 default=RECOMMENDED_HARM_BLOCK_THRESHOLD,
             ): harm_block_thresholds_selector,
-            vol.Optional(
-                CONF_USE_GOOGLE_SEARCH_TOOL,
-                description={
-                    "suggested_value": options.get(CONF_USE_GOOGLE_SEARCH_TOOL),
-                },
-                default=RECOMMENDED_USE_GOOGLE_SEARCH_TOOL,
-            ): bool,
         }
     )
+
     return schema

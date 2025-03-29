@@ -39,9 +39,8 @@ from . import CLIENT_ERROR_500, CLIENT_ERROR_API_KEY_INVALID
 from tests.common import MockConfigEntry
 
 
-@pytest.fixture
-def mock_models():
-    """Mock the model list API."""
+def get_models_pager():
+    """Return a generator that yields the models."""
     model_20_flash = Mock(
         display_name="Gemini 2.0 Flash",
         supported_actions=["generateContent"],
@@ -72,11 +71,7 @@ def mock_models():
         yield model_15_pro
         yield model_10_pro
 
-    with patch(
-        "google.genai.models.AsyncModels.list",
-        return_value=models_pager(),
-    ):
-        yield
+    return models_pager()
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -119,6 +114,16 @@ async def test_form(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+def will_options_be_rendered_again(current_options, new_options) -> bool:
+    """Determine if options will be rendered again."""
+    return current_options.get(CONF_RECOMMENDED) != new_options.get(
+        CONF_RECOMMENDED
+    ) or (
+        current_options.get(CONF_LLM_HASS_API) != new_options.get(CONF_LLM_HASS_API)
+        and new_options.get(CONF_LLM_HASS_API, "none") == "none"
+    )
+
+
 @pytest.mark.parametrize(
     ("current_options", "new_options", "expected_options"),
     [
@@ -157,6 +162,7 @@ async def test_form(hass: HomeAssistant) -> None:
                 CONF_TOP_P: RECOMMENDED_TOP_P,
                 CONF_TOP_K: RECOMMENDED_TOP_K,
                 CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_USE_GOOGLE_SEARCH_TOOL: True,
             },
             {
                 CONF_RECOMMENDED: True,
@@ -169,13 +175,102 @@ async def test_form(hass: HomeAssistant) -> None:
                 CONF_PROMPT: "",
             },
         ),
+        (
+            {
+                CONF_RECOMMENDED: False,
+                CONF_PROMPT: "Speak like a pirate",
+                CONF_TEMPERATURE: 0.3,
+                CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
+                CONF_TOP_P: RECOMMENDED_TOP_P,
+                CONF_TOP_K: RECOMMENDED_TOP_K,
+                CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_HARASSMENT_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_HATE_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_SEXUAL_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_DANGEROUS_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_USE_GOOGLE_SEARCH_TOOL: True,
+            },
+            {
+                CONF_RECOMMENDED: False,
+                CONF_PROMPT: "Speak like a pirate",
+                CONF_LLM_HASS_API: "assist",
+                CONF_TEMPERATURE: 0.3,
+                CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
+                CONF_TOP_P: RECOMMENDED_TOP_P,
+                CONF_TOP_K: RECOMMENDED_TOP_K,
+                CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_HARASSMENT_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_HATE_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_SEXUAL_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_DANGEROUS_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_USE_GOOGLE_SEARCH_TOOL: True,
+            },
+            {
+                CONF_RECOMMENDED: False,
+                CONF_PROMPT: "Speak like a pirate",
+                CONF_LLM_HASS_API: "assist",
+                CONF_TEMPERATURE: 0.3,
+                CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
+                CONF_TOP_P: RECOMMENDED_TOP_P,
+                CONF_TOP_K: RECOMMENDED_TOP_K,
+                CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_HARASSMENT_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_HATE_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_SEXUAL_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_DANGEROUS_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+            },
+        ),
+        (
+            {
+                CONF_RECOMMENDED: False,
+                CONF_PROMPT: "Speak like a pirate",
+                CONF_LLM_HASS_API: "assist",
+                CONF_TEMPERATURE: 0.3,
+                CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
+                CONF_TOP_P: RECOMMENDED_TOP_P,
+                CONF_TOP_K: RECOMMENDED_TOP_K,
+                CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_HARASSMENT_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_HATE_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_SEXUAL_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_DANGEROUS_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+            },
+            {
+                CONF_RECOMMENDED: False,
+                CONF_PROMPT: "Speak like a pirate",
+                CONF_LLM_HASS_API: "none",
+                CONF_TEMPERATURE: 0.3,
+                CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
+                CONF_USE_GOOGLE_SEARCH_TOOL: RECOMMENDED_USE_GOOGLE_SEARCH_TOOL,
+                CONF_TOP_P: RECOMMENDED_TOP_P,
+                CONF_TOP_K: RECOMMENDED_TOP_K,
+                CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_HARASSMENT_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_HATE_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_SEXUAL_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_DANGEROUS_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+            },
+            {
+                CONF_RECOMMENDED: False,
+                CONF_PROMPT: "Speak like a pirate",
+                CONF_TEMPERATURE: 0.3,
+                CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
+                CONF_TOP_P: RECOMMENDED_TOP_P,
+                CONF_TOP_K: RECOMMENDED_TOP_K,
+                CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_HARASSMENT_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_HATE_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_SEXUAL_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_DANGEROUS_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_USE_GOOGLE_SEARCH_TOOL: RECOMMENDED_USE_GOOGLE_SEARCH_TOOL,
+            },
+        ),
     ],
 )
 @pytest.mark.usefixtures("mock_init_component")
 async def test_options_switching(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_models,
     current_options,
     new_options,
     expected_options,
@@ -186,21 +281,44 @@ async def test_options_switching(
             mock_config_entry, options=current_options
         )
         await hass.async_block_till_done()
-    options_flow = await hass.config_entries.options.async_init(
-        mock_config_entry.entry_id
-    )
-    if current_options.get(CONF_RECOMMENDED) != new_options.get(CONF_RECOMMENDED):
-        options_flow = await hass.config_entries.options.async_configure(
-            options_flow["flow_id"],
-            {
-                **current_options,
-                CONF_RECOMMENDED: new_options[CONF_RECOMMENDED],
-            },
+    with patch(
+        "google.genai.models.AsyncModels.list",
+        return_value=get_models_pager(),
+    ):
+        options_flow = await hass.config_entries.options.async_init(
+            mock_config_entry.entry_id
         )
-    options = await hass.config_entries.options.async_configure(
-        options_flow["flow_id"],
-        new_options,
-    )
+    if will_options_be_rendered_again(current_options, new_options):
+        retry_options = {
+            **current_options,
+            CONF_RECOMMENDED: new_options[CONF_RECOMMENDED],
+        }
+
+        if (
+            current_options.get(CONF_LLM_HASS_API) != new_options.get(CONF_LLM_HASS_API)
+            and new_options.get(CONF_LLM_HASS_API) is not None
+        ):
+            retry_options = {
+                **retry_options,
+                CONF_LLM_HASS_API: new_options[CONF_LLM_HASS_API],
+            }
+
+        with patch(
+            "google.genai.models.AsyncModels.list",
+            return_value=get_models_pager(),
+        ):
+            options_flow = await hass.config_entries.options.async_configure(
+                options_flow["flow_id"],
+                retry_options,
+            )
+    with patch(
+        "google.genai.models.AsyncModels.list",
+        return_value=get_models_pager(),
+    ):
+        options = await hass.config_entries.options.async_configure(
+            options_flow["flow_id"],
+            new_options,
+        )
     await hass.async_block_till_done()
     assert options["type"] is FlowResultType.CREATE_ENTRY
     assert options["data"] == expected_options
