@@ -40,6 +40,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             connections={("mac", device_data.get("mac", "Unknown"))},
         )
 
+        for port in device_data.get("ports"):
+            if port["poe"]["isAllocated"]:
+                entities.append(MerakiPoeSwitch(coordinator, serial, port))  # noqa: PERF401
         if device_data.get("active_poe_ports"):
             # Assume active_poe_ports is a list of dict objects
             for port in device_data.get("active_poe_ports"):
@@ -114,14 +117,14 @@ class MerakiPoeSwitch(CoordinatorEntity, RestoreEntity, SwitchEntity):
         return self._poe_enabled
 
     async def async_turn_on(self, **kwargs):
-        """Enable PoE power on this port."""
+        """Enable this port."""
         result = await self.hass.async_add_executor_job(self._set_poe, True)
         if result:
             self._poe_enabled = result.get("poeEnabled", True)
             self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
-        """Disable PoE power on this port."""
+        """Disable this port."""
         result = await self.hass.async_add_executor_job(self._set_poe, False)
         if result:
             self._poe_enabled = result.get("poeEnabled", False)
@@ -140,7 +143,6 @@ class MerakiPoeSwitch(CoordinatorEntity, RestoreEntity, SwitchEntity):
             response = dashboard.switch.updateDeviceSwitchPort(
                 self._serial, port_identifier, poeEnabled=enable
             )
-            return response
         except meraki.APIError as err:
             _LOGGER.error(
                 "Failed to set PoE state on port %s: %s", port_identifier, err

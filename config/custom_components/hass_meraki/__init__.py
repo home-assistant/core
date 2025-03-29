@@ -32,10 +32,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         """Call the Meraki API to get LLDP/CDP neighbor data for a device."""
         try:
             return await hass.async_add_executor_job(
-                dashboard.devices.getDeviceLldpCdp, serial
+                functools.partial(
+                    dashboard.switch.getDeviceSwitchPortsStatuses,
+                    serial,
+                    timespan=300,
+                )
             )
         except meraki.APIError as err:
-            _LOGGER.error("Failed to get neighbors for serial %s: %s", serial, err)
+            _LOGGER.error("Failed to get ports for serial %s: %s", serial, err)
             return False
 
     async def async_update_data():
