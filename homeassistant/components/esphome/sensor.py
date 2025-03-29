@@ -105,7 +105,7 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
             return None
         if self.device_class is SensorDeviceClass.TIMESTAMP:
             return dt_util.utc_from_timestamp(state_float)
-        return float(state_float)
+        return state_float
 
 
 class EsphomeTextSensor(EsphomeEntity[TextSensorInfo, TextSensorState], SensorEntity):
