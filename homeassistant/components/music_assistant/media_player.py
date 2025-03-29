@@ -586,7 +586,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
     def _update_media_image_url(
         self, player: Player, queue: PlayerQueue | None
     ) -> None:
-        """Update image URL for the active queue item."""
+        """Update image URL."""
         if queue and queue.current_item:
             # image_url is provided by an music-assistant queue
             image_url = self.mass.get_media_item_image_url(queue.current_item)
