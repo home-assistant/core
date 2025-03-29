@@ -423,7 +423,7 @@
           "starting": "Starting",
           "charging": "[%key:common::state::charging%]",
           "disconnected": "Disconnected",
-          "stopped": "Stopped",
+          "stopped": "[%key:common::state::stopped%]",
           "complete": "Complete",
           "no_power": "No power"
         }
