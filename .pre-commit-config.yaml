@@ -1,0 +1,101 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.11.0
+    hooks:
+      - id: ruff
+        args:
+          - --fix
+      - id: ruff-format
+        files: ^((homeassistant|pylint|script|tests)/.+)?[^/]+\.(py|pyi)$
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.4.1
+    hooks:
+      - id: codespell
+        args:
+          - --ignore-words-list=aiport,astroid,checkin,currenty,hass,iif,incomfort,lookin,nam,NotIn
+          - --skip="./.*,*.csv,*.json,*.ambr"
+          - --quiet-level=2
+        exclude_types: [csv, json, html]
+        exclude: ^tests/fixtures/|homeassistant/generated/|tests/components/.*/snapshots/
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-executables-have-shebangs
+        stages: [manual]
+      - id: check-json
+        exclude: (.vscode|.devcontainer)
+      - id: no-commit-to-branch
+        args:
+          - --branch=dev
+          - --branch=master
+          - --branch=rc
+  - repo: https://github.com/adrienverge/yamllint.git
+    rev: v1.35.1
+    hooks:
+      - id: yamllint
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v3.0.3
+    hooks:
+      - id: prettier
+  - repo: https://github.com/cdce8p/python-typing-update
+    rev: v0.6.0
+    hooks:
+      # Run `python-typing-update` hook manually from time to time
+      # to update python typing syntax.
+      # Will require manual work, before submitting changes!
+      # pre-commit run --hook-stage manual python-typing-update --all-files
+      - id: python-typing-update
+        stages: [manual]
+        args:
+          - --py311-plus
+          - --force
+          - --keep-updates
+        files: ^(homeassistant|tests|script)/.+\.py$
+  - repo: local
+    hooks:
+      # Run mypy through our wrapper script in order to get the possible
+      # pyenv and/or virtualenv activated; it may not have been e.g. if
+      # committing from a GUI tool that was not launched from an activated
+      # shell.
+      - id: mypy
+        name: mypy
+        entry: script/run-in-env.sh mypy
+        language: script
+        require_serial: true
+        types_or: [python, pyi]
+        files: ^(homeassistant|pylint)/.+\.(py|pyi)$
+      - id: pylint
+        name: pylint
+        entry: script/run-in-env.sh pylint --ignore-missing-annotations=y
+        language: script
+        require_serial: true
+        types_or: [python, pyi]
+        files: ^(homeassistant|tests)/.+\.(py|pyi)$
+      - id: gen_requirements_all
+        name: gen_requirements_all
+        entry: script/run-in-env.sh python3 -m script.gen_requirements_all
+        pass_filenames: false
+        language: script
+        types: [text]
+        files: ^(homeassistant/.+/manifest\.json|homeassistant/brands/.+\.json|pyproject\.toml|\.pre-commit-config\.yaml|script/gen_requirements_all\.py)$
+      - id: hassfest
+        name: hassfest
+        entry: script/run-in-env.sh python3 -m script.hassfest
+        pass_filenames: false
+        language: script
+        types: [text]
+        files: ^(homeassistant/.+/(icons|manifest|strings)\.json|homeassistant/.+/(quality_scale)\.yaml|homeassistant/brands/.*\.json|homeassistant/.+/services\.yaml|script/hassfest/(?!metadata|mypy_config).+\.py|requirements.+\.txt)$
+      - id: hassfest-metadata
+        name: hassfest-metadata
+        entry: script/run-in-env.sh python3 -m script.hassfest -p metadata,docker
+        pass_filenames: false
+        language: script
+        types: [text]
+        files: ^(script/hassfest/metadata\.py|homeassistant/const\.py$|pyproject\.toml|homeassistant/components/go2rtc/const\.py)$
+      - id: hassfest-mypy-config
+        name: hassfest-mypy-config
+        entry: script/run-in-env.sh python3 -m script.hassfest -p mypy_config
+        pass_filenames: false
+        language: script
+        types: [text]
+        files: ^(script/hassfest/mypy_config\.py|\.strict-typing|mypy\.ini)$
