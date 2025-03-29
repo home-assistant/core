@@ -27,7 +27,6 @@ class DreoFlowHandler(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the Dreo flow."""
-        self.manager: HsCloud | None = None
 
     @staticmethod
     def _hash_password(password: str) -> str:
@@ -41,10 +40,10 @@ class DreoFlowHandler(ConfigFlow, domain=DOMAIN):
         if not username or not password:
             return False, "invalid_auth"
 
-        self.manager = HsCloud(username, password)
+        client = HsCloud(username, password)
 
         try:
-            await self.hass.async_add_executor_job(self.manager.login)
+            await self.hass.async_add_executor_job(client.login)
         except HsCloudException:
             return False, "cannot_connect"
         except HsCloudBusinessException:
@@ -61,7 +60,7 @@ class DreoFlowHandler(ConfigFlow, domain=DOMAIN):
             username = user_input[CONF_USERNAME]
             hashed_password = self._hash_password(user_input[CONF_PASSWORD])
 
-            await self.async_set_unique_id(username)
+            await self.async_set_unique_id(username.lower())
             self._abort_if_unique_id_configured()
 
             is_valid, error = await self._validate_login(username, hashed_password)

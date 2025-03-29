@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
 import math
 from typing import Any
@@ -18,6 +19,7 @@ from homeassistant.util.percentage import (
 from homeassistant.util.scaling import int_states_in_range
 
 from . import DreoConfigEntry
+from .const import FAN_SUFFIX
 from .entity import DreoEntity
 from .util import handle_api_exceptions
 
@@ -33,7 +35,7 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            DreoFanHA(device, config_entry)
+            DreoFanHA(device, config_entry, FAN_SUFFIX)
             for device in config_entry.runtime_data.devices
             if DEVICE_TYPE.get(device.get("model")) == FAN_DEVICE.get("type")
         ]
@@ -43,7 +45,9 @@ async def async_setup_entry(
 class DreoFanHA(DreoEntity, FanEntity):
     """Dreo fan."""
 
-    _attr_has_entity_name = True
+    _attr_should_poll = True
+    SCAN_INTERVAL = timedelta(seconds=10)
+
     _attr_supported_features = (
         FanEntityFeature.PRESET_MODE
         | FanEntityFeature.SET_SPEED
@@ -52,12 +56,18 @@ class DreoFanHA(DreoEntity, FanEntity):
         | FanEntityFeature.TURN_OFF
     )
 
-    def __init__(self, device, config_entry) -> None:
+    def __init__(
+        self,
+        device: dict[str, Any],
+        config_entry: DreoConfigEntry,
+        unique_id_suffix: str = "",
+    ) -> None:
         """Initialize the Dreo fan."""
-        super().__init__(device, config_entry)
+
+        super().__init__(device, config_entry, unique_id_suffix)
+        self._attr_name = None
 
         model_config = FAN_DEVICE.get("config", {}).get(self._model, {})
-
         speed_range = model_config.get("speed_range")
 
         self._fan_props = {
@@ -112,17 +122,17 @@ class DreoFanHA(DreoEntity, FanEntity):
         **kwargs: Any,
     ) -> None:
         """Turn the device on."""
-        self._try_command("Turn the device on failed.", power_switch=True)
+        self._send_command("Turn the device on failed.", power_switch=True)
         self._fan_props["state"] = True
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        self._try_command("Turn the device off failed.", power_switch=False)
+        self._send_command("Turn the device off failed.", power_switch=False)
         self._fan_props["state"] = False
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of fan."""
-        self._try_command("Set the preset mode failed.", mode=preset_mode)
+        self._send_command("Set the preset mode failed.", mode=preset_mode)
         self._fan_props["preset_mode"] = preset_mode
 
     def set_percentage(self, percentage: int) -> None:
@@ -133,12 +143,12 @@ class DreoFanHA(DreoEntity, FanEntity):
                     self._fan_props["low_high_range"], percentage
                 )
             )
-            self._try_command("Set the speed failed.", speed=speed)
+            self._send_command("Set the speed failed.", speed=speed)
         self._fan_props["percentage"] = percentage
 
     def oscillate(self, oscillating: bool) -> None:
         """Set the Oscillate of fan."""
-        self._try_command("Set the Oscillate failed.", oscillate=oscillating)
+        self._send_command("Set the Oscillate failed.", oscillate=oscillating)
         self._fan_props["oscillating"] = oscillating
 
     def update(self) -> None:

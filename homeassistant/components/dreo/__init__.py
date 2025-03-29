@@ -13,7 +13,7 @@ from .util import handle_api_exceptions
 
 _LOGGER = logging.getLogger(__name__)
 
-type DreoConfigEntry = ConfigEntry["DreoData"]
+type DreoConfigEntry = ConfigEntry[DreoData]
 
 PLATFORMS = [Platform.FAN]
 
@@ -31,17 +31,17 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: DreoConfigEntry) 
     username = config_entry.data[CONF_USERNAME]
     password = config_entry.data[CONF_PASSWORD]
 
-    manager = HsCloud(username, password)
+    client = HsCloud(username, password)
 
-    def setup_manager():
-        manager.login()
-        return manager.get_devices()
+    def setup_client():
+        client.login()
+        return client.get_devices()
 
     devices = await hass.async_add_executor_job(
-        lambda: handle_api_exceptions(setup_manager)
+        lambda: handle_api_exceptions(setup_client)
     )
 
-    config_entry.runtime_data = DreoData(manager, devices)
+    config_entry.runtime_data = DreoData(client, devices)
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     return True
