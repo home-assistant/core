@@ -330,8 +330,8 @@
         "state": {
           "starting": "Starting",
           "charging": "[%key:common::state::charging%]",
-          "disconnected": "Disconnected",
-          "stopped": "Stopped",
+          "disconnected": "[%key:common::state::disconnected%]",
+          "stopped": "[%key:common::state::stopped%]",
           "complete": "Complete",
           "no_power": "No power"
         }
@@ -418,8 +418,8 @@
         "name": "Grid Status",
         "state": {
           "island_status_unknown": "Unknown",
-          "on_grid": "Connected",
-          "off_grid": "Disconnected",
+          "on_grid": "[%key:common::state::connected%]",
+          "off_grid": "[%key:common::state::disconnected%]",
           "off_grid_unintentional": "Disconnected unintentionally",
           "off_grid_intentional": "Disconnected intentionally"
         }
