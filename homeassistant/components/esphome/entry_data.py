@@ -282,15 +282,18 @@ class RuntimeEntryData:
     ) -> None:
         """Distribute an update of static infos to all platforms."""
         # First, load all platforms
-        needed_platforms = set()
-        if async_get_dashboard(hass):
-            needed_platforms.add(Platform.UPDATE)
+        needed_platforms: set[Platform] = set()
 
-        if self.device_info and self.device_info.voice_assistant_feature_flags_compat(
-            self.api_version
-        ):
-            needed_platforms.add(Platform.BINARY_SENSOR)
-            needed_platforms.add(Platform.SELECT)
+        if self.device_info:
+            if async_get_dashboard(hass):
+                # Only load the update platform if the device_info is set
+                # When we restore the entry, the device_info may not be set yet
+                # and we don't want to load the update platform since it needs
+                # a complete device_info.
+                needed_platforms.add(Platform.UPDATE)
+            if self.device_info.voice_assistant_feature_flags_compat(self.api_version):
+                needed_platforms.add(Platform.BINARY_SENSOR)
+                needed_platforms.add(Platform.SELECT)
 
         ent_reg = er.async_get(hass)
         registry_get_entity = ent_reg.async_get_entity_id
