@@ -10,13 +10,14 @@ import pytest
 from homeassistant.components.backup import AgentBackup
 
 # Import the classes and functions under test.
-from homeassistant.components.backup_sftp import SFTPConfigEntryData
 from homeassistant.components.backup_sftp.client import (
     AsyncFileIterator,
     BackupAgentClient,
     BackupMetadata,
 )
 from homeassistant.core import HomeAssistant, HomeAssistantError
+
+from . import setup_backup_integration  # noqa: F401
 
 from tests.common import MockConfigEntry
 
@@ -143,10 +144,6 @@ async def test_client_aenter_fail_oserror(
     - `RuntimeError` on SFTP Connection error.
     """
 
-    config_entry.add_to_hass(hass)
-    cfg = SFTPConfigEntryData(**config_entry.data)
-    setattr(config_entry, "runtime_data", cfg)
-
     mock_connect.connect.side_effect = OSError("Error message")
     with (
         patch("homeassistant.components.backup_sftp.client.connect", mock_connect()),
@@ -178,9 +175,6 @@ async def test_client_not_initialized(
     or when wrong file path is provided.
     """
 
-    cfg = SFTPConfigEntryData(**config_entry.data)
-    setattr(config_entry, "runtime_data", cfg)
-
     client = BackupAgentClient(config_entry, hass)
     with pytest.raises(RuntimeError) as exc:
         await client._initialized()
@@ -203,9 +197,6 @@ async def test_async_list_backups(
     config_entry: MockConfigEntry, hass: HomeAssistant, mock_connect: Mocks
 ) -> None:
     """Test `async_list_backups` method of `BackupAgentClient` class."""
-
-    cfg = SFTPConfigEntryData(**config_entry.data)
-    setattr(config_entry, "runtime_data", cfg)
 
     with (
         patch("homeassistant.components.backup_sftp.client.connect", mock_connect()),
@@ -235,9 +226,6 @@ async def test_async_list_backups_err(
 ) -> None:
     """Test `async_list_backups` method of `BackupAgentClient` class when error during metadata load occurs."""
 
-    cfg = SFTPConfigEntryData(**config_entry.data)
-    setattr(config_entry, "runtime_data", cfg)
-
     mock_connect.read = AsyncMock(side_effect=RuntimeError("Error message"))
 
     with (
@@ -257,9 +245,6 @@ async def test_load_metadata(
     config_entry: MockConfigEntry, hass: HomeAssistant, mock_connect: Mocks
 ) -> None:
     """Test `_load_metadata` method of `BackupAgentClient` class."""
-
-    cfg = SFTPConfigEntryData(**config_entry.data)
-    setattr(config_entry, "runtime_data", cfg)
 
     with (
         patch("homeassistant.components.backup_sftp.client.connect", mock_connect()),
@@ -292,9 +277,6 @@ async def test_async_delete_backup(
     config_entry: MockConfigEntry, hass: HomeAssistant, mock_connect: Mocks
 ) -> None:
     """Test `async_delete_backup` method of `BackupAgentClient` class."""
-
-    cfg = SFTPConfigEntryData(**config_entry.data)
-    setattr(config_entry, "runtime_data", cfg)
 
     with (
         patch("homeassistant.components.backup_sftp.client.connect", mock_connect()),
@@ -334,9 +316,6 @@ async def test_async_upload_backup(
 ) -> None:
     """Test `async_upload_backup` method of `BackupAgentClient` class."""
 
-    cfg = SFTPConfigEntryData(**config_entry.data)
-    setattr(config_entry, "runtime_data", cfg)
-
     mock_iterator = MagicMock()
     mock_iterator.__aiter__.return_value = [b"content", b""]
     with (
@@ -362,9 +341,6 @@ async def test_iter_file(
     config_entry: MockConfigEntry, hass: HomeAssistant, mock_connect: Mocks
 ) -> None:
     """Test `iter_file` method of `BackupAgentClient` class."""
-
-    cfg = SFTPConfigEntryData(**config_entry.data)
-    setattr(config_entry, "runtime_data", cfg)
 
     mock_connect.exists.return_value = False
     mock_load_metadata = AsyncMock(
