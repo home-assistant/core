@@ -99,7 +99,7 @@ class ComelitCoverEntity(
         return self._current_action("opening")
 
     async def _cover_set_state(self, action: int, state: int) -> None:
-        """Set desired switch state."""
+        """Set desired cover state."""
         self._last_state = self.state
         await self._api.set_device_status(COVER, self._device.index, action)
         self.coordinator.data[COVER][self._device.index].status = state
