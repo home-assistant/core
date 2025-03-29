@@ -24,12 +24,10 @@ from pyheos import (
     const as heos_const,
 )
 from pyheos.util import mediauri as heos_source
-import voluptuous as vol
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
     ATTR_MEDIA_ENQUEUE,
-    ATTR_MEDIA_VOLUME_LEVEL,
     BrowseError,
     BrowseMedia,
     MediaClass,
@@ -43,32 +41,16 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.components.media_source import BrowseMediaSource
 from homeassistant.const import Platform
-from homeassistant.core import (
-    HomeAssistant,
-    ServiceResponse,
-    SupportsResponse,
-    callback,
-)
+from homeassistant.core import HomeAssistant, ServiceResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import (
-    config_validation as cv,
-    entity_platform,
-    entity_registry as er,
-)
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utcnow
 
-from .const import (
-    ATTR_QUEUE_IDS,
-    DOMAIN as HEOS_DOMAIN,
-    SERVICE_GET_QUEUE,
-    SERVICE_GROUP_VOLUME_DOWN,
-    SERVICE_GROUP_VOLUME_SET,
-    SERVICE_GROUP_VOLUME_UP,
-    SERVICE_REMOVE_FROM_QUEUE,
-)
+from . import services
+from .const import DOMAIN as HEOS_DOMAIN
 from .coordinator import HeosConfigEntry, HeosCoordinator
 
 PARALLEL_UPDATES = 0
@@ -139,36 +121,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add media players for a config entry."""
-    # Register custom entity services
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_GET_QUEUE,
-        None,
-        "async_get_queue",
-        supports_response=SupportsResponse.ONLY,
-    )
-    platform.async_register_entity_service(
-        SERVICE_REMOVE_FROM_QUEUE,
-        {
-            vol.Required(ATTR_QUEUE_IDS): vol.All(
-                cv.ensure_list,
-                [vol.All(cv.positive_int, vol.Range(min=1))],
-                vol.Unique(),
-            )
-        },
-        "async_remove_from_queue",
-    )
-    platform.async_register_entity_service(
-        SERVICE_GROUP_VOLUME_SET,
-        {vol.Required(ATTR_MEDIA_VOLUME_LEVEL): cv.small_float},
-        "async_set_group_volume_level",
-    )
-    platform.async_register_entity_service(
-        SERVICE_GROUP_VOLUME_DOWN, None, "async_group_volume_down"
-    )
-    platform.async_register_entity_service(
-        SERVICE_GROUP_VOLUME_UP, None, "async_group_volume_up"
-    )
+    services.register_media_player_services()
 
     def add_entities_callback(players: Sequence[HeosPlayer]) -> None:
         """Add entities for each player."""
