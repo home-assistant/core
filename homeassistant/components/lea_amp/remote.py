@@ -66,6 +66,16 @@ class LeaRemote(CoordinatorEntity[LEAAMPApiCoordinator], RemoteEntity):
     _attr_activity_list = []
     _attr_device_class = "remote"
 
+    _attr_capability_attributes = {
+        "zone_id": None,
+        "zone_name": None,
+        "model": None,
+        "power": None,
+        "volume": None,
+        "mute": None,
+        "source": None,
+    }
+
     def __init__(
         self,
         coordinator: LEAAMPApiCoordinator,

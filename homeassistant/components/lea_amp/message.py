@@ -203,6 +203,7 @@ class MessageResponseFactory:
             value = data.split(" ")[6]
 
             command_type = "zoneName"
+            value = value.replace('"', "")
         elif "output fader" in data:
             zoneId = data.split(" ")[3]
             value = data.split(" ")[6]
