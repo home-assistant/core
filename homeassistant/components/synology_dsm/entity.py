@@ -125,21 +125,21 @@ class SynologyDSMDeviceEntity(
         elif "device" in description.key:
             assert self._device_id is not None
             assert external_usb is not None
-            device = external_usb.get_device(self._device_id)
-            assert device is not None
-            self._device_name = device.device_name
-            self._device_manufacturer = device.device_manufacturer
-            self._device_model = device.device_product_name
-            self._device_type = device.device_type
+            for device in external_usb.get_devices.values():
+                if device.device_name == self._device_id:
+                    self._device_name = device.device_name
+                    self._device_manufacturer = device.device_manufacturer
+                    self._device_model = device.device_product_name
+                    self._device_type = device.device_type
+                    break
         elif "partition" in description.key:
             assert self._device_id is not None
             assert external_usb is not None
             for device in external_usb.get_devices.values():
-                assert device is not None
-                partition = device.get_device_partition(self._device_id)
-                if partition is not None:
-                    self._device_name = partition.partition_title
-                    break
+                for partition in device.device_partitions.values():
+                    if partition.partition_title == self._device_id:
+                        self._device_name = partition.partition_title
+                        break
 
         self._attr_unique_id += f"_{self._device_id}"
         self._attr_device_info = DeviceInfo(

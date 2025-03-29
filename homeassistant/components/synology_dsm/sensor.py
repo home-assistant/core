@@ -381,18 +381,24 @@ async def async_setup_entry(
     if external_usb is not None and external_usb.get_devices:
         entities.extend(
             [
-                SynoDSMExternalUSBSensor(api, coordinator, description, device)
-                for device in entry.data.get(CONF_DEVICES, external_usb.get_devices)
+                SynoDSMExternalUSBSensor(
+                    api, coordinator, description, device.device_name
+                )
+                for device in entry.data.get(
+                    CONF_DEVICES, external_usb.get_devices.values()
+                )
                 for description in EXTERNAL_USB_DISK_SENSORS
             ]
         )
         entities.extend(
             [
-                SynoDSMExternalUSBSensor(api, coordinator, description, partition)
+                SynoDSMExternalUSBSensor(
+                    api, coordinator, description, partition.partition_title
+                )
                 for device in entry.data.get(
                     CONF_DEVICES, external_usb.get_devices.values()
                 )
-                for partition in device.device_partitions
+                for partition in device.device_partitions.values()
                 for description in EXTERNAL_USB_PARTITION_SENSORS
             ]
         )
@@ -494,14 +500,16 @@ class SynoDSMExternalUSBSensor(SynologyDSMDeviceEntity, SynoDSMSensor):
         external_usb = self._api.external_usb
         assert external_usb is not None
         if "device" in self.entity_description.key:
-            device = external_usb.get_devices.get(str(self._device_id))
-            attr = getattr(device, self.entity_description.key)
+            for device in external_usb.get_devices.values():
+                if device.device_name == self._device_id:
+                    attr = getattr(device, self.entity_description.key)
+                    break
         elif "partition" in self.entity_description.key:
             for device in external_usb.get_devices.values():
-                partition = device.device_partitions.get(str(self._device_id))
-                if partition is not None:
-                    attr = getattr(partition, self.entity_description.key)
-                    break
+                for partition in device.device_partitions.values():
+                    if partition.partition_title == self._device_id:
+                        attr = getattr(partition, self.entity_description.key)
+                        break
         if callable(attr):
             attr = attr()
         if attr is None:
