@@ -32,7 +32,6 @@ class AqualinkEntity(Entity):
             manufacturer=dev.manufacturer,
             model=dev.model,
             name=dev.label,
-            via_device=(DOMAIN, dev.system.serial),
         )
 
     async def async_added_to_hass(self) -> None:
