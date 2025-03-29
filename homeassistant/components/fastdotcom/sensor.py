@@ -1,56 +1,121 @@
-"""Support for Fast.com internet speed testing sensor."""
+"""Sensor platform for the Fast.com integration."""
 
 from __future__ import annotations
+
+from collections.abc import Callable
+from dataclasses import dataclass
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfDataRate
+from homeassistant.const import UnitOfDataRate, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DEFAULT_NAME, DOMAIN
 from .coordinator import FastdotcomConfigEntry, FastdotcomDataUpdateCoordinator
+
+
+@dataclass(frozen=True)
+class FastdotcomSensorEntityDescription(SensorEntityDescription):
+    """Describes Fast.com sensor entities."""
+
+    value: Callable[[float], float] = lambda val: round(val, 2)
+
+
+SENSOR_TYPES: tuple[FastdotcomSensorEntityDescription, ...] = (
+    FastdotcomSensorEntityDescription(
+        key="download_speed",
+        translation_key="download_speed",
+        name="download speed",
+        native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    FastdotcomSensorEntityDescription(
+        key="upload_speed",
+        translation_key="upload_speed",
+        name="upload speed",
+        native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    FastdotcomSensorEntityDescription(
+        key="unloaded_ping",
+        translation_key="unloaded_ping",
+        name="unloaded ping",
+        native_unit_of_measurement=UnitOfTime.MILLISECONDS,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    FastdotcomSensorEntityDescription(
+        key="loaded_ping",
+        translation_key="loaded_ping",
+        name="loaded ping",
+        native_unit_of_measurement=UnitOfTime.MILLISECONDS,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: FastdotcomConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Fast.com sensor."""
-    async_add_entities([SpeedtestSensor(entry.entry_id, entry.runtime_data)])
+    """Set up Fast.com sensors from a config entry."""
+
+    # Ensure coordinator has data immediately
+    await entry.runtime_data.async_config_entry_first_refresh()
+
+    device_info = DeviceInfo(
+        identifiers={(DOMAIN, entry.entry_id)},
+        name=DEFAULT_NAME,
+        manufacturer=DEFAULT_NAME,
+        model="Speed Test Integration",
+        entry_type=DeviceEntryType.SERVICE,
+        configuration_url="https://fast.com/",
+    )
+
+    entities = [
+        FastdotcomSensor(entry.entry_id, entry.runtime_data, description, device_info)
+        for description in SENSOR_TYPES
+    ]
+
+    async_add_entities(entities)
 
 
-class SpeedtestSensor(CoordinatorEntity[FastdotcomDataUpdateCoordinator], SensorEntity):
-    """Implementation of a Fast.com sensor."""
+class FastdotcomSensor(
+    CoordinatorEntity[FastdotcomDataUpdateCoordinator], SensorEntity
+):
+    """Representation of a Fast.com sensor."""
 
-    _attr_translation_key = "download"
-    _attr_device_class = SensorDeviceClass.DATA_RATE
-    _attr_native_unit_of_measurement = UnitOfDataRate.MEGABITS_PER_SECOND
-    _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_should_poll = False
+    entity_description: FastdotcomSensorEntityDescription
     _attr_has_entity_name = True
 
     def __init__(
-        self, entry_id: str, coordinator: FastdotcomDataUpdateCoordinator
+        self,
+        entry_id: str,
+        coordinator: FastdotcomDataUpdateCoordinator,
+        description: FastdotcomSensorEntityDescription,
+        device_info: DeviceInfo,
     ) -> None:
-        """Initialize the sensor."""
+        """Initialize a Fast.com sensor."""
         super().__init__(coordinator)
-        self._attr_unique_id = entry_id
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry_id)},
-            entry_type=DeviceEntryType.SERVICE,
-            configuration_url="https://www.fast.com",
-        )
+        self.entity_description = description
+        self._attr_unique_id = f"{entry_id}_{description.key}"
+        self._attr_device_info = device_info
 
     @property
-    def native_value(
-        self,
-    ) -> float:
-        """Return the state of the sensor."""
-        return self.coordinator.data
+    def native_value(self) -> float | None:
+        """Return native value for entity."""
+        data = self.coordinator.data.get(self.entity_description.key)
+        if data is None:
+            return None
+        return self.entity_description.value(data)
