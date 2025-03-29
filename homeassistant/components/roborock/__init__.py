@@ -164,6 +164,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
     return True
 
 
+async def async_migrate_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> bool:
+    """Migrate old configuration entries to the new format."""
+    _LOGGER.debug(
+        "Migrating configuration from version %s.%s",
+        entry.version,
+        entry.minor_version,
+    )
+    if entry.version > 1:
+        # Downgrade from future version
+        return False
+
+    # 1->2: Migrate from unique id as email address to unique id as rruid
+    if entry.minor_version == 1:
+        user_data = UserData.from_dict(entry.data[CONF_USER_DATA])
+        _LOGGER.debug("Updating unique id to %s", user_data.rruid)
+        hass.config_entries.async_update_entry(
+            entry,
+            unique_id=user_data.rruid,
+            version=1,
+            minor_version=2,
+        )
+
+    return True
+
+
 def build_setup_functions(
     hass: HomeAssistant,
     entry: RoborockConfigEntry,
