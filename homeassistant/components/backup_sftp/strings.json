@@ -2,56 +2,56 @@
   "config": {
     "step": {
       "user": {
-        "description": "Setup Remote SFTP Backup Storage",
+        "description": "Set up remote SFTP backup storage",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "private_key_file": "Private Key File",
+          "private_key_file": "Private key file",
           "backup_location": "Remote path"
         },
         "data_description": {
-          "host": "Hostname or IP address of SSH/SFTP Server to connect to.",
-          "port": "Port of your SSH/SFTP Server. This is usually 22.",
+          "host": "Hostname or IP address of SSH/SFTP server to connect to.",
+          "port": "Port of your SSH/SFTP server. This is usually 22.",
           "username": "Username to authenticate with.",
-          "password": "Password to authenticate with. Provide this or Private Key File",
+          "password": "Password to authenticate with. Provide this or private key file.",
           "private_key_file": "Location to private key file to authenticate with. File must be uploaded to Home Assistant /config folder. Provide this or password.",
           "backup_location": "Remote path where to upload backups."
         }
       },
       "reauth_confirm": {
-        "description": "Re-authenticate with Remote SFTP Backup Storage",
+        "description": "Re-authenticate with remote SFTP backup storage",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "private_key_file": "Private Key File, if changed.",
+          "private_key_file": "Private key file, if changed.",
           "backup_location": "Remote path"
         },
         "data_description": {
-          "host": "Hostname or IP address of SSH/SFTP Server to connect to.",
-          "port": "Port of your SSH/SFTP Server. This is usually 22.",
+          "host": "Hostname or IP address of SSH/SFTP server to connect to.",
+          "port": "Port of your SSH/SFTP server. This is usually 22.",
           "username": "Username to authenticate with.",
-          "password": "Password to authenticate with. Provide this or Private Key File",
+          "password": "Password to authenticate with. Provide this or private key file.",
           "private_key_file": "Location to private key file to authenticate with. File must be uploaded to Home Assistant /config folder. Provide this or password.",
           "backup_location": "Remote path where to upload backups."
         }
       }
     },
     "error": {
-        "config_entry_error": "{error_message}",
-        "os_error": "{error_message}. Please check if host and/or port are correct.",
-        "permission_denied": "{error_message}",
-        "sftp_no_such_file": "Could not check directory {backup_location}. Make sure directory exists.",
-        "sftp_permission_denied": "Permission denied for directory {backup_location}",
-        "unknown": "Unexpected exception ({exception}) occurred during config flow. {error_message}"
+      "config_entry_error": "{error_message}",
+      "os_error": "{error_message}. Please check if host and/or port are correct.",
+      "permission_denied": "{error_message}",
+      "sftp_no_such_file": "Could not check directory {backup_location}. Make sure directory exists.",
+      "sftp_permission_denied": "Permission denied for directory {backup_location}",
+      "unknown": "Unexpected exception ({exception}) occurred during config flow. {error_message}"
     },
     "abort": {
-        "already_configured": "Integration already configured. Host with same address, port, username and backup location already exists.",
-        "reauth_key_changes": "Key changes were detected (Host, Port, Username or Backup location). Reauth supported only for credential changes (password or private key). For anything else, please remove integration and add new one.",
-        "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "already_configured": "Integration already configured. Host with same address, port, username and backup location already exists.",
+      "reauth_key_changes": "Key changes were detected (host, port, username or backup location). Reauthentication is supported only for credential changes (password or private key). For anything else, please remove the integration and add a new one.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   }
 }
