@@ -1,13 +1,54 @@
 {
   "config": {
     "step": {
-      "confirm": {
+      "user": {
+        "description": "Please make a choice",
+        "data": {
+          "auto_discovery": "Auto discovery enabled"
+        }
+      },
+      "discovery_confirm": {
         "description": "[%key:common::config_flow::description::confirm_setup%]"
       }
     },
     "abort": {
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "Please make a choice",
+        "menu_options": {
+          "configure_auto_discovery": "Enable or disable automatic discovery",
+          "add_device": "Enter a device's IP address",
+          "remove_device": "Remove a manually added device"
+        }
+      },
+      "add_device": {
+        "description": "Enter the device's IP address",
+        "data": {
+          "device_ip": "[%key:common::config_flow::data::ip%]"
+        }
+      },
+      "remove_device": {
+        "description": "Select one or more IP addresses to remove",
+        "data": {
+          "ips_to_remove": "IPs to remove"
+        }
+      },
+      "configure_auto_discovery": {
+        "description": "Enable or disable automatic discovery",
+        "data": {
+          "auto_discovery": "Auto discovery enabled"
+        }
+      }
+    },
+    "abort": {
+      "no_devices": "No manually added devices were found",
+      "invalid_ip": "Invalid IP address: {ip}"
     }
   },
   "entity": {
