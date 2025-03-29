@@ -36,7 +36,7 @@
           "printing": "Printing",
           "paused": "[%key:common::state::paused%]",
           "finished": "Finished",
-          "stopped": "Stopped",
+          "stopped": "[%key:common::state::stopped%]",
           "error": "Error",
           "attention": "Attention",
           "ready": "Ready"
@@ -85,7 +85,7 @@
         "name": "Z-Height"
       },
       "nozzle_diameter": {
-        "name": "Nozzle Diameter"
+        "name": "Nozzle diameter"
       }
     },
     "button": {
