@@ -819,8 +819,8 @@ async def test_updating_humidity(
             Attribute.SUPPORTED_THERMOSTAT_MODES,
             ["coolClean", "dryClean"],
             ATTR_HVAC_MODES,
+            [HVACMode.AUTO],
             [],
-            [HVACMode.COOL, HVACMode.DRY],
         ),
     ],
     ids=[
