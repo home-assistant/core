@@ -1,7 +1,8 @@
 """Tests config_flow."""
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Generator
 from tempfile import NamedTemporaryFile
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from asyncssh.misc import PermissionDenied
@@ -27,12 +28,36 @@ from tests.common import MockConfigEntry
 type ComponentSetup = Callable[[], Awaitable[None]]
 
 
+@pytest.fixture
+def mock_connect(
+    fake_connect: AsyncMock,
+) -> Generator[tuple[MagicMock, MagicMock, dict[str, Any]]]:
+    """Fixture that yields mocked connect and SSHClientConnectionOptions objects."""
+
+    with (
+        patch(
+            "homeassistant.components.backup_sftp.config_flow.connect",
+            return_value=fake_connect,
+        ) as _mock_connect,
+        patch(
+            "homeassistant.components.backup_sftp.config_flow.SSHClientConnectionOptions",
+            return_value=MagicMock(),
+        ) as _mock_ssh_client_options,
+        NamedTemporaryFile() as tmpfile,
+    ):
+        user_input = USER_INPUT.copy()
+        user_input[CONF_PRIVATE_KEY_FILE] = tmpfile.name
+        yield (_mock_connect, _mock_ssh_client_options, user_input)
+
+
 @pytest.mark.usefixtures("current_request_with_host")
 async def test_backup_sftp_full_flow(
     hass: HomeAssistant,
-    fake_connect: AsyncMock,
+    mock_connect: tuple[MagicMock, MagicMock, dict[str, Any]],
 ) -> None:
     """Test the full backup_sftp config flow with valid user input."""
+
+    mock_client, _, user_input = mock_connect
     # Start the configuration flow
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -40,25 +65,10 @@ async def test_backup_sftp_full_flow(
     # The first step should be the "user" form.
     assert result["step_id"] == "user"
 
-    # Patch the BackupAgentClient so that when the flow creates it, our fake is used.
-    with (
-        patch(
-            "homeassistant.components.backup_sftp.config_flow.connect",
-            return_value=fake_connect,
-        ) as mock_client,
-        patch(
-            "homeassistant.components.backup_sftp.config_flow.SSHClientConnectionOptions",
-            return_value=MagicMock(),
-        ),
-        NamedTemporaryFile() as tmpfile,
-    ):
-        # Create a tempfile so we don't get `ConfigEntryError` during setup.
-        user_input = USER_INPUT.copy()
-        user_input[CONF_PRIVATE_KEY_FILE] = tmpfile.name
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input
+    )
+    await hass.async_block_till_done()
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_client.mock_calls) == 1
@@ -74,9 +84,10 @@ async def test_backup_sftp_full_flow(
 async def test_already_configured(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    fake_connect: AsyncMock,
+    mock_connect: tuple[MagicMock, MagicMock, dict[str, Any]],
 ) -> None:
     """Test successful failure of already added config entry."""
+    _, _, user_input = mock_connect
     config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -84,24 +95,10 @@ async def test_already_configured(
     )
     assert result["step_id"] == "user"
 
-    # Again, create a tempfile so we don't run into ConfigEntryError
-    with (
-        patch(
-            "homeassistant.components.backup_sftp.config_flow.connect",
-            return_value=fake_connect,
-        ),
-        patch(
-            "homeassistant.components.backup_sftp.config_flow.SSHClientConnectionOptions",
-            return_value=MagicMock(),
-        ),
-        NamedTemporaryFile() as tmpfile,
-    ):
-        user_input = USER_INPUT.copy()
-        user_input[CONF_PRIVATE_KEY_FILE] = tmpfile.name
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -124,40 +121,44 @@ async def test_config_flow_exceptions(
     error_base: str,
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    fake_connect: AsyncMock,
+    mock_connect: tuple[MagicMock, MagicMock, dict[str, Any]],
 ) -> None:
     """Test successful failure of already added config entry."""
 
-    async def add(user_input: dict):
-        config_entry.add_to_hass(hass)
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-        assert result["step_id"] == "user"
+    mock_client, _, user_input = mock_connect
+    mock_client.side_effect = exception_type("Error message.")
 
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input
-        )
-        await hass.async_block_till_done()
-        return result
+    # config_entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["step_id"] == "user"
 
-    with (
-        patch(
-            "homeassistant.components.backup_sftp.config_flow.connect",
-            side_effect=exception_type("Error message."),
-        ),
-        patch(
-            "homeassistant.components.backup_sftp.config_flow.SSHClientConnectionOptions",
-            return_value=MagicMock(),
-        ),
-        NamedTemporaryFile() as tmpfile,
-    ):
-        user_input = USER_INPUT.copy()
-        user_input[CONF_PRIVATE_KEY_FILE] = tmpfile.name
-        result = await add(user_input)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] and result["errors"]["base"] == error_base
+
+    # Recover from the error
+    mock_client.side_effect = None
+
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 @pytest.mark.parametrize(
@@ -175,40 +176,29 @@ async def test_reauth(
     reauth_reason: str,
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    fake_connect: AsyncMock,
+    mock_connect: tuple[MagicMock, MagicMock, dict[str, Any]],
 ) -> None:
     """Test the reauthentication flow."""
 
+    _, _, user_input = mock_connect
     config_entry.add_to_hass(hass)
     result = await config_entry.start_reauth_flow(hass)
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "reauth_confirm"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
-    # Patch the BackupAgentClient so that when the flow creates it, our fake is used.
-    with (
-        patch(
-            "homeassistant.components.backup_sftp.config_flow.connect",
-            return_value=fake_connect,
-        ),
-        patch(
-            "homeassistant.components.backup_sftp.config_flow.SSHClientConnectionOptions",
-            return_value=MagicMock(),
-        ),
-    ):
-        user_input = USER_INPUT.copy()
-        user_input[CONF_HOST] = new_host
-        user_input[CONF_PASSWORD] = new_password
-        user_input[CONF_PRIVATE_KEY_FILE] = ""
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input
-        )
-        await hass.async_block_till_done()
+    user_input[CONF_HOST] = new_host
+    user_input[CONF_PASSWORD] = new_password
+    user_input[CONF_PRIVATE_KEY_FILE] = ""
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input
+    )
+    await hass.async_block_till_done()
 
-    assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == reauth_reason
-    assert result.get("description_placeholders") is None
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reauth_reason
+    assert result["description_placeholders"] is None
 
 
 @pytest.mark.usefixtures("current_request_with_host")
