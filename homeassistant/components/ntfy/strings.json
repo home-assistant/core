@@ -1,0 +1,35 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Setup a topic for publishing notifications",
+        "data": {
+          "url": "Service URL",
+          "topic": "Topic"
+        },
+
+        "data_description": {
+          "url": "Address of the ntfy service. Modify this if you want to use a different server",
+          "topic": "Enter the name of the topic you want to publish to. Topics may not be password-protected, so choose a name that's not easy to guess. If left empty, a random topic name will be generated."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "forbidden_topic": "Protected topics are not supported",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "invalid_url": "Invalid service URL"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "exceptions": {
+    "publish_failed_request_error": {
+      "message": "Failed to publish notification: {error_msg}"
+    },
+    "publish_failed_exception": {
+      "message": "Failed to publish notification due to a connection error"
+    }
+  }
+}
