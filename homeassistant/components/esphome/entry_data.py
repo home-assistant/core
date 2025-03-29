@@ -319,11 +319,13 @@ class RuntimeEntryData:
                 infos_by_type[info_type] = []
             infos_by_type[info_type].append(info)
 
-        callbacks_by_type = self.entity_info_callbacks
-        for type_, entity_infos in infos_by_type.items():
-            if callbacks_ := callbacks_by_type.get(type_):
-                for callback_ in callbacks_:
-                    callback_(entity_infos)
+        for type_, callbacks_ in self.entity_info_callbacks.items():
+            # If all entities for a type are removed, we
+            # still need to call the callbacks with an empty list
+            # to make sure the entities are removed.
+            entity_infos = infos_by_type.get(type_, [])
+            for callback_ in callbacks_:
+                callback_(entity_infos)
 
         # Finally update static info subscriptions
         for callback_ in self.static_info_update_subscriptions:
