@@ -6,7 +6,6 @@ from unittest.mock import patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from components.renault import RenaultHub
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -132,7 +131,7 @@ async def test_sensor_throttling(
     check_device_registry(device_registry, mock_vehicle["expected_device"])
     assert len(entity_registry.entities) == 15
 
-    hub: RenaultHub = config_entry.runtime_data
+    hub = config_entry.runtime_data
 
     # Ensure the hub has been throttled
     assert hub.check_throttled()
