@@ -67,6 +67,7 @@ def mock_serial_bridge_config_entry() -> Generator[MockConfigEntry]:
             CONF_PIN: BRIDGE_PIN,
             CONF_TYPE: BRIDGE,
         },
+        entry_id="serial_bridge_config_entry_id",
     )
 
 

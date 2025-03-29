@@ -6,7 +6,6 @@ from aiocomelit.api import ComelitSerialBridgeObject
 from aiocomelit.const import COVER, WATT
 from freezegun.api import FrozenDateTimeFactory
 from syrupy import SnapshotAssertion
-from syrupy.filters import props
 
 from homeassistant.components.comelit.const import SCAN_INTERVAL
 from homeassistant.components.cover import (
@@ -43,7 +42,7 @@ async def test_all_entities(
     await snapshot_platform(
         hass,
         entity_registry,
-        snapshot(exclude=props("unique_id")),
+        snapshot(),
         mock_serial_bridge_config_entry.entry_id,
     )
 
@@ -92,7 +91,7 @@ async def test_cover_open(
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await hass.async_block_till_done()
 
     assert (state := hass.states.get(ENTITY_ID))
     assert state.state == STATE_UNKNOWN
