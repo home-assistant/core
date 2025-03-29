@@ -41,7 +41,10 @@ from homeassistant.loader import USBMatcher, async_get_usb
 
 from .const import DOMAIN
 from .models import USBDevice
-from .utils import scan_serial_ports
+from .utils import (
+    scan_serial_ports,
+    usb_device_from_port,  # noqa: F401
+)
 
 _LOGGER = logging.getLogger(__name__)
 
