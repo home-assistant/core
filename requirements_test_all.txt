@@ -1005,7 +1005,7 @@ huum==0.7.12
 hyperion-py==0.7.5
 
 # homeassistant.components.iaqualink
-iaqualink==0.5.0
+iaqualink==0.5.3
 
 # homeassistant.components.ibeacon
 ibeacon-ble==1.2.0
