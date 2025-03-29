@@ -2,9 +2,9 @@
 
 from collections.abc import Generator
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
-from googlemaps.exceptions import ApiError, Timeout, TransportError
+from google.api_core.exceptions import GatewayTimeout, GoogleAPIError, Unauthorized
 import pytest
 
 from homeassistant.components.google_travel_time.const import DOMAIN
@@ -51,37 +51,36 @@ def bypass_platform_setup_fixture() -> Generator[None]:
 
 
 @pytest.fixture(name="validate_config_entry")
-def validate_config_entry_fixture() -> Generator[MagicMock]:
+def validate_config_entry_fixture() -> Generator[AsyncMock]:
     """Return valid config entry."""
+    client_mock = AsyncMock()
     with (
-        patch("homeassistant.components.google_travel_time.helpers.Client"),
         patch(
-            "homeassistant.components.google_travel_time.helpers.distance_matrix"
-        ) as distance_matrix_mock,
+            "homeassistant.components.google_travel_time.helpers.RoutesAsyncClient",
+            return_value=client_mock,
+        ),
+        patch(
+            "homeassistant.components.google_travel_time.sensor.RoutesAsyncClient",
+            return_value=client_mock,
+        ),
     ):
-        distance_matrix_mock.return_value = None
-        yield distance_matrix_mock
+        client_mock.compute_routes.return_value = None
+        yield client_mock.compute_routes
 
 
 @pytest.fixture(name="invalidate_config_entry")
-def invalidate_config_entry_fixture(validate_config_entry: MagicMock) -> None:
+def invalidate_config_entry_fixture(validate_config_entry: AsyncMock) -> None:
     """Return invalid config entry."""
-    validate_config_entry.side_effect = ApiError("test")
+    validate_config_entry.side_effect = GoogleAPIError("test")
 
 
 @pytest.fixture(name="invalid_api_key")
-def invalid_api_key_fixture(validate_config_entry: MagicMock) -> None:
-    """Throw a REQUEST_DENIED ApiError."""
-    validate_config_entry.side_effect = ApiError("REQUEST_DENIED", "Invalid API key.")
+def invalid_api_key_fixture(validate_config_entry: AsyncMock) -> None:
+    """Throw an Unauthorized exception."""
+    validate_config_entry.side_effect = Unauthorized("Invalid API key.")
 
 
 @pytest.fixture(name="timeout")
-def timeout_fixture(validate_config_entry: MagicMock) -> None:
+def timeout_fixture(validate_config_entry: AsyncMock) -> None:
     """Throw a Timeout exception."""
-    validate_config_entry.side_effect = Timeout()
-
-
-@pytest.fixture(name="transport_error")
-def transport_error_fixture(validate_config_entry: MagicMock) -> None:
-    """Throw a TransportError exception."""
-    validate_config_entry.side_effect = TransportError("Unknown.")
+    validate_config_entry.side_effect = GatewayTimeout("Timeout error.")

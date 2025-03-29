@@ -3,7 +3,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "You can specify the origin and destination in the form of an address, latitude/longitude coordinates, or a Google place ID. When specifying the location using a Google place ID, the ID must be prefixed with `place_id:`.",
+        "description": "You can specify the origin and destination in the form of an address, latitude/longitude coordinates or an entity ID that provides this information in its state, an entity ID with latitude and longitude attributes, or zone friendly name (case sensitive)",
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
           "api_key": "[%key:common::config_flow::data::api_key%]",
@@ -33,16 +33,16 @@
   "options": {
     "step": {
       "init": {
-        "description": "You can optionally specify either a Departure Time or Arrival Time. If specifying a departure time, you can enter `now`, a Unix timestamp, or a 24 hour time string like `08:00:00`. If specifying an arrival time, you can use a Unix timestamp or a 24 hour time string like `08:00:00`",
+        "description": "You can optionally specify either a departure time or arrival time in the form of a 24 hour time string like `08:00:00`",
         "data": {
-          "mode": "Travel Mode",
+          "mode": "Travel mode",
           "language": "[%key:common::config_flow::data::language%]",
-          "time_type": "Time Type",
+          "time_type": "Time type",
           "time": "Time",
           "avoid": "Avoid",
-          "traffic_model": "Traffic Model",
-          "transit_mode": "Transit Mode",
-          "transit_routing_preference": "Transit Routing Preference",
+          "traffic_model": "Traffic model",
+          "transit_mode": "Transit mode",
+          "transit_routing_preference": "Transit routing preference",
           "units": "Units"
         }
       }
@@ -68,19 +68,19 @@
     },
     "units": {
       "options": {
-        "metric": "Metric System",
-        "imperial": "Imperial System"
+        "metric": "Metric system",
+        "imperial": "Imperial system"
       }
     },
     "time_type": {
       "options": {
-        "arrival_time": "Arrival Time",
-        "departure_time": "Departure Time"
+        "arrival_time": "Arrival time",
+        "departure_time": "Departure time"
       }
     },
     "traffic_model": {
       "options": {
-        "best_guess": "Best Guess",
+        "best_guess": "Best guess",
         "pessimistic": "Pessimistic",
         "optimistic": "Optimistic"
       }
@@ -96,8 +96,8 @@
     },
     "transit_routing_preference": {
       "options": {
-        "less_walking": "Less Walking",
-        "fewer_transfers": "Fewer Transfers"
+        "less_walking": "Less walking",
+        "fewer_transfers": "Fewer transfers"
       }
     }
   }
