@@ -28,14 +28,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         added: set[USBDevice], removed: set[USBDevice]
     ) -> None:
         """Handle USB port events."""
-        current_entries = {
+        current_entries_by_path = {
             entry.data[DEVICE]: entry
             for entry in hass.config_entries.async_entries(DOMAIN)
         }
 
         for device in added | removed:
             path = device.device
-            entry = current_entries.get(path)
+            entry = current_entries_by_path.get(path)
 
             if entry is not None:
                 _LOGGER.debug(
@@ -43,7 +43,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     path,
                     entry,
                 )
-                hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
+                hass.config_entries.async_schedule_reload(entry.entry_id)
 
     async_register_port_event_callback(hass, async_port_event_callback)
 

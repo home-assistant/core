@@ -122,14 +122,14 @@ async def test_setup_fails_on_missing_usb_port(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         # Failed to set up, the device is missing
-        assert config_entry.state == ConfigEntryState.SETUP_RETRY
+        assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
         mock_exists.return_value = True
         async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=30))
         await hass.async_block_till_done(wait_background_tasks=True)
 
         # Now it's ready
-        assert config_entry.state == ConfigEntryState.LOADED
+        assert config_entry.state is ConfigEntryState.LOADED
 
 
 async def test_usb_device_reactivity(
@@ -177,7 +177,7 @@ async def test_usb_device_reactivity(
         await hass.async_block_till_done()
 
         # Failed to set up, the device is missing
-        assert config_entry.state == ConfigEntryState.SETUP_RETRY
+        assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
         # Now we make it available but do not wait
         mock_exists.return_value = True
@@ -200,7 +200,7 @@ async def test_usb_device_reactivity(
         # It loads immediately
         await hass.async_block_till_done(wait_background_tasks=True)
         await hass.async_block_till_done(wait_background_tasks=True)
-        assert config_entry.state == ConfigEntryState.LOADED
+        assert config_entry.state is ConfigEntryState.LOADED
 
         # Wait for a bit for the USB scan debouncer to cool off
         async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=5))
@@ -213,4 +213,4 @@ async def test_usb_device_reactivity(
 
         # The integration has reloaded and is now in a failed state
         await hass.async_block_till_done(wait_background_tasks=True)
-        assert config_entry.state == ConfigEntryState.SETUP_RETRY
+        assert config_entry.state is ConfigEntryState.SETUP_RETRY
