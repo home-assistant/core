@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine, Sequence
 from contextlib import suppress
+import dataclasses
 from datetime import datetime
 from functools import reduce, wraps
 import logging
@@ -42,7 +43,12 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.components.media_source import BrowseMediaSource
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceResponse,
+    SupportsResponse,
+    callback,
+)
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import (
     config_validation as cv,
@@ -55,10 +61,13 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utcnow
 
 from .const import (
+    ATTR_QUEUE_IDS,
     DOMAIN as HEOS_DOMAIN,
+    SERVICE_GET_QUEUE,
     SERVICE_GROUP_VOLUME_DOWN,
     SERVICE_GROUP_VOLUME_SET,
     SERVICE_GROUP_VOLUME_UP,
+    SERVICE_REMOVE_FROM_QUEUE,
 )
 from .coordinator import HeosConfigEntry, HeosCoordinator
 
@@ -133,6 +142,23 @@ async def async_setup_entry(
     # Register custom entity services
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
+        SERVICE_GET_QUEUE,
+        None,
+        "async_get_queue",
+        supports_response=SupportsResponse.ONLY,
+    )
+    platform.async_register_entity_service(
+        SERVICE_REMOVE_FROM_QUEUE,
+        {
+            vol.Required(ATTR_QUEUE_IDS): vol.All(
+                cv.ensure_list,
+                [vol.All(cv.positive_int, vol.Range(min=1))],
+                vol.Unique(),
+            )
+        },
+        "async_remove_from_queue",
+    )
+    platform.async_register_entity_service(
         SERVICE_GROUP_VOLUME_SET,
         {vol.Required(ATTR_MEDIA_VOLUME_LEVEL): cv.small_float},
         "async_set_group_volume_level",
@@ -155,20 +181,20 @@ async def async_setup_entry(
     add_entities_callback(list(coordinator.heos.players.values()))
 
 
-type _FuncType[**_P] = Callable[_P, Awaitable[Any]]
-type _ReturnFuncType[**_P] = Callable[_P, Coroutine[Any, Any, None]]
+type _FuncType[**_P, _R] = Callable[_P, Awaitable[_R]]
+type _ReturnFuncType[**_P, _R] = Callable[_P, Coroutine[Any, Any, _R]]
 
 
-def catch_action_error[**_P](
+def catch_action_error[**_P, _R](
     action: str,
-) -> Callable[[_FuncType[_P]], _ReturnFuncType[_P]]:
+) -> Callable[[_FuncType[_P, _R]], _ReturnFuncType[_P, _R]]:
     """Return decorator that catches errors and raises HomeAssistantError."""
 
-    def decorator(func: _FuncType[_P]) -> _ReturnFuncType[_P]:
+    def decorator(func: _FuncType[_P, _R]) -> _ReturnFuncType[_P, _R]:
         @wraps(func)
-        async def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> None:
+        async def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> _R:
             try:
-                await func(*args, **kwargs)
+                return await func(*args, **kwargs)
             except (HeosError, ValueError) as ex:
                 raise HomeAssistantError(
                     translation_domain=HEOS_DOMAIN,
@@ -268,6 +294,12 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         self.async_on_remove(self._player.add_on_player_event(self._player_update))
         await super().async_added_to_hass()
 
+    @catch_action_error("get queue")
+    async def async_get_queue(self) -> ServiceResponse:
+        """Get the queue for the current player."""
+        queue = await self._player.get_queue()
+        return {"queue": [dataclasses.asdict(item) for item in queue]}
+
     @catch_action_error("clear playlist")
     async def async_clear_playlist(self) -> None:
         """Clear players playlist."""
@@ -366,6 +398,15 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
             if index is None:
                 raise ValueError(f"Invalid favorite '{media_id}'")
             await self._player.play_preset_station(index)
+            return
+
+        if media_type == "queue":
+            # media_id must be an int
+            try:
+                queue_id = int(media_id)
+            except ValueError:
+                raise ValueError(f"Invalid queue id '{media_id}'") from None
+            await self._player.play_queue(queue_id)
             return
 
         raise ValueError(f"Unsupported media type '{media_type}'")
@@ -480,6 +521,10 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
                 new_members.remove(self._player.player_id)
                 await self.coordinator.heos.set_group(new_members)
                 return
+
+    async def async_remove_from_queue(self, queue_ids: list[int]) -> None:
+        """Remove items from the queue."""
+        await self._player.remove_from_queue(queue_ids)
 
     @property
     def available(self) -> bool:

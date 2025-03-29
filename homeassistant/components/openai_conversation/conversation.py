@@ -10,18 +10,23 @@ from openai.types.responses import (
     EasyInputMessageParam,
     FunctionToolParam,
     ResponseCompletedEvent,
+    ResponseErrorEvent,
+    ResponseFailedEvent,
     ResponseFunctionCallArgumentsDeltaEvent,
     ResponseFunctionCallArgumentsDoneEvent,
     ResponseFunctionToolCall,
     ResponseFunctionToolCallParam,
+    ResponseIncompleteEvent,
     ResponseInputParam,
     ResponseOutputItemAddedEvent,
     ResponseOutputMessage,
     ResponseStreamEvent,
     ResponseTextDeltaEvent,
     ToolParam,
+    WebSearchToolParam,
 )
 from openai.types.responses.response_input_param import FunctionCallOutput
+from openai.types.responses.web_search_tool_param import UserLocation
 from voluptuous_openapi import convert
 
 from homeassistant.components import assist_pipeline, conversation
@@ -40,6 +45,13 @@ from .const import (
     CONF_REASONING_EFFORT,
     CONF_TEMPERATURE,
     CONF_TOP_P,
+    CONF_WEB_SEARCH,
+    CONF_WEB_SEARCH_CITY,
+    CONF_WEB_SEARCH_CONTEXT_SIZE,
+    CONF_WEB_SEARCH_COUNTRY,
+    CONF_WEB_SEARCH_REGION,
+    CONF_WEB_SEARCH_TIMEZONE,
+    CONF_WEB_SEARCH_USER_LOCATION,
     DOMAIN,
     LOGGER,
     RECOMMENDED_CHAT_MODEL,
@@ -47,6 +59,7 @@ from .const import (
     RECOMMENDED_REASONING_EFFORT,
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_TOP_P,
+    RECOMMENDED_WEB_SEARCH_CONTEXT_SIZE,
 )
 
 # Max number of back and forth with the LLM to generate a response
@@ -139,18 +152,57 @@ async def _transform_stream(
                     )
                 ]
             }
-        elif (
-            isinstance(event, ResponseCompletedEvent)
-            and (usage := event.response.usage) is not None
-        ):
-            chat_log.async_trace(
-                {
-                    "stats": {
-                        "input_tokens": usage.input_tokens,
-                        "output_tokens": usage.output_tokens,
+        elif isinstance(event, ResponseCompletedEvent):
+            if event.response.usage is not None:
+                chat_log.async_trace(
+                    {
+                        "stats": {
+                            "input_tokens": event.response.usage.input_tokens,
+                            "output_tokens": event.response.usage.output_tokens,
+                        }
                     }
-                }
-            )
+                )
+        elif isinstance(event, ResponseIncompleteEvent):
+            if event.response.usage is not None:
+                chat_log.async_trace(
+                    {
+                        "stats": {
+                            "input_tokens": event.response.usage.input_tokens,
+                            "output_tokens": event.response.usage.output_tokens,
+                        }
+                    }
+                )
+
+            if (
+                event.response.incomplete_details
+                and event.response.incomplete_details.reason
+            ):
+                reason: str = event.response.incomplete_details.reason
+            else:
+                reason = "unknown reason"
+
+            if reason == "max_output_tokens":
+                reason = "max output tokens reached"
+            elif reason == "content_filter":
+                reason = "content filter triggered"
+
+            raise HomeAssistantError(f"OpenAI response incomplete: {reason}")
+        elif isinstance(event, ResponseFailedEvent):
+            if event.response.usage is not None:
+                chat_log.async_trace(
+                    {
+                        "stats": {
+                            "input_tokens": event.response.usage.input_tokens,
+                            "output_tokens": event.response.usage.output_tokens,
+                        }
+                    }
+                )
+            reason = "unknown reason"
+            if event.response.error is not None:
+                reason = event.response.error.message
+            raise HomeAssistantError(f"OpenAI response failed: {reason}")
+        elif isinstance(event, ResponseErrorEvent):
+            raise HomeAssistantError(f"OpenAI response error: {event.message}")
 
 
 class OpenAIConversationEntity(
@@ -222,6 +274,25 @@ class OpenAIConversationEntity(
                 _format_tool(tool, chat_log.llm_api.custom_serializer)
                 for tool in chat_log.llm_api.tools
             ]
+
+        if options.get(CONF_WEB_SEARCH):
+            web_search = WebSearchToolParam(
+                type="web_search_preview",
+                search_context_size=options.get(
+                    CONF_WEB_SEARCH_CONTEXT_SIZE, RECOMMENDED_WEB_SEARCH_CONTEXT_SIZE
+                ),
+            )
+            if options.get(CONF_WEB_SEARCH_USER_LOCATION):
+                web_search["user_location"] = UserLocation(
+                    type="approximate",
+                    city=options.get(CONF_WEB_SEARCH_CITY, ""),
+                    region=options.get(CONF_WEB_SEARCH_REGION, ""),
+                    country=options.get(CONF_WEB_SEARCH_COUNTRY, ""),
+                    timezone=options.get(CONF_WEB_SEARCH_TIMEZONE, ""),
+                )
+            if tools is None:
+                tools = []
+            tools.append(web_search)
 
         model = options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
         messages = [

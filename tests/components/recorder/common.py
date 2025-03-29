@@ -35,7 +35,8 @@ from homeassistant.components.recorder.db_schema import (
     StatesMeta,
 )
 from homeassistant.components.recorder.tasks import RecorderTask, StatisticsTask
-from homeassistant.const import UnitOfTemperature
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
+from homeassistant.const import DEGREE, UnitOfTemperature
 from homeassistant.core import Event, HomeAssistant, State
 from homeassistant.helpers import recorder as recorder_helper
 from homeassistant.util import dt as dt_util
@@ -290,6 +291,7 @@ def record_states(
     sns2 = "sensor.test2"
     sns3 = "sensor.test3"
     sns4 = "sensor.test4"
+    sns5 = "sensor.wind_direction"
     sns1_attr = {
         "device_class": "temperature",
         "state_class": "measurement",
@@ -302,6 +304,11 @@ def record_states(
     }
     sns3_attr = {"device_class": "temperature"}
     sns4_attr = {}
+    sns5_attr = {
+        "device_class": SensorDeviceClass.WIND_DIRECTION,
+        "state_class": SensorStateClass.MEASUREMENT_ANGLE,
+        "unit_of_measurement": DEGREE,
+    }
 
     def set_state(entity_id, state, **kwargs):
         """Set the state."""
@@ -315,7 +322,7 @@ def record_states(
     three = two + timedelta(seconds=30 * 5)
     four = three + timedelta(seconds=14 * 5)
 
-    states = {mp: [], sns1: [], sns2: [], sns3: [], sns4: []}
+    states = {mp: [], sns1: [], sns2: [], sns3: [], sns4: [], sns5: []}
     with freeze_time(one) as freezer:
         states[mp].append(
             set_state(mp, "idle", attributes={"media_title": str(sentinel.mt1)})
@@ -324,6 +331,7 @@ def record_states(
         states[sns2].append(set_state(sns2, "10", attributes=sns2_attr))
         states[sns3].append(set_state(sns3, "10", attributes=sns3_attr))
         states[sns4].append(set_state(sns4, "10", attributes=sns4_attr))
+        states[sns5].append(set_state(sns5, "10", attributes=sns5_attr))
 
         freezer.move_to(one + timedelta(microseconds=1))
         states[mp].append(
@@ -335,12 +343,14 @@ def record_states(
         states[sns2].append(set_state(sns2, "15", attributes=sns2_attr))
         states[sns3].append(set_state(sns3, "15", attributes=sns3_attr))
         states[sns4].append(set_state(sns4, "15", attributes=sns4_attr))
+        states[sns5].append(set_state(sns5, "350", attributes=sns5_attr))
 
         freezer.move_to(three)
         states[sns1].append(set_state(sns1, "20", attributes=sns1_attr))
         states[sns2].append(set_state(sns2, "20", attributes=sns2_attr))
         states[sns3].append(set_state(sns3, "20", attributes=sns3_attr))
         states[sns4].append(set_state(sns4, "20", attributes=sns4_attr))
+        states[sns5].append(set_state(sns5, "5", attributes=sns5_attr))
 
     return zero, four, states
 
