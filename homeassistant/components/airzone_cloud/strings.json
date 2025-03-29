@@ -32,8 +32,8 @@
       "air_quality": {
         "name": "Air Quality mode",
         "state": {
-          "off": "Off",
-          "on": "On",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]",
           "auto": "Auto"
         }
       },
@@ -45,7 +45,7 @@
           "fan": "[%key:component::climate::entity_component::_::state::fan_only%]",
           "heat": "[%key:component::climate::entity_component::_::state::heat%]",
           "heat_cool": "[%key:component::climate::entity_component::_::state::heat_cool%]",
-          "stop": "Stop"
+          "stop": "[%key:common::state::stopped%]"
         }
       }
     },
