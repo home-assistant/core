@@ -1,7 +1,8 @@
 """Tests for home_connect sensor entities."""
 
 from collections.abc import Awaitable, Callable
-from unittest.mock import AsyncMock, MagicMock, patch
+import logging
+from unittest.mock import AsyncMock, MagicMock
 
 from aiohomeconnect.model import (
     ArrayOfEvents,
@@ -28,7 +29,6 @@ from homeassistant.components.home_connect.const import (
     DOMAIN,
 )
 from homeassistant.components.home_connect.coordinator import HomeConnectError
-from homeassistant.components.home_connect.sensor import _add_event_sensor_entity
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
@@ -642,12 +642,7 @@ async def test_sensors_states(
     ],
     indirect=["appliance"],
 )
-@patch(
-    "homeassistant.components.home_connect.sensor._add_event_sensor_entity",
-    wraps=_add_event_sensor_entity,
-)
 async def test_event_sensors_states(
-    add_event_sensor_entity_mock: MagicMock,
     entity_id: str,
     event_key: EventKey,
     appliance: HomeAppliance,
@@ -656,17 +651,16 @@ async def test_event_sensors_states(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     setup_credentials: None,
     client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Tests for appliance event sensors."""
+    caplog.set_level(logging.ERROR)
     assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
     assert not hass.states.get(entity_id)
-
-    add_event_sensor_entity_expected_call_count = (
-        add_event_sensor_entity_mock.call_count + 1
-    )
 
     for value, expected_state in (
         (BSH_EVENT_PRESENT_STATE_OFF, "off"),
@@ -695,10 +689,14 @@ async def test_event_sensors_states(
         )
         await hass.async_block_till_done()
         assert hass.states.is_state(entity_id, expected_state)
-    assert (
-        add_event_sensor_entity_mock.call_count
-        == add_event_sensor_entity_expected_call_count
-    )
+
+    # Verify that the integration doesn't attempt to add the event sensors more than once
+    # If that happens, EntityPlatform does log an error with the entity's unique ID.
+    assert "exists" not in caplog.text
+    assert entity_id not in caplog.text
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    assert entity_entry.unique_id not in caplog.text
 
 
 @pytest.mark.parametrize(
