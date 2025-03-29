@@ -6,7 +6,7 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from pyephember.pyephember import (
+from pyephember2.pyephember2 import (
     EphEmber,
     ZoneMode,
     zone_current_temperature,

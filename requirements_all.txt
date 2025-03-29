@@ -1948,7 +1948,7 @@ pyenphase==1.25.1
 pyenvisalink==4.7
 
 # homeassistant.components.ephember
-pyephember==0.4.4
+pyephember2==0.4.10
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0

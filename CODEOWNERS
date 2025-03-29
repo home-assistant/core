@@ -430,7 +430,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/entur_public_transport/ @hfurubotten
 /homeassistant/components/environment_canada/ @gwww @michaeldavie
 /tests/components/environment_canada/ @gwww @michaeldavie
-/homeassistant/components/ephember/ @ttroy50
+/homeassistant/components/ephember/ @ttroy50 @roberty99
 /homeassistant/components/epic_games_store/ @hacf-fr @Quentame
 /tests/components/epic_games_store/ @hacf-fr @Quentame
 /homeassistant/components/epion/ @lhgravendeel
