@@ -1,5 +1,7 @@
 """Configure tests for Comelit SimpleHome."""
 
+from copy import deepcopy
+
 import pytest
 
 from homeassistant.components.comelit.const import (
@@ -82,10 +84,10 @@ def mock_vedo() -> Generator[AsyncMock]:
         ),
     ):
         vedo = mock_comelit_vedo.return_value
-        vedo.get_all_areas_and_zones.return_value = VEDO_DEVICE_QUERY
+        vedo.get_all_areas_and_zones.return_value = deepcopy(VEDO_DEVICE_QUERY)
         vedo.host = VEDO_HOST
         vedo.port = VEDO_PORT
-        vedo.pin = VEDO_PIN
+        vedo.device_pin = VEDO_PIN
         vedo.type = VEDO
         yield vedo
 
