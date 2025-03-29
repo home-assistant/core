@@ -32,8 +32,10 @@ def write_utf8_file_atomic(
     Using this function frequently will significantly
     negatively impact performance.
     """
+
+    encoding = "utf-8" if "b" not in mode else None
     try:
-        with AtomicWriter(filename, mode=mode, overwrite=True).open() as fdesc:
+        with AtomicWriter(filename, mode=mode, overwrite=True, encoding=encoding).open() as fdesc:
             if not private:
                 os.fchmod(fdesc.fileno(), 0o644)
             fdesc.write(utf8_data)
