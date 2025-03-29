@@ -13,7 +13,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 
 from .coordinator import LEAAMPApiCoordinator, LEAAMPConfigEntry
 
-PLATFORMS: list[Platform] = [Platform.REMOTE]
+PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER]
 CONNECTION_TIMEOUT = 5  # seconds
 PORT = "4321"
 
