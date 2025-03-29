@@ -312,7 +312,9 @@ class RuntimeEntryData:
 
         # Make a dict of the EntityInfo by type and send
         # them to the listeners for each specific EntityInfo type
-        infos_by_type: dict[type[EntityInfo], list[EntityInfo]] = defaultdict(list)
+        infos_by_type: defaultdict[type[EntityInfo], list[EntityInfo]] = defaultdict(
+            list
+        )
         for info in infos:
             infos_by_type[type(info)].append(info)
 
