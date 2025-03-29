@@ -4,7 +4,6 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from syrupy import SnapshotAssertion
-from syrupy.filters import props
 
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
@@ -37,7 +36,7 @@ async def test_all_entities(
     await snapshot_platform(
         hass,
         entity_registry,
-        snapshot(exclude=props("unique_id")),
+        snapshot(),
         mock_serial_bridge_config_entry.entry_id,
     )
 
