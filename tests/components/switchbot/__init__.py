@@ -294,3 +294,28 @@ REMOTE_SERVICE_INFO = BluetoothServiceInfoBleak(
     connectable=False,
     tx_power=-127,
 )
+
+
+WOHUB2_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="WoHub2",
+    manufacturer_data={
+        2409: b"\xe7\x06\x1dx\x99y\x00\xffg\xe2\xbf]\x84\x04\x9a,\x00",
+    },
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"v\x00"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="WoHub2",
+        manufacturer_data={
+            2409: b"\xe7\x06\x1dx\x99y\x00\xffg\xe2\xbf]\x84\x04\x9a,\x00",
+        },
+        service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"v\x00"},
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "WoHub2"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
