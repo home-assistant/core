@@ -23,6 +23,8 @@ from homeassistant.components.switch import (
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_BINARY_SENSORS,
+    CONF_BRIGHTNESS,
+    CONF_COLOR_TEMP,
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
     CONF_COUNT,
@@ -415,7 +417,14 @@ SWITCH_SCHEMA = BASE_SWITCH_SCHEMA.extend(
     }
 )
 
-LIGHT_SCHEMA = BASE_SWITCH_SCHEMA.extend({})
+LIGHT_SCHEMA = BASE_SWITCH_SCHEMA.extend(
+    {
+        vol.Optional(CONF_BRIGHTNESS): cv.positive_int,
+        vol.Optional(CONF_COLOR_TEMP): cv.positive_int,
+        vol.Optional(CONF_MIN_TEMP): cv.positive_int,
+        vol.Optional(CONF_MAX_TEMP): cv.positive_int,
+    }
+)
 
 FAN_SCHEMA = BASE_SWITCH_SCHEMA.extend({})
 
