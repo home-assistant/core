@@ -160,7 +160,7 @@
         "name": "On/Off transition time"
       },
       "altitude": {
-        "name": "Altitude above Sea Level"
+        "name": "Altitude above sea level"
       },
       "temperature_offset": {
         "name": "Temperature offset"
