@@ -19,7 +19,7 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_ics_file": "[%key:component::local_calendar::config::error::invalid_ics_file%]"
+      "invalid_ics_file": "Invalid ICS file: {error_detail}"
     }
   },
   "exceptions": {
