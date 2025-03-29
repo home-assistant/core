@@ -286,7 +286,7 @@ class RuntimeEntryData:
 
         if self.device_info:
             if async_get_dashboard(hass):
-                # Only load the update platform is the device_info is set
+                # Only load the update platform if the device_info is set
                 # When we restore the entry, the device_info may not be set yet
                 # and we don't want to load the update platform since it needs
                 # a complete device_info.
