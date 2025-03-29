@@ -193,7 +193,7 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
     _attr_should_poll = False
     _static_info: _InfoT
     _state: _StateT
-    _has_state: bool
+    _has_state: bool = False
 
     def __init__(
         self,
