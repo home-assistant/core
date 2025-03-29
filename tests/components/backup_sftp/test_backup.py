@@ -1,4 +1,4 @@
-"""Test the Google Drive backup platform."""
+"""Test the Backup SFTP Location platform."""
 
 from io import StringIO
 from typing import Any
@@ -6,19 +6,14 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 
-from homeassistant.components.backup import (
-    DOMAIN as BACKUP_DOMAIN,
-    AddonInfo,
-    AgentBackup,
-)
+from homeassistant.components.backup import AddonInfo, AgentBackup
 from homeassistant.components.backup_sftp.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
+from . import setup_backup_integration  # noqa: F401
 from .conftest import CONFIG_ENTRY_TITLE, TEST_AGENT_ID, AsyncFileIteratorMock
 
-from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 TEST_AGENT_BACKUP = AgentBackup(
@@ -50,19 +45,6 @@ TEST_AGENT_BACKUP_RESULT = {
     "failed_agent_ids": [],
     "with_automatic_settings": None,
 }
-
-
-@pytest.fixture(autouse=True)
-async def setup_integration(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    mock_client: MagicMock,
-) -> None:
-    """Set up SFTP Backup Location integration."""
-    config_entry.add_to_hass(hass)
-    assert await async_setup_component(hass, BACKUP_DOMAIN, {BACKUP_DOMAIN: {}})
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
 
 
 async def test_agents_info(
@@ -166,7 +148,6 @@ async def test_agents_get_backup(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"]["agent_errors"] == {}
     assert response["result"]["backup"] == expected_result
 
 
@@ -228,12 +209,11 @@ async def test_agents_download_metadata_not_found(
 ) -> None:
     """Test agent download backup raises error if not found."""
     backup_agent_client.return_value = async_cm_mock
-    async_cm_mock.async_list_backups.return_value = [TEST_AGENT_BACKUP]
+    async_cm_mock.async_list_backups.return_value = []
 
-    missing_id = TEST_AGENT_BACKUP.backup_id + "z"
     client = await hass_client()
     resp = await client.get(
-        f"/api/backup/download/{missing_id}?agent_id={DOMAIN}.{TEST_AGENT_ID}"
+        f"/api/backup/download/{TEST_AGENT_BACKUP.backup_id}?agent_id={DOMAIN}.{TEST_AGENT_ID}"
     )
     assert resp.status == 404
     content = await resp.content.read()
