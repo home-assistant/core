@@ -8,7 +8,7 @@ from aiocomelit import ComelitSerialBridgeObject
 from aiocomelit.const import COVER, STATE_COVER, STATE_OFF, STATE_ON
 
 from homeassistant.components.cover import CoverDeviceClass, CoverEntity, CoverState
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -98,13 +98,20 @@ class ComelitCoverEntity(
         """Return if the cover is opening."""
         return self._current_action("opening")
 
+    async def _cover_set_state(self, action: int, state: int) -> None:
+        """Set desired switch state."""
+        self._last_state = self.state
+        await self._api.set_device_status(COVER, self._device.index, action)
+        self.coordinator.data[COVER][self._device.index].status = state
+        self.async_write_ha_state()
+
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
-        await self._api.set_device_status(COVER, self._device.index, STATE_OFF)
+        await self._cover_set_state(STATE_OFF, 2)
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open cover."""
-        await self._api.set_device_status(COVER, self._device.index, STATE_ON)
+        await self._cover_set_state(STATE_ON, 1)
 
     async def async_stop_cover(self, **_kwargs: Any) -> None:
         """Stop the cover."""
@@ -112,13 +119,7 @@ class ComelitCoverEntity(
             return
 
         action = STATE_ON if self.is_closing else STATE_OFF
-        await self._api.set_device_status(COVER, self._device.index, action)
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle device update."""
-        self._last_state = self.state
-        self.async_write_ha_state()
+        await self._cover_set_state(action, 0)
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""

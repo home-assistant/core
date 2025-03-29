@@ -11,7 +11,7 @@
           'shutter': list([
             dict({
               '0': dict({
-                'human_status': 'closed',
+                'human_status': 'stopped',
                 'name': 'Cover0',
                 'power': 0.0,
                 'power_unit': 'W',
