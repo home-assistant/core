@@ -47,6 +47,7 @@ def _create_tuples(enum: type[Enum], constant_prefix: str) -> list[tuple[Enum, s
         not in [
             MediaPlayerEntityFeature.MEDIA_ANNOUNCE,
             MediaPlayerEntityFeature.MEDIA_ENQUEUE,
+            MediaPlayerEntityFeature.SEARCH_MEDIA,
         ]
     ]
 
