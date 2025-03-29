@@ -86,19 +86,19 @@
     'device_info': dict({
       'devices': list([
         dict({
-          'aree': list([
+          'alarm_areas': list([
             dict({
               '0': dict({
                 'alarm': False,
                 'alarm_memory': False,
                 'anomaly': False,
-                'armed': False,
-                'human_status': 'unknown',
+                'armed': 0,
+                'human_status': 'disarmed',
                 'in_time': False,
                 'name': 'Area0',
                 'out_time': False,
                 'p1': True,
-                'p2': False,
+                'p2': True,
                 'ready': False,
                 'sabotage': False,
               }),
@@ -106,7 +106,7 @@
           ]),
         }),
         dict({
-          'zone': list([
+          'alarm_zones': list([
             dict({
               '0': dict({
                 'human_status': 'rest',

@@ -3,6 +3,7 @@
     "step": {
       "init": {
         "title": "Pick Homematic IP access point",
+        "description": "If you are about to register a **Homematic IP HCU1**, please press the button on top of the device before you continue.\n\nThe registration process must be completed within 5 minutes.",
         "data": {
           "hapid": "Access point ID (SGTIN)",
           "pin": "[%key:common::config_flow::data::pin%]",
@@ -34,7 +35,7 @@
   "services": {
     "activate_eco_mode_with_duration": {
       "name": "Activate eco mode with duration",
-      "description": "Activates eco mode with period.",
+      "description": "Activates the eco mode for a specified duration.",
       "fields": {
         "duration": {
           "name": "Duration",
@@ -48,7 +49,7 @@
     },
     "activate_eco_mode_with_period": {
       "name": "Activate eco more with period",
-      "description": "[%key:component::homematicip_cloud::services::activate_eco_mode_with_duration::description%]",
+      "description": "Activates the eco mode until a given time.",
       "fields": {
         "endtime": {
           "name": "Endtime",
@@ -62,7 +63,7 @@
     },
     "activate_vacation": {
       "name": "Activate vacation",
-      "description": "Activates the vacation mode until the given time.",
+      "description": "Activates the vacation mode until a given time.",
       "fields": {
         "endtime": {
           "name": "[%key:component::homematicip_cloud::services::activate_eco_mode_with_period::fields::endtime::name%]",

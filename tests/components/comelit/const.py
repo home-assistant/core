@@ -1,6 +1,7 @@
 """Common stuff for Comelit SimpleHome tests."""
 
-from aiocomelit import (
+from aiocomelit.api import (
+    AlarmDataObject,
     ComelitSerialBridgeObject,
     ComelitVedoAreaObject,
     ComelitVedoZoneObject,
@@ -62,25 +63,25 @@ BRIDGE_DEVICE_QUERY = {
     SCENARIO: {},
 }
 
-VEDO_DEVICE_QUERY = {
-    "aree": {
+VEDO_DEVICE_QUERY = AlarmDataObject(
+    alarm_areas={
         0: ComelitVedoAreaObject(
             index=0,
             name="Area0",
             p1=True,
-            p2=False,
+            p2=True,
             ready=False,
-            armed=False,
+            armed=0,
             alarm=False,
             alarm_memory=False,
             sabotage=False,
             anomaly=False,
             in_time=False,
             out_time=False,
-            human_status=AlarmAreaState.UNKNOWN,
+            human_status=AlarmAreaState.DISARMED,
         )
     },
-    "zone": {
+    alarm_zones={
         0: ComelitVedoZoneObject(
             index=0,
             name="Zone0",
@@ -89,4 +90,4 @@ VEDO_DEVICE_QUERY = {
             human_status=AlarmZoneState.REST,
         )
     },
-}
+)
