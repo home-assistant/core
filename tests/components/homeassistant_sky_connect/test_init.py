@@ -3,6 +3,7 @@
 from datetime import timedelta
 from unittest.mock import patch
 
+from aiousbwatcher import InotifyNotAvailableError
 from serial.tools.list_ports_common import ListPortInfo
 
 from homeassistant.components.homeassistant_hardware.util import (
@@ -136,7 +137,13 @@ async def test_usb_device_reactivity(
 ) -> None:
     """Test setting up USB monitoring."""
 
-    assert await async_setup_component(hass, "usb", {"usb": {}})
+    # Disable the inotify subsystem to allow us to trigger rescans manually
+    with patch(
+        "homeassistant.components.usb.AIOUSBWatcher",
+        side_effect=InotifyNotAvailableError,
+    ):
+        assert await async_setup_component(hass, "usb", {"usb": {}})
+
     await hass.async_block_till_done()
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
