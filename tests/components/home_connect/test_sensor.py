@@ -691,7 +691,7 @@ async def test_event_sensors_states(
         assert hass.states.is_state(entity_id, expected_state)
 
     # Verify that the integration doesn't attempt to add the event sensors more than once
-    # If that happens, EntityPlatform does log an error with the entity's unique ID.
+    # If that happens, the EntityPlatform logs an error with the entity's unique ID.
     assert "exists" not in caplog.text
     assert entity_id not in caplog.text
     entity_entry = entity_registry.async_get(entity_id)
