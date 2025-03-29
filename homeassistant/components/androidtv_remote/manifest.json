@@ -7,6 +7,6 @@
   "integration_type": "device",
   "iot_class": "local_push",
   "loggers": ["androidtvremote2"],
-  "requirements": ["androidtvremote2==0.2.0"],
+  "requirements": ["androidtvremote2==0.2.1"],
   "zeroconf": ["_androidtvremote2._tcp.local."]
 }

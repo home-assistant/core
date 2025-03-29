@@ -145,8 +145,6 @@ def _async_get_instance(hass: HomeAssistant) -> HaAsyncZeroconf:
     if DOMAIN in hass.data:
         return cast(HaAsyncZeroconf, hass.data[DOMAIN])
 
-    logging.getLogger("zeroconf").setLevel(logging.NOTSET)
-
     zeroconf = HaZeroconf(**_async_get_zc_args(hass))
     aio_zc = HaAsyncZeroconf(zc=zeroconf)
 

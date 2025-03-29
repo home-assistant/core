@@ -57,9 +57,10 @@
     }),
     'entry': dict({
       'data': dict({
-        'host': 'fake_host',
+        'host': 'fake_bridge_host',
         'pin': '**REDACTED**',
         'port': 80,
+        'type': 'Serial bridge',
       }),
       'disabled_by': None,
       'discovery_keys': dict({
@@ -85,7 +86,7 @@
     'device_info': dict({
       'devices': list([
         dict({
-          'aree': list([
+          'alarm_areas': list([
             dict({
               '0': dict({
                 'alarm': False,
@@ -105,7 +106,7 @@
           ]),
         }),
         dict({
-          'zone': list([
+          'alarm_zones': list([
             dict({
               '0': dict({
                 'human_status': 'rest',

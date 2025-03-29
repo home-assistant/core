@@ -163,7 +163,7 @@ async def mock_async_browse(
             "title": "Fake Item 2",
             "id": FAKE_VALID_ITEM_ID + "_2",
             "hasitems": media_type == "favorites",
-            "isaudio": True,
+            "isaudio": False,
             "item_type": child_types[media_type],
             "image_url": "http://lms.internal:9000/html/images/favorites.png",
             "url": "file:///var/lib/squeezeboxserver/music/track_2.mp3",
@@ -269,6 +269,7 @@ def mock_pysqueezebox_player(uuid: str) -> MagicMock:
         mock_player.title = None
         mock_player.image_url = None
         mock_player.model = "SqueezeLite"
+        mock_player.creator = "Ralph Irving & Adrian Smith"
 
         return mock_player
 
@@ -309,7 +310,27 @@ async def configure_squeezebox_media_player_platform(
 ) -> None:
     """Configure a squeezebox config entry with appropriate mocks for media_player."""
     with (
-        patch("homeassistant.components.squeezebox.PLATFORMS", [Platform.MEDIA_PLAYER]),
+        patch(
+            "homeassistant.components.squeezebox.PLATFORMS",
+            [Platform.MEDIA_PLAYER],
+        ),
+        patch("homeassistant.components.squeezebox.Server", return_value=lms),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+
+async def configure_squeezebox_media_player_button_platform(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    lms: MagicMock,
+) -> None:
+    """Configure a squeezebox config entry with appropriate mocks for media_player."""
+    with (
+        patch(
+            "homeassistant.components.squeezebox.PLATFORMS",
+            [Platform.BUTTON],
+        ),
         patch("homeassistant.components.squeezebox.Server", return_value=lms),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -322,6 +343,15 @@ async def configured_player(
 ) -> MagicMock:
     """Fixture mocking calls to pysqueezebox Player from a configured squeezebox."""
     await configure_squeezebox_media_player_platform(hass, config_entry, lms)
+    return (await lms.async_get_players())[0]
+
+
+@pytest.fixture
+async def configured_player_with_button(
+    hass: HomeAssistant, config_entry: MockConfigEntry, lms: MagicMock
+) -> MagicMock:
+    """Fixture mocking calls to pysqueezebox Player from a configured squeezebox."""
+    await configure_squeezebox_media_player_button_platform(hass, config_entry, lms)
     return (await lms.async_get_players())[0]
 
 

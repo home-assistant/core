@@ -1,0 +1,154 @@
+# serializer version: 1
+# name: test_alarm_control_panel[amax_3000][alarm_control_panel.area1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'alarm_control_panel',
+    'entity_category': None,
+    'entity_id': 'alarm_control_panel.area1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'bosch_alarm',
+    'previous_unique_id': None,
+    'supported_features': <AlarmControlPanelEntityFeature: 3>,
+    'translation_key': None,
+    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_area_1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_alarm_control_panel[amax_3000][alarm_control_panel.area1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'changed_by': None,
+      'code_arm_required': False,
+      'code_format': None,
+      'friendly_name': 'Area1',
+      'supported_features': <AlarmControlPanelEntityFeature: 3>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'alarm_control_panel.area1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'disarmed',
+  })
+# ---
+# name: test_alarm_control_panel[b5512][alarm_control_panel.area1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'alarm_control_panel',
+    'entity_category': None,
+    'entity_id': 'alarm_control_panel.area1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'bosch_alarm',
+    'previous_unique_id': None,
+    'supported_features': <AlarmControlPanelEntityFeature: 3>,
+    'translation_key': None,
+    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_area_1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_alarm_control_panel[b5512][alarm_control_panel.area1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'changed_by': None,
+      'code_arm_required': False,
+      'code_format': None,
+      'friendly_name': 'Area1',
+      'supported_features': <AlarmControlPanelEntityFeature: 3>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'alarm_control_panel.area1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'disarmed',
+  })
+# ---
+# name: test_alarm_control_panel[solution_3000][alarm_control_panel.area1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'alarm_control_panel',
+    'entity_category': None,
+    'entity_id': 'alarm_control_panel.area1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'bosch_alarm',
+    'previous_unique_id': None,
+    'supported_features': <AlarmControlPanelEntityFeature: 3>,
+    'translation_key': None,
+    'unique_id': '1234567890_area_1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_alarm_control_panel[solution_3000][alarm_control_panel.area1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'changed_by': None,
+      'code_arm_required': False,
+      'code_format': None,
+      'friendly_name': 'Area1',
+      'supported_features': <AlarmControlPanelEntityFeature: 3>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'alarm_control_panel.area1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'disarmed',
+  })
+# ---

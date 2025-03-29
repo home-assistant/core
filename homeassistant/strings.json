@@ -47,6 +47,7 @@
         "access_token": "Access token",
         "api_key": "API key",
         "api_token": "API token",
+        "country": "Country",
         "device": "Device",
         "elevation": "Elevation",
         "email": "Email",

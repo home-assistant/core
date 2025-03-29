@@ -27,6 +27,7 @@ from homeassistant.components.media_player import (
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
+    ATTR_ENTITY_PICTURE,
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
 )
@@ -124,6 +125,10 @@ async def test_media_player_music(
     assert state.attributes.get(ATTR_MEDIA_SERIES_TITLE) is None
     assert state.attributes.get(ATTR_MEDIA_SEASON) is None
     assert state.attributes.get(ATTR_MEDIA_EPISODE) is None
+    assert (
+        state.attributes.get(ATTR_ENTITY_PICTURE)
+        == "http://localhost/Items/ALBUM-UUID/Images/Primary.jpg"
+    )
 
     entry = entity_registry.async_get(state.entity_id)
     assert entry

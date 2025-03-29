@@ -9,7 +9,7 @@
       "deviceManufacturerCode": "Yale",
       "locationId": "c4d3b2a1-09f8-765e-4d3c-2b1a09f8e7d6 ",
       "ownerId": "d47f2b19-3a6e-4c8d-bf21-9e8a7c5d134e",
-      "roomId": "94be4a1e-382a-4b7f-a5ef-fdb1a7d9f9e6",
+      "roomId": "7715151d-0314-457a-a82c-5ce48900e065",
       "components": [
         {
           "id": "main",
@@ -45,7 +45,6 @@
         }
       ],
       "createTime": "2016-11-18T23:01:19Z",
-      "parentDeviceId": "074fa784-8be8-4c70-8e22-6f5ed6f81b7e",
       "profile": {
         "id": "51b76691-3c3a-3fce-8c7c-4f9d50e5885a"
       },

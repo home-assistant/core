@@ -94,6 +94,12 @@ SUPPORTED_FEATURES_BASE = (
     | MediaPlayerEntityFeature.MEDIA_ENQUEUE
     | MediaPlayerEntityFeature.MEDIA_ANNOUNCE
     | MediaPlayerEntityFeature.SEEK
+    # we always add pause support,
+    # regardless if the underlying player actually natively supports pause
+    # because the MA behavior is to internally handle pause with stop
+    # (and a resume position) and we'd like to keep the UX consistent
+    # background info: https://github.com/home-assistant/core/issues/140118
+    | MediaPlayerEntityFeature.PAUSE
 )
 
 QUEUE_OPTION_MAP = {
@@ -697,8 +703,6 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         supported_features = SUPPORTED_FEATURES_BASE
         if PlayerFeature.SET_MEMBERS in self.player.supported_features:
             supported_features |= MediaPlayerEntityFeature.GROUPING
-        if PlayerFeature.PAUSE in self.player.supported_features:
-            supported_features |= MediaPlayerEntityFeature.PAUSE
         if self.player.mute_control != PLAYER_CONTROL_NONE:
             supported_features |= MediaPlayerEntityFeature.VOLUME_MUTE
         if self.player.volume_control != PLAYER_CONTROL_NONE:

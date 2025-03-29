@@ -83,7 +83,4 @@ rules:
   # Platinum
   async-dependency: done
   inject-websession: done
-  strict-typing:
-    status: todo
-    comment: |
-      The pyfronius library isn't strictly typed and doesn't export type information.
+  strict-typing: done

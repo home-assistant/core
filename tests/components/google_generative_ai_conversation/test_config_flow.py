@@ -21,12 +21,14 @@ from homeassistant.components.google_generative_ai_conversation.const import (
     CONF_TEMPERATURE,
     CONF_TOP_K,
     CONF_TOP_P,
+    CONF_USE_GOOGLE_SEARCH_TOOL,
     DOMAIN,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_HARM_BLOCK_THRESHOLD,
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_TOP_K,
     RECOMMENDED_TOP_P,
+    RECOMMENDED_USE_GOOGLE_SEARCH_TOOL,
 )
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
@@ -143,6 +145,7 @@ async def test_form(hass: HomeAssistant) -> None:
                 CONF_HATE_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
                 CONF_SEXUAL_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
                 CONF_DANGEROUS_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_USE_GOOGLE_SEARCH_TOOL: RECOMMENDED_USE_GOOGLE_SEARCH_TOOL,
             },
         ),
         (

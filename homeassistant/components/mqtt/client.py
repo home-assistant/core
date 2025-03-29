@@ -1022,8 +1022,6 @@ class MQTT:
         Resubscribe to all topics we were subscribed to and publish birth
         message.
         """
-        # pylint: disable-next=import-outside-toplevel
-
         if reason_code.is_failure:
             # 24: Continue authentication
             # 25: Re-authenticate

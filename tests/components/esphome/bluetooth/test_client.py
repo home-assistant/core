@@ -6,7 +6,9 @@ from aioesphomeapi import APIClient, APIVersion, BluetoothProxyFeature, DeviceIn
 from bleak.exc import BleakError
 from bleak_esphome.backend.client import ESPHomeClient, ESPHomeClientData
 from bleak_esphome.backend.device import ESPHomeBluetoothDevice
-from bleak_esphome.backend.scanner import ESPHomeScanner
+from bleak_esphome.backend.scanner import (  # pylint: disable=no-name-in-module
+    ESPHomeScanner,
+)
 import pytest
 
 from homeassistant.components.bluetooth import HaBluetoothConnector

@@ -19,10 +19,34 @@
         },
         "description": "Set up an Azure (Blob) storage account to be used for backups.",
         "title": "Add Azure storage account"
+      },
+      "reauth_confirm": {
+        "data": {
+          "storage_account_key": "[%key:component::azure_storage::config::step::user::data::storage_account_key%]"
+        },
+        "data_description": {
+          "storage_account_key": "[%key:component::azure_storage::config::step::user::data_description::storage_account_key%]"
+        },
+        "description": "Provide a new storage account key.",
+        "title": "Reauthenticate Azure storage account"
+      },
+      "reconfigure": {
+        "data": {
+          "container_name": "[%key:component::azure_storage::config::step::user::data::container_name%]",
+          "storage_account_key": "[%key:component::azure_storage::config::step::user::data::storage_account_key%]"
+        },
+        "data_description": {
+          "container_name": "[%key:component::azure_storage::config::step::user::data_description::container_name%]",
+          "storage_account_key": "[%key:component::azure_storage::config::step::user::data_description::storage_account_key%]"
+        },
+        "description": "Change the settings of the Azure storage integration.",
+        "title": "Reconfigure Azure storage account"
       }
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "issues": {

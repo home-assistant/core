@@ -1371,6 +1371,147 @@
     'state': 'unknown',
   })
 # ---
+# name: test_binary_sensor[binary_sensor.test_located_at_favorite-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.test_located_at_favorite',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Located at favorite',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'located_at_favorite',
+    'unique_id': 'LRW3F7EK4NC700000-located_at_favorite',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.test_located_at_favorite-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Located at favorite',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_located_at_favorite',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.test_located_at_home-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.test_located_at_home',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Located at home',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'located_at_home',
+    'unique_id': 'LRW3F7EK4NC700000-located_at_home',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.test_located_at_home-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Located at home',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_located_at_home',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.test_located_at_work-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.test_located_at_work',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Located at work',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'located_at_work',
+    'unique_id': 'LRW3F7EK4NC700000-located_at_work',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.test_located_at_work-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Located at work',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_located_at_work',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_binary_sensor[binary_sensor.test_offroad_lightbar-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1490,7 +1631,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Pin to drive enabled',
+    'original_name': 'PIN to Drive enabled',
     'platform': 'teslemetry',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1502,7 +1643,7 @@
 # name: test_binary_sensor[binary_sensor.test_pin_to_drive_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Pin to drive enabled',
+      'friendly_name': 'Test PIN to Drive enabled',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_pin_to_drive_enabled',
@@ -2801,6 +2942,45 @@
     'state': 'unknown',
   })
 # ---
+# name: test_binary_sensor_refresh[binary_sensor.test_located_at_favorite-statealt]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Located at favorite',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_located_at_favorite',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_binary_sensor_refresh[binary_sensor.test_located_at_home-statealt]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Located at home',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_located_at_home',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_binary_sensor_refresh[binary_sensor.test_located_at_work-statealt]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Located at work',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_located_at_work',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_binary_sensor_refresh[binary_sensor.test_offroad_lightbar-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -2830,7 +3010,7 @@
 # name: test_binary_sensor_refresh[binary_sensor.test_pin_to_drive_enabled-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Pin to drive enabled',
+      'friendly_name': 'Test PIN to Drive enabled',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_pin_to_drive_enabled',

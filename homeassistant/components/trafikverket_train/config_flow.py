@@ -86,8 +86,8 @@ async def validate_station(
     except UnknownError as error:
         _LOGGER.error("Unknown error occurred during validation %s", str(error))
         errors["base"] = "cannot_connect"
-    except Exception as error:  # noqa: BLE001
-        _LOGGER.error("Unknown exception occurred during validation %s", str(error))
+    except Exception:
+        _LOGGER.exception("Unknown exception occurred during validation")
         errors["base"] = "cannot_connect"
 
     return (stations, errors)

@@ -2,12 +2,14 @@
 
 from collections.abc import Callable, Mapping
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
-from homeassistant.const import EVENT_HOMEASSISTANT_START
+from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
+from homeassistant.const import CONF_PATH, CONF_VARIABLES, EVENT_HOMEASSISTANT_START
 from homeassistant.core import Context, CoreState, Event, HomeAssistant, callback
 from homeassistant.helpers import condition, discovery, trigger as trigger_helper
 from homeassistant.helpers.script import Script
+from homeassistant.helpers.script_variables import ScriptVariables
 from homeassistant.helpers.trace import trace_get
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -22,7 +24,7 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
 
     REMOVE_TRIGGER = object()
 
-    def __init__(self, hass: HomeAssistant, config: dict[str, Any]) -> None:
+    def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
         """Instantiate trigger data."""
         super().__init__(
             hass, _LOGGER, config_entry=None, name="Trigger Update Coordinator"
@@ -32,6 +34,18 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
         self._unsub_start: Callable[[], None] | None = None
         self._unsub_trigger: Callable[[], None] | None = None
         self._script: Script | None = None
+        self._run_variables: ScriptVariables | None = None
+        self._blueprint_inputs: dict | None = None
+        if config is not None:
+            self._run_variables = config.get(CONF_VARIABLES)
+            self._blueprint_inputs = getattr(config, "raw_blueprint_inputs", None)
+
+    @property
+    def referenced_blueprint(self) -> str | None:
+        """Return referenced blueprint or None."""
+        if self._blueprint_inputs is None:
+            return None
+        return cast(str, self._blueprint_inputs[CONF_USE_BLUEPRINT][CONF_PATH])
 
     @property
     def unique_id(self) -> str | None:
@@ -104,6 +118,10 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
     async def _handle_triggered_with_script(
         self, run_variables: TemplateVarsType, context: Context | None = None
     ) -> None:
+        # Render run variables after the trigger, before checking conditions.
+        if self._run_variables:
+            run_variables = self._run_variables.async_render(self.hass, run_variables)
+
         if not self._check_condition(run_variables):
             return
         # Create a context referring to the trigger context.
@@ -119,6 +137,9 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
     async def _handle_triggered(
         self, run_variables: TemplateVarsType, context: Context | None = None
     ) -> None:
+        if self._run_variables:
+            run_variables = self._run_variables.async_render(self.hass, run_variables)
+
         if not self._check_condition(run_variables):
             return
         self._execute_update(run_variables, context)

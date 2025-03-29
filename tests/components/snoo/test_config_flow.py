@@ -13,11 +13,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import create_entry
-from .conftest import MockedSnoo
 
 
 async def test_config_flow_success(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, bypass_api: MockedSnoo
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, bypass_api: AsyncMock
 ) -> None:
     """Test we create the entry successfully."""
     result = await hass.config_entries.flow.async_init(
@@ -55,7 +54,7 @@ async def test_config_flow_success(
 async def test_form_auth_issues(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    bypass_api: MockedSnoo,
+    bypass_api: AsyncMock,
     exception,
     error_msg,
 ) -> None:
@@ -64,7 +63,7 @@ async def test_form_auth_issues(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     # Set Authorize to fail.
-    bypass_api.set_auth_error(exception)
+    bypass_api.authorize.side_effect = exception
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -73,10 +72,9 @@ async def test_form_auth_issues(
         },
     )
     # Reset auth back to the original
-    bypass_api.set_auth_error(None)
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"base": error_msg}
-
+    bypass_api.authorize.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -84,7 +82,6 @@ async def test_form_auth_issues(
             CONF_PASSWORD: "test-password",
         },
     )
-    await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "test-username"
@@ -96,7 +93,7 @@ async def test_form_auth_issues(
 
 
 async def test_account_already_configured(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, bypass_api
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, bypass_api: AsyncMock
 ) -> None:
     """Ensure we abort if the config flow already exists."""
     create_entry(hass)

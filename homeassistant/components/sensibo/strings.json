@@ -330,7 +330,7 @@
       "timer_on_switch": {
         "name": "Timer",
         "state_attributes": {
-          "id": { "name": "Id" },
+          "id": { "name": "ID" },
           "turn_on": {
             "name": "Turns on",
             "state": {
@@ -594,7 +594,7 @@
   "issues": {
     "deprecated_entity_horizontalswing": {
       "title": "The Sensibo {name} entity is deprecated",
-      "description": "The Sensibo entity `{entity}` is deprecated and will be removed in a future release.\nPlease update your automations and scripts to use the `horizontal_swing` attribute part of the `climate` entity instead.\n, Disable the `{entity}` and reload the config entry or restart Home Assistant to fix this issue."
+      "description": "The Sensibo entity `{entity}` is deprecated and will be removed in a future release.\nPlease update your automations and scripts to use the `horizontal_swing` attribute part of the `climate` entity instead.\nDisable `{entity}` and reload the config entry or restart Home Assistant to fix this issue."
     }
   }
 }

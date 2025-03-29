@@ -30,6 +30,7 @@ from homeassistant.backup_restore import (
 from homeassistant.const import __version__ as HAVERSION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
+    frame,
     instance_id,
     integration_platform,
     issue_registry as ir,
@@ -64,6 +65,7 @@ from .models import (
     AgentBackup,
     BackupError,
     BackupManagerError,
+    BackupNotFound,
     BackupReaderWriterError,
     BaseBackup,
     Folder,
@@ -228,6 +230,13 @@ class RestoreBackupEvent(ManagerStateEvent):
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
+class BackupPlatformEvent:
+    """Backup platform class."""
+
+    domain: str
+
+
+@dataclass(frozen=True, kw_only=True, slots=True)
 class BlockedEvent(ManagerStateEvent):
     """Backup manager blocked, Home Assistant is starting."""
 
@@ -349,10 +358,13 @@ class BackupManager:
 
         # Latest backup event and backup event subscribers
         self.last_event: ManagerStateEvent = BlockedEvent()
-        self.last_non_idle_event: ManagerStateEvent | None = None
+        self.last_action_event: ManagerStateEvent | None = None
         self._backup_event_subscriptions = hass.data[
             DATA_BACKUP
         ].backup_event_subscriptions
+        self._backup_platform_event_subscriptions = hass.data[
+            DATA_BACKUP
+        ].backup_platform_event_subscriptions
 
     async def async_setup(self) -> None:
         """Set up the backup manager."""
@@ -463,6 +475,9 @@ class BackupManager:
         LOGGER.debug("%s platforms loaded in total", len(self.platforms))
         LOGGER.debug("%s agents loaded in total", len(self.backup_agents))
         LOGGER.debug("%s local agents loaded in total", len(self.local_backup_agents))
+        event = BackupPlatformEvent(domain=integration_domain)
+        for subscription in self._backup_platform_event_subscriptions:
+            subscription(event)
 
     async def async_pre_backup_actions(self) -> None:
         """Perform pre backup actions."""
@@ -665,6 +680,8 @@ class BackupManager:
         )
         for idx, result in enumerate(get_backup_results):
             agent_id = agent_ids[idx]
+            if isinstance(result, BackupNotFound):
+                continue
             if isinstance(result, BackupAgentError):
                 agent_errors[agent_id] = result
                 continue
@@ -676,7 +693,14 @@ class BackupManager:
                 continue
             if isinstance(result, BaseException):
                 raise result  # unexpected error
+            # Check for None to be backwards compatible with the old BackupAgent API,
+            # this can be removed in HA Core 2025.10
             if not result:
+                frame.report_usage(
+                    "returns None from BackupAgent.async_get_backup",
+                    breaks_in_ha_version="2025.10",
+                    integration_domain=agent_id.partition(".")[0],
+                )
                 continue
             if backup is None:
                 if known_backup := self.known_backups.get(backup_id):
@@ -740,6 +764,8 @@ class BackupManager:
         )
         for idx, result in enumerate(delete_backup_results):
             agent_id = agent_ids[idx]
+            if isinstance(result, BackupNotFound):
+                continue
             if isinstance(result, BackupAgentError):
                 agent_errors[agent_id] = result
                 continue
@@ -849,7 +875,7 @@ class BackupManager:
         agent_errors = {
             backup_id: error
             for backup_id, error in zip(backup_ids, delete_results, strict=True)
-            if error
+            if error and not isinstance(error, BackupNotFound)
         }
         if agent_errors:
             LOGGER.error(
@@ -1281,7 +1307,20 @@ class BackupManager:
     ) -> None:
         """Initiate restoring a backup."""
         agent = self.backup_agents[agent_id]
-        if not await agent.async_get_backup(backup_id):
+        try:
+            backup = await agent.async_get_backup(backup_id)
+        except BackupNotFound as err:
+            raise BackupManagerError(
+                f"Backup {backup_id} not found in agent {agent_id}"
+            ) from err
+        # Check for None to be backwards compatible with the old BackupAgent API,
+        # this can be removed in HA Core 2025.10
+        if not backup:
+            frame.report_usage(
+                "returns None from BackupAgent.async_get_backup",
+                breaks_in_ha_version="2025.10",
+                integration_domain=agent_id.partition(".")[0],
+            )
             raise BackupManagerError(
                 f"Backup {backup_id} not found in agent {agent_id}"
             )
@@ -1311,7 +1350,7 @@ class BackupManager:
             LOGGER.debug("Backup state: %s -> %s", current_state, new_state)
         self.last_event = event
         if not isinstance(event, (BlockedEvent, IdleEvent)):
-            self.last_non_idle_event = event
+            self.last_action_event = event
         for subscription in self._backup_event_subscriptions:
             subscription(event)
 
@@ -1369,7 +1408,20 @@ class BackupManager:
             agent = self.backup_agents[agent_id]
         except KeyError as err:
             raise BackupManagerError(f"Invalid agent selected: {agent_id}") from err
-        if not await agent.async_get_backup(backup_id):
+        try:
+            backup = await agent.async_get_backup(backup_id)
+        except BackupNotFound as err:
+            raise BackupManagerError(
+                f"Backup {backup_id} not found in agent {agent_id}"
+            ) from err
+        # Check for None to be backwards compatible with the old BackupAgent API,
+        # this can be removed in HA Core 2025.10
+        if not backup:
+            frame.report_usage(
+                "returns None from BackupAgent.async_get_backup",
+                breaks_in_ha_version="2025.10",
+                integration_domain=agent_id.partition(".")[0],
+            )
             raise BackupManagerError(
                 f"Backup {backup_id} not found in agent {agent_id}"
             )
@@ -1674,7 +1726,9 @@ class CoreBackupReaderWriter(BackupReaderWriter):
             """Filter to filter excludes."""
 
             for exclude in excludes:
-                if not path.match(exclude):
+                # The home assistant core configuration directory is added as "data"
+                # in the tar file, so we need to prefix that path to the filters.
+                if not path.full_match(f"data/{exclude}"):
                     continue
                 LOGGER.debug("Ignoring %s because of %s", path, exclude)
                 return True

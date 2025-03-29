@@ -21,8 +21,8 @@
     "step": {
       "init": {
         "data": {
-          "ffmpeg_arguments": "Arguments passed to ffmpeg for cameras",
-          "timeout": "Request Timeout (seconds)"
+          "ffmpeg_arguments": "Arguments passed to FFmpeg for cameras",
+          "timeout": "Request timeout (seconds)"
         }
       }
     }

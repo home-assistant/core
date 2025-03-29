@@ -686,7 +686,7 @@
     'state': '20.0',
   })
 # ---
-# name: test_sensors[air_purifier][sensor.air_purifier_vocs-entry]
+# name: test_sensors[air_purifier][sensor.air_purifier_volatile_organic_compounds_parts-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -701,7 +701,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.air_purifier_vocs',
+    'entity_id': 'sensor.air_purifier_volatile_organic_compounds_parts',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -713,7 +713,7 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: 'volatile_organic_compounds_parts'>,
     'original_icon': None,
-    'original_name': 'VOCs',
+    'original_name': 'Volatile organic compounds parts',
     'platform': 'matter',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -722,16 +722,16 @@
     'unit_of_measurement': 'ppm',
   })
 # ---
-# name: test_sensors[air_purifier][sensor.air_purifier_vocs-state]
+# name: test_sensors[air_purifier][sensor.air_purifier_volatile_organic_compounds_parts-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'volatile_organic_compounds_parts',
-      'friendly_name': 'Air Purifier VOCs',
+      'friendly_name': 'Air Purifier Volatile organic compounds parts',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'ppm',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.air_purifier_vocs',
+    'entity_id': 'sensor.air_purifier_volatile_organic_compounds_parts',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1167,7 +1167,7 @@
     'state': '20.08',
   })
 # ---
-# name: test_sensors[air_quality_sensor][sensor.lightfi_aq1_air_quality_sensor_vocs-entry]
+# name: test_sensors[air_quality_sensor][sensor.lightfi_aq1_air_quality_sensor_volatile_organic_compounds_parts-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1182,7 +1182,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.lightfi_aq1_air_quality_sensor_vocs',
+    'entity_id': 'sensor.lightfi_aq1_air_quality_sensor_volatile_organic_compounds_parts',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1194,7 +1194,7 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: 'volatile_organic_compounds_parts'>,
     'original_icon': None,
-    'original_name': 'VOCs',
+    'original_name': 'Volatile organic compounds parts',
     'platform': 'matter',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1203,16 +1203,16 @@
     'unit_of_measurement': 'ppm',
   })
 # ---
-# name: test_sensors[air_quality_sensor][sensor.lightfi_aq1_air_quality_sensor_vocs-state]
+# name: test_sensors[air_quality_sensor][sensor.lightfi_aq1_air_quality_sensor_volatile_organic_compounds_parts-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'volatile_organic_compounds_parts',
-      'friendly_name': 'lightfi-aq1-air-quality-sensor VOCs',
+      'friendly_name': 'lightfi-aq1-air-quality-sensor Volatile organic compounds parts',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'ppm',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.lightfi_aq1_air_quality_sensor_vocs',
+    'entity_id': 'sensor.lightfi_aq1_air_quality_sensor_volatile_organic_compounds_parts',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

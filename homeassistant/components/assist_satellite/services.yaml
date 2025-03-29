@@ -8,9 +8,14 @@ announce:
     message:
       required: false
       example: "Time to wake up!"
+      default: ""
       selector:
         text:
     media_id:
+      required: false
+      selector:
+        text:
+    preannounce_media_id:
       required: false
       selector:
         text:
@@ -24,6 +29,7 @@ start_conversation:
     start_message:
       required: false
       example: "You left the lights on in the living room. Turn them off?"
+      default: ""
       selector:
         text:
     start_media_id:
@@ -31,6 +37,10 @@ start_conversation:
       selector:
         text:
     extra_system_prompt:
+      required: false
+      selector:
+        text:
+    preannounce_media_id:
       required: false
       selector:
         text:

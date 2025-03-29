@@ -101,12 +101,15 @@ MOCK_BLOCKS = [
             "overpower": 0,
             "power": 53.4,
             "energy": 1234567.89,
+            "output": True,
+            "totalWorkTime": 3600,
         },
         channel="0",
         type="relay",
         overpower=0,
         power=53.4,
         energy=1234567.89,
+        totalWorkTime=3600,
         description="relay_0",
         set_state=AsyncMock(side_effect=lambda turn: {"ison": turn == "on"}),
     ),
@@ -133,11 +136,20 @@ MOCK_BLOCKS = [
         set_state=AsyncMock(side_effect=mock_light_set_state),
     ),
     Mock(
-        sensor_ids={"motion": 0, "temp": 22.1, "gas": "mild", "motionActive": 1},
+        sensor_ids={
+            "motion": 0,
+            "temp": 22.1,
+            "gas": "mild",
+            "motionActive": 1,
+            "sensorOp": "normal",
+            "selfTest": "pending",
+        },
         channel="0",
         motion=0,
         temp=22.1,
         gas="mild",
+        sensorOp="normal",
+        selfTest="pending",
         targetTemp=4,
         description="sensor_0",
         type="sensor",
@@ -207,7 +219,7 @@ MOCK_CONFIG = {
     },
     "sys": {
         "ui_data": {},
-        "device": {"name": "Test name"},
+        "device": {"name": "Test name", "mac": MOCK_MAC},
     },
     "wifi": {"sta": {"enable": True}, "sta1": {"enable": False}},
     "ws": {"enable": False, "server": None},
@@ -312,7 +324,11 @@ MOCK_STATUS_COAP = {
 
 
 MOCK_STATUS_RPC = {
-    "switch:0": {"output": True},
+    "switch:0": {
+        "id": 0,
+        "output": True,
+        "apower": 85.3,
+    },
     "input:0": {"id": 0, "state": None},
     "input:1": {"id": 1, "percent": 89, "xpercent": 8.9},
     "input:2": {
@@ -497,6 +513,10 @@ def _mock_blu_rtv_device(version: str | None = None):
         firmware_version="some fw string",
         initialized=True,
         connected=True,
+        script_getcode=AsyncMock(
+            side_effect=lambda script_id: {"data": MOCK_SCRIPTS[script_id - 1]}
+        ),
+        xmod_info={},
     )
     type(device).name = PropertyMock(return_value="Test name")
     return device

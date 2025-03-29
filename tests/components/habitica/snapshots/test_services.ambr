@@ -736,6 +736,16 @@
           'winner': None,
         }),
         'checklist': list([
+          dict({
+            'completed': False,
+            'id': 'fccc26f2-1e2b-4bf8-9dd0-a405be261036',
+            'text': 'Checklist-item1',
+          }),
+          dict({
+            'completed': True,
+            'id': '5a897af4-ea94-456a-a2bd-f336bcd79509',
+            'text': 'Checklist-item2',
+          }),
         ]),
         'collapseChecklist': False,
         'completed': False,
@@ -1106,6 +1116,16 @@
           'winner': None,
         }),
         'checklist': list([
+          dict({
+            'completed': False,
+            'id': 'a2a6702d-58e1-46c2-a3ce-422d525cc0b6',
+            'text': 'Checklist-item1',
+          }),
+          dict({
+            'completed': True,
+            'id': '9f64e1cd-b0ab-4577-8344-c7a5e1827997',
+            'text': 'Checklist-item2',
+          }),
         ]),
         'collapseChecklist': False,
         'completed': False,
@@ -1834,6 +1854,16 @@
           'winner': None,
         }),
         'checklist': list([
+          dict({
+            'completed': False,
+            'id': 'fccc26f2-1e2b-4bf8-9dd0-a405be261036',
+            'text': 'Checklist-item1',
+          }),
+          dict({
+            'completed': True,
+            'id': '5a897af4-ea94-456a-a2bd-f336bcd79509',
+            'text': 'Checklist-item2',
+          }),
         ]),
         'collapseChecklist': False,
         'completed': False,
@@ -2978,6 +3008,16 @@
           'winner': None,
         }),
         'checklist': list([
+          dict({
+            'completed': False,
+            'id': 'fccc26f2-1e2b-4bf8-9dd0-a405be261036',
+            'text': 'Checklist-item1',
+          }),
+          dict({
+            'completed': True,
+            'id': '5a897af4-ea94-456a-a2bd-f336bcd79509',
+            'text': 'Checklist-item2',
+          }),
         ]),
         'collapseChecklist': False,
         'completed': False,
@@ -3348,6 +3388,16 @@
           'winner': None,
         }),
         'checklist': list([
+          dict({
+            'completed': False,
+            'id': 'a2a6702d-58e1-46c2-a3ce-422d525cc0b6',
+            'text': 'Checklist-item1',
+          }),
+          dict({
+            'completed': True,
+            'id': '9f64e1cd-b0ab-4577-8344-c7a5e1827997',
+            'text': 'Checklist-item2',
+          }),
         ]),
         'collapseChecklist': False,
         'completed': False,
@@ -4481,6 +4531,16 @@
           'winner': None,
         }),
         'checklist': list([
+          dict({
+            'completed': False,
+            'id': 'a2a6702d-58e1-46c2-a3ce-422d525cc0b6',
+            'text': 'Checklist-item1',
+          }),
+          dict({
+            'completed': True,
+            'id': '9f64e1cd-b0ab-4577-8344-c7a5e1827997',
+            'text': 'Checklist-item2',
+          }),
         ]),
         'collapseChecklist': False,
         'completed': False,
@@ -5062,6 +5122,16 @@
           'winner': None,
         }),
         'checklist': list([
+          dict({
+            'completed': False,
+            'id': 'a2a6702d-58e1-46c2-a3ce-422d525cc0b6',
+            'text': 'Checklist-item1',
+          }),
+          dict({
+            'completed': True,
+            'id': '9f64e1cd-b0ab-4577-8344-c7a5e1827997',
+            'text': 'Checklist-item2',
+          }),
         ]),
         'collapseChecklist': False,
         'completed': False,
@@ -5615,6 +5685,16 @@
           'winner': None,
         }),
         'checklist': list([
+          dict({
+            'completed': False,
+            'id': 'fccc26f2-1e2b-4bf8-9dd0-a405be261036',
+            'text': 'Checklist-item1',
+          }),
+          dict({
+            'completed': True,
+            'id': '5a897af4-ea94-456a-a2bd-f336bcd79509',
+            'text': 'Checklist-item2',
+          }),
         ]),
         'collapseChecklist': False,
         'completed': False,
@@ -6137,6 +6217,16 @@
           'winner': None,
         }),
         'checklist': list([
+          dict({
+            'completed': False,
+            'id': 'fccc26f2-1e2b-4bf8-9dd0-a405be261036',
+            'text': 'Checklist-item1',
+          }),
+          dict({
+            'completed': True,
+            'id': '5a897af4-ea94-456a-a2bd-f336bcd79509',
+            'text': 'Checklist-item2',
+          }),
         ]),
         'collapseChecklist': False,
         'completed': False,
