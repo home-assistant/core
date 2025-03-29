@@ -25,7 +25,7 @@ rules:
 
   # Silver
   action-exceptions: done
-  config-entry-unloading: todo
+  config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
     comment: Integration has no configuration options
@@ -46,10 +46,16 @@ rules:
     status: exempt
     comment: Device is not connected to an ip network. Other information from discovery is immutable and does not require updating.
   discovery: done
-  docs-data-update: todo
+  docs-data-update:
+    status: exempt
+    comment: Integration is local push
   docs-examples: todo
-  docs-known-limitations: todo
-  docs-supported-devices: todo
+  docs-known-limitations:
+    status: exempt
+    comment: There are no known limitations
+  docs-supported-devices:
+    status: exempt
+    comment: The integration doesn't support devices directly. It presents devices that are players on the MA server so the limitation is on the server not the integration
   docs-supported-functions: todo
   docs-troubleshooting: todo
   docs-use-cases: todo
