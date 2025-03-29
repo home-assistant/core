@@ -22,10 +22,12 @@ async def async_setup_entry(
     """Add events for a config entry."""
     entry_data = entry.runtime_data
     async_add_entities(
-        SmartThingsButtonEvent(entry_data.client, entry_data.rooms, device, component)
+        SmartThingsButtonEvent(
+            entry_data.client, device, device.device.components[component]
+        )
         for device in entry_data.devices.values()
-        for component in device.device.components
-        if Capability.BUTTON in component.capabilities
+        for component, capabilities in device.status.items()
+        if Capability.BUTTON in capabilities
     )
 
 
@@ -38,14 +40,11 @@ class SmartThingsButtonEvent(SmartThingsEntity, EventEntity):
     def __init__(
         self,
         client: SmartThings,
-        rooms: dict[str, str],
         device: FullDevice,
         component: Component,
     ) -> None:
         """Init the class."""
-        super().__init__(
-            client, device, rooms, {Capability.BUTTON}, component=component.id
-        )
+        super().__init__(client, device, {Capability.BUTTON}, component=component.id)
         self._attr_name = component.label
         self._attr_unique_id = (
             f"{device.device.device_id}_{component.id}_{Capability.BUTTON}"
@@ -59,5 +58,6 @@ class SmartThingsButtonEvent(SmartThingsEntity, EventEntity):
         )
 
     def _update_handler(self, event: DeviceEvent) -> None:
-        self._trigger_event(cast(str, event.value))
-        self.async_write_ha_state()
+        if event.attribute is Attribute.BUTTON:
+            self._trigger_event(cast(str, event.value))
+        super()._update_handler(event)

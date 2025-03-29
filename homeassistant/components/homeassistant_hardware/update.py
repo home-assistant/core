@@ -199,7 +199,7 @@ class BaseFirmwareUpdateEntity(
         # This entity is not currently associated with a device so we must manually
         # give it a name
         self._attr_name = f"{self._config_entry.title} Update"
-        self._attr_title = self.entity_description.firmware_name or "unknown"
+        self._attr_title = self.entity_description.firmware_name or "Unknown"
 
         if (
             self._current_firmware_info is None
