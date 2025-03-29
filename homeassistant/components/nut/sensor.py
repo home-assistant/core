@@ -1097,6 +1097,6 @@ class NUTSensor(NUTBaseEntity, SensorEntity):
 def _format_display_state(status: dict[str, str]) -> str:
     """Return UPS display state."""
     try:
-        return " ".join(STATE_TYPES[state] for state in status[KEY_STATUS].split())
+        return ", ".join(STATE_TYPES[state] for state in status[KEY_STATUS].split())
     except KeyError:
         return STATE_UNKNOWN
