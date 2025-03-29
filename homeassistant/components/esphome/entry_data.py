@@ -312,12 +312,9 @@ class RuntimeEntryData:
 
         # Make a dict of the EntityInfo by type and send
         # them to the listeners for each specific EntityInfo type
-        infos_by_type: dict[type[EntityInfo], list[EntityInfo]] = {}
+        infos_by_type: dict[type[EntityInfo], list[EntityInfo]] = defaultdict(list)
         for info in infos:
-            info_type = type(info)
-            if info_type not in infos_by_type:
-                infos_by_type[info_type] = []
-            infos_by_type[info_type].append(info)
+            infos_by_type[type(info)].append(info)
 
         for type_, callbacks in self.entity_info_callbacks.items():
             # If all entities for a type are removed, we
