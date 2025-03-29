@@ -78,7 +78,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         """List of charge slots."""
         client = __get_client(service_call)
 
-        return {"slots": client.slots}
+        return {"slots": [slot.to_dict() for slot in client.slots]}
 
     async def set_price_cap(
         service_call: ServiceCall,
