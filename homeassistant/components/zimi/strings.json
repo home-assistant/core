@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Zimi - Discover Device(s)",
+        "title": "Zimi - Discover device(s)",
         "description": "Discover and auto-configure Zimi Cloud Connect device."
       },
       "selection": {
@@ -14,7 +14,7 @@
         }
       },
       "manual": {
-        "title": "Zimi - Configure Device",
+        "title": "Zimi - Configure device",
         "description": "Enter details of your Zimi Cloud Connect device.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
@@ -35,7 +35,7 @@
       "duplicate_entry": "Duplicate configuration entry: {error_detail}",
       "invalid_host": "Invalid hostname",
       "invalid_mac": "Invalid MAC address",
-      "mismatched_mac": "Configured MAC mismatch: {error_detail}",
+      "mismatched_mac": "Mismatched MAC address: {error_detail}",
       "connection_refused": "Connection refused",
       "discovery_failure": "ZCC discovery on LAN failed - manually define host, port and mac."
     },
