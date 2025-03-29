@@ -1167,7 +1167,7 @@ homematicip==1.1.7
 horimote==0.4.1
 
 # homeassistant.components.dreo
-hscloud==1.0.5
+hscloud==1.0.6
 
 # homeassistant.components.remember_the_milk
 httplib2==0.20.4
