@@ -47,6 +47,7 @@ def _create_tuples(enum: type[Enum], constant_prefix: str) -> list[tuple[Enum, s
         not in [
             MediaPlayerEntityFeature.MEDIA_ANNOUNCE,
             MediaPlayerEntityFeature.MEDIA_ENQUEUE,
+            MediaPlayerEntityFeature.SEARCH_MEDIA,
         ]
     ]
 
@@ -315,6 +316,7 @@ async def test_media_browse(
         "media_content_id": "mock-id",
         "can_play": False,
         "can_expand": True,
+        "can_search": False,
         "children_media_class": None,
         "thumbnail": None,
         "not_shown": 0,
