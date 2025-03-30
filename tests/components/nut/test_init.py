@@ -4,6 +4,7 @@ from copy import deepcopy
 from unittest.mock import patch
 
 from aionut import NUTError, NUTLoginError
+import pytest
 
 from homeassistant.components.nut.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -56,7 +57,10 @@ async def test_async_setup_entry(hass: HomeAssistant) -> None:
         assert not hass.data.get(DOMAIN)
 
 
-async def test_config_not_ready(hass: HomeAssistant) -> None:
+async def test_config_not_ready(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test for setup failure if connection to broker is missing."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -64,6 +68,8 @@ async def test_config_not_ready(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
+    nut_error_message = "Something wrong happened"
+    error_message = f"Error fetching UPS state: {nut_error_message}"
     with (
         patch(
             "homeassistant.components.nut.AIONUTClient.list_ups",
@@ -71,15 +77,20 @@ async def test_config_not_ready(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.nut.AIONUTClient.list_vars",
-            side_effect=NUTError,
+            side_effect=NUTError(nut_error_message),
         ),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         assert entry.state is ConfigEntryState.SETUP_RETRY
 
+        assert error_message in caplog.text
 
-async def test_auth_fails(hass: HomeAssistant) -> None:
+
+async def test_auth_fails(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test for setup failure if auth has changed."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -87,6 +98,8 @@ async def test_auth_fails(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
+    nut_error_message = "Something wrong happened"
+    error_message = f"Device authentication error: {nut_error_message}"
     with (
         patch(
             "homeassistant.components.nut.AIONUTClient.list_ups",
@@ -94,12 +107,14 @@ async def test_auth_fails(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.nut.AIONUTClient.list_vars",
-            side_effect=NUTLoginError,
+            side_effect=NUTLoginError(nut_error_message),
         ),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         assert entry.state is ConfigEntryState.SETUP_ERROR
+
+        assert error_message in caplog.text
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1

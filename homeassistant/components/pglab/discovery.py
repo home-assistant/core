@@ -34,12 +34,14 @@ if TYPE_CHECKING:
 
 # Supported platforms.
 PLATFORMS = [
+    Platform.COVER,
     Platform.SENSOR,
     Platform.SWITCH,
 ]
 
 # Used to create a new component entity.
 CREATE_NEW_ENTITY = {
+    Platform.COVER: "pglab_create_new_entity_cover",
     Platform.SENSOR: "pglab_create_new_entity_sensor",
     Platform.SWITCH: "pglab_create_new_entity_switch",
 }
@@ -249,6 +251,13 @@ class PGLabDiscovery:
                 hass, config_entry, pglab_device
             )
             self._discovered[pglab_device.id] = discovery_info
+
+            # Create all new cover entities.
+            for s in pglab_device.shutters:
+                # the HA entity is not yet created, send a message to create it
+                async_dispatcher_send(
+                    hass, CREATE_NEW_ENTITY[Platform.COVER], pglab_device, s
+                )
 
             # Create all new relay entities.
             for r in pglab_device.relays:
