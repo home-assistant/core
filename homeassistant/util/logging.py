@@ -22,6 +22,8 @@ from homeassistant.core import (
 
 _LOGGER = logging.getLogger(__name__)
 
+ALLOWED_NOISY_MODULES = {"homeassistant.setup"}
+
 
 class HomeAssistantQueueListener(logging.handlers.QueueListener):
     """Custom QueueListener to watch for noisy loggers."""
@@ -53,7 +55,11 @@ class HomeAssistantQueueListener(logging.handlers.QueueListener):
             self._reset_counters(record.created)
 
         module_name = record.name
-        if module_name == __name__ or module_name in self._warned_modules:
+        if (
+            module_name == __name__
+            or module_name in self._warned_modules
+            or module_name in ALLOWED_NOISY_MODULES
+        ):
             return
 
         self._log_counts[module_name] += 1
