@@ -157,8 +157,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool:
     )
 
     connections: set[tuple[str, str]] | None = None
-    if data.device_info.macaddr is not None:
-        connections = {(CONNECTION_NETWORK_MAC, data.device_info.macaddr)}
+    if data.device_info.mac_address is not None:
+        connections = {(CONNECTION_NETWORK_MAC, data.device_info.mac_address)}
 
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
@@ -252,7 +252,7 @@ class NUTDeviceInfo:
     model_id: str | None = None
     firmware: str | None = None
     serial: str | None = None
-    macaddr: str | None = None
+    mac_address: str | None = None
     device_location: str | None = None
 
 
@@ -316,12 +316,18 @@ class PyNUTData:
         model_id: str | None = self._status.get("device.part")
         firmware = _firmware_from_status(self._status)
         serial = _serial_from_status(self._status)
-        macaddr: str | None = self._status.get("device.macaddr")
-        if macaddr is not None:
-            macaddr = format_mac(macaddr.rstrip().replace(" ", ":"))
+        mac_address: str | None = self._status.get("device.macaddr")
+        if mac_address is not None:
+            mac_address = format_mac(mac_address.rstrip().replace(" ", ":"))
         device_location: str | None = self._status.get("device.location")
         return NUTDeviceInfo(
-            manufacturer, model, model_id, firmware, serial, macaddr, device_location
+            manufacturer,
+            model,
+            model_id,
+            firmware,
+            serial,
+            mac_address,
+            device_location,
         )
 
     async def _async_get_status(self) -> dict[str, str]:
