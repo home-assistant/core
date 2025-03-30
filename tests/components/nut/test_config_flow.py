@@ -578,10 +578,6 @@ async def test_abort_multiple_ups_duplicate_unique_ids(hass: HomeAssistant) -> N
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
