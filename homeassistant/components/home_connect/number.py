@@ -1,4 +1,4 @@
-"""Provides number enties for Home Connect."""
+"""Provides number entities for Home Connect."""
 
 import logging
 from typing import cast
@@ -16,14 +16,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import setup_home_connect_entry
-from .const import (
-    DOMAIN,
-    SVE_TRANSLATION_KEY_SET_SETTING,
-    SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID,
-    SVE_TRANSLATION_PLACEHOLDER_KEY,
-    SVE_TRANSLATION_PLACEHOLDER_VALUE,
-    UNIT_MAP,
-)
+from .const import DOMAIN, UNIT_MAP
 from .coordinator import HomeConnectApplianceData, HomeConnectConfigEntry
 from .entity import HomeConnectEntity, HomeConnectOptionEntity, constraint_fetcher
 from .utils import get_dict_from_home_connect_error
@@ -33,6 +26,11 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 1
 
 NUMBERS = (
+    NumberEntityDescription(
+        key=SettingKey.BSH_COMMON_ALARM_CLOCK,
+        device_class=NumberDeviceClass.DURATION,
+        translation_key="alarm_clock",
+    ),
     NumberEntityDescription(
         key=SettingKey.REFRIGERATION_FRIDGE_FREEZER_SETPOINT_TEMPERATURE_REFRIGERATOR,
         device_class=NumberDeviceClass.TEMPERATURE,
@@ -180,12 +178,12 @@ class HomeConnectNumberEntity(HomeConnectEntity, NumberEntity):
         except HomeConnectError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key=SVE_TRANSLATION_KEY_SET_SETTING,
+                translation_key="set_setting_entity",
                 translation_placeholders={
                     **get_dict_from_home_connect_error(err),
-                    SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID: self.entity_id,
-                    SVE_TRANSLATION_PLACEHOLDER_KEY: self.bsh_key,
-                    SVE_TRANSLATION_PLACEHOLDER_VALUE: str(value),
+                    "entity_id": self.entity_id,
+                    "key": self.bsh_key,
+                    "value": str(value),
                 },
             ) from err
 
