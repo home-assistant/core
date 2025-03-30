@@ -262,19 +262,8 @@ class LeaController:
         _LOGGER.log(logging.INFO, "_handle_response_received: %s", str(data))
         zone_id, commandType, value = self._message_factory.create_message(data)
 
-        if commandType == "volume":
-            if zone := self.get_zone_by_id(zone_id):
-                value = (((float(value) / -1) - 80) / 0.8) * -1
-                zone._volume = int(value)  # noqa: SLF001
-        elif commandType == "mute":
-            if zone := self.get_zone_by_id(zone_id):
-                zone._mute = bool(value)  # noqa: SLF001
-        # elif commandType == "source":
-        # if zone := self.get_zone_by_id(zone_id):
-        # zone.updateSource(int(value))
-        elif commandType == "power":
-            if zone := self.get_zone_by_id(zone_id):
-                zone._power = bool(value)  # noqa: SLF001
+        if zone := self.get_zone_by_id(zone_id):
+            zone.update(value, commandType)
 
     async def _handle_num_inputs(self, value: str):
         _LOGGER.log(logging.INFO, "_handle_num_inputs: %s", str(value))

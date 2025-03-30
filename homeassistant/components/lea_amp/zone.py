@@ -111,7 +111,22 @@ class LeaZone:
     async def set_zone_source(self, source: int) -> None:
         """Set Zone Source."""
         _LOGGER.debug("set_zone_source")
+        await self._controller.set_source(self._zone_id, source)
         self._source = source
+
+    def update(self, value: float, commandType: str) -> None:
+        """Update zone."""
+        if commandType == "volume":
+            # value = float(value)
+            value = (((value / -1) - 80) / 0.8) * -1
+            self._volume = int(value)
+        elif commandType == "mute":
+            self._mute = bool(value)
+        elif commandType == "power":
+            self._power = bool(value)
+        self.update_lastseen()
+        if self._update_callback and callable(self._update_callback):
+            self._update_callback(self)
 
     def update_lastseen(self) -> None:
         """Update Last Seen."""
