@@ -139,7 +139,7 @@
       "select_schedule": {
         "name": "Thermostat schedule",
         "state": {
-          "off": "Off"
+          "off": "[%key:common::state::off%]"
         }
       }
     },
