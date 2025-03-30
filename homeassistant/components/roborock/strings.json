@@ -338,7 +338,7 @@
       "zeo_state": {
         "name": "State",
         "state": {
-          "standby": "Standby",
+          "standby": "[%key:common::state::standby%]",
           "weighing": "Weighing",
           "soaking": "Soaking",
           "washing": "Washing",
