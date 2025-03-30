@@ -126,9 +126,9 @@ class NutConfigFlow(ConfigFlow, domain=DOMAIN):
                 if self._host_port_alias_already_configured(nut_config):
                     return self.async_abort(reason="already_configured")
 
-                unique_id = _unique_id_from_status(info["available_resources"])
-                await self.async_set_unique_id(unique_id)
-                self._abort_if_unique_id_configured()
+                if unique_id := _unique_id_from_status(info["available_resources"]):
+                    await self.async_set_unique_id(unique_id)
+                    self._abort_if_unique_id_configured()
 
                 title = _format_host_port_alias(nut_config)
                 return self.async_create_entry(title=title, data=nut_config)
