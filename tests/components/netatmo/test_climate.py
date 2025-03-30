@@ -1126,10 +1126,10 @@ async def test_set_scheduled_thermostat_temperature_success(
             {
                 ATTR_ENTITY_ID: "climate.Entrada",
                 ATTR_TEMPERATURE_SET: "Night",
-                ATTR_TEMPERATURE: 25,
+                ATTR_TEMPERATURE: 13,
             },
             blocking=True,
         )
         await hass.async_block_till_done()
 
-        mock_home.assert_called_once_with(zone_id=1, temps={"2833524037": 25})
+        mock_home.assert_called_once_with(zone_id=1, temps={"2833524037": 13})
