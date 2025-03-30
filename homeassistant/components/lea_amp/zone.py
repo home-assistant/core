@@ -99,6 +99,7 @@ class LeaZone:
     async def set_zone_volume(self, volume: int):
         """Set Zone Volume."""
         _LOGGER.log(logging.INFO, "set_zone_volume: %s", str(volume))
+        await self._controller.set_volume(self._zone_id, volume)
         self._volume = volume
 
     async def set_zone_mute(self, mute: bool):
