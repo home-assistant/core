@@ -26,15 +26,13 @@ class LeaZone:
         self._volume: int = 0
         self._mute: bool = False
         self._source: int = 0
-        self._update_callback: Callable[[LeaZone], None] | None = (
-            None  # Callable[[dict[str, str]], None] | None = None
-        )
+        self._update_callback: Callable[[LeaZone], None] | None = None
         self.is_manual: bool = False
 
     @property
     def update_callback(
         self,
-    ) -> Callable[[LeaZone], None] | None:  # Callable[[dict[str, str]], None] | None:
+    ) -> Callable[[LeaZone], None] | None:
         """Get Update Callback."""
         return self._update_callback
 
