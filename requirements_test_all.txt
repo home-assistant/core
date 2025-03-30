@@ -2123,6 +2123,9 @@ renson-endura-delta==1.7.2
 # homeassistant.components.reolink
 reolink-aio==0.12.1
 
+# homeassistant.components.govee
+requests==2.32.3
+
 # homeassistant.components.rflink
 rflink==0.0.66
 

@@ -1,0 +1,28 @@
+# filepath: /Users/samialouani/Desktop/HomeAssistantcore/pylintrc
+[MASTER]
+# A comma-separated list of package or module names from where C extensions may be loaded.
+extension-pkg-whitelist=
+
+[MESSAGES CONTROL]
+# Only show warnings with the listed confidence levels. Leave empty to show all.
+confidence=
+
+[REPORTS]
+# Set the output format. Available formats are text, parseable, colorized, json and msvs (visual studio).
+output-format=text
+
+[TYPECHECK]
+# List of decorators that produce context managers, such as contextlib.contextmanager.
+contextmanager-decorators=contextlib.contextmanager
+
+[FORMAT]
+# Maximum number of characters on a single line.
+max-line-length=88
+
+[DESIGN]
+# Maximum number of arguments for function / method.
+max-args=5
+
+[LOGGING]
+# Format style used to check logging format string. `old` means using % formatting, `new` is for str.format() and `fstr` is for f-strings.
+logging-format-style=old

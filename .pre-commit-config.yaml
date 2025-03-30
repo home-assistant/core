@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.9.10
+    rev: v0.11.2
     hooks:
       - id: ruff
         args:
@@ -30,15 +30,15 @@ repos:
           - --branch=master
           - --branch=rc
   - repo: https://github.com/adrienverge/yamllint.git
-    rev: v1.35.1
+    rev: v1.37.0
     hooks:
       - id: yamllint
   - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v3.0.3
+    rev: v4.0.0-alpha.8
     hooks:
       - id: prettier
   - repo: https://github.com/cdce8p/python-typing-update
-    rev: v0.6.0
+    rev: v0.7.1
     hooks:
       # Run `python-typing-update` hook manually from time to time
       # to update python typing syntax.
@@ -66,7 +66,7 @@ repos:
         files: ^(homeassistant|pylint)/.+\.(py|pyi)$
       - id: pylint
         name: pylint
-        entry: script/run-in-env.sh pylint --ignore-missing-annotations=y
+        entry: script/run-in-env.sh pylint
         language: script
         require_serial: true
         types_or: [python, pyi]

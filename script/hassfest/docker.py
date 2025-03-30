@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from homeassistant import core
-from homeassistant.components.go2rtc.const import RECOMMENDED_VERSION as GO2RTC_VERSION
+from homeassistant.components.go2rtc import RECOMMENDED_VERSION as GO2RTC_VERSION
 from homeassistant.const import Platform
 from homeassistant.util import executor, thread
 from script.gen_requirements_all import gather_recursive_requirements

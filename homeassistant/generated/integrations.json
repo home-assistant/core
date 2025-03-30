@@ -2421,6 +2421,12 @@
           "config_flow": true,
           "iot_class": "local_push",
           "name": "Govee lights local"
+        },
+        "govee": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "assumed_state",
+          "name": "Govee Space Heater"
         }
       }
     },
