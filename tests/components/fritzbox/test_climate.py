@@ -439,6 +439,26 @@ async def test_set_preset_mode_eco(
     assert device.set_target_temperature.call_args_list == expected_call_args
 
 
+async def test_set_preset_mode_boost(
+    hass: HomeAssistant,
+    fritz: Mock,
+) -> None:
+    """Test setting preset mode."""
+    device = FritzDeviceClimateMock()
+    assert await setup_config_entry(
+        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+    )
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: PRESET_BOOST},
+        True,
+    )
+    assert device.set_target_temperature.call_count == 1
+    assert device.set_target_temperature.call_args_list == [call(30, True)]
+
+
 async def test_preset_mode_update(hass: HomeAssistant, fritz: Mock) -> None:
     """Test preset mode."""
     device = FritzDeviceClimateMock()
