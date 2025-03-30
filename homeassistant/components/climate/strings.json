@@ -99,7 +99,7 @@
           "state": {
             "none": "None",
             "eco": "Eco",
-            "away": "Away",
+            "away": "[%key:common::state::not_home%]",
             "boost": "Boost",
             "comfort": "Comfort",
             "home": "[%key:common::state::home%]",
@@ -257,7 +257,7 @@
   "selector": {
     "hvac_mode": {
       "options": {
-        "off": "Off",
+        "off": "[%key:common::state::off%]",
         "auto": "Auto",
         "cool": "Cool",
         "dry": "Dry",
