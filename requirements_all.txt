@@ -2047,7 +2047,7 @@ pyiskra==0.1.15
 pyiss==1.0.1
 
 # homeassistant.components.isy994
-pyisy==3.1.14
+pyisy==3.1.15
 
 # homeassistant.components.itach
 pyitachip2ir==0.0.7
