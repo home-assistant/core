@@ -259,19 +259,23 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
         if self.home.entity_id != data["home_id"]:
             return
 
-        if data["event_type"] == EVENT_TYPE_SCHEDULE and "schedule_id" in data:
-            self._selected_schedule = getattr(
-                self.hass.data[DOMAIN][DATA_SCHEDULES][self.home.entity_id].get(
-                    data["schedule_id"]
-                ),
-                "name",
-                None,
-            )
-            self._attr_extra_state_attributes[ATTR_SELECTED_SCHEDULE] = (
-                self._selected_schedule
-            )
-            self.async_write_ha_state()
-            self.data_handler.async_force_update(self._signal_name)
+        if data["event_type"] == EVENT_TYPE_SCHEDULE:
+            if "schedule_id" in data:
+                self._selected_schedule = getattr(
+                    self.hass.data[DOMAIN][DATA_SCHEDULES][self.home.entity_id].get(
+                        data["schedule_id"]
+                    ),
+                    "name",
+                    None,
+                )
+                self._attr_extra_state_attributes[ATTR_SELECTED_SCHEDULE] = (
+                    self._selected_schedule
+                )
+                self.async_write_ha_state()
+                self.data_handler.async_force_update(self._signal_name)
+            else:
+                self.data_handler.async_force_update(self._signal_name)
+
             return
 
         home = data["home"]
