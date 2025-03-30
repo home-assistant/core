@@ -186,7 +186,7 @@ async def test_browse_media_library_albums(
     assert response["result"]["children"] == snapshot
     assert soco_mock.music_library.browse_by_idstring.call_count == 1
 
-    
+
 @pytest.mark.parametrize(
     ("media_content_id", "media_content_type"),
     [
@@ -259,4 +259,3 @@ async def test_browse_media_library_folders(
     assert response["success"]
     assert response["result"] == snapshot
     assert soco_mock.music_library.browse_by_idstring.call_count == 1
-    
