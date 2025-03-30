@@ -90,30 +90,30 @@ class LeaZone:
         """Source."""
         return self._source
 
-    async def set_zone_power(self, power: bool):
+    async def set_zone_power(self, power: bool) -> None:
         """Set Zone Power."""
         _LOGGER.log(logging.INFO, "ZONE set_zone_power: %s", str(power))
         await self._controller.turn_on_off(self._zone_id, str(power))
         self._power = power
 
-    async def set_zone_volume(self, volume: int):
+    async def set_zone_volume(self, volume: int) -> None:
         """Set Zone Volume."""
         _LOGGER.log(logging.INFO, "set_zone_volume: %s", str(volume))
         await self._controller.set_volume(self._zone_id, volume)
         self._volume = volume
 
-    async def set_zone_mute(self, mute: bool):
+    async def set_zone_mute(self, mute: bool) -> None:
         """Set Zone Mute."""
         _LOGGER.debug("set_zone_mute")
         await self._controller.set_mute(self._zone_id, mute)
         self._mute = mute
 
-    async def set_zone_source(self, source: int):
+    async def set_zone_source(self, source: int) -> None:
         """Set Zone Source."""
         _LOGGER.debug("set_zone_source")
         self._source = source
 
-    def update_lastseen(self):
+    def update_lastseen(self) -> None:
         """Update Last Seen."""
         self._lastseen = datetime.now()
 
