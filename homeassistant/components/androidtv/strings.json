@@ -21,7 +21,7 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "invalid_unique_id": "Impossible to determine a valid unique id for the device"
+      "invalid_unique_id": "Impossible to determine a valid unique ID for the device"
     }
   },
   "options": {
@@ -38,17 +38,17 @@
         }
       },
       "apps": {
-        "title": "Configure Android Apps",
-        "description": "Configure application id {app_id}",
+        "title": "Configure Android apps",
+        "description": "Configure application ID {app_id}",
         "data": {
-          "app_name": "Application Name",
+          "app_name": "Application name",
           "app_id": "Application ID",
           "app_delete": "Check to delete this application"
         }
       },
       "rules": {
         "title": "Configure Android state detection rules",
-        "description": "Configure detection rule for application id {rule_id}",
+        "description": "Configure detection rule for application ID {rule_id}",
         "data": {
           "rule_id": "[%key:component::androidtv::options::step::apps::data::app_id%]",
           "rule_values": "List of state detection rules (see documentation)",

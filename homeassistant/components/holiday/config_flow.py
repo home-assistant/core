@@ -19,6 +19,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.selector import (
     CountrySelector,
     CountrySelectorConfig,
+    SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -28,6 +29,30 @@ from homeassistant.util import dt as dt_util
 from .const import CONF_CATEGORIES, CONF_PROVINCE, DOMAIN
 
 SUPPORTED_COUNTRIES = list_supported_countries(include_aliases=False)
+
+
+def get_optional_provinces(country: str) -> list[Any]:
+    """Return the country provinces (territories).
+
+    Some territories can have extra or different holidays
+    from another within the same country.
+    Some territories can have different names (aliases).
+    """
+    province_options: list[Any] = []
+
+    if provinces := SUPPORTED_COUNTRIES[country]:
+        country_data = country_holidays(country, years=dt_util.utcnow().year)
+        if country_data.subdivisions_aliases and (
+            subdiv_aliases := country_data.get_subdivision_aliases()
+        ):
+            province_options = [
+                SelectOptionDict(value=k, label=", ".join(v))
+                for k, v in subdiv_aliases.items()
+            ]
+        else:
+            province_options = provinces
+
+    return province_options
 
 
 def get_optional_categories(country: str) -> list[str]:
@@ -45,7 +70,7 @@ def get_optional_categories(country: str) -> list[str]:
 def get_options_schema(country: str) -> vol.Schema:
     """Return the options schema."""
     schema = {}
-    if provinces := SUPPORTED_COUNTRIES[country]:
+    if provinces := get_optional_provinces(country):
         schema[vol.Optional(CONF_PROVINCE)] = SelectSelector(
             SelectSelectorConfig(
                 options=provinces,
@@ -62,6 +87,19 @@ def get_options_schema(country: str) -> vol.Schema:
             )
         )
     return vol.Schema(schema)
+
+
+def get_entry_name(language: str, country: str, province: str | None) -> str:
+    """Generate the entity name from the user language and location."""
+    try:
+        locale = Locale.parse(language, sep="-")
+    except UnknownLocaleError:
+        # Default to (US) English if language not recognized by babel
+        # Mainly an issue with English flavors such as "en-GB"
+        locale = Locale("en")
+    country_str = locale.territories[country]  # blocking I/O
+    province_str = f", {province}" if province else ""
+    return f"{country_str}{province_str}"
 
 
 class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -134,15 +172,9 @@ class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
 
             self._async_abort_entries_match({**data, **(options or {})})
 
-            try:
-                locale = Locale.parse(self.hass.config.language, sep="-")
-            except UnknownLocaleError:
-                # Default to (US) English if language not recognized by babel
-                # Mainly an issue with English flavors such as "en-GB"
-                locale = Locale("en")
-            province_str = f", {province}" if province else ""
-            name = f"{locale.territories[country]}{province_str}"
-
+            name = await self.hass.async_add_executor_job(
+                get_entry_name, self.hass.config.language, country, province
+            )
             return self.async_create_entry(title=name, data=data, options=options)
 
         options_schema = await self.hass.async_add_executor_job(
@@ -171,14 +203,9 @@ class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
 
             self._async_abort_entries_match({**data, **(options or {})})
 
-            try:
-                locale = Locale.parse(self.hass.config.language, sep="-")
-            except UnknownLocaleError:
-                # Default to (US) English if language not recognized by babel
-                # Mainly an issue with English flavors such as "en-GB"
-                locale = Locale("en")
-            province_str = f", {province}" if province else ""
-            name = f"{locale.territories[country]}{province_str}"
+            name = await self.hass.async_add_executor_job(
+                get_entry_name, self.hass.config.language, country, province
+            )
 
             if options:
                 return self.async_update_reload_and_abort(

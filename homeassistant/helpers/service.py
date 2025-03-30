@@ -88,6 +88,7 @@ def _base_components() -> dict[str, ModuleType]:
     # pylint: disable-next=import-outside-toplevel
     from homeassistant.components import (
         alarm_control_panel,
+        assist_satellite,
         calendar,
         camera,
         climate,
@@ -108,6 +109,7 @@ def _base_components() -> dict[str, ModuleType]:
 
     return {
         "alarm_control_panel": alarm_control_panel,
+        "assist_satellite": assist_satellite,
         "calendar": calendar,
         "camera": camera,
         "climate": climate,
@@ -133,8 +135,7 @@ def _validate_option_or_feature(option_or_feature: str, label: str) -> Any:
         domain, enum, option = option_or_feature.split(".", 2)
     except ValueError as exc:
         raise vol.Invalid(
-            f"Invalid {label} '{option_or_feature}', expected "
-            "<domain>.<enum>.<member>"
+            f"Invalid {label} '{option_or_feature}', expected <domain>.<enum>.<member>"
         ) from exc
 
     base_components = _base_components()
@@ -226,7 +227,7 @@ class ServiceParams(TypedDict):
 class ServiceTargetSelector:
     """Class to hold a target selector for a service."""
 
-    __slots__ = ("entity_ids", "device_ids", "area_ids", "floor_ids", "label_ids")
+    __slots__ = ("area_ids", "device_ids", "entity_ids", "floor_ids", "label_ids")
 
     def __init__(self, service_call: ServiceCall) -> None:
         """Extract ids from service call data."""
@@ -503,7 +504,7 @@ def _has_match(ids: str | list[str] | None) -> TypeGuard[str | list[str]]:
 
 
 @bind_hass
-def async_extract_referenced_entity_ids(  # noqa: C901
+def async_extract_referenced_entity_ids(
     hass: HomeAssistant, service_call: ServiceCall, expand_group: bool = True
 ) -> SelectedEntities:
     """Extract referenced entity IDs from a service call."""

@@ -9,7 +9,6 @@ from urllib.parse import urlparse
 from pynetgear import DEFAULT_HOST, DEFAULT_PORT, DEFAULT_USER
 import voluptuous as vol
 
-from homeassistant.components import ssdp
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -24,6 +23,12 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_MODEL_NAME,
+    ATTR_UPNP_MODEL_NUMBER,
+    ATTR_UPNP_SERIAL,
+    SsdpServiceInfo,
+)
 from homeassistant.util.network import is_ipv4_address
 
 from .const import (
@@ -129,7 +134,7 @@ class NetgearFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_ssdp(
-        self, discovery_info: ssdp.SsdpServiceInfo
+        self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Initialize flow from ssdp."""
         updated_data: dict[str, str | int | bool] = {}
@@ -144,10 +149,10 @@ class NetgearFlowHandler(ConfigFlow, domain=DOMAIN):
 
         _LOGGER.debug("Netgear ssdp discovery info: %s", discovery_info)
 
-        if ssdp.ATTR_UPNP_SERIAL not in discovery_info.upnp:
+        if ATTR_UPNP_SERIAL not in discovery_info.upnp:
             return self.async_abort(reason="no_serial")
 
-        await self.async_set_unique_id(discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL])
+        await self.async_set_unique_id(discovery_info.upnp[ATTR_UPNP_SERIAL])
         self._abort_if_unique_id_configured(updates=updated_data)
 
         if device_url.scheme == "https":
@@ -157,18 +162,14 @@ class NetgearFlowHandler(ConfigFlow, domain=DOMAIN):
 
         updated_data[CONF_PORT] = DEFAULT_PORT
         for model in MODELS_PORT_80:
-            if discovery_info.upnp.get(ssdp.ATTR_UPNP_MODEL_NUMBER, "").startswith(
+            if discovery_info.upnp.get(ATTR_UPNP_MODEL_NUMBER, "").startswith(
                 model
-            ) or discovery_info.upnp.get(ssdp.ATTR_UPNP_MODEL_NAME, "").startswith(
-                model
-            ):
+            ) or discovery_info.upnp.get(ATTR_UPNP_MODEL_NAME, "").startswith(model):
                 updated_data[CONF_PORT] = PORT_80
         for model in MODELS_PORT_5555:
-            if discovery_info.upnp.get(ssdp.ATTR_UPNP_MODEL_NUMBER, "").startswith(
+            if discovery_info.upnp.get(ATTR_UPNP_MODEL_NUMBER, "").startswith(
                 model
-            ) or discovery_info.upnp.get(ssdp.ATTR_UPNP_MODEL_NAME, "").startswith(
-                model
-            ):
+            ) or discovery_info.upnp.get(ATTR_UPNP_MODEL_NAME, "").startswith(model):
                 updated_data[CONF_PORT] = PORT_5555
                 updated_data[CONF_SSL] = True
 

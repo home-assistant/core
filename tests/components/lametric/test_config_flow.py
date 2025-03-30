@@ -13,18 +13,18 @@ from demetriek import (
 )
 import pytest
 
-from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.components.lametric.const import DOMAIN
-from homeassistant.components.ssdp import (
-    ATTR_UPNP_FRIENDLY_NAME,
-    ATTR_UPNP_SERIAL,
-    SsdpServiceInfo,
-)
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_DEVICE, CONF_HOST, CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_SERIAL,
+    SsdpServiceInfo,
+)
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker

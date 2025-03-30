@@ -4,13 +4,14 @@ import asyncio
 from collections.abc import Iterable
 import dataclasses
 from datetime import timedelta
+from enum import IntFlag
 import logging
 import threading
 from typing import Any
 from unittest.mock import MagicMock, PropertyMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from propcache import cached_property
+from propcache.api import cached_property
 import pytest
 from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
@@ -34,7 +35,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 from tests.common import (
@@ -985,7 +986,7 @@ async def _test_friendly_name(
     async def async_setup_entry(
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Mock setup entry method."""
         async_add_entities([ent])
@@ -1313,7 +1314,7 @@ async def test_entity_name_translation_placeholder_errors(
     async def async_setup_entry(
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Mock setup entry method."""
         async_add_entities([ent])
@@ -1541,7 +1542,7 @@ async def test_friendly_name_updated(
     async def async_setup_entry(
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Mock setup entry method."""
         async_add_entities(
@@ -2483,6 +2484,31 @@ async def test_cached_entity_property_override(hass: HomeAssistant) -> None:
         class EntityWithClassAttribute7(entity.Entity):
             def _attr_attribution(self):
                 return "🤡"
+
+
+async def test_entity_report_deprecated_supported_features_values(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test reporting deprecated supported feature values only happens once."""
+    ent = entity.Entity()
+
+    class MockEntityFeatures(IntFlag):
+        VALUE1 = 1
+        VALUE2 = 2
+
+    ent._report_deprecated_supported_features_values(MockEntityFeatures(2))
+    assert (
+        "is using deprecated supported features values which will be removed"
+        in caplog.text
+    )
+    assert "MockEntityFeatures.VALUE2" in caplog.text
+
+    caplog.clear()
+    ent._report_deprecated_supported_features_values(MockEntityFeatures(2))
+    assert (
+        "is using deprecated supported features values which will be removed"
+        not in caplog.text
+    )
 
 
 async def test_remove_entity_registry(

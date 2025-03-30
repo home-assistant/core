@@ -29,7 +29,7 @@ rules:
   action-exceptions:
     status: todo
     comment: |
-      Legacy Notify needs rewriting once Notify architecture stabilizes.
+      Awaiting legacy Notify deprecation.
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
@@ -42,7 +42,7 @@ rules:
   parallel-updates:
     status: todo
     comment: |
-      Does not set parallel-updates on notify platform.
+      Awaiting legacy Notify deprecation.
   reauthentication-flow:
     status: todo
     comment: |
@@ -50,7 +50,7 @@ rules:
   test-coverage:
     status: todo
     comment: |
-      Legacy Notify needs rewriting once Notify architecture stabilizes.
+      Awaiting legacy Notify deprecation.
 
   # Gold
   devices: done
@@ -78,7 +78,7 @@ rules:
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
-  exception-translations: todo
+  exception-translations: done
   icon-translations: done
   reconfiguration-flow:
     status: todo
@@ -93,7 +93,4 @@ rules:
   # Platinum
   async-dependency: todo
   inject-websession: todo
-  strict-typing:
-    status: todo
-    comment: |
-      Requirement 'Mastodon.py==1.8.1' appears untyped
+  strict-typing: done

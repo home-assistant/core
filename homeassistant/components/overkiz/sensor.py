@@ -15,7 +15,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
@@ -31,10 +30,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import HomeAssistantOverkizData
+from . import OverkizDataConfigEntry
 from .const import (
     DOMAIN,
     IGNORED_OVERKIZ_DEVICES,
@@ -483,11 +482,11 @@ SUPPORTED_STATES = {description.key: description for description in SENSOR_DESCR
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: OverkizDataConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Overkiz sensors from a config entry."""
-    data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
     entities: list[SensorEntity] = []
 
     for device in data.coordinator.data.values():
@@ -535,8 +534,7 @@ class OverkizStateSensor(OverkizDescriptiveEntity, SensorEntity):
             # This is probably incorrect and should be fixed in a follow up PR.
             # To ensure measurement sensors do not get an `unknown` state on
             # a falsy value (e.g. 0 or 0.0) we also check the state_class.
-            or self.state_class != SensorStateClass.MEASUREMENT
-            and not state.value
+            or (self.state_class != SensorStateClass.MEASUREMENT and not state.value)
         ):
             return None
 

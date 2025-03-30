@@ -9,7 +9,7 @@ from typing import Any
 
 from fints.client import FinTS3PinTanClient
 from fints.models import SEPAAccount
-from propcache import cached_property
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -18,7 +18,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import CONF_NAME, CONF_PIN, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 

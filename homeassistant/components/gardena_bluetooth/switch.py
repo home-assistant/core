@@ -9,17 +9,16 @@ from gardena_bluetooth.const import Valve
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import GardenaBluetoothConfigEntry
-from .coordinator import GardenaBluetoothCoordinator
+from .coordinator import GardenaBluetoothConfigEntry, GardenaBluetoothCoordinator
 from .entity import GardenaBluetoothEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: GardenaBluetoothConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switch based on a config entry."""
     coordinator = entry.runtime_data

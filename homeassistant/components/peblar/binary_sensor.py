@@ -12,12 +12,12 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
 from .coordinator import PeblarConfigEntry, PeblarData, PeblarDataUpdateCoordinator
+from .entity import PeblarEntity
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -50,38 +50,26 @@ DESCRIPTIONS = [
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: PeblarConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Peblar binary sensor based on a config entry."""
     async_add_entities(
-        PeblarBinarySensorEntity(entry=entry, description=description)
+        PeblarBinarySensorEntity(
+            entry=entry,
+            coordinator=entry.runtime_data.data_coordinator,
+            description=description,
+        )
         for description in DESCRIPTIONS
     )
 
 
 class PeblarBinarySensorEntity(
-    CoordinatorEntity[PeblarDataUpdateCoordinator], BinarySensorEntity
+    PeblarEntity[PeblarDataUpdateCoordinator],
+    BinarySensorEntity,
 ):
     """Defines a Peblar binary sensor entity."""
 
     entity_description: PeblarBinarySensorEntityDescription
-
-    _attr_has_entity_name = True
-
-    def __init__(
-        self,
-        entry: PeblarConfigEntry,
-        description: PeblarBinarySensorEntityDescription,
-    ) -> None:
-        """Initialize the binary sensor entity."""
-        super().__init__(entry.runtime_data.data_coordinator)
-        self.entity_description = description
-        self._attr_unique_id = f"{entry.unique_id}-{description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={
-                (DOMAIN, entry.runtime_data.system_information.product_serial_number)
-            },
-        )
 
     @property
     def is_on(self) -> bool:

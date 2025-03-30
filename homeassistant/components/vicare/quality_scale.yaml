@@ -1,47 +1,70 @@
 rules:
   # Bronze
-  config-flow: done
-  test-before-configure: done
-  unique-config-entry:
-    status: todo
-    comment: Uniqueness is not checked yet.
-  config-flow-test-coverage: done
-  runtime-data:
-    status: todo
-    comment: runtime_data is not used yet.
-  test-before-setup: done
-  appropriate-polling: done
-  entity-unique-id: done
-  has-entity-name: done
-  entity-event-setup:
-    status: exempt
-    comment: Entities of this integration does not explicitly subscribe to events.
-  dependency-transparency: done
   action-setup:
     status: todo
     comment: service registered in climate async_setup_entry.
+  appropriate-polling: done
+  brands: done
   common-modules:
     status: done
     comment: No coordinator is used, data update is centrally handled by the library.
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions: done
   docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions:
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: Entities of this integration does not explicitly subscribe to events.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry:
     status: todo
-    comment: removal instructions missing
-  docs-actions: done
-  brands: done
+    comment: Uniqueness is not checked yet.
+
   # Silver
-  integration-owner: done
-  reauthentication-flow: done
+  action-exceptions: todo
   config-entry-unloading: done
+  docs-configuration-parameters: todo
+  docs-installation-parameters: todo
+  entity-unavailable: todo
+  integration-owner: done
+  log-when-unavailable: todo
+  parallel-updates: todo
+  reauthentication-flow: done
+  test-coverage: todo
+
   # Gold
   devices: done
   diagnostics: done
-  entity-category: done
+  discovery-update-info: todo
+  discovery: todo
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
   dynamic-devices: done
+  entity-category: done
   entity-device-class: done
-  entity-translations: done
   entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations: todo
+  icon-translations: todo
+  reconfiguration-flow: todo
   repair-issues:
     status: exempt
     comment: This integration does not raise any repairable issues.
+  stale-devices: todo
+
+  # Platinum
+  async-dependency: todo
+  inject-websession: todo
+  strict-typing: todo

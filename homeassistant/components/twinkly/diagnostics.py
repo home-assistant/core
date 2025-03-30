@@ -10,8 +10,8 @@ from homeassistant.const import ATTR_SW_VERSION, CONF_HOST, CONF_IP_ADDRESS, CON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import TwinklyConfigEntry
 from .const import DOMAIN
+from .coordinator import TwinklyConfigEntry
 
 TO_REDACT = [CONF_HOST, CONF_IP_ADDRESS, CONF_MAC]
 
@@ -34,8 +34,8 @@ async def async_get_config_entry_diagnostics(
     return async_redact_data(
         {
             "entry": entry.as_dict(),
-            "device_info": entry.runtime_data.device_info,
-            ATTR_SW_VERSION: entry.runtime_data.sw_version,
+            "device_info": entry.runtime_data.data.device_info,
+            ATTR_SW_VERSION: entry.runtime_data.software_version,
             "attributes": attributes,
         },
         TO_REDACT,

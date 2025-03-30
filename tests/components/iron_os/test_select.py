@@ -16,6 +16,8 @@ from pynecil import (
     ScreenOrientationMode,
     ScrollSpeed,
     TempUnit,
+    TipType,
+    USBPDMode,
 )
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -104,6 +106,16 @@ async def test_state(
             "select.pinecil_boot_logo_duration",
             "loop",
             (CharSetting.LOGO_DURATION, LogoDuration.LOOP),
+        ),
+        (
+            "select.pinecil_power_delivery_3_1_epr",
+            "on",
+            (CharSetting.USB_PD_MODE, USBPDMode.ON),
+        ),
+        (
+            "select.pinecil_soldering_tip_type",
+            "auto",
+            (CharSetting.TIP_TYPE, TipType.AUTO),
         ),
     ],
 )

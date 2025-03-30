@@ -64,6 +64,8 @@ PLATFORMS_BY_TYPE = {
     SupportedModels.HUB2.value: [Platform.SENSOR],
     SupportedModels.RELAY_SWITCH_1PM.value: [Platform.SWITCH, Platform.SENSOR],
     SupportedModels.RELAY_SWITCH_1.value: [Platform.SWITCH],
+    SupportedModels.LEAK.value: [Platform.BINARY_SENSOR, Platform.SENSOR],
+    SupportedModels.REMOTE.value: [Platform.SENSOR],
 }
 CLASS_BY_DEVICE = {
     SupportedModels.CEILING_LIGHT.value: switchbot.SwitchbotCeilingLight,

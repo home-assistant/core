@@ -1,0 +1,347 @@
+{
+  "config": {
+    "flow_title": "Homee {name} ({host})",
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "title": "Configure homee",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "host": "The IP address of your Homee.",
+          "username": "The username for your Homee.",
+          "password": "The password for your Homee."
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "blackout_alarm": {
+        "name": "Blackout"
+      },
+      "carbon_dioxide": {
+        "name": "Carbon dioxide"
+      },
+      "flood": {
+        "name": "Flood"
+      },
+      "high_temperature": {
+        "name": "High temperature"
+      },
+      "leak_alarm": {
+        "name": "Leak"
+      },
+      "load_alarm": {
+        "name": "Load",
+        "state": {
+          "off": "Normal",
+          "on": "Overload"
+        }
+      },
+      "low_temperature": {
+        "name": "Low temperature"
+      },
+      "malfunction": {
+        "name": "Malfunction"
+      },
+      "maximum": {
+        "name": "Maximum level"
+      },
+      "minimum": {
+        "name": "Minimum level"
+      },
+      "motor_blocked": {
+        "name": "Motor blocked"
+      },
+      "overcurrent": {
+        "name": "Overcurrent"
+      },
+      "overload": {
+        "name": "Overload"
+      },
+      "rain": {
+        "name": "Rain"
+      },
+      "replace_filter": {
+        "name": "Replace filter",
+        "state": {
+          "on": "Replace"
+        }
+      },
+      "storage": {
+        "name": "Storage",
+        "state": {
+          "off": "Space available",
+          "on": "Storage full"
+        }
+      },
+      "surge": {
+        "name": "Surge"
+      },
+      "voltage_drop": {
+        "name": "Voltage drop"
+      },
+      "water": {
+        "name": "Water"
+      }
+    },
+    "button": {
+      "automatic_mode": {
+        "name": "Automatic mode"
+      },
+      "briefly_open": {
+        "name": "Briefly open"
+      },
+      "identification_mode": {
+        "name": "Identification mode"
+      },
+      "impulse_instance": {
+        "name": "Impulse {instance}"
+      },
+      "light": {
+        "name": "Light"
+      },
+      "light_instance": {
+        "name": "Light {instance}"
+      },
+      "open_partial": {
+        "name": "Open partially"
+      },
+      "permanently_open": {
+        "name": "Open permanently"
+      },
+      "reset_meter": {
+        "name": "Reset meter"
+      },
+      "reset_meter_instance": {
+        "name": "Reset meter {instance}"
+      },
+      "ventilate": {
+        "name": "Ventilate"
+      }
+    },
+    "light": {
+      "light_instance": {
+        "name": "Light {instance}"
+      }
+    },
+    "number": {
+      "down_position": {
+        "name": "Down position"
+      },
+      "down_slat_position": {
+        "name": "Down slat position"
+      },
+      "down_time": {
+        "name": "Down-movement duration"
+      },
+      "endposition_configuration": {
+        "name": "End position"
+      },
+      "motion_alarm_cancelation_delay": {
+        "name": "Motion alarm delay"
+      },
+      "open_window_detection_sensibility": {
+        "name": "Window open sensibility"
+      },
+      "polling_interval": {
+        "name": "Polling interval"
+      },
+      "shutter_slat_time": {
+        "name": "Slat turn duration"
+      },
+      "slat_max_angle": {
+        "name": "Maximum slat angle"
+      },
+      "slat_min_angle": {
+        "name": "Minimum slat angle"
+      },
+      "slat_steps": {
+        "name": "Slat steps"
+      },
+      "temperature_offset": {
+        "name": "Temperature offset"
+      },
+      "up_time": {
+        "name": "Up-movement duration"
+      },
+      "wake_up_interval": {
+        "name": "Wake-up interval"
+      }
+    },
+    "select": {
+      "repeater_mode": {
+        "name": "Repeater mode",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "level1": "Level 1",
+          "level2": "Level 2"
+        }
+      }
+    },
+    "sensor": {
+      "brightness": {
+        "name": "Illuminance"
+      },
+      "brightness_instance": {
+        "name": "Illuminance {instance}"
+      },
+      "current_instance": {
+        "name": "Current {instance}"
+      },
+      "dawn": {
+        "name": "Dawn"
+      },
+      "device_temperature": {
+        "name": "Device temperature"
+      },
+      "energy_instance": {
+        "name": "Energy {instance}"
+      },
+      "exhaust_motor_revs": {
+        "name": "Exhaust motor speed"
+      },
+      "indoor_humidity": {
+        "name": "Indoor humidity"
+      },
+      "indoor_humidity_instance": {
+        "name": "Indoor humidity {instance}"
+      },
+      "indoor_temperature": {
+        "name": "Indoor temperature"
+      },
+      "indoor_temperature_instance": {
+        "name": "Indoor temperature {instance}"
+      },
+      "intake_motor_revs": {
+        "name": "Intake motor speed"
+      },
+      "level": {
+        "name": "Level"
+      },
+      "link_quality": {
+        "name": "Link quality"
+      },
+      "node_state": {
+        "name": "Node state",
+        "state": {
+          "available": "Available",
+          "unavailable": "Unavailable",
+          "update_in_progress": "Update in progress",
+          "waiting_for_attributes": "Waiting for attributes",
+          "initializing": "Initializing",
+          "user_interaction_required": "User interaction required",
+          "password_required": "Password required",
+          "host_unavailable": "Host unavailable",
+          "delete_in_progress": "Delete in progress",
+          "cosi_connected": "Cosi connected",
+          "blocked": "Blocked",
+          "waiting_for_wakeup": "Waiting for wakeup",
+          "remote_node_deleted": "Remote node deleted",
+          "firmware_update_in_progress": "Firmware update in progress"
+        }
+      },
+      "operating_hours": {
+        "name": "Operating hours"
+      },
+      "outdoor_humidity": {
+        "name": "Outdoor humidity"
+      },
+      "outdoor_humidity_instance": {
+        "name": "Outdoor humidity {instance}"
+      },
+      "outdoor_temperature": {
+        "name": "Outdoor temperature"
+      },
+      "outdoor_temperature_instance": {
+        "name": "Outdoor temperature {instance}"
+      },
+      "position": {
+        "name": "Position"
+      },
+      "power_instance": {
+        "name": "Power {instance}"
+      },
+      "rainfall_hour": {
+        "name": "Rainfall last hour"
+      },
+      "rainfall_day": {
+        "name": "Rainfall today"
+      },
+      "total_current": {
+        "name": "Total current"
+      },
+      "total_energy": {
+        "name": "Total energy"
+      },
+      "total_power": {
+        "name": "Total power"
+      },
+      "total_voltage": {
+        "name": "Total voltage"
+      },
+      "up_down": {
+        "name": "State",
+        "state": {
+          "open": "[%key:common::state::open%]",
+          "closed": "[%key:common::state::closed%]",
+          "partial": "Partially open",
+          "opening": "Opening",
+          "closing": "Closing"
+        }
+      },
+      "uv": {
+        "name": "Ultraviolet"
+      },
+      "valve_position": {
+        "name": "Valve position"
+      },
+      "voltage_instance": {
+        "name": "Voltage {instance}"
+      },
+      "window_position": {
+        "name": "Window position",
+        "state": {
+          "closed": "[%key:common::state::closed%]",
+          "open": "[%key:common::state::open%]",
+          "tilted": "Tilted"
+        }
+      }
+    },
+    "switch": {
+      "external_binary_input": {
+        "name": "Child lock"
+      },
+      "manual_operation": {
+        "name": "Manual operation"
+      },
+      "on_off_instance": {
+        "name": "Switch {instance}"
+      },
+      "watchdog": {
+        "name": "Watchdog"
+      }
+    },
+    "valve": {
+      "valve_position": {
+        "name": "Valve position"
+      }
+    }
+  },
+  "exceptions": {
+    "connection_closed": {
+      "message": "Could not connect to Homee while setting attribute."
+    }
+  }
+}

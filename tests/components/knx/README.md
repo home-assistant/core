@@ -3,17 +3,22 @@
 A KNXTestKit instance can be requested from a fixture. It provides convenience methods
 to test outgoing KNX telegrams and inject incoming telegrams.
 To test something add a test function requesting the `hass` and `knx` fixture and
-set up the KNX integration by passing a KNX config dict to `knx.setup_integration`.
+set up the KNX integration with `knx.setup_integration`.
+You can pass a KNX YAML-config dict or a ConfigStore fixture filename to the setup method. The fixture should be placed in the `tests/components/knx/fixtures` directory.
 
 ```python
-async def test_something(hass, knx):
-    await knx.setup_integration({
+async def test_some_yaml(hass: HomeAssistant, knx: KNXTestKit):
+    await knx.setup_integration(
+        yaml_config={
             "switch": {
                 "name": "test_switch",
                 "address": "1/2/3",
             }
         }
     )
+
+async def test_some_config_store(hass: HomeAssistant, knx: KNXTestKit):
+    await knx.setup_integration(config_store_fixture="config_store_filename.json")
 ```
 
 ## Asserting outgoing telegrams

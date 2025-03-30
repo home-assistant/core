@@ -22,17 +22,17 @@ from homeassistant.const import (
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utcnow
 
 from .const import (
-    DOMAIN,
     PEBLAR_CHARGE_LIMITER_TO_HOME_ASSISTANT,
     PEBLAR_CP_STATE_TO_HOME_ASSISTANT,
 )
 from .coordinator import PeblarConfigEntry, PeblarData, PeblarDataUpdateCoordinator
+from .entity import PeblarEntity
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -231,37 +231,24 @@ DESCRIPTIONS: tuple[PeblarSensorDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: PeblarConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Peblar sensors based on a config entry."""
     async_add_entities(
-        PeblarSensorEntity(entry, description)
+        PeblarSensorEntity(
+            entry=entry,
+            coordinator=entry.runtime_data.data_coordinator,
+            description=description,
+        )
         for description in DESCRIPTIONS
-        if description.has_fn(entry.runtime_data.user_configuraton_coordinator.data)
+        if description.has_fn(entry.runtime_data.user_configuration_coordinator.data)
     )
 
 
-class PeblarSensorEntity(CoordinatorEntity[PeblarDataUpdateCoordinator], SensorEntity):
+class PeblarSensorEntity(PeblarEntity[PeblarDataUpdateCoordinator], SensorEntity):
     """Defines a Peblar sensor."""
 
     entity_description: PeblarSensorDescription
-
-    _attr_has_entity_name = True
-
-    def __init__(
-        self,
-        entry: PeblarConfigEntry,
-        description: PeblarSensorDescription,
-    ) -> None:
-        """Initialize the Peblar entity."""
-        super().__init__(entry.runtime_data.data_coordinator)
-        self.entity_description = description
-        self._attr_unique_id = f"{entry.unique_id}_{description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={
-                (DOMAIN, entry.runtime_data.system_information.product_serial_number)
-            },
-        )
 
     @property
     def native_value(self) -> datetime | int | str | None:

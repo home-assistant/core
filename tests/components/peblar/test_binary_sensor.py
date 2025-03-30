@@ -23,7 +23,7 @@ async def test_entities(
     """Test the binary sensors entities."""
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
-    # Ensure all entities are correctly assigned to the Peblar device
+    # Ensure all entities are correctly assigned to the Peblar EV charger
     device_entry = device_registry.async_get_device(
         identifiers={(DOMAIN, "23-45-A4O-MOF")}
     )

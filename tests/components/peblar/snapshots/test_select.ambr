@@ -14,6 +14,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -36,7 +37,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'smart_charging',
-    'unique_id': '23-45-A4O-MOF-smart_charging',
+    'unique_id': '23-45-A4O-MOF_smart_charging',
     'unit_of_measurement': None,
   })
 # ---

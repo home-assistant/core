@@ -27,11 +27,12 @@ from homeassistant.components.sensor import UNIT_CONVERTERS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import recorder as recorder_helper
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from .common import (
     async_recorder_block_till_done,
+    async_wait_recorder,
     async_wait_recording_done,
     create_engine_test,
     do_adhoc_statistics,
@@ -41,7 +42,11 @@ from .common import (
 from .conftest import InstrumentedMigration
 
 from tests.common import async_fire_time_changed
-from tests.typing import RecorderInstanceGenerator, WebSocketGenerator
+from tests.typing import (
+    RecorderInstanceContextManager,
+    RecorderInstanceGenerator,
+    WebSocketGenerator,
+)
 
 
 @pytest.fixture
@@ -2557,12 +2562,51 @@ async def test_recorder_info(
     assert response["success"]
     assert response["result"] == {
         "backlog": 0,
+        "db_in_default_location": False,  # We never use the default URL in tests
         "max_backlog": 65000,
         "migration_in_progress": False,
         "migration_is_live": False,
         "recording": True,
         "thread_running": True,
     }
+
+
+@pytest.mark.parametrize(
+    ("db_url", "db_in_default_location"),
+    [
+        ("sqlite:///{config_dir}/home-assistant_v2.db", True),
+        ("sqlite:///{config_dir}/custom.db", False),
+        ("mysql://root:root_password@127.0.0.1:3316/homeassistant-test", False),
+    ],
+)
+async def test_recorder_info_default_url(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    db_url: str,
+    db_in_default_location: bool,
+) -> None:
+    """Test getting recorder status."""
+    client = await hass_ws_client()
+
+    # Ensure there are no queued events
+    await async_wait_recording_done(hass)
+
+    with patch.object(
+        recorder_mock, "db_url", db_url.format(config_dir=hass.config.config_dir)
+    ):
+        await client.send_json_auto_id({"type": "recorder/info"})
+        response = await client.receive_json()
+        assert response["success"]
+        assert response["result"] == {
+            "backlog": 0,
+            "db_in_default_location": db_in_default_location,
+            "max_backlog": 65000,
+            "migration_in_progress": False,
+            "migration_is_live": False,
+            "recording": True,
+            "thread_running": True,
+        }
 
 
 async def test_recorder_info_no_recorder(
@@ -2603,27 +2647,35 @@ async def test_recorder_info_bad_recorder_config(
     assert response["result"]["thread_running"] is False
 
 
-async def test_recorder_info_no_instance(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+async def test_recorder_info_wait_database_connect(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
 ) -> None:
-    """Test getting recorder when there is no instance."""
+    """Test getting recorder info waits for recorder database connection."""
     client = await hass_ws_client()
 
-    with patch(
-        "homeassistant.components.recorder.basic_websocket_api.get_instance",
-        return_value=None,
-    ):
-        await client.send_json_auto_id({"type": "recorder/info"})
+    recorder_helper.async_initialize_recorder(hass)
+    await client.send_json_auto_id({"type": "recorder/info"})
+
+    async with async_test_recorder(hass):
         response = await client.receive_json()
         assert response["success"]
-        assert response["result"]["recording"] is False
-        assert response["result"]["thread_running"] is False
+        assert response["result"] == {
+            "backlog": ANY,
+            "db_in_default_location": False,
+            "max_backlog": 65000,
+            "migration_in_progress": False,
+            "migration_is_live": False,
+            "recording": True,
+            "thread_running": True,
+        }
 
 
 async def test_recorder_info_migration_queue_exhausted(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
     instrument_migration: InstrumentedMigration,
 ) -> None:
     """Test getting recorder status when recorder queue is exhausted."""
@@ -2646,7 +2698,7 @@ async def test_recorder_info_migration_queue_exhausted(
                 instrument_migration.migration_started.wait
             )
             assert recorder.util.async_migration_in_progress(hass) is True
-            await recorder_helper.async_wait_recorder(hass)
+            await async_wait_recorder(hass)
             hass.states.async_set("my.entity", "on", {})
             await hass.async_block_till_done()
 

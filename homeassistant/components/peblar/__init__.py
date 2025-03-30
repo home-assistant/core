@@ -16,10 +16,8 @@ from peblar import (
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from .const import DOMAIN
 from .coordinator import (
     PeblarConfigEntry,
     PeblarDataUpdateCoordinator,
@@ -30,6 +28,7 @@ from .coordinator import (
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
@@ -75,27 +74,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: PeblarConfigEntry) -> bo
     entry.runtime_data = PeblarRuntimeData(
         data_coordinator=meter_coordinator,
         system_information=system_information,
-        user_configuraton_coordinator=user_configuration_coordinator,
+        user_configuration_coordinator=user_configuration_coordinator,
         version_coordinator=version_coordinator,
-    )
-
-    # Peblar is a single device integration. Setting up the device directly
-    # during setup. This way we only have to reference it in all entities.
-    device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        configuration_url=f"http://{entry.data[CONF_HOST]}",
-        connections={
-            (dr.CONNECTION_NETWORK_MAC, system_information.ethernet_mac_address),
-            (dr.CONNECTION_NETWORK_MAC, system_information.wlan_mac_address),
-        },
-        identifiers={(DOMAIN, system_information.product_serial_number)},
-        manufacturer=system_information.product_vendor_name,
-        model_id=system_information.product_number,
-        model=system_information.product_model_name,
-        name="Peblar EV Charger",
-        serial_number=system_information.product_serial_number,
-        sw_version=version_coordinator.data.current.firmware,
     )
 
     # Forward the setup to the platforms

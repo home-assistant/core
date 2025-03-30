@@ -9,6 +9,31 @@
       }
     }
   },
+  "config_subentries": {
+    "entity": {
+      "step": {
+        "add_sensor": {
+          "description": "Configure the new sensor",
+          "data": {
+            "name": "[%key:common::config_flow::data::name%]",
+            "state": "Initial state"
+          }
+        },
+        "reconfigure_sensor": {
+          "description": "Reconfigure the sensor",
+          "data": {
+            "name": "[%key:component::kitchen_sink::config_subentries::entity::step::reconfigure_sensor::data::state%]",
+            "state": "Initial state"
+          }
+        }
+      },
+      "initiate_flow": {
+        "user": "Add sensor",
+        "reconfigure": "Reconfigure sensor"
+      },
+      "entry_type": "Sensor"
+    }
+  },
   "options": {
     "step": {
       "init": {
@@ -80,8 +105,8 @@
   },
   "services": {
     "test_service_1": {
-      "name": "Test service 1",
-      "description": "Fake service for testing",
+      "name": "Test action 1",
+      "description": "Fake action for testing",
       "fields": {
         "field_1": {
           "name": "Field 1",

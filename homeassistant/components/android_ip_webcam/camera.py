@@ -11,7 +11,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import AndroidIPCamConfigEntry, AndroidIPCamDataUpdateCoordinator
@@ -20,7 +20,7 @@ from .coordinator import AndroidIPCamConfigEntry, AndroidIPCamDataUpdateCoordina
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: AndroidIPCamConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the IP Webcam camera from config entry."""
     filter_urllib3_logging()

@@ -8,6 +8,14 @@
         }
       }
     },
+    "button": {
+      "settings_save": {
+        "default": "mdi:content-save-cog"
+      },
+      "settings_reset": {
+        "default": "mdi:refresh"
+      }
+    },
     "number": {
       "setpoint_temperature": {
         "default": "mdi:thermometer"
@@ -65,6 +73,9 @@
       },
       "power_limit": {
         "default": "mdi:flash-alert"
+      },
+      "hall_effect_sleep_time": {
+        "default": "mdi:timer-sand"
       }
     },
     "select": {
@@ -94,6 +105,12 @@
       },
       "logo_duration": {
         "default": "mdi:clock-digital"
+      },
+      "usb_pd_mode": {
+        "default": "mdi:meter-electric-outline"
+      },
+      "tip_type": {
+        "default": "mdi:pencil-outline"
       }
     },
     "sensor": {
@@ -143,11 +160,55 @@
           "soldering": "mdi:soldering-iron",
           "sleeping": "mdi:sleep",
           "settings": "mdi:menu-open",
-          "debug": "mdi:bug-play"
+          "debug": "mdi:bug-play",
+          "soldering_profile": "mdi:chart-box-outline",
+          "temperature_adjust": "mdi:thermostat-box",
+          "usb_pd_debug": "mdi:bug-play",
+          "thermal_runaway": "mdi:fire-alert",
+          "startup_logo": "mdi:dots-circle",
+          "cjc_calibration": "mdi:tune-vertical",
+          "startup_warnings": "mdi:alert",
+          "initialisation_done": "mdi:check-circle",
+          "hibernating": "mdi:sleep"
         }
       },
       "estimated_power": {
         "default": "mdi:flash"
+      }
+    },
+    "switch": {
+      "animation_loop": {
+        "default": "mdi:play-box",
+        "state": {
+          "on": "mdi:animation-play"
+        }
+      },
+      "calibrate_cjc": {
+        "default": "mdi:tune-vertical"
+      },
+      "cooling_temp_blink": {
+        "default": "mdi:alarm-light-outline",
+        "state": {
+          "off": "mdi:alarm-light-off-outline"
+        }
+      },
+      "display_invert": {
+        "default": "mdi:invert-colors"
+      },
+      "invert_buttons": {
+        "default": "mdi:plus-minus-variant"
+      },
+      "idle_screen_details": {
+        "default": "mdi:card-bulleted-outline",
+        "state": {
+          "off": "mdi:card-bulleted-off-outline"
+        }
+      },
+      "solder_screen_details": {
+        "default": "mdi:card-bulleted-outline",
+        "state": {
+          "off": "mdi:card-bulleted-off-outline"
+        }
       }
     }
   }

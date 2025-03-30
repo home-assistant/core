@@ -13,7 +13,7 @@ from homeassistant.components.select import (
     SelectEntityDescription,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
@@ -45,7 +45,7 @@ RPC_SELECT_ENTITIES: Final = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up selectors for device."""
     if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
