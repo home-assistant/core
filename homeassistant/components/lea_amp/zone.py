@@ -24,8 +24,22 @@ class LeaZone:
         self._volume: int = 0
         self._mute: bool = False
         self._source: int = 0
-        self._update_callback: Callable[[LeaZone], None] | None = None
+        self._update_callback: Callable[[dict[str, str]], None] | None = None
         self.is_manual: bool = False
+
+    @property
+    def update_callback(self) -> Callable[[dict[str, str]], None] | None:
+        """Get Update Callback."""
+        return self._update_callback
+
+    def set_update_callback(
+        self,
+        callback: Callable[[dict[str, str]], None] | None,
+    ) -> Callable[[dict[str, str]], None] | None:
+        """Set Update Callback."""
+        old_callback = self._update_callback
+        self._update_callback = callback
+        return old_callback
 
     def updatePower(self, value: bool) -> None:
         """Update zone."""
@@ -33,30 +47,21 @@ class LeaZone:
         self._power = value
         self.update_lastseen()
 
-        if self._update_callback and callable(self._update_callback):
-            self._update_callback(self)
-
     def updateVolume(self, value: float) -> None:
         """Update zone."""
         _LOGGER.log(logging.INFO, "updateVolume: %s", str(value))
         self._volume = int(value)
         self.update_lastseen()
-        if self._update_callback and callable(self._update_callback):
-            self._update_callback(self)
 
     def updateMute(self, value: bool) -> None:
         """Update zone."""
         self._mute = value
         self.update_lastseen()
-        if self._update_callback and callable(self._update_callback):
-            self._update_callback(self)
 
     def updateSource(self, value: int) -> None:
         """Update zone."""
         self._source = value
         self.update_lastseen()
-        if self._update_callback and callable(self._update_callback):
-            self._update_callback(self)
 
     @property
     def controller(self):
@@ -103,24 +108,11 @@ class LeaZone:
         """Source."""
         return self._source
 
-    @property
-    def update_callback(self) -> Callable[[LeaZone], None] | None:  # noqa: F821, PGH003 # type: ignore
-        """Update Callback."""
-        return self._update_callback
-
-    def set_update_callback(
-        self,
-        callback: Callable[[LeaZone], None] | None,  # noqa: F821, PGH003 # type: ignore
-    ) -> Callable[[LeaZone], None] | None:  # noqa: F821, PGH003 # type: ignore
-        """Set Update Callback."""
-        old_callback = self._update_callback
-        self._update_callback = callback
-        return old_callback
-
     async def set_zone_power(self, power: bool):
         """Set Zone Power."""
         _LOGGER.log(logging.INFO, "set_zone_power: %s", str(power))
         self._power = power
+        await self._controller.turn_on_off(self._zone_id, str(power))
         self.updatePower(power)
 
     async def set_zone_volume(self, volume: int):

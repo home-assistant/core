@@ -39,7 +39,7 @@ class LeaController:
     """LEA Controller."""
 
     def __init__(  # noqa: D417
-        self: Any,
+        self,
         loop=None,
         port: str = PORT,
         ip_address: str = IP_ADDRESS,
@@ -253,6 +253,7 @@ class LeaController:
     @property
     def zones(self) -> list[LeaZone]:
         """Return zones."""
+        _LOGGER.log(logging.INFO, "controller zones")
         return list(self._registry.discovered_zones.values())
 
     def connection_lost(self, *args, **kwargs) -> None:
