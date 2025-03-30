@@ -272,6 +272,7 @@ class LeaController:
 
         if commandType == "volume":
             if zone := self.get_zone_by_id(zone_id):
+                value = (((float(value) / -1) - 80) / 0.8) * -1
                 zone.updateVolume(float(value))
         elif commandType == "mute":
             if zone := self.get_zone_by_id(zone_id):
