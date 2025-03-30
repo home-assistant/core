@@ -154,7 +154,7 @@
         "state": {
           "pause": "[%key:common::state::paused%]",
           "run": "Running",
-          "stop": "Stopped"
+          "stop": "[%key:common::state::stopped%]"
         }
       },
       "dishwasher_job_state": {
