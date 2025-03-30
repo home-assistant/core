@@ -15,7 +15,7 @@ class ZoneRegistry:
         self._custom_zones_queue: set[int] = set()
         self._logger = logger or logging.getLogger(__name__)
 
-    def add_discovered_zone(self, zone: LeaZone):
+    def add_discovered_zone(self, zone: LeaZone) -> LeaZone:
         """Add Discovered Zones."""
         if int(zone.zone_id) in self._custom_zones_queue:
             self._logger.debug(
