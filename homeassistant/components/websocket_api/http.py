@@ -7,6 +7,7 @@ from collections import deque
 from collections.abc import Callable, Coroutine
 import datetime as dt
 from functools import partial
+from itertools import chain
 import logging
 from typing import TYPE_CHECKING, Any, Final
 
@@ -162,7 +163,8 @@ class WebSocketHandler:
                     await send_bytes_text(message)
                     continue
 
-                coalesced_messages = b"".join((b"[", b",".join(message_queue), b"]"))
+                messages = tuple(chain.from_iterable((x, b",") for x in message_queue))
+                coalesced_messages = b"".join((b"[", *messages[:-1], b"]"))
                 message_queue.clear()
                 if is_debug_log_enabled():
                     debug("%s: Sending %s", self.description, coalesced_messages)
