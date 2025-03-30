@@ -511,7 +511,7 @@
     },
     "spin_speed": {
       "options": {
-        "laundry_care_washer_enum_type_spin_speed_off": "Off",
+        "laundry_care_washer_enum_type_spin_speed_off": "[%key:common::state::off%]",
         "laundry_care_washer_enum_type_spin_speed_r_p_m_400": "400 rpm",
         "laundry_care_washer_enum_type_spin_speed_r_p_m_600": "600 rpm",
         "laundry_care_washer_enum_type_spin_speed_r_p_m_700": "700 rpm",
@@ -521,7 +521,7 @@
         "laundry_care_washer_enum_type_spin_speed_r_p_m_1200": "1200 rpm",
         "laundry_care_washer_enum_type_spin_speed_r_p_m_1400": "1400 rpm",
         "laundry_care_washer_enum_type_spin_speed_r_p_m_1600": "1600 rpm",
-        "laundry_care_washer_enum_type_spin_speed_ul_off": "Off",
+        "laundry_care_washer_enum_type_spin_speed_ul_off": "[%key:common::state::off%]",
         "laundry_care_washer_enum_type_spin_speed_ul_low": "Low",
         "laundry_care_washer_enum_type_spin_speed_ul_medium": "Medium",
         "laundry_care_washer_enum_type_spin_speed_ul_high": "High"
@@ -529,7 +529,7 @@
     },
     "vario_perfect": {
       "options": {
-        "laundry_care_common_enum_type_vario_perfect_off": "Off",
+        "laundry_care_common_enum_type_vario_perfect_off": "[%key:common::state::off%]",
         "laundry_care_common_enum_type_vario_perfect_eco_perfect": "Eco perfect",
         "laundry_care_common_enum_type_vario_perfect_speed_perfect": "Speed perfect"
       }
