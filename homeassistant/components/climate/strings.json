@@ -257,7 +257,7 @@
   "selector": {
     "hvac_mode": {
       "options": {
-        "off": "Off",
+        "off": "[%key:common::state::off%]",
         "auto": "Auto",
         "cool": "Cool",
         "dry": "Dry",
