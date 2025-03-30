@@ -126,7 +126,7 @@
             "payload_not_available": "Payload not available"
           },
           "data_description": {
-            "availability_topic": "Topic to receive the availabillity payload on",
+            "availability_topic": "Topic to receive the availability payload on",
             "availability_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-templates-with-the-mqtt-integration) to render the availability payload received on the availability topic",
             "payload_available": "The payload that indicates the device is available (defaults to 'online')",
             "payload_not_available": "The payload that indicates the device is not available (defaults to 'offline')"
