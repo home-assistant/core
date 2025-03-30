@@ -59,7 +59,7 @@ async def async_setup_entry(
                 coordinator,
                 SensorEntityDescription(
                     key="zigbee:Price",
-                    translation_key="meter_price",
+                    translation_key="energy_price",
                     native_unit_of_measurement=f"{coordinator.data['zigbee:PriceCurrency']}/{UnitOfEnergy.KILO_WATT_HOUR}",
                     state_class=SensorStateClass.MEASUREMENT,
                 ),

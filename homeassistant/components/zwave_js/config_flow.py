@@ -21,19 +21,16 @@ from homeassistant.components.hassio import (
 )
 from homeassistant.config_entries import (
     SOURCE_USB,
-    ConfigEntriesFlowManager,
     ConfigEntry,
     ConfigEntryBaseFlow,
     ConfigEntryState,
     ConfigFlow,
-    ConfigFlowContext,
     ConfigFlowResult,
     OptionsFlow,
-    OptionsFlowManager,
 )
 from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import AbortFlow, FlowManager
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.hassio import is_hassio
@@ -42,7 +39,6 @@ from homeassistant.helpers.service_info.usb import UsbServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.helpers.typing import VolDictType
 
-from . import disconnect_client
 from .addon import get_addon_manager
 from .const import (
     ADDON_SLUG,
@@ -191,11 +187,6 @@ class BaseZwaveJSFlow(ConfigEntryBaseFlow, ABC):
         self.install_task: asyncio.Task | None = None
         self.start_task: asyncio.Task | None = None
         self.version_info: VersionInfo | None = None
-
-    @property
-    @abstractmethod
-    def flow_manager(self) -> FlowManager[ConfigFlowContext, ConfigFlowResult]:
-        """Return the flow manager of the flow."""
 
     async def async_step_install_addon(
         self, user_input: dict[str, Any] | None = None
@@ -355,11 +346,6 @@ class ZWaveJSConfigFlow(BaseZwaveJSFlow, ConfigFlow, domain=DOMAIN):
         super().__init__()
         self.use_addon = False
         self._usb_discovery = False
-
-    @property
-    def flow_manager(self) -> ConfigEntriesFlowManager:
-        """Return the correct flow manager."""
-        return self.hass.config_entries.flow
 
     @staticmethod
     @callback
@@ -730,11 +716,6 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
         self.original_addon_config: dict[str, Any] | None = None
         self.revert_reason: str | None = None
 
-    @property
-    def flow_manager(self) -> OptionsFlowManager:
-        """Return the correct flow manager."""
-        return self.hass.config_entries.options
-
     @callback
     def _async_update_entry(self, data: dict[str, Any]) -> None:
         """Update the config entry with new data."""
@@ -861,7 +842,7 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
                 and self.config_entry.state == ConfigEntryState.LOADED
             ):
                 # Disconnect integration before restarting add-on.
-                await disconnect_client(self.hass, self.config_entry)
+                await self.hass.config_entries.async_unload(self.config_entry.entry_id)
 
             return await self.async_step_start_addon()
 
