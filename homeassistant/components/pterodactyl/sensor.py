@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -11,15 +12,11 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import (
-    PERCENTAGE,
-    EntityCategory,
-    UnitOfInformation,
-    UnitOfTime,
-)
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfInformation
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.util import dt as dt_util
 
 from .coordinator import PterodactylConfigEntry, PterodactylCoordinator, PterodactylData
 from .entity import PterodactylEntity
@@ -42,7 +39,7 @@ PARALLEL_UPDATES = 0
 class PterodactylSensorEntityDescription(SensorEntityDescription):
     """Class describing Pterodactyl sensor entities."""
 
-    value_fn: Callable[[PterodactylData], StateType]
+    value_fn: Callable[[PterodactylData], StateType | datetime]
 
 
 SENSOR_DESCRIPTIONS = [
@@ -138,12 +135,10 @@ SENSOR_DESCRIPTIONS = [
     PterodactylSensorEntityDescription(
         key=KEY_UPTIME,
         translation_key=KEY_UPTIME,
-        value_fn=lambda data: data.uptime,
-        device_class=SensorDeviceClass.DURATION,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfTime.MILLISECONDS,
-        suggested_unit_of_measurement=UnitOfTime.DAYS,
-        suggested_display_precision=1,
+        value_fn=lambda data: dt_util.utcnow() - timedelta(milliseconds=data.uptime)
+        if data.uptime > 0
+        else None,
+        device_class=SensorDeviceClass.TIMESTAMP,
     ),
 ]
 
@@ -179,17 +174,8 @@ class PterodactylSensorEntity(PterodactylEntity, SensorEntity):
         super().__init__(coordinator, identifier, config_entry)
         self.entity_description = description
         self._attr_unique_id = f"{self.game_server_data.uuid}_{description.key}"
-        self._update_properties()
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._update_properties()
-        self.async_write_ha_state()
-
-    @callback
-    def _update_properties(self) -> None:
-        """Update sensor properties."""
-        self._attr_native_value = self.entity_description.value_fn(
-            self.game_server_data
-        )
+    @property
+    def native_value(self) -> StateType | datetime:
+        """Return native value of sensor."""
+        return self.entity_description.value_fn(self.game_server_data)
