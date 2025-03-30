@@ -263,7 +263,10 @@ class LeaController:
         zone_id, commandType, value = self._message_factory.create_message(data)
 
         if zone := self.get_zone_by_id(zone_id):
-            zone.update(float(value), commandType)
+            if commandType == "volume":
+                zone.updateVolume(float(value))
+            else:
+                zone.update(value, commandType)
 
     async def _handle_num_inputs(self, value: str):
         _LOGGER.log(logging.INFO, "_handle_num_inputs: %s", str(value))

@@ -114,13 +114,17 @@ class LeaZone:
         await self._controller.set_source(self._zone_id, source)
         self._source = source
 
-    def update(self, value: float, commandType: str) -> None:
+    def updateVolume(self, value: float) -> None:
+        """Update Volume."""
+        value = (((value / -1) - 80) / 0.8) * -1
+        self._volume = int(value)
+        self.update_lastseen()
+        if self._update_callback and callable(self._update_callback):
+            self._update_callback(self)
+
+    def update(self, value: str, commandType: str) -> None:
         """Update zone."""
-        if commandType == "volume":
-            # value = float(value)
-            value = (((value / -1) - 80) / 0.8) * -1
-            self._volume = int(value)
-        elif commandType == "mute":
+        if commandType == "mute":
             self._mute = bool(value)
         elif commandType == "power":
             self._power = bool(value)
