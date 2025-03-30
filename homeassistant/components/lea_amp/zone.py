@@ -104,6 +104,7 @@ class LeaZone:
     async def set_zone_mute(self, mute: bool):
         """Set Zone Mute."""
         _LOGGER.debug("set_zone_mute")
+        await self._controller.set_mute(self._zone_id, mute)
         self._mute = mute
 
     async def set_zone_source(self, source: int):

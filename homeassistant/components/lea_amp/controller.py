@@ -233,7 +233,7 @@ class LeaController:
         await self._send_message(setSourceMessage(zone_id, source))
 
     async def set_mute(self, zone_id: str, mute: bool) -> None:
-        """Set Volume."""
+        """Set Mute."""
         await self._send_message(setMuteMessage(zone_id, mute))
 
     def get_zone_by_id(self, zone_id: str) -> LeaZone | None:
