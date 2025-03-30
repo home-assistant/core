@@ -464,7 +464,7 @@ apprise==1.9.1
 aprslib==0.7.2
 
 # homeassistant.components.apsystems
-apsystems-ez1==2.4.0
+apsystems-ez1==2.5.0
 
 # homeassistant.components.aranet
 aranet4==2.5.1
@@ -1014,7 +1014,7 @@ ibeacon-ble==1.2.0
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
 # homeassistant.components.remote_calendar
-ical==9.0.1
+ical==9.0.3
 
 # homeassistant.components.caldav
 icalendar==6.1.0
@@ -1386,7 +1386,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.7.2
+plugwise==1.7.3
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1421,7 +1421,7 @@ pushbullet.py==0.11.0
 pushover_complete==1.1.1
 
 # homeassistant.components.pvoutput
-pvo==2.2.0
+pvo==2.2.1
 
 # homeassistant.components.aosmith
 py-aosmith==1.0.12
@@ -1566,7 +1566,7 @@ pydiscovergy==3.0.2
 pydrawise==2025.3.0
 
 # homeassistant.components.android_ip_webcam
-pydroid-ipcam==2.0.0
+pydroid-ipcam==3.0.0
 
 # homeassistant.components.ecoforest
 pyecoforest==0.4.0
@@ -1668,7 +1668,7 @@ pyiskra==0.1.15
 pyiss==1.0.1
 
 # homeassistant.components.isy994
-pyisy==3.1.15
+pyisy==3.2.0
 
 # homeassistant.components.ituran
 pyituran==0.1.4
@@ -2288,9 +2288,6 @@ stringcase==1.2.0
 
 # homeassistant.components.subaru
 subarulink==0.7.13
-
-# homeassistant.components.sunweg
-sunweg==3.0.2
 
 # homeassistant.components.surepetcare
 surepy==0.9.0
