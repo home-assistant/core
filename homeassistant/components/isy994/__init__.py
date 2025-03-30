@@ -138,7 +138,7 @@ async def async_setup_entry(
         for vtype, _, vid in isy.variables.children:
             numbers.append(isy.variables[vtype][vid])
     if (
-        isy.conf[CONFIG_NETWORKING] or isy.conf[CONFIG_PORTAL]
+        isy.conf[CONFIG_NETWORKING] or isy.conf.get(CONFIG_PORTAL)
     ) and isy.networking.nobjs:
         isy_data.devices[CONF_NETWORK] = _create_service_device_info(
             isy, name=CONFIG_NETWORKING, unique_id=CONF_NETWORK
