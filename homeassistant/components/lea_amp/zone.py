@@ -116,6 +116,8 @@ class LeaZone:
 
     def updateVolume(self, value: float) -> None:
         """Update Volume."""
+        _LOGGER.debug("updateVolume")
+        _LOGGER.debug("value:  %s", str(value))
         value = (((value / -1) - 80) / 0.8) * -1
         self._volume = int(value)
         self.update_lastseen()
@@ -124,6 +126,9 @@ class LeaZone:
 
     def update(self, value: str, commandType: str) -> None:
         """Update zone."""
+        _LOGGER.debug("update")
+        _LOGGER.debug("commandType:  %s", str(commandType))
+        _LOGGER.debug("value:  %s", str(value))
         if commandType == "mute":
             self._mute = bool(value)
         elif commandType == "power":
