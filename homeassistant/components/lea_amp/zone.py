@@ -1,5 +1,7 @@
 """LEA Zone Structure."""
 
+from __future__ import annotations
+
 from collections.abc import Callable
 from datetime import datetime
 import logging
@@ -24,18 +26,22 @@ class LeaZone:
         self._volume: int = 0
         self._mute: bool = False
         self._source: int = 0
-        self._update_callback: Callable[[dict[str, str]], None] | None = None
+        self._update_callback: Callable[[LeaZone], None] | None = (
+            None  # Callable[[dict[str, str]], None] | None = None
+        )
         self.is_manual: bool = False
 
     @property
-    def update_callback(self) -> Callable[[dict[str, str]], None] | None:
+    def update_callback(
+        self,
+    ) -> Callable[[LeaZone], None] | None:  # Callable[[dict[str, str]], None] | None:
         """Get Update Callback."""
         return self._update_callback
 
     def set_update_callback(
         self,
-        callback: Callable[[dict[str, str]], None] | None,
-    ) -> Callable[[dict[str, str]], None] | None:
+        callback: Callable[[LeaZone], None] | None,
+    ) -> Callable[[LeaZone], None] | None:
         """Set Update Callback."""
         old_callback = self._update_callback
         self._update_callback = callback
