@@ -32,6 +32,7 @@ class LeaZone:
         _LOGGER.log(logging.INFO, "updatePower: %s", str(value))
         self._power = value
         self.update_lastseen()
+
         if self._update_callback and callable(self._update_callback):
             self._update_callback(self)
 
