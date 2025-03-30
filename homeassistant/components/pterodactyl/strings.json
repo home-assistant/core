@@ -28,28 +28,28 @@
     },
     "sensor": {
       "cpu_utilization": {
-        "name": "CPU Utilization"
+        "name": "CPU utilization"
       },
       "cpu_limit": {
-        "name": "CPU Limit"
+        "name": "CPU limit"
       },
       "memory_usage": {
-        "name": "Memory Usage"
+        "name": "Memory usage"
       },
       "memory_limit": {
-        "name": "Memory Limit"
+        "name": "Memory limit"
       },
       "disk_usage": {
-        "name": "Disk Usage"
+        "name": "Disk usage"
       },
       "disk_limit": {
-        "name": "Disk Limit"
+        "name": "Disk limit"
       },
       "network_inbound": {
-        "name": "Network Inbound"
+        "name": "Network inbound"
       },
       "network_outbound": {
-        "name": "Network Outbound"
+        "name": "Network outbound"
       },
       "uptime": {
         "name": "Uptime"
