@@ -180,6 +180,9 @@ async def test_noisy_loggers(
     """Test that noisy loggers all logged as warnings."""
 
     logging_util.async_activate_log_queue_handler(hass)
+    await hass.async_start()
+    await hass.async_block_till_done()
+
     logger1 = logging.getLogger("noisy1")
     logger2 = logging.getLogger("noisy2.module")
 
@@ -215,6 +218,9 @@ async def test_noisy_loggers_ignores_lower_than_info(
     """Test that noisy loggers all logged as warnings, except for levels lower than INFO."""
 
     logging_util.async_activate_log_queue_handler(hass)
+    await hass.async_start()
+    await hass.async_block_till_done()
+
     logger = logging.getLogger("noisy_module")
 
     for _ in range(5):
@@ -246,6 +252,9 @@ async def test_noisy_loggers_counters_reset(
     """Test that noisy logger counters reset periodically."""
 
     logging_util.async_activate_log_queue_handler(hass)
+    await hass.async_start()
+    await hass.async_block_till_done()
+
     logger = logging.getLogger("noisy_module")
 
     expected_warning = "Module noisy_module is logging too frequently"
@@ -267,5 +276,44 @@ async def test_noisy_loggers_counters_reset(
     logger.info("This is log 3")
     await empty_log_queue()
     assert caplog.text.count(expected_warning) == 1
+    # close the handler so the queue thread stops
+    logging.root.handlers[0].close()
+
+
+@patch("homeassistant.util.logging.HomeAssistantQueueListener.MAX_LOGS_COUNT", 2)
+@patch(
+    "homeassistant.util.logging.HomeAssistantQueueListener.MAX_LOGS_COUNT_HA_STARTING",
+    3,
+)
+async def test_noisy_loggers_max_while_ha_starting(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that the threshold for warning about noisy loggers is higher during HomeAssistant startup."""
+
+    logging_util.async_activate_log_queue_handler(hass)
+
+    logger_startup = logging.getLogger("startup")
+    logger_startup.info("This is a log")
+    logger_startup.info("This is a log")
+
+    await empty_log_queue()
+    expected_warning = "logging too frequently"
+    assert caplog.text.count(expected_warning) == 0
+
+    logger_startup.info("This is a log")
+    logger_startup.info("This is a log")
+    await empty_log_queue()
+    assert caplog.text.count(expected_warning) == 1
+
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    logger = logging.getLogger("noisy_module")
+    logger.info("This is a log")
+    logger.info("This is a log")
+    await empty_log_queue()
+    expected_warning = "logging too frequently"
+    assert caplog.text.count(expected_warning) == 2
+
     # close the handler so the queue thread stops
     logging.root.handlers[0].close()

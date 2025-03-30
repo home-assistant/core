@@ -13,7 +13,9 @@ import time
 import traceback
 from typing import Any, cast, overload, override
 
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import (
+    Event,
     HassJobType,
     HomeAssistant,
     callback,
@@ -27,6 +29,7 @@ class HomeAssistantQueueListener(logging.handlers.QueueListener):
     """Custom QueueListener to watch for noisy loggers."""
 
     LOG_COUNTS_RESET_INTERVAL = 300
+    MAX_LOGS_COUNT_HA_STARTING = 500
     MAX_LOGS_COUNT = 200
 
     _last_reset: float
@@ -39,6 +42,7 @@ class HomeAssistantQueueListener(logging.handlers.QueueListener):
         """Initialize the handler."""
         super().__init__(queue, *handlers)
         self._warned_modules = set()
+        self._max_logs_count = self.MAX_LOGS_COUNT_HA_STARTING
         self._reset_counters(time.time())
 
     @override
@@ -58,7 +62,7 @@ class HomeAssistantQueueListener(logging.handlers.QueueListener):
 
         self._log_counts[module_name] += 1
         module_count = self._log_counts[module_name]
-        if module_count < self.MAX_LOGS_COUNT:
+        if module_count < self._max_logs_count:
             return
 
         _LOGGER.warning(
@@ -67,6 +71,11 @@ class HomeAssistantQueueListener(logging.handlers.QueueListener):
             module_count,
         )
         self._warned_modules.add(module_name)
+
+    def use_default_max_logs_count(self) -> None:
+        """Use the default max logs count."""
+        self._reset_counters(time.time())
+        self._max_logs_count = self.MAX_LOGS_COUNT
 
     def _reset_counters(self, time_sec: float) -> None:
         _LOGGER.debug("Resetting log counters")
@@ -128,6 +137,13 @@ def async_activate_log_queue_handler(hass: HomeAssistant) -> None:
 
     listener = HomeAssistantQueueListener(simple_queue, *migrated_handlers)
     queue_handler.listener = listener
+
+    @callback
+    def on_hass_started(event: Event) -> None:
+        """Switch to normal log count after HA has started."""
+        listener.use_default_max_logs_count()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, on_hass_started)
 
     listener.start()
 
