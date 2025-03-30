@@ -118,7 +118,7 @@
           "charge_ended": "Charge ended",
           "waiting_for_current_charge": "Waiting for current charge",
           "energy_flap_opened": "Energy flap opened",
-          "charge_in_progress": "Charging",
+          "charge_in_progress": "[%key:common::state::charging%]",
           "charge_error": "Not charging or plugged in",
           "unavailable": "Unavailable"
         }
