@@ -99,7 +99,7 @@
           "state": {
             "none": "None",
             "eco": "Eco",
-            "away": "[%key:common::state::not_home%]",
+            "away": "Away",
             "boost": "Boost",
             "comfort": "Comfort",
             "home": "[%key:common::state::home%]",
