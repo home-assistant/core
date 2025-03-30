@@ -6,6 +6,7 @@ from typing import Any
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
+    PRESET_BOOST,
     PRESET_COMFORT,
     PRESET_ECO,
     ClimateEntity,
@@ -38,7 +39,7 @@ from .sensor import value_scheduled_preset
 HVAC_MODES = [HVACMode.HEAT, HVACMode.OFF]
 PRESET_HOLIDAY = "holiday"
 PRESET_SUMMER = "summer"
-PRESET_MODES = [PRESET_ECO, PRESET_COMFORT]
+PRESET_MODES = [PRESET_ECO, PRESET_COMFORT, PRESET_BOOST]
 SUPPORTED_FEATURES = (
     ClimateEntityFeature.TARGET_TEMPERATURE
     | ClimateEntityFeature.PRESET_MODE
@@ -194,6 +195,8 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
             return PRESET_HOLIDAY
         if self.data.summer_active:
             return PRESET_SUMMER
+        if self.data.target_temperature == ON_API_TEMPERATURE:
+            return PRESET_BOOST
         if self.data.target_temperature == self.data.comfort_temperature:
             return PRESET_COMFORT
         if self.data.target_temperature == self.data.eco_temperature:
@@ -211,6 +214,8 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
             await self.async_set_temperature(temperature=self.data.comfort_temperature)
         elif preset_mode == PRESET_ECO:
             await self.async_set_temperature(temperature=self.data.eco_temperature)
+        elif preset_mode == PRESET_BOOST:
+            await self.async_set_temperature(temperature=ON_REPORT_SET_TEMPERATURE)
 
     @property
     def extra_state_attributes(self) -> ClimateExtraAttributes:

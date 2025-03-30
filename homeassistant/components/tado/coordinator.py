@@ -10,7 +10,6 @@ from PyTado.interface import Tado
 from requests import RequestException
 
 from homeassistant.components.climate import PRESET_AWAY, PRESET_HOME
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -20,6 +19,7 @@ if TYPE_CHECKING:
 
 from .const import (
     CONF_FALLBACK,
+    CONF_REFRESH_TOKEN,
     CONST_OVERLAY_TADO_DEFAULT,
     DOMAIN,
     INSIDE_TEMPERATURE_MEASUREMENT,
@@ -58,8 +58,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
             update_interval=SCAN_INTERVAL,
         )
         self._tado = tado
-        self._username = config_entry.data[CONF_USERNAME]
-        self._password = config_entry.data[CONF_PASSWORD]
+        self._refresh_token = config_entry.data[CONF_REFRESH_TOKEN]
         self._fallback = config_entry.options.get(
             CONF_FALLBACK, CONST_OVERLAY_TADO_DEFAULT
         )
@@ -107,6 +106,18 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
         self.data["zone"] = zones
         self.data["weather"] = home["weather"]
         self.data["geofence"] = home["geofence"]
+
+        refresh_token = await self.hass.async_add_executor_job(
+            self._tado.get_refresh_token
+        )
+
+        if refresh_token != self._refresh_token:
+            _LOGGER.debug("New refresh token obtained from Tado: %s", refresh_token)
+            self._refresh_token = refresh_token
+            self.hass.config_entries.async_update_entry(
+                self.config_entry,
+                data={**self.config_entry.data, CONF_REFRESH_TOKEN: refresh_token},
+            )
 
         return self.data
 
