@@ -35,7 +35,7 @@ BRIDGE_DEVICE_QUERY = {
             index=0,
             name="Cover0",
             status=0,
-            human_status="closed",
+            human_status="stopped",
             type="cover",
             val=0,
             protected=0,
@@ -58,7 +58,20 @@ BRIDGE_DEVICE_QUERY = {
             power_unit=WATT,
         )
     },
-    OTHER: {},
+    OTHER: {
+        0: ComelitSerialBridgeObject(
+            index=0,
+            name="Switch0",
+            status=0,
+            human_status="off",
+            type="other",
+            val=0,
+            protected=0,
+            zone="Bathroom",
+            power=0.0,
+            power_unit=WATT,
+        ),
+    },
     IRRIGATION: {},
     SCENARIO: {},
 }
