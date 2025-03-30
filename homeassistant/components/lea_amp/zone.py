@@ -130,6 +130,7 @@ class LeaZone:
         """Set Zone Mute."""
         _LOGGER.debug("set_zone_mute")
         self._mute = mute
+        self.update_callback(self)
 
     async def set_zone_source(self, source: int):
         """Set Zone Source."""
