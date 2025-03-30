@@ -1555,6 +1555,7 @@ async def test_rgb_value_template_fails(
             DEFAULT_CONFIG,
             (
                 {
+                    "effect_list": ["rainbow", "colorloop"],
                     "state_topic": "test-topic",
                     "state_template": "{{ value_json.state }}",
                     "brightness_template": "{{ value_json.brightness }}",
@@ -1562,6 +1563,7 @@ async def test_rgb_value_template_fails(
                     "red_template": "{{ value_json.color.red }}",
                     "green_template": "{{ value_json.color.green }}",
                     "blue_template": "{{ value_json.color.blue }}",
+                    "effect_template": "{{ value_json.effect }}",
                 },
             ),
         )
@@ -1622,6 +1624,15 @@ async def test_state_templates_ignore_missing_values(
     assert state.attributes.get("brightness") == 128
     assert state.attributes.get("color_temp_kelvin") is None  # rgb color has priority
     assert state.attributes.get("effect") is None
+
+    # update effect
+    async_fire_mqtt_message(hass, "test-topic", '{"effect": "rainbow"}')
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+    assert state.attributes.get("rgb_color") == (255, 128, 64)
+    assert state.attributes.get("brightness") == 128
+    assert state.attributes.get("color_temp_kelvin") is None  # rgb color has priority
+    assert state.attributes.get("effect") == "rainbow"
 
     # turn off the light
     async_fire_mqtt_message(hass, "test-topic", '{"state": "off"}')
