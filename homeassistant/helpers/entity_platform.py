@@ -573,9 +573,9 @@ class EntityPlatform:
 
     async def _async_add_and_update_entities(
         self,
-        coros: list[Coroutine[Any, Any, None]],
         entities: list[Entity],
         timeout: float,
+        config_subentry_id: str | None,
     ) -> None:
         """Add entities for a single platform and update them.
 
@@ -585,7 +585,16 @@ class EntityPlatform:
         event loop and will finish faster if we run them concurrently.
         """
         results: list[BaseException | None] | None = None
-        tasks = [create_eager_task(coro, loop=self.hass.loop) for coro in coros]
+        entity_registry = ent_reg.async_get(self.hass)
+        tasks = [
+            create_eager_task(
+                self._async_add_entity(
+                    entity, True, entity_registry, config_subentry_id
+                ),
+                loop=self.hass.loop,
+            )
+            for entity in entities
+        ]
         try:
             async with self.hass.timeout.async_timeout(timeout, self.domain):
                 results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -615,9 +624,9 @@ class EntityPlatform:
 
     async def _async_add_entities(
         self,
-        coros: list[Coroutine[Any, Any, None]],
         entities: list[Entity],
         timeout: float,
+        config_subentry_id: str | None,
     ) -> None:
         """Add entities for a single platform without updating.
 
@@ -626,13 +635,15 @@ class EntityPlatform:
         to the event loop so we can await the coros directly without
         scheduling them as tasks.
         """
+        entity_registry = ent_reg.async_get(self.hass)
         try:
             async with self.hass.timeout.async_timeout(timeout, self.domain):
-                for idx, coro in enumerate(coros):
+                for entity in entities:
                     try:
-                        await coro
+                        await self._async_add_entity(
+                            entity, False, entity_registry, config_subentry_id
+                        )
                     except Exception as ex:
-                        entity = entities[idx]
                         self.logger.exception(
                             "Error adding entity %s for domain %s with platform %s",
                             entity.entity_id,
@@ -677,21 +688,13 @@ class EntityPlatform:
         if not entities:
             return
 
-        entity_registry = ent_reg.async_get(self.hass)
-        coros = [
-            self._async_add_entity(
-                entity, update_before_add, entity_registry, config_subentry_id
-            )
-            for entity in entities
-        ]
-
-        timeout = max(SLOW_ADD_ENTITY_MAX_WAIT * len(coros), SLOW_ADD_MIN_TIMEOUT)
+        timeout = max(SLOW_ADD_ENTITY_MAX_WAIT * len(entities), SLOW_ADD_MIN_TIMEOUT)
         if update_before_add:
-            add_func = self._async_add_and_update_entities
+            await self._async_add_and_update_entities(
+                entities, timeout, config_subentry_id
+            )
         else:
-            add_func = self._async_add_entities
-
-        await add_func(coros, entities, timeout)
+            await self._async_add_entities(entities, timeout, config_subentry_id)
 
         if (
             (self.config_entry and self.config_entry.pref_disable_polling)
