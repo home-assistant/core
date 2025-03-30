@@ -141,7 +141,7 @@
       "air_purifier_state_current": {
         "state": {
           "inactive": "Inactive",
-          "idle": "Idle",
+          "idle": "[%key:common::state::idle%]",
           "purifying": "Purifying"
         }
       }
