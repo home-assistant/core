@@ -15,11 +15,12 @@ from homeassistant.const import (
     CONF_RESOURCES,
     PERCENTAGE,
     STATE_UNKNOWN,
+    Platform,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, translation
 
 from .util import (
     _get_mock_nutclient,
@@ -247,6 +248,36 @@ async def test_stale_options(
 
         state = hass.states.get("sensor.ups1_battery_charge")
         assert state.state == "10"
+
+
+async def test_state_ambient_translation(hass: HomeAssistant) -> None:
+    """Test translation of ambient state sensor."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "mock", CONF_PORT: "mock"},
+    )
+    entry.add_to_hass(hass)
+
+    mock_pynut = _get_mock_nutclient(
+        list_ups={"ups1": "UPS 1"}, list_vars={"ambient.humidity.status": "good"}
+    )
+
+    with patch(
+        "homeassistant.components.nut.AIONUTClient",
+        return_value=mock_pynut,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        key = "ambient_humidity_status"
+        state = hass.states.get(f"sensor.ups1_{key}")
+        assert state.state == "good"
+
+        result = translation.async_translate_state(
+            hass, state.state, Platform.SENSOR, DOMAIN, key, None
+        )
+
+        assert result == "Good"
 
 
 @pytest.mark.parametrize(
