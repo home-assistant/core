@@ -51,6 +51,7 @@ VALID_ENERGY_UNITS_GAS = {
     UnitOfVolume.CENTUM_CUBIC_FEET,
     UnitOfVolume.CUBIC_FEET,
     UnitOfVolume.CUBIC_METERS,
+    UnitOfVolume.LITERS,
     *VALID_ENERGY_UNITS,
 }
 VALID_VOLUME_UNITS_WATER: set[str] = {
@@ -271,8 +272,10 @@ class EnergyCostSensor(SensorEntity):
 
         elif self._adapter.source_type == "gas":
             valid_units = VALID_ENERGY_UNITS_GAS
-            # No conversion for gas.
-            default_price_unit = None
+            if self.hass.config.units is METRIC_SYSTEM:
+                default_price_unit = UnitOfVolume.CUBIC_METERS
+            else:
+                default_price_unit = UnitOfVolume.CENTUM_CUBIC_FEET
 
         elif self._adapter.source_type == "water":
             valid_units = VALID_VOLUME_UNITS_WATER
