@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 from music_assistant_client import MusicAssistantClient
 from music_assistant_client.exceptions import CannotConnect, InvalidServerVersion
 from music_assistant_models.enums import EventType
-from music_assistant_models.errors import MusicAssistantError
+from music_assistant_models.errors import ActionUnavailable, MusicAssistantError
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_URL, EVENT_HOMEASSISTANT_STOP, Platform
@@ -23,7 +23,7 @@ from homeassistant.helpers.issue_registry import (
     async_delete_issue,
 )
 
-from .actions import register_actions
+from .actions import get_music_assistant_client, register_actions
 from .const import DOMAIN, LOGGER
 
 if TYPE_CHECKING:
@@ -137,6 +137,18 @@ async def async_setup_entry(
         mass.subscribe(handle_player_removed, EventType.PLAYER_REMOVED)
     )
 
+    # check if any playerconfigs have been removed while we were disconnected
+    all_player_configs = await mass.config.get_player_configs()
+    player_ids = {player.player_id for player in all_player_configs}
+    dev_reg = dr.async_get(hass)
+    dev_entries = dr.async_entries_for_config_entry(dev_reg, entry.entry_id)
+    for device in dev_entries:
+        for identifier in device.identifiers:
+            if identifier[0] == DOMAIN and identifier[1] not in player_ids:
+                dev_reg.async_update_device(
+                    device.id, remove_config_entry_id=entry.entry_id
+                )
+
     return True
 
 
@@ -174,3 +186,31 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await mass_entry_data.mass.disconnect()
 
     return unload_ok
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+) -> bool:
+    """Remove a config entry from a device."""
+    player_id = next(
+        (
+            identifier[1]
+            for identifier in device_entry.identifiers
+            if identifier[0] == DOMAIN
+        ),
+        None,
+    )
+    if player_id is None:
+        # this should not be possible at all, but guard it anyways
+        return False
+    mass = get_music_assistant_client(hass, config_entry.entry_id)
+    if mass.players.get(player_id) is None:
+        # player is already removed on the server, this is an orphaned device
+        return True
+    # try to remove the player from the server
+    try:
+        await mass.config.remove_player_config(player_id)
+    except ActionUnavailable:
+        return False
+    else:
+        return True

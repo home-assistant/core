@@ -33,6 +33,7 @@ SONOS_COMPOSER = "composers"
 SONOS_RADIO = "radio"
 SONOS_SHARE = "share"
 SONOS_OTHER_ITEM = "other items"
+SONOS_AUDIO_BOOK = "audio book"
 
 MEDIA_TYPE_DIRECTORY = MediaClass.DIRECTORY
 
@@ -74,6 +75,7 @@ SONOS_TO_MEDIA_CLASSES = {
     "object.item": MediaClass.TRACK,
     "object.item.audioItem.musicTrack": MediaClass.TRACK,
     "object.item.audioItem.audioBroadcast": MediaClass.GENRE,
+    "object.item.audioItem.audioBook": MediaClass.TRACK,
 }
 
 SONOS_TO_MEDIA_TYPES = {
@@ -92,6 +94,7 @@ SONOS_TO_MEDIA_TYPES = {
     "object.container.playlistContainer.sameArtist": MediaType.ARTIST,
     "object.container.playlistContainer": MediaType.PLAYLIST,
     "object.item.audioItem.musicTrack": MediaType.TRACK,
+    "object.item.audioItem.audioBook": MediaType.TRACK,
 }
 
 MEDIA_TYPES_TO_SONOS: dict[MediaType | str, str] = {
@@ -122,6 +125,7 @@ SONOS_TYPES_MAPPING = {
     "object.item": SONOS_OTHER_ITEM,
     "object.item.audioItem.musicTrack": SONOS_TRACKS,
     "object.item.audioItem.audioBroadcast": SONOS_RADIO,
+    "object.item.audioItem.audioBook": SONOS_AUDIO_BOOK,
 }
 
 LIBRARY_TITLES_MAPPING = {

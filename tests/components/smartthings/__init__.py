@@ -3,7 +3,7 @@
 from typing import Any
 from unittest.mock import AsyncMock
 
-from pysmartthings.models import Attribute, Capability, DeviceEvent
+from pysmartthings import Attribute, Capability, DeviceEvent
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.smartthings.const import MAIN
@@ -55,21 +55,26 @@ async def trigger_update(
     attribute: Attribute,
     value: str | float | dict[str, Any] | list[Any] | None,
     data: dict[str, Any] | None = None,
+    component: str = MAIN,
 ) -> None:
     """Trigger an update."""
+    event = DeviceEvent(
+        "abc",
+        "abc",
+        "abc",
+        device_id,
+        component,
+        capability,
+        attribute,
+        value,
+        data,
+    )
+    for call in mock.add_unspecified_device_event_listener.call_args_list:
+        call[0][0](event)
     for call in mock.add_device_event_listener.call_args_list:
+        if call[0][0] == device_id:
+            call[0][3](event)
+    for call in mock.add_device_capability_event_listener.call_args_list:
         if call[0][0] == device_id and call[0][2] == capability:
-            call[0][3](
-                DeviceEvent(
-                    "abc",
-                    "abc",
-                    "abc",
-                    device_id,
-                    MAIN,
-                    capability,
-                    attribute,
-                    value,
-                    data,
-                )
-            )
+            call[0][3](event)
     await hass.async_block_till_done()

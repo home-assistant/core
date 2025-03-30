@@ -25,7 +25,12 @@ from aioesphomeapi import (
 )
 import pytest
 
-from homeassistant.components import assist_satellite, tts
+from homeassistant.components import (
+    assist_pipeline,
+    assist_satellite,
+    conversation,
+    tts,
+)
 from homeassistant.components.assist_pipeline import PipelineEvent, PipelineEventType
 from homeassistant.components.assist_satellite import (
     AssistSatelliteConfiguration,
@@ -41,7 +46,6 @@ from homeassistant.components.esphome.assist_satellite import (
     EsphomeAssistSatellite,
     VoiceAssistantUDPServer,
 )
-from homeassistant.components.media_source import PlayMedia
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
@@ -54,8 +58,11 @@ from homeassistant.helpers import (
     intent as intent_helper,
 )
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.network import get_url
 
 from .conftest import MockESPHomeDevice
+
+from tests.components.tts.common import MockResultStream
 
 
 def get_satellite_entity(
@@ -127,8 +134,6 @@ async def test_pipeline_api_audio(
 ) -> None:
     """Test a complete pipeline run with API audio (over the TCP connection)."""
     conversation_id = "test-conversation-id"
-    media_url = "http://test.url"
-    media_id = "test-media-id"
 
     mock_device: MockESPHomeDevice = await mock_esphome_device(
         mock_client=mock_client,
@@ -285,12 +290,21 @@ async def test_pipeline_api_audio(
         event_callback(
             PipelineEvent(
                 type=PipelineEventType.INTENT_END,
-                data={"intent_output": {"conversation_id": conversation_id}},
+                data={
+                    "intent_output": conversation.ConversationResult(
+                        response=intent_helper.IntentResponse("en"),
+                        conversation_id=conversation_id,
+                        continue_conversation=True,
+                    ).as_dict()
+                },
             )
         )
         assert mock_client.send_voice_assistant_event.call_args_list[-1].args == (
             VoiceAssistantEventType.VOICE_ASSISTANT_INTENT_END,
-            {"conversation_id": conversation_id},
+            {
+                "conversation_id": conversation_id,
+                "continue_conversation": "1",
+            },
         )
 
         # TTS
@@ -313,15 +327,22 @@ async def test_pipeline_api_audio(
         assert satellite.state == AssistSatelliteState.RESPONDING
 
         # Should return mock_wav audio
+        mock_tts_result_stream = MockResultStream(hass, "wav", mock_wav)
         event_callback(
             PipelineEvent(
                 type=PipelineEventType.TTS_END,
-                data={"tts_output": {"url": media_url, "media_id": media_id}},
+                data={
+                    "tts_output": {
+                        "media_id": "test-media-id",
+                        "url": mock_tts_result_stream.url,
+                        "token": mock_tts_result_stream.token,
+                    }
+                },
             )
         )
         assert mock_client.send_voice_assistant_event.call_args_list[-1].args == (
             VoiceAssistantEventType.VOICE_ASSISTANT_TTS_END,
-            {"url": media_url},
+            {"url": get_url(hass) + mock_tts_result_stream.url},
         )
 
         event_callback(PipelineEvent(type=PipelineEventType.RUN_END))
@@ -340,12 +361,6 @@ async def test_pipeline_api_audio(
         original_handle_pipeline_finished()
         pipeline_finished.set()
 
-    async def async_get_media_source_audio(
-        hass: HomeAssistant,
-        media_source_id: str,
-    ) -> tuple[str, bytes]:
-        return ("wav", mock_wav)
-
     tts_finished = asyncio.Event()
     original_tts_response_finished = satellite.tts_response_finished
 
@@ -357,10 +372,6 @@ async def test_pipeline_api_audio(
         patch(
             "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
             new=async_pipeline_from_audio_stream,
-        ),
-        patch(
-            "homeassistant.components.tts.async_get_media_source_audio",
-            new=async_get_media_source_audio,
         ),
         patch.object(satellite, "handle_pipeline_finished", handle_pipeline_finished),
         patch.object(satellite, "_stream_tts_audio", _stream_tts_audio),
@@ -419,8 +430,6 @@ async def test_pipeline_udp_audio(
     mainly focused on the UDP server.
     """
     conversation_id = "test-conversation-id"
-    media_url = "http://test.url"
-    media_id = "test-media-id"
 
     mock_device: MockESPHomeDevice = await mock_esphome_device(
         mock_client=mock_client,
@@ -484,7 +493,12 @@ async def test_pipeline_udp_audio(
         event_callback(
             PipelineEvent(
                 type=PipelineEventType.INTENT_END,
-                data={"intent_output": {"conversation_id": conversation_id}},
+                data={
+                    "intent_output": conversation.ConversationResult(
+                        response=intent_helper.IntentResponse("en"),
+                        conversation_id=conversation_id,
+                    ).as_dict()
+                },
             )
         )
 
@@ -502,10 +516,17 @@ async def test_pipeline_udp_audio(
         )
 
         # Should return mock_wav audio
+        mock_tts_result_stream = MockResultStream(hass, "wav", mock_wav)
         event_callback(
             PipelineEvent(
                 type=PipelineEventType.TTS_END,
-                data={"tts_output": {"url": media_url, "media_id": media_id}},
+                data={
+                    "tts_output": {
+                        "media_id": "test-media-id",
+                        "url": mock_tts_result_stream.url,
+                        "token": mock_tts_result_stream.token,
+                    }
+                },
             )
         )
 
@@ -517,12 +538,6 @@ async def test_pipeline_udp_audio(
     def handle_pipeline_finished():
         original_handle_pipeline_finished()
         pipeline_finished.set()
-
-    async def async_get_media_source_audio(
-        hass: HomeAssistant,
-        media_source_id: str,
-    ) -> tuple[str, bytes]:
-        return ("wav", mock_wav)
 
     tts_finished = asyncio.Event()
     original_tts_response_finished = satellite.tts_response_finished
@@ -546,10 +561,6 @@ async def test_pipeline_udp_audio(
         patch(
             "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
             new=async_pipeline_from_audio_stream,
-        ),
-        patch(
-            "homeassistant.components.tts.async_get_media_source_audio",
-            new=async_get_media_source_audio,
         ),
         patch.object(satellite, "handle_pipeline_finished", handle_pipeline_finished),
         patch.object(satellite, "tts_response_finished", tts_response_finished),
@@ -632,8 +643,6 @@ async def test_pipeline_media_player(
     mainly focused on tts_response_finished getting automatically called.
     """
     conversation_id = "test-conversation-id"
-    media_url = "http://test.url"
-    media_id = "test-media-id"
 
     mock_device: MockESPHomeDevice = await mock_esphome_device(
         mock_client=mock_client,
@@ -690,7 +699,12 @@ async def test_pipeline_media_player(
         event_callback(
             PipelineEvent(
                 type=PipelineEventType.INTENT_END,
-                data={"intent_output": {"conversation_id": conversation_id}},
+                data={
+                    "intent_output": conversation.ConversationResult(
+                        response=intent_helper.IntentResponse("en"),
+                        conversation_id=conversation_id,
+                    ).as_dict()
+                },
             )
         )
 
@@ -708,10 +722,17 @@ async def test_pipeline_media_player(
         )
 
         # Should return mock_wav audio
+        mock_tts_result_stream = MockResultStream(hass, "wav", mock_wav)
         event_callback(
             PipelineEvent(
                 type=PipelineEventType.TTS_END,
-                data={"tts_output": {"url": media_url, "media_id": media_id}},
+                data={
+                    "tts_output": {
+                        "media_id": "test-media-id",
+                        "url": mock_tts_result_stream.url,
+                        "token": mock_tts_result_stream.token,
+                    }
+                },
             )
         )
 
@@ -724,12 +745,6 @@ async def test_pipeline_media_player(
         original_handle_pipeline_finished()
         pipeline_finished.set()
 
-    async def async_get_media_source_audio(
-        hass: HomeAssistant,
-        media_source_id: str,
-    ) -> tuple[str, bytes]:
-        return ("wav", mock_wav)
-
     tts_finished = asyncio.Event()
     original_tts_response_finished = satellite.tts_response_finished
 
@@ -741,10 +756,6 @@ async def test_pipeline_media_player(
         patch(
             "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
             new=async_pipeline_from_audio_stream,
-        ),
-        patch(
-            "homeassistant.components.tts.async_get_media_source_audio",
-            new=async_get_media_source_audio,
         ),
         patch.object(satellite, "handle_pipeline_finished", handle_pipeline_finished),
         patch.object(satellite, "tts_response_finished", tts_response_finished),
@@ -919,80 +930,63 @@ async def test_streaming_tts_errors(
 
     # Should not stream if not running
     satellite._is_running = False
-    await satellite._stream_tts_audio("test-media-id")
+    await satellite._stream_tts_audio(MockResultStream(hass, "wav", mock_wav))
     mock_client.send_voice_assistant_audio.assert_not_called()
     satellite._is_running = True
 
     # Should only stream WAV
-    async def get_mp3(
-        hass: HomeAssistant,
-        media_source_id: str,
-    ) -> tuple[str, bytes]:
-        return ("mp3", b"")
-
-    with patch(
-        "homeassistant.components.tts.async_get_media_source_audio", new=get_mp3
-    ):
-        await satellite._stream_tts_audio("test-media-id")
-        mock_client.send_voice_assistant_audio.assert_not_called()
+    await satellite._stream_tts_audio(MockResultStream(hass, "mp3", b""))
+    mock_client.send_voice_assistant_audio.assert_not_called()
 
     # Needs to be the correct sample rate, etc.
-    async def get_bad_wav(
-        hass: HomeAssistant,
-        media_source_id: str,
-    ) -> tuple[str, bytes]:
-        with io.BytesIO() as wav_io:
-            with wave.open(wav_io, "wb") as wav_file:
-                wav_file.setframerate(48000)
-                wav_file.setsampwidth(2)
-                wav_file.setnchannels(1)
-                wav_file.writeframes(b"test-wav")
+    with io.BytesIO() as wav_io:
+        with wave.open(wav_io, "wb") as wav_file:
+            wav_file.setframerate(48000)
+            wav_file.setsampwidth(2)
+            wav_file.setnchannels(1)
+            wav_file.writeframes(b"test-wav")
 
-            return ("wav", wav_io.getvalue())
+        mock_tts_result_stream = MockResultStream(hass, "wav", wav_io.getvalue())
 
-    with patch(
-        "homeassistant.components.tts.async_get_media_source_audio", new=get_bad_wav
-    ):
-        await satellite._stream_tts_audio("test-media-id")
-        mock_client.send_voice_assistant_audio.assert_not_called()
+    await satellite._stream_tts_audio(mock_tts_result_stream)
+    mock_client.send_voice_assistant_audio.assert_not_called()
 
     # Check that TTS_STREAM_* events still get sent after cancel
     media_fetched = asyncio.Event()
 
-    async def get_slow_wav(
-        hass: HomeAssistant,
-        media_source_id: str,
-    ) -> tuple[str, bytes]:
+    mock_tts_result_stream = MockResultStream(hass, "wav", b"")
+
+    async def async_stream_result_slowly():
         media_fetched.set()
         await asyncio.sleep(1)
-        return ("wav", mock_wav)
+        yield mock_wav
+
+    mock_tts_result_stream.async_stream_result = async_stream_result_slowly
 
     mock_client.send_voice_assistant_event.reset_mock()
-    with patch(
-        "homeassistant.components.tts.async_get_media_source_audio", new=get_slow_wav
-    ):
-        task = asyncio.create_task(satellite._stream_tts_audio("test-media-id"))
-        async with asyncio.timeout(1):
-            # Wait for media to be fetched
-            await media_fetched.wait()
 
-        # Cancel task
-        task.cancel()
-        await task
+    task = asyncio.create_task(satellite._stream_tts_audio(mock_tts_result_stream))
+    async with asyncio.timeout(1):
+        # Wait for media to be fetched
+        await media_fetched.wait()
 
-        # No audio should have gone out
-        mock_client.send_voice_assistant_audio.assert_not_called()
-        assert len(mock_client.send_voice_assistant_event.call_args_list) == 2
+    # Cancel task
+    task.cancel()
+    await task
 
-        # The TTS_STREAM_* events should have gone out
-        assert mock_client.send_voice_assistant_event.call_args_list[-2].args == (
-            VoiceAssistantEventType.VOICE_ASSISTANT_TTS_STREAM_START,
-            {},
-        )
-        assert mock_client.send_voice_assistant_event.call_args_list[-1].args == (
-            VoiceAssistantEventType.VOICE_ASSISTANT_TTS_STREAM_END,
-            {},
-        )
+    # No audio should have gone out
+    mock_client.send_voice_assistant_audio.assert_not_called()
+    assert len(mock_client.send_voice_assistant_event.call_args_list) == 2
+
+    # The TTS_STREAM_* events should have gone out
+    assert mock_client.send_voice_assistant_event.call_args_list[-2].args == (
+        VoiceAssistantEventType.VOICE_ASSISTANT_TTS_STREAM_START,
+        {},
+    )
+    assert mock_client.send_voice_assistant_event.call_args_list[-1].args == (
+        VoiceAssistantEventType.VOICE_ASSISTANT_TTS_STREAM_END,
+        {},
+    )
 
 
 async def test_tts_format_from_media_player(
@@ -1140,7 +1134,7 @@ async def test_announce_supported_features(
         Awaitable[MockESPHomeDevice],
     ],
 ) -> None:
-    """Test that the announce supported feature is set by flags."""
+    """Test that the announce supported feature is not set by default."""
     mock_device: MockESPHomeDevice = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=[],
@@ -1187,25 +1181,32 @@ async def test_announce_message(
     done = asyncio.Event()
 
     async def send_voice_assistant_announcement_await_response(
-        media_id: str, timeout: float, text: str
+        media_id: str,
+        timeout: float,
+        text: str,
+        start_conversation: bool,
+        preannounce_media_id: str | None = None,
     ):
         assert satellite.state == AssistSatelliteState.RESPONDING
-        assert media_id == "https://www.home-assistant.io/resolved.mp3"
+        assert media_id == "http://10.10.10.10:8123/api/tts_proxy/test-token"
         assert text == "test-text"
+        assert not start_conversation
+        assert not preannounce_media_id
 
         done.set()
 
     with (
         patch(
-            "homeassistant.components.assist_satellite.entity.tts_generate_media_source_id",
+            "homeassistant.components.tts.generate_media_source_id",
             return_value="media-source://bla",
         ),
         patch(
-            "homeassistant.components.media_source.async_resolve_media",
-            return_value=PlayMedia(
-                url="https://www.home-assistant.io/resolved.mp3",
-                mime_type="audio/mp3",
-            ),
+            "homeassistant.components.tts.async_resolve_engine",
+            return_value="tts.cloud_tts",
+        ),
+        patch(
+            "homeassistant.components.tts.async_create_stream",
+            return_value=MockResultStream(hass, "wav", b""),
         ),
         patch.object(
             mock_client,
@@ -1217,7 +1218,11 @@ async def test_announce_message(
             await hass.services.async_call(
                 assist_satellite.DOMAIN,
                 "announce",
-                {"entity_id": satellite.entity_id, "message": "test-text"},
+                {
+                    "entity_id": satellite.entity_id,
+                    "message": "test-text",
+                    "preannounce_media_id": None,
+                },
                 blocking=True,
             )
             await done.wait()
@@ -1275,10 +1280,16 @@ async def test_announce_media_id(
     done = asyncio.Event()
 
     async def send_voice_assistant_announcement_await_response(
-        media_id: str, timeout: float, text: str
+        media_id: str,
+        timeout: float,
+        text: str,
+        start_conversation: bool,
+        preannounce_media_id: str | None = None,
     ):
         assert satellite.state == AssistSatelliteState.RESPONDING
         assert media_id == "https://www.home-assistant.io/proxied.flac"
+        assert not start_conversation
+        assert not preannounce_media_id
 
         done.set()
 
@@ -1300,6 +1311,7 @@ async def test_announce_media_id(
                 {
                     "entity_id": satellite.entity_id,
                     "media_id": "https://www.home-assistant.io/resolved.mp3",
+                    "preannounce_media_id": None,
                 },
                 blocking=True,
             )
@@ -1307,14 +1319,430 @@ async def test_announce_media_id(
             assert satellite.state == AssistSatelliteState.IDLE
 
         mock_async_create_proxy_url.assert_called_once_with(
-            hass,
-            dev.id,
-            "https://www.home-assistant.io/resolved.mp3",
+            hass=hass,
+            device_id=dev.id,
+            media_url="https://www.home-assistant.io/resolved.mp3",
             media_format="flac",
             rate=48000,
             channels=2,
             width=2,
         )
+
+
+async def test_announce_message_with_preannounce(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
+) -> None:
+    """Test announcement with message and preannounce media id."""
+    mock_device: MockESPHomeDevice = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=[],
+        user_service=[],
+        states=[],
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+            | VoiceAssistantFeature.SPEAKER
+            | VoiceAssistantFeature.API_AUDIO
+            | VoiceAssistantFeature.ANNOUNCE
+        },
+    )
+    await hass.async_block_till_done()
+
+    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
+    assert satellite is not None
+
+    done = asyncio.Event()
+
+    async def send_voice_assistant_announcement_await_response(
+        media_id: str,
+        timeout: float,
+        text: str,
+        start_conversation: bool,
+        preannounce_media_id: str | None = None,
+    ):
+        assert satellite.state == AssistSatelliteState.RESPONDING
+        assert media_id == "http://10.10.10.10:8123/api/tts_proxy/test-token"
+        assert text == "test-text"
+        assert not start_conversation
+        assert preannounce_media_id == "test-preannounce"
+
+        done.set()
+
+    with (
+        patch(
+            "homeassistant.components.tts.generate_media_source_id",
+            return_value="media-source://bla",
+        ),
+        patch(
+            "homeassistant.components.tts.async_resolve_engine",
+            return_value="tts.cloud_tts",
+        ),
+        patch(
+            "homeassistant.components.tts.async_create_stream",
+            return_value=MockResultStream(hass, "wav", b""),
+        ),
+        patch.object(
+            mock_client,
+            "send_voice_assistant_announcement_await_response",
+            new=send_voice_assistant_announcement_await_response,
+        ),
+    ):
+        async with asyncio.timeout(1):
+            await hass.services.async_call(
+                assist_satellite.DOMAIN,
+                "announce",
+                {
+                    "entity_id": satellite.entity_id,
+                    "message": "test-text",
+                    "preannounce_media_id": "test-preannounce",
+                },
+                blocking=True,
+            )
+            await done.wait()
+            assert satellite.state == AssistSatelliteState.IDLE
+
+
+async def test_start_conversation_supported_features(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
+) -> None:
+    """Test that the start conversation supported feature is not set by default."""
+    mock_device: MockESPHomeDevice = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=[],
+        user_service=[],
+        states=[],
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+        },
+    )
+    await hass.async_block_till_done()
+
+    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
+    assert satellite is not None
+
+    assert not (
+        satellite.supported_features & AssistSatelliteEntityFeature.START_CONVERSATION
+    )
+
+
+async def test_start_conversation_message(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
+) -> None:
+    """Test start conversation with message."""
+    mock_device: MockESPHomeDevice = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=[],
+        user_service=[],
+        states=[],
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+            | VoiceAssistantFeature.SPEAKER
+            | VoiceAssistantFeature.API_AUDIO
+            | VoiceAssistantFeature.ANNOUNCE
+            | VoiceAssistantFeature.START_CONVERSATION
+        },
+    )
+    await hass.async_block_till_done()
+
+    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
+    assert satellite is not None
+
+    pipeline = assist_pipeline.Pipeline(
+        conversation_engine="test engine",
+        conversation_language="en",
+        language="en",
+        name="test pipeline",
+        stt_engine="test stt",
+        stt_language="en",
+        tts_engine="test tts",
+        tts_language="en",
+        tts_voice=None,
+        wake_word_entity=None,
+        wake_word_id=None,
+    )
+
+    done = asyncio.Event()
+
+    async def send_voice_assistant_announcement_await_response(
+        media_id: str,
+        timeout: float,
+        text: str,
+        start_conversation: bool,
+        preannounce_media_id: str,
+    ):
+        assert satellite.state == AssistSatelliteState.RESPONDING
+        assert media_id == "http://10.10.10.10:8123/api/tts_proxy/test-token"
+        assert text == "test-text"
+        assert start_conversation
+        assert not preannounce_media_id
+
+        done.set()
+
+    with (
+        patch(
+            "homeassistant.components.tts.generate_media_source_id",
+            return_value="media-source://bla",
+        ),
+        patch(
+            "homeassistant.components.tts.async_resolve_engine",
+            return_value="tts.cloud_tts",
+        ),
+        patch(
+            "homeassistant.components.tts.async_create_stream",
+            return_value=MockResultStream(hass, "wav", b""),
+        ),
+        patch.object(
+            mock_client,
+            "send_voice_assistant_announcement_await_response",
+            new=send_voice_assistant_announcement_await_response,
+        ),
+        patch(
+            "homeassistant.components.assist_satellite.entity.async_get_pipeline",
+            return_value=pipeline,
+        ),
+    ):
+        async with asyncio.timeout(1):
+            await hass.services.async_call(
+                assist_satellite.DOMAIN,
+                "start_conversation",
+                {
+                    "entity_id": satellite.entity_id,
+                    "start_message": "test-text",
+                    "preannounce_media_id": None,
+                },
+                blocking=True,
+            )
+            await done.wait()
+            assert satellite.state == AssistSatelliteState.IDLE
+
+
+async def test_start_conversation_media_id(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test start conversation with media id."""
+    mock_device: MockESPHomeDevice = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=[
+            MediaPlayerInfo(
+                object_id="mymedia_player",
+                key=1,
+                name="my media_player",
+                unique_id="my_media_player",
+                supports_pause=True,
+                supported_formats=[
+                    MediaPlayerSupportedFormat(
+                        format="flac",
+                        sample_rate=48000,
+                        num_channels=2,
+                        purpose=MediaPlayerFormatPurpose.ANNOUNCEMENT,
+                        sample_bytes=2,
+                    ),
+                ],
+            )
+        ],
+        user_service=[],
+        states=[],
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+            | VoiceAssistantFeature.SPEAKER
+            | VoiceAssistantFeature.API_AUDIO
+            | VoiceAssistantFeature.ANNOUNCE
+            | VoiceAssistantFeature.START_CONVERSATION
+        },
+    )
+    await hass.async_block_till_done()
+
+    dev = device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, mock_device.entry.unique_id)}
+    )
+
+    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
+    assert satellite is not None
+
+    pipeline = assist_pipeline.Pipeline(
+        conversation_engine="test engine",
+        conversation_language="en",
+        language="en",
+        name="test pipeline",
+        stt_engine="test stt",
+        stt_language="en",
+        tts_engine="test tts",
+        tts_language="en",
+        tts_voice=None,
+        wake_word_entity=None,
+        wake_word_id=None,
+    )
+
+    done = asyncio.Event()
+
+    async def send_voice_assistant_announcement_await_response(
+        media_id: str,
+        timeout: float,
+        text: str,
+        start_conversation: bool,
+        preannounce_media_id: str,
+    ):
+        assert satellite.state == AssistSatelliteState.RESPONDING
+        assert media_id == "https://www.home-assistant.io/proxied.flac"
+        assert start_conversation
+        assert not preannounce_media_id
+
+        done.set()
+
+    with (
+        patch.object(
+            mock_client,
+            "send_voice_assistant_announcement_await_response",
+            new=send_voice_assistant_announcement_await_response,
+        ),
+        patch(
+            "homeassistant.components.esphome.assist_satellite.async_create_proxy_url",
+            return_value="https://www.home-assistant.io/proxied.flac",
+        ) as mock_async_create_proxy_url,
+        patch(
+            "homeassistant.components.assist_satellite.entity.async_get_pipeline",
+            return_value=pipeline,
+        ),
+    ):
+        async with asyncio.timeout(1):
+            await hass.services.async_call(
+                assist_satellite.DOMAIN,
+                "start_conversation",
+                {
+                    "entity_id": satellite.entity_id,
+                    "start_media_id": "https://www.home-assistant.io/resolved.mp3",
+                    "preannounce_media_id": None,
+                },
+                blocking=True,
+            )
+            await done.wait()
+            assert satellite.state == AssistSatelliteState.IDLE
+
+        mock_async_create_proxy_url.assert_called_once_with(
+            hass=hass,
+            device_id=dev.id,
+            media_url="https://www.home-assistant.io/resolved.mp3",
+            media_format="flac",
+            rate=48000,
+            channels=2,
+            width=2,
+        )
+
+
+async def test_start_conversation_message_with_preannounce(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
+) -> None:
+    """Test start conversation with message and preannounce media id."""
+    mock_device: MockESPHomeDevice = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=[],
+        user_service=[],
+        states=[],
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+            | VoiceAssistantFeature.SPEAKER
+            | VoiceAssistantFeature.API_AUDIO
+            | VoiceAssistantFeature.ANNOUNCE
+            | VoiceAssistantFeature.START_CONVERSATION
+        },
+    )
+    await hass.async_block_till_done()
+
+    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
+    assert satellite is not None
+
+    pipeline = assist_pipeline.Pipeline(
+        conversation_engine="test engine",
+        conversation_language="en",
+        language="en",
+        name="test pipeline",
+        stt_engine="test stt",
+        stt_language="en",
+        tts_engine="test tts",
+        tts_language="en",
+        tts_voice=None,
+        wake_word_entity=None,
+        wake_word_id=None,
+    )
+
+    done = asyncio.Event()
+
+    async def send_voice_assistant_announcement_await_response(
+        media_id: str,
+        timeout: float,
+        text: str,
+        start_conversation: bool,
+        preannounce_media_id: str,
+    ):
+        assert satellite.state == AssistSatelliteState.RESPONDING
+        assert media_id == "http://10.10.10.10:8123/api/tts_proxy/test-token"
+        assert text == "test-text"
+        assert start_conversation
+        assert preannounce_media_id == "test-preannounce"
+
+        done.set()
+
+    with (
+        patch(
+            "homeassistant.components.tts.generate_media_source_id",
+            return_value="media-source://bla",
+        ),
+        patch(
+            "homeassistant.components.tts.async_resolve_engine",
+            return_value="tts.cloud_tts",
+        ),
+        patch(
+            "homeassistant.components.tts.async_create_stream",
+            return_value=MockResultStream(hass, "wav", b""),
+        ),
+        patch.object(
+            mock_client,
+            "send_voice_assistant_announcement_await_response",
+            new=send_voice_assistant_announcement_await_response,
+        ),
+        patch(
+            "homeassistant.components.assist_satellite.entity.async_get_pipeline",
+            return_value=pipeline,
+        ),
+    ):
+        async with asyncio.timeout(1):
+            await hass.services.async_call(
+                assist_satellite.DOMAIN,
+                "start_conversation",
+                {
+                    "entity_id": satellite.entity_id,
+                    "start_message": "test-text",
+                    "preannounce_media_id": "test-preannounce",
+                },
+                blocking=True,
+            )
+            await done.wait()
+            assert satellite.state == AssistSatelliteState.IDLE
 
 
 async def test_satellite_unloaded_on_disconnect(
