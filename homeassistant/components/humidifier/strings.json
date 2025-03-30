@@ -66,11 +66,11 @@
             "home": "[%key:common::state::home%]",
             "away": "[%key:common::state::not_home%]",
             "auto": "Auto",
-            "baby": "Baby"
+            "baby": "Baby",
             "boost": "Boost",
             "comfort": "Comfort",
             "eco": "Eco",
-            "sleep": "Sleep",
+            "sleep": "Sleep"
           }
         }
       }
