@@ -265,7 +265,7 @@
           "high": "High",
           "low": "Low",
           "medium": "Medium",
-          "off": "Off"
+          "off": "[%key:common::state::off%]"
         }
       },
       "climate_state_seat_heater_rear_center": {
@@ -274,7 +274,7 @@
           "high": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::high%]",
           "low": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::low%]",
           "medium": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::medium%]",
-          "off": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::off%]"
+          "off": "[%key:common::state::off%]"
         }
       },
       "climate_state_seat_heater_rear_left": {
@@ -283,7 +283,7 @@
           "high": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::high%]",
           "low": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::low%]",
           "medium": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::medium%]",
-          "off": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::off%]"
+          "off": "[%key:common::state::off%]"
         }
       },
       "climate_state_seat_heater_rear_right": {
@@ -292,7 +292,7 @@
           "high": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::high%]",
           "low": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::low%]",
           "medium": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::medium%]",
-          "off": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::off%]"
+          "off": "[%key:common::state::off%]"
         }
       },
       "climate_state_seat_heater_right": {
@@ -301,7 +301,7 @@
           "high": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::high%]",
           "low": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::low%]",
           "medium": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::medium%]",
-          "off": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::off%]"
+          "off": "[%key:common::state::off%]"
         }
       },
       "climate_state_seat_heater_third_row_left": {
@@ -310,7 +310,7 @@
           "high": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::high%]",
           "low": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::low%]",
           "medium": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::medium%]",
-          "off": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::off%]"
+          "off": "[%key:common::state::off%]"
         }
       },
       "climate_state_seat_heater_third_row_right": {
@@ -319,7 +319,7 @@
           "high": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::high%]",
           "low": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::low%]",
           "medium": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::medium%]",
-          "off": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::off%]"
+          "off": "[%key:common::state::off%]"
         }
       },
       "climate_state_steering_wheel_heat_level": {
@@ -327,7 +327,7 @@
         "state": {
           "high": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::high%]",
           "low": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::low%]",
-          "off": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::off%]"
+          "off": "[%key:common::state::off%]"
         }
       },
       "components_customer_preferred_export_rule": {
@@ -422,8 +422,8 @@
         "state": {
           "starting": "Starting",
           "charging": "[%key:common::state::charging%]",
-          "disconnected": "Disconnected",
-          "stopped": "Stopped",
+          "disconnected": "[%key:common::state::disconnected%]",
+          "stopped": "[%key:common::state::stopped%]",
           "complete": "Complete",
           "no_power": "No power"
         }

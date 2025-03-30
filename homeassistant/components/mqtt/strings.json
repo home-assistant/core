@@ -126,7 +126,7 @@
             "payload_not_available": "Payload not available"
           },
           "data_description": {
-            "availability_topic": "Topic to receive the availabillity payload on",
+            "availability_topic": "Topic to receive the availability payload on",
             "availability_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-templates-with-the-mqtt-integration) to render the availability payload received on the availability topic",
             "payload_available": "The payload that indicates the device is available (defaults to 'online')",
             "payload_not_available": "The payload that indicates the device is not available (defaults to 'offline')"
@@ -219,10 +219,10 @@
             "options": "Add option"
           },
           "data_description": {
-            "device_class": "The device class of the {platform} entity. [Learn more.]({url}#device_class)",
-            "state_class": "The [state_class](https://developers.home-assistant.io/docs/core/entity/sensor/#available-state-classes) of the sensor. [Learn more.]({url}#state_class)",
+            "device_class": "The Device class of the {platform} entity. [Learn more.]({url}#device_class)",
+            "state_class": "The [State class](https://developers.home-assistant.io/docs/core/entity/sensor/#available-state-classes) of the sensor. [Learn more.]({url}#state_class)",
             "unit_of_measurement": "Defines the unit of measurement of the sensor, if any.",
-            "options": "Options for allowed sensor state values. The sensor’s device_class must be set to Enumeration. The options option cannot be used together with State Class or Unit of measurement."
+            "options": "Options for allowed sensor state values. The sensor’s Device class must be set to Enumeration. The 'Options' setting cannot be used together with State class or Unit of measurement."
           },
           "sections": {
             "advanced_settings": {

@@ -267,7 +267,7 @@ aiohasupervisor==0.3.0
 aiohomeconnect==0.16.3
 
 # homeassistant.components.homekit_controller
-aiohomekit==3.2.8
+aiohomekit==3.2.13
 
 # homeassistant.components.mcp_server
 aiohttp_sse==2.2.0
@@ -491,7 +491,7 @@ apprise==1.9.1
 aprslib==0.7.2
 
 # homeassistant.components.apsystems
-apsystems-ez1==2.4.0
+apsystems-ez1==2.5.0
 
 # homeassistant.components.aqualogic
 aqualogic==2.6
@@ -1184,7 +1184,7 @@ hyperion-py==0.7.5
 iammeter==0.2.1
 
 # homeassistant.components.iaqualink
-iaqualink==0.5.0
+iaqualink==0.5.3
 
 # homeassistant.components.ibeacon
 ibeacon-ble==1.2.0
@@ -1196,7 +1196,7 @@ ibmiotf==0.3.4
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
 # homeassistant.components.remote_calendar
-ical==9.0.1
+ical==9.0.3
 
 # homeassistant.components.caldav
 icalendar==6.1.0
@@ -1675,7 +1675,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.7.2
+plugwise==1.7.3
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1722,7 +1722,7 @@ pushbullet.py==0.11.0
 pushover_complete==1.1.1
 
 # homeassistant.components.pvoutput
-pvo==2.2.0
+pvo==2.2.1
 
 # homeassistant.components.aosmith
 py-aosmith==1.0.12
@@ -1918,7 +1918,7 @@ pydoods==1.0.2
 pydrawise==2025.3.0
 
 # homeassistant.components.android_ip_webcam
-pydroid-ipcam==2.0.0
+pydroid-ipcam==3.0.0
 
 # homeassistant.components.ebox
 pyebox==1.1.4
@@ -2047,7 +2047,7 @@ pyiskra==0.1.15
 pyiss==1.0.1
 
 # homeassistant.components.isy994
-pyisy==3.1.14
+pyisy==3.2.0
 
 # homeassistant.components.itach
 pyitachip2ir==0.0.7
@@ -2829,9 +2829,6 @@ stringcase==1.2.0
 
 # homeassistant.components.subaru
 subarulink==0.7.13
-
-# homeassistant.components.sunweg
-sunweg==3.0.2
 
 # homeassistant.components.surepetcare
 surepy==0.9.0

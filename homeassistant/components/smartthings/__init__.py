@@ -426,7 +426,7 @@ def create_devices(
                 kwargs[ATTR_CONNECTIONS] = {
                     (dr.CONNECTION_NETWORK_MAC, device.device.hub.mac_address)
                 }
-        if device.device.parent_device_id:
+        if device.device.parent_device_id and device.device.parent_device_id in devices:
             kwargs[ATTR_VIA_DEVICE] = (DOMAIN, device.device.parent_device_id)
         if (ocf := device.device.ocf) is not None:
             kwargs.update(
