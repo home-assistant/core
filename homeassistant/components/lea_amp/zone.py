@@ -45,28 +45,6 @@ class LeaZone:
         self._update_callback = callback
         return old_callback
 
-    def updatePower(self, value: bool) -> None:
-        """Update zone."""
-        _LOGGER.log(logging.INFO, "updatePower: %s", str(value))
-        self._power = value
-        self.update_lastseen()
-
-    def updateVolume(self, value: float) -> None:
-        """Update zone."""
-        _LOGGER.log(logging.INFO, "updateVolume: %s", str(value))
-        self._volume = int(value)
-        self.update_lastseen()
-
-    def updateMute(self, value: bool) -> None:
-        """Update zone."""
-        self._mute = value
-        self.update_lastseen()
-
-    def updateSource(self, value: int) -> None:
-        """Update zone."""
-        self._source = value
-        self.update_lastseen()
-
     @property
     def controller(self):
         """Controller."""
@@ -114,10 +92,9 @@ class LeaZone:
 
     async def set_zone_power(self, power: bool):
         """Set Zone Power."""
-        _LOGGER.log(logging.INFO, "set_zone_power: %s", str(power))
-        self._power = power
+        _LOGGER.log(logging.INFO, "ZONE set_zone_power: %s", str(power))
         await self._controller.turn_on_off(self._zone_id, str(power))
-        self.updatePower(power)
+        self._power = power
 
     async def set_zone_volume(self, volume: int):
         """Set Zone Volume."""

@@ -103,22 +103,22 @@ class LeaController:
         if self._update_enabled:
             self.send_update_message()
 
-    def cleanup(self) -> asyncio.Event:
+    async def cleanup(self) -> asyncio.Event:
         """Stop discovering. Stop updating. Close connection."""
         self._cleanup_done.clear()
         self.set_update_enabled(False)
-        self.set_discovery_enabled(False)
+        await self.set_discovery_enabled(False)
 
         if self._transport:
             self._transport.close()
         self._registry.cleanup()
         return self._cleanup_done
 
-    def add_zone_to_discovery_queue(self, zone_id: str) -> bool:
+    async def add_zone_to_discovery_queue(self, zone_id: str) -> bool:
         """Add zone to queue."""
         zone_added: bool = self._registry.add_zone_to_queue(int(zone_id))
         if not self._discovery_enabled and zone_added:
-            self.send_discovery_message()
+            await self.send_discovery_message()
         return zone_added
 
     def remove_zone_from_discovery_queue(self, zone_id: str) -> bool:
@@ -136,13 +136,13 @@ class LeaController:
             zone = zone.zone_id
         self._registry.remove_discovered_zone(zone)
 
-    def set_discovery_enabled(self, enabled: bool) -> None:
+    async def set_discovery_enabled(self, enabled: bool) -> None:
         """Enable Discovery."""
         if self._discovery_enabled == enabled:
             return
         self._discovery_enabled = enabled
         if enabled:
-            self.send_discovery_message()
+            await self.send_discovery_message()
         elif self._discovery_handle:
             self._discovery_handle.cancel()
             self._discovery_handle = None
@@ -185,7 +185,7 @@ class LeaController:
         """Return updates is enabled."""
         return self._update_enabled
 
-    async def send_discovery_message(self):
+    async def send_discovery_message(self) -> None:
         """Send Get Number of Inputs."""
         message: str = str(GetNumOfInputsMessage())
         _LOGGER.log(logging.INFO, "Sending discovery message: %s", message)
@@ -205,15 +205,6 @@ class LeaController:
             # self._transport.close()
         if self._registry.has_queued_zones:
             for zone_id in self._registry.zones_queue:
-                self._transport.sendto(message, (zone_id, self._port))
-
-        manually_added_zones = [
-            zone.zone_id
-            for zone in self._registry.discovered_zones.values()
-            if zone.is_manual
-        ]
-        if manually_added_zones:
-            for zone_id in manually_added_zones:
                 self._transport.sendto(message, (zone_id, self._port))
 
     async def send_update_message(self):
@@ -274,16 +265,16 @@ class LeaController:
         if commandType == "volume":
             if zone := self.get_zone_by_id(zone_id):
                 value = (((float(value) / -1) - 80) / 0.8) * -1
-                zone.updateVolume(float(value))
+                zone._volume = int(value)  # noqa: SLF001
         elif commandType == "mute":
             if zone := self.get_zone_by_id(zone_id):
-                zone.updateMute(bool(value))
+                zone._mute = bool(value)  # noqa: SLF001
         # elif commandType == "source":
         # if zone := self.get_zone_by_id(zone_id):
         # zone.updateSource(int(value))
         elif commandType == "power":
             if zone := self.get_zone_by_id(zone_id):
-                zone.updatePower(bool(value))
+                zone._power = bool(value)  # noqa: SLF001
 
     async def _handle_num_inputs(self, value: str):
         _LOGGER.log(logging.INFO, "_handle_num_inputs: %s", str(value))
