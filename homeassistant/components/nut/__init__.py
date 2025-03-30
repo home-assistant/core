@@ -122,7 +122,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool:
     if unique_id is None:
         unique_id = entry.entry_id
 
-    if entry.unique_id is None:
+    elif entry.unique_id is None:
         hass.config_entries.async_update_entry(entry, unique_id=unique_id)
 
     if username is not None and password is not None:
