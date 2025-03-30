@@ -71,7 +71,7 @@
           "level2": "Level 2",
           "level3": "Level 3",
           "level4": "Level 4",
-          "stop": "Stopped",
+          "stop": "[%key:common::state::stopped%]",
           "pretimeout": "Pre-timeout",
           "timeout": "Timeout"
         }
