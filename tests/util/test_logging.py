@@ -209,6 +209,32 @@ async def test_noisy_loggers(
 
 
 @patch("homeassistant.util.logging.HomeAssistantQueueListener.MAX_LOGS_COUNT", 5)
+@pytest.mark.parametrize(
+    ("module"),
+    ["homeassistant.setup"],
+)
+async def test_allowed_noisy_loggers(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    module: str,
+) -> None:
+    """Test that noisy loggers all logged as warnings."""
+
+    logging_util.async_activate_log_queue_handler(hass)
+    logger = logging.getLogger(module)
+
+    for _ in range(10):
+        logger.info("This is a log")
+
+    await empty_log_queue()
+
+    assert f"Module {module} is logging too frequently" not in caplog.text
+
+    # close the handler so the queue thread stops
+    logging.root.handlers[0].close()
+
+
+@patch("homeassistant.util.logging.HomeAssistantQueueListener.MAX_LOGS_COUNT", 5)
 async def test_noisy_loggers_ignores_lower_than_info(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
