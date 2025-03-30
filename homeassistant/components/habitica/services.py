@@ -84,6 +84,7 @@ from .const import (
     SERVICE_API_CALL,
     SERVICE_CANCEL_QUEST,
     SERVICE_CAST_SKILL,
+    SERVICE_CREATE_DAILY,
     SERVICE_CREATE_HABIT,
     SERVICE_CREATE_REWARD,
     SERVICE_CREATE_TODO,
@@ -243,6 +244,7 @@ SERVICE_TASK_TYPE_MAP = {
     SERVICE_UPDATE_TODO: TaskType.TODO,
     SERVICE_CREATE_TODO: TaskType.TODO,
     SERVICE_UPDATE_DAILY: TaskType.DAILY,
+    SERVICE_CREATE_DAILY: TaskType.DAILY,
 }
 
 
@@ -913,7 +915,12 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
             schema=SERVICE_UPDATE_TASK_SCHEMA,
             supports_response=SupportsResponse.ONLY,
         )
-    for service in (SERVICE_CREATE_HABIT, SERVICE_CREATE_REWARD, SERVICE_CREATE_TODO):
+    for service in (
+        SERVICE_CREATE_DAILY,
+        SERVICE_CREATE_HABIT,
+        SERVICE_CREATE_REWARD,
+        SERVICE_CREATE_TODO,
+    ):
         hass.services.async_register(
             DOMAIN,
             service,

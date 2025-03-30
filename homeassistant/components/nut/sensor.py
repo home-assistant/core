@@ -523,6 +523,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
     "input.power": SensorEntityDescription(
         key="input.power",
         translation_key="input_power",
+        native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
         device_class=SensorDeviceClass.APPARENT_POWER,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -988,13 +989,6 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "watts": SensorEntityDescription(
-        key="watts",
-        translation_key="watts",
-        native_unit_of_measurement=UnitOfPower.WATT,
-        device_class=SensorDeviceClass.POWER,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
 }
 
 
@@ -1103,6 +1097,6 @@ class NUTSensor(NUTBaseEntity, SensorEntity):
 def _format_display_state(status: dict[str, str]) -> str:
     """Return UPS display state."""
     try:
-        return " ".join(STATE_TYPES[state] for state in status[KEY_STATUS].split())
+        return ", ".join(STATE_TYPES[state] for state in status[KEY_STATUS].split())
     except KeyError:
         return STATE_UNKNOWN
