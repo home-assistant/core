@@ -670,25 +670,20 @@ class EntityPlatform:
                 f"entry {self.config_entry.entry_id if self.config_entry else None}"
             )
 
+        entities: list[Entity] = (
+            new_entities if type(new_entities) is list else list(new_entities)
+        )
         # handle empty list from component/platform
-        if not new_entities:  # type: ignore[truthy-iterable]
+        if not entities:
             return
 
-        hass = self.hass
-        entity_registry = ent_reg.async_get(hass)
-        coros: list[Coroutine[Any, Any, None]] = []
-        entities: list[Entity] = []
-        for entity in new_entities:
-            coros.append(
-                self._async_add_entity(
-                    entity, update_before_add, entity_registry, config_subentry_id
-                )
+        entity_registry = ent_reg.async_get(self.hass)
+        coros = [
+            self._async_add_entity(
+                entity, update_before_add, entity_registry, config_subentry_id
             )
-            entities.append(entity)
-
-        # No entities for processing
-        if not coros:
-            return
+            for entity in entities
+        ]
 
         timeout = max(SLOW_ADD_ENTITY_MAX_WAIT * len(coros), SLOW_ADD_MIN_TIMEOUT)
         if update_before_add:
