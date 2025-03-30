@@ -104,14 +104,17 @@ class LeaZone:
         return self._source
 
     @property
-    def update_callback(self):
+    def update_callback(self) -> Callable[[LeaZone], None] | None:  # noqa: F821, PGH003 # type: ignore
         """Update Callback."""
         return self._update_callback
 
-    def set_update_callback(self, update_callback):
+    def set_update_callback(
+        self,
+        callback: Callable[[LeaZone], None] | None,  # noqa: F821, PGH003 # type: ignore
+    ) -> Callable[[LeaZone], None] | None:  # noqa: F821, PGH003 # type: ignore
         """Set Update Callback."""
         old_callback = self._update_callback
-        self._update_callback = update_callback
+        self._update_callback = callback
         return old_callback
 
     async def set_zone_power(self, power: bool):
@@ -119,20 +122,16 @@ class LeaZone:
         _LOGGER.log(logging.INFO, "set_zone_power: %s", str(power))
         self._power = power
         self.updatePower(power)
-        self.update_lastseen()
-        self.update_callback(self)
 
     async def set_zone_volume(self, volume: int):
         """Set Zone Volume."""
         _LOGGER.log(logging.INFO, "set_zone_volume: %s", str(volume))
         self._volume = volume
-        self.update_callback(self)
 
     async def set_zone_mute(self, mute: bool):
         """Set Zone Mute."""
         _LOGGER.debug("set_zone_mute")
         self._mute = mute
-        self.update_callback(self)
 
     async def set_zone_source(self, source: int):
         """Set Zone Source."""
