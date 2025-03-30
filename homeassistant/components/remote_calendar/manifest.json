@@ -1,0 +1,12 @@
+{
+  "domain": "remote_calendar",
+  "name": "Remote Calendar",
+  "codeowners": ["@Thomas55555"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/remote_calendar",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "loggers": ["ical"],
+  "quality_scale": "silver",
+  "requirements": ["ical==9.0.3"]
+}

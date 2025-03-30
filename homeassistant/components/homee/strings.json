@@ -26,6 +26,76 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "blackout_alarm": {
+        "name": "Blackout"
+      },
+      "carbon_dioxide": {
+        "name": "Carbon dioxide"
+      },
+      "flood": {
+        "name": "Flood"
+      },
+      "high_temperature": {
+        "name": "High temperature"
+      },
+      "leak_alarm": {
+        "name": "Leak"
+      },
+      "load_alarm": {
+        "name": "Load",
+        "state": {
+          "off": "Normal",
+          "on": "Overload"
+        }
+      },
+      "low_temperature": {
+        "name": "Low temperature"
+      },
+      "malfunction": {
+        "name": "Malfunction"
+      },
+      "maximum": {
+        "name": "Maximum level"
+      },
+      "minimum": {
+        "name": "Minimum level"
+      },
+      "motor_blocked": {
+        "name": "Motor blocked"
+      },
+      "overcurrent": {
+        "name": "Overcurrent"
+      },
+      "overload": {
+        "name": "Overload"
+      },
+      "rain": {
+        "name": "Rain"
+      },
+      "replace_filter": {
+        "name": "Replace filter",
+        "state": {
+          "on": "Replace"
+        }
+      },
+      "storage": {
+        "name": "Storage",
+        "state": {
+          "off": "Space available",
+          "on": "Storage full"
+        }
+      },
+      "surge": {
+        "name": "Surge"
+      },
+      "voltage_drop": {
+        "name": "Voltage drop"
+      },
+      "water": {
+        "name": "Water"
+      }
+    },
     "button": {
       "automatic_mode": {
         "name": "Automatic mode"
@@ -227,8 +297,8 @@
           "open": "[%key:common::state::open%]",
           "closed": "[%key:common::state::closed%]",
           "partial": "Partially open",
-          "opening": "Opening",
-          "closing": "Closing"
+          "opening": "[%key:common::state::opening%]",
+          "closing": "[%key:common::state::closing%]"
         }
       },
       "uv": {
