@@ -252,7 +252,7 @@ aiohasupervisor==0.3.0
 aiohomeconnect==0.16.3
 
 # homeassistant.components.homekit_controller
-aiohomekit==3.2.8
+aiohomekit==3.2.13
 
 # homeassistant.components.mcp_server
 aiohttp_sse==2.2.0
@@ -1005,7 +1005,7 @@ huum==0.7.12
 hyperion-py==0.7.5
 
 # homeassistant.components.iaqualink
-iaqualink==0.5.0
+iaqualink==0.5.3
 
 # homeassistant.components.ibeacon
 ibeacon-ble==1.2.0
@@ -1668,7 +1668,7 @@ pyiskra==0.1.15
 pyiss==1.0.1
 
 # homeassistant.components.isy994
-pyisy==3.1.14
+pyisy==3.2.0
 
 # homeassistant.components.ituran
 pyituran==0.1.4
