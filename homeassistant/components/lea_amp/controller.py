@@ -263,6 +263,7 @@ class LeaController:
         zone_id, commandType, value = self._message_factory.create_message(data)
 
         if zone := self.get_zone_by_id(zone_id):
+            _LOGGER.log(logging.INFO, "zone found")
             if commandType == "volume":
                 zone.updateVolume(float(value))
             else:
