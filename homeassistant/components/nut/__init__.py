@@ -25,12 +25,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import (
-    DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-    INTEGRATION_SUPPORTED_COMMANDS,
-    PLATFORMS,
-)
+from .const import DOMAIN, INTEGRATION_SUPPORTED_COMMANDS, PLATFORMS
 
 NUT_FAKE_SERIAL = ["unknown", "blank"]
 
@@ -68,7 +63,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool:
     alias = config.get(CONF_ALIAS)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
-    scan_interval = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+    if CONF_SCAN_INTERVAL in entry.options:
+        current_options = {**entry.options}
+        current_options.pop(CONF_SCAN_INTERVAL)
+        hass.config_entries.async_update_entry(entry, options=current_options)
 
     data = PyNUTData(host, port, alias, username, password)
 
@@ -101,7 +99,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool:
         config_entry=entry,
         name="NUT resource status",
         update_method=async_update_data,
-        update_interval=timedelta(seconds=scan_interval),
+        update_interval=timedelta(seconds=60),
         always_update=False,
     )
 

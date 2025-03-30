@@ -14,7 +14,6 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_RESOURCES,
-    CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
@@ -671,45 +670,3 @@ async def test_abort_if_already_setup_alias(hass: HomeAssistant) -> None:
 
         assert result3["type"] is FlowResultType.ABORT
         assert result3["reason"] == "already_configured"
-
-
-async def test_options_flow(hass: HomeAssistant) -> None:
-    """Test config flow options."""
-
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="abcde12345",
-        data=VALID_CONFIG,
-    )
-    config_entry.add_to_hass(hass)
-
-    with patch("homeassistant.components.nut.async_setup_entry", return_value=True):
-        result = await hass.config_entries.options.async_init(config_entry.entry_id)
-
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "init"
-
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"], user_input={}
-        )
-
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert config_entry.options == {
-            CONF_SCAN_INTERVAL: 60,
-        }
-
-    with patch("homeassistant.components.nut.async_setup_entry", return_value=True):
-        result2 = await hass.config_entries.options.async_init(config_entry.entry_id)
-
-        assert result2["type"] is FlowResultType.FORM
-        assert result2["step_id"] == "init"
-
-        result2 = await hass.config_entries.options.async_configure(
-            result2["flow_id"],
-            user_input={CONF_SCAN_INTERVAL: 12},
-        )
-
-        assert result2["type"] is FlowResultType.CREATE_ENTRY
-        assert config_entry.options == {
-            CONF_SCAN_INTERVAL: 12,
-        }
