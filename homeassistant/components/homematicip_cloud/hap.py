@@ -18,7 +18,7 @@ import homeassistant
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.httpx_client import create_async_httpx_client
+from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import HMIPC_AUTHTOKEN, HMIPC_HAPID, HMIPC_NAME, HMIPC_PIN, PLATFORMS
 from .errors import HmipcConnectionError
@@ -31,7 +31,7 @@ async def build_context_async(
 ):
     """Create a HomematicIP context object."""
     ssl_ctx = homeassistant.util.ssl.get_default_context()
-    client_session = create_async_httpx_client(hass)
+    client_session = get_async_client(hass)
 
     return await ConnectionContextBuilder.build_context_async(
         accesspoint_id=hapid,
@@ -83,7 +83,7 @@ class HomematicipAuth:
         connection = RestConnection(
             context,
             log_status_exceptions=False,
-            httpx_client_session=create_async_httpx_client(hass),
+            httpx_client_session=get_async_client(hass),
         )
         # hass.loop
         auth = Auth(connection, context.client_auth_token, hapid)
@@ -280,7 +280,7 @@ class HomematicipHAP:
 
         try:
             context = await build_context_async(hass, hapid, authtoken)
-            home.init_with_context(context, True, create_async_httpx_client(hass))
+            home.init_with_context(context, True, get_async_client(hass))
             await home.get_current_state_async()
         except HmipConnectionError as err:
             raise HmipcConnectionError from err
