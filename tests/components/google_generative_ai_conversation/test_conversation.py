@@ -104,28 +104,24 @@ async def test_function_call(
 
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     assert result.response.as_dict()["speech"]["plain"]["speech"] == "Hi there!"
-    mock_tool_call = mock_create.mock_calls[2][2]["message"]
-    assert mock_tool_call.model_dump() == {
-        "parts": [
-            {
-                "code_execution_result": None,
-                "executable_code": None,
-                "file_data": None,
-                "function_call": None,
-                "function_response": {
-                    "id": None,
-                    "name": "test_tool",
-                    "response": {
-                        "result": "Test response",
-                    },
-                },
-                "inline_data": None,
-                "text": None,
-                "thought": None,
-                "video_metadata": None,
+    mock_tool_response_parts = mock_create.mock_calls[2][2]["message"]
+    assert len(mock_tool_response_parts) == 1
+    assert mock_tool_response_parts[0].model_dump() == {
+        "code_execution_result": None,
+        "executable_code": None,
+        "file_data": None,
+        "function_call": None,
+        "function_response": {
+            "id": None,
+            "name": "test_tool",
+            "response": {
+                "result": "Test response",
             },
-        ],
-        "role": None,
+        },
+        "inline_data": None,
+        "text": None,
+        "thought": None,
+        "video_metadata": None,
     }
 
     mock_tool.async_call.assert_awaited_once_with(
@@ -292,28 +288,24 @@ async def test_function_call_without_parameters(
 
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     assert result.response.as_dict()["speech"]["plain"]["speech"] == "Hi there!"
-    mock_tool_call = mock_create.mock_calls[2][2]["message"]
-    assert mock_tool_call.model_dump() == {
-        "parts": [
-            {
-                "code_execution_result": None,
-                "executable_code": None,
-                "file_data": None,
-                "function_call": None,
-                "function_response": {
-                    "id": None,
-                    "name": "test_tool",
-                    "response": {
-                        "result": "Test response",
-                    },
-                },
-                "inline_data": None,
-                "text": None,
-                "thought": None,
-                "video_metadata": None,
+    mock_tool_response_parts = mock_create.mock_calls[2][2]["message"]
+    assert len(mock_tool_response_parts) == 1
+    assert mock_tool_response_parts[0].model_dump() == {
+        "code_execution_result": None,
+        "executable_code": None,
+        "file_data": None,
+        "function_call": None,
+        "function_response": {
+            "id": None,
+            "name": "test_tool",
+            "response": {
+                "result": "Test response",
             },
-        ],
-        "role": None,
+        },
+        "inline_data": None,
+        "text": None,
+        "thought": None,
+        "video_metadata": None,
     }
 
     mock_tool.async_call.assert_awaited_once_with(
@@ -390,29 +382,25 @@ async def test_function_exception(
 
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     assert result.response.as_dict()["speech"]["plain"]["speech"] == "Hi there!"
-    mock_tool_call = mock_create.mock_calls[2][2]["message"]
-    assert mock_tool_call.model_dump() == {
-        "parts": [
-            {
-                "code_execution_result": None,
-                "executable_code": None,
-                "file_data": None,
-                "function_call": None,
-                "function_response": {
-                    "id": None,
-                    "name": "test_tool",
-                    "response": {
-                        "error": "HomeAssistantError",
-                        "error_text": "Test tool exception",
-                    },
-                },
-                "inline_data": None,
-                "text": None,
-                "thought": None,
-                "video_metadata": None,
+    mock_tool_response_parts = mock_create.mock_calls[2][2]["message"]
+    assert len(mock_tool_response_parts) == 1
+    assert mock_tool_response_parts[0].model_dump() == {
+        "code_execution_result": None,
+        "executable_code": None,
+        "file_data": None,
+        "function_call": None,
+        "function_response": {
+            "id": None,
+            "name": "test_tool",
+            "response": {
+                "error": "HomeAssistantError",
+                "error_text": "Test tool exception",
             },
-        ],
-        "role": None,
+        },
+        "inline_data": None,
+        "text": None,
+        "thought": None,
+        "video_metadata": None,
     }
     mock_tool.async_call.assert_awaited_once_with(
         hass,

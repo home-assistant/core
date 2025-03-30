@@ -79,9 +79,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool:
         try:
             return await data.async_update()
         except NUTLoginError as err:
-            raise ConfigEntryAuthFailed from err
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="device_authentication",
+                translation_placeholders={
+                    "err": str(err),
+                },
+            ) from err
         except NUTError as err:
-            raise UpdateFailed(f"Error fetching UPS state: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="data_fetch_error",
+                translation_placeholders={
+                    "err": str(err),
+                },
+            ) from err
 
     coordinator = DataUpdateCoordinator(
         hass,
@@ -328,7 +340,12 @@ class PyNUTData:
             await self._client.run_command(self._alias, command_name)
         except NUTError as err:
             raise HomeAssistantError(
-                f"Error running command {command_name}, {err}"
+                translation_domain=DOMAIN,
+                translation_key="nut_command_error",
+                translation_placeholders={
+                    "command_name": command_name,
+                    "err": str(err),
+                },
             ) from err
 
     async def async_list_commands(self) -> set[str] | None:

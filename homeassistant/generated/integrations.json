@@ -630,6 +630,11 @@
       "config_flow": false,
       "iot_class": "cloud_push"
     },
+    "balay": {
+      "name": "Balay",
+      "integration_type": "virtual",
+      "supported_by": "home_connect"
+    },
     "balboa": {
       "name": "Balboa Spa Client",
       "integration_type": "hub",
@@ -759,11 +764,28 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
-    "bosch_shc": {
-      "name": "Bosch SHC",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "local_push"
+    "bosch": {
+      "name": "Bosch",
+      "integrations": {
+        "bosch_alarm": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "Bosch Alarm"
+        },
+        "bosch_shc": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "Bosch SHC"
+        },
+        "home_connect": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_push",
+          "name": "Home Connect"
+        }
+      }
     },
     "brandt": {
       "name": "Brandt Smart Control",
@@ -1048,6 +1070,11 @@
       "name": "Consolidated Edison (ConEd)",
       "integration_type": "virtual",
       "supported_by": "opower"
+    },
+    "constructa": {
+      "name": "Constructa",
+      "integration_type": "virtual",
+      "supported_by": "home_connect"
     },
     "control4": {
       "name": "Control4",
@@ -2157,6 +2184,11 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "gaggenau": {
+      "name": "Gaggenau",
+      "integration_type": "virtual",
+      "supported_by": "home_connect"
+    },
     "garadget": {
       "name": "Garadget",
       "integration_type": "hub",
@@ -2632,13 +2664,6 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
-    },
-    "home_connect": {
-      "name": "Home Connect",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_push",
-      "single_config_entry": true
     },
     "home_plus_control": {
       "name": "Legrand Home+ Control",
@@ -4191,6 +4216,11 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "neff": {
+      "name": "Neff",
+      "integration_type": "virtual",
+      "supported_by": "home_connect"
+    },
     "ness_alarm": {
       "name": "Ness Alarm",
       "integration_type": "hub",
@@ -4884,6 +4914,11 @@
       "integration_type": "virtual",
       "supported_by": "wyoming"
     },
+    "pitsos": {
+      "name": "Pitsos",
+      "integration_type": "virtual",
+      "supported_by": "home_connect"
+    },
     "pjlink": {
       "name": "PJLink",
       "integration_type": "hub",
@@ -4959,6 +4994,11 @@
       "config_flow": true,
       "single_config_entry": true
     },
+    "profilo": {
+      "name": "Profilo",
+      "integration_type": "virtual",
+      "supported_by": "home_connect"
+    },
     "progettihwsw": {
       "name": "ProgettiHWSW Automation",
       "integration_type": "hub",
@@ -5020,6 +5060,12 @@
       "name": "Public Service Company of Oklahoma (PSO)",
       "integration_type": "virtual",
       "supported_by": "opower"
+    },
+    "pterodactyl": {
+      "name": "Pterodactyl",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "pulseaudio_loopback": {
       "name": "PulseAudio Loopback",
@@ -5764,6 +5810,11 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
+    },
+    "siemens": {
+      "name": "Siemens",
+      "integration_type": "virtual",
+      "supported_by": "home_connect"
     },
     "sigfox": {
       "name": "Sigfox",
@@ -6516,6 +6567,11 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
+    },
+    "thermador": {
+      "name": "Thermador",
+      "integration_type": "virtual",
+      "supported_by": "home_connect"
     },
     "thermobeacon": {
       "name": "ThermoBeacon",
