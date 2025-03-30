@@ -1,6 +1,7 @@
 """Tests for home_connect sensor entities."""
 
 from collections.abc import Awaitable, Callable
+from http import HTTPStatus
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
@@ -59,6 +60,7 @@ from homeassistant.helpers import (
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
+from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture
@@ -209,6 +211,7 @@ async def test_connected_devices(
     assert len(new_entity_entries) > len(entity_entries)
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
 async def test_switch_entity_availability(
     hass: HomeAssistant,
@@ -320,6 +323,7 @@ async def test_switch_functionality(
     assert hass.states.is_state(entity_id, state)
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     ("entity_id", "program_key", "initial_state", "appliance"),
     [
@@ -397,6 +401,7 @@ async def test_program_switch_functionality(
     client.stop_program.assert_awaited_once_with(appliance.ha_id)
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     (
         "entity_id",
@@ -801,18 +806,24 @@ async def test_power_switch_service_validation_errors(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_create_issue(
+@pytest.mark.parametrize(
+    "service",
+    [SERVICE_TURN_ON, SERVICE_TURN_OFF],
+)
+async def test_create_program_switch_deprecation_issue(
     hass: HomeAssistant,
     appliance: HomeAppliance,
+    service: str,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     setup_credentials: None,
     client: MagicMock,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test we create an issue when an automation or script is using a deprecated entity."""
+    """Test that we create an issue when an automation or script is using a program switch entity or the entity is used by the user."""
     entity_id = "switch.washer_program_mix"
-    issue_id = f"deprecated_program_switch_{entity_id}"
+    automation_script_issue_id = f"deprecated_program_switch_{entity_id}"
+    action_handler_issue_id = f"deprecated_program_switch_{entity_id}"
 
     assert await async_setup_component(
         hass,
@@ -851,17 +862,118 @@ async def test_create_issue(
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        service,
+        {
+            ATTR_ENTITY_ID: entity_id,
+        },
+        blocking=True,
+    )
+
     assert automations_with_entity(hass, entity_id)[0] == "automation.test"
     assert scripts_with_entity(hass, entity_id)[0] == "script.test"
 
-    assert len(issue_registry.issues) == 1
-    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert len(issue_registry.issues) == 2
+    assert issue_registry.async_get_issue(DOMAIN, automation_script_issue_id)
+    assert issue_registry.async_get_issue(DOMAIN, action_handler_issue_id)
 
     await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
 
     # Assert the issue is no longer present
-    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert not issue_registry.async_get_issue(DOMAIN, automation_script_issue_id)
+    assert not issue_registry.async_get_issue(DOMAIN, action_handler_issue_id)
+    assert len(issue_registry.issues) == 0
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    "service",
+    [SERVICE_TURN_ON, SERVICE_TURN_OFF],
+)
+async def test_program_switch_deprecation_issue_fix(
+    hass: HomeAssistant,
+    appliance: HomeAppliance,
+    service: str,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    setup_credentials: None,
+    client: MagicMock,
+    issue_registry: ir.IssueRegistry,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test we can fix the issues created when a program switch entity is in an automation or in a script or when is used."""
+    entity_id = "switch.washer_program_mix"
+    automation_script_issue_id = f"deprecated_program_switch_{entity_id}"
+    action_handler_issue_id = f"deprecated_program_switch_{entity_id}"
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": "test",
+                "trigger": {"platform": "state", "entity_id": entity_id},
+                "action": {
+                    "action": "automation.turn_on",
+                    "target": {
+                        "entity_id": "automation.test",
+                    },
+                },
+            }
+        },
+    )
+    assert await async_setup_component(
+        hass,
+        script.DOMAIN,
+        {
+            script.DOMAIN: {
+                "test": {
+                    "sequence": [
+                        {
+                            "action": "switch.turn_on",
+                            "entity_id": entity_id,
+                        },
+                    ],
+                }
+            }
+        },
+    )
+
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert await integration_setup(client)
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        service,
+        {
+            ATTR_ENTITY_ID: entity_id,
+        },
+        blocking=True,
+    )
+
+    assert automations_with_entity(hass, entity_id)[0] == "automation.test"
+    assert scripts_with_entity(hass, entity_id)[0] == "script.test"
+
+    assert len(issue_registry.issues) == 2
+    assert issue_registry.async_get_issue(DOMAIN, automation_script_issue_id)
+    assert issue_registry.async_get_issue(DOMAIN, action_handler_issue_id)
+
+    for issue in issue_registry.issues.copy().values():
+        _client = await hass_client()
+        resp = await _client.post(
+            "/api/repairs/issues/fix",
+            json={"handler": DOMAIN, "issue_id": issue.issue_id},
+        )
+        assert resp.status == HTTPStatus.OK
+        flow_id = (await resp.json())["flow_id"]
+        resp = await _client.post(f"/api/repairs/issues/fix/{flow_id}")
+
+    # Assert the issue is no longer present
+    assert not issue_registry.async_get_issue(DOMAIN, automation_script_issue_id)
+    assert not issue_registry.async_get_issue(DOMAIN, action_handler_issue_id)
     assert len(issue_registry.issues) == 0
 
 
