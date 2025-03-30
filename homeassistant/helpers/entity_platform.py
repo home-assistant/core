@@ -586,18 +586,20 @@ class EntityPlatform:
         """
         results: list[BaseException | None] | None = None
         entity_registry = ent_reg.async_get(self.hass)
-        tasks = [
-            create_eager_task(
-                self._async_add_entity(
-                    entity, True, entity_registry, config_subentry_id
-                ),
-                loop=self.hass.loop,
-            )
-            for entity in entities
-        ]
         try:
             async with self.hass.timeout.async_timeout(timeout, self.domain):
-                results = await asyncio.gather(*tasks, return_exceptions=True)
+                results = await asyncio.gather(
+                    *(
+                        create_eager_task(
+                            self._async_add_entity(
+                                entity, True, entity_registry, config_subentry_id
+                            ),
+                            loop=self.hass.loop,
+                        )
+                        for entity in entities
+                    ),
+                    return_exceptions=True,
+                )
         except TimeoutError:
             self.logger.warning(
                 "Timed out adding entities for domain %s with platform %s after %ds",
