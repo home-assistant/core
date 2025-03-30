@@ -21,7 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .util import _get_mock_nutclient
+from .util import _get_mock_nutclient, async_init_integration
 
 from tests.common import MockConfigEntry
 
@@ -520,6 +520,43 @@ async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
                 CONF_PORT: 123,
             },
         )
+
+        assert result2["type"] is FlowResultType.ABORT
+        assert result2["reason"] == "already_configured"
+
+
+async def test_abort_duplicate_unique_ids(hass: HomeAssistant) -> None:
+    """Test we abort if unique_id is already setup."""
+
+    list_vars = {
+        "device.mfr": "Some manufacturer",
+        "device.model": "Some model",
+        "device.serial": "0000-1",
+    }
+    await async_init_integration(
+        hass,
+        list_ups={"ups1": "UPS 1"},
+        list_vars=list_vars,
+    )
+
+    mock_pynut = _get_mock_nutclient(list_ups={"ups2": "UPS 2"}, list_vars=list_vars)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.nut.AIONUTClient",
+        return_value=mock_pynut,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "1.1.1.1",
+                CONF_PORT: 2222,
+            },
+        )
+        await hass.async_block_till_done()
 
         assert result2["type"] is FlowResultType.ABORT
         assert result2["reason"] == "already_configured"
