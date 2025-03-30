@@ -161,7 +161,7 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
 
         entry = await self.async_set_unique_id(self.unique_id)
         self.hass.config_entries.async_update_entry(entry, data=data)
-        await self.hass.config_entries.async_reload(entry.entry_id)        
+        await self.hass.config_entries.async_reload(entry.entry_id)
         return self.async_abort(reason="reauth_successful")
 
     async def async_step_user(
