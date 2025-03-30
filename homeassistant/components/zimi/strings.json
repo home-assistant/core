@@ -37,7 +37,7 @@
       "invalid_mac": "Invalid MAC address",
       "mismatched_mac": "Mismatched MAC address: {error_detail}",
       "connection_refused": "Connection refused",
-      "discovery_failure": "ZCC discovery on LAN failed - manually define host, port and mac."
+      "discovery_failure": "ZCC discovery on LAN failed - manually define host, port and MAC address."
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
