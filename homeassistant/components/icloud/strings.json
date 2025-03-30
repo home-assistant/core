@@ -44,20 +44,6 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
-  "options": {
-    "step": {
-      "init": {
-        "title": "iCloud Settings",
-        "description": "Manage settings for the iCloud integration.",
-        "data": {
-          "re_auth": "Reauthenticate with iCloud"
-        }
-      }
-    },
-    "abort": {
-        "reauth_initiated": "Reauthentication process has started."
-    }
-  },
   "services": {
     "update": {
       "name": "Update",

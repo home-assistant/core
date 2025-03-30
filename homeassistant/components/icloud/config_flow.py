@@ -17,7 +17,6 @@ from pyicloud.exceptions import (
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.core import callback
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.storage import Store
 
@@ -162,11 +161,7 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
 
         entry = await self.async_set_unique_id(self.unique_id)
         self.hass.config_entries.async_update_entry(entry, data=data)
-        try:
-            await self.hass.config_entries.async_reload(entry.entry_id)
-        except Exception as ex:
-            _LOGGER.error("Failed to Reload Integration for  %s", ex)
-            
+        await self.hass.config_entries.async_reload(entry.entry_id)        
         return self.async_abort(reason="reauth_successful")
 
     async def async_step_user(
