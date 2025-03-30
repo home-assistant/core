@@ -117,11 +117,13 @@ class LeaZone:
         """Set Zone Power."""
         _LOGGER.log(logging.INFO, "set_zone_power: %s", str(power))
         self._power = power
+        self.update_callback(self)
 
     async def set_zone_volume(self, volume: int):
         """Set Zone Volume."""
         _LOGGER.log(logging.INFO, "set_zone_volume: %s", str(volume))
         self._volume = volume
+        self.update_callback(self)
 
     async def set_zone_mute(self, mute: bool):
         """Set Zone Mute."""
