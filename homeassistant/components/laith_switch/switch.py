@@ -24,6 +24,7 @@ class LaithSwitch(SwitchEntity):
         """Initialize the switch."""
         self._attr_name = "Laith Switch"
         self._is_on = False
+        self._attr_unique_id = "laith_switch_1"
 
     @property
     def is_on(self) -> bool:
