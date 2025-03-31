@@ -8,5 +8,5 @@
   "integration_type": "hub",
   "iot_class": "local_polling",
   "quality_scale": "bronze",
-  "requirements": ["aiohttp==3.11.11"]
+  "requirements": ["aiohttp==3.11.14"]
 }
