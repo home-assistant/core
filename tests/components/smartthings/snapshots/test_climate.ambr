@@ -70,6 +70,7 @@
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
       'max_temp': 35,
@@ -109,6 +110,7 @@
       'current_temperature': 23.9,
       'friendly_name': 'Radiator Thermostat II [+M] Wohnzimmer',
       'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
       'max_temp': 35,
@@ -431,6 +433,7 @@
         'auto',
       ]),
       'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
@@ -478,6 +481,7 @@
       'friendly_name': 'Main Floor',
       'hvac_action': <HVACAction.HEATING: 'heating'>,
       'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
@@ -628,6 +632,7 @@
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
       'max_temp': 35,
@@ -668,6 +673,7 @@
       'friendly_name': 'Hall thermostat',
       'hvac_action': <HVACAction.HEATING: 'heating'>,
       'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
       'max_temp': 35,
@@ -695,6 +701,7 @@
         'on',
       ]),
       'hvac_modes': list([
+        <HVACMode.AUTO: 'auto'>,
       ]),
       'max_temp': 35.0,
       'min_temp': 7.0,
@@ -738,6 +745,7 @@
       'friendly_name': 'asd',
       'hvac_action': <HVACAction.COOLING: 'cooling'>,
       'hvac_modes': list([
+        <HVACMode.AUTO: 'auto'>,
       ]),
       'max_temp': 35.0,
       'min_temp': 7.0,
