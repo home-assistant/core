@@ -266,6 +266,7 @@ class LeaController:
             _LOGGER.log(logging.INFO, "zone found")
             if commandType == "volume":
                 zone.updateVolume(float(value))
+                zone.update_lastseen()
             else:
                 zone.update(value, commandType)
 

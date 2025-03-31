@@ -140,6 +140,7 @@ class LeaZone:
     def update_lastseen(self) -> None:
         """Update Last Seen."""
         self._lastseen = datetime.now()
+        _LOGGER.debug("update_lastseen:  %s", str(self._lastseen))
 
     def as_dict(self) -> dict[str, Any]:
         """Dictinory."""
