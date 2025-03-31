@@ -48,6 +48,11 @@ dependencies = [
   # hass-nabucasa is imported by helpers which don't depend on the cloud
   # integration
   "hass-nabucasa==0.94.0",
+  # hassil is indirectly imported from onboarding via the import chain
+  # onboarding->cloud->assist_pipeline->conversation->hassil. Onboarding needs
+  # to be setup in stage 0, but we don't want to also promote cloud with all its
+  # dependencies to stage 0.
+  "hassil==2.2.3",
   # When bumping httpx, please check the version pins of
   # httpcore, anyio, and h11 in gen_requirements_all
   "httpx==0.28.1",

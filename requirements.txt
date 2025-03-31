@@ -23,6 +23,7 @@ ciso8601==2.3.2
 cronsim==2.6
 fnv-hash-fast==1.4.0
 hass-nabucasa==0.94.0
+hassil==2.2.3
 httpx==0.28.1
 home-assistant-bluetooth==1.13.1
 ifaddr==0.2.0
