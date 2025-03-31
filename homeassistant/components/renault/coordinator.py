@@ -69,7 +69,7 @@ class RenaultDataUpdateCoordinator(DataUpdateCoordinator[T]):
             # we have been throttled and decided to cooldown
             # so do not count this update as an error
             # coordinator.last_update_success should still be ok
-            LOGGER.warning("API throttled: Waiting for next scan")
+            self.logger.debug("Renault API throttled: scan skipped and old data returned")
             return self.data
 
         try:
