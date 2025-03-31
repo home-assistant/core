@@ -462,7 +462,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             vol.Optional(ATTR_MEDIA_CONTENT_TYPE): cv.string,
             vol.Optional(ATTR_MEDIA_CONTENT_ID): cv.string,
             vol.Required(ATTR_MEDIA_SEARCH_QUERY): cv.string,
-            vol.Required(ATTR_MEDIA_SEARCH_QUERY): cv.string,
             vol.Optional(ATTR_MEDIA_FILTER_CLASSES): vol.All(
                 cv.ensure_list,
                 [vol.In([m.value for m in MediaClass])],
