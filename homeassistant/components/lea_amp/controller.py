@@ -25,7 +25,7 @@ from .message import (
 from .zone import LeaZone
 from .zone_registry import ZoneRegistry
 
-IP_ADDRESS = "192.168.0.250"
+# IP_ADDRESS = "192.168.0.250"
 PORT = "4321"
 
 DISCOVERY_INTERVAL = 10
@@ -42,7 +42,7 @@ class LeaController:
         self,
         loop=None,
         port: str = PORT,
-        ip_address: str = IP_ADDRESS,
+        ip_address: str = "",
         discovery_enabled: bool = False,
         discovery_interval: int = DISCOVERY_INTERVAL,
         update_enabled: bool = True,

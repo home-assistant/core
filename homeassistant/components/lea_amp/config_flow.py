@@ -8,28 +8,44 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant import data_entry_flow
+from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_entry_flow
 
-from .const import CONNECTION_TIMEOUT, DOMAIN, LEA_IP, PORT
+from .const import CONNECTION_TIMEOUT, DOMAIN, PORT
 from .controller import LeaController
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class ExampleConfigFlow(data_entry_flow.FlowHandler):
+class ExampleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
-    async def async_step_user(self, user_input=None) -> FlowResult:
+    async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Step User."""
         # Specify items in the order they are to be displayed in the UI
-        data_schema = {
-            vol.Required("ip_address"): str,
-        }
+        if user_input is not None:
+            return self.async_create_entry(title="Lea AMP", data=user_input)
 
-        return self.async_show_form(step_id="user", data_schema=vol.Schema(data_schema))
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required("ip_address"): str,
+                }
+            ),
+        )
+
+
+async def async_setup_entry(hass: HomeAssistant, entry):
+    """Setup."""  # noqa: D401
+
+    ip_address = hass.data["ip_address"]
+    hass.data[DOMAIN] = {"ip": ip_address}
+
+    _LOGGER.log(logging.INFO, "async_setup_entry")
+    _LOGGER.log(logging.INFO, "ip_address: %s", str(ip_address))
 
 
 async def _async_has_devices(hass: HomeAssistant) -> bool:
@@ -37,10 +53,16 @@ async def _async_has_devices(hass: HomeAssistant) -> bool:
 
     # adapter = await network.async_get_source_ip(hass, network.PUBLIC_TARGET_IP)
 
+    ip_address = hass.data["ip_address"]
+    hass.data[DOMAIN] = {"ip": ip_address}
+
+    _LOGGER.log(logging.INFO, "async_setup_entry")
+    _LOGGER.log(logging.INFO, "ip_address: %s", str(ip_address))
+
     controller: LeaController = LeaController(
         loop=hass.loop,
         port=PORT,
-        ip_address=LEA_IP,
+        ip_address=ip_address,
         discovery_enabled=True,
         discovery_interval=1,
         update_enabled=False,
