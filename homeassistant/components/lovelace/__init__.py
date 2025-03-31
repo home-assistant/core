@@ -284,6 +284,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     ).async_setup(hass)
 
     def create_map_dashboard() -> None:
+        """Create a map dashboard."""
         hass.async_create_task(_create_map_dashboard(hass, dashboards_collection))
 
     if not onboarding.async_is_onboarded(hass):
