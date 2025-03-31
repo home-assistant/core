@@ -89,7 +89,7 @@ class RenaultDataUpdateCoordinator(DataUpdateCoordinator[T]):
             # we should initiate a cooldown for all coordinators
             self._hub.got_throttled()
             if self._has_already_worked:
-                LOGGER.warning("Renault API throttled, reuse latest received data")
+                self.logger.exception("Renault API throttled")
                 return self.data
 
             raise UpdateFailed(f"Renault API throttled: {err}") from err
