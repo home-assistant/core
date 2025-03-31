@@ -59,6 +59,7 @@ class RenaultDataUpdateCoordinator(DataUpdateCoordinator[T]):
         )
         self.access_denied = False
         self.not_supported = False
+        self.assumed_state = False
         self._has_already_worked = False
         self._hub = hub
 
