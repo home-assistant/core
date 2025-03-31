@@ -28,10 +28,10 @@
       "presets": {
         "title": "Temperature presets",
         "data": {
-          "away_temp": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::away%]",
+          "home_temp": "[%key:common::state::home%]",
+          "away_temp": "[%key:common::state::not_home%]",
           "comfort_temp": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::comfort%]",
           "eco_temp": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::eco%]",
-          "home_temp": "[%key:common::state::home%]",
           "sleep_temp": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::sleep%]",
           "activity_temp": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::activity%]"
         }
@@ -63,10 +63,10 @@
       "presets": {
         "title": "[%key:component::generic_thermostat::config::step::presets::title%]",
         "data": {
-          "away_temp": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::away%]",
+          "home_temp": "[%key:common::state::home%]",
+          "away_temp": "[%key:common::state::not_home%]",
           "comfort_temp": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::comfort%]",
           "eco_temp": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::eco%]",
-          "home_temp": "[%key:common::state::home%]",
           "sleep_temp": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::sleep%]",
           "activity_temp": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::activity%]"
         }
