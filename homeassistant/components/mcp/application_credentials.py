@@ -1,4 +1,4 @@
-"""Application credentials platform for iotty."""
+"""Application credentials platform for Model Context Protocol."""
 
 from __future__ import annotations
 
