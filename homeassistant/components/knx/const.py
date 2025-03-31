@@ -160,6 +160,7 @@ SUPPORTED_PLATFORMS_YAML: Final = {
 
 SUPPORTED_PLATFORMS_UI: Final = {
     Platform.BINARY_SENSOR,
+    Platform.COVER,
     Platform.LIGHT,
     Platform.SWITCH,
 }
