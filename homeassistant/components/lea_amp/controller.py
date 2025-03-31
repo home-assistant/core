@@ -274,6 +274,42 @@ class LeaController:
 
     def _handle_num_inputs(self, value: str):
         _LOGGER.log(logging.INFO, "_handle_num_inputs: %s", str(value))
+        if "8D" in value:
+            sourcesList = [
+                "Analog 1",
+                "Analog 2",
+                "Analog 1+2",
+                "Analog 3",
+                "Analog 4",
+                "Analog 3+4",
+                "Analog 5",
+                "Analog 6",
+                "Analog 5+6",
+                "Analog 7",
+                "Analog 8",
+                "Analog 7+8",
+                "Dante 1",
+                "Dante 2",
+                "Dante 1+2",
+                "Dante 3",
+                "Dante 4",
+                "Dante 3+4",
+                "Dante 5",
+                "Dante 6",
+                "Dante 5+6",
+                "Dante 7",
+                "Dante 8",
+                "Dante 7+8",
+            ]
+            for i in range(1, int(value) + 1):
+                zone = LeaZone(self, str(i))
+                zone._sourcesList = sourcesList  # noqa: SLF001
+                zone._model = "8D"  # noqa: SLF001
+                if self._call_discovered_callback(zone, True):
+                    zone = self._registry.add_discovered_zone(zone)
+                    _LOGGER.log(logging.INFO, "zone discovered: %s", zone)
+                else:
+                    _LOGGER.log(logging.INFO, "zone %s ignored", zone)
 
     def _call_discovered_callback(self, zone: LeaZone, is_new: bool) -> bool:
         if not self._zone_discovered_callback:

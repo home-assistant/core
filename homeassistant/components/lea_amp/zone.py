@@ -25,6 +25,7 @@ class LeaZone:
         self._volume: float = 0.5
         self._mute: bool = True
         self._source: str = ""
+        self._sourcesList: list[str] = []
         self._update_callback: Callable[[LeaZone], None] | None = None
         self.is_manual: bool = False
 
@@ -88,6 +89,11 @@ class LeaZone:
     def source(self) -> str:
         """Source."""
         return self._source
+
+    @property
+    def sourcesList(self) -> list[str]:
+        """Sources list."""
+        return self._sourcesList
 
     async def set_zone_power(self, power: bool) -> None:
         """Set Zone Power."""
