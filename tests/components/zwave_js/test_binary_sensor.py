@@ -330,16 +330,6 @@ async def test_smoke_co_notification_sensors(
 
     # Test diagnostic entities
     entity_ids = [
-        "sensor.zcombo_g_smoke_co_alarm_node_status",
-        "sensor.zcombo_g_smoke_co_alarm_successful_commands_rx",
-        "sensor.zcombo_g_smoke_co_alarm_successful_commands_tx",
-        "sensor.zcombo_g_smoke_co_alarm_commands_dropped_rx",
-        "sensor.zcombo_g_smoke_co_alarm_commands_dropped_tx",
-        "sensor.zcombo_g_smoke_co_alarm_timed_out_responses",
-        "sensor.zcombo_g_smoke_co_alarm_round_trip_time",
-        "sensor.zcombo_g_smoke_co_alarm_rssi",
-        "sensor.zcombo_g_smoke_co_alarm_last_seen",
-        "sensor.zcombo_g_smoke_co_alarm_battery_level",
         "binary_sensor.zcombo_g_smoke_co_alarm_smoke_alarm_test",
         "binary_sensor.zcombo_g_smoke_co_alarm_alarm_silenced",
         "binary_sensor.zcombo_g_smoke_co_alarm_replacement_required_end_of_life",

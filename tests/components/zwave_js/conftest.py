@@ -563,7 +563,7 @@ def mock_client_fixture(
         client.connect = AsyncMock(side_effect=connect)
         client.listen = AsyncMock(side_effect=listen)
         client.disconnect = AsyncMock(side_effect=disconnect)
-        client.disable_server_logging = AsyncMock()
+        client.disable_server_logging = MagicMock()
         client.driver = Driver(
             client, copy.deepcopy(controller_state), copy.deepcopy(log_config_state)
         )
