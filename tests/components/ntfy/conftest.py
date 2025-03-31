@@ -1,7 +1,7 @@
 """Common fixtures for the ntfy tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -36,14 +36,14 @@ def mock_aiontfy() -> Generator[AsyncMock]:
 
 
 @pytest.fixture(autouse=True)
-def mopck_random() -> Generator[AsyncMock]:
+def mock_random() -> Generator[MagicMock]:
     """Mock random."""
 
     with patch(
         "homeassistant.components.ntfy.config_flow.random.choices",
-        return_value=["mytopic"],
-    ) as mock_random:
-        yield mock_random.return_value
+        return_value=["randomtopic"],
+    ) as mock_client:
+        yield mock_client
 
 
 @pytest.fixture(name="config_entry")
