@@ -43,6 +43,9 @@
         },
         "description": "The ESPHome device {name} enabled transport encryption or changed the encryption key. Please enter the updated key. You can find it in the ESPHome Dashboard or in your device configuration."
       },
+      "reauth_encryption_removed_confirm": {
+        "description": "The ESPHome device {name} disabled transport encryption. Please confirm that you want to remove the encryption key and allow unencrypted connections."
+      },
       "discovery_confirm": {
         "description": "Do you want to add the ESPHome node `{name}` to Home Assistant?",
         "title": "Discovered ESPHome node"

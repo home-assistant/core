@@ -331,7 +331,6 @@ CAPABILITY_TO_SENSORS: dict[
                 translation_key="dryer_machine_state",
                 options=WASHER_OPTIONS,
                 device_class=SensorDeviceClass.ENUM,
-                deprecated=lambda _: "machine_state",
             )
         ],
         Attribute.DRYER_JOB_STATE: [
@@ -966,7 +965,6 @@ CAPABILITY_TO_SENSORS: dict[
                 translation_key="washer_machine_state",
                 options=WASHER_OPTIONS,
                 device_class=SensorDeviceClass.ENUM,
-                deprecated=lambda _: "machine_state",
             )
         ],
         Attribute.WASHER_JOB_STATE: [
