@@ -246,6 +246,12 @@ class GaposaCover(CoordinatorEntity, CoverEntity):
         self.lastCommandTime = dt_util.utcnow()
         await self.motor.stop(False)
 
+        # For stop commands, we can update the UI immediately
+        # First, get the latest state
+        await self.coordinator.async_request_refresh()
+        # Then update the UI
+        self.async_write_ha_state()
+
     def schedule_refresh_ha_after_motion(self) -> None:
         """Wait for the cover to stop moving and update HA state."""
         self.hass.async_create_task(self.refresh_ha_after_motion())
@@ -254,4 +260,9 @@ class GaposaCover(CoordinatorEntity, CoverEntity):
         """Refresh after a delay."""
         await asyncio.sleep(MOTION_DELAY)
         _LOGGER.info("Delayed_refresh for %s %s", self.motor.name, self.motor.state)
+
+        # Force fetch the updated state from the API if possible
+        await self.coordinator.async_request_refresh()
+
+        # Update HA state to reflect current motor state
         self.async_write_ha_state()
