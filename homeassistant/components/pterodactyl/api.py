@@ -1,6 +1,7 @@
 """API module of the Pterodactyl integration."""
 
 from dataclasses import dataclass
+from enum import StrEnum
 import logging
 
 from pydactyl import PterodactylClient
@@ -41,6 +42,15 @@ class PterodactylData:
     network_inbound: int
     network_outbound: int
     uptime: int
+
+
+class PterodactylCommands(StrEnum):
+    """Command enums for the Pterodactyl server."""
+
+    START_SERVER = "start"
+    STOP_SERVER = "stop"
+    RESTART_SERVER = "restart"
+    FORCE_STOP_SERVER = "kill"
 
 
 class PterodactylAPI:
@@ -124,3 +134,20 @@ class PterodactylAPI:
                 _LOGGER.debug("%s", data[identifier])
 
         return data
+
+    async def async_send_command(
+        self, identifier: str, command: PterodactylCommands
+    ) -> None:
+        """Send a command to the Pterodactyl server."""
+        try:
+            await self.hass.async_add_executor_job(
+                self.pterodactyl.client.servers.send_power_action,  # type: ignore[union-attr]
+                command,
+                identifier,
+            )
+        except (
+            PydactylError,
+            BadRequestError,
+            PterodactylApiError,
+        ) as error:
+            raise PterodactylConnectionError(error) from error

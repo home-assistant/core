@@ -1,5 +1,19 @@
 {
   "entity": {
+    "button": {
+      "start_server": {
+        "default": "mdi:play"
+      },
+      "stop_server": {
+        "default": "mdi:stop"
+      },
+      "restart_server": {
+        "default": "mdi:refresh"
+      },
+      "force_stop_server": {
+        "default": "mdi:flash-alert"
+      }
+    },
     "sensor": {
       "cpu_utilization": {
         "default": "mdi:cpu-64-bit"
