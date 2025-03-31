@@ -51,7 +51,7 @@ PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
 )
 
 EPH_TO_HA_STATE = {
-    "AUTO": HVACMode.AUTO,
+    "AUTO": HVACMode.HEAT_COOL,
     "ON": HVACMode.HEAT,
     "OFF": HVACMode.OFF,
 }
