@@ -154,6 +154,8 @@ class LeaZone:
                 self._power = True
             else:
                 self._power = False
+        elif commandType == "source":
+            self._source = value
         self.update_lastseen()
         if self._update_callback and callable(self._update_callback):
             _LOGGER.log(logging.INFO, "callback")
