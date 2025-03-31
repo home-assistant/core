@@ -564,7 +564,7 @@ async def test_set_temperature_lock(
 
     with pytest.raises(
         HomeAssistantError,
-        match="Can't change temperature while 'Disable manual access for telephone, app, or user interface' is selected in the FRITZ!box settings",
+        match="Can't change settings while manual access for telephone, app, or user interface is disabled on the device",
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
@@ -622,7 +622,7 @@ async def test_set_hvac_mode_lock(
 
     with pytest.raises(
         HomeAssistantError,
-        match="Can't change HVAC while 'Disable manual access for telephone, app, or user interface' is selected in the FRITZ!box settings",
+        match="Can't change settings while manual access for telephone, app, or user interface is disabled on the device",
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
