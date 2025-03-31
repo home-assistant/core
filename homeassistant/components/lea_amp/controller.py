@@ -261,9 +261,11 @@ class LeaController:
         if zone := self.get_zone_by_id(zone_id):
             _LOGGER.log(logging.INFO, "zone found")
             if commandType == "volume":
+                _LOGGER.log(logging.INFO, "update volume")
                 zone.updateVolume(float(value))
                 zone.update_lastseen()
             else:
+                _LOGGER.log(logging.INFO, "update volume")
                 zone.update(value, commandType)
 
     def _handle_num_inputs(self, value: str):
