@@ -62,7 +62,7 @@ PyTurboJPEG==1.7.5
 PyYAML==6.0.2
 requests==2.32.3
 securetar==2025.2.1
-SQLAlchemy==2.0.39
+SQLAlchemy==2.0.40
 standard-aifc==3.13.0
 standard-telnetlib==3.13.0
 typing-extensions>=4.13.0,<5.0
@@ -87,9 +87,9 @@ httplib2>=0.19.0
 # gRPC is an implicit dependency that we want to make explicit so we manage
 # upgrades intentionally. It is a large package to build from source and we
 # want to ensure we have wheels built.
-grpcio==1.67.1
-grpcio-status==1.67.1
-grpcio-reflection==1.67.1
+grpcio==1.71.0
+grpcio-status==1.71.0
+grpcio-reflection==1.71.0
 
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0

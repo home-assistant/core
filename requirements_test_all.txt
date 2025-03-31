@@ -110,7 +110,7 @@ RtmAPI==0.7.2
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-SQLAlchemy==2.0.39
+SQLAlchemy==2.0.40
 
 # homeassistant.components.tami4
 Tami4EdgeAPI==3.0
@@ -231,7 +231,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==29.7.0
+aioesphomeapi==29.8.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -344,7 +344,7 @@ aioridwell==2024.01.0
 aioruckus==0.42
 
 # homeassistant.components.russound_rio
-aiorussound==4.4.0
+aiorussound==4.5.0
 
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
@@ -1305,7 +1305,7 @@ objgraph==3.5.0
 odp-amsterdam==6.0.2
 
 # homeassistant.components.ohme
-ohme==1.4.1
+ohme==1.5.1
 
 # homeassistant.components.ollama
 ollama==0.4.7
@@ -1814,7 +1814,7 @@ pypalazzetti==0.1.19
 pypck==0.8.5
 
 # homeassistant.components.pglab
-pypglab==0.0.3
+pypglab==0.0.5
 
 # homeassistant.components.pjlink
 pypjlink2==1.2.1

@@ -534,7 +534,7 @@
       "vin": {
         "name": "Vehicle",
         "state": {
-          "disconnected": "Disconnected"
+          "disconnected": "[%key:common::state::disconnected%]"
         }
       },
       "vpp_backup_reserve_percent": {
