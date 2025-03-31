@@ -114,7 +114,7 @@ class LeaZone:
         await self._controller.set_source(self._zone_id, source)
         self._source = source
 
-    def updateVolume(self, value: float) -> None:
+    def updateVolume(self, value: float):
         """Update Volume."""
         _LOGGER.debug("updateVolume")
         _LOGGER.debug("value:  %s", str(value))
@@ -124,7 +124,7 @@ class LeaZone:
         if self._update_callback and callable(self._update_callback):
             self._update_callback(self)
 
-    def update(self, value: str, commandType: str) -> None:
+    def update(self, value: str, commandType: str):
         """Update zone."""
         _LOGGER.debug("update")
         _LOGGER.debug("commandType:  %s", str(commandType))
