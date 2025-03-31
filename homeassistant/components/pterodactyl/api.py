@@ -44,8 +44,8 @@ class PterodactylData:
     uptime: int
 
 
-class PterodactylCommands(StrEnum):
-    """Command enums for the Pterodactyl server."""
+class PterodactylCommand(StrEnum):
+    """Command enum for the Pterodactyl server."""
 
     START_SERVER = "start"
     STOP_SERVER = "stop"
@@ -136,7 +136,7 @@ class PterodactylAPI:
         return data
 
     async def async_send_command(
-        self, identifier: str, command: PterodactylCommands
+        self, identifier: str, command: PterodactylCommand
     ) -> None:
         """Send a command to the Pterodactyl server."""
         try:

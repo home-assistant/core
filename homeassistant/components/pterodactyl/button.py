@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .api import PterodactylCommands, PterodactylConnectionError
+from .api import PterodactylCommand, PterodactylConnectionError
 from .coordinator import PterodactylConfigEntry, PterodactylCoordinator
 from .entity import PterodactylEntity
 
@@ -26,29 +26,29 @@ PARALLEL_UPDATES = 0
 class PterodactylButtonEntityDescription(ButtonEntityDescription):
     """Class describing Pterodactyl button entities."""
 
-    command: PterodactylCommands
+    command: PterodactylCommand
 
 
 BUTTON_DESCRIPTIONS = [
     PterodactylButtonEntityDescription(
         key=KEY_START_SERVER,
         translation_key=KEY_START_SERVER,
-        command=PterodactylCommands.START_SERVER,
+        command=PterodactylCommand.START_SERVER,
     ),
     PterodactylButtonEntityDescription(
         key=KEY_STOP_SERVER,
         translation_key=KEY_STOP_SERVER,
-        command=PterodactylCommands.STOP_SERVER,
+        command=PterodactylCommand.STOP_SERVER,
     ),
     PterodactylButtonEntityDescription(
         key=KEY_RESTART_SERVER,
         translation_key=KEY_RESTART_SERVER,
-        command=PterodactylCommands.RESTART_SERVER,
+        command=PterodactylCommand.RESTART_SERVER,
     ),
     PterodactylButtonEntityDescription(
         key=KEY_FORCE_STOP_SERVER,
         translation_key=KEY_FORCE_STOP_SERVER,
-        command=PterodactylCommands.FORCE_STOP_SERVER,
+        command=PterodactylCommand.FORCE_STOP_SERVER,
         entity_registry_enabled_default=False,
     ),
 ]
