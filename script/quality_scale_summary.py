@@ -17,6 +17,7 @@ COMPONENTS_DIR = Path("homeassistant/components")
 def generate_quality_scale_summary() -> list[str, int]:
     """Generate a summary of integration quality scales."""
     quality_scales = {
+        "virtual": 0,
         "unknown": 0,
         "legacy": 0,
         "internal": 0,
@@ -29,7 +30,9 @@ def generate_quality_scale_summary() -> list[str, int]:
     for manifest_path in COMPONENTS_DIR.glob("*/manifest.json"):
         manifest = load_json(manifest_path)
 
-        if quality_scale := manifest.get("quality_scale"):
+        if manifest.get("integration_type") == "virtual":
+            quality_scales["virtual"] += 1
+        elif quality_scale := manifest.get("quality_scale"):
             quality_scales[quality_scale] += 1
         else:
             quality_scales["unknown"] += 1
@@ -45,6 +48,7 @@ def output_csv(quality_scales: dict[str, int], print_header: bool) -> None:
             [
                 "Version",
                 "Total",
+                "Virtual",
                 "Unknown",
                 "Legacy",
                 "Internal",
@@ -63,6 +67,7 @@ def output_csv(quality_scales: dict[str, int], print_header: bool) -> None:
         [
             current_version,
             total,
+            quality_scales["virtual"],
             quality_scales["unknown"],
             quality_scales["legacy"],
             quality_scales["internal"],
