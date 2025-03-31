@@ -137,7 +137,7 @@ def setSourceMessage(zone_id: str, source: str) -> str:
     ext1 = "/amp/channels/"
     ext2 = "/inputSelector/primary"
 
-    return request_type + ext1 + zone_id + ext2 + " " + str(source) + "\n"
+    return request_type + ext1 + zone_id + ext2 + ' "' + str(source) + '"\n'
 
 
 class ScanResponse(LeaMessage):
