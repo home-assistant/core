@@ -11,7 +11,6 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_entry_flow
 
 from .const import CONNECTION_TIMEOUT, DOMAIN, PORT
 from .controller import LeaController
@@ -84,4 +83,4 @@ async def _async_has_devices(hass: HomeAssistant) -> bool:
     return devices_count > 0
 
 
-config_entry_flow.register_discovery_flow(DOMAIN, "LEA AMP local", _async_has_devices)
+# config_entry_flow.register_discovery_flow(DOMAIN, "LEA AMP local", _async_has_devices)
