@@ -30,7 +30,7 @@
         },
         "preannounce_media_id": {
           "name": "Preannounce media ID",
-          "description": "The media ID to play before the announcement."
+          "description": "Custom media ID to play before the announcement."
         }
       }
     },
@@ -56,7 +56,7 @@
         },
         "preannounce_media_id": {
           "name": "Preannounce media ID",
-          "description": "The media ID to play before the start message or media."
+          "description": "Custom media ID to play before the start message or media."
         }
       }
     }
