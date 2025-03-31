@@ -1,7 +1,7 @@
 """Tests for the Gaposa cover component."""
 
 from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 from freezegun import freeze_time
 import pytest
@@ -151,32 +151,23 @@ async def test_refresh_ha_after_motion(hass: HomeAssistant, cover) -> None:
         mock_write_state.assert_called_once()
 
 
-def test_schedule_refresh_ha_after_motion() -> None:
+async def test_schedule_refresh_ha_after_motion(hass: HomeAssistant, cover) -> None:
     """Test that schedule_refresh_ha_after_motion creates a task."""
 
-    # Use a plain mock for hass to avoid asyncio warnings
-    hass_mock = MagicMock()
-    cover_mock = MagicMock()
+    # Mock the refresh_ha_after_motion method to avoid actual delays
+    with (
+        patch.object(cover, "refresh_ha_after_motion", AsyncMock()) as mock_refresh,
+        patch.object(hass, "async_create_task") as mock_create_task,
+    ):
+        # Make async_create_task actually run the coroutine to avoid warnings
+        mock_create_task.side_effect = hass.loop.create_task
 
-    # Create a simple non-async mock for refresh_ha_after_motion
-    refresh_mock = MagicMock()
-    cover_mock.refresh_ha_after_motion = refresh_mock
+        # Call the method
+        cover.schedule_refresh_ha_after_motion()
 
-    # Create a mock for async_create_task
-    create_task_mock = MagicMock()
-    hass_mock.async_create_task = create_task_mock
-
-    # Attach the hass mock to the cover
-    cover_mock.hass = hass_mock
-
-    # Call the method directly to avoid asyncio complexity
-    cover_mock.schedule_refresh_ha_after_motion()
-
-    # Verify a task was created
-    create_task_mock.assert_called_once()
-
-    # Verify our refresh method was used
-    refresh_mock.assert_called_once()
+        # Verify the refresh method was called
+        await hass.async_block_till_done()
+        mock_refresh.assert_called_once()
 
 
 def test_cover_unique_id(hass: HomeAssistant, cover) -> None:
