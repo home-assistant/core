@@ -116,7 +116,7 @@ RtmAPI==0.7.2
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-SQLAlchemy==2.0.39
+SQLAlchemy==2.0.40
 
 # homeassistant.components.tami4
 Tami4EdgeAPI==3.0
@@ -243,7 +243,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==29.7.0
+aioesphomeapi==29.8.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -362,7 +362,7 @@ aioridwell==2024.01.0
 aioruckus==0.42
 
 # homeassistant.components.russound_rio
-aiorussound==4.4.0
+aiorussound==4.5.0
 
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
@@ -1035,10 +1035,10 @@ google-api-python-client==2.71.0
 google-cloud-pubsub==2.29.0
 
 # homeassistant.components.google_cloud
-google-cloud-speech==2.27.0
+google-cloud-speech==2.31.1
 
 # homeassistant.components.google_cloud
-google-cloud-texttospeech==2.17.2
+google-cloud-texttospeech==2.25.1
 
 # homeassistant.components.google_generative_ai_conversation
 google-genai==1.7.0
@@ -1559,7 +1559,7 @@ odp-amsterdam==6.0.2
 oemthermostat==1.1.1
 
 # homeassistant.components.ohme
-ohme==1.4.1
+ohme==1.5.1
 
 # homeassistant.components.ollama
 ollama==0.4.7
@@ -1675,7 +1675,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.7.2
+plugwise==1.7.3
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1722,7 +1722,7 @@ pushbullet.py==0.11.0
 pushover_complete==1.1.1
 
 # homeassistant.components.pvoutput
-pvo==2.2.0
+pvo==2.2.1
 
 # homeassistant.components.aosmith
 py-aosmith==1.0.12
@@ -2047,7 +2047,7 @@ pyiskra==0.1.15
 pyiss==1.0.1
 
 # homeassistant.components.isy994
-pyisy==3.2.0
+pyisy==3.4.0
 
 # homeassistant.components.itach
 pyitachip2ir==0.0.7
@@ -2223,7 +2223,7 @@ pypca==0.0.7
 pypck==0.8.5
 
 # homeassistant.components.pglab
-pypglab==0.0.3
+pypglab==0.0.5
 
 # homeassistant.components.pjlink
 pypjlink2==1.2.1
@@ -2319,7 +2319,7 @@ pysma==0.7.5
 pysmappee==0.2.29
 
 # homeassistant.components.smartthings
-pysmartthings==3.0.0
+pysmartthings==3.0.1
 
 # homeassistant.components.smarty
 pysmarty2==0.10.2
@@ -2829,9 +2829,6 @@ stringcase==1.2.0
 
 # homeassistant.components.subaru
 subarulink==0.7.13
-
-# homeassistant.components.sunweg
-sunweg==3.0.2
 
 # homeassistant.components.surepetcare
 surepy==0.9.0

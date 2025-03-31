@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any
 
 from pypglab.const import SENSOR_REBOOT_TIME, SENSOR_TEMPERATURE, SENSOR_VOLTAGE
 from pypglab.device import Device as PyPGLabDevice
-from pypglab.sensor import Sensor as PyPGLabSensors
+from pypglab.sensor import StatusSensor as PyPGLabSensors
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -31,7 +31,7 @@ class PGLabSensorsCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Initialize."""
 
         # get a reference of PG Lab device internal sensors state
-        self._sensors: PyPGLabSensors = pglab_device.sensors
+        self._sensors: PyPGLabSensors = pglab_device.status_sensor
 
         super().__init__(
             hass,
