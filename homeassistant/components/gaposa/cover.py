@@ -124,7 +124,7 @@ class GaposaCover(CoordinatorEntity, CoverEntity):
     ) -> None:
         """Initialize the motor."""
 
-        super().__init__(coordinator, context=id)
+        super().__init__(coordinator, context=coverid)
 
         # Usual setup is done here.
         self.id = coverid
@@ -259,7 +259,7 @@ class GaposaCover(CoordinatorEntity, CoverEntity):
     async def refresh_ha_after_motion(self) -> None:
         """Refresh after a delay."""
         await asyncio.sleep(MOTION_DELAY)
-        _LOGGER.info("Delayed_refresh for %s %s", self.motor.name, self.motor.state)
+        _LOGGER.debug("Delayed_refresh for %s %s", self.motor.name, self.motor.state)
 
         # Force fetch the updated state from the API if possible
         await self.coordinator.async_request_refresh()

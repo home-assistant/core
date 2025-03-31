@@ -67,7 +67,7 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator):
         return True
 
     async def _async_update_data(self) -> dict[str, Motor]:
-        self.logger.info(
+        self.logger.debug(
             "Gaposa coordinator _async_update_data, interval: %s",
             str(self.update_interval),
         )
@@ -108,6 +108,6 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator):
 
     def on_document_updated(self) -> None:
         """Handle document updated."""
-        self.logger.info("Gaposa coordinator on_document_updated")
+        self.logger.debug("Gaposa coordinator on_document_updated")
         data = self._get_data_from_devices()
         self.async_set_updated_data(data)
