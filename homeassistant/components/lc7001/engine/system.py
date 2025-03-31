@@ -3,71 +3,66 @@
 import logging
 from typing import Any
 
+from .json import Jsonable
 from .packet import Packet
 
 _LOGGER = logging.getLogger(__name__)
 
 
+class SystemPropertyList(Jsonable):
+    """Properties for the LC7001 system."""
+
+    def __init__(self, **kwargs: Any) -> None:
+        """Initialize."""
+        super().__init__()
+
+        # Should figure out the properties
+        self.__dict__.update(kwargs)
+
+
 class ReportSystemProperties(Packet):
     """A SystemProperties packet."""
 
+    _service_name = "ReportSystemProperties"
+
     def __init__(
         self,
-        ID: int | None = None,
-        Service: str | None = None,
-        PropertyList: dict | None = None,
-        **kwargs,
+        PropertyList: SystemPropertyList | dict | None = None,
+        **kwargs: Any,
     ) -> None:
         """Initialize."""
-        super().__init__(ID=ID, Service=Service or "ReportSystemProperties", **kwargs)
-        self.PropertyList = PropertyList
+        super().__init__(**kwargs)
 
-    def asDict(self) -> dict[str, Any]:
-        """Return a dict representation of packet."""
-        selfDict = super().asDict()
-
-        if self.PropertyList is not None:
-            selfDict["PropertyList"] = self.PropertyList
-
-        return selfDict
+        self.PropertyList = (
+            SystemPropertyList(**PropertyList)
+            if isinstance(PropertyList, dict)
+            else SystemPropertyList(**vars(PropertyList))
+            if isinstance(PropertyList, SystemPropertyList)
+            else None
+        )
 
 
 class SystemInfo(Packet):
     """Represents a SystemInfo packet from LC7001."""
 
+    _service_name = "SystemInfo"
+
     def __init__(
-        self, ID: int | None = None, Service: str | None = None, **kwargs
+        self,
+        Model: str | None = None,
+        FirmwareVersion: str | None = None,
+        FirmwareDate: str | None = None,
+        FirmwareBranch: str | None = None,
+        MACAddress: str | None = None,
+        UpdateState: str | None = None,
+        **kwargs: Any,
     ) -> None:
         """Initialize."""
-        super().__init__(ID=ID, Service=Service or "SystemInfo", **kwargs)
+        super().__init__(**kwargs)
 
-        self.Model = kwargs.get("Model")
-        self.FirmwareVersion = kwargs.get("FirmwareVersion")
-        self.FirmwareDate = kwargs.get("FirmwareDate")
-        self.FirmwareBranch = kwargs.get("FirmwareBranch")
-        self.MACAddress = kwargs.get("MACAddress")
-        self.UpdateState = kwargs.get("UpdateState")
-
-    def asDict(self) -> dict[str, Any]:
-        """Return a dict representation of packet."""
-        selfDict = super().asDict()
-
-        if self.Model is not None:
-            selfDict["Model"] = self.Model
-
-        if self.FirmwareVersion is not None:
-            selfDict["FirmwareVersion"] = self.FirmwareVersion
-
-        if self.FirmwareDate is not None:
-            selfDict["FirmwareDate"] = self.FirmwareDate
-
-        if self.FirmwareBranch is not None:
-            selfDict["FirmwareBranch"] = self.FirmwareBranch
-
-        if self.MACAddress is not None:
-            selfDict["MACAddress"] = self.MACAddress
-
-        if self.UpdateState is not None:
-            selfDict["UpdateState"] = self.UpdateState
-
-        return selfDict
+        self.Model = Model
+        self.FirmwareVersion = FirmwareVersion
+        self.FirmwareDate = FirmwareDate
+        self.FirmwareBranch = FirmwareBranch
+        self.MACAddress = MACAddress
+        self.UpdateState = UpdateState

@@ -6,13 +6,12 @@ import logging
 import re
 import socket
 from threading import Lock, Thread
-from typing import Any
 
 from pymitter import EventEmitter
 
 from .diagnostics import BroadcastMemory
 from .packet import Packet
-from .system import ReportSystemProperties, SystemInfo
+from .system import ReportSystemProperties, SystemInfo, SystemPropertyList
 from .utils import encrypt
 from .zone import ListZones, ReportZoneProperties, ZonePropertyList
 
@@ -86,7 +85,7 @@ class Engine(EventEmitter):
         self._expectedZoneCount = 0
         self.packetID = 0
         self.systemInfo = SystemInfo()
-        self.systemProperties: dict[str, Any] = {}
+        self.systemProperties: SystemPropertyList = SystemPropertyList()
 
     def connect(self) -> None:
         """Connect to the LC7001 hub."""
@@ -144,10 +143,11 @@ class Engine(EventEmitter):
         if packet is None:
             pass
         if isinstance(packet, ListZones):
-            for zone in packet.ZoneList:
-                if zone.ZID is not None:
-                    self.sendPacket(ReportZoneProperties(ZID=zone.ZID))
-            self._expectedZoneCount = len(packet.ZoneList)
+            if packet.ZoneList:
+                for zone in packet.ZoneList:
+                    if zone.ZID is not None:
+                        self.sendPacket(ReportZoneProperties(ZID=zone.ZID))
+                self._expectedZoneCount = len(packet.ZoneList)
 
         elif isinstance(packet, ReportZoneProperties):
             if packet.PropertyList is not None and packet.ZID is not None:
@@ -160,7 +160,7 @@ class Engine(EventEmitter):
                     self.emit(
                         "ZoneChanged",
                         ZID=packet.ZID,
-                        changes=ZonePropertyList(packet.PropertyList),
+                        changes=ZonePropertyList(**vars(packet.PropertyList)),
                         properties=self.zones[packet.ZID],
                     )
                 except Exception:

@@ -1,14 +1,18 @@
 """A BroadcastMemory packet."""
 
+from typing import Any
+
 from .packet import Packet
 
 
 class BroadcastMemory(Packet):
     """A BroadcastMemory packet."""
 
-    def __init__(self, Service: str | None = None, **kwargs) -> None:
+    _service_name = "BroadcastMemory"
+
+    def __init__(self, **kwargs: Any) -> None:
         """Initialize a BroadcastMemory packet."""
-        super().__init__(Service=Service or "BroadcastMemory", **kwargs)
+        super().__init__(**kwargs)
 
         self.FreeMemory = kwargs.get("FreeMemory")
         self.FreeMemLowWater = kwargs.get("FreeMemLowWater")
