@@ -301,7 +301,8 @@ class LeaController:
                 "Dante 8",
                 "Dante 7+8",
             ]
-            for i in range(1, int(value) + 1):
+            # int(value) + 1
+            for i in range(1, 9):
                 zone = LeaZone(self, str(i))
                 zone._sourcesList = sourcesList  # noqa: SLF001
                 zone._model = "8D"  # noqa: SLF001
