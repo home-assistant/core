@@ -229,7 +229,7 @@ class LeaController:
         """Set Volume."""
         self._send_message(setVolumeMessage(zone_id, volume))
 
-    async def set_source(self, zone_id: str, source: int) -> None:
+    async def set_source(self, zone_id: str, source: str) -> None:
         """Set Source."""
         self._send_message(setSourceMessage(zone_id, source))
 

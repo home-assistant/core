@@ -130,7 +130,7 @@ def getZoneName(zone_id: str) -> str:
     return request_type + ext1 + zone_id + ext2 + "\n"
 
 
-def setSourceMessage(zone_id: str, source: int) -> str:
+def setSourceMessage(zone_id: str, source: str) -> str:
     """Set source Message."""
 
     request_type = "set "
