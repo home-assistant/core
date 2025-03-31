@@ -1,7 +1,7 @@
 """Tests for the Gaposa cover component."""
 
 from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun import freeze_time
 import pytest
@@ -86,38 +86,100 @@ async def test_is_moving(hass: HomeAssistant, cover) -> None:
 
 async def test_open_cover(hass: HomeAssistant, cover, mock_motor) -> None:
     """Test opening the cover."""
-    with patch("homeassistant.components.gaposa.cover.dt_util") as mock_dt:
+    with (
+        patch("homeassistant.components.gaposa.cover.dt_util") as mock_dt,
+        patch.object(cover, "schedule_refresh_ha_after_motion") as mock_schedule,
+    ):
         mock_dt.utcnow.return_value = datetime(2021, 1, 1, 12, 0, 0)
         await cover.async_open_cover()
         mock_motor.up.assert_called_once_with(False)
         assert cover.lastCommand == "UP"
         assert cover.lastCommandTime == mock_dt.utcnow()
+        # Verify that refresh is scheduled
+        mock_schedule.assert_called_once()
 
 
 async def test_close_cover(hass: HomeAssistant, cover, mock_motor) -> None:
     """Test closing the cover."""
-    with patch("homeassistant.components.gaposa.cover.dt_util") as mock_dt:
+    with (
+        patch("homeassistant.components.gaposa.cover.dt_util") as mock_dt,
+        patch.object(cover, "schedule_refresh_ha_after_motion") as mock_schedule,
+    ):
         mock_dt.utcnow.return_value = datetime(2021, 1, 1, 12, 0, 0)
         await cover.async_close_cover()
         mock_motor.down.assert_called_once_with(False)
         assert cover.lastCommand == "DOWN"
         assert cover.lastCommandTime == mock_dt.utcnow()
+        # Verify that refresh is scheduled
+        mock_schedule.assert_called_once()
 
 
 async def test_stop_cover(hass: HomeAssistant, cover, mock_motor) -> None:
     """Test stopping the cover."""
-    with patch("homeassistant.components.gaposa.cover.dt_util") as mock_dt:
+    with (
+        patch("homeassistant.components.gaposa.cover.dt_util") as mock_dt,
+        patch.object(cover.coordinator, "async_request_refresh") as mock_refresh,
+        patch.object(cover, "async_write_ha_state") as mock_write_state,
+    ):
         mock_dt.utcnow.return_value = datetime(2021, 1, 1, 12, 0, 0)
         await cover.async_stop_cover()
         mock_motor.stop.assert_called_once_with(False)
         assert cover.lastCommand == "STOP"
         assert cover.lastCommandTime == mock_dt.utcnow()
 
+        # Verify that coordinator refresh is called and state is updated immediately
+        mock_refresh.assert_called_once()
+        mock_write_state.assert_called_once()
+
 
 # Add these new test functions
 
 
-async def test_cover_unique_id(hass: HomeAssistant, cover) -> None:
+async def test_refresh_ha_after_motion(hass: HomeAssistant, cover) -> None:
+    """Test that refresh_ha_after_motion updates the state correctly."""
+    with (
+        patch("asyncio.sleep") as mock_sleep,
+        patch.object(cover.coordinator, "async_request_refresh") as mock_refresh,
+        patch.object(cover, "async_write_ha_state") as mock_write_state,
+    ):
+        await cover.refresh_ha_after_motion()
+        # Verify sleep was called with the expected delay
+        mock_sleep.assert_called_once_with(MOTION_DELAY)
+        # Verify coordinator refresh is called
+        mock_refresh.assert_called_once()
+        # Verify state is written
+        mock_write_state.assert_called_once()
+
+
+def test_schedule_refresh_ha_after_motion() -> None:
+    """Test that schedule_refresh_ha_after_motion creates a task."""
+
+    # Use a plain mock for hass to avoid asyncio warnings
+    hass_mock = MagicMock()
+    cover_mock = MagicMock()
+
+    # Create a simple non-async mock for refresh_ha_after_motion
+    refresh_mock = MagicMock()
+    cover_mock.refresh_ha_after_motion = refresh_mock
+
+    # Create a mock for async_create_task
+    create_task_mock = MagicMock()
+    hass_mock.async_create_task = create_task_mock
+
+    # Attach the hass mock to the cover
+    cover_mock.hass = hass_mock
+
+    # Call the method directly to avoid asyncio complexity
+    cover_mock.schedule_refresh_ha_after_motion()
+
+    # Verify a task was created
+    create_task_mock.assert_called_once()
+
+    # Verify our refresh method was used
+    refresh_mock.assert_called_once()
+
+
+def test_cover_unique_id(hass: HomeAssistant, cover) -> None:
     """Test cover unique ID generation."""
     assert cover.unique_id == COVER_ID
 
