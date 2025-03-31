@@ -31,9 +31,9 @@ class ZimiEntity(Entity):
             name=self._entity.manufacture_info.model,
             manufacturer=self._entity.manufacture_info.manufacturer,
             model=f"hwVersion={self._entity.manufacture_info.hwVersion}",
-            hw_version=self._entity.manufacture_info.hwVersion,
-            sw_version=self._entity.manufacture_info.firmwareVersion,
-            suggested_area=self._entity.room,
+            hw_version=entity.manufacture_info.hwVersion,
+            sw_version=entity.manufacture_info.firmwareVersion,
+            suggested_area=entity.room,
             via_device=(DOMAIN, api.mac),
         )
         self._attr_name = self._entity.name.strip()
