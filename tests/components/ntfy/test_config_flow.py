@@ -14,11 +14,8 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.parametrize("topic", ["mytopic", ""])
 @pytest.mark.usefixtures("mock_aiontfy")
-async def test_form(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, topic: str
-) -> None:
+async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -34,7 +31,7 @@ async def test_form(
             result["flow_id"],
             {
                 CONF_URL: "https://ntfy.sh",
-                CONF_TOPIC: topic,
+                CONF_TOPIC: "mytopic",
             },
         )
         await hass.async_block_till_done()
@@ -44,6 +41,51 @@ async def test_form(
     assert result["data"] == {
         CONF_URL: "https://ntfy.sh",
         CONF_TOPIC: "mytopic",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("mock_aiontfy")
+async def test_form_generate_topic(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_random: AsyncMock
+) -> None:
+    """Test random topic generation."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {}
+    with patch(
+        "homeassistant.components.ntfy.config_flow.Ntfy.publish",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_URL: "https://ntfy.sh",
+                CONF_TOPIC: "",
+            },
+        )
+        await hass.async_block_till_done()
+
+        assert result["type"] == FlowResultType.FORM
+        assert result["errors"] == {}
+
+        mock_random.assert_called_once()
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_URL: "https://ntfy.sh",
+                CONF_TOPIC: "randomtopic",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["title"] == "randomtopic"
+    assert result["data"] == {
+        CONF_URL: "https://ntfy.sh",
+        CONF_TOPIC: "randomtopic",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
