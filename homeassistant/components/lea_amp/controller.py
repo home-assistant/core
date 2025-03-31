@@ -10,7 +10,7 @@ from typing import Any
 
 from .message import (
     DevStatusResponse,
-    GetNumOfInputsMessage,
+    GetModelMessage,
     MessageResponseFactory,
     OnOffMessage,
     ZoneEnabledMsg,
@@ -187,7 +187,7 @@ class LeaController:
 
     def send_discovery_message(self) -> None:
         """Send Get Number of Inputs."""
-        message: str = str(GetNumOfInputsMessage())
+        message: str = str(GetModelMessage())
         _LOGGER.log(logging.INFO, "Sending discovery message: %s", message)
 
         if not self._transport:
@@ -224,18 +224,22 @@ class LeaController:
     async def turn_on_off(self, zone_id: str, status: str):
         """Turn on off."""
         self._send_message(OnOffMessage(zone_id, status))
+        self._send_update_message(zone_id)
 
     async def set_volume(self, zone_id: str, volume: int) -> None:
         """Set Volume."""
         self._send_message(setVolumeMessage(zone_id, volume))
+        self._send_update_message(zone_id)
 
     async def set_source(self, zone_id: str, source: str) -> None:
         """Set Source."""
         self._send_message(setSourceMessage(zone_id, source))
+        self._send_update_message(zone_id)
 
     async def set_mute(self, zone_id: str, mute: bool) -> None:
         """Set Mute."""
         self._send_message(setMuteMessage(zone_id, mute))
+        self._send_update_message(zone_id)
 
     def get_zone_by_id(self, zone_id: str) -> LeaZone | None:
         """Get Zone by id."""
@@ -270,19 +274,6 @@ class LeaController:
 
     def _handle_num_inputs(self, value: str):
         _LOGGER.log(logging.INFO, "_handle_num_inputs: %s", str(value))
-        value = value.replace("/amp/deviceInfo/numInputs", "")
-        value = value.replace(" ", "")
-        value = value.replace("\n", "")
-        value = value.replace(".0", "")
-        _LOGGER.log(logging.INFO, "_handle_num_inputs: %s", str(value))
-
-        for i in range(1, int(value) + 1):
-            zone = LeaZone(self, str(i))
-            if self._call_discovered_callback(zone, True):
-                zone = self._registry.add_discovered_zone(zone)
-                _LOGGER.log(logging.INFO, "zone discovered: %s", zone)
-            else:
-                _LOGGER.log(logging.INFO, "zone %s ignored", zone)
 
     def _call_discovered_callback(self, zone: LeaZone, is_new: bool) -> bool:
         if not self._zone_discovered_callback:

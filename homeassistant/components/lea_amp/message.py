@@ -42,6 +42,12 @@ class LeaMessage:
 M = TypeVar("M", bound=LeaMessage)
 
 
+def GetModelMessage():
+    """Get Num of inputs."""
+
+    return "get /amp/deviceInfo/modelID \n"
+
+
 def GetNumOfInputsMessage():
     """Get Num of inputs."""
 
