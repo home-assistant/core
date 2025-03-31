@@ -53,7 +53,7 @@ class RenaultHub:
 
         self._got_throttled_at_time: float | None = None
 
-    def got_throttled(self) -> None:
+    def set_throttled(self) -> None:
         """We got throttled, we need to adjust the rate limit."""
         if self._got_throttled_at_time is None:
             self._got_throttled_at_time = time()
