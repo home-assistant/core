@@ -22,6 +22,7 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from .conftest import (
     AUTH_DOMAIN,
     CLIENT_ID,
+    MCP_SERVER_URL,
     OAUTH_AUTHORIZE_URL,
     OAUTH_TOKEN_URL,
     TEST_API_NAME,
@@ -31,8 +32,7 @@ from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
-MCP_SERVER_URL = "http://1.1.1.1/sse"
-MCP_SERVER_BASE_URL = "http://1.1.1.1"
+MCP_SERVER_BASE_URL = "http://1.1.1.1:8080"
 OAUTH_DISCOVERY_ENDPOINT = (
     f"{MCP_SERVER_BASE_URL}/.well-known/oauth-authorization-server"
 )

@@ -8,6 +8,7 @@ from typing import Any, cast
 
 import httpx
 import voluptuous as vol
+from yarl import URL
 
 from homeassistant.components.application_credentials import AuthorizationServer
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
@@ -52,10 +53,8 @@ async def async_discover_oauth_config(
     - For servers that do not implement OAuth 2.0 Authorization Server Metadata, the client uses
       default paths relative to the authorization base URL.
     """
-    authorization_base_url = (
-        f"{httpx.URL(mcp_server_url).scheme}://{httpx.URL(mcp_server_url).host}"
-    )
-    discovery_endpoint = f"{authorization_base_url}/{OAUTH_DISCOVERY_ENDPOINT}"
+    parsed_url = URL(mcp_server_url)
+    discovery_endpoint = str(parsed_url.with_path(OAUTH_DISCOVERY_ENDPOINT))
     try:
         async with httpx.AsyncClient(headers=MCP_DISCOVERY_HEADERS) as client:
             response = await client.get(discovery_endpoint)
@@ -67,8 +66,8 @@ async def async_discover_oauth_config(
         if error.response.status_code == 404:
             _LOGGER.info("Authorization Server Metadata not found, using default paths")
             return AuthorizationServer(
-                authorize_url=f"{authorization_base_url}/authorize",
-                token_url=f"{authorization_base_url}/token",
+                authorize_url=str(parsed_url.with_path("/authorize")),
+                token_url=str(parsed_url.with_path("/token")),
             )
         raise CannotConnect from error
     except httpx.HTTPError as error:
@@ -79,9 +78,9 @@ async def async_discover_oauth_config(
     authorize_url = data["authorization_endpoint"]
     token_url = data["token_endpoint"]
     if authorize_url.startswith("/"):
-        authorize_url = f"{authorization_base_url}{authorize_url}"
+        authorize_url = str(parsed_url.with_path(authorize_url))
     if token_url.startswith("/"):
-        token_url = f"{authorization_base_url}{token_url}"
+        token_url = str(parsed_url.with_path(token_url))
     return AuthorizationServer(
         authorize_url=authorize_url,
         token_url=token_url,
