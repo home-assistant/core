@@ -333,6 +333,7 @@ def _register_panel(
 
 
 async def _create_map_dashboard(hass: HomeAssistant) -> None:
+    """Create a map dashboard."""
     translations = await async_get_translations(
         hass, hass.config.language, "dashboard", {onboarding.DOMAIN}
     )
