@@ -453,6 +453,8 @@ async def test_set_preset_mode_boost(
 ) -> None:
     """Test setting preset mode."""
     device = FritzDeviceClimateMock()
+
+    device.lock = False
     assert await setup_config_entry(
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
