@@ -86,7 +86,7 @@ def _get_data_schema(hass: HomeAssistant) -> vol.Schema:
 class JewishCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Jewish calendar."""
 
-    VERSION = 1
+    VERSION = 2
 
     @staticmethod
     @callback
@@ -101,23 +101,10 @@ class JewishCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is not None:
-            _options = {}
-            if CONF_CANDLE_LIGHT_MINUTES in user_input:
-                _options[CONF_CANDLE_LIGHT_MINUTES] = user_input[
-                    CONF_CANDLE_LIGHT_MINUTES
-                ]
-                del user_input[CONF_CANDLE_LIGHT_MINUTES]
-            if CONF_HAVDALAH_OFFSET_MINUTES in user_input:
-                _options[CONF_HAVDALAH_OFFSET_MINUTES] = user_input[
-                    CONF_HAVDALAH_OFFSET_MINUTES
-                ]
-                del user_input[CONF_HAVDALAH_OFFSET_MINUTES]
             if CONF_LOCATION in user_input:
                 user_input[CONF_LATITUDE] = user_input[CONF_LOCATION][CONF_LATITUDE]
                 user_input[CONF_LONGITUDE] = user_input[CONF_LOCATION][CONF_LONGITUDE]
-            return self.async_create_entry(
-                title=DEFAULT_NAME, data=user_input, options=_options
-            )
+            return self.async_create_entry(title=DEFAULT_NAME, data=user_input)
 
         return self.async_show_form(
             step_id="user",
@@ -125,10 +112,6 @@ class JewishCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
                 _get_data_schema(self.hass), user_input
             ),
         )
-
-    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Import a config entry from configuration.yaml."""
-        return await self.async_step_user(import_data)
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None

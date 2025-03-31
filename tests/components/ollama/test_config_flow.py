@@ -204,10 +204,6 @@ async def test_form_errors(hass: HomeAssistant, side_effect, error) -> None:
     assert result2["errors"] == {"base": error}
 
 
-@pytest.mark.parametrize(  # Remove when translations fixed
-    "ignore_translations",
-    ["component.ollama.config.abort.download_failed"],
-)
 async def test_download_error(hass: HomeAssistant) -> None:
     """Test we handle errors while downloading a model."""
     result = await hass.config_entries.flow.async_init(

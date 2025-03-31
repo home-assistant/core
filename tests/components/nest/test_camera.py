@@ -24,7 +24,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from .common import DEVICE_ID, CreateDevice, FakeSubscriber, PlatformSetup
+from .common import DEVICE_ID, CreateDevice, PlatformSetup
 from .conftest import FakeAuth
 
 from tests.common import async_fire_time_changed
@@ -176,16 +176,6 @@ async def async_get_image(
     return image.content
 
 
-def get_frontend_stream_type_attribute(
-    hass: HomeAssistant, entity_id: str
-) -> StreamType:
-    """Get the frontend_stream_type camera attribute."""
-    cam = hass.states.get(entity_id)
-    assert cam is not None
-    assert cam.state == CameraState.STREAMING
-    return cam.attributes.get("frontend_stream_type")
-
-
 async def async_frontend_stream_types(
     client: MockHAClientWebSocket, entity_id: str
 ) -> list[str] | None:
@@ -268,9 +258,9 @@ async def test_camera_stream(
     await setup_platform()
 
     assert len(hass.states.async_all()) == 1
-    assert (
-        get_frontend_stream_type_attribute(hass, "camera.my_camera") == StreamType.HLS
-    )
+    cam = hass.states.get("camera.my_camera")
+    assert cam is not None
+    assert cam.state == CameraState.STREAMING
     client = await hass_ws_client(hass)
     frontend_stream_types = await async_frontend_stream_types(
         client, "camera.my_camera"
@@ -294,10 +284,9 @@ async def test_camera_ws_stream(
     await setup_platform()
 
     assert len(hass.states.async_all()) == 1
-    assert (
-        get_frontend_stream_type_attribute(hass, "camera.my_camera") == StreamType.HLS
-    )
-
+    cam = hass.states.get("camera.my_camera")
+    assert cam is not None
+    assert cam.state == CameraState.STREAMING
     client = await hass_ws_client(hass)
     frontend_stream_types = await async_frontend_stream_types(
         client, "camera.my_camera"
@@ -483,17 +472,58 @@ async def test_stream_response_already_expired(
     assert stream_source == "rtsp://some/url?auth=g.2.streamingToken"
 
 
+async def test_extending_stream_already_expired(
+    hass: HomeAssistant,
+    auth: FakeAuth,
+    setup_platform: PlatformSetup,
+    camera_device: None,
+) -> None:
+    """Test a API response when extending the stream returns an expired stream url."""
+    now = utcnow()
+    stream_1_expiration = now + datetime.timedelta(seconds=180)
+    stream_2_expiration = now + datetime.timedelta(seconds=30)  # Will be in the past
+    stream_3_expiration = now + datetime.timedelta(seconds=600)
+    auth.responses = [
+        make_stream_url_response(stream_1_expiration, token_num=1),
+        make_stream_url_response(stream_2_expiration, token_num=2),
+        make_stream_url_response(stream_3_expiration, token_num=3),
+    ]
+    await setup_platform()
+
+    assert len(hass.states.async_all()) == 1
+    cam = hass.states.get("camera.my_camera")
+    assert cam is not None
+    assert cam.state == CameraState.STREAMING
+
+    # The stream is expired, but we return it anyway
+    stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
+    assert stream_source == "rtsp://some/url?auth=g.1.streamingToken"
+
+    # Jump to when the stream will be refreshed
+    await fire_alarm(hass, now + datetime.timedelta(seconds=160))
+    stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
+    assert stream_source == "rtsp://some/url?auth=g.2.streamingToken"
+
+    # The stream will have expired in the past, but 1 minute min refresh interval is applied.
+    # The stream token is not updated.
+    await fire_alarm(hass, now + datetime.timedelta(seconds=170))
+    stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
+    assert stream_source == "rtsp://some/url?auth=g.2.streamingToken"
+
+    # Now go past the min update interval and the stream is refreshed
+    await fire_alarm(hass, now + datetime.timedelta(seconds=225))
+    stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
+    assert stream_source == "rtsp://some/url?auth=g.3.streamingToken"
+
+
 async def test_camera_removed(
     hass: HomeAssistant,
     auth: FakeAuth,
     camera_device: None,
-    subscriber: FakeSubscriber,
     setup_platform: PlatformSetup,
 ) -> None:
     """Test case where entities are removed and stream tokens revoked."""
     await setup_platform()
-    # Simplify test setup
-    subscriber.cache_policy.fetch = False
 
     assert len(hass.states.async_all()) == 1
     cam = hass.states.get("camera.my_camera")
@@ -627,7 +657,10 @@ async def test_camera_web_rtc(
     cam = hass.states.get("camera.my_camera")
     assert cam is not None
     assert cam.state == CameraState.STREAMING
-    assert cam.attributes["frontend_stream_type"] == StreamType.WEB_RTC
+    client = await hass_ws_client(hass)
+    assert await async_frontend_stream_types(client, "camera.my_camera") == [
+        StreamType.WEB_RTC
+    ]
 
     client = await hass_ws_client(hass)
     await client.send_json_auto_id(
@@ -676,17 +709,11 @@ async def test_camera_web_rtc_unsupported(
     cam = hass.states.get("camera.my_camera")
     assert cam is not None
     assert cam.state == CameraState.STREAMING
-    assert cam.attributes["frontend_stream_type"] == StreamType.HLS
 
     client = await hass_ws_client(hass)
-    await client.send_json_auto_id(
-        {"type": "camera/capabilities", "entity_id": "camera.my_camera"}
-    )
-    msg = await client.receive_json()
-
-    assert msg["type"] == TYPE_RESULT
-    assert msg["success"]
-    assert msg["result"] == {"frontend_stream_types": ["hls"]}
+    assert await async_frontend_stream_types(client, "camera.my_camera") == [
+        StreamType.HLS
+    ]
 
     await client.send_json_auto_id(
         {
@@ -701,7 +728,7 @@ async def test_camera_web_rtc_unsupported(
     assert not msg["success"]
     assert msg["error"] == {
         "code": "webrtc_offer_failed",
-        "message": "Camera does not support WebRTC, frontend_stream_type=hls",
+        "message": "Camera does not support WebRTC, frontend_stream_types={<StreamType.HLS: 'hls'>}",
     }
 
 
@@ -750,7 +777,7 @@ async def test_camera_web_rtc_offer_failure(
     assert response["event"] == {
         "type": "error",
         "code": "webrtc_offer_failed",
-        "message": "Nest API error: Bad Request response from API (400)",
+        "message": "Nest API error:  response from API (400)",
     }
 
 
@@ -800,6 +827,10 @@ async def test_camera_multiple_streams(
     assert cam.state == CameraState.STREAMING
     # Prefer WebRTC over RTSP/HLS
     assert cam.attributes["frontend_stream_type"] == StreamType.WEB_RTC
+    client = await hass_ws_client(hass)
+    assert await async_frontend_stream_types(client, "camera.my_camera") == [
+        StreamType.WEB_RTC
+    ]
 
     # RTSP stream is not supported
     stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
@@ -875,6 +906,10 @@ async def test_webrtc_refresh_expired_stream(
     assert cam is not None
     assert cam.state == CameraState.STREAMING
     assert cam.attributes["frontend_stream_type"] == StreamType.WEB_RTC
+    client = await hass_ws_client(hass)
+    assert await async_frontend_stream_types(client, "camera.my_camera") == [
+        StreamType.WEB_RTC
+    ]
 
     client = await hass_ws_client(hass)
     await client.send_json_auto_id(

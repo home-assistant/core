@@ -20,6 +20,9 @@
   "dependencies": ["bluetooth_adapters"],
   "dhcp": [
     {
+      "registered_devices": true
+    },
+    {
       "hostname": "gs[0-9][0-9][0-9][0-9][0-9][0-9]"
     },
     {
@@ -32,6 +35,7 @@
   "documentation": "https://www.home-assistant.io/integrations/lamarzocco",
   "integration_type": "device",
   "iot_class": "cloud_polling",
-  "loggers": ["lmcloud"],
-  "requirements": ["lmcloud==1.2.3"]
+  "loggers": ["pylamarzocco"],
+  "quality_scale": "platinum",
+  "requirements": ["pylamarzocco==1.4.9"]
 }

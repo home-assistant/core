@@ -209,7 +209,7 @@
           "high": "High",
           "low": "Low",
           "medium": "Medium",
-          "off": "Off"
+          "off": "[%key:common::state::off%]"
         }
       },
       "climate_state_seat_heater_rear_center": {
@@ -218,7 +218,7 @@
           "high": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::high%]",
           "low": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::low%]",
           "medium": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::medium%]",
-          "off": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::off%]"
+          "off": "[%key:common::state::off%]"
         }
       },
       "climate_state_seat_heater_rear_left": {
@@ -227,7 +227,7 @@
           "high": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::high%]",
           "low": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::low%]",
           "medium": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::medium%]",
-          "off": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::off%]"
+          "off": "[%key:common::state::off%]"
         }
       },
       "climate_state_seat_heater_rear_right": {
@@ -236,7 +236,7 @@
           "high": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::high%]",
           "low": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::low%]",
           "medium": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::medium%]",
-          "off": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::off%]"
+          "off": "[%key:common::state::off%]"
         }
       },
       "climate_state_seat_heater_right": {
@@ -245,7 +245,7 @@
           "high": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::high%]",
           "low": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::low%]",
           "medium": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::medium%]",
-          "off": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::off%]"
+          "off": "[%key:common::state::off%]"
         }
       },
       "climate_state_seat_heater_third_row_left": {
@@ -254,7 +254,7 @@
           "high": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::high%]",
           "low": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::low%]",
           "medium": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::medium%]",
-          "off": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::off%]"
+          "off": "[%key:common::state::off%]"
         }
       },
       "climate_state_seat_heater_third_row_right": {
@@ -263,7 +263,7 @@
           "high": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::high%]",
           "low": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::low%]",
           "medium": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::medium%]",
-          "off": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::off%]"
+          "off": "[%key:common::state::off%]"
         }
       },
       "climate_state_steering_wheel_heat_level": {
@@ -271,7 +271,7 @@
         "state": {
           "high": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::high%]",
           "low": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::low%]",
-          "off": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::off%]"
+          "off": "[%key:common::state::off%]"
         }
       },
       "components_customer_preferred_export_rule": {
@@ -329,9 +329,9 @@
         "name": "Charging",
         "state": {
           "starting": "Starting",
-          "charging": "Charging",
-          "disconnected": "Disconnected",
-          "stopped": "Stopped",
+          "charging": "[%key:common::state::charging%]",
+          "disconnected": "[%key:common::state::disconnected%]",
+          "stopped": "[%key:common::state::stopped%]",
           "complete": "Complete",
           "no_power": "No power"
         }
@@ -418,11 +418,14 @@
         "name": "Grid Status",
         "state": {
           "island_status_unknown": "Unknown",
-          "on_grid": "Connected",
-          "off_grid": "Disconnected",
+          "on_grid": "[%key:common::state::connected%]",
+          "off_grid": "[%key:common::state::disconnected%]",
           "off_grid_unintentional": "Disconnected unintentionally",
           "off_grid_intentional": "Disconnected intentionally"
         }
+      },
+      "storm_mode_active": {
+        "name": "Storm Watch active"
       },
       "vehicle_state_tpms_pressure_fl": {
         "name": "Tire pressure front left"
@@ -453,10 +456,73 @@
       },
       "wall_connector_state": {
         "name": "State code"
+      },
+      "solar_energy_exported": {
+        "name": "Solar exported"
+      },
+      "generator_energy_exported": {
+        "name": "Generator exported"
+      },
+      "grid_energy_imported": {
+        "name": "Grid imported"
+      },
+      "grid_services_energy_imported": {
+        "name": "Grid services imported"
+      },
+      "grid_services_energy_exported": {
+        "name": "Grid services exported"
+      },
+      "grid_energy_exported_from_solar": {
+        "name": "Grid exported from solar"
+      },
+      "grid_energy_exported_from_generator": {
+        "name": "Grid exported from generator"
+      },
+      "grid_energy_exported_from_battery": {
+        "name": "Grid exported from battery"
+      },
+      "battery_energy_exported": {
+        "name": "Battery exported"
+      },
+      "battery_energy_imported_from_grid": {
+        "name": "Battery imported from grid"
+      },
+      "battery_energy_imported_from_solar": {
+        "name": "Battery imported from solar"
+      },
+      "battery_energy_imported_from_generator": {
+        "name": "Battery imported from generator"
+      },
+      "consumer_energy_imported_from_grid": {
+        "name": "Consumer imported from grid"
+      },
+      "consumer_energy_imported_from_solar": {
+        "name": "Consumer imported from solar"
+      },
+      "consumer_energy_imported_from_battery": {
+        "name": "Consumer imported from battery"
+      },
+      "consumer_energy_imported_from_generator": {
+        "name": "Consumer imported from generator"
+      },
+      "total_home_usage": {
+        "name": "Home usage"
+      },
+      "total_battery_charge": {
+        "name": "Battery charged"
+      },
+      "total_battery_discharge": {
+        "name": "Battery discharged"
+      },
+      "total_solar_generation": {
+        "name": "Solar generated"
+      },
+      "total_grid_energy_exported": {
+        "name": "Grid exported"
       }
     },
     "switch": {
-      "charge_state_user_charge_enable_request": {
+      "charge_state_charging_state": {
         "name": "Charge"
       },
       "climate_state_auto_seat_climate_left": {

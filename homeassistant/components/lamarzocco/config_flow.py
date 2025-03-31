@@ -6,26 +6,26 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from lmcloud.client_cloud import LaMarzoccoCloudClient
-from lmcloud.client_local import LaMarzoccoLocalClient
-from lmcloud.exceptions import AuthFail, RequestNotSuccessful
-from lmcloud.models import LaMarzoccoDeviceInfo
+from aiohttp import ClientSession
+from pylamarzocco.clients.cloud import LaMarzoccoCloudClient
+from pylamarzocco.clients.local import LaMarzoccoLocalClient
+from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
+from pylamarzocco.models import LaMarzoccoDeviceInfo
 import voluptuous as vol
 
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfo,
     async_discovered_service_info,
 )
-from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
 )
 from homeassistant.const import (
+    CONF_ADDRESS,
     CONF_HOST,
     CONF_MAC,
     CONF_MODEL,
@@ -36,15 +36,20 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
 )
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import CONF_USE_BLUETOOTH, DOMAIN
+from .coordinator import LaMarzoccoConfigEntry
 
 CONF_MACHINE = "machine"
 
@@ -55,6 +60,8 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for La Marzocco."""
 
     VERSION = 2
+
+    _client: ClientSession
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -79,9 +86,11 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
                 **self._discovered,
             }
 
+            self._client = async_create_clientsession(self.hass)
             cloud_client = LaMarzoccoCloudClient(
                 username=data[CONF_USERNAME],
                 password=data[CONF_PASSWORD],
+                client=self._client,
             )
             try:
                 self._fleet = await cloud_client.get_customer_fleet()
@@ -125,15 +134,31 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._config = data
                 return await self.async_step_machine_selection()
 
+        placeholders: dict[str, str] | None = None
+        if self._discovered:
+            self.context["title_placeholders"] = placeholders = {
+                CONF_NAME: self._discovered[CONF_MACHINE]
+            }
+
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_USERNAME): str,
-                    vol.Required(CONF_PASSWORD): str,
+                    vol.Required(CONF_USERNAME): TextSelector(
+                        TextSelectorConfig(
+                            type=TextSelectorType.EMAIL, autocomplete="username"
+                        )
+                    ),
+                    vol.Required(CONF_PASSWORD): TextSelector(
+                        TextSelectorConfig(
+                            type=TextSelectorType.PASSWORD,
+                            autocomplete="current-password",
+                        )
+                    ),
                 }
             ),
             errors=errors,
+            description_placeholders=placeholders,
         )
 
     async def async_step_machine_selection(
@@ -155,7 +180,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
             # validate local connection if host is provided
             if user_input.get(CONF_HOST):
                 if not await LaMarzoccoLocalClient.validate_connection(
-                    client=get_async_client(self.hass),
+                    client=self._client,
                     host=user_input[CONF_HOST],
                     token=selected_device.communication_key,
                 ):
@@ -277,7 +302,13 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
         serial = discovery_info.hostname.upper()
 
         await self.async_set_unique_id(serial)
-        self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured(
+            updates={
+                CONF_HOST: discovery_info.ip,
+                CONF_ADDRESS: discovery_info.macaddress,
+            }
+        )
+        self._async_abort_entries_match({CONF_ADDRESS: discovery_info.macaddress})
 
         _LOGGER.debug(
             "Discovered La Marzocco machine %s through DHCP at address %s",
@@ -287,6 +318,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self._discovered[CONF_MACHINE] = serial
         self._discovered[CONF_HOST] = discovery_info.ip
+        self._discovered[CONF_ADDRESS] = discovery_info.macaddress
 
         return await self.async_step_user()
 
@@ -323,13 +355,20 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
                 data_schema=vol.Schema(
                     {
                         vol.Required(
-                            CONF_USERNAME,
-                            default=reconfigure_entry.data[CONF_USERNAME],
-                        ): str,
+                            CONF_USERNAME, default=reconfigure_entry.data[CONF_USERNAME]
+                        ): TextSelector(
+                            TextSelectorConfig(
+                                type=TextSelectorType.EMAIL, autocomplete="username"
+                            ),
+                        ),
                         vol.Required(
-                            CONF_PASSWORD,
-                            default=reconfigure_entry.data[CONF_PASSWORD],
-                        ): str,
+                            CONF_PASSWORD, default=reconfigure_entry.data[CONF_PASSWORD]
+                        ): TextSelector(
+                            TextSelectorConfig(
+                                type=TextSelectorType.PASSWORD,
+                                autocomplete="current-password",
+                            ),
+                        ),
                     }
                 ),
             )
@@ -339,7 +378,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: LaMarzoccoConfigEntry,
     ) -> LmOptionsFlowHandler:
         """Create the options flow."""
         return LmOptionsFlowHandler()

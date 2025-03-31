@@ -25,7 +25,7 @@ from awesomeversion import (
     AwesomeVersionException,
     AwesomeVersionStrategy,
 )
-from propcache import cached_property
+from propcache.api import cached_property
 import voluptuous as vol
 
 from . import generated
@@ -40,7 +40,8 @@ from .generated.ssdp import SSDP
 from .generated.usb import USB
 from .generated.zeroconf import HOMEKIT, ZEROCONF
 from .helpers.json import json_bytes, json_fragment
-from .helpers.typing import UNDEFINED
+from .helpers.typing import UNDEFINED, UndefinedType
+from .util.async_ import create_eager_task
 from .util.hass_dict import HassKey
 from .util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
@@ -65,14 +66,15 @@ _LOGGER = logging.getLogger(__name__)
 # This list can be extended by calling async_register_preload_platform
 #
 BASE_PRELOAD_PLATFORMS = [
+    "backup",
     "config",
     "config_flow",
     "diagnostics",
     "energy",
     "group",
-    "logbook",
     "hardware",
     "intent",
+    "logbook",
     "media_source",
     "recorder",
     "repairs",
@@ -124,9 +126,9 @@ BLOCKED_CUSTOM_INTEGRATIONS: dict[str, BlockedIntegration] = {
 DATA_COMPONENTS: HassKey[dict[str, ModuleType | ComponentProtocol]] = HassKey(
     "components"
 )
-DATA_INTEGRATIONS: HassKey[dict[str, Integration | asyncio.Future[None]]] = HassKey(
-    "integrations"
-)
+DATA_INTEGRATIONS: HassKey[
+    dict[str, Integration | asyncio.Future[Integration | IntegrationNotFound]]
+] = HassKey("integrations")
 DATA_MISSING_PLATFORMS: HassKey[dict[str, bool]] = HassKey("missing_platforms")
 DATA_CUSTOM_COMPONENTS: HassKey[
     dict[str, Integration] | asyncio.Future[dict[str, Integration]]
@@ -758,10 +760,8 @@ class Integration:
         manifest["overwrites_built_in"] = self.overwrites_built_in
 
         if self.dependencies:
-            self._all_dependencies_resolved: bool | None = None
-            self._all_dependencies: set[str] | None = None
+            self._all_dependencies: set[str] | Exception | None = None
         else:
-            self._all_dependencies_resolved = True
             self._all_dependencies = set()
 
         self._platforms_to_preload = hass.data[DATA_PRELOAD_PLATFORMS]
@@ -830,6 +830,9 @@ class Integration:
     @cached_property
     def quality_scale(self) -> str | None:
         """Return Integration Quality Scale."""
+        # Custom integrations default to "custom" quality scale.
+        if not self.is_built_in or self.overwrites_built_in:
+            return "custom"
         return self.manifest.get("quality_scale")
 
     @cached_property
@@ -930,47 +933,25 @@ class Integration:
         """Return all dependencies including sub-dependencies."""
         if self._all_dependencies is None:
             raise RuntimeError("Dependencies not resolved!")
+        if isinstance(self._all_dependencies, Exception):
+            raise self._all_dependencies
 
         return self._all_dependencies
 
     @property
     def all_dependencies_resolved(self) -> bool:
         """Return if all dependencies have been resolved."""
-        return self._all_dependencies_resolved is not None
+        return self._all_dependencies is not None
 
-    async def resolve_dependencies(self) -> bool:
+    async def resolve_dependencies(self) -> set[str] | None:
         """Resolve all dependencies."""
-        if self._all_dependencies_resolved is not None:
-            return self._all_dependencies_resolved
+        if self._all_dependencies is not None:
+            if isinstance(self._all_dependencies, Exception):
+                return None
+            return self._all_dependencies
 
-        self._all_dependencies_resolved = False
-        try:
-            dependencies = await _async_component_dependencies(self.hass, self)
-        except IntegrationNotFound as err:
-            _LOGGER.error(
-                (
-                    "Unable to resolve dependencies for %s: unable to resolve"
-                    " (sub)dependency %s"
-                ),
-                self.domain,
-                err.domain,
-            )
-        except CircularDependency as err:
-            _LOGGER.error(
-                (
-                    "Unable to resolve dependencies for %s: it contains a circular"
-                    " dependency: %s -> %s"
-                ),
-                self.domain,
-                err.from_domain,
-                err.to_domain,
-            )
-        else:
-            dependencies.discard(self.domain)
-            self._all_dependencies = dependencies
-            self._all_dependencies_resolved = True
-
-        return self._all_dependencies_resolved
+        result = await resolve_integrations_dependencies(self.hass, (self,))
+        return result.get(self.domain)
 
     async def async_get_component(self) -> ComponentProtocol:
         """Return the component.
@@ -1341,7 +1322,7 @@ def async_get_loaded_integration(hass: HomeAssistant, domain: str) -> Integratio
     Raises IntegrationNotLoaded if the integration is not loaded.
     """
     cache = hass.data[DATA_INTEGRATIONS]
-    int_or_fut = cache.get(domain, UNDEFINED)
+    int_or_fut = cache.get(domain)
     # Integration is never subclassed, so we can check for type
     if type(int_or_fut) is Integration:
         return int_or_fut
@@ -1351,7 +1332,7 @@ def async_get_loaded_integration(hass: HomeAssistant, domain: str) -> Integratio
 async def async_get_integration(hass: HomeAssistant, domain: str) -> Integration:
     """Get integration."""
     cache = hass.data[DATA_INTEGRATIONS]
-    if type(int_or_fut := cache.get(domain, UNDEFINED)) is Integration:
+    if type(int_or_fut := cache.get(domain)) is Integration:
         return int_or_fut
     integrations_or_excs = await async_get_integrations(hass, [domain])
     int_or_exc = integrations_or_excs[domain]
@@ -1366,15 +1347,17 @@ async def async_get_integrations(
     """Get integrations."""
     cache = hass.data[DATA_INTEGRATIONS]
     results: dict[str, Integration | Exception] = {}
-    needed: dict[str, asyncio.Future[None]] = {}
-    in_progress: dict[str, asyncio.Future[None]] = {}
+    needed: dict[str, asyncio.Future[Integration | IntegrationNotFound]] = {}
+    in_progress: dict[str, asyncio.Future[Integration | IntegrationNotFound]] = {}
     for domain in domains:
-        int_or_fut = cache.get(domain, UNDEFINED)
+        int_or_fut = cache.get(domain)
         # Integration is never subclassed, so we can check for type
         if type(int_or_fut) is Integration:
             results[domain] = int_or_fut
-        elif int_or_fut is not UNDEFINED:
-            in_progress[domain] = cast(asyncio.Future[None], int_or_fut)
+        elif int_or_fut:
+            if TYPE_CHECKING:
+                assert isinstance(int_or_fut, asyncio.Future)
+            in_progress[domain] = int_or_fut
         elif "." in domain:
             results[domain] = ValueError(f"Invalid domain {domain}")
         else:
@@ -1382,14 +1365,13 @@ async def async_get_integrations(
 
     if in_progress:
         await asyncio.wait(in_progress.values())
-        for domain in in_progress:
-            # When we have waited and it's UNDEFINED, it doesn't exist
-            # We don't cache that it doesn't exist, or else people can't fix it
-            # and then restart, because their config will never be valid.
-            if (int_or_fut := cache.get(domain, UNDEFINED)) is UNDEFINED:
-                results[domain] = IntegrationNotFound(domain)
-            else:
-                results[domain] = cast(Integration, int_or_fut)
+        # Here we retrieve the results we waited for
+        # instead of reading them from the cache since
+        # reading from the cache will have a race if
+        # the integration gets removed from the cache
+        # because it was not found.
+        for domain, future in in_progress.items():
+            results[domain] = future.result()
 
     if not needed:
         return results
@@ -1401,7 +1383,7 @@ async def async_get_integrations(
     for domain, future in needed.items():
         if integration := custom.get(domain):
             results[domain] = cache[domain] = integration
-            future.set_result(None)
+            future.set_result(integration)
 
     for domain in results:
         if domain in needed:
@@ -1415,20 +1397,209 @@ async def async_get_integrations(
             _resolve_integrations_from_root, hass, components, needed
         )
         for domain, future in needed.items():
-            int_or_exc = integrations.get(domain)
-            if not int_or_exc:
-                cache.pop(domain)
-                results[domain] = IntegrationNotFound(domain)
-            elif isinstance(int_or_exc, Exception):
-                cache.pop(domain)
-                exc = IntegrationNotFound(domain)
-                exc.__cause__ = int_or_exc
-                results[domain] = exc
+            if integration := integrations.get(domain):
+                results[domain] = cache[domain] = integration
+                future.set_result(integration)
             else:
-                results[domain] = cache[domain] = int_or_exc
-            future.set_result(None)
+                # We don't cache that it doesn't exist as configuration
+                # validation that relies on integrations being loaded
+                # would be unfixable. For example if a custom integration
+                # was temporarily removed.
+                # This allows restoring a missing integration to fix the
+                # validation error so the config validations checks do not
+                # block restarting.
+                del cache[domain]
+                exc = IntegrationNotFound(domain)
+                results[domain] = exc
+                # We don't use set_exception because
+                # we expect there will be cases where
+                # the future exception is never retrieved
+                future.set_result(exc)
 
     return results
+
+
+class _ResolveDependenciesCacheProtocol(Protocol):
+    def get(self, itg: Integration) -> set[str] | Exception | None: ...
+
+    def __setitem__(
+        self, itg: Integration, all_dependencies: set[str] | Exception
+    ) -> None: ...
+
+
+class _ResolveDependenciesCache(_ResolveDependenciesCacheProtocol):
+    """Cache for resolve_integrations_dependencies."""
+
+    def get(self, itg: Integration) -> set[str] | Exception | None:
+        return itg._all_dependencies  # noqa: SLF001
+
+    def __setitem__(
+        self, itg: Integration, all_dependencies: set[str] | Exception
+    ) -> None:
+        itg._all_dependencies = all_dependencies  # noqa: SLF001
+
+
+async def resolve_integrations_dependencies(
+    hass: HomeAssistant, integrations: Iterable[Integration]
+) -> dict[str, set[str]]:
+    """Resolve all dependencies for integrations.
+
+    Detects circular dependencies and missing integrations.
+    """
+    resolved = _ResolveDependenciesCache()
+
+    async def _resolve_deps_catch_exceptions(itg: Integration) -> set[str] | None:
+        try:
+            return await _do_resolve_dependencies(itg, cache=resolved)
+        except Exception as exc:  # noqa: BLE001
+            _LOGGER.error("Unable to resolve dependencies for %s: %s", itg.domain, exc)
+            return None
+
+    resolve_dependencies_tasks = {
+        itg.domain: create_eager_task(
+            _resolve_deps_catch_exceptions(itg),
+            name=f"resolve dependencies {itg.domain}",
+            loop=hass.loop,
+        )
+        for itg in integrations
+    }
+
+    result = await asyncio.gather(*resolve_dependencies_tasks.values())
+
+    return {
+        domain: deps
+        for domain, deps in zip(resolve_dependencies_tasks, result, strict=True)
+        if deps is not None
+    }
+
+
+async def resolve_integrations_after_dependencies(
+    hass: HomeAssistant,
+    integrations: Iterable[Integration],
+    possible_after_dependencies: set[str] | None = None,
+    *,
+    ignore_exceptions: bool = False,
+) -> dict[str, set[str]]:
+    """Resolve all dependencies, including after_dependencies, for integrations.
+
+    Detects circular dependencies and missing integrations.
+    """
+    resolved: dict[Integration, set[str] | Exception] = {}
+
+    async def _resolve_deps_catch_exceptions(itg: Integration) -> set[str] | None:
+        try:
+            return await _do_resolve_dependencies(
+                itg,
+                cache=resolved,
+                possible_after_dependencies=possible_after_dependencies,
+                ignore_exceptions=ignore_exceptions,
+            )
+        except Exception as exc:  # noqa: BLE001
+            _LOGGER.error(
+                "Unable to resolve (after) dependencies for %s: %s", itg.domain, exc
+            )
+            return None
+
+    resolve_dependencies_tasks = {
+        itg.domain: create_eager_task(
+            _resolve_deps_catch_exceptions(itg),
+            name=f"resolve after dependencies {itg.domain}",
+            loop=hass.loop,
+        )
+        for itg in integrations
+    }
+
+    result = await asyncio.gather(*resolve_dependencies_tasks.values())
+
+    return {
+        domain: deps
+        for domain, deps in zip(resolve_dependencies_tasks, result, strict=True)
+        if deps is not None
+    }
+
+
+async def _do_resolve_dependencies(
+    itg: Integration,
+    *,
+    cache: _ResolveDependenciesCacheProtocol,
+    possible_after_dependencies: set[str] | None | UndefinedType = UNDEFINED,
+    ignore_exceptions: bool = False,
+) -> set[str]:
+    """Recursively resolve all dependencies.
+
+    Uses `cache` to cache the results.
+
+    If `possible_after_dependencies` is not UNDEFINED,
+    listed after dependencies are also considered.
+    If `possible_after_dependencies` is None,
+    all the possible after dependencies are considered.
+
+    If `ignore_exceptions` is True, exceptions are caught and ignored
+    and the normal resolution algorithm continues.
+    Otherwise, exceptions are raised.
+    """
+    resolved = cache
+    resolving: set[str] = set()
+
+    async def do_resolve_dependencies_impl(itg: Integration) -> set[str]:
+        domain = itg.domain
+
+        # If it's already resolved, no point doing it again.
+        if (result := resolved.get(itg)) is not None:
+            if isinstance(result, Exception):
+                raise result
+            return result
+
+        # If we are already resolving it, we have a circular dependency.
+        if domain in resolving:
+            if ignore_exceptions:
+                resolved[itg] = set()
+                return set()
+            exc = CircularDependency([domain])
+            resolved[itg] = exc
+            raise exc
+
+        resolving.add(domain)
+
+        dependencies_domains = set(itg.dependencies)
+        if possible_after_dependencies is not UNDEFINED:
+            if possible_after_dependencies is None:
+                after_dependencies: Iterable[str] = itg.after_dependencies
+            else:
+                after_dependencies = (
+                    set(itg.after_dependencies) & possible_after_dependencies
+                )
+            dependencies_domains.update(after_dependencies)
+        dependencies = await async_get_integrations(itg.hass, dependencies_domains)
+
+        all_dependencies: set[str] = set()
+        for dep_domain, dep_integration in dependencies.items():
+            if isinstance(dep_integration, Exception):
+                if ignore_exceptions:
+                    continue
+                resolved[itg] = dep_integration
+                raise dep_integration
+
+            all_dependencies.add(dep_domain)
+
+            try:
+                dep_dependencies = await do_resolve_dependencies_impl(dep_integration)
+            except CircularDependency as exc:
+                exc.extend_cycle(domain)
+                resolved[itg] = exc
+                raise
+            except Exception as exc:
+                resolved[itg] = exc
+                raise
+
+            all_dependencies.update(dep_dependencies)
+
+        resolving.remove(domain)
+
+        resolved[itg] = all_dependencies
+        return all_dependencies
+
+    return await do_resolve_dependencies_impl(itg)
 
 
 class LoaderError(Exception):
@@ -1456,11 +1627,13 @@ class IntegrationNotLoaded(LoaderError):
 class CircularDependency(LoaderError):
     """Raised when a circular dependency is found when resolving components."""
 
-    def __init__(self, from_domain: str | set[str], to_domain: str) -> None:
+    def __init__(self, domain_cycle: list[str]) -> None:
         """Initialize circular dependency error."""
-        super().__init__(f"Circular dependency detected: {from_domain} -> {to_domain}.")
-        self.from_domain = from_domain
-        self.to_domain = to_domain
+        super().__init__("Circular dependency detected", domain_cycle)
+
+    def extend_cycle(self, domain: str) -> None:
+        """Extend the cycle with the domain."""
+        self.args[1].insert(0, domain)
 
 
 def _load_file(
@@ -1556,16 +1729,16 @@ class Components:
             raise ImportError(f"Unable to load {comp_name}")
 
         # Local import to avoid circular dependencies
-        from .helpers.frame import report  # pylint: disable=import-outside-toplevel
+        # pylint: disable-next=import-outside-toplevel
+        from .helpers.frame import ReportBehavior, report_usage
 
-        report(
-            (
-                f"accesses hass.components.{comp_name}."
-                " This is deprecated and will stop working in Home Assistant 2025.3, it"
-                f" should be updated to import functions used from {comp_name} directly"
-            ),
-            error_if_core=False,
-            log_custom_component_only=True,
+        report_usage(
+            f"accesses hass.components.{comp_name}, which"
+            f" should be updated to import functions used from {comp_name} directly",
+            core_behavior=ReportBehavior.IGNORE,
+            core_integration_behavior=ReportBehavior.IGNORE,
+            custom_integration_behavior=ReportBehavior.LOG,
+            breaks_in_ha_version="2025.3",
         )
 
         wrapped = ModuleWrapper(self._hass, component)
@@ -1585,16 +1758,18 @@ class Helpers:
         helper = importlib.import_module(f"homeassistant.helpers.{helper_name}")
 
         # Local import to avoid circular dependencies
-        from .helpers.frame import report  # pylint: disable=import-outside-toplevel
+        # pylint: disable-next=import-outside-toplevel
+        from .helpers.frame import ReportBehavior, report_usage
 
-        report(
+        report_usage(
             (
-                f"accesses hass.helpers.{helper_name}."
-                " This is deprecated and will stop working in Home Assistant 2025.5, it"
+                f"accesses hass.helpers.{helper_name}, which"
                 f" should be updated to import functions used from {helper_name} directly"
             ),
-            error_if_core=False,
-            log_custom_component_only=True,
+            core_behavior=ReportBehavior.IGNORE,
+            core_integration_behavior=ReportBehavior.IGNORE,
+            custom_integration_behavior=ReportBehavior.LOG,
+            breaks_in_ha_version="2025.5",
         )
 
         wrapped = ModuleWrapper(self._hass, helper)
@@ -1610,50 +1785,6 @@ def bind_hass[_CallableT: Callable[..., Any]](func: _CallableT) -> _CallableT:
     """
     setattr(func, "__bind_hass", True)
     return func
-
-
-async def _async_component_dependencies(
-    hass: HomeAssistant,
-    integration: Integration,
-) -> set[str]:
-    """Get component dependencies."""
-    loading: set[str] = set()
-    loaded: set[str] = set()
-
-    async def component_dependencies_impl(integration: Integration) -> None:
-        """Recursively get component dependencies."""
-        domain = integration.domain
-        if not (dependencies := integration.dependencies):
-            loaded.add(domain)
-            return
-
-        loading.add(domain)
-        dep_integrations = await async_get_integrations(hass, dependencies)
-        for dependency_domain, dep_integration in dep_integrations.items():
-            if isinstance(dep_integration, Exception):
-                raise dep_integration
-
-            # If we are already loading it, we have a circular dependency.
-            # We have to check it here to make sure that every integration that
-            # depends on us, does not appear in our own after_dependencies.
-            if conflict := loading.intersection(dep_integration.after_dependencies):
-                raise CircularDependency(conflict, dependency_domain)
-
-            # If we have already loaded it, no point doing it again.
-            if dependency_domain in loaded:
-                continue
-
-            # If we are already loading it, we have a circular dependency.
-            if dependency_domain in loading:
-                raise CircularDependency(dependency_domain, domain)
-
-            await component_dependencies_impl(dep_integration)
-        loading.remove(domain)
-        loaded.add(domain)
-
-    await component_dependencies_impl(integration)
-
-    return loaded
 
 
 def _async_mount_config_dir(hass: HomeAssistant) -> None:
@@ -1682,6 +1813,29 @@ def is_component_module_loaded(hass: HomeAssistant, module: str) -> bool:
 
 
 @callback
+def async_get_issue_integration(
+    hass: HomeAssistant | None,
+    integration_domain: str | None,
+) -> Integration | None:
+    """Return details of an integration for issue reporting."""
+    integration: Integration | None = None
+    if not hass or not integration_domain:
+        # We are unable to get the integration
+        return None
+
+    if (comps_or_future := hass.data.get(DATA_CUSTOM_COMPONENTS)) and not isinstance(
+        comps_or_future, asyncio.Future
+    ):
+        integration = comps_or_future.get(integration_domain)
+
+    if not integration:
+        with suppress(IntegrationNotLoaded):
+            integration = async_get_loaded_integration(hass, integration_domain)
+
+    return integration
+
+
+@callback
 def async_get_issue_tracker(
     hass: HomeAssistant | None,
     *,
@@ -1694,20 +1848,11 @@ def async_get_issue_tracker(
         "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
     )
     if not integration and not integration_domain and not module:
-        # If we know nothing about the entity, suggest opening an issue on HA core
+        # If we know nothing about the integration, suggest opening an issue on HA core
         return issue_tracker
 
-    if (
-        not integration
-        and (hass and integration_domain)
-        and (comps_or_future := hass.data.get(DATA_CUSTOM_COMPONENTS))
-        and not isinstance(comps_or_future, asyncio.Future)
-    ):
-        integration = comps_or_future.get(integration_domain)
-
-    if not integration and (hass and integration_domain):
-        with suppress(IntegrationNotLoaded):
-            integration = async_get_loaded_integration(hass, integration_domain)
+    if not integration:
+        integration = async_get_issue_integration(hass, integration_domain)
 
     if integration and not integration.is_built_in:
         return integration.issue_tracker
@@ -1745,8 +1890,7 @@ def async_suggest_report_issue(
         if not integration_domain:
             return "report it to the custom integration author"
         return (
-            f"report it to the author of the '{integration_domain}' "
-            "custom integration"
+            f"report it to the author of the '{integration_domain}' custom integration"
         )
 
     return f"create a bug report at {issue_tracker}"

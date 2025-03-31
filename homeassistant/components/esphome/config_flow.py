@@ -20,7 +20,7 @@ from aioesphomeapi import (
 import aiohttp
 import voluptuous as vol
 
-from homeassistant.components import dhcp, zeroconf
+from homeassistant.components import zeroconf
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     ConfigEntry,
@@ -31,14 +31,17 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.util.json import json_loads_object
 
 from .const import (
     CONF_ALLOW_SERVICE_CALLS,
     CONF_DEVICE_NAME,
     CONF_NOISE_PSK,
+    CONF_SUBSCRIBE_LOGS,
     DEFAULT_ALLOW_SERVICE_CALLS,
     DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
     DOMAIN,
@@ -125,7 +128,22 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             self._password = ""
             return await self._async_authenticate_or_add()
 
+        if error is None and entry_data.get(CONF_NOISE_PSK):
+            return await self.async_step_reauth_encryption_removed_confirm()
         return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_encryption_removed_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reauthorization flow when encryption was removed."""
+        if user_input is not None:
+            self._noise_psk = None
+            return self._async_get_entry()
+
+        return self.async_show_form(
+            step_id="reauth_encryption_removed_confirm",
+            description_placeholders={"name": self._name},
+        )
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
@@ -223,7 +241,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         mac_address: str | None = discovery_info.properties.get("mac")
@@ -257,6 +275,9 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         self, discovery_info: MqttServiceInfo
     ) -> ConfigFlowResult:
         """Handle MQTT discovery."""
+        if not discovery_info.payload:
+            return self.async_abort(reason="mqtt_missing_payload")
+
         device_info = json_loads_object(discovery_info.payload)
         if "mac" not in device_info:
             return self.async_abort(reason="mqtt_missing_mac")
@@ -290,7 +311,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         return await self.async_step_discovery_confirm()
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle DHCP discovery."""
         await self.async_set_unique_id(format_mac(discovery_info.macaddress))
@@ -502,6 +523,10 @@ class OptionsFlowHandler(OptionsFlow):
                     default=self.config_entry.options.get(
                         CONF_ALLOW_SERVICE_CALLS, DEFAULT_ALLOW_SERVICE_CALLS
                     ),
+                ): bool,
+                vol.Required(
+                    CONF_SUBSCRIBE_LOGS,
+                    default=self.config_entry.options.get(CONF_SUBSCRIBE_LOGS, False),
                 ): bool,
             }
         )

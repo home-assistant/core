@@ -16,7 +16,7 @@ from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .common import MOCK_REPOSITORIES, MOCK_STORE_ADDONS
 
@@ -33,6 +33,7 @@ def mock_all(
     store_info: AsyncMock,
     addon_stats: AsyncMock,
     addon_changelog: AsyncMock,
+    resolution_info: AsyncMock,
 ) -> None:
     """Mock all setup requests."""
     _install_default_mocks(aioclient_mock)
@@ -145,19 +146,6 @@ def _install_default_mocks(aioclient_mock: AiohttpClientMocker):
     )
     aioclient_mock.get(
         "http://127.0.0.1/ingress/panels", json={"result": "ok", "data": {"panels": {}}}
-    )
-    aioclient_mock.get(
-        "http://127.0.0.1/resolution/info",
-        json={
-            "result": "ok",
-            "data": {
-                "unsupported": [],
-                "unhealthy": [],
-                "suggestions": [],
-                "issues": [],
-                "checks": [],
-            },
-        },
     )
     aioclient_mock.get(
         "http://127.0.0.1/network/info",

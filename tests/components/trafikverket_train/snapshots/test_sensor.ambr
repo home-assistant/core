@@ -222,7 +222,7 @@
       'title_placeholders': dict({
         'name': 'Mock Title',
       }),
-      'unique_id': "stockholmc-uppsalac--['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']",
+      'unique_id': None,
     }),
     'flow_id': <ANY>,
     'handler': 'trafikverket_train',

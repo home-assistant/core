@@ -5,7 +5,7 @@ from datetime import timedelta
 from typing import Any, cast
 from unittest.mock import patch
 
-from aiohttp import WSMsgType, WSServerHandshakeError, web
+from aiohttp import ServerDisconnectedError, WSMsgType, web
 import pytest
 
 from homeassistant.components.websocket_api import (
@@ -241,7 +241,7 @@ async def test_pending_msg_peak(
     instance: http.WebSocketHandler = cast(http.WebSocketHandler, setup_instance)
 
     # Fill the queue past the allowed peak
-    for _ in range(10):
+    for _ in range(20):
         instance._send_message({"overload": "message"})
 
     async_fire_time_changed(
@@ -251,7 +251,7 @@ async def test_pending_msg_peak(
     msg = await websocket_client.receive()
     assert msg.type is WSMsgType.CLOSE
     assert "Client unable to keep up with pending messages" in caplog.text
-    assert "Stayed over 5 for 5 seconds" in caplog.text
+    assert "Stayed over 5 for 10 seconds" in caplog.text
     assert "overload" in caplog.text
 
 
@@ -374,7 +374,7 @@ async def test_prepare_fail_timeout(
             "homeassistant.components.websocket_api.http.web.WebSocketResponse.prepare",
             side_effect=(TimeoutError, web.WebSocketResponse.prepare),
         ),
-        pytest.raises(WSServerHandshakeError),
+        pytest.raises(ServerDisconnectedError),
     ):
         await hass_ws_client(hass)
 
@@ -392,7 +392,7 @@ async def test_prepare_fail_connection_reset(
             "homeassistant.components.websocket_api.http.web.WebSocketResponse.prepare",
             side_effect=(ConnectionResetError, web.WebSocketResponse.prepare),
         ),
-        pytest.raises(WSServerHandshakeError),
+        pytest.raises(ServerDisconnectedError),
     ):
         await hass_ws_client(hass)
 

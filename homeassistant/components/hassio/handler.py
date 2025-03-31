@@ -24,7 +24,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.singleton import singleton
 from homeassistant.loader import bind_hass
 
-from .const import ATTR_MESSAGE, ATTR_RESULT, DOMAIN, X_HASS_SOURCE
+from .const import ATTR_MESSAGE, ATTR_RESULT, DATA_COMPONENT, X_HASS_SOURCE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,7 +72,7 @@ async def async_update_diagnostics(hass: HomeAssistant, diagnostics: bool) -> bo
 
     The caller of the function should handle HassioAPIError.
     """
-    hassio: HassIO = hass.data[DOMAIN]
+    hassio = hass.data[DATA_COMPONENT]
     return await hassio.update_diagnostics(diagnostics)
 
 
@@ -85,25 +85,16 @@ async def async_create_backup(
 
     The caller of the function should handle HassioAPIError.
     """
-    hassio: HassIO = hass.data[DOMAIN]
+    hassio = hass.data[DATA_COMPONENT]
     backup_type = "partial" if partial else "full"
     command = f"/backups/new/{backup_type}"
     return await hassio.send_command(command, payload=payload, timeout=None)
 
 
-@bind_hass
-@_api_bool
-async def async_apply_suggestion(hass: HomeAssistant, suggestion_uuid: str) -> dict:
-    """Apply a suggestion from supervisor's resolution center."""
-    hassio: HassIO = hass.data[DOMAIN]
-    command = f"/resolution/suggestion/{suggestion_uuid}"
-    return await hassio.send_command(command, timeout=None)
-
-
 @api_data
 async def async_get_green_settings(hass: HomeAssistant) -> dict[str, bool]:
     """Return settings specific to Home Assistant Green."""
-    hassio: HassIO = hass.data[DOMAIN]
+    hassio = hass.data[DATA_COMPONENT]
     return await hassio.send_command("/os/boards/green", method="get")
 
 
@@ -115,7 +106,7 @@ async def async_set_green_settings(
 
     Returns an empty dict.
     """
-    hassio: HassIO = hass.data[DOMAIN]
+    hassio = hass.data[DATA_COMPONENT]
     return await hassio.send_command(
         "/os/boards/green", method="post", payload=settings
     )
@@ -124,7 +115,7 @@ async def async_set_green_settings(
 @api_data
 async def async_get_yellow_settings(hass: HomeAssistant) -> dict[str, bool]:
     """Return settings specific to Home Assistant Yellow."""
-    hassio: HassIO = hass.data[DOMAIN]
+    hassio = hass.data[DATA_COMPONENT]
     return await hassio.send_command("/os/boards/yellow", method="get")
 
 
@@ -136,20 +127,10 @@ async def async_set_yellow_settings(
 
     Returns an empty dict.
     """
-    hassio: HassIO = hass.data[DOMAIN]
+    hassio = hass.data[DATA_COMPONENT]
     return await hassio.send_command(
         "/os/boards/yellow", method="post", payload=settings
     )
-
-
-@api_data
-async def async_reboot_host(hass: HomeAssistant) -> dict:
-    """Reboot the host.
-
-    Returns an empty dict.
-    """
-    hassio: HassIO = hass.data[DOMAIN]
-    return await hassio.send_command("/host/reboot", method="post", timeout=60)
 
 
 class HassIO:
@@ -245,26 +226,6 @@ class HassIO:
         """
         return self.send_command("/ingress/panels", method="get")
 
-    @api_data
-    def get_resolution_info(self) -> Coroutine:
-        """Return data for Supervisor resolution center.
-
-        This method returns a coroutine.
-        """
-        return self.send_command("/resolution/info", method="get")
-
-    @api_data
-    def get_suggestions_for_issue(
-        self, issue_id: str
-    ) -> Coroutine[Any, Any, dict[str, Any]]:
-        """Return suggestions for issue from Supervisor resolution center.
-
-        This method returns a coroutine.
-        """
-        return self.send_command(
-            f"/resolution/issue/{issue_id}/suggestions", method="get"
-        )
-
     @_api_bool
     async def update_hass_api(
         self, http_config: dict[str, Any], refresh_token: RefreshToken
@@ -303,14 +264,6 @@ class HassIO:
         return self.send_command(
             "/supervisor/options", payload={"diagnostics": diagnostics}
         )
-
-    @_api_bool
-    def apply_suggestion(self, suggestion_uuid: str) -> Coroutine:
-        """Apply a suggestion from supervisor's resolution center.
-
-        This method returns a coroutine.
-        """
-        return self.send_command(f"/resolution/suggestion/{suggestion_uuid}")
 
     async def send_command(
         self,
@@ -380,7 +333,7 @@ class HassIO:
 @singleton(KEY_SUPERVISOR_CLIENT)
 def get_supervisor_client(hass: HomeAssistant) -> SupervisorClient:
     """Return supervisor client."""
-    hassio: HassIO = hass.data[DOMAIN]
+    hassio = hass.data[DATA_COMPONENT]
     return SupervisorClient(
         str(hassio.base_url),
         os.environ.get("SUPERVISOR_TOKEN", ""),

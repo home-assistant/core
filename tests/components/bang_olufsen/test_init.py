@@ -9,7 +9,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
 
-from .const import TEST_MODEL_BALANCE, TEST_NAME, TEST_SERIAL_NUMBER
+from .const import TEST_FRIENDLY_NAME, TEST_MODEL_BALANCE, TEST_SERIAL_NUMBER
 
 from tests.common import MockConfigEntry
 
@@ -35,7 +35,8 @@ async def test_setup_entry(
         identifiers={(DOMAIN, TEST_SERIAL_NUMBER)}
     )
     assert device is not None
-    assert device.name == TEST_NAME
+    # Is usually TEST_NAME, but is updated to the device's friendly name by _update_name_and_beolink
+    assert device.name == TEST_FRIENDLY_NAME
     assert device.model == TEST_MODEL_BALANCE
 
     # Ensure that the connection has been checked WebSocket connection has been initialized

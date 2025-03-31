@@ -6,10 +6,14 @@ https://home-assistant.io/components/vacuum.romy/.
 
 from typing import Any
 
-from homeassistant.components.vacuum import StateVacuumEntity, VacuumEntityFeature
+from homeassistant.components.vacuum import (
+    StateVacuumEntity,
+    VacuumActivity,
+    VacuumEntityFeature,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, LOGGER
 from .coordinator import RomyVacuumCoordinator
@@ -47,7 +51,7 @@ SUPPORT_ROMY_ROBOT = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up ROMY vacuum cleaner."""
 
@@ -75,7 +79,14 @@ class RomyVacuumEntity(RomyEntity, StateVacuumEntity):
         """Handle updated data from the coordinator."""
         self._attr_fan_speed = FAN_SPEEDS[self.romy.fan_speed]
         self._attr_battery_level = self.romy.battery_level
-        self._attr_state = self.romy.status
+        if (status := self.romy.status) is None:
+            self._attr_activity = None
+            self.async_write_ha_state()
+            return
+        try:
+            self._attr_activity = VacuumActivity(status)
+        except ValueError:
+            self._attr_activity = None
 
         self.async_write_ha_state()
 

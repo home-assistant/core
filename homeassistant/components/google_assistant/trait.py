@@ -21,6 +21,7 @@ from homeassistant.components import (
     input_boolean,
     input_button,
     input_select,
+    lawn_mower,
     light,
     lock,
     media_player,
@@ -42,6 +43,7 @@ from homeassistant.components.climate import ClimateEntityFeature
 from homeassistant.components.cover import CoverEntityFeature
 from homeassistant.components.fan import FanEntityFeature
 from homeassistant.components.humidifier import HumidifierEntityFeature
+from homeassistant.components.lawn_mower import LawnMowerEntityFeature
 from homeassistant.components.light import LightEntityFeature
 from homeassistant.components.lock import LockState
 from homeassistant.components.media_player import MediaPlayerEntityFeature, MediaType
@@ -553,15 +555,9 @@ class ColorSettingTrait(_Trait):
             response["colorModel"] = "hsv"
 
         if light.color_temp_supported(color_modes):
-            # Max Kelvin is Min Mireds K = 1000000 / mireds
-            # Min Kelvin is Max Mireds K = 1000000 / mireds
             response["colorTemperatureRange"] = {
-                "temperatureMaxK": color_util.color_temperature_mired_to_kelvin(
-                    attrs.get(light.ATTR_MIN_MIREDS)
-                ),
-                "temperatureMinK": color_util.color_temperature_mired_to_kelvin(
-                    attrs.get(light.ATTR_MAX_MIREDS)
-                ),
+                "temperatureMaxK": int(attrs.get(light.ATTR_MAX_COLOR_TEMP_KELVIN)),
+                "temperatureMinK": int(attrs.get(light.ATTR_MIN_COLOR_TEMP_KELVIN)),
             }
 
         return response
@@ -583,7 +579,7 @@ class ColorSettingTrait(_Trait):
                 }
 
         if light.color_temp_supported([color_mode]):
-            temp = self.state.attributes.get(light.ATTR_COLOR_TEMP)
+            temp = self.state.attributes.get(light.ATTR_COLOR_TEMP_KELVIN)
             # Some faulty integrations might put 0 in here, raising exception.
             if temp == 0:
                 _LOGGER.warning(
@@ -592,9 +588,7 @@ class ColorSettingTrait(_Trait):
                     temp,
                 )
             elif temp is not None:
-                color["temperatureK"] = color_util.color_temperature_mired_to_kelvin(
-                    temp
-                )
+                color["temperatureK"] = temp
 
         response = {}
 
@@ -606,11 +600,9 @@ class ColorSettingTrait(_Trait):
     async def execute(self, command, data, params, challenge):
         """Execute a color temperature command."""
         if "temperature" in params["color"]:
-            temp = color_util.color_temperature_kelvin_to_mired(
-                params["color"]["temperature"]
-            )
-            min_temp = self.state.attributes[light.ATTR_MIN_MIREDS]
-            max_temp = self.state.attributes[light.ATTR_MAX_MIREDS]
+            temp = params["color"]["temperature"]
+            max_temp = self.state.attributes[light.ATTR_MAX_COLOR_TEMP_KELVIN]
+            min_temp = self.state.attributes[light.ATTR_MIN_COLOR_TEMP_KELVIN]
 
             if temp < min_temp or temp > max_temp:
                 raise SmartHomeError(
@@ -621,7 +613,10 @@ class ColorSettingTrait(_Trait):
             await self.hass.services.async_call(
                 light.DOMAIN,
                 SERVICE_TURN_ON,
-                {ATTR_ENTITY_ID: self.state.entity_id, light.ATTR_COLOR_TEMP: temp},
+                {
+                    ATTR_ENTITY_ID: self.state.entity_id,
+                    light.ATTR_COLOR_TEMP_KELVIN: temp,
+                },
                 blocking=not self.config.should_report_state,
                 context=data.context,
             )
@@ -721,7 +716,7 @@ class DockTrait(_Trait):
     @staticmethod
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
-        return domain == vacuum.DOMAIN
+        return domain in (vacuum.DOMAIN, lawn_mower.DOMAIN)
 
     def sync_attributes(self) -> dict[str, Any]:
         """Return dock attributes for a sync request."""
@@ -729,17 +724,32 @@ class DockTrait(_Trait):
 
     def query_attributes(self) -> dict[str, Any]:
         """Return dock query attributes."""
-        return {"isDocked": self.state.state == vacuum.STATE_DOCKED}
+        domain = self.state.domain
+        state = self.state.state
+        if domain == vacuum.DOMAIN:
+            return {"isDocked": state == vacuum.VacuumActivity.DOCKED}
+        if domain == lawn_mower.DOMAIN:
+            return {"isDocked": state == lawn_mower.LawnMowerActivity.DOCKED}
+        raise NotImplementedError(f"Unsupported domain {domain}")
 
     async def execute(self, command, data, params, challenge):
         """Execute a dock command."""
-        await self.hass.services.async_call(
-            self.state.domain,
-            vacuum.SERVICE_RETURN_TO_BASE,
-            {ATTR_ENTITY_ID: self.state.entity_id},
-            blocking=not self.config.should_report_state,
-            context=data.context,
-        )
+        domain = self.state.domain
+        service: str | None = None
+
+        if domain == vacuum.DOMAIN:
+            service = vacuum.SERVICE_RETURN_TO_BASE
+        elif domain == lawn_mower.DOMAIN:
+            service = lawn_mower.SERVICE_DOCK
+
+        if service:
+            await self.hass.services.async_call(
+                self.state.domain,
+                service,
+                {ATTR_ENTITY_ID: self.state.entity_id},
+                blocking=not self.config.should_report_state,
+                context=data.context,
+            )
 
 
 @register_trait
@@ -825,8 +835,8 @@ class EnergyStorageTrait(_Trait):
             "capacityUntilFull": [
                 {"rawValue": 100 - battery_level, "unit": "PERCENTAGE"}
             ],
-            "isCharging": self.state.state == vacuum.STATE_DOCKED,
-            "isPluggedIn": self.state.state == vacuum.STATE_DOCKED,
+            "isCharging": self.state.state == vacuum.VacuumActivity.DOCKED,
+            "isPluggedIn": self.state.state == vacuum.VacuumActivity.DOCKED,
         }
 
     async def execute(self, command, data, params, challenge):
@@ -850,7 +860,7 @@ class StartStopTrait(_Trait):
     @staticmethod
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
-        if domain == vacuum.DOMAIN:
+        if domain in (vacuum.DOMAIN, lawn_mower.DOMAIN):
             return True
 
         if (
@@ -870,6 +880,12 @@ class StartStopTrait(_Trait):
                 & VacuumEntityFeature.PAUSE
                 != 0
             }
+        if domain == lawn_mower.DOMAIN:
+            return {
+                "pausable": self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+                & LawnMowerEntityFeature.PAUSE
+                != 0
+            }
         if domain in COVER_VALVE_DOMAINS:
             return {}
 
@@ -882,8 +898,13 @@ class StartStopTrait(_Trait):
 
         if domain == vacuum.DOMAIN:
             return {
-                "isRunning": state == vacuum.STATE_CLEANING,
-                "isPaused": state == vacuum.STATE_PAUSED,
+                "isRunning": state == vacuum.VacuumActivity.CLEANING,
+                "isPaused": state == vacuum.VacuumActivity.PAUSED,
+            }
+        if domain == lawn_mower.DOMAIN:
+            return {
+                "isRunning": state == lawn_mower.LawnMowerActivity.MOWING,
+                "isPaused": state == lawn_mower.LawnMowerActivity.PAUSED,
             }
 
         if domain in COVER_VALVE_DOMAINS:
@@ -903,46 +924,52 @@ class StartStopTrait(_Trait):
         if domain == vacuum.DOMAIN:
             await self._execute_vacuum(command, data, params, challenge)
             return
+        if domain == lawn_mower.DOMAIN:
+            await self._execute_lawn_mower(command, data, params, challenge)
+            return
         if domain in COVER_VALVE_DOMAINS:
             await self._execute_cover_or_valve(command, data, params, challenge)
             return
 
     async def _execute_vacuum(self, command, data, params, challenge):
         """Execute a StartStop command."""
+        service: str | None = None
         if command == COMMAND_START_STOP:
-            if params["start"]:
-                await self.hass.services.async_call(
-                    self.state.domain,
-                    vacuum.SERVICE_START,
-                    {ATTR_ENTITY_ID: self.state.entity_id},
-                    blocking=not self.config.should_report_state,
-                    context=data.context,
-                )
-            else:
-                await self.hass.services.async_call(
-                    self.state.domain,
-                    vacuum.SERVICE_STOP,
-                    {ATTR_ENTITY_ID: self.state.entity_id},
-                    blocking=not self.config.should_report_state,
-                    context=data.context,
-                )
+            service = vacuum.SERVICE_START if params["start"] else vacuum.SERVICE_STOP
         elif command == COMMAND_PAUSE_UNPAUSE:
-            if params["pause"]:
-                await self.hass.services.async_call(
-                    self.state.domain,
-                    vacuum.SERVICE_PAUSE,
-                    {ATTR_ENTITY_ID: self.state.entity_id},
-                    blocking=not self.config.should_report_state,
-                    context=data.context,
-                )
-            else:
-                await self.hass.services.async_call(
-                    self.state.domain,
-                    vacuum.SERVICE_START,
-                    {ATTR_ENTITY_ID: self.state.entity_id},
-                    blocking=not self.config.should_report_state,
-                    context=data.context,
-                )
+            service = vacuum.SERVICE_PAUSE if params["pause"] else vacuum.SERVICE_START
+        if service:
+            await self.hass.services.async_call(
+                self.state.domain,
+                service,
+                {ATTR_ENTITY_ID: self.state.entity_id},
+                blocking=not self.config.should_report_state,
+                context=data.context,
+            )
+
+    async def _execute_lawn_mower(self, command, data, params, challenge):
+        """Execute a StartStop command."""
+        service: str | None = None
+        if command == COMMAND_START_STOP:
+            service = (
+                lawn_mower.SERVICE_START_MOWING
+                if params["start"]
+                else lawn_mower.SERVICE_DOCK
+            )
+        elif command == COMMAND_PAUSE_UNPAUSE:
+            service = (
+                lawn_mower.SERVICE_PAUSE
+                if params["pause"]
+                else lawn_mower.SERVICE_START_MOWING
+            )
+        if service:
+            await self.hass.services.async_call(
+                self.state.domain,
+                service,
+                {ATTR_ENTITY_ID: self.state.entity_id},
+                blocking=not self.config.should_report_state,
+                context=data.context,
+            )
 
     async def _execute_cover_or_valve(self, command, data, params, challenge):
         """Execute a StartStop command."""
@@ -2706,6 +2733,21 @@ class SensorStateTrait(_Trait):
         ),
     }
 
+    binary_sensor_types = {
+        binary_sensor.BinarySensorDeviceClass.CO: (
+            "CarbonMonoxideLevel",
+            ["carbon monoxide detected", "no carbon monoxide detected", "unknown"],
+        ),
+        binary_sensor.BinarySensorDeviceClass.SMOKE: (
+            "SmokeLevel",
+            ["smoke detected", "no smoke detected", "unknown"],
+        ),
+        binary_sensor.BinarySensorDeviceClass.MOISTURE: (
+            "WaterLeak",
+            ["leak", "no leak", "unknown"],
+        ),
+    }
+
     name = TRAIT_SENSOR_STATE
     commands: list[str] = []
 
@@ -2728,24 +2770,37 @@ class SensorStateTrait(_Trait):
     @classmethod
     def supported(cls, domain, features, device_class, _):
         """Test if state is supported."""
-        return domain == sensor.DOMAIN and device_class in cls.sensor_types
+        return (domain == sensor.DOMAIN and device_class in cls.sensor_types) or (
+            domain == binary_sensor.DOMAIN and device_class in cls.binary_sensor_types
+        )
 
     def sync_attributes(self) -> dict[str, Any]:
         """Return attributes for a sync request."""
         device_class = self.state.attributes.get(ATTR_DEVICE_CLASS)
-        data = self.sensor_types.get(device_class)
 
-        if device_class is None or data is None:
-            return {}
+        def create_sensor_state(
+            name: str,
+            raw_value_unit: str | None = None,
+            available_states: list[str] | None = None,
+        ) -> dict[str, Any]:
+            sensor_state: dict[str, Any] = {
+                "name": name,
+            }
+            if raw_value_unit:
+                sensor_state["numericCapabilities"] = {"rawValueUnit": raw_value_unit}
+            if available_states:
+                sensor_state["descriptiveCapabilities"] = {
+                    "availableStates": available_states
+                }
+            return {"sensorStatesSupported": [sensor_state]}
 
-        sensor_state = {
-            "name": data[0],
-            "numericCapabilities": {"rawValueUnit": data[1]},
-        }
-
-        if device_class == sensor.SensorDeviceClass.AQI:
-            sensor_state["descriptiveCapabilities"] = {
-                "availableStates": [
+        if self.state.domain == sensor.DOMAIN:
+            sensor_data = self.sensor_types.get(device_class)
+            if device_class is None or sensor_data is None:
+                return {}
+            available_states: list[str] | None = None
+            if device_class == sensor.SensorDeviceClass.AQI:
+                available_states = [
                     "healthy",
                     "moderate",
                     "unhealthy for sensitive groups",
@@ -2753,30 +2808,53 @@ class SensorStateTrait(_Trait):
                     "very unhealthy",
                     "hazardous",
                     "unknown",
-                ],
-            }
-
-        return {"sensorStatesSupported": [sensor_state]}
+                ]
+            return create_sensor_state(sensor_data[0], sensor_data[1], available_states)
+        binary_sensor_data = self.binary_sensor_types.get(device_class)
+        if device_class is None or binary_sensor_data is None:
+            return {}
+        return create_sensor_state(
+            binary_sensor_data[0], available_states=binary_sensor_data[1]
+        )
 
     def query_attributes(self) -> dict[str, Any]:
         """Return the attributes of this trait for this entity."""
         device_class = self.state.attributes.get(ATTR_DEVICE_CLASS)
-        data = self.sensor_types.get(device_class)
 
-        if device_class is None or data is None:
+        def create_sensor_state(
+            name: str, raw_value: float | None = None, current_state: str | None = None
+        ) -> dict[str, Any]:
+            sensor_state: dict[str, Any] = {
+                "name": name,
+                "rawValue": raw_value,
+            }
+            if current_state:
+                sensor_state["currentSensorState"] = current_state
+            return {"currentSensorStateData": [sensor_state]}
+
+        if self.state.domain == sensor.DOMAIN:
+            sensor_data = self.sensor_types.get(device_class)
+            if device_class is None or sensor_data is None:
+                return {}
+            try:
+                value = float(self.state.state)
+            except ValueError:
+                value = None
+            if self.state.state == STATE_UNKNOWN:
+                value = None
+            current_state: str | None = None
+            if device_class == sensor.SensorDeviceClass.AQI:
+                current_state = self._air_quality_description_for_aqi(value)
+            return create_sensor_state(sensor_data[0], value, current_state)
+
+        binary_sensor_data = self.binary_sensor_types.get(device_class)
+        if device_class is None or binary_sensor_data is None:
             return {}
-
-        try:
-            value = float(self.state.state)
-        except ValueError:
-            value = None
-        if self.state.state == STATE_UNKNOWN:
-            value = None
-        sensor_data = {"name": data[0], "rawValue": value}
-
-        if device_class == sensor.SensorDeviceClass.AQI:
-            sensor_data["currentSensorState"] = self._air_quality_description_for_aqi(
-                value
-            )
-
-        return {"currentSensorStateData": [sensor_data]}
+        value = {
+            STATE_ON: 0,
+            STATE_OFF: 1,
+            STATE_UNKNOWN: 2,
+        }[self.state.state]
+        return create_sensor_state(
+            binary_sensor_data[0], current_state=binary_sensor_data[1][value]
+        )

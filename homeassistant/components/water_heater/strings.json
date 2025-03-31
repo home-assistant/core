@@ -1,4 +1,5 @@
 {
+  "title": "Water heater",
   "device_automation": {
     "action_type": {
       "turn_on": "[%key:common::device_automation::action_type::turn_on%]",
@@ -7,7 +8,7 @@
   },
   "entity_component": {
     "_": {
-      "name": "Water heater",
+      "name": "[%key:component::water_heater::title%]",
       "state": {
         "off": "[%key:common::state::off%]",
         "eco": "Eco",

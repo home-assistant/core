@@ -18,8 +18,8 @@ from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 
-from . import SteamConfigEntry
 from .const import CONF_ACCOUNT, CONF_ACCOUNTS, DOMAIN, LOGGER, PLACEHOLDERS
+from .coordinator import SteamConfigEntry
 
 # To avoid too long request URIs, the amount of ids to request is limited
 MAX_IDS_TO_REQUEST = 275
@@ -42,7 +42,7 @@ class SteamFlowHandler(ConfigFlow, domain=DOMAIN):
         config_entry: SteamConfigEntry,
     ) -> SteamOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return SteamOptionsFlowHandler()
+        return SteamOptionsFlowHandler(config_entry)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -120,6 +120,10 @@ def _batch_ids(ids: list[str]) -> Iterator[list[str]]:
 
 class SteamOptionsFlowHandler(OptionsFlow):
     """Handle Steam client options."""
+
+    def __init__(self, entry: SteamConfigEntry) -> None:
+        """Initialize options flow."""
+        self.options = dict(entry.options)
 
     async def async_step_init(
         self, user_input: dict[str, dict[str, str]] | None = None

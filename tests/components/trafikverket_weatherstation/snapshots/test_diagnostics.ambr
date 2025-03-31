@@ -1,0 +1,29 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'air_temp': -3.0,
+    'dew_point': -5.0,
+    'humidity': 84.1,
+    'measure_time': '2024-12-30T23:00:03+01:00',
+    'modified_time': '2024-12-30T22:03:45.143000+00:00',
+    'precipitation_amount': 0.0,
+    'precipitationtype': 'no',
+    'raining': False,
+    'road_ice': None,
+    'road_ice_depth': None,
+    'road_snow': None,
+    'road_snow_depth': None,
+    'road_temp': -3.4,
+    'road_water': None,
+    'road_water_depth': None,
+    'road_water_equivalent_depth': None,
+    'snowing': False,
+    'station_id': '227',
+    'station_name': 'Arlanda',
+    'visible_distance': 20000.0,
+    'wind_height': 6.0,
+    'winddirection': '202',
+    'windforce': 1.2,
+    'windforcemax': 2.3,
+  })
+# ---

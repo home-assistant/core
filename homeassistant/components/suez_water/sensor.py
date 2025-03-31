@@ -2,68 +2,97 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable
+from dataclasses import asdict, dataclass
 from typing import Any
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfVolume
+from pysuez.const import ATTRIBUTION
+
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
+from homeassistant.const import CURRENCY_EURO, UnitOfVolume
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_COUNTER_ID, DOMAIN
-from .coordinator import SuezWaterCoordinator
+from .coordinator import SuezWaterConfigEntry, SuezWaterCoordinator, SuezWaterData
+
+
+@dataclass(frozen=True, kw_only=True)
+class SuezWaterSensorEntityDescription(SensorEntityDescription):
+    """Describes Suez water sensor entity."""
+
+    value_fn: Callable[[SuezWaterData], float | str | None]
+    attr_fn: Callable[[SuezWaterData], dict[str, Any] | None] = lambda _: None
+
+
+SENSORS: tuple[SuezWaterSensorEntityDescription, ...] = (
+    SuezWaterSensorEntityDescription(
+        key="water_usage_yesterday",
+        translation_key="water_usage_yesterday",
+        native_unit_of_measurement=UnitOfVolume.LITERS,
+        device_class=SensorDeviceClass.WATER,
+        value_fn=lambda suez_data: suez_data.aggregated_value,
+        attr_fn=lambda suez_data: asdict(suez_data.aggregated_attr),
+    ),
+    SuezWaterSensorEntityDescription(
+        key="water_price",
+        translation_key="water_price",
+        native_unit_of_measurement=CURRENCY_EURO,
+        device_class=SensorDeviceClass.MONETARY,
+        value_fn=lambda suez_data: suez_data.price,
+    ),
+)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: SuezWaterConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Suez Water sensor from a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([SuezAggregatedSensor(coordinator, entry.data[CONF_COUNTER_ID])])
+    coordinator = entry.runtime_data
+    counter_id = entry.data[CONF_COUNTER_ID]
+
+    async_add_entities(
+        SuezWaterSensor(coordinator, counter_id, description) for description in SENSORS
+    )
 
 
-class SuezAggregatedSensor(CoordinatorEntity[SuezWaterCoordinator], SensorEntity):
-    """Representation of a Sensor."""
+class SuezWaterSensor(CoordinatorEntity[SuezWaterCoordinator], SensorEntity):
+    """Representation of a Suez water sensor."""
 
     _attr_has_entity_name = True
-    _attr_translation_key = "water_usage_yesterday"
-    _attr_native_unit_of_measurement = UnitOfVolume.LITERS
-    _attr_device_class = SensorDeviceClass.WATER
+    _attr_attribution = ATTRIBUTION
+    entity_description: SuezWaterSensorEntityDescription
 
-    def __init__(self, coordinator: SuezWaterCoordinator, counter_id: int) -> None:
-        """Initialize the data object."""
+    def __init__(
+        self,
+        coordinator: SuezWaterCoordinator,
+        counter_id: int,
+        entity_description: SuezWaterSensorEntityDescription,
+    ) -> None:
+        """Initialize the suez water sensor entity."""
         super().__init__(coordinator)
-        self._attr_extra_state_attributes = {}
-        self._attr_unique_id = f"{counter_id}_water_usage_yesterday"
+        self._attr_unique_id = f"{counter_id}_{entity_description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, str(counter_id))},
             entry_type=DeviceEntryType.SERVICE,
             manufacturer="Suez",
         )
+        self.entity_description = entity_description
 
     @property
-    def native_value(self) -> float:
-        """Return the current daily usage."""
-        return self.coordinator.data.value
+    def native_value(self) -> float | str | None:
+        """Return the state of the sensor."""
+        return self.entity_description.value_fn(self.coordinator.data)
 
     @property
-    def attribution(self) -> str:
-        """Return data attribution message."""
-        return self.coordinator.data.attribution
-
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any]:
-        """Return aggregated data."""
-        return {
-            "this_month_consumption": self.coordinator.data.current_month,
-            "previous_month_consumption": self.coordinator.data.previous_month,
-            "highest_monthly_consumption": self.coordinator.data.highest_monthly_consumption,
-            "last_year_overall": self.coordinator.data.previous_year,
-            "this_year_overall": self.coordinator.data.current_year,
-            "history": self.coordinator.data.history,
-        }
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return extra state of the sensor."""
+        return self.entity_description.attr_fn(self.coordinator.data)

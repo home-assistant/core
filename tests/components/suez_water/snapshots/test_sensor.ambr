@@ -1,4 +1,54 @@
 # serializer version: 1
+# name: test_sensors_valid_state[sensor.suez_mock_device_water_price-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.suez_mock_device_water_price',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
+    'original_icon': None,
+    'original_name': 'Water price',
+    'platform': 'suez_water',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'water_price',
+    'unique_id': 'test-counter_water_price',
+    'unit_of_measurement': '€',
+  })
+# ---
+# name: test_sensors_valid_state[sensor.suez_mock_device_water_price-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by toutsurmoneau.fr',
+      'device_class': 'monetary',
+      'friendly_name': 'Suez mock device Water price',
+      'unit_of_measurement': '€',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.suez_mock_device_water_price',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4.74',
+  })
+# ---
 # name: test_sensors_valid_state[sensor.suez_mock_device_water_usage_yesterday-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -6,6 +56,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -35,7 +86,7 @@
 # name: test_sensors_valid_state[sensor.suez_mock_device_water_usage_yesterday-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'suez water mock test',
+      'attribution': 'Data provided by toutsurmoneau.fr',
       'device_class': 'water',
       'friendly_name': 'Suez mock device Water usage yesterday',
       'highest_monthly_consumption': 2558,

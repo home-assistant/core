@@ -21,12 +21,13 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import MyUplinkConfigEntry, MyUplinkDataCoordinator
+from .const import F_SERIES
+from .coordinator import MyUplinkConfigEntry, MyUplinkDataCoordinator
 from .entity import MyUplinkEntity
-from .helpers import find_matching_platform, skip_entity
+from .helpers import find_matching_platform, skip_entity, transform_model_series
 
 DEVICE_POINT_UNIT_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     "°C": SensorEntityDescription(
@@ -139,7 +140,7 @@ DEVICE_POINT_UNIT_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
 MARKER_FOR_UNKNOWN_VALUE = -32768
 
 CATEGORY_BASED_DESCRIPTIONS: dict[str, dict[str, SensorEntityDescription]] = {
-    "F730": {
+    F_SERIES: {
         "43108": SensorEntityDescription(
             key="fan_mode",
             translation_key="fan_mode",
@@ -200,6 +201,7 @@ def get_description(device_point: DevicePoint) -> SensorEntityDescription | None
     """
     description = None
     prefix, _, _ = device_point.category.partition(" ")
+    prefix = transform_model_series(prefix)
     description = CATEGORY_BASED_DESCRIPTIONS.get(prefix, {}).get(
         device_point.parameter_id
     )
@@ -212,7 +214,7 @@ def get_description(device_point: DevicePoint) -> SensorEntityDescription | None
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: MyUplinkConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up myUplink sensor."""
 
@@ -323,10 +325,10 @@ class MyUplinkEnumSensor(MyUplinkDevicePointSensor):
         }
 
     @property
-    def native_value(self) -> str:
+    def native_value(self) -> str | None:
         """Sensor state value for enum sensor."""
         device_point = self.coordinator.data.points[self.device_id][self.point_id]
-        return self.options_map[str(int(device_point.value))]  # type: ignore[no-any-return]
+        return self.options_map.get(str(int(device_point.value)))
 
 
 class MyUplinkEnumRawSensor(MyUplinkDevicePointSensor):

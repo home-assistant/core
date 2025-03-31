@@ -17,7 +17,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_VALUE_TEMPLATE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, VolSchemaType
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
@@ -31,6 +31,8 @@ from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 DEFAULT_NAME = "MQTT Update"
 
@@ -80,7 +82,7 @@ MQTT_JSON_UPDATE_SCHEMA = vol.Schema(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MQTT update entity through YAML and through MQTT discovery."""
     async_setup_entity_entry_helper(
@@ -149,10 +151,7 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
             rendered_json_payload = json_loads(payload)
             if isinstance(rendered_json_payload, dict):
                 _LOGGER.debug(
-                    (
-                        "JSON payload detected after processing payload '%s' on"
-                        " topic %s"
-                    ),
+                    "JSON payload detected after processing payload '%s' on topic %s",
                     rendered_json_payload,
                     msg.topic,
                 )

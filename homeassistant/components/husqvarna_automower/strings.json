@@ -27,7 +27,9 @@
       "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "wrong_account": "You can only reauthenticate this entry with the same Husqvarna account.",
-      "missing_amc_scope": "The `Authentication API` and the `Automower Connect API` are not connected to your application in the Husqvarna Developer Portal."
+      "no_mower_connected": "No mowers connected to this account.",
+      "missing_amc_scope": "The `Authentication API` and the `Automower Connect API` are not connected to your application in the Husqvarna Developer Portal.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
@@ -219,6 +221,9 @@
       "cutting_blade_usage_time": {
         "name": "Cutting blade usage time"
       },
+      "downtime": {
+        "name": "Downtime"
+      },
       "restricted_reason": {
         "name": "Restricted reason",
         "state": {
@@ -260,6 +265,9 @@
           "home": "Home",
           "demo": "Demo"
         }
+      },
+      "uptime": {
+        "name": "Uptime"
       },
       "work_area": {
         "name": "Work area",
@@ -311,10 +319,16 @@
       }
     }
   },
+  "issues": {
+    "deprecated_entity": {
+      "title": "The Husqvarna Automower {entity_name} sensor is deprecated",
+      "description": "The Husqvarna Automower entity `{entity}` is deprecated and will be removed in a future release.\nYou can use the new returning state of the lawn mower entity instead.\nPlease update your automations and scripts to replace the sensor entity with the newly added lawn mower entity.\nWhen you are done migrating you can disable `{entity}`."
+    }
+  },
   "services": {
     "override_schedule": {
       "name": "Override schedule",
-      "description": "Override the schedule to either mow or park for a duration of time.",
+      "description": "Lets the mower either mow or park for a given duration, overriding all schedules.",
       "fields": {
         "duration": {
           "name": "Duration",
@@ -328,7 +342,7 @@
     },
     "override_schedule_work_area": {
       "name": "Override schedule work area",
-      "description": "Override the schedule of the mower for a duration of time in the selected work area.",
+      "description": "Lets the mower mow for a given duration in a specified work area, overriding all schedules.",
       "fields": {
         "duration": {
           "name": "[%key:component::husqvarna_automower::services::override_schedule::fields::duration::name%]",

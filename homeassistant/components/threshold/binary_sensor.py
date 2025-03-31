@@ -33,7 +33,10 @@ from homeassistant.core import (
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.device import async_device_info_to_link_from_entity
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -61,22 +64,36 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME: Final = "Threshold"
 
-PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id,
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_HYSTERESIS, default=DEFAULT_HYSTERESIS): vol.Coerce(float),
-        vol.Optional(CONF_LOWER): vol.Coerce(float),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_UPPER): vol.Coerce(float),
-    }
+
+def no_missing_threshold(value: dict) -> dict:
+    """Validate data point list is greater than polynomial degrees."""
+    if value.get(CONF_LOWER) is None and value.get(CONF_UPPER) is None:
+        raise vol.Invalid("Lower or Upper thresholds are not provided")
+
+    return value
+
+
+PLATFORM_SCHEMA = vol.All(
+    BINARY_SENSOR_PLATFORM_SCHEMA.extend(
+        {
+            vol.Required(CONF_ENTITY_ID): cv.entity_id,
+            vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+            vol.Optional(CONF_HYSTERESIS, default=DEFAULT_HYSTERESIS): vol.Coerce(
+                float
+            ),
+            vol.Optional(CONF_LOWER): vol.Coerce(float),
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_UPPER): vol.Coerce(float),
+        }
+    ),
+    no_missing_threshold,
 )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize threshold config entry."""
     registry = er.async_get(hass)
@@ -125,9 +142,6 @@ async def async_setup_platform(
     upper: float | None = config.get(CONF_UPPER)
     hysteresis: float = config[CONF_HYSTERESIS]
     device_class: BinarySensorDeviceClass | None = config.get(CONF_DEVICE_CLASS)
-
-    if lower is None and upper is None:
-        raise ValueError("Lower or Upper thresholds not provided")
 
     async_add_entities(
         [

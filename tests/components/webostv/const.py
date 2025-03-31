@@ -1,11 +1,13 @@
-"""Constants for LG webOS Smart TV tests."""
+"""Constants for LG webOS TV tests."""
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.webostv.const import LIVE_TV_APP_ID
+from homeassistant.util import slugify
 
 FAKE_UUID = "some-fake-uuid"
-TV_NAME = "fake_webos"
-ENTITY_ID = f"{MP_DOMAIN}.{TV_NAME}"
+TV_MODEL = "MODEL"
+TV_NAME = f"LG webOS TV {TV_MODEL}"
+ENTITY_ID = f"{MP_DOMAIN}.{slugify(TV_NAME)}"
 HOST = "1.2.3.4"
 CLIENT_KEY = "some-secret"
 

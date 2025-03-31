@@ -97,10 +97,6 @@ async def test_user_flow(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-USER_OPTIONS = {
-    CONF_ONLY_INCLUDE_FEEDID: ["1"],
-}
-
 CONFIG_ENTRY = {
     CONF_API_KEY: "my_api_key",
     CONF_ONLY_INCLUDE_FEEDID: ["1"],
@@ -110,21 +106,24 @@ CONFIG_ENTRY = {
 
 async def test_options_flow(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     emoncms_client: AsyncMock,
     config_entry: MockConfigEntry,
 ) -> None:
     """Options flow - success test."""
     await setup_integration(hass, config_entry)
+    assert config_entry.options == {}
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     await hass.async_block_till_done()
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input=USER_OPTIONS,
+        user_input={
+            CONF_ONLY_INCLUDE_FEEDID: ["1"],
+        },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == CONFIG_ENTRY
-    assert config_entry.options == CONFIG_ENTRY
+    assert config_entry.options == {
+        CONF_ONLY_INCLUDE_FEEDID: ["1"],
+    }
 
 
 async def test_options_flow_failure(
@@ -142,3 +141,21 @@ async def test_options_flow_failure(
     assert result["description_placeholders"]["details"] == "failure"
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
+
+
+async def test_unique_id_exists(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    emoncms_client: AsyncMock,
+    config_entry_unique_id: MockConfigEntry,
+) -> None:
+    """Test when entry with same unique id already exists."""
+    config_entry_unique_id.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"

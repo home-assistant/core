@@ -23,7 +23,7 @@ from .common import (
 )
 
 from tests.common import MockEntity, MockEntityPlatform
-from tests.typing import RecorderInstanceGenerator
+from tests.typing import RecorderInstanceContextManager
 
 
 def _count_entity_id_in_states_meta(
@@ -40,7 +40,7 @@ def _count_entity_id_in_states_meta(
 
 @pytest.fixture
 async def mock_recorder_before_hass(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
 ) -> None:
     """Set up recorder."""
 

@@ -152,7 +152,7 @@
     },
     "unsupported_connectivity_check": {
       "title": "Unsupported system - Connectivity check disabled",
-      "description": "System is unsupported because Home Assistant cannot determine when an internet connection is available. Use the link to learn more and how to fix this."
+      "description": "System is unsupported because Home Assistant cannot determine when an Internet connection is available. Use the link to learn more and how to fix this."
     },
     "unsupported_content_trust": {
       "title": "Unsupported system - Content-trust check disabled",
@@ -216,7 +216,7 @@
     },
     "unsupported_systemd_journal": {
       "title": "Unsupported system - Systemd Journal issues",
-      "description": "System is unsupported because Systemd Journal and/or the gateway service is missing, inactive or misconfigured . Use the link to learn more and how to fix this."
+      "description": "System is unsupported because Systemd Journal and/or the gateway service is missing, inactive or misconfigured. Use the link to learn more and how to fix this."
     },
     "unsupported_systemd_resolved": {
       "title": "Unsupported system - Systemd-Resolved issues",
@@ -274,60 +274,60 @@
       "fields": {
         "addon": {
           "name": "Add-on",
-          "description": "The add-on slug."
+          "description": "The add-on to start."
         }
       }
     },
     "addon_restart": {
-      "name": "Restart add-on.",
+      "name": "Restart add-on",
       "description": "Restarts an add-on.",
       "fields": {
         "addon": {
           "name": "[%key:component::hassio::services::addon_start::fields::addon::name%]",
-          "description": "[%key:component::hassio::services::addon_start::fields::addon::description%]"
+          "description": "The add-on to restart."
         }
       }
     },
     "addon_stdin": {
-      "name": "Write data to add-on stdin.",
-      "description": "Writes data to add-on stdin.",
+      "name": "Write data to add-on stdin",
+      "description": "Writes data to the add-on's standard input.",
       "fields": {
         "addon": {
           "name": "[%key:component::hassio::services::addon_start::fields::addon::name%]",
-          "description": "[%key:component::hassio::services::addon_start::fields::addon::description%]"
+          "description": "The add-on to write to."
         }
       }
     },
     "addon_stop": {
-      "name": "Stop add-on.",
+      "name": "Stop add-on",
       "description": "Stops an add-on.",
       "fields": {
         "addon": {
           "name": "[%key:component::hassio::services::addon_start::fields::addon::name%]",
-          "description": "[%key:component::hassio::services::addon_start::fields::addon::description%]"
+          "description": "The add-on to stop."
         }
       }
     },
     "addon_update": {
-      "name": "Update add-on.",
+      "name": "Update add-on",
       "description": "Updates an add-on. This action should be used with caution since add-on updates can contain breaking changes. It is highly recommended that you review release notes/change logs before updating an add-on.",
       "fields": {
         "addon": {
           "name": "[%key:component::hassio::services::addon_start::fields::addon::name%]",
-          "description": "[%key:component::hassio::services::addon_start::fields::addon::description%]"
+          "description": "The add-on to update."
         }
       }
     },
     "host_reboot": {
-      "name": "Reboot the host system.",
+      "name": "Reboot the host system",
       "description": "Reboots the host system."
     },
     "host_shutdown": {
-      "name": "Power off the host system.",
+      "name": "Power off the host system",
       "description": "Powers off the host system."
     },
     "backup_full": {
-      "name": "Create a full backup.",
+      "name": "Create a full backup",
       "description": "Creates a full backup.",
       "fields": {
         "name": {
@@ -348,12 +348,12 @@
         },
         "homeassistant_exclude_database": {
           "name": "Home Assistant exclude database",
-          "description": "Exclude the Home Assistant database file from backup"
+          "description": "Exclude the Home Assistant database file from the backup."
         }
       }
     },
     "backup_partial": {
-      "name": "Create a partial backup.",
+      "name": "Create a partial backup",
       "description": "Creates a partial backup.",
       "fields": {
         "homeassistant": {
@@ -362,7 +362,7 @@
         },
         "addons": {
           "name": "Add-ons",
-          "description": "List of add-ons to include in the backup. Use the name slug of the add-on."
+          "description": "List of add-ons to include in the backup. Use the name slug of each add-on."
         },
         "folders": {
           "name": "Folders",
@@ -385,13 +385,13 @@
           "description": "[%key:component::hassio::services::backup_full::fields::location::description%]"
         },
         "homeassistant_exclude_database": {
-          "name": "Home Assistant exclude database",
-          "description": "Exclude the Home Assistant database file from backup"
+          "name": "[%key:component::hassio::services::backup_full::fields::homeassistant_exclude_database::name%]",
+          "description": "[%key:component::hassio::services::backup_full::fields::homeassistant_exclude_database::description%]"
         }
       }
     },
     "restore_full": {
-      "name": "Restore from full backup.",
+      "name": "Restore from full backup",
       "description": "Restores from full backup.",
       "fields": {
         "slug": {
@@ -405,7 +405,7 @@
       }
     },
     "restore_partial": {
-      "name": "Restore from partial backup.",
+      "name": "Restore from partial backup",
       "description": "Restores from a partial backup.",
       "fields": {
         "slug": {
@@ -418,11 +418,11 @@
         },
         "folders": {
           "name": "[%key:component::hassio::services::backup_partial::fields::folders::name%]",
-          "description": "[%key:component::hassio::services::backup_partial::fields::folders::description%]"
+          "description": "List of directories to restore from the backup."
         },
         "addons": {
           "name": "[%key:component::hassio::services::backup_partial::fields::addons::name%]",
-          "description": "[%key:component::hassio::services::backup_partial::fields::addons::description%]"
+          "description": "List of add-ons to restore from the backup. Use the name slug of each add-on."
         },
         "password": {
           "name": "[%key:common::config_flow::data::password%]",

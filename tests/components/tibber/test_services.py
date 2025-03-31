@@ -20,84 +20,32 @@ def generate_mock_home_data():
     mock_homes = [
         MagicMock(
             name="first_home",
-            info={
-                "viewer": {
-                    "home": {
-                        "currentSubscription": {
-                            "priceInfo": {
-                                "today": [
-                                    {
-                                        "startsAt": START_TIME.isoformat(),
-                                        "total": 0.36914,
-                                        "level": "VERY_EXPENSIVE",
-                                    },
-                                    {
-                                        "startsAt": (
-                                            START_TIME + dt.timedelta(hours=1)
-                                        ).isoformat(),
-                                        "total": 0.36914,
-                                        "level": "VERY_EXPENSIVE",
-                                    },
-                                ],
-                                "tomorrow": [
-                                    {
-                                        "startsAt": tomorrow.isoformat(),
-                                        "total": 0.46914,
-                                        "level": "VERY_EXPENSIVE",
-                                    },
-                                    {
-                                        "startsAt": (
-                                            tomorrow + dt.timedelta(hours=1)
-                                        ).isoformat(),
-                                        "total": 0.46914,
-                                        "level": "VERY_EXPENSIVE",
-                                    },
-                                ],
-                            }
-                        }
-                    }
-                }
+            price_total={
+                START_TIME.isoformat(): 0.36914,
+                (START_TIME + dt.timedelta(hours=1)).isoformat(): 0.36914,
+                tomorrow.isoformat(): 0.46914,
+                (tomorrow + dt.timedelta(hours=1)).isoformat(): 0.46914,
+            },
+            price_level={
+                START_TIME.isoformat(): "VERY_EXPENSIVE",
+                (START_TIME + dt.timedelta(hours=1)).isoformat(): "VERY_EXPENSIVE",
+                tomorrow.isoformat(): "VERY_EXPENSIVE",
+                (tomorrow + dt.timedelta(hours=1)).isoformat(): "VERY_EXPENSIVE",
             },
         ),
         MagicMock(
             name="second_home",
-            info={
-                "viewer": {
-                    "home": {
-                        "currentSubscription": {
-                            "priceInfo": {
-                                "today": [
-                                    {
-                                        "startsAt": START_TIME.isoformat(),
-                                        "total": 0.36914,
-                                        "level": "VERY_EXPENSIVE",
-                                    },
-                                    {
-                                        "startsAt": (
-                                            START_TIME + dt.timedelta(hours=1)
-                                        ).isoformat(),
-                                        "total": 0.36914,
-                                        "level": "VERY_EXPENSIVE",
-                                    },
-                                ],
-                                "tomorrow": [
-                                    {
-                                        "startsAt": tomorrow.isoformat(),
-                                        "total": 0.46914,
-                                        "level": "VERY_EXPENSIVE",
-                                    },
-                                    {
-                                        "startsAt": (
-                                            tomorrow + dt.timedelta(hours=1)
-                                        ).isoformat(),
-                                        "total": 0.46914,
-                                        "level": "VERY_EXPENSIVE",
-                                    },
-                                ],
-                            }
-                        }
-                    }
-                }
+            price_total={
+                START_TIME.isoformat(): 0.36914,
+                (START_TIME + dt.timedelta(hours=1)).isoformat(): 0.36914,
+                tomorrow.isoformat(): 0.46914,
+                (tomorrow + dt.timedelta(hours=1)).isoformat(): 0.46914,
+            },
+            price_level={
+                START_TIME.isoformat(): "VERY_EXPENSIVE",
+                (START_TIME + dt.timedelta(hours=1)).isoformat(): "VERY_EXPENSIVE",
+                tomorrow.isoformat(): "VERY_EXPENSIVE",
+                (tomorrow + dt.timedelta(hours=1)).isoformat(): "VERY_EXPENSIVE",
             },
         ),
     ]

@@ -3,7 +3,6 @@
 from kasa import Feature
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components import tplink
 from homeassistant.components.number import (
     ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
@@ -15,11 +14,8 @@ from homeassistant.components.tplink.number import NUMBER_DESCRIPTIONS
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.setup import async_setup_component
 
 from . import (
-    DEVICE_ID,
-    MAC_ADDRESS,
     _mocked_device,
     _mocked_feature,
     _mocked_strip_children,
@@ -28,6 +24,7 @@ from . import (
     setup_platform_for_device,
     snapshot_platform,
 )
+from .const import DEVICE_ID, MAC_ADDRESS
 
 from tests.common import MockConfigEntry
 
@@ -39,7 +36,7 @@ async def test_states(
     device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test a sensor unique ids."""
+    """Test a number states."""
     features = {description.key for description in NUMBER_DESCRIPTIONS}
     features.update(EXCLUDED_FEATURES)
     device = _mocked_device(alias="my_device", features=features)
@@ -54,7 +51,7 @@ async def test_states(
 
 
 async def test_number(hass: HomeAssistant, entity_registry: er.EntityRegistry) -> None:
-    """Test a sensor unique ids."""
+    """Test number unique ids."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
@@ -70,7 +67,7 @@ async def test_number(hass: HomeAssistant, entity_registry: er.EntityRegistry) -
     )
     plug = _mocked_device(alias="my_plug", features=[new_feature])
     with _patch_discovery(device=plug), _patch_connect(device=plug):
-        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.config_entries.async_setup(already_migrated_config_entry.entry_id)
         await hass.async_block_till_done()
 
     entity_id = "number.my_plug_temperature_offset"
@@ -84,7 +81,7 @@ async def test_number_children(
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test a sensor unique ids."""
+    """Test number children."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
@@ -104,7 +101,7 @@ async def test_number_children(
         children=_mocked_strip_children(features=[new_feature]),
     )
     with _patch_discovery(device=plug), _patch_connect(device=plug):
-        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.config_entries.async_setup(already_migrated_config_entry.entry_id)
         await hass.async_block_till_done()
 
     entity_id = "number.my_plug_temperature_offset"
@@ -142,7 +139,7 @@ async def test_number_set(
     )
     plug = _mocked_device(alias="my_plug", features=[new_feature])
     with _patch_discovery(device=plug), _patch_connect(device=plug):
-        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.config_entries.async_setup(already_migrated_config_entry.entry_id)
         await hass.async_block_till_done()
 
     entity_id = "number.my_plug_temperature_offset"

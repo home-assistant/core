@@ -9,27 +9,21 @@ from typing import Any
 from aionut import NUTError, NUTLoginError
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_ALIAS,
     CONF_BASE,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
-    CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from . import PyNUTData
-from .const import DEFAULT_HOST, DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DOMAIN
+from . import PyNUTData, _unique_id_from_status
+from .const import DEFAULT_HOST, DEFAULT_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -95,7 +89,7 @@ class NutConfigFlow(ConfigFlow, domain=DOMAIN):
         self.reauth_entry: ConfigEntry | None = None
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Prepare configuration for a discovered nut device."""
         await self._async_handle_discovery_without_unique_id()
@@ -125,6 +119,11 @@ class NutConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 if self._host_port_alias_already_configured(nut_config):
                     return self.async_abort(reason="already_configured")
+
+                if unique_id := _unique_id_from_status(info["available_resources"]):
+                    await self.async_set_unique_id(unique_id)
+                    self._abort_if_unique_id_configured()
+
                 title = _format_host_port_alias(nut_config)
                 return self.async_create_entry(title=title, data=nut_config)
 
@@ -147,8 +146,13 @@ class NutConfigFlow(ConfigFlow, domain=DOMAIN):
             self.nut_config.update(user_input)
             if self._host_port_alias_already_configured(nut_config):
                 return self.async_abort(reason="already_configured")
-            _, errors, placeholders = await self._async_validate_or_error(nut_config)
+
+            info, errors, placeholders = await self._async_validate_or_error(nut_config)
             if not errors:
+                if unique_id := _unique_id_from_status(info["available_resources"]):
+                    await self.async_set_unique_id(unique_id)
+                    self._abort_if_unique_id_configured()
+
                 title = _format_host_port_alias(nut_config)
                 return self.async_create_entry(title=title, data=nut_config)
 
@@ -230,32 +234,3 @@ class NutConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(AUTH_SCHEMA),
             errors=errors,
         )
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
-        """Get the options flow for this handler."""
-        return OptionsFlowHandler()
-
-
-class OptionsFlowHandler(OptionsFlow):
-    """Handle a option flow for nut."""
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle options flow."""
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-
-        scan_interval = self.config_entry.options.get(
-            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-        )
-
-        base_schema = {
-            vol.Optional(CONF_SCAN_INTERVAL, default=scan_interval): vol.All(
-                vol.Coerce(int), vol.Clamp(min=10, max=300)
-            )
-        }
-
-        return self.async_show_form(step_id="init", data_schema=vol.Schema(base_schema))

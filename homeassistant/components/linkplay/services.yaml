@@ -11,5 +11,4 @@ play_preset:
       selector:
         number:
           min: 1
-          max: 10
           mode: box

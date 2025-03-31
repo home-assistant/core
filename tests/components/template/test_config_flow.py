@@ -16,6 +16,36 @@ from homeassistant.helpers import device_registry as dr
 from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
 
+SWITCH_BEFORE_OPTIONS = {
+    "name": "test_template_switch",
+    "template_type": "switch",
+    "turn_off": [{"event": "test_template_switch", "event_data": {"event": "off"}}],
+    "turn_on": [{"event": "test_template_switch", "event_data": {"event": "on"}}],
+    "value_template": "{{ now().minute % 2 == 0 }}",
+}
+
+
+SWITCH_AFTER_OPTIONS = {
+    "name": "test_template_switch",
+    "template_type": "switch",
+    "turn_off": [{"event": "test_template_switch", "event_data": {"event": "off"}}],
+    "turn_on": [{"event": "test_template_switch", "event_data": {"event": "on"}}],
+    "state": "{{ now().minute % 2 == 0 }}",
+    "value_template": "{{ now().minute % 2 == 0 }}",
+}
+
+SENSOR_OPTIONS = {
+    "name": "test_template_sensor",
+    "template_type": "sensor",
+    "state": "{{ 'a' if now().minute % 2 == 0 else 'b' }}",
+}
+
+BINARY_SENSOR_OPTIONS = {
+    "name": "test_template_sensor",
+    "template_type": "binary_sensor",
+    "state": "{{ now().minute % 2 == 0 else }}",
+}
+
 
 @pytest.mark.parametrize(
     (
@@ -222,8 +252,8 @@ async def test_config_flow(
 
     state = hass.states.get(f"{template_type}.my_template")
     assert state.state == template_state
-    for key in extra_attrs:
-        assert state.attributes[key] == extra_attrs[key]
+    for key, value in extra_attrs.items():
+        assert state.attributes[key] == value
 
 
 @pytest.mark.parametrize(
@@ -273,11 +303,21 @@ async def test_config_flow(
                 "min": "0",
                 "max": "100",
                 "step": "0.1",
+                "set_value": {
+                    "action": "input_number.set_value",
+                    "target": {"entity_id": "input_number.test"},
+                    "data": {"value": "{{ value }}"},
+                },
             },
             {
                 "min": 0,
                 "max": 100,
                 "step": 0.1,
+                "set_value": {
+                    "action": "input_number.set_value",
+                    "target": {"entity_id": "input_number.test"},
+                    "data": {"value": "{{ value }}"},
+                },
             },
         ),
         (
@@ -794,7 +834,7 @@ EARLY_END_ERROR = "invalid template (TemplateSyntaxError: unexpected 'end of tem
                 ),
                 "unit_of_measurement": (
                     "'None' is not a valid unit for device class 'energy'; "
-                    "expected one of 'cal', 'Gcal', 'GJ', 'J', 'kcal', 'kJ', 'kWh', 'Mcal', 'MJ', 'MWh', 'Wh'"
+                    "expected one of 'cal', 'Gcal', 'GJ', 'GWh', 'J', 'kcal', 'kJ', 'kWh', 'Mcal', 'MJ', 'MWh', 'mWh', 'TWh', 'Wh'"
                 ),
             },
         ),
@@ -1263,11 +1303,21 @@ async def test_option_flow_sensor_preview_config_entry_removed(
                 "min": 0,
                 "max": 100,
                 "step": 0.1,
+                "set_value": {
+                    "action": "input_number.set_value",
+                    "target": {"entity_id": "input_number.test"},
+                    "data": {"value": "{{ value }}"},
+                },
             },
             {
                 "min": 0,
                 "max": 100,
                 "step": 0.1,
+                "set_value": {
+                    "action": "input_number.set_value",
+                    "target": {"entity_id": "input_number.test"},
+                    "data": {"value": "{{ value }}"},
+                },
             },
         ),
         (

@@ -2,8 +2,6 @@
 
 DOMAIN = "nest"
 DATA_SDM = "sdm"
-DATA_SUBSCRIBER = "subscriber"
-DATA_DEVICE_MANAGER = "device_manager"
 
 WEB_AUTH_DOMAIN = DOMAIN
 INSTALLED_AUTH_DOMAIN = f"{DOMAIN}.installed"

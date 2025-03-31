@@ -14,7 +14,7 @@ from homeassistant.auth.providers import homeassistant as auth_ha
 from homeassistant.components.http import KEY_HASS, KEY_HASS_USER, HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 
 from .const import ATTR_ADDON, ATTR_PASSWORD, ATTR_USERNAME
 

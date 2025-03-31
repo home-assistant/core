@@ -7,6 +7,9 @@ import pytest
 from homeassistant.components.swiss_public_transport.const import (
     CONF_DESTINATION,
     CONF_START,
+    CONF_TIME_FIXED,
+    CONF_TIME_OFFSET,
+    CONF_TIME_STATION,
     CONF_VIA,
     DOMAIN,
 )
@@ -26,6 +29,17 @@ MOCK_DATA_STEP_BASE = {
 MOCK_DATA_STEP_VIA = {
     **MOCK_DATA_STEP_BASE,
     CONF_VIA: ["via_station"],
+}
+
+MOCK_DATA_STEP_TIME_FIXED = {
+    **MOCK_DATA_STEP_VIA,
+    CONF_TIME_FIXED: "18:03:00",
+}
+
+MOCK_DATA_STEP_TIME_OFFSET = {
+    **MOCK_DATA_STEP_VIA,
+    CONF_TIME_OFFSET: {"hours": 0, "minutes": 10, "seconds": 0},
+    CONF_TIME_STATION: "arrival",
 }
 
 CONNECTIONS = [
@@ -70,6 +84,8 @@ CONNECTIONS = [
         (1, 1, MOCK_DATA_STEP_BASE, "None_departure"),
         (1, 2, MOCK_DATA_STEP_BASE, None),
         (2, 1, MOCK_DATA_STEP_VIA, None),
+        (3, 1, MOCK_DATA_STEP_TIME_FIXED, None),
+        (3, 1, MOCK_DATA_STEP_TIME_OFFSET, None),
     ],
 )
 async def test_migration_from(
@@ -113,7 +129,7 @@ async def test_migration_from(
         )
 
         # Check change in config entry and verify most recent version
-        assert config_entry.version == 2
+        assert config_entry.version == 3
         assert config_entry.minor_version == 1
         assert config_entry.unique_id == unique_id
 
@@ -130,7 +146,7 @@ async def test_migrate_error_from_future(hass: HomeAssistant) -> None:
 
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
-        version=3,
+        version=4,
         minor_version=1,
         unique_id="some_crazy_future_unique_id",
         data=MOCK_DATA_STEP_BASE,

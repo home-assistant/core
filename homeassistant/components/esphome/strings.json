@@ -4,11 +4,12 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "mdns_missing_mac": "Missing MAC address in MDNS properties.",
+      "mdns_missing_mac": "Missing MAC address in mDNS properties.",
       "service_received": "Action received",
       "mqtt_missing_mac": "Missing MAC address in MQTT properties.",
       "mqtt_missing_api": "Missing API port in MQTT properties.",
-      "mqtt_missing_ip": "Missing IP address in MQTT properties."
+      "mqtt_missing_ip": "Missing IP address in MQTT properties.",
+      "mqtt_missing_payload": "Missing MQTT Payload."
     },
     "error": {
       "resolve_error": "Can't resolve address of the ESP. If this error persists, please set a static IP address",
@@ -42,6 +43,9 @@
         },
         "description": "The ESPHome device {name} enabled transport encryption or changed the encryption key. Please enter the updated key. You can find it in the ESPHome Dashboard or in your device configuration."
       },
+      "reauth_encryption_removed_confirm": {
+        "description": "The ESPHome device {name} disabled transport encryption. Please confirm that you want to remove the encryption key and allow unencrypted connections."
+      },
       "discovery_confirm": {
         "description": "Do you want to add the ESPHome node `{name}` to Home Assistant?",
         "title": "Discovered ESPHome node"
@@ -53,7 +57,8 @@
     "step": {
       "init": {
         "data": {
-          "allow_service_calls": "Allow the device to perform Home Assistant actions."
+          "allow_service_calls": "Allow the device to perform Home Assistant actions.",
+          "subscribe_logs": "Subscribe to logs from the device. When enabled, the device will send logs to Home Assistant and you can view them in the logs panel."
         }
       }
     }
@@ -82,6 +87,12 @@
           "default": "[%key:component::assist_pipeline::entity::select::vad_sensitivity::state::default%]",
           "aggressive": "[%key:component::assist_pipeline::entity::select::vad_sensitivity::state::aggressive%]",
           "relaxed": "[%key:component::assist_pipeline::entity::select::vad_sensitivity::state::relaxed%]"
+        }
+      },
+      "wake_word": {
+        "name": "Wake word",
+        "state": {
+          "okay_nabu": "Okay Nabu"
         }
       }
     },
@@ -118,7 +129,7 @@
     },
     "service_calls_not_allowed": {
       "title": "{name} is not permitted to perform Home Assistant actions",
-      "description": "The ESPHome device attempted to perform a Home Assistant action, but this functionality is not enabled.\n\nIf you trust this device and want to allow it to perfom Home Assistant action, you can enable this functionality in the options flow."
+      "description": "The ESPHome device attempted to perform a Home Assistant action, but this functionality is not enabled.\n\nIf you trust this device and want to allow it to perform Home Assistant action, you can enable this functionality in the options flow."
     }
   }
 }

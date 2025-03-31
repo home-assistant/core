@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
 import logging
 from typing import Any
 
 from somfy_mylink_synergy import SomfyMyLinkSynergy
 import voluptuous as vol
 
-from homeassistant.components import dhcp
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigEntryState,
@@ -20,6 +20,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import (
     CONF_REVERSE,
@@ -68,7 +69,7 @@ class SomfyConfigFlow(ConfigFlow, domain=DOMAIN):
         self.ip_address: str | None = None
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle dhcp discovery."""
         self._async_abort_entries_match({CONF_HOST: discovery_info.ip})
@@ -121,14 +122,15 @@ class SomfyConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
-        return OptionsFlowHandler()
+        return OptionsFlowHandler(config_entry)
 
 
 class OptionsFlowHandler(OptionsFlow):
     """Handle a option flow for somfy_mylink."""
 
-    def __init__(self) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
+        self.options = deepcopy(dict(config_entry.options))
         self._target_id: str | None = None
 
     @callback

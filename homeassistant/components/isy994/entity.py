@@ -106,7 +106,7 @@ class ISYNodeEntity(ISYEntity):
         return getattr(self._node, TAG_ENABLED, True)
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Get the state attributes for the device.
 
         The 'aux_properties' in the pyisy Node class are combined with the
@@ -181,6 +181,7 @@ class ISYProgramEntity(ISYEntity):
 
     _actions: Program
     _status: Program
+    _node: Program
 
     def __init__(self, name: str, status: Program, actions: Program = None) -> None:
         """Initialize the ISY program-based entity."""
@@ -189,7 +190,7 @@ class ISYProgramEntity(ISYEntity):
         self._actions = actions
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Get the state attributes for the device."""
         attr = {}
         if self._actions:

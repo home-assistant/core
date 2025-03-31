@@ -52,8 +52,8 @@ CONF_KNX_DEFAULT_RATE_LIMIT: Final = 0
 DEFAULT_ROUTING_IA: Final = "0.0.240"
 
 CONF_KNX_TELEGRAM_LOG_SIZE: Final = "telegram_log_size"
-TELEGRAM_LOG_DEFAULT: Final = 200
-TELEGRAM_LOG_MAX: Final = 5000  # ~2 MB or ~5 hours of reasonable bus load
+TELEGRAM_LOG_DEFAULT: Final = 1000
+TELEGRAM_LOG_MAX: Final = 25000  # ~10 MB or ~25 hours of reasonable bus load
 
 ##
 # Secure constants
@@ -67,6 +67,8 @@ CONF_KNX_SECURE_USER_PASSWORD: Final = "user_password"
 CONF_KNX_SECURE_DEVICE_AUTHENTICATION: Final = "device_authentication"
 
 
+CONF_CONTEXT_TIMEOUT: Final = "context_timeout"
+CONF_IGNORE_INTERNAL_STATE: Final = "ignore_internal_state"
 CONF_PAYLOAD_LENGTH: Final = "payload_length"
 CONF_RESET_AFTER: Final = "reset_after"
 CONF_RESPOND_TO_READ: Final = "respond_to_read"
@@ -104,7 +106,7 @@ class KNXConfigEntryData(TypedDict, total=False):
     route_back: bool  # not required
     host: str  # only required for tunnelling
     port: int  # only required for tunnelling
-    tunnel_endpoint_ia: str | None
+    tunnel_endpoint_ia: str | None  # tunnelling only - not required (use get())
     # KNX secure
     user_id: int | None  # not required
     user_password: str | None  # not required
@@ -114,7 +116,7 @@ class KNXConfigEntryData(TypedDict, total=False):
     backbone_key: str | None  # not required
     sync_latency_tolerance: int | None  # not required
     # OptionsFlow only
-    state_updater: bool
+    state_updater: bool  # default state updater: True -> expire 60; False -> init
     rate_limit: int
     #   Integration only (not forwarded to xknx)
     telegram_log_size: int  # not required
@@ -156,7 +158,11 @@ SUPPORTED_PLATFORMS_YAML: Final = {
     Platform.WEATHER,
 }
 
-SUPPORTED_PLATFORMS_UI: Final = {Platform.SWITCH, Platform.LIGHT}
+SUPPORTED_PLATFORMS_UI: Final = {
+    Platform.BINARY_SENSOR,
+    Platform.LIGHT,
+    Platform.SWITCH,
+}
 
 # Map KNX controller modes to HA modes. This list might not be complete.
 CONTROLLER_MODES: Final = {

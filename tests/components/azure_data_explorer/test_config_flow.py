@@ -25,7 +25,7 @@ async def test_config_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> 
         BASE_CONFIG.copy(),
     )
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result2["title"] == "cluster.region.kusto.windows.net"
     mock_setup_entry.assert_called_once()
 
@@ -59,12 +59,12 @@ async def test_config_flow_errors(
         result["flow_id"],
         BASE_CONFIG.copy(),
     )
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["errors"] == {"base": expected}
 
     await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
 
     # Retest error handling if error is corrected and connection is successful
 
@@ -77,4 +77,4 @@ async def test_config_flow_errors(
 
     await hass.async_block_till_done()
 
-    assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result3["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY

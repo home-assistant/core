@@ -70,23 +70,23 @@ async def test_one_pt2262_switch(hass: HomeAssistant, rfxtrx) -> None:
     await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("switch.pt2262_22670e")
+    state = hass.states.get("switch.pt2262_226700")
     assert state
     assert state.state == STATE_UNKNOWN
-    assert state.attributes.get("friendly_name") == "PT2262 22670e"
+    assert state.attributes.get("friendly_name") == "PT2262 226700"
 
     await hass.services.async_call(
-        "switch", "turn_on", {"entity_id": "switch.pt2262_22670e"}, blocking=True
+        "switch", "turn_on", {"entity_id": "switch.pt2262_226700"}, blocking=True
     )
 
-    state = hass.states.get("switch.pt2262_22670e")
+    state = hass.states.get("switch.pt2262_226700")
     assert state.state == "on"
 
     await hass.services.async_call(
-        "switch", "turn_off", {"entity_id": "switch.pt2262_22670e"}, blocking=True
+        "switch", "turn_off", {"entity_id": "switch.pt2262_226700"}, blocking=True
     )
 
-    state = hass.states.get("switch.pt2262_22670e")
+    state = hass.states.get("switch.pt2262_226700")
     assert state.state == "off"
 
     assert rfxtrx.transport.send.mock_calls == [
@@ -220,26 +220,26 @@ async def test_pt2262_switch_events(hass: HomeAssistant, rfxtrx) -> None:
     await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("switch.pt2262_22670e")
+    state = hass.states.get("switch.pt2262_226700")
     assert state
     assert state.state == STATE_UNKNOWN
-    assert state.attributes.get("friendly_name") == "PT2262 22670e"
+    assert state.attributes.get("friendly_name") == "PT2262 226700"
 
     # "Command: 0xE"
     await rfxtrx.signal("0913000022670e013970")
-    assert hass.states.get("switch.pt2262_22670e").state == "on"
+    assert hass.states.get("switch.pt2262_226700").state == "on"
 
     # "Command: 0x0"
     await rfxtrx.signal("09130000226700013970")
-    assert hass.states.get("switch.pt2262_22670e").state == "on"
+    assert hass.states.get("switch.pt2262_226700").state == "on"
 
     # "Command: 0x7"
     await rfxtrx.signal("09130000226707013d70")
-    assert hass.states.get("switch.pt2262_22670e").state == "off"
+    assert hass.states.get("switch.pt2262_226700").state == "off"
 
     # "Command: 0x1"
     await rfxtrx.signal("09130000226701013d70")
-    assert hass.states.get("switch.pt2262_22670e").state == "off"
+    assert hass.states.get("switch.pt2262_226700").state == "off"
 
 
 async def test_discover_switch(hass: HomeAssistant, rfxtrx_automatic) -> None:

@@ -1,5 +1,5 @@
 {
-  // Please keep this file in sync with settings in home-assistant/.devcontainer/devcontainer.json
+  // Please keep this file (mostly!) in sync with settings in home-assistant/.devcontainer/devcontainer.json
   // Added --no-cov to work around TypeError: message must be set
   // https://github.com/microsoft/vscode-python/issues/14067
   "python.testing.pytestArgs": ["--no-cov"],
@@ -12,6 +12,7 @@
             "fileMatch": [
                 "homeassistant/components/*/manifest.json"
             ],
+            // This value differs between working with devcontainer and locally, therefor this value should NOT be in sync!
             "url": "./script/json_schemas/manifest_schema.json"
         }
     ]

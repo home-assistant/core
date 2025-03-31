@@ -349,6 +349,7 @@ def async_ufp_instance_for_config_entry_ids(
             entry.runtime_data.api
             for entry_id in config_entry_ids
             if (entry := hass.config_entries.async_get_entry(entry_id))
+            and entry.domain == DOMAIN
             and hasattr(entry, "runtime_data")
         ),
         None,

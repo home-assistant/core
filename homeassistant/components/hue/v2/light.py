@@ -13,11 +13,12 @@ from aiohue.v2.models.light import Light
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_FLASH,
     ATTR_TRANSITION,
     ATTR_XY_COLOR,
+    EFFECT_OFF,
     FLASH_SHORT,
     ColorMode,
     LightEntity,
@@ -27,7 +28,8 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import color as color_util
 
 from ..bridge import HueBridge
 from ..const import DOMAIN
@@ -38,16 +40,15 @@ from .helpers import (
     normalize_hue_transition,
 )
 
-EFFECT_NONE = "None"
-FALLBACK_MIN_MIREDS = 153  # 6500 K
-FALLBACK_MAX_MIREDS = 500  # 2000 K
-FALLBACK_MIREDS = 173  # halfway
+FALLBACK_MIN_KELVIN = 6500
+FALLBACK_MAX_KELVIN = 2000
+FALLBACK_KELVIN = 5800  # halfway
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Hue Light from Config Entry."""
     bridge: HueBridge = hass.data[DOMAIN][config_entry.entry_id]
@@ -74,7 +75,7 @@ class HueLight(HueBaseEntity, LightEntity):
 
     _fixed_color_mode: ColorMode | None = None
     entity_description = LightEntityDescription(
-        key="hue_light", has_entity_name=True, name=None
+        key="hue_light", translation_key="hue_light", has_entity_name=True, name=None
     )
 
     def __init__(
@@ -106,7 +107,9 @@ class HueLight(HueBaseEntity, LightEntity):
         self._attr_effect_list = []
         if effects := resource.effects:
             self._attr_effect_list = [
-                x.value for x in effects.status_values if x != EffectStatus.NO_EFFECT
+                x.value
+                for x in effects.status_values
+                if x not in (EffectStatus.NO_EFFECT, EffectStatus.UNKNOWN)
             ]
         if timed_effects := resource.timed_effects:
             self._attr_effect_list += [
@@ -115,7 +118,7 @@ class HueLight(HueBaseEntity, LightEntity):
                 if x != TimedEffectStatus.NO_EFFECT
             ]
         if len(self._attr_effect_list) > 0:
-            self._attr_effect_list.insert(0, EFFECT_NONE)
+            self._attr_effect_list.insert(0, EFFECT_OFF)
             self._attr_supported_features |= LightEntityFeature.EFFECT
 
     @property
@@ -164,28 +167,32 @@ class HueLight(HueBaseEntity, LightEntity):
         return None
 
     @property
-    def color_temp(self) -> int:
-        """Return the color temperature."""
+    def color_temp_kelvin(self) -> int | None:
+        """Return the color temperature value in Kelvin."""
         if color_temp := self.resource.color_temperature:
-            return color_temp.mirek
+            return color_util.color_temperature_mired_to_kelvin(color_temp.mirek)
         # return a fallback value to prevent issues with mired->kelvin conversions
-        return FALLBACK_MIREDS
+        return FALLBACK_KELVIN
 
     @property
-    def min_mireds(self) -> int:
-        """Return the coldest color_temp that this light supports."""
+    def max_color_temp_kelvin(self) -> int:
+        """Return the coldest color_temp_kelvin that this light supports."""
         if color_temp := self.resource.color_temperature:
-            return color_temp.mirek_schema.mirek_minimum
+            return color_util.color_temperature_mired_to_kelvin(
+                color_temp.mirek_schema.mirek_minimum
+            )
         # return a fallback value to prevent issues with mired->kelvin conversions
-        return FALLBACK_MIN_MIREDS
+        return FALLBACK_MAX_KELVIN
 
     @property
-    def max_mireds(self) -> int:
-        """Return the warmest color_temp that this light supports."""
+    def min_color_temp_kelvin(self) -> int:
+        """Return the warmest color_temp_kelvin that this light supports."""
         if color_temp := self.resource.color_temperature:
-            return color_temp.mirek_schema.mirek_maximum
+            return color_util.color_temperature_mired_to_kelvin(
+                color_temp.mirek_schema.mirek_maximum
+            )
         # return a fallback value to prevent issues with mired->kelvin conversions
-        return FALLBACK_MAX_MIREDS
+        return FALLBACK_MIN_KELVIN
 
     @property
     def extra_state_attributes(self) -> dict[str, str] | None:
@@ -204,13 +211,13 @@ class HueLight(HueBaseEntity, LightEntity):
         if timed_effects := self.resource.timed_effects:
             if timed_effects.status != TimedEffectStatus.NO_EFFECT:
                 return timed_effects.status.value
-        return EFFECT_NONE
+        return EFFECT_OFF
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         transition = normalize_hue_transition(kwargs.get(ATTR_TRANSITION))
         xy_color = kwargs.get(ATTR_XY_COLOR)
-        color_temp = normalize_hue_colortemp(kwargs.get(ATTR_COLOR_TEMP))
+        color_temp = normalize_hue_colortemp(kwargs.get(ATTR_COLOR_TEMP_KELVIN))
         brightness = normalize_hue_brightness(kwargs.get(ATTR_BRIGHTNESS))
         if self._last_brightness and brightness is None:
             # The Hue bridge sets the brightness to 1% when turning on a bulb
@@ -226,12 +233,12 @@ class HueLight(HueBaseEntity, LightEntity):
         self._color_temp_active = color_temp is not None
         flash = kwargs.get(ATTR_FLASH)
         effect = effect_str = kwargs.get(ATTR_EFFECT)
-        if effect_str in (EFFECT_NONE, EFFECT_NONE.lower()):
-            # ignore effect if set to "None" and we have no effect active
-            # the special effect "None" is only used to stop an active effect
+        if effect_str == EFFECT_OFF:
+            # ignore effect if set to "off" and we have no effect active
+            # the special effect "off" is only used to stop an active effect
             # but sending it while no effect is active can actually result in issues
             # https://github.com/home-assistant/core/issues/122165
-            effect = None if self.effect == EFFECT_NONE else EffectStatus.NO_EFFECT
+            effect = None if self.effect == EFFECT_OFF else EffectStatus.NO_EFFECT
         elif effect_str is not None:
             # work out if we got a regular effect or timed effect
             effect = EffectStatus(effect_str)

@@ -27,8 +27,8 @@ from homeassistant.const import (
     CONF_STATE,
 )
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, VolSchemaType
@@ -56,6 +56,8 @@ from .models import (
 )
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_publish_topic, valid_subscribe_topic
+
+PARALLEL_UPDATES = 0
 
 CONF_DIRECTION_STATE_TOPIC = "direction_state_topic"
 CONF_DIRECTION_COMMAND_TOPIC = "direction_command_topic"
@@ -188,7 +190,7 @@ DISCOVERY_SCHEMA = vol.All(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MQTT fan through YAML and through MQTT discovery."""
     async_setup_entity_entry_helper(
@@ -224,7 +226,6 @@ class MqttFan(MqttEntity, FanEntity):
     _optimistic_preset_mode: bool
     _payload: dict[str, Any]
     _speed_range: tuple[int, int]
-    _enable_turn_on_off_backwards_compatibility = False
 
     @staticmethod
     def config_schema() -> VolSchemaType:

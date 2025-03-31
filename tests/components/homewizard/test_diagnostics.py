@@ -21,6 +21,7 @@ from tests.typing import ClientSessionGenerator
         "SDM630",
         "HWE-KWH1",
         "HWE-KWH3",
+        "HWE-BAT",
     ],
 )
 async def test_diagnostics(

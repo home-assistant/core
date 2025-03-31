@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import html
 import logging
 
 from feedparser import FeedParserDict
@@ -9,7 +10,7 @@ from feedparser import FeedParserDict
 from homeassistant.components.event import EventEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import FeedReaderConfigEntry
@@ -27,7 +28,7 @@ ATTR_TITLE = "title"
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: FeedReaderConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up event entities for feedreader."""
     coordinator = entry.runtime_data
@@ -76,15 +77,22 @@ class FeedReaderEvent(CoordinatorEntity[FeedReaderCoordinator], EventEntity):
         # so we always take the first entry in list, since we only care about the latest entry
         feed_data: FeedParserDict = data[0]
 
+        if description := feed_data.get("description"):
+            description = html.unescape(description)
+
+        if title := feed_data.get("title"):
+            title = html.unescape(title)
+
         if content := feed_data.get("content"):
             if isinstance(content, list) and isinstance(content[0], dict):
                 content = content[0].get("value")
+            content = html.unescape(content)
 
         self._trigger_event(
             EVENT_FEEDREADER,
             {
-                ATTR_DESCRIPTION: feed_data.get("description"),
-                ATTR_TITLE: feed_data.get("title"),
+                ATTR_DESCRIPTION: description,
+                ATTR_TITLE: title,
                 ATTR_LINK: feed_data.get("link"),
                 ATTR_CONTENT: content,
             },

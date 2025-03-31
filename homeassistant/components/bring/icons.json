@@ -1,5 +1,10 @@
 {
   "entity": {
+    "event": {
+      "activity": {
+        "default": "mdi:bell"
+      }
+    },
     "sensor": {
       "urgent": {
         "default": "mdi:run-fast"
@@ -16,7 +21,8 @@
       "list_access": {
         "default": "mdi:account-lock",
         "state": {
-          "shared": "mdi:account-group"
+          "shared": "mdi:account-group",
+          "invitation": "mdi:account-multiple-plus"
         }
       }
     },
