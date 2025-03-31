@@ -41,13 +41,18 @@ def mock_gaposa(device):
 def coordinator(hass: HomeAssistant, mock_gaposa):
     """Return an initialized Gaposa DataUpdateCoordinator."""
     logger = logging.getLogger("test")
-    return DataUpdateCoordinatorGaposa(
+    coordinator = DataUpdateCoordinatorGaposa(
         hass,
         logger,
-        mock_gaposa,
+        api_key="test_api_key",
+        username="test_username",
+        password="test_password",
         name="Test Coordinator",
         update_interval=timedelta(seconds=UPDATE_INTERVAL),
     )
+    # Manually set the gaposa object for testing
+    coordinator.gaposa = mock_gaposa
+    return coordinator
 
 
 async def test_update_gateway_success(coordinator, mock_gaposa) -> None:
