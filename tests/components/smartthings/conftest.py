@@ -105,6 +105,7 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "ge_in_wall_smart_dimmer",
         "centralite",
         "da_ref_normal_000001",
+        "da_ref_normal_01011",
         "vd_network_audio_002s",
         "vd_sensor_light_2023",
         "iphone",
