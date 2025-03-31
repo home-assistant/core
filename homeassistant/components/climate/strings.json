@@ -98,13 +98,13 @@
           "name": "Preset",
           "state": {
             "none": "None",
-            "eco": "Eco",
-            "away": "Away",
+            "home": "[%key:common::state::home%]",
+            "away": "[%key:common::state::not_home%]",
+            "activity": "Activity",
             "boost": "Boost",
             "comfort": "Comfort",
-            "home": "[%key:common::state::home%]",
-            "sleep": "Sleep",
-            "activity": "Activity"
+            "eco": "Eco",
+            "sleep": "Sleep"
           }
         },
         "preset_modes": {
