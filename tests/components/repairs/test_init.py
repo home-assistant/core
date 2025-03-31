@@ -21,6 +21,7 @@ from tests.common import mock_platform
 from tests.typing import WebSocketGenerator
 
 
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 @pytest.mark.freeze_time("2022-07-19 07:53:05")
 async def test_create_update_issue(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
@@ -160,6 +161,7 @@ async def test_create_issue_invalid_version(
     assert msg["result"] == {"issues": []}
 
 
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 @pytest.mark.freeze_time("2022-07-19 07:53:05")
 async def test_ignore_issue(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
@@ -329,6 +331,7 @@ async def test_ignore_issue(
     }
 
 
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["fake_integration"])
 @pytest.mark.freeze_time("2022-07-19 07:53:05")
 async def test_delete_issue(
     hass: HomeAssistant,
@@ -483,6 +486,7 @@ async def test_non_compliant_platform(
     assert list(hass.data[DOMAIN]["platforms"].keys()) == ["fake_integration"]
 
 
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["fake_integration"])
 @pytest.mark.freeze_time("2022-07-21 08:22:00")
 async def test_sync_methods(
     hass: HomeAssistant,

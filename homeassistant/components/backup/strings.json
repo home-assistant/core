@@ -1,8 +1,45 @@
 {
+  "issues": {
+    "automatic_backup_agents_unavailable": {
+      "title": "The backup location {agent_id} is unavailable",
+      "description": "The backup location `{agent_id}` is unavailable but is still configured for automatic backups.\n\nPlease visit the [automatic backup configuration page]({backup_settings}) to review and update your backup locations. Backups will not be uploaded to selected locations that are unavailable."
+    },
+    "automatic_backup_failed_create": {
+      "title": "Automatic backup could not be created",
+      "description": "The automatic backup could not be created. Please check the logs for more information. Another attempt will be made at the next scheduled time if a backup schedule is configured."
+    },
+    "automatic_backup_failed_upload_agents": {
+      "title": "Automatic backup could not be uploaded to the configured locations",
+      "description": "The automatic backup could not be uploaded to the configured locations {failed_agents}. Please check the logs for more information. Another attempt will be made at the next scheduled time if a backup schedule is configured."
+    }
+  },
   "services": {
     "create": {
       "name": "Create backup",
       "description": "Creates a new backup."
+    },
+    "create_automatic": {
+      "name": "Create automatic backup",
+      "description": "Creates a new backup with automatic backup settings."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "backup_manager_state": {
+        "name": "Backup Manager state",
+        "state": {
+          "idle": "[%key:common::state::idle%]",
+          "create_backup": "Creating a backup",
+          "receive_backup": "Receiving a backup",
+          "restore_backup": "Restoring a backup"
+        }
+      },
+      "next_scheduled_automatic_backup": {
+        "name": "Next scheduled automatic backup"
+      },
+      "last_successful_automatic_backup": {
+        "name": "Last successful automatic backup"
+      }
     }
   }
 }

@@ -14,7 +14,7 @@
   "services": {
     "announce": {
       "name": "Announce",
-      "description": "Let the satellite announce a message.",
+      "description": "Lets a satellite announce a message.",
       "fields": {
         "message": {
           "name": "Message",
@@ -23,6 +23,40 @@
         "media_id": {
           "name": "Media ID",
           "description": "The media ID to announce instead of using text-to-speech."
+        },
+        "preannounce": {
+          "name": "Preannounce",
+          "description": "Play a sound before the announcement."
+        },
+        "preannounce_media_id": {
+          "name": "Preannounce media ID",
+          "description": "Custom media ID to play before the announcement."
+        }
+      }
+    },
+    "start_conversation": {
+      "name": "Start conversation",
+      "description": "Starts a conversation from a satellite.",
+      "fields": {
+        "start_message": {
+          "name": "Message",
+          "description": "The message to start with."
+        },
+        "start_media_id": {
+          "name": "Media ID",
+          "description": "The media ID to start with instead of using text-to-speech."
+        },
+        "extra_system_prompt": {
+          "name": "Extra system prompt",
+          "description": "Provide background information to the AI about the request."
+        },
+        "preannounce": {
+          "name": "Preannounce",
+          "description": "Play a sound before the start message or media."
+        },
+        "preannounce_media_id": {
+          "name": "Preannounce media ID",
+          "description": "Custom media ID to play before the start message or media."
         }
       }
     }

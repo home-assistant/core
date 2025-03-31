@@ -1,0 +1,95 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'entry': dict({
+      'data': dict({
+        'name': 'velbus home',
+        'port': '127.0.1.0.1:3788',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'velbus',
+      'minor_version': 2,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': 'Mock Title',
+      'unique_id': None,
+      'version': 2,
+    }),
+    'modules': list([
+      dict({
+        'address': list([
+          1,
+          2,
+          3,
+          4,
+        ]),
+        'channels': dict({
+        }),
+        'is_loaded': True,
+        'name': 'BedRoom',
+        'sw_version': '1.0.0',
+        'type': 'VMB4RYLD',
+      }),
+      dict({
+        'address': list([
+          1,
+          2,
+          3,
+          4,
+        ]),
+        'channels': dict({
+        }),
+        'is_loaded': True,
+        'name': 'BedRoom',
+        'sw_version': '1.0.0',
+        'type': 'VMB4RYLD',
+      }),
+      dict({
+        'address': list([
+          1,
+          2,
+          3,
+          4,
+        ]),
+        'channels': dict({
+        }),
+        'is_loaded': True,
+        'name': 'BedRoom',
+        'sw_version': '1.0.0',
+        'type': 'VMB4RYLD',
+      }),
+      dict({
+        'address': list([
+          1,
+          2,
+          3,
+          4,
+        ]),
+        'channels': dict({
+        }),
+        'is_loaded': True,
+        'name': 'BedRoom',
+        'sw_version': '1.0.0',
+        'type': 'VMB4RYLD',
+      }),
+      dict({
+        'address': list([
+          88,
+        ]),
+        'channels': dict({
+        }),
+        'is_loaded': True,
+        'name': 'Kitchen',
+        'sw_version': '2.0.0',
+        'type': 'VMB2BLE',
+      }),
+    ]),
+  })
+# ---

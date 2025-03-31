@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/touchline_sl",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
-  "requirements": ["pytouchlinesl==0.1.8"]
+  "requirements": ["pytouchlinesl==0.3.0"]
 }

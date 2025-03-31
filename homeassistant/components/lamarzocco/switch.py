@@ -5,19 +5,21 @@ from dataclasses import dataclass
 from typing import Any
 
 from pylamarzocco.const import BoilerType
+from pylamarzocco.devices.machine import LaMarzoccoMachine
 from pylamarzocco.exceptions import RequestNotSuccessful
-from pylamarzocco.lm_machine import LaMarzoccoMachine
 from pylamarzocco.models import LaMarzoccoMachineConfig
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import LaMarzoccoConfigEntry, LaMarzoccoUpdateCoordinator
 from .entity import LaMarzoccoBaseEntity, LaMarzoccoEntity, LaMarzoccoEntityDescription
+
+PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -62,11 +64,11 @@ ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: LaMarzoccoConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switch entities and services."""
 
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.config_coordinator
 
     entities: list[SwitchEntity] = []
     entities.extend(
@@ -108,7 +110,7 @@ class LaMarzoccoSwitchEntity(LaMarzoccoEntity, SwitchEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="switch_off_error",
-                translation_placeholders={"name": self.entity_description.key},
+                translation_placeholders={"key": self.entity_description.key},
             ) from exc
         self.async_write_ha_state()
 

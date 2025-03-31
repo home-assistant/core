@@ -14,7 +14,7 @@ from homeassistant.const import ATTR_TIME, UnitOfLength
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.unit_conversion import DistanceConverter
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
@@ -38,7 +38,9 @@ SOURCE = "geonetnz_quakes"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the GeoNet NZ Quakes Feed platform."""
     manager: GeonetnzQuakesFeedEntityManager = hass.data[DOMAIN][FEED][entry.entry_id]

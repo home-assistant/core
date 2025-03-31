@@ -1,6 +1,27 @@
 # serializer version: 1
 # name: test_entry_diagnostics
   dict({
+    'BC_abilities': dict({
+      '0': dict({
+        'aitype': 34615,
+        'chnID': 0,
+      }),
+      'Host': dict({
+        'pushAlarm': 7,
+      }),
+    }),
+    'Chimes': dict({
+      '12345678': dict({
+        'channel': 0,
+        'event_types': list([
+          'md',
+          'people',
+          'visitor',
+        ]),
+        'name': 'Test chime',
+        'online': True,
+      }),
+    }),
     'HTTP(S) port': 1234,
     'HTTPS': True,
     'IPC cams': dict({
@@ -41,6 +62,14 @@
       0,
     ]),
     'cmd list': dict({
+      '296': dict({
+        '0': 1,
+        'null': 1,
+      }),
+      'DingDongOpt': dict({
+        '0': 2,
+        'null': 2,
+      }),
       'GetAiAlarm': dict({
         '0': 5,
         'null': 5,
@@ -80,6 +109,10 @@
       'GetDeviceAudioCfg': dict({
         '0': 2,
         'null': 4,
+      }),
+      'GetDingDongCfg': dict({
+        '0': 3,
+        'null': 3,
       }),
       'GetEmail': dict({
         '0': 1,
@@ -136,6 +169,9 @@
       'GetRec': dict({
         '0': 1,
         'null': 2,
+      }),
+      'GetScene': dict({
+        'null': 1,
       }),
       'GetStateLight': dict({
         'null': 1,

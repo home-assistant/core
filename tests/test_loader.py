@@ -15,7 +15,6 @@ from homeassistant import loader
 from homeassistant.components import http, hue
 from homeassistant.components.hue import light as hue_light
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import frame
 from homeassistant.helpers.json import json_dumps
 from homeassistant.util.json import json_loads
 
@@ -28,40 +27,91 @@ async def test_circular_component_dependencies(hass: HomeAssistant) -> None:
     mock_integration(hass, MockModule("mod2", dependencies=["mod1"]))
     mock_integration(hass, MockModule("mod3", dependencies=["mod1"]))
     mod_4 = mock_integration(hass, MockModule("mod4", dependencies=["mod2", "mod3"]))
+    all_domains = {"mod1", "mod2", "mod3", "mod4"}
 
-    deps = await loader._async_component_dependencies(hass, mod_4)
-    assert deps == {"mod1", "mod2", "mod3", "mod4"}
+    deps = await loader._do_resolve_dependencies(mod_4, cache={})
+    assert deps == {"mod1", "mod2", "mod3"}
 
     # Create a circular dependency
     mock_integration(hass, MockModule("mod1", dependencies=["mod4"]))
     with pytest.raises(loader.CircularDependency):
-        await loader._async_component_dependencies(hass, mod_4)
+        await loader._do_resolve_dependencies(mod_4, cache={})
 
     # Create a different circular dependency
     mock_integration(hass, MockModule("mod1", dependencies=["mod3"]))
     with pytest.raises(loader.CircularDependency):
-        await loader._async_component_dependencies(hass, mod_4)
+        await loader._do_resolve_dependencies(mod_4, cache={})
 
     # Create a circular after_dependency
     mock_integration(
         hass, MockModule("mod1", partial_manifest={"after_dependencies": ["mod4"]})
     )
     with pytest.raises(loader.CircularDependency):
-        await loader._async_component_dependencies(hass, mod_4)
+        await loader._do_resolve_dependencies(
+            mod_4,
+            cache={},
+            possible_after_dependencies=all_domains,
+        )
 
     # Create a different circular after_dependency
     mock_integration(
         hass, MockModule("mod1", partial_manifest={"after_dependencies": ["mod3"]})
     )
     with pytest.raises(loader.CircularDependency):
-        await loader._async_component_dependencies(hass, mod_4)
+        await loader._do_resolve_dependencies(
+            mod_4,
+            cache={},
+            possible_after_dependencies=all_domains,
+        )
+
+    # Create a circular after_dependency without a hard dependency
+    mock_integration(
+        hass, MockModule("mod1", partial_manifest={"after_dependencies": ["mod4"]})
+    )
+    mod_4 = mock_integration(
+        hass, MockModule("mod4", partial_manifest={"after_dependencies": ["mod2"]})
+    )
+    with pytest.raises(loader.CircularDependency):
+        await loader._do_resolve_dependencies(
+            mod_4,
+            cache={},
+            possible_after_dependencies=all_domains,
+        )
+
+    result = await loader.resolve_integrations_after_dependencies(hass, (mod_4,))
+    assert result == {}
+    result = await loader.resolve_integrations_after_dependencies(
+        hass, (mod_4,), ignore_exceptions=True
+    )
+    assert result["mod4"] == {"mod4", "mod2", "mod1"}
 
 
 async def test_nonexistent_component_dependencies(hass: HomeAssistant) -> None:
     """Test if we can detect nonexistent dependencies of components."""
     mod_1 = mock_integration(hass, MockModule("mod1", dependencies=["nonexistent"]))
+    mod_2 = mock_integration(hass, MockModule("mod2", dependencies=["mod1"]))
+
+    assert await mod_2.resolve_dependencies() is None
+    assert mod_2.all_dependencies_resolved
     with pytest.raises(loader.IntegrationNotFound):
-        await loader._async_component_dependencies(hass, mod_1)
+        mod_2.all_dependencies  # noqa: B018
+
+    assert mod_1.all_dependencies_resolved
+    assert await mod_1.resolve_dependencies() is None
+    with pytest.raises(loader.IntegrationNotFound):
+        mod_1.all_dependencies  # noqa: B018
+
+    result = await loader.resolve_integrations_dependencies(hass, (mod_2, mod_1))
+    assert result == {}
+
+    mod_1 = mock_integration(
+        hass,
+        MockModule("mod1", partial_manifest={"after_dependencies": ["non.existent"]}),
+    )
+    mod_2 = mock_integration(hass, MockModule("mod2", dependencies=["mod1"]))
+
+    result = await loader.resolve_integrations_after_dependencies(hass, (mod_2, mod_1))
+    assert result == {}
 
 
 def test_component_loader(hass: HomeAssistant) -> None:
@@ -547,6 +597,7 @@ def test_integration_properties(hass: HomeAssistant) -> None:
             ],
             "mqtt": ["hue/discovery"],
             "version": "1.0.0",
+            "quality_scale": "gold",
         },
     )
     assert integration.name == "Philips Hue"
@@ -585,6 +636,7 @@ def test_integration_properties(hass: HomeAssistant) -> None:
     assert integration.is_built_in is True
     assert integration.overwrites_built_in is False
     assert integration.version == "1.0.0"
+    assert integration.quality_scale == "gold"
 
     integration = loader.Integration(
         hass,
@@ -595,6 +647,7 @@ def test_integration_properties(hass: HomeAssistant) -> None:
             "domain": "hue",
             "dependencies": ["test-dep"],
             "requirements": ["test-req==1.0.0"],
+            "quality_scale": "gold",
         },
     )
     assert integration.is_built_in is False
@@ -607,6 +660,7 @@ def test_integration_properties(hass: HomeAssistant) -> None:
     assert integration.ssdp is None
     assert integration.mqtt is None
     assert integration.version is None
+    assert integration.quality_scale == "custom"
 
     integration = loader.Integration(
         hass,
@@ -1310,7 +1364,6 @@ async def test_config_folder_not_in_path() -> None:
     ],
 )
 @pytest.mark.usefixtures("mock_integration_frame")
-@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 async def test_hass_components_use_reported(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
@@ -1327,7 +1380,7 @@ async def test_hass_components_use_reported(
 
         reported = (
             "Detected that custom integration 'test_integration_frame'"
-            " accesses hass.components.http. This is deprecated"
+            " accesses hass.components.http, which should be updated"
         ) in caplog.text
         assert reported == expected
 
@@ -2006,7 +2059,6 @@ async def test_has_services(hass: HomeAssistant) -> None:
     ],
 )
 @pytest.mark.usefixtures("mock_integration_frame")
-@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 async def test_hass_helpers_use_reported(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
@@ -2023,7 +2075,7 @@ async def test_hass_helpers_use_reported(
 
         reported = (
             "Detected that custom integration 'test_integration_frame' "
-            "accesses hass.helpers.aiohttp_client. This is deprecated"
+            "accesses hass.helpers.aiohttp_client, which should be updated"
         ) in caplog.text
         assert reported == expected
 
@@ -2035,3 +2087,59 @@ async def test_manifest_json_fragment_round_trip(hass: HomeAssistant) -> None:
         json_loads(json_dumps(integration.manifest_json_fragment))
         == integration.manifest
     )
+
+
+async def test_async_get_integrations_multiple_non_existent(
+    hass: HomeAssistant,
+) -> None:
+    """Test async_get_integrations with multiple non-existent integrations."""
+    integrations = await loader.async_get_integrations(hass, ["does_not_exist"])
+    assert isinstance(integrations["does_not_exist"], loader.IntegrationNotFound)
+
+    async def slow_load_failure(
+        *args: Any, **kwargs: Any
+    ) -> dict[str, loader.Integration]:
+        await asyncio.sleep(0.1)
+        return {}
+
+    with patch.object(hass, "async_add_executor_job", slow_load_failure):
+        task1 = hass.async_create_task(
+            loader.async_get_integrations(hass, ["does_not_exist", "does_not_exist2"])
+        )
+        # Task one should now be waiting for executor job
+    task2 = hass.async_create_task(
+        loader.async_get_integrations(hass, ["does_not_exist"])
+    )
+    # Task two should be waiting for the futures created in task one
+    task3 = hass.async_create_task(
+        loader.async_get_integrations(hass, ["does_not_exist2", "does_not_exist"])
+    )
+    # Task three should be waiting for the futures created in task one
+    integrations_1 = await task1
+    assert isinstance(integrations_1["does_not_exist"], loader.IntegrationNotFound)
+    assert isinstance(integrations_1["does_not_exist2"], loader.IntegrationNotFound)
+    integrations_2 = await task2
+    assert isinstance(integrations_2["does_not_exist"], loader.IntegrationNotFound)
+    integrations_3 = await task3
+    assert isinstance(integrations_3["does_not_exist2"], loader.IntegrationNotFound)
+    assert isinstance(integrations_3["does_not_exist"], loader.IntegrationNotFound)
+
+    # Make sure IntegrationNotFound is not cached
+    # so configuration errors can be fixed as to
+    # not prevent Home Assistant from being restarted
+    integration = loader.Integration(
+        hass,
+        "custom_components.does_not_exist",
+        None,
+        {
+            "name": "Does not exist",
+            "domain": "does_not_exist",
+        },
+    )
+    with patch.object(
+        loader,
+        "_resolve_integrations_from_root",
+        return_value={"does_not_exist": integration},
+    ):
+        integrations = await loader.async_get_integrations(hass, ["does_not_exist"])
+    assert integrations["does_not_exist"] is integration

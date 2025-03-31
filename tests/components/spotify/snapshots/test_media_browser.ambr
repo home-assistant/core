@@ -87,26 +87,6 @@
       dict({
         'can_expand': True,
         'can_play': False,
-        'children_media_class': <MediaClass.GENRE: 'genre'>,
-        'media_class': <MediaClass.DIRECTORY: 'directory'>,
-        'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/categories',
-        'media_content_type': 'spotify://categories',
-        'thumbnail': None,
-        'title': 'Categories',
-      }),
-      dict({
-        'can_expand': True,
-        'can_play': False,
-        'children_media_class': <MediaClass.PLAYLIST: 'playlist'>,
-        'media_class': <MediaClass.DIRECTORY: 'directory'>,
-        'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/featured_playlists',
-        'media_content_type': 'spotify://featured_playlists',
-        'thumbnail': None,
-        'title': 'Featured Playlists',
-      }),
-      dict({
-        'can_expand': True,
-        'can_play': False,
         'children_media_class': <MediaClass.ALBUM: 'album'>,
         'media_class': <MediaClass.DIRECTORY: 'directory'>,
         'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/new_releases',
@@ -297,76 +277,6 @@
     'not_shown': 0,
     'thumbnail': 'https://i.scdn.co/image/ab6761610000e5ebee07b5820dd91d15d397e29c',
     'title': 'Pitbull',
-  })
-# ---
-# name: test_browsing[categories-categories]
-  dict({
-    'can_expand': True,
-    'can_play': False,
-    'children': list([
-      dict({
-        'can_expand': True,
-        'can_play': False,
-        'children_media_class': <MediaClass.TRACK: 'track'>,
-        'media_class': <MediaClass.PLAYLIST: 'playlist'>,
-        'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/0JQ5DAt0tbjZptfcdMSKl3',
-        'media_content_type': 'spotify://category_playlists',
-        'thumbnail': 'https://t.scdn.co/images/728ed47fc1674feb95f7ac20236eb6d7.jpeg',
-        'title': 'Made For You',
-      }),
-      dict({
-        'can_expand': True,
-        'can_play': False,
-        'children_media_class': <MediaClass.TRACK: 'track'>,
-        'media_class': <MediaClass.PLAYLIST: 'playlist'>,
-        'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/0JQ5DAqbMKFz6FAsUtgAab',
-        'media_content_type': 'spotify://category_playlists',
-        'thumbnail': 'https://t.scdn.co/images/728ed47fc1674feb95f7ac20236eb6d7.jpeg',
-        'title': 'New Releases',
-      }),
-    ]),
-    'children_media_class': <MediaClass.GENRE: 'genre'>,
-    'media_class': <MediaClass.DIRECTORY: 'directory'>,
-    'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/categories',
-    'media_content_type': 'spotify://categories',
-    'not_shown': 0,
-    'thumbnail': None,
-    'title': 'Categories',
-  })
-# ---
-# name: test_browsing[category_playlists-dinner]
-  dict({
-    'can_expand': True,
-    'can_play': False,
-    'children': list([
-      dict({
-        'can_expand': True,
-        'can_play': True,
-        'children_media_class': <MediaClass.TRACK: 'track'>,
-        'media_class': <MediaClass.PLAYLIST: 'playlist'>,
-        'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/spotify:playlist:37i9dQZF1DX7yhuKT9G4qk',
-        'media_content_type': 'spotify://playlist',
-        'thumbnail': 'https://i.scdn.co/image/ab67706f0000000343319faa9428405f3312b588',
-        'title': 'eten met vrienden',
-      }),
-      dict({
-        'can_expand': True,
-        'can_play': True,
-        'children_media_class': <MediaClass.TRACK: 'track'>,
-        'media_class': <MediaClass.PLAYLIST: 'playlist'>,
-        'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/spotify:playlist:37i9dQZF1DXbvE0SE0Cczh',
-        'media_content_type': 'spotify://playlist',
-        'thumbnail': 'https://i.scdn.co/image/ab67706f00000003b93c270883619dde61725fc8',
-        'title': 'Jukebox Joint',
-      }),
-    ]),
-    'children_media_class': <MediaClass.PLAYLIST: 'playlist'>,
-    'media_class': <MediaClass.DIRECTORY: 'directory'>,
-    'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/dinner',
-    'media_content_type': 'spotify://category_playlists',
-    'not_shown': 0,
-    'thumbnail': 'https://t.scdn.co/media/original/dinner_1b6506abba0ba52c54e6d695c8571078_274x274.jpg',
-    'title': 'Cooking & Dining',
   })
 # ---
 # name: test_browsing[current_user_followed_artists-current_user_followed_artists]
@@ -649,41 +559,6 @@
     'title': 'Top Tracks',
   })
 # ---
-# name: test_browsing[featured_playlists-featured_playlists]
-  dict({
-    'can_expand': True,
-    'can_play': False,
-    'children': list([
-      dict({
-        'can_expand': True,
-        'can_play': True,
-        'children_media_class': <MediaClass.TRACK: 'track'>,
-        'media_class': <MediaClass.PLAYLIST: 'playlist'>,
-        'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/spotify:playlist:37i9dQZF1DX4dopZ9vOp1t',
-        'media_content_type': 'spotify://playlist',
-        'thumbnail': 'https://i.scdn.co/image/ab67706f000000037d14c267b8ee5fea2246a8fe',
-        'title': 'Kerst Hits 2023',
-      }),
-      dict({
-        'can_expand': True,
-        'can_play': True,
-        'children_media_class': <MediaClass.TRACK: 'track'>,
-        'media_class': <MediaClass.PLAYLIST: 'playlist'>,
-        'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/spotify:playlist:37i9dQZF1DWSBi5svWQ9Nk',
-        'media_content_type': 'spotify://playlist',
-        'thumbnail': 'https://i.scdn.co/image/ab67706f00000003f7b99051789611a49101c1cf',
-        'title': 'Top Hits NL',
-      }),
-    ]),
-    'children_media_class': <MediaClass.PLAYLIST: 'playlist'>,
-    'media_class': <MediaClass.DIRECTORY: 'directory'>,
-    'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/featured_playlists',
-    'media_content_type': 'spotify://featured_playlists',
-    'not_shown': 0,
-    'thumbnail': None,
-    'title': 'Featured Playlists',
-  })
-# ---
 # name: test_browsing[new_releases-new_releases]
   dict({
     'can_expand': True,
@@ -773,6 +648,16 @@
         'media_content_type': 'spotify://track',
         'thumbnail': 'https://i.scdn.co/image/ab67616d0000b27304e57d181ff062f8339d6c71',
         'title': 'You Are So Beautiful',
+      }),
+      dict({
+        'can_expand': False,
+        'can_play': True,
+        'children_media_class': None,
+        'media_class': <MediaClass.EPISODE: 'episode'>,
+        'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/spotify:episode:3o0RYoo5iOMKSmEbunsbvW',
+        'media_content_type': 'spotify://episode',
+        'thumbnail': 'https://i.scdn.co/image/ab6765630000ba8ac7bedd27a4413b1abf926d8a',
+        'title': 'My Squirrel Has Brain Damage - Safety Third 119',
       }),
     ]),
     'children_media_class': <MediaClass.TRACK: 'track'>,

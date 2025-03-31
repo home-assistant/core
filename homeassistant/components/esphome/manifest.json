@@ -15,11 +15,10 @@
   "iot_class": "local_push",
   "loggers": ["aioesphomeapi", "noiseprotocol", "bleak_esphome"],
   "mqtt": ["esphome/discover/#"],
-  "quality_scale": "platinum",
   "requirements": [
-    "aioesphomeapi==27.0.1",
+    "aioesphomeapi==29.8.0",
     "esphome-dashboard-api==1.2.3",
-    "bleak-esphome==1.1.0"
+    "bleak-esphome==2.12.0"
   ],
   "zeroconf": ["_esphomelib._tcp.local."]
 }

@@ -7,10 +7,10 @@ from aiostreammagic import (
     ShuffleMode,
     TransportControl,
 )
-from aiostreammagic.models import CallbackType
 import pytest
 
 from homeassistant.components.media_player import (
+    ATTR_MEDIA_ARTIST,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_REPEAT,
@@ -49,16 +49,10 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
-from . import setup_integration
+from . import mock_state_update, setup_integration
 from .const import ENTITY_ID
 
 from tests.common import MockConfigEntry
-
-
-async def mock_state_update(client: AsyncMock) -> None:
-    """Trigger a callback in the media player."""
-    for callback in client.register_state_update_callbacks.call_args_list:
-        await callback[0][0](client, CallbackType.STATE)
 
 
 async def test_entity_supported_features(
@@ -496,3 +490,41 @@ async def test_play_media_unknown_type(
             },
             blocking=True,
         )
+
+
+@pytest.mark.parametrize(
+    ("source_id", "artist", "station", "display"),
+    [
+        ("MEDIA_PLAYER", "Metallica", None, "Metallica"),
+        ("USB_AUDIO", "Iron Maiden", "Radio BOB!", "Iron Maiden"),
+        ("IR", "In Flames", "Radio BOB!", "In Flames"),
+        ("IR", None, "Radio BOB!", "Radio BOB!"),
+        ("IR", None, None, None),
+        ("MEDIA_PLAYER", None, "Radio BOB!", None),
+    ],
+)
+async def test_media_artist(
+    hass: HomeAssistant,
+    mock_stream_magic_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    source_id: str,
+    artist: str,
+    station: str,
+    display: str,
+) -> None:
+    """Test media player state."""
+    await setup_integration(hass, mock_config_entry)
+    mock_stream_magic_client.play_state.metadata.artist = artist
+    mock_stream_magic_client.play_state.metadata.station = station
+    mock_stream_magic_client.state.source = source_id
+
+    await mock_state_update(mock_stream_magic_client)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    if (artist is None and source_id != "IR") or (
+        source_id == "IR" and station is None
+    ):
+        assert ATTR_MEDIA_ARTIST not in state.attributes
+    else:
+        assert state.attributes[ATTR_MEDIA_ARTIST] == display

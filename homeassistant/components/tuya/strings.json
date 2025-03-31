@@ -14,7 +14,7 @@
         }
       },
       "scan": {
-        "description": "Use Smart Life app or Tuya Smart app to scan the following QR-code to complete the login.\n\nContinue to the next step once you have completed this step in the app."
+        "description": "Use the Smart Life app or Tuya Smart app to scan the following QR code to complete the login.\n\nContinue to the next step once you have completed this step in the app."
       }
     },
     "error": {
@@ -119,6 +119,9 @@
       }
     },
     "number": {
+      "alarm_duration": {
+        "name": "Alarm duration"
+      },
       "temperature": {
         "name": "[%key:component::sensor::entity_component::temperature::name%]"
       },
@@ -465,6 +468,9 @@
       },
       "temperature": {
         "name": "[%key:component::sensor::entity_component::temperature::name%]"
+      },
+      "temperature_external": {
+        "name": "Probe temperature"
       },
       "humidity": {
         "name": "[%key:component::sensor::entity_component::humidity::name%]"

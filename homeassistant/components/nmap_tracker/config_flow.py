@@ -22,7 +22,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_EXCLUDE, CONF_HOSTS
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import VolDictType
 
 from .const import (

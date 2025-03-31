@@ -165,10 +165,6 @@ async def test_reconfigure_flow(
     mock_madvr_client.async_cancel_tasks.assert_called()
 
 
-@pytest.mark.parametrize(  # Remove when translations fixed
-    "ignore_translations",
-    ["component.madvr.config.abort.set_up_new_device"],
-)
 async def test_reconfigure_new_device(
     hass: HomeAssistant,
     mock_madvr_client: AsyncMock,

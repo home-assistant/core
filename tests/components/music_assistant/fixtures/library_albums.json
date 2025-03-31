@@ -1,0 +1,148 @@
+{
+  "library_albums": [
+    {
+      "item_id": "396",
+      "provider": "library",
+      "name": "Synth Punk EP",
+      "version": "",
+      "sort_name": "synth punk ep",
+      "uri": "library://album/396",
+      "external_ids": [["barcode", "872133626743"]],
+      "media_type": "album",
+      "provider_mappings": [
+        {
+          "item_id": "48563817",
+          "provider_domain": "tidal",
+          "provider_instance": "tidal--Ah76MuMg",
+          "available": 1,
+          "audio_format": {
+            "content_type": "flac",
+            "sample_rate": 44100,
+            "bit_depth": 16,
+            "channels": 2,
+            "output_format_str": "flac",
+            "bit_rate": 0
+          },
+          "url": "https://tidal.com/album/48563817",
+          "details": null
+        }
+      ],
+      "metadata": {
+        "description": null,
+        "review": null,
+        "explicit": false,
+        "images": [
+          {
+            "type": "thumb",
+            "path": "https://resources.tidal.com/images/99c8bc2f/ed43/4fb2/adfb/e7e3157089d2/750x750.jpg",
+            "provider": "tidal",
+            "remotely_accessible": true
+          }
+        ],
+        "genres": null,
+        "mood": null,
+        "style": null,
+        "copyright": "586446 Records DK",
+        "lyrics": null,
+        "label": null,
+        "links": null,
+        "performers": null,
+        "preview": null,
+        "popularity": 7,
+        "release_date": null,
+        "languages": null,
+        "last_refresh": null
+      },
+      "favorite": false,
+      "position": null,
+      "year": 2015,
+      "artists": [
+        {
+          "item_id": 289,
+          "provider": "library",
+          "name": "A Space Love Adventure",
+          "version": "",
+          "sort_name": "space love adventure, a",
+          "uri": "library://artist/289",
+          "external_ids": [],
+          "media_type": "artist",
+          "available": true,
+          "image": null
+        }
+      ],
+      "album_type": "ep"
+    },
+    {
+      "item_id": "95",
+      "provider": "library",
+      "name": "Synthwave (The 80S Revival)",
+      "version": "The 80S Revival",
+      "sort_name": "synthwave (the 80s revival)",
+      "uri": "library://album/95",
+      "external_ids": [["barcode", "3614974086112"]],
+      "media_type": "album",
+      "provider_mappings": [
+        {
+          "item_id": "70953630",
+          "provider_domain": "tidal",
+          "provider_instance": "tidal--56X5qDS7",
+          "available": 1,
+          "audio_format": {
+            "content_type": "flac",
+            "sample_rate": 44100,
+            "bit_depth": 16,
+            "channels": 2,
+            "output_format_str": "flac",
+            "bit_rate": 0
+          },
+          "url": "https://tidal.com/album/70953630",
+          "details": null
+        }
+      ],
+      "metadata": {
+        "description": null,
+        "review": null,
+        "explicit": false,
+        "images": [
+          {
+            "type": "thumb",
+            "path": "https://resources.tidal.com/images/b7b1897c/57ed/4a31/83d7/9ab3df83183a/750x750.jpg",
+            "provider": "tidal",
+            "remotely_accessible": true
+          }
+        ],
+        "genres": null,
+        "mood": null,
+        "style": null,
+        "copyright": "Kiez Beats",
+        "lyrics": null,
+        "label": null,
+        "links": null,
+        "performers": null,
+        "preview": null,
+        "popularity": 43,
+        "release_date": null,
+        "languages": null,
+        "last_refresh": null
+      },
+      "favorite": false,
+      "position": null,
+      "year": 2017,
+      "artists": [
+        {
+          "item_id": 96,
+          "provider": "library",
+          "name": "Various Artists",
+          "version": "",
+          "sort_name": "various artists",
+          "uri": "library://artist/96",
+          "external_ids": [],
+          "media_type": "artist",
+          "available": true,
+          "image": null
+        }
+      ],
+      "album_type": "compilation"
+    }
+  ]
+}

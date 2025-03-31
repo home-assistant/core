@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 import functools
 
-from pydantic import ValidationError
+from pydantic.v1 import ValidationError
 import voluptuous as vol
 from zwave_js_server.client import Client
 from zwave_js_server.model.controller import CONTROLLER_EVENT_MODEL_MAP

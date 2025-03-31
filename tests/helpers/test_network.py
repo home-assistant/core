@@ -538,7 +538,7 @@ async def test_get_url(hass: HomeAssistant) -> None:
             "homeassistant.helpers.network._get_request_host",
             return_value="example.com",
         ),
-        patch("homeassistant.components.http.current_request"),
+        patch("homeassistant.helpers.http.current_request"),
     ):
         assert get_url(hass, require_current_request=True) == "https://example.com"
         assert (
@@ -554,7 +554,7 @@ async def test_get_url(hass: HomeAssistant) -> None:
             "homeassistant.helpers.network._get_request_host",
             return_value="example.local",
         ),
-        patch("homeassistant.components.http.current_request"),
+        patch("homeassistant.helpers.http.current_request"),
     ):
         assert get_url(hass, require_current_request=True) == "http://example.local"
 
@@ -592,7 +592,7 @@ async def test_get_request_host_with_port(hass: HomeAssistant) -> None:
     with pytest.raises(NoURLAvailableError):
         _get_request_host()
 
-    with patch("homeassistant.components.http.current_request") as mock_request_context:
+    with patch("homeassistant.helpers.http.current_request") as mock_request_context:
         mock_request = Mock()
         mock_request.headers = CIMultiDictProxy(
             CIMultiDict({hdrs.HOST: "example.com:8123"})
@@ -609,7 +609,7 @@ async def test_get_request_host_without_port(hass: HomeAssistant) -> None:
     with pytest.raises(NoURLAvailableError):
         _get_request_host()
 
-    with patch("homeassistant.components.http.current_request") as mock_request_context:
+    with patch("homeassistant.helpers.http.current_request") as mock_request_context:
         mock_request = Mock()
         mock_request.headers = CIMultiDictProxy(CIMultiDict({hdrs.HOST: "example.com"}))
         mock_request.url = URL("http://example.com/test/request")
@@ -624,7 +624,7 @@ async def test_get_request_ipv6_address(hass: HomeAssistant) -> None:
     with pytest.raises(NoURLAvailableError):
         _get_request_host()
 
-    with patch("homeassistant.components.http.current_request") as mock_request_context:
+    with patch("homeassistant.helpers.http.current_request") as mock_request_context:
         mock_request = Mock()
         mock_request.headers = CIMultiDictProxy(CIMultiDict({hdrs.HOST: "[::1]:8123"}))
         mock_request.url = URL("http://[::1]:8123/test/request")
@@ -639,7 +639,7 @@ async def test_get_request_ipv6_address_without_port(hass: HomeAssistant) -> Non
     with pytest.raises(NoURLAvailableError):
         _get_request_host()
 
-    with patch("homeassistant.components.http.current_request") as mock_request_context:
+    with patch("homeassistant.helpers.http.current_request") as mock_request_context:
         mock_request = Mock()
         mock_request.headers = CIMultiDictProxy(CIMultiDict({hdrs.HOST: "[::1]"}))
         mock_request.url = URL("http://[::1]/test/request")
@@ -654,7 +654,7 @@ async def test_get_request_host_no_host_header(hass: HomeAssistant) -> None:
     with pytest.raises(NoURLAvailableError):
         _get_request_host()
 
-    with patch("homeassistant.components.http.current_request") as mock_request_context:
+    with patch("homeassistant.helpers.http.current_request") as mock_request_context:
         mock_request = Mock()
         mock_request.headers = CIMultiDictProxy(CIMultiDict())
         mock_request.url = URL("/test/request")

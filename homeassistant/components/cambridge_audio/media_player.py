@@ -13,6 +13,7 @@ from aiostreammagic import (
 )
 
 from homeassistant.components.media_player import (
+    BrowseMedia,
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
@@ -20,11 +21,11 @@ from homeassistant.components.media_player import (
     MediaType,
     RepeatMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import CambridgeAudioConfigEntry, media_browser
 from .const import (
     CAMBRIDGE_MEDIA_TYPE_AIRABLE,
     CAMBRIDGE_MEDIA_TYPE_INTERNET_RADIO,
@@ -34,7 +35,8 @@ from .const import (
 from .entity import CambridgeAudioEntity, command
 
 BASE_FEATURES = (
-    MediaPlayerEntityFeature.SELECT_SOURCE
+    MediaPlayerEntityFeature.BROWSE_MEDIA
+    | MediaPlayerEntityFeature.SELECT_SOURCE
     | MediaPlayerEntityFeature.TURN_OFF
     | MediaPlayerEntityFeature.TURN_ON
     | MediaPlayerEntityFeature.PLAY_MEDIA
@@ -57,11 +59,13 @@ TRANSPORT_FEATURES: dict[TransportControl, MediaPlayerEntityFeature] = {
     TransportControl.STOP: MediaPlayerEntityFeature.STOP,
 }
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: CambridgeAudioConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Cambridge Audio device based on a config entry."""
     client: StreamMagicClient = entry.runtime_data
@@ -138,6 +142,12 @@ class CambridgeAudioDevice(CambridgeAudioEntity, MediaPlayerEntity):
     @property
     def media_artist(self) -> str | None:
         """Artist of current playing media, music track only."""
+        if (
+            not self.client.play_state.metadata.artist
+            and self.client.state.source == "IR"
+        ):
+            # Return channel instead of artist when playing internet radio
+            return self.client.play_state.metadata.station
         return self.client.play_state.metadata.artist
 
     @property
@@ -164,6 +174,11 @@ class CambridgeAudioDevice(CambridgeAudioEntity, MediaPlayerEntity):
     def media_position_updated_at(self) -> datetime:
         """Last time the media position was updated."""
         return self.client.position_last_updated
+
+    @property
+    def media_channel(self) -> str | None:
+        """Channel currently playing."""
+        return self.client.play_state.metadata.station
 
     @property
     def is_volume_muted(self) -> bool | None:
@@ -336,3 +351,13 @@ class CambridgeAudioDevice(CambridgeAudioEntity, MediaPlayerEntity):
 
         if media_type == CAMBRIDGE_MEDIA_TYPE_INTERNET_RADIO:
             await self.client.play_radio_url("Radio", media_id)
+
+    async def async_browse_media(
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
+    ) -> BrowseMedia:
+        """Implement the media browsing helper."""
+        return await media_browser.async_browse_media(
+            self.hass, self.client, media_content_id, media_content_type
+        )

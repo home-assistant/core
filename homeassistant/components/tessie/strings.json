@@ -75,9 +75,9 @@
         "name": "Charging",
         "state": {
           "starting": "Starting",
-          "charging": "Charging",
-          "disconnected": "Disconnected",
-          "stopped": "Stopped",
+          "charging": "[%key:common::state::charging%]",
+          "disconnected": "[%key:common::state::disconnected%]",
+          "stopped": "[%key:common::state::stopped%]",
           "complete": "Complete",
           "no_power": "No power"
         }
@@ -212,7 +212,7 @@
         "name": "State",
         "state": {
           "booting": "Booting",
-          "charging": "[%key:component::tessie::entity::sensor::charge_state_charging_state::state::charging%]",
+          "charging": "[%key:common::state::charging%]",
           "disconnected": "[%key:common::state::disconnected%]",
           "connected": "[%key:common::state::connected%]",
           "scheduled": "Scheduled",
@@ -459,7 +459,7 @@
       }
     },
     "switch": {
-      "charge_state_charge_enable_request": {
+      "charge_state_charging_state": {
         "name": "Charge"
       },
       "climate_state_defrost_mode": {
@@ -506,7 +506,7 @@
   },
   "exceptions": {
     "unknown": {
-      "message": "An unknown issue occured changing {name}."
+      "message": "An unknown issue occurred changing {name}."
     },
     "not_supported": {
       "message": "{name} is not supported."
@@ -521,7 +521,7 @@
       "message": "{name} is already inactive."
     },
     "incorrect_pin": {
-      "message": "Incorrect pin for {name}."
+      "message": "Incorrect PIN for {name}."
     },
     "no_cable": {
       "message": "Insert cable to lock"

@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 import logging
 from unittest.mock import AsyncMock, Mock, patch
 import urllib.error
+import weakref
 
 import aiohttp
 from freezegun.api import FrozenDateTimeFactory
@@ -12,13 +13,13 @@ import requests
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import CoreState, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryError,
     ConfigEntryNotReady,
 )
-from homeassistant.helpers import frame, update_coordinator
+from homeassistant.helpers import update_coordinator
 from homeassistant.util.dt import utcnow
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -628,8 +629,7 @@ async def test_async_config_entry_first_refresh_invalid_state(
         RuntimeError,
         match="Detected code that uses `async_config_entry_first_refresh`, which "
         "is only supported when entry state is ConfigEntryState.SETUP_IN_PROGRESS, "
-        "but it is in state ConfigEntryState.NOT_LOADED. This will stop working "
-        "in Home Assistant 2025.11. Please report this issue.",
+        "but it is in state ConfigEntryState.NOT_LOADED. Please report this issue",
     ):
         await crd.async_config_entry_first_refresh()
 
@@ -638,7 +638,6 @@ async def test_async_config_entry_first_refresh_invalid_state(
 
 
 @pytest.mark.usefixtures("mock_integration_frame")
-@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 async def test_async_config_entry_first_refresh_invalid_state_in_integration(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -653,8 +652,9 @@ async def test_async_config_entry_first_refresh_invalid_state_in_integration(
     assert (
         "Detected that integration 'hue' uses `async_config_entry_first_refresh`, which "
         "is only supported when entry state is ConfigEntryState.SETUP_IN_PROGRESS, "
-        "but it is in state ConfigEntryState.NOT_LOADED, This will stop working "
-        "in Home Assistant 2025.11"
+        "but it is in state ConfigEntryState.NOT_LOADED at "
+        "homeassistant/components/hue/light.py, line 23: self.light.is_on. "
+        "This will stop working in Home Assistant 2025.11"
     ) in caplog.text
 
 
@@ -665,8 +665,8 @@ async def test_async_config_entry_first_refresh_no_entry(hass: HomeAssistant) ->
     with pytest.raises(
         RuntimeError,
         match="Detected code that uses `async_config_entry_first_refresh`, "
-        "which is only supported for coordinators with a config entry and will "
-        "stop working in Home Assistant 2025.11. Please report this issue.",
+        "which is only supported for coordinators with a config entry. "
+        "Please report this issue",
     ):
         await crd.async_config_entry_first_refresh()
 
@@ -898,3 +898,41 @@ async def test_config_entry(hass: HomeAssistant) -> None:
         hass, _LOGGER, name="test", config_entry=another_entry
     )
     assert crd.config_entry is another_entry
+
+
+async def test_listener_unsubscribe_releases_coordinator(hass: HomeAssistant) -> None:
+    """Test listener subscribe/unsubscribe releases parent class.
+
+    See https://github.com/home-assistant/core/issues/137237
+    And https://github.com/home-assistant/core/pull/137338
+    """
+
+    class Subscriber:
+        _unsub: CALLBACK_TYPE | None = None
+
+        def start_listen(
+            self, coordinator: update_coordinator.DataUpdateCoordinator
+        ) -> None:
+            self._unsub = coordinator.async_add_listener(lambda: None)
+
+        def stop_listen(self) -> None:
+            self._unsub()
+            self._unsub = None
+
+    coordinator = update_coordinator.DataUpdateCoordinator[int](
+        hass, _LOGGER, name="test"
+    )
+    subscriber = Subscriber()
+    subscriber.start_listen(coordinator)
+
+    # Keep weak reference to the coordinator
+    weak_ref = weakref.ref(coordinator)
+    assert weak_ref() is not None
+
+    # Unload the subscriber, then shutdown the coordinator
+    subscriber.stop_listen()
+    await coordinator.async_shutdown()
+    del coordinator
+
+    # Ensure the coordinator is released
+    assert weak_ref() is None

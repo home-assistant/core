@@ -17,7 +17,7 @@ from homeassistant.components.remote import (
 )
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AppleTvConfigEntry
 from .entity import AppleTVEntity
@@ -38,7 +38,7 @@ COMMAND_TO_ATTRIBUTE = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: AppleTvConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Load Apple TV remote based on a config entry."""
     name: str = config_entry.data[CONF_NAME]

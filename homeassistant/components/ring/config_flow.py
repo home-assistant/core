@@ -8,7 +8,6 @@ import uuid
 from ring_doorbell import Auth, AuthenticationError, Requires2FAError
 import voluptuous as vol
 
-from homeassistant.components import dhcp
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
@@ -24,8 +23,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from . import get_auth_user_agent
 from .const import CONF_2FA, CONF_CONFIG_ENTRY_MINOR_VERSION, DOMAIN
@@ -78,7 +78,7 @@ class RingConfigFlow(ConfigFlow, domain=DOMAIN):
     hardware_id: str | None = None
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle discovery via dhcp."""
         # Ring has a single config entry per cloud username rather than per device

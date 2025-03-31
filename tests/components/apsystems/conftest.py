@@ -38,11 +38,12 @@ def mock_apsystems() -> Generator[MagicMock]:
         mock_api = mock_client.return_value
         mock_api.get_device_info.return_value = ReturnDeviceInfo(
             deviceId="MY_SERIAL_NUMBER",
-            devVer="1.0.0",
+            devVer="EZ1 1.0.0",
             ssid="MY_SSID",
             ipAddr="127.0.01",
             minPower=0,
             maxPower=1000,
+            isBatterySystem=False,
         )
         mock_api.get_output_data.return_value = ReturnOutputData(
             p1=2.0,
@@ -59,6 +60,7 @@ def mock_apsystems() -> Generator[MagicMock]:
             operating=False,
         )
         mock_api.get_device_power_status.return_value = True
+        mock_api.get_max_power.return_value = 666
         yield mock_api
 
 

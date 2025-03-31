@@ -18,7 +18,7 @@ from homeassistant.const import (
     CONF_TOKEN,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.util import location
+from homeassistant.util import location as location_util
 
 from .const import (
     CONFIG_ENTRY_VERSION,
@@ -54,7 +54,7 @@ class PlayStation4FlowHandler(ConfigFlow, domain=DOMAIN):
         self.region = None
         self.pin: str | None = None
         self.m_device = None
-        self.location: location.LocationInfo | None = None
+        self.location: location_util.LocationInfo | None = None
         self.device_list: list[str] = []
 
     async def async_step_user(
@@ -190,7 +190,7 @@ class PlayStation4FlowHandler(ConfigFlow, domain=DOMAIN):
 
         # Try to find region automatically.
         if not self.location:
-            self.location = await location.async_detect_location_info(
+            self.location = await location_util.async_detect_location_info(
                 async_get_clientsession(self.hass)
             )
         if self.location:

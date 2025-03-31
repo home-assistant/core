@@ -159,11 +159,11 @@ async def test_api_set_color_temperature(hass: HomeAssistant) -> None:
 
     assert len(call_light) == 1
     assert call_light[0].data["entity_id"] == "light.test"
-    assert call_light[0].data["kelvin"] == 7500
+    assert call_light[0].data["color_temp_kelvin"] == 7500
     assert msg["header"]["name"] == "Response"
 
 
-@pytest.mark.parametrize(("result", "initial"), [(383, "333"), (500, "500")])
+@pytest.mark.parametrize(("result", "initial"), [(2500, "3000"), (2000, "2000")])
 async def test_api_decrease_color_temp(
     hass: HomeAssistant, result: int, initial: str
 ) -> None:
@@ -176,7 +176,11 @@ async def test_api_decrease_color_temp(
     hass.states.async_set(
         "light.test",
         "off",
-        {"friendly_name": "Test light", "color_temp": initial, "max_mireds": 500},
+        {
+            "friendly_name": "Test light",
+            "color_temp_kelvin": initial,
+            "min_color_temp_kelvin": 2000,
+        },
     )
 
     call_light = async_mock_service(hass, "light", "turn_on")
@@ -189,11 +193,11 @@ async def test_api_decrease_color_temp(
 
     assert len(call_light) == 1
     assert call_light[0].data["entity_id"] == "light.test"
-    assert call_light[0].data["color_temp"] == result
+    assert call_light[0].data["color_temp_kelvin"] == result
     assert msg["header"]["name"] == "Response"
 
 
-@pytest.mark.parametrize(("result", "initial"), [(283, "333"), (142, "142")])
+@pytest.mark.parametrize(("result", "initial"), [(3500, "3000"), (7000, "7000")])
 async def test_api_increase_color_temp(
     hass: HomeAssistant, result: int, initial: str
 ) -> None:
@@ -206,7 +210,11 @@ async def test_api_increase_color_temp(
     hass.states.async_set(
         "light.test",
         "off",
-        {"friendly_name": "Test light", "color_temp": initial, "min_mireds": 142},
+        {
+            "friendly_name": "Test light",
+            "color_temp_kelvin": initial,
+            "max_color_temp_kelvin": 7000,
+        },
     )
 
     call_light = async_mock_service(hass, "light", "turn_on")
@@ -219,7 +227,7 @@ async def test_api_increase_color_temp(
 
     assert len(call_light) == 1
     assert call_light[0].data["entity_id"] == "light.test"
-    assert call_light[0].data["color_temp"] == result
+    assert call_light[0].data["color_temp_kelvin"] == result
     assert msg["header"]["name"] == "Response"
 
 

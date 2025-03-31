@@ -17,7 +17,7 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
     CONF_VERIFY_SSL,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 
 from .const import (
     CONF_BUFFER_SIZE,
