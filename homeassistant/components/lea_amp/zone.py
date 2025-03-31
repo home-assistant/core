@@ -98,7 +98,7 @@ class LeaZone:
 
     def set_zone_volume(self, volume: int) -> None:
         """Set Zone Volume."""
-        _LOGGER.log(logging.INFO, "set_zone_volume: %s", str(volume))
+        _LOGGER.log(logging.INFO, "set_zone_volume value to send: %s", str(volume))
         self._controller.set_volume(self._zone_id, volume)
         self.updateVolume(float(volume))
 
@@ -117,9 +117,10 @@ class LeaZone:
     def updateVolume(self, value: float):
         """Update Volume."""
         _LOGGER.log(logging.INFO, "updateVolume")
-        _LOGGER.log(logging.INFO, "value:  %s", str(value))
+        _LOGGER.log(logging.INFO, "lea value:  %s", str(value))
         value = (((value / -1) - 80) / 0.8) * -1
-        self._volume = int(value)
+        _LOGGER.log(logging.INFO, "HA value:  %s", str(value))
+        # self._volume = int(value)
         self.update_lastseen()
         if self._update_callback and callable(self._update_callback):
             self._update_callback(self)
