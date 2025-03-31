@@ -422,7 +422,7 @@ aiowaqi==3.1.0
 aiowatttime==0.1.1
 
 # homeassistant.components.webdav
-aiowebdav2==0.4.4
+aiowebdav2==0.4.5
 
 # homeassistant.components.webostv
 aiowebostv==0.7.3
