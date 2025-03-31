@@ -111,11 +111,8 @@ async def test_user_selection_incorrect_pin(
         },
     )
 
-    assert result["data"] == {
-        CONF_ADDRESS: "00000000-0000-0000-0000-000000000001",
-        CONF_CLIENT_ID: 1197489078,
-        CONF_PIN: "1234",
-    }
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
 
 
 async def test_bluetooth(hass: HomeAssistant) -> None:
@@ -203,11 +200,10 @@ async def test_successful_reauth(
         },
     )
 
-    assert result["data"] == {
-        CONF_ADDRESS: "00000000-0000-0000-0000-000000000001",
-        CONF_CLIENT_ID: 1197489078,
-        CONF_PIN: "1234",
-    }
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
 
 
 async def test_failed_reauth(
