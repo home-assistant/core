@@ -140,7 +140,7 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
         if self.data.lock:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="change_hvac_while_lock_enabled",
+                translation_key="change_tempratur_while_lock_enabled",
             )
 
         if (hvac_mode := kwargs.get(ATTR_HVAC_MODE)) is HVACMode.OFF:
