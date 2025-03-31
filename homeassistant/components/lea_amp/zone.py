@@ -124,6 +124,7 @@ class LeaZone:
         self._volume = int(value)
         self.update_lastseen()
         if self._update_callback and callable(self._update_callback):
+            _LOGGER.log(logging.INFO, "callback")
             self._update_callback(self)
 
     def update(self, value: str, commandType: str):
@@ -137,6 +138,7 @@ class LeaZone:
             self._power = bool(value)
         self.update_lastseen()
         if self._update_callback and callable(self._update_callback):
+            _LOGGER.log(logging.INFO, "callback")
             self._update_callback(self)
 
     def update_lastseen(self) -> None:
