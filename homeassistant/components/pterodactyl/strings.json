@@ -26,6 +26,20 @@
         "name": "Status"
       }
     },
+    "button": {
+      "start_server": {
+        "name": "Start server"
+      },
+      "stop_server": {
+        "name": "Stop server"
+      },
+      "restart_server": {
+        "name": "Restart server"
+      },
+      "force_stop_server": {
+        "name": "Force stop server"
+      }
+    },
     "sensor": {
       "cpu_utilization": {
         "name": "CPU utilization"
