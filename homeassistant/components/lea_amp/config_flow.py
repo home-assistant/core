@@ -6,13 +6,30 @@ import asyncio
 from contextlib import suppress
 import logging
 
+import voluptuous as vol
+
+from homeassistant import data_entry_flow
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_entry_flow
 
 from .const import CONNECTION_TIMEOUT, DOMAIN, LEA_IP, PORT
 from .controller import LeaController
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class ExampleConfigFlow(data_entry_flow.FlowHandler):
+    """Handle a config flow."""
+
+    async def async_step_user(self, user_input=None) -> FlowResult:
+        """Step User."""
+        # Specify items in the order they are to be displayed in the UI
+        data_schema = {
+            vol.Required("ip_address"): str,
+        }
+
+        return self.async_show_form(step_id="init", data_schema=vol.Schema(data_schema))
 
 
 async def _async_has_devices(hass: HomeAssistant) -> bool:
