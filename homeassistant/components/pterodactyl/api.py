@@ -142,8 +142,8 @@ class PterodactylAPI:
         try:
             await self.hass.async_add_executor_job(
                 self.pterodactyl.client.servers.send_power_action,  # type: ignore[union-attr]
-                command,
                 identifier,
+                command,
             )
         except (
             PydactylError,

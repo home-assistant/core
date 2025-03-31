@@ -73,7 +73,6 @@ class PterodactylButtonEntity(PterodactylEntity, ButtonEntity):
     """Representation of a Pterodactyl button entity."""
 
     entity_description: PterodactylButtonEntityDescription
-    _attr_has_entity_name = True
 
     def __init__(
         self,
