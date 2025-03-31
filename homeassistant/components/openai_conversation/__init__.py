@@ -11,6 +11,7 @@ from openai.types.images_response import ImagesResponse
 from openai.types.responses import (
     EasyInputMessageParam,
     Response,
+    ResponseInputFileParam,
     ResponseInputImageParam,
     ResponseInputMessageContentListParam,
     ResponseInputParam,
@@ -132,19 +133,28 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 if not Path(filename).exists():
                     raise HomeAssistantError(f"`{filename}` does not exist")
                 mime_type, base64_file = encode_file(filename)
-                if "image/" not in mime_type:
+                if "image/" in mime_type:
+                    content.append(
+                        ResponseInputImageParam(
+                            type="input_image",
+                            file_id=filename,
+                            image_url=f"data:{mime_type};base64,{base64_file}",
+                            detail="auto",
+                        )
+                    )
+                elif "application/pdf" in mime_type:
+                    content.append(
+                        ResponseInputFileParam(
+                            type="input_file",
+                            filename=filename,
+                            file_data=f"data:{mime_type};base64,{base64_file}",
+                        )
+                    )
+                else:
                     raise HomeAssistantError(
-                        "Only images are supported by the OpenAI API,"
-                        f"`{filename}` is not an image file"
+                        "Only images and PDF are supported by the OpenAI API,"
+                        f"`{filename}` is not an image file or PDF"
                     )
-                content.append(
-                    ResponseInputImageParam(
-                        type="input_image",
-                        file_id=filename,
-                        image_url=f"data:{mime_type};base64,{base64_file}",
-                        detail="auto",
-                    )
-                )
 
         if CONF_FILENAMES in call.data:
             await hass.async_add_executor_job(append_files_to_content)
