@@ -240,17 +240,6 @@ async def websocket_node_diagnostics(
     connection.send_result(msg[ID], dataclass_to_dict(result))
 
 
-from dataclasses import dataclass
-
-
-@dataclass
-class NodeBinding:
-    node: int
-    group: int
-    endpoint: int
-    cluster: int
-    fabricIndex: int
-
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "matter/get_node_binding",
