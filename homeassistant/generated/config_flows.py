@@ -332,7 +332,6 @@ FLOWS = {
         "laundrify",
         "lcn",
         "ld2410_ble",
-        "lea_amp",
         "leaone",
         "led_ble",
         "lektrico",
