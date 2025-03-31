@@ -2,7 +2,6 @@
   "domain": "lovelace",
   "name": "Dashboards",
   "codeowners": ["@home-assistant/frontend"],
-  "dependencies": ["onboarding"],
   "documentation": "https://www.home-assistant.io/integrations/lovelace",
   "integration_type": "system",
   "quality_scale": "internal"
