@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "Setup a topic for publishing notifications",
+        "description": "Set up a topic for publishing notifications",
         "data": {
           "url": "Service URL",
           "topic": "Topic"
