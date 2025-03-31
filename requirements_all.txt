@@ -2223,7 +2223,7 @@ pypca==0.0.7
 pypck==0.8.5
 
 # homeassistant.components.pglab
-pypglab==0.0.3
+pypglab==0.0.5
 
 # homeassistant.components.pjlink
 pypjlink2==1.2.1
