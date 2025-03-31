@@ -70,16 +70,20 @@ async def test_curtain3_controlling(
 
     with (
         patch(
-            "switchbot.SwitchbotCurtain.open", new=AsyncMock(return_value=True)
+            "homeassistant.components.switchbot.cover.switchbot.SwitchbotCurtain.open",
+            new=AsyncMock(return_value=True),
         ) as mock_open,
         patch(
-            "switchbot.SwitchbotCurtain.close", new=AsyncMock(return_value=True)
+            "homeassistant.components.switchbot.cover.switchbot.SwitchbotCurtain.close",
+            new=AsyncMock(return_value=True),
         ) as mock_close,
         patch(
-            "switchbot.SwitchbotCurtain.stop", new=AsyncMock(return_value=True)
+            "homeassistant.components.switchbot.cover.switchbot.SwitchbotCurtain.stop",
+            new=AsyncMock(return_value=True),
         ) as mock_stop,
         patch(
-            "switchbot.SwitchbotCurtain.set_position", new=AsyncMock(return_value=True)
+            "homeassistant.components.switchbot.cover.switchbot.SwitchbotCurtain.set_position",
+            new=AsyncMock(return_value=True),
         ) as mock_set_position,
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -176,7 +180,10 @@ async def test_blindtilt_setup(
     )
 
     entry.add_to_hass(hass)
-    with patch("switchbot.SwitchbotDevice.update", new=AsyncMock(return_value=True)):
+    with patch(
+        "homeassistant.components.switchbot.cover.switchbot.SwitchbotBlindTilt.update",
+        new=AsyncMock(return_value=True),
+    ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
