@@ -22,6 +22,11 @@ _LOGGER = logging.getLogger(__name__)
 class ExampleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
+    def __init__(self) -> None:
+        """Init."""
+
+        self.data: dict[str, str] = {}
+
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Step User."""
         # Specify items in the order they are to be displayed in the UI
