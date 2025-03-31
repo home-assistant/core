@@ -260,13 +260,13 @@ class LeaController:
 
         if zone := self.get_zone_by_id(zone_id):
             _LOGGER.log(logging.INFO, "zone found")
+            zoneInstance = LeaZone(self, zone.zone_id)
             if commandType == "volume":
                 _LOGGER.log(logging.INFO, "update volume")
-                zone.updateVolume(float(value))
-                zone.update_lastseen()
+                zoneInstance.updateVolume(float(value))
             else:
-                _LOGGER.log(logging.INFO, "update volume")
-                zone.update(value, commandType)
+                _LOGGER.log(logging.INFO, "update")
+                zoneInstance.update(value, commandType)
 
     def _handle_num_inputs(self, value: str):
         _LOGGER.log(logging.INFO, "_handle_num_inputs: %s", str(value))
