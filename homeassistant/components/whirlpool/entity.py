@@ -1,15 +1,11 @@
 """Base entity for the Whirlpool integration."""
 
-import logging
-
 from whirlpool.appliance import Appliance
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class WhirlpoolEntity(Entity):

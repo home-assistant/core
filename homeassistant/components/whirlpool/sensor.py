@@ -3,7 +3,6 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-import logging
 from typing import override
 
 from whirlpool.appliance import Appliance
@@ -23,7 +22,6 @@ from homeassistant.util.dt import utcnow
 from . import WhirlpoolConfigEntry
 from .entity import WhirlpoolEntity
 
-_LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(minutes=5)
 
 WASHER_DRYER_TANK_FILL = {
