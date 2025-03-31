@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 import logging
 from typing import override
 
+from whirlpool.appliance import Appliance
 from whirlpool.washerdryer import MachineState, WasherDryer
 
 from homeassistant.components.sensor import (
@@ -156,40 +157,39 @@ async def async_setup_entry(
 
         entities.extend(
             [
-                WasherDryerEntity(washer_dryer, description)
+                WhirlpoolSensor(washer_dryer, description)
                 for description in sensor_descriptions
             ]
         )
         entities.extend(
             [
-                WasherDryerTimeEntity(washer_dryer, description)
+                WasherDryerTimeSensor(washer_dryer, description)
                 for description in WASHER_DRYER_TIME_SENSORS
             ]
         )
     async_add_entities(entities)
 
 
-class WasherDryerEntity(WhirlpoolEntity, SensorEntity):
-    """A class for the Whirlpool washer/dryer sensors."""
+class WhirlpoolSensor(WhirlpoolEntity, SensorEntity):
+    """A class for the Whirlpool sensors."""
 
     _attr_should_poll = False
 
     def __init__(
-        self, washer_dryer: WasherDryer, description: WhirlpoolSensorEntityDescription
+        self, appliance: Appliance, description: WhirlpoolSensorEntityDescription
     ) -> None:
         """Initialize the washer sensor."""
-        super().__init__(washer_dryer, unique_id_suffix=f"-{description.key}")
-        self._wd: WasherDryer = washer_dryer
+        super().__init__(appliance, unique_id_suffix=f"-{description.key}")
 
         self.entity_description: WhirlpoolSensorEntityDescription = description
 
     @property
     def native_value(self) -> StateType | str:
         """Return native value of sensor."""
-        return self.entity_description.value_fn(self._wd)
+        return self.entity_description.value_fn(self._appliance)
 
 
-class WasherDryerTimeEntity(WhirlpoolEntity, RestoreSensor):
+class WasherDryerTimeSensor(WhirlpoolEntity, RestoreSensor):
     """A timestamp class for the Whirlpool washer/dryer."""
 
     _attr_should_poll = True
