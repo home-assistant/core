@@ -85,8 +85,7 @@ class RenaultDataUpdateCoordinator(DataUpdateCoordinator[T]):
             raise UpdateFailed(f"This endpoint is denied: {err}") from err
 
         except QuotaLimitException as err:
-            # we got a throttling by the API : the data we got is not bad per see,
-            # we should initiate a cooldown for all coordinators
+            # The data we got is not bad per se, initiate cooldown for all coordinators
             self._hub.got_throttled()
             if self._has_already_worked:
                 self.logger.exception("Renault API throttled")
