@@ -54,8 +54,9 @@ async def test_curtain3_setup(
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get(entity_id).state == CoverState.OPEN
-    assert hass.states.get(entity_id).attributes[ATTR_CURRENT_POSITION] == 50
+    state = hass.states.get(entity_id)
+    assert state.state == CoverState.OPEN
+    assert state.attributes[ATTR_CURRENT_POSITION] == 50
 
 
 async def test_curtain3_controlling(
@@ -99,8 +100,9 @@ async def test_curtain3_controlling(
         await hass.async_block_till_done()
 
         mock_open.assert_awaited_once()
-        assert hass.states.get(entity_id).state == CoverState.OPEN
-        assert hass.states.get(entity_id).attributes[ATTR_CURRENT_POSITION] == 95
+        state = hass.states.get(entity_id)
+        assert state.state == CoverState.OPEN
+        assert state.attributes[ATTR_CURRENT_POSITION] == 95
 
         # Test close
         manufacturer_data = b"\xcf;Zwu\x0c\x19\x0b\x58\x11D\x006"
@@ -116,8 +118,9 @@ async def test_curtain3_controlling(
         await hass.async_block_till_done()
 
         mock_close.assert_awaited_once()
-        assert hass.states.get(entity_id).state == CoverState.CLOSED
-        assert hass.states.get(entity_id).attributes[ATTR_CURRENT_POSITION] == 12
+        state = hass.states.get(entity_id)
+        assert state.state == CoverState.CLOSED
+        assert state.attributes[ATTR_CURRENT_POSITION] == 12
 
         # Test stop
         manufacturer_data = b"\xcf;Zwu\x0c\x19\x0b\x3c\x11D\x006"
@@ -130,8 +133,9 @@ async def test_curtain3_controlling(
         await hass.async_block_till_done()
 
         mock_stop.assert_awaited_once()
-        assert hass.states.get(entity_id).state == CoverState.OPEN
-        assert hass.states.get(entity_id).attributes[ATTR_CURRENT_POSITION] == 40
+        state = hass.states.get(entity_id)
+        assert state.state == CoverState.OPEN
+        assert state.attributes[ATTR_CURRENT_POSITION] == 40
 
         # Test set position
         manufacturer_data = b"\xcf;Zwu\x0c\x19\x0b(\x11D\x006"
@@ -147,8 +151,9 @@ async def test_curtain3_controlling(
         await hass.async_block_till_done()
 
         mock_set_position.assert_awaited_once()
-        assert hass.states.get(entity_id).state == CoverState.OPEN
-        assert hass.states.get(entity_id).attributes[ATTR_CURRENT_POSITION] == 60
+        state = hass.states.get(entity_id)
+        assert state.state == CoverState.OPEN
+        assert state.attributes[ATTR_CURRENT_POSITION] == 60
 
 
 async def test_blindtilt_setup(
@@ -175,8 +180,9 @@ async def test_blindtilt_setup(
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        assert hass.states.get(entity_id).state == CoverState.OPEN
-        assert hass.states.get(entity_id).attributes[ATTR_CURRENT_TILT_POSITION] == 40
+        state = hass.states.get(entity_id)
+        assert state.state == CoverState.OPEN
+        assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 40
 
 
 async def test_blindtilt_controlling(
@@ -240,10 +246,9 @@ async def test_blindtilt_controlling(
 
             mock_open.assert_awaited_once()
 
-            assert hass.states.get(entity_id).state == CoverState.OPEN
-            assert (
-                hass.states.get(entity_id).attributes[ATTR_CURRENT_TILT_POSITION] == 70
-            )
+            state = hass.states.get(entity_id)
+            assert state.state == CoverState.OPEN
+            assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 70
 
         # Test close
         manufacturer_data = b"\xfbgA`\x98\xe8\x1d%\x0f\x12\x85"
@@ -263,10 +268,9 @@ async def test_blindtilt_controlling(
             await hass.async_block_till_done()
 
             mock_close.assert_awaited_once()
-            assert hass.states.get(entity_id).state == CoverState.CLOSED
-            assert (
-                hass.states.get(entity_id).attributes[ATTR_CURRENT_TILT_POSITION] == 15
-            )
+            state = hass.states.get(entity_id)
+            assert state.state == CoverState.CLOSED
+            assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 15
 
         # Test stop
         manufacturer_data = b"\xfbgA`\x98\xe8\x1d%\n\x12\x85"
@@ -286,10 +290,9 @@ async def test_blindtilt_controlling(
             await hass.async_block_till_done()
 
             mock_stop.assert_awaited_once()
-            assert hass.states.get(entity_id).state == CoverState.CLOSED
-            assert (
-                hass.states.get(entity_id).attributes[ATTR_CURRENT_TILT_POSITION] == 10
-            )
+            state = hass.states.get(entity_id)
+            assert state.state == CoverState.CLOSED
+            assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 10
 
         # Test set position
         manufacturer_data = b"\xfbgA`\x98\xe8\x1d%2\x12\x85"
@@ -309,7 +312,6 @@ async def test_blindtilt_controlling(
             await hass.async_block_till_done()
 
             mock_set_position.assert_awaited_once()
-            assert hass.states.get(entity_id).state == CoverState.OPEN
-            assert (
-                hass.states.get(entity_id).attributes[ATTR_CURRENT_TILT_POSITION] == 50
-            )
+            state = hass.states.get(entity_id)
+            assert state.state == CoverState.OPEN
+            assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 50
