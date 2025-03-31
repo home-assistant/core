@@ -16,17 +16,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_time_change
 
-from .const import (
-    ATTR_ALARM_ID,
-    ATTR_DAYS_OF_WEEK,
-    ATTR_REPEAT,
-    ATTR_SCHEDULED_TODAY,
-    ATTR_TIME,
-    ATTR_URL,
-    ATTR_VOLUME,
-    SIGNAL_ALARM_DISCOVERED,
-    SIGNAL_PLAYER_DISCOVERED,
-)
+from .const import ATTR_ALARM_ID, SIGNAL_ALARM_DISCOVERED, SIGNAL_PLAYER_DISCOVERED
 from .coordinator import SqueezeBoxPlayerUpdateCoordinator
 from .entity import SqueezeboxEntity
 
@@ -144,15 +134,7 @@ class SqueezeBoxAlarmEntity(SqueezeboxEntity, SwitchEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return attributes of Squeezebox alarm switch."""
-        return {
-            ATTR_ALARM_ID: str(self.alarm["id"]),
-            ATTR_TIME: str(self.alarm["time"]),
-            ATTR_REPEAT: str(self.alarm["repeat"]),
-            ATTR_DAYS_OF_WEEK: str(self.alarm["dow"]),
-            ATTR_VOLUME: self.alarm["volume"] / 100,
-            ATTR_URL: self.alarm["url"],
-            ATTR_SCHEDULED_TODAY: self._is_today,
-        }
+        return {ATTR_ALARM_ID: str(self.alarm["id"])}
 
     @property
     def is_on(self) -> bool:

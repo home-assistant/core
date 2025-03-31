@@ -37,14 +37,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'alarm_id': '1',
-      'dow': '[0, 1, 2, 3, 4, 5, 6]',
       'friendly_name': 'Test Player Alarm (1)',
       'icon': 'mdi:alarm',
-      'repeat': 'False',
-      'scheduled_today': True,
-      'time': '07:00',
-      'url': 'CURRENT_PLAYLIST',
-      'volume': 0.5,
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_player_alarm_1',

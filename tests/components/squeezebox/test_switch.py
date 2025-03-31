@@ -1,15 +1,12 @@
 """Tests for the Squeezebox alarm switch platform."""
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.squeezebox.const import (
-    ATTR_SCHEDULED_TODAY,
-    SENSOR_UPDATE_INTERVAL,
-)
+from homeassistant.components.squeezebox.const import SENSOR_UPDATE_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
 
@@ -50,32 +47,6 @@ async def test_switch_state(
     assert (
         hass.states.get(f"switch.test_player_alarm_{TEST_ALARM_ID}").state
         == "unavailable"
-    )
-
-
-async def test_daily_update(
-    hass: HomeAssistant,
-    mock_alarms_player: MagicMock,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test daily update of the switch."""
-    assert (
-        hass.states.get(f"switch.test_player_alarm_{TEST_ALARM_ID}").attributes[
-            ATTR_SCHEDULED_TODAY
-        ]
-        is True
-    )
-    tomorrow = (datetime.today().weekday() + 1) % 7
-    mock_alarms_player.alarms[0]["dow"].remove(tomorrow)
-
-    freezer.tick(timedelta(days=1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    assert (
-        hass.states.get(f"switch.test_player_alarm_{TEST_ALARM_ID}").attributes[
-            ATTR_SCHEDULED_TODAY
-        ]
-        is False
     )
 
 
