@@ -99,7 +99,7 @@
           "state": {
             "none": "None",
             "home": "[%key:common::state::home%]",
-            "away": "[%key:common::state::not_home%]",            
+            "away": "[%key:common::state::not_home%]",
             "activity": "Activity",
             "boost": "Boost",
             "comfort": "Comfort",
