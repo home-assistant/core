@@ -233,7 +233,7 @@ class AssistSatelliteEntity(entity.Entity):
         start_media_id: str | None = None,
         extra_system_prompt: str | None = None,
         preannounce: bool = True,
-        preannounce_media_id: str | None = PREANNOUNCE_URL,
+        preannounce_media_id: str = PREANNOUNCE_URL,
     ) -> None:
         """Start a conversation from the satellite.
 
