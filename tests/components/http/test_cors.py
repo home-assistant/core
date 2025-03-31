@@ -18,9 +18,8 @@ from aiohttp.test_utils import TestClient
 import pytest
 
 from homeassistant.components.http.cors import setup_cors
-from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.http import KEY_ALLOW_CONFIGURED_CORS
+from homeassistant.helpers.http import KEY_ALLOW_CONFIGURED_CORS, HomeAssistantView
 from homeassistant.setup import async_setup_component
 
 from . import HTTP_HEADER_HA_AUTH
