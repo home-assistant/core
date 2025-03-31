@@ -25,6 +25,35 @@
       "status": {
         "name": "Status"
       }
+    },
+    "sensor": {
+      "cpu_utilization": {
+        "name": "CPU utilization"
+      },
+      "cpu_limit": {
+        "name": "CPU limit"
+      },
+      "memory_usage": {
+        "name": "Memory usage"
+      },
+      "memory_limit": {
+        "name": "Memory limit"
+      },
+      "disk_usage": {
+        "name": "Disk usage"
+      },
+      "disk_limit": {
+        "name": "Disk limit"
+      },
+      "network_inbound": {
+        "name": "Network inbound"
+      },
+      "network_outbound": {
+        "name": "Network outbound"
+      },
+      "uptime": {
+        "name": "Uptime"
+      }
     }
   }
 }
