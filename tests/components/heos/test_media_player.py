@@ -27,11 +27,13 @@ from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
 from homeassistant.components.heos.const import (
+    ATTR_QUEUE_IDS,
     DOMAIN,
     SERVICE_GET_QUEUE,
     SERVICE_GROUP_VOLUME_DOWN,
     SERVICE_GROUP_VOLUME_SET,
     SERVICE_GROUP_VOLUME_UP,
+    SERVICE_REMOVE_FROM_QUEUE,
 )
 from homeassistant.components.media_player import (
     ATTR_GROUP_MEMBERS,
@@ -1767,3 +1769,18 @@ async def test_get_queue(
     )
     controller.player_get_queue.assert_called_once_with(1, None, None)
     assert response == snapshot
+
+
+async def test_remove_from_queue(
+    hass: HomeAssistant, config_entry: MockConfigEntry, controller: MockHeos
+) -> None:
+    """Test the get queue service."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_REMOVE_FROM_QUEUE,
+        {ATTR_ENTITY_ID: "media_player.test_player", ATTR_QUEUE_IDS: [1, "2"]},
+        blocking=True,
+    )
+    controller.player_remove_from_queue.assert_called_once_with(1, [1, 2])

@@ -650,7 +650,14 @@ class DefaultAgent(ConversationEntity):
 
                 if (
                     (maybe_result is None)  # first result
-                    or (num_matched_entities > best_num_matched_entities)
+                    or (
+                        # More literal text matched
+                        result.text_chunks_matched > maybe_result.text_chunks_matched
+                    )
+                    or (
+                        # More entities matched
+                        num_matched_entities > best_num_matched_entities
+                    )
                     or (
                         # Fewer unmatched entities
                         (num_matched_entities == best_num_matched_entities)
@@ -661,16 +668,6 @@ class DefaultAgent(ConversationEntity):
                         (num_matched_entities == best_num_matched_entities)
                         and (num_unmatched_entities == best_num_unmatched_entities)
                         and (num_unmatched_ranges > best_num_unmatched_ranges)
-                    )
-                    or (
-                        # More literal text matched
-                        (num_matched_entities == best_num_matched_entities)
-                        and (num_unmatched_entities == best_num_unmatched_entities)
-                        and (num_unmatched_ranges == best_num_unmatched_ranges)
-                        and (
-                            result.text_chunks_matched
-                            > maybe_result.text_chunks_matched
-                        )
                     )
                     or (
                         # Prefer match failures with entities
