@@ -3,6 +3,7 @@
 from collections.abc import (
     AsyncGenerator,
     AsyncIterator,
+    Buffer,
     Callable,
     Coroutine,
     Generator,
@@ -13,7 +14,7 @@ from datetime import datetime
 from io import StringIO
 import os
 from pathlib import PurePath
-from typing import Any
+from typing import Any, cast
 from unittest.mock import ANY, AsyncMock, Mock, patch
 from uuid import UUID
 
@@ -341,7 +342,7 @@ def mock_backup_agent(
 
     async def delete_backup(backup_id: str, **kwargs: Any) -> None:
         """Mock delete."""
-        get_backup(backup_id)
+        await get_backup(backup_id)
 
     async def download_backup(backup_id: str, **kwargs: Any) -> AsyncIterator[bytes]:
         """Mock download."""
@@ -349,7 +350,7 @@ def mock_backup_agent(
 
     async def get_backup(backup_id: str, **kwargs: Any) -> AgentBackup:
         """Get a backup."""
-        backup = next((b for b in backups if b.backup_id == backup_id), None)
+        backup = next((b for b in _backups if b.backup_id == backup_id), None)
         if backup is None:
             raise BackupNotFound
         return backup
@@ -361,15 +362,15 @@ def mock_backup_agent(
         **kwargs: Any,
     ) -> None:
         """Upload a backup."""
-        backups.append(backup)
+        _backups.append(backup)
         backup_stream = await open_stream()
         backup_data = bytearray()
         async for chunk in backup_stream:
             backup_data += chunk
         backups_data[backup.backup_id] = backup_data
 
-    backups = backups or []
-    backups_data: dict[str, bytes] = {}
+    _backups = backups or []
+    backups_data: dict[str, Buffer] = {}
     mock_agent = Mock(spec=BackupAgent)
     mock_agent.domain = domain
     mock_agent.name = name
@@ -401,7 +402,7 @@ async def _setup_backup_platform(
     platform: BackupAgentPlatformProtocol,
 ) -> None:
     """Set up a mock domain."""
-    mock_platform(hass, f"{domain}.backup", platform)
+    mock_platform(hass, f"{domain}.backup", cast(Mock, platform))
     assert await async_setup_component(hass, domain, {})
     await hass.async_block_till_done()
 
@@ -423,7 +424,7 @@ async def _setup_backup_platform(
                         name="test",
                         read_only=False,
                         state=supervisor_mounts.MountState.ACTIVE,
-                        user_path="test",
+                        user_path=PurePath("test"),
                         usage=supervisor_mounts.MountUsage.BACKUP,
                         server="test",
                         type=supervisor_mounts.MountType.CIFS,
@@ -441,7 +442,7 @@ async def _setup_backup_platform(
                         name="test",
                         read_only=False,
                         state=supervisor_mounts.MountState.ACTIVE,
-                        user_path="test",
+                        user_path=PurePath("test"),
                         usage=supervisor_mounts.MountUsage.MEDIA,
                         server="test",
                         type=supervisor_mounts.MountType.CIFS,
@@ -854,7 +855,7 @@ DEFAULT_BACKUP_OPTIONS = supervisor_backups.PartialBackupOptions(
         "with_automatic_settings": False,
     },
     filename=PurePath("Test_2025-01-30_05.42_12345678.tar"),
-    folders={"ssl"},
+    folders={supervisor_backups.Folder("ssl")},
     homeassistant_exclude_database=False,
     homeassistant=True,
     location=[LOCATION_LOCAL_STORAGE],
@@ -877,7 +878,7 @@ DEFAULT_BACKUP_OPTIONS = supervisor_backups.PartialBackupOptions(
         ),
         (
             {"include_all_addons": True},
-            replace(DEFAULT_BACKUP_OPTIONS, addons="ALL"),
+            replace(DEFAULT_BACKUP_OPTIONS, addons=supervisor_backups.AddonSet("ALL")),
         ),
         (
             {"include_database": False},
@@ -885,7 +886,14 @@ DEFAULT_BACKUP_OPTIONS = supervisor_backups.PartialBackupOptions(
         ),
         (
             {"include_folders": ["media", "share"]},
-            replace(DEFAULT_BACKUP_OPTIONS, folders={"media", "share", "ssl"}),
+            replace(
+                DEFAULT_BACKUP_OPTIONS,
+                folders={
+                    supervisor_backups.Folder("media"),
+                    supervisor_backups.Folder("share"),
+                    supervisor_backups.Folder("ssl"),
+                },
+            ),
         ),
         (
             {
@@ -895,7 +903,7 @@ DEFAULT_BACKUP_OPTIONS = supervisor_backups.PartialBackupOptions(
             },
             replace(
                 DEFAULT_BACKUP_OPTIONS,
-                folders={"media"},
+                folders={supervisor_backups.Folder("media")},
                 homeassistant=False,
                 homeassistant_exclude_database=True,
             ),
@@ -1251,11 +1259,11 @@ async def test_reader_writer_create_per_agent_encryption(
     hass_ws_client: WebSocketGenerator,
     freezer: FrozenDateTimeFactory,
     supervisor_client: AsyncMock,
-    commands: dict[str, Any],
+    commands: list[dict[str, Any]],
     password: str | None,
     agent_ids: list[str],
     password_sent_to_supervisor: str | None,
-    create_locations: list[str | None],
+    create_locations: list[str],
     create_protected: bool,
     upload_locations: list[str | None],
 ) -> None:
@@ -1270,7 +1278,7 @@ async def test_reader_writer_create_per_agent_encryption(
                 name=f"share{i}",
                 read_only=False,
                 state=supervisor_mounts.MountState.ACTIVE,
-                user_path=f"share{i}",
+                user_path=PurePath(f"share{i}"),
                 usage=supervisor_mounts.MountUsage.BACKUP,
                 server=f"share{i}",
                 type=supervisor_mounts.MountType.CIFS,
@@ -1996,7 +2004,7 @@ async def test_reader_writer_restore_remote_backup(
         homeassistant_version="2024.12.0",
         name="Test",
         protected=False,
-        size=0.0,
+        size=0,
     )
     remote_agent = mock_backup_agent("remote", backups=[test_backup])
     await _setup_backup_platform(
@@ -2626,7 +2634,7 @@ async def test_config_load_config_info(
     freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
     hass_storage: dict[str, Any],
-    storage_data: dict[str, Any] | None,
+    storage_data: dict[str, Any],
 ) -> None:
     """Test loading stored backup config and reading it via config/info."""
     client = await hass_ws_client(hass)

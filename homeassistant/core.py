@@ -1935,13 +1935,14 @@ class State:
             # to avoid callers outside of this module
             # from misusing it by mistake.
             context = state_context._as_dict  # noqa: SLF001
+        last_changed_timestamp = self.last_changed_timestamp
         compressed_state: CompressedState = {
             COMPRESSED_STATE_STATE: self.state,
             COMPRESSED_STATE_ATTRIBUTES: self.attributes,
             COMPRESSED_STATE_CONTEXT: context,
-            COMPRESSED_STATE_LAST_CHANGED: self.last_changed_timestamp,
+            COMPRESSED_STATE_LAST_CHANGED: last_changed_timestamp,
         }
-        if self.last_changed != self.last_updated:
+        if last_changed_timestamp != self.last_updated_timestamp:
             compressed_state[COMPRESSED_STATE_LAST_UPDATED] = (
                 self.last_updated_timestamp
             )

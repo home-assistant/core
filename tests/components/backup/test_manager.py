@@ -68,10 +68,17 @@ from tests.typing import ClientSessionGenerator, WebSocketGenerator
 _EXPECTED_FILES = [
     "test.txt",
     ".storage",
+    "another_subdir",
+    "another_subdir/backups",
+    "another_subdir/backups/backup.tar",
+    "another_subdir/backups/not_backup",
+    "another_subdir/tts",
+    "another_subdir/tts/voice.mp3",
     "backups",
     "backups/not_backup",
     "tmp_backups",
     "tmp_backups/not_backup",
+    "tts",
 ]
 _EXPECTED_FILES_WITH_DATABASE = {
     True: [*_EXPECTED_FILES, "home-assistant_v2.db"],

@@ -362,9 +362,9 @@
       "ess_state": {
         "name": "Battery state",
         "state": {
-          "charge": "Charging",
-          "discharge": "Discharging",
-          "standby": "Standby"
+          "charge": "[%key:common::state::charging%]",
+          "discharge": "[%key:common::state::discharging%]",
+          "standby": "[%key:common::state::standby%]"
         }
       },
       "ess_discharge_today": {
@@ -412,7 +412,7 @@
       "photovoltaic_status": {
         "name": "PV state",
         "state": {
-          "ready": "Standby",
+          "ready": "[%key:common::state::standby%]",
           "production": "Producing"
         }
       },

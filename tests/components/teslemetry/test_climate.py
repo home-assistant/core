@@ -2,10 +2,10 @@
 
 from unittest.mock import AsyncMock, patch
 
-from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.exceptions import InvalidCommand
+from teslemetry_stream import Signal
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -24,15 +24,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
-from . import assert_entities, setup_platform
+from . import assert_entities, reload_platform, setup_platform
 from .const import (
     COMMAND_ERRORS,
     COMMAND_IGNORED_REASON,
     METADATA_NOSCOPE,
     VEHICLE_DATA_ALT,
-    VEHICLE_DATA_ASLEEP,
-    WAKE_UP_ASLEEP,
-    WAKE_UP_ONLINE,
 )
 
 
@@ -41,6 +38,7 @@ async def test_climate(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
+    mock_legacy: AsyncMock,
 ) -> None:
     """Tests that the climate entity is correct."""
 
@@ -195,6 +193,7 @@ async def test_climate_alt(
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     mock_vehicle_data: AsyncMock,
+    mock_legacy: AsyncMock,
 ) -> None:
     """Tests that the climate entity is correct."""
 
@@ -211,7 +210,7 @@ async def test_invalid_error(hass: HomeAssistant, snapshot: SnapshotAssertion) -
 
     with (
         patch(
-            "homeassistant.components.teslemetry.VehicleSpecific.auto_conditioning_start",
+            "tesla_fleet_api.teslemetry.Vehicle.auto_conditioning_start",
             side_effect=InvalidCommand,
         ) as mock_on,
         pytest.raises(HomeAssistantError) as error,
@@ -235,7 +234,7 @@ async def test_errors(hass: HomeAssistant, response: str) -> None:
 
     with (
         patch(
-            "homeassistant.components.teslemetry.VehicleSpecific.auto_conditioning_start",
+            "tesla_fleet_api.teslemetry.Vehicle.auto_conditioning_start",
             return_value=response,
         ) as mock_on,
         pytest.raises(HomeAssistantError),
@@ -257,7 +256,7 @@ async def test_ignored_error(
     await setup_platform(hass, [Platform.CLIMATE])
     entity_id = "climate.test_climate"
     with patch(
-        "homeassistant.components.teslemetry.VehicleSpecific.auto_conditioning_start",
+        "tesla_fleet_api.teslemetry.Vehicle.auto_conditioning_start",
         return_value=COMMAND_IGNORED_REASON,
     ) as mock_on:
         await hass.services.async_call(
@@ -269,71 +268,12 @@ async def test_ignored_error(
         mock_on.assert_called_once()
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_asleep_or_offline(
-    hass: HomeAssistant,
-    mock_vehicle_data: AsyncMock,
-    mock_wake_up: AsyncMock,
-    mock_vehicle: AsyncMock,
-    freezer: FrozenDateTimeFactory,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Tests asleep is handled."""
-
-    mock_vehicle_data.return_value = VEHICLE_DATA_ASLEEP
-    await setup_platform(hass, [Platform.CLIMATE])
-    entity_id = "climate.test_climate"
-
-    # Run a command but fail trying to wake up the vehicle
-    mock_wake_up.side_effect = InvalidCommand
-    with pytest.raises(HomeAssistantError) as error:
-        await hass.services.async_call(
-            CLIMATE_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: [entity_id]},
-            blocking=True,
-        )
-    assert str(error.value) == snapshot(name="InvalidCommand")
-    mock_wake_up.assert_called_once()
-
-    mock_wake_up.side_effect = None
-    mock_wake_up.reset_mock()
-
-    # Run a command but timeout trying to wake up the vehicle
-    mock_wake_up.return_value = WAKE_UP_ASLEEP
-    mock_vehicle.return_value = WAKE_UP_ASLEEP
-    with (
-        patch("homeassistant.components.teslemetry.helpers.asyncio.sleep"),
-        pytest.raises(HomeAssistantError) as error,
-    ):
-        await hass.services.async_call(
-            CLIMATE_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: [entity_id]},
-            blocking=True,
-        )
-    assert str(error.value) == snapshot(name="HomeAssistantError")
-    mock_wake_up.assert_called_once()
-    mock_vehicle.assert_called()
-
-    mock_wake_up.reset_mock()
-    mock_vehicle.reset_mock()
-    mock_wake_up.return_value = WAKE_UP_ONLINE
-    mock_vehicle.return_value = WAKE_UP_ONLINE
-
-    # Run a command and wake up the vehicle immediately
-    await hass.services.async_call(
-        CLIMATE_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: [entity_id]}, blocking=True
-    )
-    await hass.async_block_till_done()
-    mock_wake_up.assert_called_once()
-
-
 async def test_climate_noscope(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     mock_metadata: AsyncMock,
+    mock_legacy: AsyncMock,
 ) -> None:
     """Tests that the climate entity is correct."""
     mock_metadata.return_value = METADATA_NOSCOPE
@@ -363,3 +303,47 @@ async def test_climate_noscope(
             {ATTR_ENTITY_ID: [entity_id], ATTR_TEMPERATURE: 20},
             blocking=True,
         )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_select_streaming(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    mock_vehicle_data: AsyncMock,
+    mock_add_listener: AsyncMock,
+) -> None:
+    """Tests that the select entities with streaming are correct."""
+
+    entry = await setup_platform(hass, [Platform.CLIMATE])
+
+    # Stream update
+    mock_add_listener.send(
+        {
+            "vin": VEHICLE_DATA_ALT["response"]["vin"],
+            "data": {
+                Signal.INSIDE_TEMP: 26,
+                Signal.HVAC_AC_ENABLED: True,
+                Signal.CLIMATE_KEEPER_MODE: "ClimateKeeperModeOn",
+                Signal.RIGHT_HAND_DRIVE: True,
+                Signal.HVAC_LEFT_TEMPERATURE_REQUEST: 22,
+                Signal.HVAC_RIGHT_TEMPERATURE_REQUEST: 21,
+                Signal.CABIN_OVERHEAT_PROTECTION_MODE: "CabinOverheatProtectionModeStateOn",
+                Signal.CABIN_OVERHEAT_PROTECTION_TEMPERATURE_LIMIT: 35,
+            },
+            "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("climate.test_climate") == snapshot(
+        name="climate.test_climate LHD"
+    )
+
+    await reload_platform(hass, entry, [Platform.CLIMATE])
+
+    # Assert the entities restored their values
+    for entity_id in (
+        "climate.test_climate",
+        "climate.test_cabin_overheat_protection",
+    ):
+        assert hass.states.get(entity_id) == snapshot(name=entity_id)
