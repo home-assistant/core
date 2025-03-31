@@ -470,6 +470,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             ),
         },
         "async_internal_search_media",
+        [MediaPlayerEntityFeature.SEARCH_MEDIA],
         supports_response=SupportsResponse.ONLY,
     )
     component.async_register_entity_service(
