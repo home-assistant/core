@@ -25,7 +25,6 @@ from .message import (
 from .zone import LeaZone
 from .zone_registry import ZoneRegistry
 
-# IP_ADDRESS = "192.168.0.250"
 PORT = "4321"
 
 DISCOVERY_INTERVAL = 10
