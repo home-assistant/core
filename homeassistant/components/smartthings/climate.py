@@ -281,7 +281,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
         return [
             state
             for mode in supported_thermostat_modes
-            if (state := AC_MODE_TO_STATE.get(mode)) is not None
+            if (state := MODE_TO_STATE.get(mode)) is not None
         ]
 
     @property
