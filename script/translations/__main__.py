@@ -5,7 +5,7 @@ import importlib
 from pathlib import Path
 import sys
 
-from script.translations import error, util
+from . import error, util
 
 
 def get_arguments() -> argparse.Namespace:
