@@ -174,6 +174,11 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new operation mode."""
+        if self.data.lock:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="change_hvac_while_lock_enabled",
+            )
         if self.data.holiday_active or self.data.summer_active:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
