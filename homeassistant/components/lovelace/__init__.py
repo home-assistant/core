@@ -284,7 +284,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     ).async_setup(hass)
 
     def create_map_dashboard() -> None:
-        hass.async_create_task(_create_map_dashboard(hass))
+        hass.async_create_task(_create_map_dashboard(hass, dashboards_collection))
 
     if not onboarding.async_is_onboarded(hass):
         onboarding.async_add_listener(hass, create_map_dashboard)
@@ -332,16 +332,15 @@ def _register_panel(
     frontend.async_register_built_in_panel(hass, DOMAIN, **kwargs)
 
 
-async def _create_map_dashboard(hass: HomeAssistant) -> None:
+async def _create_map_dashboard(
+    hass: HomeAssistant, dashboards_collection: dashboard.DashboardsCollection
+) -> None:
     """Create a map dashboard."""
     translations = await async_get_translations(
         hass, hass.config.language, "dashboard", {onboarding.DOMAIN}
     )
     title = translations["component.onboarding.dashboard.map.title"]
 
-    dashboards_collection: dashboard.DashboardsCollection = hass.data[DOMAIN][
-        "dashboards_collection"
-    ]
     await dashboards_collection.async_create_item(
         {
             CONF_ALLOW_SINGLE_WORD: True,
@@ -351,5 +350,5 @@ async def _create_map_dashboard(hass: HomeAssistant) -> None:
         }
     )
 
-    map_store: dashboard.LovelaceStorage = hass.data[DOMAIN]["dashboards"]["map"]
+    map_store = hass.data[LOVELACE_DATA].dashboards["map"]
     await map_store.async_save({"strategy": {"type": "map"}})
