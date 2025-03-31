@@ -38,16 +38,6 @@ class ExampleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry):
-    """Setup."""  # noqa: D401
-
-    ip_address = hass.data["ip_address"]
-    hass.data[DOMAIN] = {"ip": ip_address}
-
-    _LOGGER.log(logging.INFO, "async_setup_entry")
-    _LOGGER.log(logging.INFO, "ip_address: %s", str(ip_address))
-
-
 async def _async_has_devices(hass: HomeAssistant) -> bool:
     """Return if there are devices that can be discovered."""
 

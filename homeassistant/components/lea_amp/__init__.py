@@ -11,6 +11,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
+from .const import DOMAIN
 from .coordinator import LEAAMPApiCoordinator, LEAAMPConfigEntry
 
 PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER]
@@ -22,6 +23,13 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: LEAAMPConfigEntry) -> bool:
     """Set up LEA AMP local from a config entry."""
+
+    ip_address = hass.data["ip_address"]
+    hass.data[DOMAIN] = {"ip": ip_address}
+
+    _LOGGER.log(logging.INFO, "async_setup_entry")
+    _LOGGER.log(logging.INFO, "ip_address: %s", str(ip_address))
+
     coordinator = LEAAMPApiCoordinator(hass, entry)
 
     async def await_cleanup():
