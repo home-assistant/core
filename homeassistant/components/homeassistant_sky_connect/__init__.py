@@ -13,7 +13,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DESCRIPTION, DEVICE, DOMAIN, FIRMWARE, FIRMWARE_VERSION, PRODUCT
+from .const import DESCRIPTION, DEVICE, DOMAIN, FIRMWARE, FIRMWARE_VERSION, PRODUCT, VID
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,6 +22,12 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the ZBT-1 integration."""
+
+    for entry in list(hass.config_entries.async_entries(DOMAIN)):
+        # Old SkyConnect entries do not contain enough information to set up or migrate
+        if VID not in entry.data:
+            _LOGGER.debug("Removing old SkyConnect entry %s", entry.entry_id)
+            await hass.config_entries.async_remove(entry.entry_id)
 
     @callback
     def async_port_event_callback(

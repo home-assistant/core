@@ -187,3 +187,64 @@ async def test_usb_device_reactivity(hass: HomeAssistant) -> None:
         # The integration has reloaded and is now in a failed state
         await hass.async_block_till_done(wait_background_tasks=True)
         assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_bad_config_entry_deletion(hass: HomeAssistant) -> None:
+    """Test deleting a config entry with bad data."""
+
+    # Newly-added ZBT-1
+    new_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="some_unique_id-9e2adbd75b8beb119fe564a0f320645d",
+        data={
+            "device": "/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_9e2adbd75b8beb119fe564a0f320645d-if00-port0",
+            "vid": "10C4",
+            "pid": "EA60",
+            "serial_number": "9e2adbd75b8beb119fe564a0f320645d",
+            "manufacturer": "Nabu Casa",
+            "product": "SkyConnect v1.0",
+            "firmware": "ezsp",
+            "firmware_version": "7.4.4.0 (build 123)",
+        },
+        version=1,
+        minor_version=3,
+    )
+
+    new_config_entry.add_to_hass(hass)
+
+    # Old config entry, without firmware info
+    old_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="some_unique_id-3c0ed67c628beb11b1cd64a0f320645d",
+        data={
+            "device": "/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_3c0ed67c628beb11b1cd64a0f320645d-if00-port0",
+            "vid": "10C4",
+            "pid": "EA60",
+            "serial_number": "3c0ed67c628beb11b1cd64a0f320645d",
+            "manufacturer": "Nabu Casa",
+            "description": "SkyConnect v1.0",
+        },
+        version=1,
+        minor_version=1,
+    )
+
+    old_config_entry.add_to_hass(hass)
+
+    # Bad config entry, missing most keys
+    bad_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="some_unique_id-9f6c4bba657cc9a4f0cea48bc5948562",
+        data={
+            "device": "/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_9f6c4bba657cc9a4f0cea48bc5948562-if00-port0",
+        },
+        version=1,
+        minor_version=2,
+    )
+
+    bad_config_entry.add_to_hass(hass)
+
+    await async_setup_component(hass, "homeassistant_sky_connect", {})
+
+    assert hass.config_entries.async_get_entry(new_config_entry.entry_id) is not None
+    assert hass.config_entries.async_get_entry(old_config_entry.entry_id) is not None
+    assert hass.config_entries.async_get_entry(bad_config_entry.entry_id) is None
