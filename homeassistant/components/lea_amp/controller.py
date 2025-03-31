@@ -225,7 +225,7 @@ class LeaController:
         """Turn on off."""
         self._send_message(OnOffMessage(zone_id, status))
 
-    def set_volume(self, zone_id: str, volume: int) -> None:
+    async def set_volume(self, zone_id: str, volume: int) -> None:
         """Set Volume."""
         self._send_message(setVolumeMessage(zone_id, volume))
 
