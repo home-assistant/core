@@ -258,7 +258,7 @@
       "operational_state": {
         "name": "Operational state",
         "state": {
-          "stopped": "Stopped",
+          "stopped": "[%key:common::state::stopped%]",
           "running": "Running",
           "paused": "[%key:common::state::paused%]",
           "error": "Error",
