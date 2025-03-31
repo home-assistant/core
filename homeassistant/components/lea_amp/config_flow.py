@@ -29,7 +29,7 @@ class ExampleConfigFlow(data_entry_flow.FlowHandler):
             vol.Required("ip_address"): str,
         }
 
-        return self.async_show_form(step_id="init", data_schema=vol.Schema(data_schema))
+        return self.async_show_form(step_id="user", data_schema=vol.Schema(data_schema))
 
 
 async def _async_has_devices(hass: HomeAssistant) -> bool:
