@@ -369,9 +369,9 @@ async def test_smoke_co_notification_sensors(
     # Get a fresh state after the sleep
     state = hass.states.get(smoke_sensor)
     assert state is not None, "Smoke sensor state should not be None"
-    assert (
-        state.state == STATE_ON
-    ), f"Expected smoke sensor state to be 'on', got '{state.state}'"
+    assert state.state == STATE_ON, (
+        f"Expected smoke sensor state to be 'on', got '{state.state}'"
+    )
 
     # Test state updates for CO alarm
     event = Event(
@@ -398,9 +398,9 @@ async def test_smoke_co_notification_sensors(
     # Get a fresh state after the sleep
     state = hass.states.get(co_sensor)
     assert state is not None, "CO sensor state should not be None"
-    assert (
-        state.state == STATE_ON
-    ), f"Expected CO sensor state to be 'on', got '{state.state}'"
+    assert state.state == STATE_ON, (
+        f"Expected CO sensor state to be 'on', got '{state.state}'"
+    )
 
     # Test diagnostic state updates for smoke alarm
     event = Event(
@@ -427,6 +427,6 @@ async def test_smoke_co_notification_sensors(
     # Get a fresh state after the sleep
     state = hass.states.get(smoke_diagnostic)
     assert state is not None, "Smoke diagnostic state should not be None"
-    assert (
-        state.state == STATE_ON
-    ), f"Expected smoke diagnostic state to be 'on', got '{state.state}'"
+    assert state.state == STATE_ON, (
+        f"Expected smoke diagnostic state to be 'on', got '{state.state}'"
+    )
