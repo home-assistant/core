@@ -365,6 +365,39 @@
     'via_device_id': None,
   })
 # ---
+# name: test_devices[da_ac_rac_000003]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': 'ARTIK051',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        'c76d6f38-1b7f-13dd-37b5-db18d5272783',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'Samsung Electronics',
+    'model': 'ARTIK051_PRAC_20K',
+    'model_id': None,
+    'name': 'Office AirFree',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': 'ARTIK051_PRAC_20K_11230313',
+    'via_device_id': None,
+  })
+# ---
 # name: test_devices[da_ac_rac_01001]
   DeviceRegistryEntrySnapshot({
     'area_id': 'theater',

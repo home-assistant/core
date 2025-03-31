@@ -466,12 +466,14 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
             Capability.DEMAND_RESPONSE_LOAD_CONTROL,
             Attribute.DEMAND_RESPONSE_LOAD_CONTROL_STATUS,
         )
-        return {
-            "drlc_status_duration": drlc_status["duration"],
-            "drlc_status_level": drlc_status["drlcLevel"],
-            "drlc_status_start": drlc_status["start"],
-            "drlc_status_override": drlc_status["override"],
-        }
+        res = {}
+        for key in ("duration", "start", "override", "drlcLevel"):
+            if key in drlc_status:
+                dict_key = {"drlcLevel": "drlc_status_level"}.get(
+                    key, f"drlc_status_{key}"
+                )
+                res[dict_key] = drlc_status[key]
+        return res
 
     @property
     def fan_mode(self) -> str:
