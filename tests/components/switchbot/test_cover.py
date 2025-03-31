@@ -203,20 +203,23 @@ async def test_blindtilt_controlling(
     }
     with (
         patch(
-            "switchbot.SwitchbotBlindTilt.get_basic_info",
+            "homeassistant.components.switchbot.cover.switchbot.SwitchbotBlindTilt.get_basic_info",
             new=AsyncMock(return_value=info),
         ),
         patch(
-            "switchbot.SwitchbotBlindTilt.open", new=AsyncMock(return_value=True)
+            "homeassistant.components.switchbot.cover.switchbot.SwitchbotBlindTilt.open",
+            new=AsyncMock(return_value=True),
         ) as mock_open,
         patch(
-            "switchbot.SwitchbotBlindTilt.close", new=AsyncMock(return_value=True)
+            "homeassistant.components.switchbot.cover.switchbot.SwitchbotBlindTilt.close",
+            new=AsyncMock(return_value=True),
         ) as mock_close,
         patch(
-            "switchbot.SwitchbotBlindTilt.stop", new=AsyncMock(return_value=True)
+            "homeassistant.components.switchbot.cover.switchbot.SwitchbotBlindTilt.stop",
+            new=AsyncMock(return_value=True),
         ) as mock_stop,
         patch(
-            "switchbot.SwitchbotBlindTilt.set_position",
+            "homeassistant.components.switchbot.cover.switchbot.SwitchbotBlindTilt.set_position",
             new=AsyncMock(return_value=True),
         ) as mock_set_position,
     ):
@@ -236,7 +239,7 @@ async def test_blindtilt_controlling(
             blocking=True,
         )
         with patch(
-            "switchbot.SwitchbotBlindTilt.get_basic_info",
+            "homeassistant.components.switchbot.cover.switchbot.SwitchbotBlindTilt.get_basic_info",
             return_value=info,
         ):
             inject_bluetooth_service_info(
@@ -259,7 +262,7 @@ async def test_blindtilt_controlling(
             blocking=True,
         )
         with patch(
-            "switchbot.SwitchbotBlindTilt.get_basic_info",
+            "homeassistant.components.switchbot.cover.switchbot.SwitchbotBlindTilt.get_basic_info",
             return_value=info,
         ):
             inject_bluetooth_service_info(
@@ -281,7 +284,7 @@ async def test_blindtilt_controlling(
             blocking=True,
         )
         with patch(
-            "switchbot.SwitchbotBlindTilt.get_basic_info",
+            "homeassistant.components.switchbot.cover.switchbot.SwitchbotBlindTilt.get_basic_info",
             return_value=info,
         ):
             inject_bluetooth_service_info(
@@ -303,7 +306,7 @@ async def test_blindtilt_controlling(
             blocking=True,
         )
         with patch(
-            "switchbot.SwitchbotBlindTilt.get_basic_info",
+            "homeassistant.components.switchbot.cover.switchbot.SwitchbotBlindTilt.get_basic_info",
             return_value=info,
         ):
             inject_bluetooth_service_info(
