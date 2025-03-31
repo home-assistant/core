@@ -9,7 +9,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .api import PterodactylCommand, PterodactylConnectionError
+from .api import (
+    PterodactylAuthorizationError,
+    PterodactylCommand,
+    PterodactylConnectionError,
+)
 from .coordinator import PterodactylConfigEntry, PterodactylCoordinator
 from .entity import PterodactylEntity
 
@@ -94,5 +98,9 @@ class PterodactylButtonEntity(PterodactylEntity, ButtonEntity):
             )
         except PterodactylConnectionError as err:
             raise HomeAssistantError(
-                f"Failed to send action '{self.entity_description.key}'"
+                f"Failed to send action '{self.entity_description.key}': Connection error"
+            ) from err
+        except PterodactylAuthorizationError as err:
+            raise HomeAssistantError(
+                f"Failed to send action '{self.entity_description.key}': Unauthorized"
             ) from err

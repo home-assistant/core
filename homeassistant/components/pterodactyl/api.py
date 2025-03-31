@@ -5,20 +5,16 @@ from enum import StrEnum
 import logging
 
 from pydactyl import PterodactylClient
-from pydactyl.exceptions import (
-    BadRequestError,
-    ClientConfigError,
-    PterodactylApiError,
-    PydactylError,
-)
+from pydactyl.exceptions import BadRequestError, PterodactylApiError
+from requests.exceptions import ConnectionError, HTTPError
 
 from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class PterodactylConfigurationError(Exception):
-    """Raised when the configuration is invalid."""
+class PterodactylAuthorizationError(Exception):
+    """Raised when access to server is unauthorized."""
 
 
 class PterodactylConnectionError(Exception):
@@ -75,13 +71,12 @@ class PterodactylAPI:
             paginated_response = await self.hass.async_add_executor_job(
                 self.pterodactyl.client.servers.list_servers
             )
-        except ClientConfigError as error:
-            raise PterodactylConfigurationError(error) from error
-        except (
-            PydactylError,
-            BadRequestError,
-            PterodactylApiError,
-        ) as error:
+        except (BadRequestError, PterodactylApiError, ConnectionError) as error:
+            raise PterodactylConnectionError(error) from error
+        except HTTPError as error:
+            if error.response.status_code == 401:
+                raise PterodactylAuthorizationError(error) from error
+
             raise PterodactylConnectionError(error) from error
         else:
             game_servers = paginated_response.collect()
@@ -108,11 +103,12 @@ class PterodactylAPI:
                 server, utilization = await self.hass.async_add_executor_job(
                     self.get_server_data, identifier
                 )
-            except (
-                PydactylError,
-                BadRequestError,
-                PterodactylApiError,
-            ) as error:
+            except (BadRequestError, PterodactylApiError, ConnectionError) as error:
+                raise PterodactylConnectionError(error) from error
+            except HTTPError as error:
+                if error.response.status_code == 401:
+                    raise PterodactylAuthorizationError(error) from error
+
                 raise PterodactylConnectionError(error) from error
             else:
                 data[identifier] = PterodactylData(
@@ -145,9 +141,10 @@ class PterodactylAPI:
                 identifier,
                 command,
             )
-        except (
-            PydactylError,
-            BadRequestError,
-            PterodactylApiError,
-        ) as error:
+        except (BadRequestError, PterodactylApiError, ConnectionError) as error:
+            raise PterodactylConnectionError(error) from error
+        except HTTPError as error:
+            if error.response.status_code == 401:
+                raise PterodactylAuthorizationError(error) from error
+
             raise PterodactylConnectionError(error) from error

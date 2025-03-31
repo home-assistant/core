@@ -12,7 +12,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .api import (
     PterodactylAPI,
-    PterodactylConfigurationError,
+    PterodactylAuthorizationError,
     PterodactylConnectionError,
     PterodactylData,
 )
@@ -55,12 +55,12 @@ class PterodactylCoordinator(DataUpdateCoordinator[dict[str, PterodactylData]]):
 
         try:
             await self.api.async_init()
-        except PterodactylConfigurationError as error:
+        except (PterodactylAuthorizationError, PterodactylConnectionError) as error:
             raise UpdateFailed(error) from error
 
     async def _async_update_data(self) -> dict[str, PterodactylData]:
         """Get updated data from the Pterodactyl server."""
         try:
             return await self.api.async_get_data()
-        except PterodactylConnectionError as error:
+        except (PterodactylAuthorizationError, PterodactylConnectionError) as error:
             raise UpdateFailed(error) from error
