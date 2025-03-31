@@ -29,7 +29,7 @@
           "description": "Play a sound before the announcement."
         },
         "preannounce_media_id": {
-          "name": "Preannounce Media ID",
+          "name": "Preannounce media ID",
           "description": "The media ID to play before the announcement."
         }
       }
@@ -55,7 +55,7 @@
           "description": "Play a sound before the start message or media."
         },
         "preannounce_media_id": {
-          "name": "Preannounce Media ID",
+          "name": "Preannounce media ID",
           "description": "The media ID to play before the start message or media."
         }
       }
