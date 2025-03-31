@@ -122,8 +122,11 @@ class LeaZone:
         _LOGGER.log(logging.INFO, "updateVolume")
         _LOGGER.log(logging.INFO, "lea value:  %s", str(value))
         value = (((value / -1) - 80) / 0.8) * -1
-        _LOGGER.log(logging.INFO, "HA value:  %s", str(value))
-        self._volume = int(value / 100)
+        HAVolume = value / 100
+        _LOGGER.log(logging.INFO, "HA value1 :  %s", str(value))
+        _LOGGER.log(logging.INFO, "HA value2:  %s", str(HAVolume))
+        self._volume = HAVolume
+
         self.update_lastseen()
         if self._update_callback and callable(self._update_callback):
             _LOGGER.log(logging.INFO, "callback")
