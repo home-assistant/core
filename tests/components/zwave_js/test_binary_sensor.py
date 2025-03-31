@@ -298,8 +298,8 @@ async def test_config_parameter_binary_sensor(
 async def test_smoke_co_notification_sensors(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    zcombo_smoke_co_alarm,
-    integration,
+    zcombo_smoke_co_alarm: Node,
+    integration: MockConfigEntry,
 ) -> None:
     """Test smoke and CO notification sensors with diagnostic states."""
     # Test smoke alarm sensor
@@ -317,6 +317,9 @@ async def test_smoke_co_notification_sensors(
     state = hass.states.get(smoke_diagnostic)
     assert state
     assert state.state == STATE_OFF
+    entity_entry = entity_registry.async_get(smoke_diagnostic)
+    assert entity_entry
+    assert entity_entry.entity_category == EntityCategory.DIAGNOSTIC
 
     # Test CO alarm sensor
     co_sensor = "binary_sensor.zcombo_g_smoke_co_alarm_carbon_monoxide_detected"

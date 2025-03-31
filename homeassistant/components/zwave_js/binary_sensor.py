@@ -71,6 +71,46 @@ class PropertyZWaveJSEntityDescription(BinarySensorEntityDescription):
 #
 # Mapping rules:
 # The catch all description should not have a device class and be marked as diagnostic.
+#
+# The following notifications have been moved to diagnostic:
+# Smoke Alarm
+# - State idle
+# - Alarm silenced
+# - Replacement required
+# - Replacement required, End-of-life
+# - Maintenance required, planned periodic inspection
+# - Maintenance required, dust in device
+# CO Alarm
+# - State idle
+# - Carbon monoxide test
+# - Replacement required
+# - Replacement required, End-of-life
+# - Alarm silenced
+# - Maintenance required, planned periodic inspection
+# CO2 Alarm
+# - State idle
+# - Carbon dioxide test
+# - Replacement required
+# - Replacement required, End-of-life
+# - Alarm silenced
+# - Maintenance required, planned periodic inspection
+# Heat Alarm
+# - State idle
+# - Rapid temperature rise (location provided)
+# - Rapid temperature rise
+# - Rapid temperature fall (location provided)
+# - Rapid temperature fall
+# - Heat alarm test
+# - Alarm silenced
+# - Replacement required, End-of-life
+# - Maintenance required, dust in device
+# - Maintenance required, planned periodic inspection
+
+# Water Alarm
+# - State idle
+# - Replace water filter
+# - Sump pump failure
+
 NOTIFICATION_SENSOR_MAPPINGS: tuple[NotificationZWaveJSEntityDescription, ...] = (
     NotificationZWaveJSEntityDescription(
         # NotificationType 1: Smoke Alarm - State Id's 1 and 2 - Smoke detected
