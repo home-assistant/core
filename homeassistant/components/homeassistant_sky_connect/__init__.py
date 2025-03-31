@@ -6,14 +6,29 @@ import logging
 import os.path
 
 from homeassistant.components.homeassistant_hardware.util import guess_firmware_info
-from homeassistant.components.usb import USBDevice, async_register_port_event_callback
+from homeassistant.components.usb import (
+    USBDevice,
+    async_register_port_event_callback,
+    scan_serial_ports,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DESCRIPTION, DEVICE, DOMAIN, FIRMWARE, FIRMWARE_VERSION, PRODUCT, VID
+from .const import (
+    DESCRIPTION,
+    DEVICE,
+    DOMAIN,
+    FIRMWARE,
+    FIRMWARE_VERSION,
+    MANUFACTURER,
+    PID,
+    PRODUCT,
+    SERIAL_NUMBER,
+    VID,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,10 +37,29 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the ZBT-1 integration."""
+    serial_ports = await hass.async_add_executor_job(scan_serial_ports)
+    serial_ports_info = {port.device: port for port in serial_ports}
 
     for entry in list(hass.config_entries.async_entries(DOMAIN)):
-        # Old SkyConnect entries do not contain enough information to set up or migrate
-        if VID not in entry.data:
+        # Old SkyConnect entries are missing all of their info. They must either be
+        # updated or migrated.
+        if VID in entry.data:
+            continue
+
+        if usb_info := serial_ports_info.get(entry.data[DEVICE]):
+            hass.config_entries.async_update_entry(
+                entry,
+                data={
+                    **entry.data,
+                    VID: usb_info.vid,
+                    PID: usb_info.pid,
+                    MANUFACTURER: usb_info.manufacturer,
+                    PRODUCT: usb_info.description,
+                    DESCRIPTION: usb_info.description,
+                    SERIAL_NUMBER: usb_info.serial_number,
+                },
+            )
+        else:
             _LOGGER.debug("Removing old SkyConnect entry %s", entry.entry_id)
             await hass.config_entries.async_remove(entry.entry_id)
 
@@ -79,7 +113,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
     """Migrate old entry."""
 
     _LOGGER.debug(
-        "Migrating from version %s:%s", config_entry.version, config_entry.minor_version
+        "Migrating from version %s.%s", config_entry.version, config_entry.minor_version
     )
 
     if config_entry.version == 1:

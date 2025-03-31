@@ -9,7 +9,15 @@ from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
 )
-from homeassistant.components.homeassistant_sky_connect.const import DOMAIN
+from homeassistant.components.homeassistant_sky_connect.const import (
+    DESCRIPTION,
+    DOMAIN,
+    MANUFACTURER,
+    PID,
+    PRODUCT,
+    SERIAL_NUMBER,
+    VID,
+)
 from homeassistant.components.usb import USBDevice
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
@@ -189,11 +197,11 @@ async def test_usb_device_reactivity(hass: HomeAssistant) -> None:
         assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_bad_config_entry_deletion(hass: HomeAssistant) -> None:
-    """Test deleting a config entry with bad data."""
+async def test_bad_config_entry_fixing(hass: HomeAssistant) -> None:
+    """Test fixing/deleting config entries with bad data."""
 
     # Newly-added ZBT-1
-    new_config_entry = MockConfigEntry(
+    new_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="some_unique_id-9e2adbd75b8beb119fe564a0f320645d",
         data={
@@ -210,10 +218,10 @@ async def test_bad_config_entry_deletion(hass: HomeAssistant) -> None:
         minor_version=3,
     )
 
-    new_config_entry.add_to_hass(hass)
+    new_entry.add_to_hass(hass)
 
     # Old config entry, without firmware info
-    old_config_entry = MockConfigEntry(
+    old_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="some_unique_id-3c0ed67c628beb11b1cd64a0f320645d",
         data={
@@ -228,10 +236,10 @@ async def test_bad_config_entry_deletion(hass: HomeAssistant) -> None:
         minor_version=1,
     )
 
-    old_config_entry.add_to_hass(hass)
+    old_entry.add_to_hass(hass)
 
     # Bad config entry, missing most keys
-    bad_config_entry = MockConfigEntry(
+    bad_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="some_unique_id-9f6c4bba657cc9a4f0cea48bc5948562",
         data={
@@ -241,10 +249,45 @@ async def test_bad_config_entry_deletion(hass: HomeAssistant) -> None:
         minor_version=2,
     )
 
-    bad_config_entry.add_to_hass(hass)
+    bad_entry.add_to_hass(hass)
 
-    await async_setup_component(hass, "homeassistant_sky_connect", {})
+    # Bad config entry, missing most keys, but fixable since the device is present
+    fixable_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="some_unique_id-4f5f3b26d59f8714a78b599690741999",
+        data={
+            "device": "/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_4f5f3b26d59f8714a78b599690741999-if00-port0",
+        },
+        version=1,
+        minor_version=2,
+    )
 
-    assert hass.config_entries.async_get_entry(new_config_entry.entry_id) is not None
-    assert hass.config_entries.async_get_entry(old_config_entry.entry_id) is not None
-    assert hass.config_entries.async_get_entry(bad_config_entry.entry_id) is None
+    fixable_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.homeassistant_sky_connect.scan_serial_ports",
+        return_value=[
+            USBDevice(
+                device="/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_4f5f3b26d59f8714a78b599690741999-if00-port0",
+                vid="10C4",
+                pid="EA60",
+                serial_number="4f5f3b26d59f8714a78b599690741999",
+                manufacturer="Nabu Casa",
+                description="SkyConnect v1.0",
+            )
+        ],
+    ):
+        await async_setup_component(hass, "homeassistant_sky_connect", {})
+
+    assert hass.config_entries.async_get_entry(new_entry.entry_id) is not None
+    assert hass.config_entries.async_get_entry(old_entry.entry_id) is not None
+    assert hass.config_entries.async_get_entry(bad_entry.entry_id) is None
+    assert hass.config_entries.async_get_entry(fixable_entry.entry_id) is not None
+
+    updated_entry = hass.config_entries.async_get_entry(fixable_entry.entry_id)
+    assert updated_entry.data[VID] == "10C4"
+    assert updated_entry.data[PID] == "EA60"
+    assert updated_entry.data[SERIAL_NUMBER] == "4f5f3b26d59f8714a78b599690741999"
+    assert updated_entry.data[MANUFACTURER] == "Nabu Casa"
+    assert updated_entry.data[PRODUCT] == "SkyConnect v1.0"
+    assert updated_entry.data[DESCRIPTION] == "SkyConnect v1.0"
