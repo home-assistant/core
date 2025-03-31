@@ -187,7 +187,7 @@ class SearchMedia:
 class SearchMediaQuery:
     """Represent a search media file."""
 
-    media_search_query: str
+    search_query: str
     media_content_type: MediaType | str | None = field(default=None)
     media_content_id: str | None = None
     media_filter_classes: list[MediaClass] | None = field(default=None)

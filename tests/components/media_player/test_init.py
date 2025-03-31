@@ -453,7 +453,7 @@ async def test_media_search(
                 "entity_id": "media_player.search",
                 "media_content_type": "album",
                 "media_content_id": "abcd",
-                "media_search_query": "query",
+                "search_query": "query",
                 "media_filter_classes": ["album"],
             }
         )
@@ -479,7 +479,7 @@ async def test_media_search(
         }
     ]
     assert mock_search_media.mock_calls[0].kwargs["query"] == SearchMediaQuery(
-        media_search_query="query",
+        search_query="query",
         media_content_type="album",
         media_content_id="abcd",
         media_filter_classes={MediaClass.ALBUM},
@@ -526,7 +526,7 @@ async def test_media_search_service(hass: HomeAssistant) -> None:
     assert search_res.version == 1
     assert search_res.result == expected
     assert mock_search_media.mock_calls[0].kwargs["query"] == SearchMediaQuery(
-        media_search_query="query",
+        search_query="query",
         media_content_type="album",
         media_content_id="title=Album*",
         media_filter_classes={MediaClass.ALBUM},

@@ -1184,14 +1184,14 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     async def async_internal_search_media(
         self,
-        media_search_query: str,
+        search_query: str,
         media_content_type: MediaType | str | None = None,
         media_content_id: str | None = None,
         media_filter_classes: list[MediaClass] | None = None,
     ) -> SearchMedia:
         return await self.async_search_media(
             query=SearchMediaQuery(
-                media_search_query=media_search_query,
+                search_query=search_query,
                 media_content_type=media_content_type,
                 media_content_id=media_content_id,
                 media_filter_classes=media_filter_classes,
