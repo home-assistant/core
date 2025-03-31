@@ -6,6 +6,7 @@ rules:
   config-flow: "done"
   config-flow-test-coverage: "done"
   dependency-transparency: "done"
+  diagnostics: "todo"
   docs-actions: "done"
   docs-high-level-description: "done"
   docs-installation-instructions: "done"
