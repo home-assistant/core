@@ -116,7 +116,7 @@ RtmAPI==0.7.2
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-SQLAlchemy==2.0.39
+SQLAlchemy==2.0.40
 
 # homeassistant.components.tami4
 Tami4EdgeAPI==3.0
@@ -243,7 +243,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==29.7.0
+aioesphomeapi==29.8.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -267,7 +267,7 @@ aiohasupervisor==0.3.0
 aiohomeconnect==0.16.3
 
 # homeassistant.components.homekit_controller
-aiohomekit==3.2.8
+aiohomekit==3.2.13
 
 # homeassistant.components.mcp_server
 aiohttp_sse==2.2.0
@@ -362,7 +362,7 @@ aioridwell==2024.01.0
 aioruckus==0.42
 
 # homeassistant.components.russound_rio
-aiorussound==4.4.0
+aiorussound==4.5.0
 
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
@@ -491,7 +491,7 @@ apprise==1.9.1
 aprslib==0.7.2
 
 # homeassistant.components.apsystems
-apsystems-ez1==2.4.0
+apsystems-ez1==2.5.0
 
 # homeassistant.components.aqualogic
 aqualogic==2.6
@@ -1035,10 +1035,10 @@ google-api-python-client==2.71.0
 google-cloud-pubsub==2.29.0
 
 # homeassistant.components.google_cloud
-google-cloud-speech==2.27.0
+google-cloud-speech==2.31.1
 
 # homeassistant.components.google_cloud
-google-cloud-texttospeech==2.17.2
+google-cloud-texttospeech==2.25.1
 
 # homeassistant.components.google_generative_ai_conversation
 google-genai==1.7.0
@@ -1184,7 +1184,7 @@ hyperion-py==0.7.5
 iammeter==0.2.1
 
 # homeassistant.components.iaqualink
-iaqualink==0.5.0
+iaqualink==0.5.3
 
 # homeassistant.components.ibeacon
 ibeacon-ble==1.2.0
@@ -1196,7 +1196,7 @@ ibmiotf==0.3.4
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
 # homeassistant.components.remote_calendar
-ical==9.0.1
+ical==9.0.3
 
 # homeassistant.components.caldav
 icalendar==6.1.0
@@ -1559,7 +1559,7 @@ odp-amsterdam==6.0.2
 oemthermostat==1.1.1
 
 # homeassistant.components.ohme
-ohme==1.4.1
+ohme==1.5.1
 
 # homeassistant.components.ollama
 ollama==0.4.7
@@ -1675,7 +1675,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.7.2
+plugwise==1.7.3
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1722,7 +1722,7 @@ pushbullet.py==0.11.0
 pushover_complete==1.1.1
 
 # homeassistant.components.pvoutput
-pvo==2.2.0
+pvo==2.2.1
 
 # homeassistant.components.aosmith
 py-aosmith==1.0.12
@@ -1918,7 +1918,7 @@ pydoods==1.0.2
 pydrawise==2025.3.0
 
 # homeassistant.components.android_ip_webcam
-pydroid-ipcam==2.0.0
+pydroid-ipcam==3.0.0
 
 # homeassistant.components.ebox
 pyebox==1.1.4
@@ -2047,7 +2047,7 @@ pyiskra==0.1.15
 pyiss==1.0.1
 
 # homeassistant.components.isy994
-pyisy==3.1.14
+pyisy==3.4.0
 
 # homeassistant.components.itach
 pyitachip2ir==0.0.7
@@ -2223,7 +2223,7 @@ pypca==0.0.7
 pypck==0.8.5
 
 # homeassistant.components.pglab
-pypglab==0.0.3
+pypglab==0.0.5
 
 # homeassistant.components.pjlink
 pypjlink2==1.2.1
@@ -2319,7 +2319,7 @@ pysma==0.7.5
 pysmappee==0.2.29
 
 # homeassistant.components.smartthings
-pysmartthings==3.0.0
+pysmartthings==3.0.1
 
 # homeassistant.components.smarty
 pysmarty2==0.10.2
@@ -2829,9 +2829,6 @@ stringcase==1.2.0
 
 # homeassistant.components.subaru
 subarulink==0.7.13
-
-# homeassistant.components.sunweg
-sunweg==3.0.2
 
 # homeassistant.components.surepetcare
 surepy==0.9.0
