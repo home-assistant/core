@@ -657,7 +657,8 @@ async def websocket_node_alerts(
                         "comments": [
                             {
                                 "level": "info",
-                                "text": "This device has been provisioned but is not yet included in the network.",
+                                "text": "This device has been provisioned but is not yet included in the "
+                                "network.",
                             }
                         ],
                     },
