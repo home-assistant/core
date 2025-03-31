@@ -25,7 +25,7 @@ class LeaZone:
         self._power: bool = False
         self._volume: int = 0
         self._mute: bool = False
-        self._source: int = 0
+        self._source: str = ""
         self._update_callback: Callable[[LeaZone], None] | None = None
         self.is_manual: bool = False
 
@@ -86,7 +86,7 @@ class LeaZone:
         return self._mute
 
     @property
-    def source(self) -> int:
+    def source(self) -> str:
         """Source."""
         return self._source
 
@@ -96,11 +96,13 @@ class LeaZone:
         await self._controller.turn_on_off(self._zone_id, str(power))
         self._power = power
 
-    def set_zone_volume(self, volume: int) -> None:
+    async def set_zone_volume(self, volume: int) -> None:
         """Set Zone Volume."""
         _LOGGER.log(logging.INFO, "set_zone_volume value to send: %s", str(volume))
-        self._controller.set_volume(self._zone_id, volume)
-        self.updateVolume(float(volume))
+        await self._controller.set_volume(self._zone_id, volume)
+        value = (((volume / -1) - 80) / 0.8) * -1
+        _LOGGER.log(logging.INFO, "HA value:  %s", str(value))
+        self._volume = int(value)
 
     async def set_zone_mute(self, mute: bool) -> None:
         """Set Zone Mute."""
@@ -108,7 +110,7 @@ class LeaZone:
         await self._controller.set_mute(self._zone_id, mute)
         self._mute = mute
 
-    async def set_zone_source(self, source: int) -> None:
+    async def set_zone_source(self, source: str) -> None:
         """Set Zone Source."""
         _LOGGER.log(logging.INFO, "set_zone_source")
         await self._controller.set_source(self._zone_id, source)
@@ -120,7 +122,7 @@ class LeaZone:
         _LOGGER.log(logging.INFO, "lea value:  %s", str(value))
         value = (((value / -1) - 80) / 0.8) * -1
         _LOGGER.log(logging.INFO, "HA value:  %s", str(value))
-        # self._volume = int(value)
+        self._volume = int(value)
         self.update_lastseen()
         if self._update_callback and callable(self._update_callback):
             self._update_callback(self)
@@ -141,7 +143,7 @@ class LeaZone:
     def update_lastseen(self) -> None:
         """Update Last Seen."""
         self._lastseen = datetime.now()
-        _LOGGER.debug("update_lastseen:  %s", str(self._lastseen))
+        _LOGGER.log(logging.INFO, "last seen: %s", str(self._lastseen))
 
     def as_dict(self) -> dict[str, Any]:
         """Dictinory."""
