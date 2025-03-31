@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import datetime
 import logging
-from typing import Any
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,7 +23,7 @@ class LeaZone:
         self._model: str = ""
         self._power: bool = True
         self._volume: float = 0.5
-        self._mute: bool = False
+        self._mute: bool = True
         self._source: str = ""
         self._update_callback: Callable[[LeaZone], None] | None = None
         self.is_manual: bool = False
@@ -138,6 +137,7 @@ class LeaZone:
         _LOGGER.log(logging.INFO, "commandType:  %s", str(commandType))
         _LOGGER.log(logging.INFO, "value:  %s", str(value))
         if commandType == "mute":
+            _LOGGER.log(logging.INFO, "update mute:  %s", str(value))
             self._mute = bool(value)
         elif commandType == "power":
             _LOGGER.log(logging.INFO, "update power:  %s", str(value))
@@ -151,16 +151,6 @@ class LeaZone:
         """Update Last Seen."""
         self._lastseen = datetime.now()
         _LOGGER.log(logging.INFO, "last seen: %s", str(self._lastseen))
-
-    def as_dict(self) -> dict[str, Any]:
-        """Dictinory."""
-        return {
-            "zoneId": self._zone_id,
-            "power": self._power,
-            "volume": self._volume,
-            "mute": self._mute,
-            "source": self._source,
-        }
 
     def __str__(self) -> str:
         """Str."""
