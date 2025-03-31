@@ -16,8 +16,12 @@ class SystemPropertyList(Jsonable):
         """Initialize."""
         super().__init__()
 
-        # Should figure out the properties
-        self.__dict__.update(kwargs)
+        self.AddASceneController: bool | None = kwargs.get("AddASceneController")
+        self.AddALight: bool | None = kwargs.get("AddALight")
+        self.TimeZone: int | None = kwargs.get("TimeZone")
+        self.DaylightSavingTime: bool | None = kwargs.get("DaylightSavingTime")
+        self.LocationInfo: str | None = kwargs.get("LocationInfo")
+        self.Location: dict | None = kwargs.get("Location")
 
 
 class ReportSystemProperties(Packet):
