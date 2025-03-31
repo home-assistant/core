@@ -100,8 +100,9 @@ class LeaZone:
         """Set Zone Volume."""
         _LOGGER.log(logging.INFO, "set_zone_volume value to send: %s", str(volume))
         await self._controller.set_volume(self._zone_id, volume)
+        HAVolume = int(HAVolume / 100)
         _LOGGER.log(logging.INFO, "HA value:  %s", str(HAVolume))
-        self._volume = int(HAVolume / 100)
+        self._volume = HAVolume
 
     async def set_zone_mute(self, mute: bool) -> None:
         """Set Zone Mute."""
