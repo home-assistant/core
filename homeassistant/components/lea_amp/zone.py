@@ -138,10 +138,16 @@ class LeaZone:
         _LOGGER.log(logging.INFO, "value:  %s", str(value))
         if commandType == "mute":
             _LOGGER.log(logging.INFO, "update mute:  %s", str(value))
-            self._mute = bool(value)
+            if value == "true":
+                self._mute = True
+            else:
+                self._mute = True
         elif commandType == "power":
             _LOGGER.log(logging.INFO, "update power:  %s", str(value))
-            self._power = bool(value)
+            if value == "true":
+                self._power = True
+            else:
+                self._power = True
         self.update_lastseen()
         if self._update_callback and callable(self._update_callback):
             _LOGGER.log(logging.INFO, "callback")
