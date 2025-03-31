@@ -109,7 +109,7 @@
         "state": {
           "run": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::state::run%]",
           "pause": "[%key:common::state::paused%]",
-          "stop": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::state::stop%]"
+          "stop": "[%key:common::state::stopped%]"
         }
       }
     },
@@ -154,7 +154,7 @@
         "state": {
           "pause": "[%key:common::state::paused%]",
           "run": "Running",
-          "stop": "Stopped"
+          "stop": "[%key:common::state::stopped%]"
         }
       },
       "dishwasher_job_state": {
@@ -183,7 +183,7 @@
         "state": {
           "pause": "[%key:common::state::paused%]",
           "run": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::state::run%]",
-          "stop": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::state::stop%]"
+          "stop": "[%key:common::state::stopped%]"
         }
       },
       "dryer_job_state": {
@@ -441,7 +441,7 @@
         "state": {
           "pause": "[%key:common::state::paused%]",
           "run": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::state::run%]",
-          "stop": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::state::stop%]"
+          "stop": "[%key:common::state::stopped%]"
         }
       },
       "washer_job_state": {
@@ -486,10 +486,6 @@
     "deprecated_binary_fridge_door": {
       "title": "Deprecated refrigerator door binary sensor detected in some automations or scripts",
       "description": "The refrigerator door binary sensor `{entity}` is deprecated and is used in the following automations or scripts:\n{items}\n\nSeparate entities for cooler and freezer door are available and should be used going forward. Please use them in the above automations or scripts to fix this issue."
-    },
-    "deprecated_machine_state": {
-      "title": "Deprecated machine state sensor detected in some automations or scripts",
-      "description": "The machine state sensor `{entity}` is deprecated and is used in the following automations or scripts:\n{items}\n\nA select entity is now available for the machine state and should be used going forward. Please use the new select entity in the above automations or scripts to fix this issue."
     },
     "deprecated_switch_appliance": {
       "title": "Deprecated switch detected in some automations or scripts",

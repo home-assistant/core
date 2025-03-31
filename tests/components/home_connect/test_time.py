@@ -320,7 +320,7 @@ async def test_time_entity_error(
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize("appliance", ["Oven"], indirect=True)
-async def test_create_issue(
+async def test_create_alarm_clock_deprecation_issue(
     hass: HomeAssistant,
     appliance: HomeAppliance,
     config_entry: MockConfigEntry,
@@ -329,7 +329,7 @@ async def test_create_issue(
     client: MagicMock,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test we create an issue when an automation or script is using a deprecated entity."""
+    """Test that we create an issue when an automation or script is using a alarm clock time entity or the entity is used by the user."""
     entity_id = f"{TIME_DOMAIN}.oven_alarm_clock"
     automation_script_issue_id = (
         f"deprecated_time_alarm_clock_in_automations_scripts_{entity_id}"
@@ -401,7 +401,7 @@ async def test_create_issue(
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize("appliance", ["Oven"], indirect=True)
-async def test_issue_fix(
+async def test_alarm_clock_deprecation_issue_fix(
     hass: HomeAssistant,
     appliance: HomeAppliance,
     config_entry: MockConfigEntry,
@@ -411,7 +411,7 @@ async def test_issue_fix(
     issue_registry: ir.IssueRegistry,
     hass_client: ClientSessionGenerator,
 ) -> None:
-    """Test we create an issue when an automation or script is using a deprecated entity."""
+    """Test we can fix the issues created when a alarm clock time entity is in an automation or in a script or when is used."""
     entity_id = f"{TIME_DOMAIN}.oven_alarm_clock"
     automation_script_issue_id = (
         f"deprecated_time_alarm_clock_in_automations_scripts_{entity_id}"

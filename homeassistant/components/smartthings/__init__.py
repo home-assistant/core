@@ -352,7 +352,10 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                         return {
                             "new_unique_id": f"{device_id}_{MAIN}_{Capability.THREE_AXIS}_{Attribute.THREE_AXIS}_{new_attribute}",
                         }
-                    if attribute == Attribute.MACHINE_STATE:
+                    if attribute in {
+                        Attribute.MACHINE_STATE,
+                        Attribute.COMPLETION_TIME,
+                    }:
                         capability = determine_machine_type(
                             hass, entry.entry_id, device_id
                         )
@@ -423,7 +426,7 @@ def create_devices(
                 kwargs[ATTR_CONNECTIONS] = {
                     (dr.CONNECTION_NETWORK_MAC, device.device.hub.mac_address)
                 }
-        if device.device.parent_device_id:
+        if device.device.parent_device_id and device.device.parent_device_id in devices:
             kwargs[ATTR_VIA_DEVICE] = (DOMAIN, device.device.parent_device_id)
         if (ocf := device.device.ocf) is not None:
             kwargs.update(

@@ -45,6 +45,35 @@ async def test_form_import_ics(hass: HomeAssistant, ics_content: str) -> None:
     }
 
 
+@respx.mock
+async def test_form_import_webcal(hass: HomeAssistant, ics_content: str) -> None:
+    """Test we get the import form."""
+    respx.get(CALENDER_URL).mock(
+        return_value=Response(
+            status_code=200,
+            text=ics_content,
+        )
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_CALENDAR_NAME: CALENDAR_NAME,
+            CONF_URL: "webcal://some.calendar.com/calendar.ics",
+        },
+    )
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == CALENDAR_NAME
+    assert result2["data"] == {
+        CONF_CALENDAR_NAME: CALENDAR_NAME,
+        CONF_URL: CALENDER_URL,
+    }
+
+
 @pytest.mark.parametrize(
     ("side_effect"),
     [
