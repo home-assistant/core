@@ -66,7 +66,7 @@ class RenaultDataUpdateCoordinator(DataUpdateCoordinator[T]):
     async def _async_update_data(self) -> T:
         """Fetch the latest data from the source."""
 
-        if self._hub.check_throttled():
+        if self._hub.is_throttled():
             # we have been throttled and decided to cooldown
             # so do not count this update as an error
             # coordinator. last_update_success should still be ok
