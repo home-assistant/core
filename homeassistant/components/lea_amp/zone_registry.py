@@ -33,14 +33,14 @@ class ZoneRegistry:
         if int(zone) in self._num_of_zones:
             del self._num_of_zones[int(zone)]
 
-    def add_zone_to_queue(self, zone_id: int):
+    def add_zone_to_queue(self, zone_id: int) -> bool:
         """Add Zone to queue."""
         if zone_id not in self._custom_zones_queue:
             self._custom_zones_queue.add(zone_id)
             return True
         return False
 
-    def remove_zone_from_queue(self, zone_id: int):
+    def remove_zone_from_queue(self, zone_id: int) -> bool:
         """Remove zone from queue."""
         if zone_id in self._custom_zones_queue:
             self._custom_zones_queue.remove(zone_id)

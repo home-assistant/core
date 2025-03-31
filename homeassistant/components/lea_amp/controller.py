@@ -99,26 +99,26 @@ class LeaController:
         _LOGGER.log(logging.INFO, "Update enabled %s", str(self._update_enabled))
 
         if self._discovery_enabled or self._registry.has_queued_zones:
-            await self.send_discovery_message()
+            self.send_discovery_message()
         if self._update_enabled:
             self.send_update_message()
 
-    async def cleanup(self) -> asyncio.Event:
+    def cleanup(self) -> asyncio.Event:
         """Stop discovering. Stop updating. Close connection."""
         self._cleanup_done.clear()
         self.set_update_enabled(False)
-        await self.set_discovery_enabled(False)
+        self.set_discovery_enabled(False)
 
         if self._transport:
             self._transport.close()
         self._registry.cleanup()
         return self._cleanup_done
 
-    async def add_zone_to_discovery_queue(self, zone_id: str) -> bool:
+    def add_zone_to_discovery_queue(self, zone_id: str) -> bool:
         """Add zone to queue."""
         zone_added: bool = self._registry.add_zone_to_queue(int(zone_id))
         if not self._discovery_enabled and zone_added:
-            await self.send_discovery_message()
+            self.send_discovery_message()
         return zone_added
 
     def remove_zone_from_discovery_queue(self, zone_id: str) -> bool:
@@ -136,13 +136,13 @@ class LeaController:
             zone = zone.zone_id
         self._registry.remove_discovered_zone(zone)
 
-    async def set_discovery_enabled(self, enabled: bool) -> None:
+    def set_discovery_enabled(self, enabled: bool) -> None:
         """Enable Discovery."""
         if self._discovery_enabled == enabled:
             return
         self._discovery_enabled = enabled
         if enabled:
-            await self.send_discovery_message()
+            self.send_discovery_message()
         elif self._discovery_handle:
             self._discovery_handle.cancel()
             self._discovery_handle = None
@@ -185,7 +185,7 @@ class LeaController:
         """Return updates is enabled."""
         return self._update_enabled
 
-    async def send_discovery_message(self) -> None:
+    def send_discovery_message(self) -> None:
         """Send Get Number of Inputs."""
         message: str = str(GetNumOfInputsMessage())
         _LOGGER.log(logging.INFO, "Sending discovery message: %s", message)
@@ -200,20 +200,20 @@ class LeaController:
             data = self._transport.recv(2048)
             if data:
                 _LOGGER.log(logging.INFO, "response data: %s", str(data))
-                await self._handle_num_inputs(data.decode())
+                self._handle_num_inputs(data.decode())
                 # self._handle_response_received(data)
             # self._transport.close()
         if self._registry.has_queued_zones:
             for zone_id in self._registry.zones_queue:
                 self._transport.sendto(message, (zone_id, self._port))
 
-    async def send_update_message(self):
+    def send_update_message(self) -> None:
         """Send Update Message."""
 
         if self._transport:
             for d in self._registry.discovered_zones.values():
                 _LOGGER.log(logging.INFO, "zone id: %s", str(d.zone_id))
-                await self._send_update_message(d.zone_id)
+                self._send_update_message(d.zone_id)
 
             if self._update_enabled:
                 self._update_handle = self._loop.call_later(
@@ -222,19 +222,19 @@ class LeaController:
 
     async def turn_on_off(self, zone_id: str, status: str):
         """Turn on off."""
-        await self._send_message(OnOffMessage(zone_id, status))
+        self._send_message(OnOffMessage(zone_id, status))
 
     async def set_volume(self, zone_id: str, volume: int) -> None:
         """Set Volume."""
-        await self._send_message(setVolumeMessage(zone_id, volume))
+        self._send_message(setVolumeMessage(zone_id, volume))
 
     async def set_source(self, zone_id: str, source: int) -> None:
         """Set Source."""
-        await self._send_message(setSourceMessage(zone_id, source))
+        self._send_message(setSourceMessage(zone_id, source))
 
     async def set_mute(self, zone_id: str, mute: bool) -> None:
         """Set Mute."""
-        await self._send_message(setMuteMessage(zone_id, mute))
+        self._send_message(setMuteMessage(zone_id, mute))
 
     def get_zone_by_id(self, zone_id: str) -> LeaZone | None:
         """Get Zone by id."""
@@ -252,12 +252,7 @@ class LeaController:
         self._cleanup_done.set()
         self._logger.debug("Disconnected")
 
-    def response_received(self):
-        """Receive response."""
-        data: Any = self._transport.recv(2048)
-        self._loop.create_task(self._handle_response_received(data))
-
-    async def _handle_response_received(self, data: str):
+    def _handle_response_received(self, data: str):
         """Handle received response."""
         _LOGGER.log(logging.INFO, "_handle_response_received: %s", str(data))
         zone_id, commandType, value = self._message_factory.create_message(data)
@@ -270,7 +265,7 @@ class LeaController:
             else:
                 zone.update(value, commandType)
 
-    async def _handle_num_inputs(self, value: str):
+    def _handle_num_inputs(self, value: str):
         _LOGGER.log(logging.INFO, "_handle_num_inputs: %s", str(value))
         value = value.replace("/amp/deviceInfo/numInputs", "")
         value = value.replace(" ", "")
@@ -291,7 +286,7 @@ class LeaController:
             return True
         return self._zone_discovered_callback(zone, is_new)
 
-    async def _send_message(self, message: str) -> None:
+    def _send_message(self, message: str) -> None:
         _LOGGER.log(logging.INFO, "_send_message message:%s", message)
         if not self._transport:
             _LOGGER.log(logging.INFO, "Transport not available")
@@ -301,11 +296,11 @@ class LeaController:
         if data:
             _LOGGER.log(logging.INFO, "response data: %s", str(data))
             if "OK" not in data.decode():
-                await self._handle_response_received(data.decode())
+                self._handle_response_received(data.decode())
 
-    async def _send_update_message(self, zone_id: str):
-        await self._send_message(ZoneEnabledMsg(zone_id))
-        await self._send_message(getMuteMessage(zone_id))
-        await self._send_message(getVolumeMessage(zone_id))
-        await self._send_message(getSourceMessage(zone_id))
-        await self._send_message(getZoneName(zone_id))
+    def _send_update_message(self, zone_id: str):
+        self._send_message(ZoneEnabledMsg(zone_id))
+        self._send_message(getMuteMessage(zone_id))
+        self._send_message(getVolumeMessage(zone_id))
+        self._send_message(getSourceMessage(zone_id))
+        self._send_message(getZoneName(zone_id))
