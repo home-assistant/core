@@ -44,7 +44,7 @@ HotWaterDevices = [4, 514]
 # Return cached results if last scan was less then this time ago
 SCAN_INTERVAL = timedelta(seconds=120)
 
-OPERATION_LIST = [HVACMode.AUTO, HVACMode.HEAT, HVACMode.OFF]
+OPERATION_LIST = [HVACMode.HEAT_COOL, HVACMode.HEAT, HVACMode.OFF]
 
 PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_USERNAME): cv.string, vol.Required(CONF_PASSWORD): cv.string}
