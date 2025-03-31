@@ -32,9 +32,9 @@ from time import time
 from .const import (
     CONF_KAMEREON_ACCOUNT_ID,
     COOLING_UPDATES_SECONDS,
-    MAX_CALLS_PER_HOURS,
+    DEFAULT_SCAN_INTERVAL,
 )
-from .renault_vehicle import COORDINATORS, RenaultVehicleProxy
+from .renault_vehicle import RenaultVehicleProxy
 
 LOGGER = logging.getLogger(__name__)
 
@@ -56,14 +56,18 @@ class RenaultHub:
     def set_throttled(self) -> None:
         """We got throttled, we need to adjust the rate limit."""
         if self._got_throttled_at_time is None:
-            self._got_throttled_at_time = time()
+            self._got_throttled_at_time = self._get_now()
 
-    def check_throttled(self) -> bool:
+    def _get_now(self) -> float:
+        """Get the current time."""
+        return time()
+
+    def is_throttled(self) -> bool:
         """Check if we are throttled."""
         if self._got_throttled_at_time is None:
             return False
 
-        if time() - self._got_throttled_at_time > COOLING_UPDATES_SECONDS:
+        if self._get_now() - self._got_throttled_at_time > COOLING_UPDATES_SECONDS:
             self._got_throttled_at_time = None
             return False
 
@@ -95,9 +99,8 @@ class RenaultHub:
                     "Failed to retrieve vehicle details from Renault servers"
                 )
 
-            num_call_per_scan = len(COORDINATORS) * len(vehicles.vehicleLinks)
             scan_interval = timedelta(
-                seconds=(3600 * num_call_per_scan) / MAX_CALLS_PER_HOURS
+                seconds=DEFAULT_SCAN_INTERVAL * len(vehicles.vehicleLinks)
             )
 
             device_registry = dr.async_get(self._hass)
@@ -113,21 +116,6 @@ class RenaultHub:
                     for vehicle_link in vehicles.vehicleLinks
                 )
             )
-
-            # all vehicles have been initiated with the right number of active coordinators
-            num_call_per_scan = 0
-            for vehicle_link in vehicles.vehicleLinks:
-                vehicle = self._vehicles[str(vehicle_link.vin)]
-                num_call_per_scan += len(vehicle.coordinators)
-
-            new_scan_interval = timedelta(
-                seconds=(3600 * num_call_per_scan) / MAX_CALLS_PER_HOURS
-            )
-            if new_scan_interval != scan_interval:
-                # we need to change the vehicles with the right scan interval
-                for vehicle_link in vehicles.vehicleLinks:
-                    vehicle = self._vehicles[str(vehicle_link.vin)]
-                    vehicle.update_interval = new_scan_interval
 
     async def async_initialise_vehicle(
         self,
