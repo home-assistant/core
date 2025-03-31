@@ -9,6 +9,7 @@ from pygaposa import Device, FirebaseAuthException, Gaposa, GaposaAuthException,
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import UPDATE_INTERVAL, UPDATE_INTERVAL_FAST
@@ -21,8 +22,10 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator):
         self,
         hass: HomeAssistant,
         logger: logging.Logger,
-        gaposa: Gaposa,
         *,
+        api_key: str,
+        username: str,
+        password: str,
         name: str,
         update_interval: timedelta,
     ) -> None:
@@ -34,12 +37,26 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator):
             update_interval=update_interval,
         )
 
-        self.gaposa = gaposa
+        self._api_key = api_key
+        self._username = username
+        self._password = password
+        self.gaposa: Gaposa | None = None
         self.devices: list[Device] = []
         self.listener: Callable[[], None] | None = None
 
     async def update_gateway(self) -> bool:
         """Fetch data from gateway."""
+        # Initialize the API if it's not ready
+        if self.gaposa is None:
+            websession = async_get_clientsession(self.hass)
+            try:
+                self.gaposa = Gaposa(self._api_key, websession=websession)
+                await self.gaposa.login(self._username, self._password)
+            except GaposaAuthException as exp:
+                raise ConfigEntryAuthFailed from exp
+            except FirebaseAuthException as exp:
+                raise ConfigEntryAuthFailed from exp
+
         try:
             await self.gaposa.update()
         except GaposaAuthException as exp:
@@ -49,8 +66,10 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator):
 
         current_devices: list[Device] = []
         new_devices: list[Device] = []
-        if self.listener is None:
+        if self.listener is None and self.gaposa is not None:
             self.listener = self.on_document_updated
+            # mypy doesn't understand that we've already checked self.gaposa is not None
+            assert self.gaposa is not None
             for client, _user in self.gaposa.clients:
                 for device in client.devices:
                     current_devices.append(device)
@@ -99,10 +118,11 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator):
         # <device serial number>.motors.<channel number>
         data: dict[str, Motor] = {}
 
-        for client, _user in self.gaposa.clients:
-            for device in client.devices:
-                for motor in device.motors:
-                    data[f"{device.serial}.motors.{motor.id}"] = motor
+        if self.gaposa is not None:
+            for client, _user in self.gaposa.clients:
+                for device in client.devices:
+                    for motor in device.motors:
+                        data[f"{device.serial}.motors.{motor.id}"] = motor
 
         return data
 

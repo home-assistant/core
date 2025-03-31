@@ -43,7 +43,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add cover for passed config_entry in HA."""
-    gaposa, coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: DataUpdateCoordinatorGaposa = config_entry.runtime_data["coordinator"]
 
     # Create a set to store the IDs of added entities
     my_entities: dict[str, GaposaCover] = {}
@@ -81,43 +81,17 @@ async def async_setup_entry(
     )
 
 
-# This entire class could be written to extend a base class to ensure common attributes
-# are kept identical/in sync. It's broken apart here between the Cover and Sensors to
-# be explicit about what is returned, and the comments outline where the overlap is.
 class GaposaCover(CoordinatorEntity, CoverEntity):
     """Representation of a Gaposa Cover."""
 
     _attr_device_class = CoverDeviceClass.SHADE
 
-    # The supported features of a cover are done using a bitmask. Using the constants
-    # imported above, we can tell HA the features that are supported by this entity.
-    # If the supported features were dynamic (ie: different depending on the external
-    # device it connected to), then this should be function with an @property decorator.
     @property
     def supported_features(self) -> CoverEntityFeature:
         """Return supported features."""
         return (
             CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
         )
-
-    # Add device actions support
-    @property
-    def device_actions(self) -> list[dict[str, str]]:
-        """Return the available actions for this cover."""
-        return [
-            {
-                "name": "Open",
-                "service": "cover.open_cover",
-            },
-            {
-                "name": "Close",
-                "service": "cover.close_cover",
-            },
-            {
-                "name": "Stop",
-                "service": "cover.stop_cover",
-            },
-        ]
 
     def __init__(
         self, coordinator: DataUpdateCoordinatorGaposa, coverid: str, motor: Motor
@@ -149,31 +123,11 @@ class GaposaCover(CoordinatorEntity, CoverEntity):
         # The opposite of async_added_to_hass. Remove any registered call backs here.
         await super().async_will_remove_from_hass()
 
-    # Information about the devices that is partially visible in the UI.
-    # The most critical thing here is to give this entity a name so it is displayed
-    # as a "device" in the HA UI. This name is used on the Devices overview table,
-    # and the initial screen when the device is added (rather than the entity name
-    # property below). You can then associate other Entities (eg: a battery
-    # sensor) with this device, so it shows more like a unified element in the UI.
-    # For example, an associated battery sensor will be displayed in the right most
-    # column in the Configuration > Devices view for a device.
-    # To associate an entity with this device, the device_info must also return an
-    # identical "identifiers" attribute, but not return a name attribute.
-    # See the sensors.py file for the corresponding example setup.
-    # Additional meta data can also be returned here, including sw_version (displayed
-    # as Firmware), model and manufacturer (displayed as <model> by <manufacturer>)
-    # shown on the device info screen. The Manufacturer and model also have their
-    # respective columns on the Devices overview table. Note: Many of these must be
-    # set when the device is first added, and they are not always automatically
-    # refreshed by HA from it's internal cache.
-    # For more information see:
-    # https://developers.home-assistant.io/docs/device_registry_index/#device-properties
     @property
     def device_info(self) -> DeviceInfo:
         """Information about this entity/device."""
         return {
             "identifiers": {(DOMAIN, self.id)},
-            # If desired, the name for the device could be different to the entity
             "name": self.motor.name,
             "manufacturer": "Gaposa",
         }
