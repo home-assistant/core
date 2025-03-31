@@ -3258,6 +3258,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "laith_switch": {
+      "name": "Laith Light",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "lamarzocco": {
       "name": "La Marzocco",
       "integration_type": "device",
