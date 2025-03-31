@@ -1707,45 +1707,6 @@ class ModuleWrapper:
         return value
 
 
-class Components:
-    """Helper to load components."""
-
-    def __init__(self, hass: HomeAssistant) -> None:
-        """Initialize the Components class."""
-        self._hass = hass
-
-    def __getattr__(self, comp_name: str) -> ModuleWrapper:
-        """Fetch a component."""
-        # Test integration cache
-        integration = self._hass.data[DATA_INTEGRATIONS].get(comp_name)
-
-        if isinstance(integration, Integration):
-            component: ComponentProtocol | None = integration.get_component()
-        else:
-            # Fallback to importing old-school
-            component = _load_file(self._hass, comp_name, _lookup_path(self._hass))
-
-        if component is None:
-            raise ImportError(f"Unable to load {comp_name}")
-
-        # Local import to avoid circular dependencies
-        # pylint: disable-next=import-outside-toplevel
-        from .helpers.frame import ReportBehavior, report_usage
-
-        report_usage(
-            f"accesses hass.components.{comp_name}, which"
-            f" should be updated to import functions used from {comp_name} directly",
-            core_behavior=ReportBehavior.IGNORE,
-            core_integration_behavior=ReportBehavior.IGNORE,
-            custom_integration_behavior=ReportBehavior.LOG,
-            breaks_in_ha_version="2025.3",
-        )
-
-        wrapped = ModuleWrapper(self._hass, component)
-        setattr(self, comp_name, wrapped)
-        return wrapped
-
-
 class Helpers:
     """Helper to load helpers."""
 

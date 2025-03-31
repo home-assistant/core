@@ -441,7 +441,6 @@ class HomeAssistant:
         self.states = StateMachine(self.bus, self.loop)
         self.config = Config(self, config_dir)
         self.config.async_initialize()
-        self.components = loader.Components(self)
         self.helpers = loader.Helpers(self)
         self.state: CoreState = CoreState.not_running
         self.exit_code: int = 0
