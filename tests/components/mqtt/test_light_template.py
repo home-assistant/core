@@ -1634,6 +1634,15 @@ async def test_state_templates_ignore_missing_values(
     assert state.attributes.get("color_temp_kelvin") is None  # rgb color has priority
     assert state.attributes.get("effect") == "rainbow"
 
+    # invalid effect
+    async_fire_mqtt_message(hass, "test-topic", '{"effect": "invalid"}')
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+    assert state.attributes.get("rgb_color") == (255, 128, 64)
+    assert state.attributes.get("brightness") == 128
+    assert state.attributes.get("color_temp_kelvin") is None  # rgb color has priority
+    assert state.attributes.get("effect") == "rainbow"
+
     # turn off the light
     async_fire_mqtt_message(hass, "test-topic", '{"state": "off"}')
     state = hass.states.get("light.test")
