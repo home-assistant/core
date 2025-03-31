@@ -68,6 +68,9 @@
       "reauth_encryption_removed_confirm": {
         "description": "The ESPHome device `{name}` disabled transport encryption. Please confirm that you want to remove the encryption key and allow unencrypted connections."
       },
+      "reauth_encryption_removed_confirm": {
+        "description": "The ESPHome device {name} disabled transport encryption. Please confirm that you want to remove the encryption key and allow unencrypted connections."
+      },
       "discovery_confirm": {
         "description": "Do you want to add the device `{name}` to Home Assistant?",
         "title": "Discovered ESPHome device"
