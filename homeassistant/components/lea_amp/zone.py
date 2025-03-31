@@ -96,10 +96,10 @@ class LeaZone:
         await self._controller.turn_on_off(self._zone_id, str(power))
         self._power = power
 
-    async def set_zone_volume(self, volume: int) -> None:
+    def set_zone_volume(self, volume: int) -> None:
         """Set Zone Volume."""
         _LOGGER.log(logging.INFO, "set_zone_volume: %s", str(volume))
-        await self._controller.set_volume(self._zone_id, volume)
+        self._controller.set_volume(self._zone_id, volume)
         self._volume = volume
 
     async def set_zone_mute(self, mute: bool) -> None:
