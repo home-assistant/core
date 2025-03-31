@@ -1,5 +1,6 @@
 """Config flow for Remote Calendar integration."""
 
+from http import HTTPStatus
 import logging
 from typing import Any
 
@@ -50,6 +51,13 @@ class RemoteCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
         client = get_async_client(self.hass)
         try:
             res = await client.get(user_input[CONF_URL], follow_redirects=True)
+            if res.status_code == HTTPStatus.FORBIDDEN:
+                errors["base"] = "forbidden"
+                return self.async_show_form(
+                    step_id="user",
+                    data_schema=STEP_USER_DATA_SCHEMA,
+                    errors=errors,
+                )
             res.raise_for_status()
         except (HTTPError, InvalidURL) as err:
             errors["base"] = "cannot_connect"
