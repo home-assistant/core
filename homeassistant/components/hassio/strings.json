@@ -24,8 +24,8 @@
           "fix_menu": {
             "description": "Add-on {addon} is set to start at boot but failed to start. Usually this occurs when the configuration is incorrect or the same port is used in multiple add-ons. Check the configuration as well as logs for {addon} and Supervisor.\n\nUse Start to try again or Disable to turn off the start at boot option.",
             "menu_options": {
-              "addon_execute_start": "Start",
-              "addon_disable_boot": "Disable"
+              "addon_execute_start": "[%key:common::action::start%]",
+              "addon_disable_boot": "[%key:common::action::disable%]"
             }
           }
         },
