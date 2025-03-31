@@ -22,8 +22,8 @@ class LeaZone:
 
         self._zone_name: str = "Zone " + str(zone_id)
         self._model: str = ""
-        self._power: bool = False
-        self._volume: int = 0
+        self._power: bool = True
+        self._volume: float = 0.5
         self._mute: bool = False
         self._source: str = ""
         self._update_callback: Callable[[LeaZone], None] | None = None
@@ -76,7 +76,7 @@ class LeaZone:
         return self._power
 
     @property
-    def volume(self) -> int:
+    def volume(self) -> float:
         """Volume."""
         return self._volume
 
@@ -101,7 +101,7 @@ class LeaZone:
         _LOGGER.log(logging.INFO, "set_zone_volume value to send: %s", str(volume))
         await self._controller.set_volume(self._zone_id, volume)
         _LOGGER.log(logging.INFO, "HA value:  %s", str(HAVolume))
-        self._volume = int(HAVolume)
+        self._volume = int(HAVolume / 100)
 
     async def set_zone_mute(self, mute: bool) -> None:
         """Set Zone Mute."""
@@ -135,6 +135,7 @@ class LeaZone:
         if commandType == "mute":
             self._mute = bool(value)
         elif commandType == "power":
+            _LOGGER.log(logging.INFO, "update power:  %s", str(value))
             self._power = bool(value)
         self.update_lastseen()
         if self._update_callback and callable(self._update_callback):
