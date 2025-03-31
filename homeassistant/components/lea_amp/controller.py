@@ -216,10 +216,10 @@ class LeaController:
             # _LOGGER.log(logging.INFO, "zone id: %s", str(d.zone_id))
             # self._send_update_message(d.zone_id)
 
-            # if self._update_enabled:
-            # self._update_handle = self._loop.call_later(
-            # self._update_interval, self.send_update_message
-            # )
+            if self._update_enabled:
+                self._update_handle = self._loop.call_later(
+                    self._update_interval, self.send_update_message
+                )
 
     async def turn_on_off(self, zone_id: str, status: str):
         """Turn on off."""
