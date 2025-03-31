@@ -52,3 +52,4 @@ types-pytz==2025.1.0.20250204
 types-PyYAML==6.0.12.20241230
 types-requests==2.31.0.3
 types-xmltodict==0.13.0.3
+types-aiobotocore[s3]==2.13.1

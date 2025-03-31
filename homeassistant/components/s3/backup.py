@@ -5,9 +5,12 @@ import functools
 import json
 import logging
 from time import time
-from typing import Any, TypeVar, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from botocore.exceptions import BotoCoreError
+
+if TYPE_CHECKING:
+    from types_aiobotocore_s3.type_defs import CompletedPartTypeDef
 
 from homeassistant.components.backup import (
     AgentBackup,
@@ -24,11 +27,8 @@ from .const import CONF_BUCKET, DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 CACHE_TTL = 300
 
-# Type variable for the decorator return type
-T = TypeVar("T")
 
-
-def handle_boto_errors(
+def handle_boto_errors[T](
     func: Callable[..., Coroutine[Any, Any, T]],
 ) -> Callable[..., Coroutine[Any, Any, T]]:
     """Handle BotoCoreError exceptions by converting them to BackupAgentError."""
@@ -91,10 +91,10 @@ class S3BackupAgent(BackupAgent):
         """Initialize the S3 agent."""
         super().__init__()
         self._client = entry.runtime_data
-        self._bucket: str = entry.data[CONF_BUCKET]
+        self._bucket = cast(str, entry.data[CONF_BUCKET])
         self.name = entry.title
         self.unique_id = cast(str, entry.unique_id)
-        self._backup_cache: dict[str, AgentBackup] = {}
+        self._backup_cache = cast(dict[str, AgentBackup], {})
         self._cache_expiration = time()
 
     @handle_boto_errors
@@ -112,7 +112,7 @@ class S3BackupAgent(BackupAgent):
         tar_filename, _ = suggested_filenames(backup)
 
         response = await self._client.get_object(Bucket=self._bucket, Key=tar_filename)
-        return response["Body"].iter_chunks()
+        return response["Body"].iter_chunks()  # type: ignore[return-value]
 
     async def async_upload_backup(
         self,
@@ -137,7 +137,7 @@ class S3BackupAgent(BackupAgent):
             )
 
             upload_id = multipart_upload["UploadId"]
-            parts: list[dict] = []
+            parts: list[CompletedPartTypeDef] = []
             part_number = 1
 
             stream = await open_stream()

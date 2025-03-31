@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import logging
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
-from aiobotocore.client import AioBaseClient
+if TYPE_CHECKING:
+    from types_aiobotocore_s3 import S3Client
+else:
+    from aiobotocore.client import AioBaseClient as S3Client
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -15,12 +18,11 @@ from ._api import (
     CannotConnectError,
     InvalidBucketNameError,
     InvalidCredentialsError,
-    InvalidEndpointURLError,
     get_client,
 )
 from .const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 
-type S3ConfigEntry = ConfigEntry[AioBaseClient]
+type S3ConfigEntry = ConfigEntry[S3Client]
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,11 +42,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: S3ConfigEntry) -> bool:
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="invalid_bucket_name",
-        ) from err
-    except InvalidEndpointURLError as err:
-        raise ConfigEntryError(
-            translation_domain=DOMAIN,
-            translation_key="invalid_endpoint_url",
         ) from err
     except CannotConnectError as err:
         raise ConfigEntryError(

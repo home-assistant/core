@@ -1,7 +1,12 @@
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from typing import TYPE_CHECKING
 
-from aiobotocore.client import AioBaseClient
+if TYPE_CHECKING:
+    from types_aiobotocore_s3 import S3Client
+else:
+    from aiobotocore.client import AioBaseClient as S3Client
+
 from aiobotocore.session import AioSession
 from botocore.exceptions import (
     ClientError,
@@ -11,7 +16,7 @@ from botocore.exceptions import (
 
 
 @asynccontextmanager
-async def get_client(data: dict[str, str]) -> AsyncGenerator[AioBaseClient]:
+async def get_client(data: dict[str, str]) -> AsyncGenerator[S3Client]:
     session = AioSession()
     try:
         async with session.create_client(
