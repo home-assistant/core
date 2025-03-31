@@ -104,20 +104,20 @@ class LeaZone:
 
     async def set_zone_mute(self, mute: bool) -> None:
         """Set Zone Mute."""
-        _LOGGER.debug("set_zone_mute")
+        _LOGGER.log(logging.INFO, "set_zone_mute")
         await self._controller.set_mute(self._zone_id, mute)
         self._mute = mute
 
     async def set_zone_source(self, source: int) -> None:
         """Set Zone Source."""
-        _LOGGER.debug("set_zone_source")
+        _LOGGER.log(logging.INFO, "set_zone_source")
         await self._controller.set_source(self._zone_id, source)
         self._source = source
 
     def updateVolume(self, value: float):
         """Update Volume."""
-        _LOGGER.debug("updateVolume")
-        _LOGGER.debug("value:  %s", str(value))
+        _LOGGER.log(logging.INFO, "updateVolume")
+        _LOGGER.log(logging.INFO, "value:  %s", str(value))
         value = (((value / -1) - 80) / 0.8) * -1
         self._volume = int(value)
         self.update_lastseen()
@@ -126,9 +126,9 @@ class LeaZone:
 
     def update(self, value: str, commandType: str):
         """Update zone."""
-        _LOGGER.debug("update")
-        _LOGGER.debug("commandType:  %s", str(commandType))
-        _LOGGER.debug("value:  %s", str(value))
+        _LOGGER.log(logging.INFO, "update")
+        _LOGGER.log(logging.INFO, "commandType:  %s", str(commandType))
+        _LOGGER.log(logging.INFO, "value:  %s", str(value))
         if commandType == "mute":
             self._mute = bool(value)
         elif commandType == "power":
