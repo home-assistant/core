@@ -2,7 +2,7 @@
   "domain": "lea_amp",
   "name": "lea",
   "codeowners": ["@lea_amp"],
-  "config_flow": false,
+  "config_flow": true,
   "dependencies": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/lea_amp",
   "integration_type": "device",
