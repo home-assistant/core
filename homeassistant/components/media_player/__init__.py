@@ -462,8 +462,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             vol.Optional(ATTR_MEDIA_CONTENT_TYPE): cv.string,
             vol.Optional(ATTR_MEDIA_CONTENT_ID): cv.string,
             vol.Required(ATTR_MEDIA_SEARCH_QUERY): cv.string,
+            vol.Required(ATTR_MEDIA_SEARCH_QUERY): cv.string,
             vol.Optional(ATTR_MEDIA_FILTER_CLASSES): vol.All(
-                cv.ensure_list, [cv.enum(MediaClass)]
+                cv.ensure_list,
+                [vol.In([m.value for m in MediaClass])],
+                lambda x: {MediaClass(item) for item in x},
             ),
         },
         "async_internal_search_media",
@@ -1181,17 +1184,17 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     async def async_internal_search_media(
         self,
-        query: str,
+        media_search_query: str,
         media_content_type: MediaType | str | None = None,
         media_content_id: str | None = None,
-        target_media_classes: set[MediaClass] | None = None,
+        media_filter_classes: list[MediaClass] | None = None,
     ) -> SearchMedia:
         return await self.async_search_media(
             query=SearchMediaQuery(
-                query=query,
+                media_search_query=media_search_query,
                 media_content_type=media_content_type,
                 media_content_id=media_content_id,
-                target_media_classes=target_media_classes,
+                media_filter_classes=media_filter_classes,
             )
         )
 
@@ -1421,7 +1424,9 @@ async def websocket_browse_media(
         ): str,
         vol.Required(ATTR_MEDIA_SEARCH_QUERY): str,
         vol.Optional(ATTR_MEDIA_FILTER_CLASSES): vol.All(
-            cv.ensure_list, [cv.enum(MediaClass)]
+            cv.ensure_list,
+            [vol.In([m.value for m in MediaClass])],
+            lambda x: {MediaClass(item) for item in x},
         ),
     }
 )
@@ -1453,14 +1458,14 @@ async def websocket_search_media(
     media_content_type = msg.get(ATTR_MEDIA_CONTENT_TYPE)
     media_content_id = msg.get(ATTR_MEDIA_CONTENT_ID)
     query = str(msg.get(ATTR_MEDIA_SEARCH_QUERY))
-    target_media_classes = msg.get(ATTR_MEDIA_FILTER_CLASSES)
+    media_filter_classes = msg.get(ATTR_MEDIA_FILTER_CLASSES, [])
 
     try:
         payload = await player.async_internal_search_media(
             query,
             media_content_type,
             media_content_id,
-            target_media_classes,
+            media_filter_classes,
         )
     except SearchError as err:
         connection.send_message(
