@@ -485,13 +485,6 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
     ),
     OverkizSensorDescription(
-        key=OverkizState.CORE_REGULATION_MODE,
-        name="Regulation mode",
-        translation_key="regulation_mode",
-        device_class=SensorDeviceClass.ENUM,
-        options=["none", "standby", "increase"],
-    ),
-    OverkizSensorDescription(
         key=OverkizState.CORE_DEROGATED_TARGET_TEMPERATURE,
         name="Derogated target temperature",
         translation_key="derogated_target_temperature",
