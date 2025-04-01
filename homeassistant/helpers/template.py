@@ -1997,9 +1997,9 @@ def add(value, amount, default=_SENTINEL):
         return default
 
 
-def apply(value, callable, *args, **kwargs):
+def apply(value, fn, *args, **kwargs):
     """Call the given callable with the provided arguments and keyword arguments."""
-    return callable(value, *args, **kwargs)
+    return fn(value, *args, **kwargs)
 
 
 def as_function(macro: jinja2.runtime.Macro) -> Callable[..., Any]:
