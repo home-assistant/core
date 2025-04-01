@@ -67,7 +67,7 @@ class RenaultHub:
         if self._got_throttled_at_time is None:
             return False
 
-        if self._get_now() - self._got_throttled_at_time > COOLING_UPDATES_SECONDS:
+        if time() - self._got_throttled_at_time > COOLING_UPDATES_SECONDS:
             self._got_throttled_at_time = None
             return False
 
