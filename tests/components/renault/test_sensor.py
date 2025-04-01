@@ -226,7 +226,6 @@ async def test_sensor_throttling_after_init(
     assert "Renault API throttled: scan skipped" in caplog.text
 
     # Test QuotaLimitException recovery, with new battery level
-    caplog.clear()
     for get_data_mock in patches.values():
         get_data_mock.side_effect = None
     patches["battery_status"].return_value.batteryLevel = 55
