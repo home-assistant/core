@@ -79,7 +79,9 @@ def api_call[_T: VelbusEntity, **_P](
         """Wrap all command methods."""
         try:
             await func(self, *args, **kwargs)
+            self._attr_available = True
         except OSError as exc:
+            self._attr_available = True
             raise HomeAssistantError(
                 f"Could not execute {func.__name__} service for {self.name}"
             ) from exc
