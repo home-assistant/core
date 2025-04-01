@@ -146,6 +146,7 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
         """(Re)Subscribe to topics."""
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
 
+    @callback
     def _process_update_extra_state_attributes(
         self, extra_state_attributes: dict[str, Any]
     ) -> None:
