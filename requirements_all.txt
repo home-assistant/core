@@ -1884,6 +1884,9 @@ pycoolmasternet-async==0.2.2
 # homeassistant.components.radio_browser
 pycountry==24.6.1
 
+# homeassistant.components.lc7001
+pycryptodome==3.22.0
+
 # homeassistant.components.microsoft
 pycsspeechtts==1.0.8
 
@@ -2129,6 +2132,9 @@ pymeteoclimatic==0.1.0
 
 # homeassistant.components.assist_pipeline
 pymicro-vad==1.0.1
+
+# homeassistant.components.lc7001
+pymitter==1.0.0
 
 # homeassistant.components.xiaomi_tv
 pymitv==1.4.3

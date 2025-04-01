@@ -1,0 +1,10 @@
+{
+  "domain": "lc7001",
+  "name": "Legrand Whole Home Lighting",
+  "codeowners": ["@bas.tard"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/lc7001",
+  "iot_class": "local_push",
+  "quality_scale": "platinum",
+  "requirements": ["pymitter==1.0.0", "pycryptodome==3.22.0"]
+}
