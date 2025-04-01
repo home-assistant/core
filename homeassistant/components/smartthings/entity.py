@@ -44,7 +44,7 @@ class SmartThingsEntity(Entity):
             if capability in device.status[component]
         }
         self.device = device
-        self._attr_unique_id = device.device.device_id
+        self._attr_unique_id = f"{device.device.device_id}_{component}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.device.device_id)},
         )

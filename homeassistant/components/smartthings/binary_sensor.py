@@ -133,6 +133,8 @@ CAPABILITY_TO_SENSORS: dict[
             device_class=BinarySensorDeviceClass.POWER,
             is_on_key="on",
             category={
+                Category.CLOTHING_CARE_MACHINE,
+                Category.COOKTOP,
                 Category.DISHWASHER,
                 Category.DRYER,
                 Category.MICROWAVE,
@@ -229,7 +231,7 @@ class SmartThingsBinarySensor(SmartThingsEntity, BinarySensorEntity):
         self._attribute = attribute
         self.capability = capability
         self.entity_description = entity_description
-        self._attr_unique_id = f"{device.device.device_id}.{attribute}"
+        self._attr_unique_id = f"{device.device.device_id}_{component}_{capability}_{attribute}_{attribute}"
         if (
             entity_description.category_device_class
             and (category := get_main_component_category(device))
@@ -247,9 +249,6 @@ class SmartThingsBinarySensor(SmartThingsEntity, BinarySensorEntity):
             is not None
         ):
             self._attr_translation_key = translation_key
-            self._attr_unique_id = (
-                f"{device.device.device_id}_{component}_{capability}_{attribute}"
-            )
 
     @property
     def is_on(self) -> bool:

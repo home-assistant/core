@@ -152,8 +152,8 @@
   "selector": {
     "profile": {
       "options": {
-        "home": "Home",
-        "away": "Away",
+        "home": "[%key:common::state::home%]",
+        "away": "[%key:common::state::not_home%]",
         "boost": "Boost",
         "fireplace": "Fireplace",
         "extra": "Extra"

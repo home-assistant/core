@@ -6,12 +6,12 @@ from collections.abc import Mapping
 from typing import Any
 
 from aiohttp import ClientConnectionError
-from tesla_fleet_api import Teslemetry
 from tesla_fleet_api.exceptions import (
     InvalidToken,
     SubscriptionRequired,
     TeslaFleetError,
 )
+from tesla_fleet_api.teslemetry import Teslemetry
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult

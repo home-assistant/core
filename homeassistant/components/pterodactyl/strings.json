@@ -25,6 +25,49 @@
       "status": {
         "name": "Status"
       }
+    },
+    "button": {
+      "start_server": {
+        "name": "Start server"
+      },
+      "stop_server": {
+        "name": "Stop server"
+      },
+      "restart_server": {
+        "name": "Restart server"
+      },
+      "force_stop_server": {
+        "name": "Force stop server"
+      }
+    },
+    "sensor": {
+      "cpu_utilization": {
+        "name": "CPU utilization"
+      },
+      "cpu_limit": {
+        "name": "CPU limit"
+      },
+      "memory_usage": {
+        "name": "Memory usage"
+      },
+      "memory_limit": {
+        "name": "Memory limit"
+      },
+      "disk_usage": {
+        "name": "Disk usage"
+      },
+      "disk_limit": {
+        "name": "Disk limit"
+      },
+      "network_inbound": {
+        "name": "Network inbound"
+      },
+      "network_outbound": {
+        "name": "Network outbound"
+      },
+      "uptime": {
+        "name": "Uptime"
+      }
     }
   }
 }

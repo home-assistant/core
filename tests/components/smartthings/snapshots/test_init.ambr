@@ -365,6 +365,39 @@
     'via_device_id': None,
   })
 # ---
+# name: test_devices[da_ac_rac_000003]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': 'ARTIK051',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        'c76d6f38-1b7f-13dd-37b5-db18d5272783',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'Samsung Electronics',
+    'model': 'ARTIK051_PRAC_20K',
+    'model_id': None,
+    'name': 'Office AirFree',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': 'ARTIK051_PRAC_20K_11230313',
+    'via_device_id': None,
+  })
+# ---
 # name: test_devices[da_ac_rac_01001]
   DeviceRegistryEntrySnapshot({
     'area_id': 'theater',
@@ -427,6 +460,39 @@
     'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': 'Theater',
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_devices[da_ks_cooktop_31001]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        '808dbd84-f357-47e2-a0cd-3b66fa22d584',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': None,
+    'model': None,
+    'model_id': None,
+    'name': 'Induction Hob',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
@@ -563,6 +629,39 @@
     'via_device_id': None,
   })
 # ---
+# name: test_devices[da_ref_normal_01011]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': 'Realtek',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        '5758b2ec-563e-f39b-ec39-208e54aabf60',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'Samsung Electronics',
+    'model': 'TP1X_REF_21K',
+    'model_id': None,
+    'name': 'Frigo',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': 'A-RFWW-TP1-22-REV1_20241030',
+    'via_device_id': None,
+  })
+# ---
 # name: test_devices[da_rvc_normal_000001]
   DeviceRegistryEntrySnapshot({
     'area_id': 'theater',
@@ -659,6 +758,39 @@
     'serial_number': None,
     'suggested_area': 'Theater',
     'sw_version': 'DA_DW_A51_20_COMMON_30230714',
+    'via_device_id': None,
+  })
+# ---
+# name: test_devices[da_wm_sc_000001]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': 'MediaTek',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        'b93211bf-9d96-bd21-3b2f-964fcc87f5cc',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'Samsung Electronics',
+    'model': 'DA_DF_TP2_20_COMMON',
+    'model_id': None,
+    'name': 'AirDresser',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': 'DA_DF_TP2_20_COMMON_30230807',
     'via_device_id': None,
   })
 # ---
