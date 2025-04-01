@@ -62,10 +62,6 @@ class RenaultDataUpdateCoordinator(DataUpdateCoordinator[T]):
         self._has_already_worked = False
         self._hub = hub
 
-    async def _call_update_method(self) -> T:
-        """Call the update method and handle exceptions."""
-        return await self.update_method()
-
     async def _async_update_data(self) -> T:
         """Fetch the latest data from the source."""
 

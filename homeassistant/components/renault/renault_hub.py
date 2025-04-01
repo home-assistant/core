@@ -58,10 +58,6 @@ class RenaultHub:
         if self._got_throttled_at_time is None:
             self._got_throttled_at_time = time()
 
-    def _get_now(self) -> float:
-        """Get the current time."""
-        return time()
-
     def is_throttled(self) -> bool:
         """Check if we are throttled."""
         if self._got_throttled_at_time is None:
@@ -99,9 +95,7 @@ class RenaultHub:
                     "Failed to retrieve vehicle details from Renault servers"
                 )
 
-            scan_interval = timedelta(
-                seconds=DEFAULT_SCAN_INTERVAL * len(vehicles.vehicleLinks)
-            )
+            scan_interval = timedelta(seconds=DEFAULT_SCAN_INTERVAL)
 
             device_registry = dr.async_get(self._hass)
             await asyncio.gather(
