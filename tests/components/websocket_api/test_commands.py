@@ -732,7 +732,7 @@ async def test_get_config(
             result[key] = set(result[key])
             config[key] = set(config[key])
 
-    assert result == config
+    assert result == config | {"pending_components": []}
 
 
 async def test_ping(websocket_client: MockHAClientWebSocket) -> None:

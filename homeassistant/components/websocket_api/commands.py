@@ -59,7 +59,11 @@ from homeassistant.loader import (
     async_get_integration_descriptions,
     async_get_integrations,
 )
-from homeassistant.setup import async_get_loaded_integrations, async_get_setup_timings
+from homeassistant.setup import (
+    DATA_SETUP_DONE,
+    async_get_loaded_integrations,
+    async_get_setup_timings,
+)
 from homeassistant.util.json import format_unserializable_data
 
 from . import const, decorators, messages
@@ -517,7 +521,9 @@ def handle_get_config(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle get config command."""
-    connection.send_result(msg["id"], hass.config.as_dict())
+    config_dict = hass.config.as_dict()
+    config_dict["pending_components"] = list(hass.data.get(DATA_SETUP_DONE, []))
+    connection.send_result(msg["id"], config_dict)
 
 
 @decorators.websocket_command(
