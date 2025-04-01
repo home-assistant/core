@@ -1,6 +1,6 @@
 {
   "domain": "lea_amp",
-  "name": "lea",
+  "name": "LEA AMP",
   "codeowners": ["@lea_amp"],
   "config_flow": true,
   "dependencies": ["network"],
