@@ -31,7 +31,7 @@ from homeassistant.helpers import area_registry as ar
 from homeassistant.helpers.backup import async_get_manager as async_get_backup_manager
 from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.helpers.translation import async_get_translations
-from homeassistant.setup import async_setup_component
+from homeassistant.setup import SetupPhases, async_pause_setup, async_setup_component
 
 if TYPE_CHECKING:
     from . import OnboardingData, OnboardingStorage, OnboardingStoreData
@@ -60,7 +60,7 @@ async def async_setup(
     hass.http.register_view(BackupInfoView(data))
     hass.http.register_view(RestoreBackupView(data))
     hass.http.register_view(UploadBackupView(data))
-    setup_cloud_views(hass, data)
+    await setup_cloud_views(hass, data)
 
 
 class OnboardingView(HomeAssistantView):
@@ -430,8 +430,18 @@ class UploadBackupView(BackupOnboardingView, backup_http.UploadBackupView):
         return await self._post(request)
 
 
-def setup_cloud_views(hass: HomeAssistant, data: OnboardingStoreData) -> None:
+async def setup_cloud_views(hass: HomeAssistant, data: OnboardingStoreData) -> None:
     """Set up the cloud views."""
+
+    with async_pause_setup(hass, SetupPhases.WAIT_IMPORT_PACKAGES):
+        # Import the cloud integration in an executor to avoid blocking the
+        # event loop.
+        def import_cloud() -> None:
+            """Import the cloud integration."""
+            # pylint: disable-next=import-outside-toplevel
+            from homeassistant.components.cloud import http_api  # noqa: F401
+
+        await hass.async_add_import_executor_job(import_cloud)
 
     # The cloud integration is imported locally to avoid cloud being imported by
     # bootstrap.py and to avoid circular imports.
