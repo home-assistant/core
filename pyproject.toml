@@ -100,6 +100,11 @@ dependencies = [
   # dependencies to stage 0.
   "pyspeex-noise==1.0.2",
   "python-slugify==8.0.4",
+  # PyTurboJPEG is indirectly imported from onboarding via the import chain
+  # onboarding->cloud->camera->pyturbojpeg. Onboarding needs
+  # to be setup in stage 0, but we don't want to also promote cloud with all its
+  # dependencies to stage 0.
+  "PyTurboJPEG==1.7.5",
   "PyYAML==6.0.2",
   "requests==2.32.3",
   "securetar==2025.2.1",

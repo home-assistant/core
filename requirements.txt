@@ -44,6 +44,7 @@ psutil-home-assistant==0.0.1
 pymicro-vad==1.0.1
 pyspeex-noise==1.0.2
 python-slugify==8.0.4
+PyTurboJPEG==1.7.5
 PyYAML==6.0.2
 requests==2.32.3
 securetar==2025.2.1
