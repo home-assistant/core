@@ -2,7 +2,6 @@
 
 from unittest.mock import AsyncMock, Mock, patch
 
-# from homematicip..connection import AsyncConnection
 from homematicip.async_home import AsyncHome
 from homematicip.auth import Auth
 from homematicip.base.enums import WeatherCondition, WeatherDayTime
@@ -39,8 +38,6 @@ def mock_connection_fixture() -> RestConnection:
         return path, body
 
     connection.async_post.side_effect = _rest_call_side_effect
-    # connection.api_call = AsyncMock(return_value=True)
-    # connection.init = AsyncMock(side_effect=True)
 
     return connection
 
