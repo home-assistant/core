@@ -422,7 +422,7 @@ aiowaqi==3.1.0
 aiowatttime==0.1.1
 
 # homeassistant.components.webdav
-aiowebdav2==0.4.4
+aiowebdav2==0.4.5
 
 # homeassistant.components.webostv
 aiowebostv==0.7.3
@@ -514,7 +514,7 @@ asmog==0.0.6
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.43.0
+async-upnp-client==0.44.0
 
 # homeassistant.components.arve
 asyncarve==0.1.1
@@ -1157,7 +1157,7 @@ hole==0.8.0
 holidays==0.69
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250328.0
+home-assistant-frontend==20250331.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.3.28
