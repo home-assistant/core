@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -124,75 +124,63 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
             )
             return
         if payload == self._config[CONF_PAYLOAD_HOME]:
-            self._location_name = STATE_HOME
+            self._attr_location_name = STATE_HOME
         elif payload == self._config[CONF_PAYLOAD_NOT_HOME]:
-            self._location_name = STATE_NOT_HOME
+            self._attr_location_name = STATE_NOT_HOME
         elif payload == self._config[CONF_PAYLOAD_RESET]:
-            self._location_name = None
+            self._attr_location_name = None
         else:
             if TYPE_CHECKING:
                 assert isinstance(msg.payload, str)
-            self._location_name = msg.payload
+            self._attr_location_name = msg.payload
 
     @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         self.add_subscription(
-            CONF_STATE_TOPIC, self._tracker_message_received, {"_location_name"}
+            CONF_STATE_TOPIC, self._tracker_message_received, {"_attr_location_name"}
         )
-
-    @property
-    def force_update(self) -> bool:
-        """Do not force updates if the state is the same."""
-        return False
 
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
 
-    @property
-    def latitude(self) -> float | None:
-        """Return latitude if provided in extra_state_attributes or None."""
+    def _process_update_extra_state_attributes(
+        self, extra_state_attributes: dict[str, Any]
+    ) -> None:
+        """Extract the location from the extra state attributes."""
         if (
-            self.extra_state_attributes is not None
-            and ATTR_LATITUDE in self.extra_state_attributes
+            ATTR_LATITUDE in extra_state_attributes
+            and ATTR_LONGITUDE in extra_state_attributes
         ):
             try:
-                return float(self.extra_state_attributes[ATTR_LATITUDE])
-            except (TypeError, ValueError):
-                return None
-        return None
+                self._attr_latitude = float(extra_state_attributes[ATTR_LATITUDE])
+                self._attr_longitude = float(extra_state_attributes[ATTR_LONGITUDE])
+            except (ValueError, TypeError):
+                # Reset location
+                self._attr_latitude = None
+                self._attr_longitude = None
+            finally:
+                self._attr_location_name = None
+        else:
+            # Reset location name and coordinates
+            self._attr_latitude = None
+            self._attr_longitude = None
+            self._attr_location_name = None
 
-    @property
-    def location_accuracy(self) -> int:
-        """Return location accuracy if provided in extra_state_attributes or None."""
-        if (
-            self.extra_state_attributes is not None
-            and ATTR_GPS_ACCURACY in self.extra_state_attributes
-        ):
+        if ATTR_GPS_ACCURACY in extra_state_attributes:
             try:
-                return int(self.extra_state_attributes[ATTR_GPS_ACCURACY])
-            except (TypeError, ValueError):
-                return 0
-        return 0
+                self._attr_location_accuracy = round(
+                    float(extra_state_attributes[ATTR_GPS_ACCURACY])
+                )
+            except (ValueError, TypeError):
+                self._attr_location_accuracy = 0
 
-    @property
-    def longitude(self) -> float | None:
-        """Return longitude if provided in extra_state_attributes or None."""
-        if (
-            self.extra_state_attributes is not None
-            and ATTR_LONGITUDE in self.extra_state_attributes
-        ):
-            try:
-                return float(self.extra_state_attributes[ATTR_LONGITUDE])
-            except (TypeError, ValueError):
-                return None
-        return None
-
-    @property
-    def location_name(self) -> str | None:
-        """Return a location name for the current location of the device."""
-        return self._location_name
+        self._attr_extra_state_attributes = {
+            attribute: value
+            for attribute, value in extra_state_attributes.items()
+            if attribute not in (ATTR_LATITUDE, ATTR_LONGITUDE, ATTR_GPS_ACCURACY)
+        }
 
     @property
     def source_type(self) -> SourceType:
