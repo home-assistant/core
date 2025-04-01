@@ -34,7 +34,7 @@ PARALLEL_UPDATES = 0
 class OhmeSensorDescription(OhmeEntityDescription, SensorEntityDescription):
     """Class describing Ohme sensor entities."""
 
-    value_fn: Callable[[OhmeApiClient], str | int | float]
+    value_fn: Callable[[OhmeApiClient], str | int | float | None]
 
 
 SENSOR_CHARGE_SESSION = [
@@ -130,6 +130,6 @@ class OhmeSensor(OhmeEntity, SensorEntity):
     entity_description: OhmeSensorDescription
 
     @property
-    def native_value(self) -> str | int | float:
+    def native_value(self) -> str | int | float | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.client)
