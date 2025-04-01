@@ -108,7 +108,7 @@ class S3BackupAgent(BackupAgent):
         backup = await self._find_backup_by_id(backup_id)
         tar_filename, _ = suggested_filenames(backup)
 
-        response = await self._client.get_object(Bucket=self._bucket, Key=tar_filename)  # type: ignore[attr-defined]
+        response = await self._client.get_object(Bucket=self._bucket, Key=tar_filename)
         return response["Body"].iter_chunks()
 
     async def async_upload_backup(
@@ -128,7 +128,7 @@ class S3BackupAgent(BackupAgent):
         # Upload the backup file
         upload_id = None
         try:
-            multipart_upload = await self._client.create_multipart_upload(  # type: ignore[attr-defined]
+            multipart_upload = await self._client.create_multipart_upload(
                 Bucket=self._bucket,
                 Key=tar_filename,
             )
@@ -139,7 +139,7 @@ class S3BackupAgent(BackupAgent):
 
             stream = await open_stream()
             async for chunk in stream:
-                part = await self._client.upload_part(  # type: ignore[attr-defined]
+                part = await self._client.upload_part(
                     Bucket=self._bucket,
                     Key=tar_filename,
                     PartNumber=part_number,
@@ -149,7 +149,7 @@ class S3BackupAgent(BackupAgent):
                 parts.append({"PartNumber": part_number, "ETag": part["ETag"]})
                 part_number += 1
 
-            await self._client.complete_multipart_upload(  # type: ignore[attr-defined]
+            await self._client.complete_multipart_upload(
                 Bucket=self._bucket,
                 Key=tar_filename,
                 UploadId=upload_id,
@@ -158,7 +158,7 @@ class S3BackupAgent(BackupAgent):
 
             # Upload the metadata file
             metadata_content = json.dumps(backup.as_dict())
-            await self._client.put_object(  # type: ignore[attr-defined]
+            await self._client.put_object(
                 Bucket=self._bucket,
                 Key=metadata_filename,
                 Body=metadata_content,
@@ -170,7 +170,7 @@ class S3BackupAgent(BackupAgent):
         except BotoCoreError as err:
             if upload_id:
                 try:
-                    await self._client.abort_multipart_upload(  # type: ignore[attr-defined]
+                    await self._client.abort_multipart_upload(
                         Bucket=self._bucket,
                         Key=tar_filename,
                         UploadId=upload_id,
@@ -193,8 +193,8 @@ class S3BackupAgent(BackupAgent):
         tar_filename, metadata_filename = suggested_filenames(backup)
 
         # Delete both the backup file and its metadata file
-        await self._client.delete_object(Bucket=self._bucket, Key=tar_filename)  # type: ignore[attr-defined]
-        await self._client.delete_object(Bucket=self._bucket, Key=metadata_filename)  # type: ignore[attr-defined]
+        await self._client.delete_object(Bucket=self._bucket, Key=tar_filename)
+        await self._client.delete_object(Bucket=self._bucket, Key=metadata_filename)
 
         # Reset cache after successful deletion
         self._cache_expiration = time()
@@ -228,7 +228,7 @@ class S3BackupAgent(BackupAgent):
             return self._backup_cache
 
         backups = {}
-        response = await self._client.list_objects_v2(Bucket=self._bucket)  # type: ignore[attr-defined]
+        response = await self._client.list_objects_v2(Bucket=self._bucket)
 
         # Filter for metadata files only
         metadata_files = [
@@ -240,7 +240,7 @@ class S3BackupAgent(BackupAgent):
         for metadata_file in metadata_files:
             try:
                 # Download and parse metadata file
-                metadata_response = await self._client.get_object(  # type: ignore[attr-defined]
+                metadata_response = await self._client.get_object(
                     Bucket=self._bucket, Key=metadata_file["Key"]
                 )
                 metadata_content = await metadata_response["Body"].read()
