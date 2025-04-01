@@ -29,16 +29,21 @@ class HomeAssistantQueueListener(logging.handlers.QueueListener):
     LOG_COUNTS_RESET_INTERVAL = 300
     MAX_LOGS_COUNT = 200
 
+    EXCLUDED_LOG_COUNT_MODULES = [
+        "homeassistant.setup",
+        "homeassistant.components.automation",
+        "homeassistant.components.script",
+    ]
+
     _last_reset: float
     _log_counts: dict[str, int]
-    _warned_modules: set[str]
 
     def __init__(
         self, queue: SimpleQueue[logging.Handler], *handlers: logging.Handler
     ) -> None:
         """Initialize the handler."""
         super().__init__(queue, *handlers)
-        self._warned_modules = set()
+        self._module_log_count_skip_flags: dict[str, bool] = {__name__: True}
         self._reset_counters(time.time())
 
     @override
@@ -53,7 +58,7 @@ class HomeAssistantQueueListener(logging.handlers.QueueListener):
             self._reset_counters(record.created)
 
         module_name = record.name
-        if module_name == __name__ or module_name in self._warned_modules:
+        if self._check_skip_flag(module_name):
             return
 
         self._log_counts[module_name] += 1
@@ -66,12 +71,25 @@ class HomeAssistantQueueListener(logging.handlers.QueueListener):
             module_name,
             module_count,
         )
-        self._warned_modules.add(module_name)
+        self._module_log_count_skip_flags[module_name] = True
 
     def _reset_counters(self, time_sec: float) -> None:
         _LOGGER.debug("Resetting log counters")
         self._last_reset = time_sec
         self._log_counts = defaultdict(int)
+
+    def _check_skip_flag(self, module_name: str) -> bool:
+        skip_flag: bool | None = self._module_log_count_skip_flags.get(module_name)
+        if skip_flag:
+            return True
+
+        if skip_flag is None and any(
+            module_name.startswith(prefix) for prefix in self.EXCLUDED_LOG_COUNT_MODULES
+        ):
+            self._module_log_count_skip_flags[module_name] = True
+            return True
+
+        return False
 
 
 class HomeAssistantQueueHandler(logging.handlers.QueueHandler):
