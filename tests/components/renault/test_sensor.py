@@ -10,7 +10,7 @@ from renault_api.kamereon.exceptions import QuotaLimitException
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import ATTR_ASSUMED_STATE, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -210,6 +210,7 @@ async def test_sensor_throttling_after_init(
     # Initial state
     entity_id = "sensor.reg_number_battery"
     assert hass.states.get(entity_id).state == "60"
+    assert not hass.states.get(entity_id).attributes.get(ATTR_ASSUMED_STATE)
     assert "Renault API throttled: scan skipped" not in caplog.text
 
     # Test QuotaLimitException state
@@ -223,6 +224,7 @@ async def test_sensor_throttling_after_init(
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == "60"
+    assert hass.states.get(entity_id).attributes.get(ATTR_ASSUMED_STATE)
     assert "Renault API throttled" in caplog.text
     assert "Renault hub currently throttled: scan skipped" in caplog.text
 
@@ -236,5 +238,6 @@ async def test_sensor_throttling_after_init(
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == "55"
+    assert not hass.states.get(entity_id).attributes.get(ATTR_ASSUMED_STATE)
     assert "Renault API throttled" not in caplog.text
     assert "Renault hub currently throttled: scan skipped" not in caplog.text
