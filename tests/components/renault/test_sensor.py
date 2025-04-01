@@ -223,14 +223,18 @@ async def test_sensor_throttling_after_init(
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == "60"
-    assert "Renault API throttled: scan skipped" in caplog.text
+    assert "Renault API throttled" in caplog.text
+    assert "Renault hub currently throttled: scan skipped" in caplog.text
 
     # Test QuotaLimitException recovery, with new battery level
+    caplog.clear()
     for get_data_mock in patches.values():
         get_data_mock.side_effect = None
     patches["battery_status"].return_value.batteryLevel = 55
-    freezer.tick(datetime.timedelta(minutes=10))
+    freezer.tick(datetime.timedelta(minutes=20))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == "55"
+    assert "Renault API throttled" not in caplog.text
+    assert "Renault hub currently throttled: scan skipped" not in caplog.text

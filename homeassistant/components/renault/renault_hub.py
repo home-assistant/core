@@ -82,10 +82,10 @@ class RenaultHub:
     async def async_initialise(self, config_entry: RenaultConfigEntry) -> None:
         """Set up proxy."""
         account_id: str = config_entry.data[CONF_KAMEREON_ACCOUNT_ID]
+        scan_interval = timedelta(seconds=DEFAULT_SCAN_INTERVAL)
 
         self._account = await self._client.get_api_account(account_id)
         vehicles = await self._account.get_vehicles()
-
         if vehicles.vehicleLinks:
             if any(
                 vehicle_link.vehicleDetails is None
@@ -94,9 +94,6 @@ class RenaultHub:
                 raise ConfigEntryNotReady(
                     "Failed to retrieve vehicle details from Renault servers"
                 )
-
-            scan_interval = timedelta(seconds=DEFAULT_SCAN_INTERVAL)
-
             device_registry = dr.async_get(self._hass)
             await asyncio.gather(
                 *(

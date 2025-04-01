@@ -59,8 +59,4 @@ class RenaultDataEntity(
 
     def _get_data_attr(self, key: str) -> StateType:
         """Return the attribute value from the coordinator data."""
-        return (
-            cast(StateType, getattr(self.coordinator.data, key))
-            if self.coordinator.data is not None
-            else None
-        )
+        return cast(StateType, getattr(self.coordinator.data, key))

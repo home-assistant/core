@@ -66,12 +66,12 @@ class RenaultDataUpdateCoordinator(DataUpdateCoordinator[T]):
         """Fetch the latest data from the source."""
 
         if self._hub.is_throttled():
+            if not self._has_already_worked:
+                raise UpdateFailed("Renault hub currently throttled: init skipped")
             # we have been throttled and decided to cooldown
             # so do not count this update as an error
             # coordinator. last_update_success should still be ok
-            self.logger.debug(
-                "Renault API throttled: scan skipped and old data returned"
-            )
+            self.logger.debug("Renault hub currently throttled: scan skipped")
             self.assumed_state = True
             return self.data
 
