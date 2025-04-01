@@ -120,6 +120,7 @@
       "active": "Active",
       "charging": "Charging",
       "closed": "Closed",
+      "closing": "Closing",
       "connected": "Connected",
       "disabled": "Disabled",
       "discharging": "Discharging",
@@ -133,8 +134,10 @@
       "off": "Off",
       "on": "On",
       "open": "Open",
+      "opening": "Opening",
       "paused": "Paused",
       "standby": "Standby",
+      "stopped": "Stopped",
       "unlocked": "Unlocked",
       "yes": "Yes"
     },

@@ -68,8 +68,8 @@
       "led_bar_mode": {
         "name": "LED bar mode",
         "state": {
-          "off": "Off",
-          "co2": "Carbon dioxide",
+          "off": "[%key:common::state::off%]",
+          "co2": "[%key:component::sensor::entity_component::carbon_dioxide::name%]",
           "pm": "Particulate matter"
         }
       },
@@ -143,8 +143,8 @@
       "led_bar_mode": {
         "name": "[%key:component::airgradient::entity::select::led_bar_mode::name%]",
         "state": {
-          "off": "[%key:component::airgradient::entity::select::led_bar_mode::state::off%]",
-          "co2": "[%key:component::airgradient::entity::select::led_bar_mode::state::co2%]",
+          "off": "[%key:common::state::off%]",
+          "co2": "[%key:component::sensor::entity_component::carbon_dioxide::name%]",
           "pm": "[%key:component::airgradient::entity::select::led_bar_mode::state::pm%]"
         }
       },

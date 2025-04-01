@@ -186,7 +186,7 @@ async def test_new_pipeline_cancels_pipeline(
     ("service_data", "expected_params"),
     [
         (
-            {"message": "Hello", "preannounce_media_id": None},
+            {"message": "Hello", "preannounce": False},
             AssistSatelliteAnnouncement(
                 message="Hello",
                 media_id="http://10.10.10.10:8123/api/tts_proxy/test-token",
@@ -199,7 +199,7 @@ async def test_new_pipeline_cancels_pipeline(
             {
                 "message": "Hello",
                 "media_id": "media-source://given",
-                "preannounce_media_id": None,
+                "preannounce": False,
             },
             AssistSatelliteAnnouncement(
                 message="Hello",
@@ -210,7 +210,7 @@ async def test_new_pipeline_cancels_pipeline(
             ),
         ),
         (
-            {"media_id": "http://example.com/bla.mp3", "preannounce_media_id": None},
+            {"media_id": "http://example.com/bla.mp3", "preannounce": False},
             AssistSatelliteAnnouncement(
                 message="",
                 media_id="http://example.com/bla.mp3",
@@ -541,7 +541,7 @@ async def test_vad_sensitivity_entity_not_found(
             {
                 "start_message": "Hello",
                 "extra_system_prompt": "Better system prompt",
-                "preannounce_media_id": None,
+                "preannounce": False,
             },
             (
                 "mock-conversation-id",
@@ -559,7 +559,7 @@ async def test_vad_sensitivity_entity_not_found(
             {
                 "start_message": "Hello",
                 "start_media_id": "media-source://given",
-                "preannounce_media_id": None,
+                "preannounce": False,
             },
             (
                 "mock-conversation-id",
@@ -576,7 +576,7 @@ async def test_vad_sensitivity_entity_not_found(
         (
             {
                 "start_media_id": "http://example.com/given.mp3",
-                "preannounce_media_id": None,
+                "preannounce": False,
             },
             (
                 "mock-conversation-id",
