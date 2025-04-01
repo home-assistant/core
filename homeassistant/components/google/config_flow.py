@@ -262,8 +262,8 @@ class OptionsFlowHandler(OptionsFlow):
         
         #adding options here 
         options = [
-            SelectOptionDict(value=READ_WRITE, label="Read/Write access (can create events)"),
-            SelectOptionDict(value=READ_ONLY, label="Read-only access"),
+            SelectOptionDict(value=READ_WRITE, translation_key=READ_WRITE),
+            SelectOptionDict(value=READ_ONLY, translation_key=READ_ONLY),
         ]
 
         return self.async_show_form(
@@ -275,20 +275,3 @@ class OptionsFlowHandler(OptionsFlow):
                 ): SelectSelector(SelectSelectorConfig(options=options))
             }),
         )
-
-        # return self.async_show_form(
-        #     step_id="init",
-        #     data_schema=vol.Schema(
-        #         {
-        #             vol.Required(
-        #                 CONF_CALENDAR_ACCESS,
-        #                 default=self.config_entry.options.get(CONF_CALENDAR_ACCESS),
-        #             ): vol.In(
-        #                 {
-        #                     "read_write": "Read/Write access (can create events)",
-        #                     "read_only": "Read-only access",
-        #                 }
-        #             )
-        #         }
-        #     ),
-        # )
