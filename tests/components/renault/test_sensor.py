@@ -163,7 +163,6 @@ async def test_sensor_throttling_during_setup(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     vehicle_type: str,
-    caplog: pytest.LogCaptureFixture,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test for Renault sensors with a throttling error during setup."""
