@@ -19,9 +19,7 @@ from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
-    TextSelector,
-    TextSelectorConfig,
-    TextSelectorType,
+    TimeSelector,
 )
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
@@ -109,11 +107,7 @@ OPTIONS_SCHEMA = vol.Schema(
                 translation_key=CONF_TIME_TYPE,
             )
         ),
-        vol.Optional(CONF_TIME): TextSelector(
-            TextSelectorConfig(
-                type=TextSelectorType.TIME,
-            )
-        ),
+        vol.Optional(CONF_TIME): TimeSelector(),
         vol.Optional(CONF_TRAFFIC_MODEL): SelectSelector(
             SelectSelectorConfig(
                 options=TRAFFIC_MODELS,
