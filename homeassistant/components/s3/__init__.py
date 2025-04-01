@@ -3,12 +3,9 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, cast
+from typing import cast
 
-if TYPE_CHECKING:
-    from types_aiobotocore_s3 import S3Client
-else:
-    from aiobotocore.client import AioBaseClient as S3Client
+from aiobotocore.client import AioBaseClient as S3Client
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant

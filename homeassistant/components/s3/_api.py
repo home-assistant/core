@@ -1,12 +1,7 @@
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from types_aiobotocore_s3 import S3Client
-else:
-    from aiobotocore.client import AioBaseClient as S3Client
-
+from aiobotocore.client import AioBaseClient as S3Client
 from aiobotocore.session import AioSession
 from botocore.exceptions import (
     ClientError,

@@ -109,4 +109,4 @@ rules:
   inject-websession:
     status: exempt
     comment: Aiobotocore doesn't support injecting client from outside.
-  strict-typing: done
+  strict-typing: todo
