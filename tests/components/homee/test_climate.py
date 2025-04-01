@@ -8,9 +8,11 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
     ATTR_HVAC_ACTION,
+    ATTR_HVAC_MODE,
     ATTR_HVAC_MODES,
     ATTR_PRESET_MODE,
     ATTR_PRESET_MODES,
+    ATTR_TEMPERATURE,
     DOMAIN as CLIMATE_DOMAIN,
     PRESET_BOOST,
     PRESET_ECO,
@@ -190,37 +192,37 @@ async def test_current_preset_mode(
         ),
         (
             SERVICE_SET_HVAC_MODE,
-            {"hvac_mode": HVACMode.HEAT},
+            {ATTR_HVAC_MODE: HVACMode.HEAT},
             (4, 3, 1),
         ),
         (
             SERVICE_SET_HVAC_MODE,
-            {"hvac_mode": HVACMode.OFF},
+            {ATTR_HVAC_MODE: HVACMode.OFF},
             (4, 3, 0),
         ),
         (
             SERVICE_SET_TEMPERATURE,
-            {"temperature": 20},
+            {ATTR_TEMPERATURE: 20},
             (4, 1, 20),
         ),
         (
             SERVICE_SET_PRESET_MODE,
-            {"preset_mode": PRESET_NONE},
+            {ATTR_PRESET_MODE: PRESET_NONE},
             (4, 3, 1),
         ),
         (
             SERVICE_SET_PRESET_MODE,
-            {"preset_mode": PRESET_ECO},
+            {ATTR_PRESET_MODE: PRESET_ECO},
             (4, 3, 2),
         ),
         (
             SERVICE_SET_PRESET_MODE,
-            {"preset_mode": PRESET_BOOST},
+            {ATTR_PRESET_MODE: PRESET_BOOST},
             (4, 3, 3),
         ),
         (
             SERVICE_SET_PRESET_MODE,
-            {"preset_mode": PRESET_MANUAL},
+            {ATTR_PRESET_MODE: PRESET_MANUAL},
             (4, 3, 4),
         ),
     ],
