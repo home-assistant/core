@@ -27,8 +27,8 @@ class ExampleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Step User."""
         # Specify items in the order they are to be displayed in the UI
         if user_input is not None:
-            getDeviceName(user_input["IP Address"])
-            # return self.async_create_entry(title="Lea AMP", data=user_input)
+            deviceName = getDeviceName(user_input["IP Address"])
+            return self.async_create_entry(title=deviceName, data=user_input)
 
         return self.async_show_form(
             step_id="user",
@@ -44,7 +44,7 @@ def getDeviceName(ip_address):
     """Get Num of inputs."""
 
     _LOGGER.log(logging.INFO, "Connect to %s", ip_address)
-    msg = "get /amp/deviceInfo/modelID\n"
+    msg = "get /amp/deviceInfo/deviceName\n"
     mySocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     address = (ip_address, 4321)
     mySocket.connect(address)
@@ -54,4 +54,10 @@ def getDeviceName(ip_address):
     data = mySocket.recv(2048)
     if data:
         _LOGGER.log(logging.INFO, "response data: %s", str(data))
+        data = data.decode()
+        deviceName = data.replace("/amp/deviceInfo/deviceName", "")
+        deviceName = deviceName.replace("\n", "")
+        deviceName = deviceName.replace('"', "")
         mySocket.close()
+
+    return deviceName
