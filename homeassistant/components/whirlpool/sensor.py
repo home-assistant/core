@@ -99,9 +99,8 @@ WASHER_DRYER_STATE_OPTIONS = (
 WASHER_SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
     WhirlpoolSensorEntityDescription(
         key="state",
-        translation_key="whirlpool_machine",
+        translation_key="washer_state",
         device_class=SensorDeviceClass.ENUM,
-        icon="mdi:washing-machine",
         options=WASHER_DRYER_STATE_OPTIONS,
         value_fn=washer_dryer_state,
     ),
@@ -120,9 +119,8 @@ WASHER_SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
 DRYER_SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
     WhirlpoolSensorEntityDescription(
         key="state",
-        translation_key="whirlpool_machine",
+        translation_key="dryer_state",
         device_class=SensorDeviceClass.ENUM,
-        icon="mdi:tumble-dryer",
         options=WASHER_DRYER_STATE_OPTIONS,
         value_fn=washer_dryer_state,
     ),

@@ -43,7 +43,7 @@
   },
   "entity": {
     "sensor": {
-      "whirlpool_machine": {
+      "washer_state": {
         "name": "State",
         "state": {
           "standby": "[%key:common::state::standby%]",
@@ -51,7 +51,7 @@
           "delay_countdown": "Delay Countdown",
           "delay_paused": "Delay Paused",
           "smart_delay": "Smart Delay",
-          "smart_grid_pause": "[%key:component::whirlpool::entity::sensor::whirlpool_machine::state::smart_delay%]",
+          "smart_grid_pause": "[%key:component::whirlpool::entity::sensor::washer_state::state::smart_delay%]",
           "pause": "[%key:common::state::paused%]",
           "running_maincycle": "Running Maincycle",
           "running_postcycle": "Running Postcycle",
@@ -72,6 +72,37 @@
           "cycle_spinning": "Cycle Spinning",
           "cycle_washing": "Cycle Washing",
           "door_open": "Door Open"
+        }
+      },
+      "dryer_state": {
+        "name": "State",
+        "state": {
+          "standby": "[%key:common::state::standby%]",
+          "setting": "[%key:component::whirlpool::entity::sensor::washer_state::state::setting%]",
+          "delay_countdown": "[%key:component::whirlpool::entity::sensor::washer_state::state::delay_countdown%]",
+          "delay_paused": "[%key:component::whirlpool::entity::sensor::washer_state::state::delay_paused%]",
+          "smart_delay": "[%key:component::whirlpool::entity::sensor::washer_state::state::smart_delay%]",
+          "smart_grid_pause": "[%key:component::whirlpool::entity::sensor::washer_state::state::smart_delay%]",
+          "pause": "[%key:common::state::paused%]",
+          "running_maincycle": "[%key:component::whirlpool::entity::sensor::washer_state::state::running_maincycle%]",
+          "running_postcycle": "[%key:component::whirlpool::entity::sensor::washer_state::state::running_postcycle%]",
+          "exception": "[%key:component::whirlpool::entity::sensor::washer_state::state::exception%]",
+          "complete": "[%key:component::whirlpool::entity::sensor::washer_state::state::complete%]",
+          "power_failure": "[%key:component::whirlpool::entity::sensor::washer_state::state::power_failure%]",
+          "service_diagnostic_mode": "[%key:component::whirlpool::entity::sensor::washer_state::state::service_diagnostic_mode%]",
+          "factory_diagnostic_mode": "[%key:component::whirlpool::entity::sensor::washer_state::state::factory_diagnostic_mode%]",
+          "life_test": "[%key:component::whirlpool::entity::sensor::washer_state::state::life_test%]",
+          "customer_focus_mode": "[%key:component::whirlpool::entity::sensor::washer_state::state::customer_focus_mode%]",
+          "demo_mode": "[%key:component::whirlpool::entity::sensor::washer_state::state::demo_mode%]",
+          "hard_stop_or_error": "[%key:component::whirlpool::entity::sensor::washer_state::state::hard_stop_or_error%]",
+          "system_initialize": "[%key:component::whirlpool::entity::sensor::washer_state::state::system_initialize%]",
+          "cycle_filling": "[%key:component::whirlpool::entity::sensor::washer_state::state::cycle_filling%]",
+          "cycle_rinsing": "[%key:component::whirlpool::entity::sensor::washer_state::state::cycle_rinsing%]",
+          "cycle_sensing": "[%key:component::whirlpool::entity::sensor::washer_state::state::cycle_sensing%]",
+          "cycle_soaking": "[%key:component::whirlpool::entity::sensor::washer_state::state::cycle_soaking%]",
+          "cycle_spinning": "[%key:component::whirlpool::entity::sensor::washer_state::state::cycle_spinning%]",
+          "cycle_washing": "[%key:component::whirlpool::entity::sensor::washer_state::state::cycle_washing%]",
+          "door_open": "[%key:component::whirlpool::entity::sensor::washer_state::state::door_open%]"
         }
       },
       "whirlpool_tank": {
