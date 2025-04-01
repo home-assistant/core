@@ -184,7 +184,7 @@ async def test_sensor_throttling_during_setup(
     for get_data_mock in patches.values():
         get_data_mock.side_effect = None
     patches["battery_status"].return_value.batteryLevel = 55
-    freezer.tick(datetime.timedelta(minutes=10))
+    freezer.tick(datetime.timedelta(minutes=20))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
