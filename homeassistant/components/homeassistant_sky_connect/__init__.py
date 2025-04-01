@@ -13,7 +13,7 @@ from homeassistant.components.usb import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
@@ -37,31 +37,6 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the ZBT-1 integration."""
-    serial_ports = await hass.async_add_executor_job(scan_serial_ports)
-    serial_ports_info = {port.device: port for port in serial_ports}
-
-    for entry in list(hass.config_entries.async_entries(DOMAIN)):
-        # Old SkyConnect entries are missing all of their info. They must either be
-        # updated or migrated.
-        if VID in entry.data:
-            continue
-
-        if usb_info := serial_ports_info.get(entry.data[DEVICE]):
-            hass.config_entries.async_update_entry(
-                entry,
-                data={
-                    **entry.data,
-                    VID: usb_info.vid,
-                    PID: usb_info.pid,
-                    MANUFACTURER: usb_info.manufacturer,
-                    PRODUCT: usb_info.description,
-                    DESCRIPTION: usb_info.description,
-                    SERIAL_NUMBER: usb_info.serial_number,
-                },
-            )
-        else:
-            _LOGGER.debug("Removing old SkyConnect entry %s", entry.entry_id)
-            await hass.config_entries.async_remove(entry.entry_id)
 
     @callback
     def async_port_event_callback(
@@ -147,6 +122,43 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                 version=1,
                 minor_version=3,
             )
+
+        if config_entry.minor_version == 3:
+            # Old SkyConnect config entries were missing keys
+            if any(
+                key not in config_entry.data
+                for key in (VID, PID, MANUFACTURER, PRODUCT, SERIAL_NUMBER)
+            ):
+                serial_ports = await hass.async_add_executor_job(scan_serial_ports)
+                serial_ports_info = {port.device: port for port in serial_ports}
+                device = config_entry.data[DEVICE]
+
+                if not (usb_info := serial_ports_info.get(device)):
+                    raise HomeAssistantError(
+                        f"USB device {device} is missing, cannot migrate"
+                    )
+
+                hass.config_entries.async_update_entry(
+                    config_entry,
+                    data={
+                        **config_entry.data,
+                        VID: usb_info.vid,
+                        PID: usb_info.pid,
+                        MANUFACTURER: usb_info.manufacturer,
+                        PRODUCT: usb_info.description,
+                        DESCRIPTION: usb_info.description,
+                        SERIAL_NUMBER: usb_info.serial_number,
+                    },
+                    version=1,
+                    minor_version=4,
+                )
+            else:
+                # Existing entries are migrated by just incrementing the version
+                hass.config_entries.async_update_entry(
+                    config_entry,
+                    version=1,
+                    minor_version=4,
+                )
 
         _LOGGER.debug(
             "Migration to version %s.%s successful",
