@@ -79,7 +79,7 @@ class OnboardingPlatformProtocol(Protocol):
 async def async_process_onboarding_platforms(hass: HomeAssistant) -> None:
     """Start processing onboarding platforms."""
     await integration_platform.async_process_integration_platforms(
-        hass, DOMAIN, _register_onboarding_platform, wait_for_platforms=True
+        hass, DOMAIN, _register_onboarding_platform, wait_for_platforms=False
     )
 
 
