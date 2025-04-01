@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import socket
 
 import voluptuous as vol
 
@@ -25,8 +26,9 @@ class ExampleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Step User."""
         # Specify items in the order they are to be displayed in the UI
-        # if user_input is not None:
-        # return self.async_create_entry(title="Lea AMP", data=user_input)
+        if user_input is not None:
+            getDeviceName(user_input)
+            # return self.async_create_entry(title="Lea AMP", data=user_input)
 
         return self.async_show_form(
             step_id="user",
@@ -36,3 +38,20 @@ class ExampleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             ),
         )
+
+
+def getDeviceName(ip_address):
+    """Get Num of inputs."""
+
+    _LOGGER.log(logging.INFO, "Connect to %s", ip_address)
+    msg = "get /amp/deviceInfo/modelID\n"
+    mySocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    address = (ip_address, 4321)
+    mySocket.connect(address)
+
+    mySocket.send(msg.encode())
+    # while True:
+    data = mySocket.recv(2048)
+    if data:
+        _LOGGER.log(logging.INFO, "response data: %s", str(data))
+        mySocket.close()
