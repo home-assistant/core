@@ -157,8 +157,10 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
             self.extra_state_attributes is not None
             and ATTR_LATITUDE in self.extra_state_attributes
         ):
-            latitude: float = self.extra_state_attributes[ATTR_LATITUDE]
-            return latitude
+            try:
+                return float(self.extra_state_attributes[ATTR_LATITUDE])
+            except (TypeError, ValueError):
+                return None
         return None
 
     @property
@@ -168,8 +170,10 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
             self.extra_state_attributes is not None
             and ATTR_GPS_ACCURACY in self.extra_state_attributes
         ):
-            accuracy: int = self.extra_state_attributes[ATTR_GPS_ACCURACY]
-            return accuracy
+            try:
+                return int(self.extra_state_attributes[ATTR_GPS_ACCURACY])
+            except (TypeError, ValueError):
+                return 0
         return 0
 
     @property
@@ -179,8 +183,10 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
             self.extra_state_attributes is not None
             and ATTR_LONGITUDE in self.extra_state_attributes
         ):
-            longitude: float = self.extra_state_attributes[ATTR_LONGITUDE]
-            return longitude
+            try:
+                return float(self.extra_state_attributes[ATTR_LONGITUDE])
+            except (TypeError, ValueError):
+                return None
         return None
 
     @property

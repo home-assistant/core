@@ -462,6 +462,47 @@ async def test_setting_device_tracker_location_via_lat_lon_message(
     assert state.attributes["latitude"] == 32.87336
     assert state.state == STATE_UNKNOWN
 
+    # Test strings are converted
+    async_fire_mqtt_message(
+        hass,
+        "attributes-topic",
+        '{"latitude": "32.87336","longitude": "-117.22743", "gps_accuracy": "1.5", "source_type": "router"}',
+    )
+    state = hass.states.get("device_tracker.test")
+    assert state.attributes["latitude"] == "32.87336"
+    assert state.attributes["longitude"] == "-117.22743"
+    assert state.attributes["gps_accuracy"] == "1.5"
+    # assert source_type is overridden by discovery
+    assert state.attributes["source_type"] == "router"
+    assert state.state == STATE_HOME
+
+    # Test with invalid GPS accuracy should default to 0
+    async_fire_mqtt_message(
+        hass,
+        "attributes-topic",
+        '{"latitude": "32.87336","longitude": "-117.22743", "gps_accuracy": "invalid", "source_type": "router"}',
+    )
+    state = hass.states.get("device_tracker.test")
+    assert state.state == STATE_HOME
+
+    # Test with invalid latitude
+    async_fire_mqtt_message(
+        hass,
+        "attributes-topic",
+        '{"latitude": "unknown","longitude": "-117.22743", "gps_accuracy": 1, "source_type": "router"}',
+    )
+    state = hass.states.get("device_tracker.test")
+    assert state.state == STATE_UNKNOWN
+
+    # Test with invalid longitude
+    async_fire_mqtt_message(
+        hass,
+        "attributes-topic",
+        '{"latitude": 32.87336,"longitude": "unknown", "gps_accuracy": 1, "source_type": "router"}',
+    )
+    state = hass.states.get("device_tracker.test")
+    assert state.state == STATE_UNKNOWN
+
 
 async def test_setting_device_tracker_location_via_reset_message(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
