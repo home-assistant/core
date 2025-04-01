@@ -29,14 +29,14 @@ class ExampleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Step User."""
         # Specify items in the order they are to be displayed in the UI
-        if user_input is not None:
-            return self.async_create_entry(title="Lea AMP", data=user_input)
+        # if user_input is not None:
+        # return self.async_create_entry(title="Lea AMP", data=user_input)
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required("ip_address"): str,
+                    vol.Required("IP Address"): str,
                 }
             ),
         )
@@ -44,8 +44,6 @@ class ExampleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 async def _async_has_devices(hass: HomeAssistant) -> bool:
     """Return if there are devices that can be discovered."""
-
-    # adapter = await network.async_get_source_ip(hass, network.PUBLIC_TARGET_IP)
 
     ip_address = hass.data["ip_address"]
     hass.data[DOMAIN] = {"ip": ip_address}
