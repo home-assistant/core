@@ -33,10 +33,7 @@ rules:
   docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
-  log-when-unavailable:
-    status: done
-    comment: |
-      Handled by coordinator.
+  log-when-unavailable: done
   parallel-updates: done
   reauthentication-flow:
     status: exempt
@@ -61,39 +58,18 @@ rules:
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: done
-  dynamic-devices:
-    status: exempt
-    comment: |
-      Device type integration.
+  dynamic-devices: done
   entity-category: done
   entity-device-class: done
-  entity-disabled-by-default:
-    status: exempt
-    comment: |
-      No noisy/non-essential entities.
+  entity-disabled-by-default: done
   entity-translations: done
-  exception-translations:
-    status: exempt
-    comment: |
-      No custom exceptions.
+  exception-translations: done
   icon-translations: done
-  reconfiguration-flow:
-    status: exempt
-    comment: |
-      Only parameter that could be changed (MAC = unique_id) would force a new config entry.
-  repair-issues:
-    status: exempt
-    comment: |
-      No repairs/issues.
-  stale-devices:
-    status: exempt
-    comment: |
-      Device type integration.
+  reconfiguration-flow: done
+  repair-issues: done
+  stale-devices: done
 
   # Platinum
   async-dependency: done
-  inject-websession:
-    status: exempt
-    comment: |
-      Bluetooth connection.
+  inject-websession: done
   strict-typing: done

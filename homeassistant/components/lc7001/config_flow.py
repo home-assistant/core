@@ -34,16 +34,7 @@ class LcConfigFlow(ConfigFlow, domain=DOMAIN):
         self.data: dict[str, Any] = {}
 
     async def validate_input(self, data: dict[str, Any]) -> dict[str, Any]:
-        """Validate the user input allows us to connect.
-
-        Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-        """
-
-        # If your PyPI package is not built with async, pass your methods
-        # to the executor:
-        # await hass.async_add_executor_job(
-        #     your_validate_func, data[CONF_USERNAME], data[CONF_PASSWORD]
-        # )
+        """Validate the user input allows us to connect."""
 
         host = data[CONF_HOST]
         port = data[CONF_PORT]
@@ -102,6 +93,12 @@ class LcConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration."""
+        return await self.async_step_user()
 
 
 class CannotConnect(HomeAssistantError):
