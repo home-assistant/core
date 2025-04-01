@@ -76,7 +76,7 @@ from .const import (
     MODEL_AIRPURIFIER_4_LITE_RMA1,
     MODEL_AIRPURIFIER_4_LITE_RMB1,
     MODEL_AIRPURIFIER_4_PRO,
-    MODEL_AIRPURIFIER_ELITE_Y600
+    MODEL_AIRPURIFIER_ELITE
     MODEL_AIRPURIFIER_PRO,
     MODEL_AIRPURIFIER_PRO_V7,
     MODEL_AIRPURIFIER_V3,
@@ -439,8 +439,8 @@ class XiaomiAirPurifier(XiaomiGenericAirPurifier):
                 FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
             )
             self._speed_count = 3
-        elif self._model in [MODEL_AIRPURIFIER_ELITE_Y600]:
-            self._device_features = FEATURE_FLAGS_MODEL_AIRPURIFIER_ELITE_Y600
+        elif self._model in [MODEL_AIRPURIFIER_ELITE]:
+            self._device_features = FEATURE_FLAGS_MODEL_AIRPURIFIER_ELITE
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_MIOT
             self._preset_modes = PRESET_MODES_AIRPURIFIER_MIOT
             self._attr_supported_features = (
