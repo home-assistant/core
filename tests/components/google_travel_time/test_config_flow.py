@@ -93,7 +93,7 @@ async def assert_common_create_steps(
         }
 
 
-@pytest.mark.usefixtures("validate_config_entry", "bypass_setup")
+@pytest.mark.usefixtures("valid_return", "bypass_setup")
 async def test_minimum_fields(hass: HomeAssistant) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
@@ -163,7 +163,7 @@ async def test_timeout(hass: HomeAssistant) -> None:
     ("data", "options"),
     [(MOCK_CONFIG, DEFAULT_OPTIONS)],
 )
-@pytest.mark.usefixtures("validate_config_entry", "bypass_setup")
+@pytest.mark.usefixtures("valid_return", "bypass_setup")
 async def test_reconfigure(hass: HomeAssistant, mock_config: MockConfigEntry) -> None:
     """Test reconfigure flow."""
     reconfigure_result = await mock_config.start_reconfigure_flow(hass)
@@ -244,7 +244,7 @@ async def test_reconfigure_timeout(
     ("data", "options"),
     [(MOCK_CONFIG, DEFAULT_OPTIONS)],
 )
-@pytest.mark.usefixtures("validate_config_entry")
+@pytest.mark.usefixtures("valid_return")
 async def test_options_flow(hass: HomeAssistant, mock_config: MockConfigEntry) -> None:
     """Test options flow."""
     result = await hass.config_entries.options.async_init(
@@ -297,7 +297,7 @@ async def test_options_flow(hass: HomeAssistant, mock_config: MockConfigEntry) -
     ("data", "options"),
     [(MOCK_CONFIG, DEFAULT_OPTIONS)],
 )
-@pytest.mark.usefixtures("validate_config_entry")
+@pytest.mark.usefixtures("valid_return")
 async def test_options_flow_departure_time(
     hass: HomeAssistant, mock_config: MockConfigEntry
 ) -> None:
@@ -369,7 +369,7 @@ async def test_options_flow_departure_time(
         ),
     ],
 )
-@pytest.mark.usefixtures("validate_config_entry")
+@pytest.mark.usefixtures("valid_return")
 async def test_reset_departure_time(
     hass: HomeAssistant, mock_config: MockConfigEntry
 ) -> None:
@@ -417,7 +417,7 @@ async def test_reset_departure_time(
         ),
     ],
 )
-@pytest.mark.usefixtures("validate_config_entry")
+@pytest.mark.usefixtures("valid_return")
 async def test_reset_arrival_time(
     hass: HomeAssistant, mock_config: MockConfigEntry
 ) -> None:
@@ -463,7 +463,7 @@ async def test_reset_arrival_time(
         )
     ],
 )
-@pytest.mark.usefixtures("validate_config_entry")
+@pytest.mark.usefixtures("valid_return")
 async def test_reset_options_flow_fields(
     hass: HomeAssistant, mock_config: MockConfigEntry
 ) -> None:
@@ -492,7 +492,7 @@ async def test_reset_options_flow_fields(
     }
 
 
-@pytest.mark.usefixtures("validate_config_entry", "bypass_setup")
+@pytest.mark.usefixtures("valid_return", "bypass_setup")
 async def test_dupe(hass: HomeAssistant) -> None:
     """Test setting up the same entry data twice is OK."""
     result = await hass.config_entries.flow.async_init(

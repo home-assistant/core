@@ -1,12 +1,9 @@
 """Test the Google Maps Travel Time sensors."""
 
-from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 from google.api_core.exceptions import GoogleAPIError
-from google.maps.routing_v2 import ComputeRoutesResponse, Route, Units
-from google.protobuf import duration_pb2
-from google.type import localized_text_pb2
+from google.maps.routing_v2 import Units
 import pytest
 
 from homeassistant.components.google_travel_time.config_flow import default_options
@@ -34,53 +31,18 @@ from .const import DEFAULT_OPTIONS, MOCK_CONFIG
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-@pytest.fixture(name="mock_update")
-def mock_update_fixture() -> Generator[AsyncMock]:
-    """Mock an update to the sensor."""
-    client_mock = AsyncMock()
-    client_mock.compute_routes.return_value = ComputeRoutesResponse(
-        mapping={
-            "routes": [
-                Route(
-                    mapping={
-                        "localized_values": Route.RouteLocalizedValues(
-                            mapping={
-                                "distance": localized_text_pb2.LocalizedText(
-                                    text="21.3 km"
-                                ),
-                                "duration": localized_text_pb2.LocalizedText(
-                                    text="27 mins"
-                                ),
-                                "static_duration": localized_text_pb2.LocalizedText(
-                                    text="26 mins"
-                                ),
-                            }
-                        ),
-                        "duration": duration_pb2.Duration(seconds=1620),
-                    }
-                )
-            ]
-        }
-    )
-    with patch(
-        "homeassistant.components.google_travel_time.sensor.RoutesAsyncClient",
-        return_value=client_mock,
-    ):
-        yield client_mock.compute_routes
-
-
 @pytest.fixture(name="mock_update_empty")
-def mock_update_empty_fixture(mock_update: AsyncMock) -> AsyncMock:
+def mock_update_empty_fixture(valid_return: AsyncMock) -> AsyncMock:
     """Mock an update to the sensor with an empty response."""
-    mock_update.return_value = None
-    return mock_update
+    valid_return.return_value = None
+    return valid_return
 
 
 @pytest.mark.parametrize(
     ("data", "options"),
     [(MOCK_CONFIG, DEFAULT_OPTIONS)],
 )
-@pytest.mark.usefixtures("mock_update", "mock_config")
+@pytest.mark.usefixtures("valid_return", "mock_config")
 async def test_sensor(hass: HomeAssistant) -> None:
     """Test that sensor works."""
     assert hass.states.get("sensor.google_travel_time").state == "27"
@@ -133,7 +95,7 @@ async def test_sensor_empty_response(hass: HomeAssistant) -> None:
         ),
     ],
 )
-@pytest.mark.usefixtures("mock_update", "mock_config")
+@pytest.mark.usefixtures("valid_return", "mock_config")
 async def test_sensor_departure_time(hass: HomeAssistant) -> None:
     """Test that sensor works for departure time."""
     assert hass.states.get("sensor.google_travel_time").state == "27"
@@ -154,7 +116,7 @@ async def test_sensor_departure_time(hass: HomeAssistant) -> None:
         ),
     ],
 )
-@pytest.mark.usefixtures("mock_update", "mock_config")
+@pytest.mark.usefixtures("valid_return", "mock_config")
 async def test_sensor_arrival_time(hass: HomeAssistant) -> None:
     """Test that sensor works for arrival time."""
     assert hass.states.get("sensor.google_travel_time").state == "27"
@@ -201,11 +163,11 @@ async def test_sensor_unit_system(
 async def test_sensor_exception(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    mock_update: AsyncMock,
+    valid_return: AsyncMock,
     mock_config: MockConfigEntry,
 ) -> None:
     """Test that exception gets caught."""
-    mock_update.side_effect = GoogleAPIError("Errormessage")
+    valid_return.side_effect = GoogleAPIError("Errormessage")
     async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
     await hass.async_block_till_done()
     assert "Error getting travel time" in caplog.text

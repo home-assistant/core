@@ -26,7 +26,7 @@ from tests.common import MockConfigEntry
         (None, None),
     ],
 )
-@pytest.mark.usefixtures("validate_config_entry")
+@pytest.mark.usefixtures("valid_return")
 async def test_migrate_entry_v1_v2(
     hass: HomeAssistant,
     v1: str,
@@ -54,7 +54,7 @@ async def test_migrate_entry_v1_v2(
     assert updated_entry.options[CONF_TIME] == v2
 
 
-@pytest.mark.usefixtures("validate_config_entry")
+@pytest.mark.usefixtures("valid_return")
 async def test_migrate_entry_v1_v2_invalid_time(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
