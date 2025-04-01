@@ -24,7 +24,6 @@ type ZimiConfigEntry = ConfigEntry[ControlPoint]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ZimiConfigEntry) -> bool:
     """Connect to Zimi Controller and register device."""
-    _LOGGER.debug("Zimi setup starting")
 
     try:
         api = await async_connect_to_controller(
@@ -47,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ZimiConfigEntry) -> bool
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, api.mac)},
         manufacturer=api.brand,
-        name=f"Controller ({api.host}:{api.port})",
+        name=f"{api.network_name}",
         model="Zimi Cloud Connect",
         sw_version=api.firmware_version,
         connections={(CONNECTION_NETWORK_MAC, api.mac)},

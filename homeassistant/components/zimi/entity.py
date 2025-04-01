@@ -28,9 +28,9 @@ class ZimiEntity(Entity):
         self._attr_unique_id = self._entity.identifier
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._entity.manufacture_info.identifier)},
-            name=self._entity.manufacture_info.model,
             manufacturer=self._entity.manufacture_info.manufacturer,
-            model=f"hwVersion={self._entity.manufacture_info.hwVersion}",
+            model=self._entity.manufacture_info.model,
+            name=self._entity.manufacture_info.model,
             hw_version=entity.manufacture_info.hwVersion,
             sw_version=entity.manufacture_info.firmwareVersion,
             suggested_area=entity.room,

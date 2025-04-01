@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import contextlib
+from enum import StrEnum
 import logging
 import socket
 from typing import Any
 
-from enum import StrEnum
 import voluptuous as vol
 from zcc import (
     ControlPoint,
@@ -33,7 +33,7 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HOST, default=""): str,
+        vol.Required(CONF_HOST): str,
         vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
     }
 )
@@ -75,8 +75,8 @@ class ZimiConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             self.api_descriptions = await ControlPointDiscoveryService().discovers()
-        except ControlPointError as e:
-            _LOGGER.error(e)
+        except ControlPointError as _:
+            # ControlPointError is expected if no zcc are found on LAN
             return await self.async_step_manual()
 
         if len(self.api_descriptions) == 1:
