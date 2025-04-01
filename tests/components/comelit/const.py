@@ -29,13 +29,30 @@ VEDO_PIN = 5678
 FAKE_PIN = 0000
 
 BRIDGE_DEVICE_QUERY = {
-    CLIMATE: {},
+    CLIMATE: {
+        0: ComelitSerialBridgeObject(
+            index=0,
+            name="Climate0",
+            status=0,
+            human_status="off",
+            type="climate",
+            val=[
+                [221, 0, "U", "M", 50, 0, 0, "U"],
+                [650, 0, "O", "M", 500, 0, 0, "N"],
+                [0, 0],
+            ],
+            protected=0,
+            zone="Living room",
+            power=0.0,
+            power_unit=WATT,
+        ),
+    },
     COVER: {
         0: ComelitSerialBridgeObject(
             index=0,
             name="Cover0",
             status=0,
-            human_status="closed",
+            human_status="stopped",
             type="cover",
             val=0,
             protected=0,
@@ -58,7 +75,20 @@ BRIDGE_DEVICE_QUERY = {
             power_unit=WATT,
         )
     },
-    OTHER: {},
+    OTHER: {
+        0: ComelitSerialBridgeObject(
+            index=0,
+            name="Switch0",
+            status=0,
+            human_status="off",
+            type="other",
+            val=0,
+            protected=0,
+            zone="Bathroom",
+            power=0.0,
+            power_unit=WATT,
+        ),
+    },
     IRRIGATION: {},
     SCENARIO: {},
 }
