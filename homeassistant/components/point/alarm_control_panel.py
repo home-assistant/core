@@ -2,23 +2,22 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 import logging
 
+from pypoint import PointSession
+
 from homeassistant.components.alarm_control_panel import (
-    DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
     AlarmControlPanelState,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import MinutPointClient
-from .const import DOMAIN as POINT_DOMAIN, POINT_DISCOVERY_NEW, SIGNAL_WEBHOOK
+from . import PointConfigEntry
+from .const import DOMAIN as POINT_DOMAIN, SIGNAL_WEBHOOK
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,21 +31,20 @@ EVENT_MAP = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: PointConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Point's alarm_control_panel based on a config entry."""
+    coordinator = config_entry.runtime_data
 
-    async def async_discover_home(home_id):
+    def async_discover_home(home_id: str) -> None:
         """Discover and add a discovered home."""
-        client = config_entry.runtime_data.client
-        async_add_entities([MinutPointAlarmControl(client, home_id)], True)
+        async_add_entities([MinutPointAlarmControl(coordinator.point, home_id)])
 
-    async_dispatcher_connect(
-        hass,
-        POINT_DISCOVERY_NEW.format(ALARM_CONTROL_PANEL_DOMAIN, POINT_DOMAIN),
-        async_discover_home,
-    )
+    coordinator.new_home_callback = async_discover_home
+
+    for home_id in coordinator.point.homes:
+        async_discover_home(home_id)
 
 
 class MinutPointAlarmControl(AlarmControlPanelEntity):
@@ -55,12 +53,11 @@ class MinutPointAlarmControl(AlarmControlPanelEntity):
     _attr_supported_features = AlarmControlPanelEntityFeature.ARM_AWAY
     _attr_code_arm_required = False
 
-    def __init__(self, point_client: MinutPointClient, home_id: str) -> None:
+    def __init__(self, point: PointSession, home_id: str) -> None:
         """Initialize the entity."""
-        self._client = point_client
+        self._client = point
         self._home_id = home_id
-        self._async_unsub_hook_dispatcher_connect: Callable[[], None] | None = None
-        self._home = point_client.homes[self._home_id]
+        self._home = point.homes[self._home_id]
 
         self._attr_name = self._home["name"]
         self._attr_unique_id = f"point.{home_id}"
@@ -73,15 +70,9 @@ class MinutPointAlarmControl(AlarmControlPanelEntity):
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to HOme Assistant."""
         await super().async_added_to_hass()
-        self._async_unsub_hook_dispatcher_connect = async_dispatcher_connect(
-            self.hass, SIGNAL_WEBHOOK, self._webhook_event
+        self.async_on_remove(
+            async_dispatcher_connect(self.hass, SIGNAL_WEBHOOK, self._webhook_event)
         )
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect dispatcher listener when removed."""
-        await super().async_will_remove_from_hass()
-        if self._async_unsub_hook_dispatcher_connect:
-            self._async_unsub_hook_dispatcher_connect()
 
     @callback
     def _webhook_event(self, data, webhook):
@@ -107,12 +98,12 @@ class MinutPointAlarmControl(AlarmControlPanelEntity):
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
-        status = await self._client.async_alarm_disarm(self._home_id)
+        status = await self._client.alarm_disarm(self._home_id)
         if status:
             self._home["alarm_status"] = "off"
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
-        status = await self._client.async_alarm_arm(self._home_id)
+        status = await self._client.alarm_arm(self._home_id)
         if status:
             self._home["alarm_status"] = "on"

@@ -33,6 +33,19 @@ async def test_sensor(
     await snapshot_platform(hass, entity_registry, snapshot, load_int.entry_id)
 
 
+@pytest.mark.freeze_time("2024-11-05T18:00:00+00:00")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensor_current_price_is_0(
+    hass: HomeAssistant, load_int: ConfigEntry
+) -> None:
+    """Test the Nord Pool sensor working if price is 0."""
+
+    current_price = hass.states.get("sensor.nord_pool_se4_current_price")
+
+    assert current_price is not None
+    assert current_price.state == "0.0"  # SE4 2024-11-05T18:00:00Z
+
+
 @pytest.mark.freeze_time("2024-11-05T23:00:00+00:00")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_no_next_price(hass: HomeAssistant, load_int: ConfigEntry) -> None:

@@ -21,6 +21,7 @@ from homeassistant.helpers.service import entity_service_call
 from homeassistant.helpers.typing import VolDictType
 
 from .const import _LOGGER, DOMAIN
+from .models import IsyData
 
 # Common Services for All Platforms:
 SERVICE_SEND_PROGRAM_COMMAND = "send_program_command"
@@ -149,7 +150,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         isy_name = service.data.get(CONF_ISY)
 
         for config_entry_id in hass.data[DOMAIN]:
-            isy_data = hass.data[DOMAIN][config_entry_id]
+            isy_data: IsyData = hass.data[DOMAIN][config_entry_id]
             isy = isy_data.root
             if isy_name and isy_name != isy.conf["name"]:
                 continue
