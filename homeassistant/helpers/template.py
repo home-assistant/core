@@ -3062,6 +3062,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             str | jinja2.nodes.Template, CodeType | None
         ] = weakref.WeakValueDictionary()
         self.add_extension("jinja2.ext.loopcontrols")
+        self.add_extension("jinja2.ext.do")
 
         self.globals["acos"] = arc_cosine
         self.globals["apply"] = apply

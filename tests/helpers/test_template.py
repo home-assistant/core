@@ -777,7 +777,7 @@ def test_as_function(hass: HomeAssistant) -> None:
     assert template.Template(
         """
         {%- macro macro_double(num, returns) -%}
-        {{ returns(num * 2) }}
+        {%- do returns(num * 2) -%}
         {%- endmacro -%}
         {%- set double = macro_double | as_function -%}
         {{ [1, 2, 3] | map('apply', double) | list }}
