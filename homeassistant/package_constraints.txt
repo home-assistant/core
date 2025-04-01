@@ -6,14 +6,14 @@ aiodns==3.2.0
 aiohasupervisor==0.3.0
 aiohttp-asyncmdnsresolver==0.1.1
 aiohttp-fast-zlib==0.2.3
-aiohttp==3.11.14
+aiohttp==3.11.15
 aiohttp_cors==0.7.0
 aiousbwatcher==1.1.1
 aiozoneinfo==0.2.3
 annotatedyaml==0.4.5
 astral==2.2
 async-interrupt==1.2.2
-async-upnp-client==0.43.0
+async-upnp-client==0.44.0
 atomicwrites-homeassistant==1.4.1
 attrs==25.1.0
 audioop-lts==0.2.1
@@ -38,8 +38,8 @@ habluetooth==3.37.0
 hass-nabucasa==0.94.0
 hassil==2.2.3
 home-assistant-bluetooth==1.13.1
-home-assistant-frontend==20250306.0
-home-assistant-intents==2025.3.23
+home-assistant-frontend==20250331.0
+home-assistant-intents==2025.3.28
 httpx==0.28.1
 ifaddr==0.2.0
 Jinja2==3.1.6
@@ -49,7 +49,7 @@ orjson==3.10.16
 packaging>=23.1
 paho-mqtt==2.1.0
 Pillow==11.1.0
-propcache==0.3.0
+propcache==0.3.1
 psutil-home-assistant==0.0.1
 PyJWT==2.10.1
 pymicro-vad==1.0.1
@@ -62,7 +62,7 @@ PyTurboJPEG==1.7.5
 PyYAML==6.0.2
 requests==2.32.3
 securetar==2025.2.1
-SQLAlchemy==2.0.39
+SQLAlchemy==2.0.40
 standard-aifc==3.13.0
 standard-telnetlib==3.13.0
 typing-extensions>=4.13.0,<5.0
@@ -87,9 +87,9 @@ httplib2>=0.19.0
 # gRPC is an implicit dependency that we want to make explicit so we manage
 # upgrades intentionally. It is a large package to build from source and we
 # want to ensure we have wheels built.
-grpcio==1.67.1
-grpcio-status==1.67.1
-grpcio-reflection==1.67.1
+grpcio==1.71.0
+grpcio-status==1.71.0
+grpcio-reflection==1.71.0
 
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0
@@ -129,7 +129,7 @@ multidict>=6.0.2
 backoff>=2.0
 
 # ensure pydantic version does not float since it might have breaking changes
-pydantic==2.10.6
+pydantic==2.11.1
 
 # Required for Python 3.12.4 compatibility (#119223).
 mashumaro>=3.13.1

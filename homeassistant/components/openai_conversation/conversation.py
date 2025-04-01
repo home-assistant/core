@@ -23,8 +23,10 @@ from openai.types.responses import (
     ResponseStreamEvent,
     ResponseTextDeltaEvent,
     ToolParam,
+    WebSearchToolParam,
 )
 from openai.types.responses.response_input_param import FunctionCallOutput
+from openai.types.responses.web_search_tool_param import UserLocation
 from voluptuous_openapi import convert
 
 from homeassistant.components import assist_pipeline, conversation
@@ -43,6 +45,13 @@ from .const import (
     CONF_REASONING_EFFORT,
     CONF_TEMPERATURE,
     CONF_TOP_P,
+    CONF_WEB_SEARCH,
+    CONF_WEB_SEARCH_CITY,
+    CONF_WEB_SEARCH_CONTEXT_SIZE,
+    CONF_WEB_SEARCH_COUNTRY,
+    CONF_WEB_SEARCH_REGION,
+    CONF_WEB_SEARCH_TIMEZONE,
+    CONF_WEB_SEARCH_USER_LOCATION,
     DOMAIN,
     LOGGER,
     RECOMMENDED_CHAT_MODEL,
@@ -50,6 +59,7 @@ from .const import (
     RECOMMENDED_REASONING_EFFORT,
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_TOP_P,
+    RECOMMENDED_WEB_SEARCH_CONTEXT_SIZE,
 )
 
 # Max number of back and forth with the LLM to generate a response
@@ -264,6 +274,25 @@ class OpenAIConversationEntity(
                 _format_tool(tool, chat_log.llm_api.custom_serializer)
                 for tool in chat_log.llm_api.tools
             ]
+
+        if options.get(CONF_WEB_SEARCH):
+            web_search = WebSearchToolParam(
+                type="web_search_preview",
+                search_context_size=options.get(
+                    CONF_WEB_SEARCH_CONTEXT_SIZE, RECOMMENDED_WEB_SEARCH_CONTEXT_SIZE
+                ),
+            )
+            if options.get(CONF_WEB_SEARCH_USER_LOCATION):
+                web_search["user_location"] = UserLocation(
+                    type="approximate",
+                    city=options.get(CONF_WEB_SEARCH_CITY, ""),
+                    region=options.get(CONF_WEB_SEARCH_REGION, ""),
+                    country=options.get(CONF_WEB_SEARCH_COUNTRY, ""),
+                    timezone=options.get(CONF_WEB_SEARCH_TIMEZONE, ""),
+                )
+            if tools is None:
+                tools = []
+            tools.append(web_search)
 
         model = options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
         messages = [

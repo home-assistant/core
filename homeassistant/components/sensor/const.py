@@ -699,3 +699,8 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {
     SensorDeviceClass.WIND_DIRECTION: {SensorStateClass.MEASUREMENT_ANGLE},
     SensorDeviceClass.WIND_SPEED: {SensorStateClass.MEASUREMENT},
 }
+
+
+STATE_CLASS_UNITS: dict[SensorStateClass | str, set[type[StrEnum] | str | None]] = {
+    SensorStateClass.MEASUREMENT_ANGLE: {DEGREE},
+}

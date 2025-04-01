@@ -356,6 +356,15 @@ class GoogleGenerativeAIConversationEntity(
 
             messages.append(_convert_content(chat_content))
 
+        # The SDK requires the first message to be a user message
+        # This is not the case if user used `start_conversation`
+        # Workaround from https://github.com/googleapis/python-genai/issues/529#issuecomment-2740964537
+        if messages and messages[0].role != "user":
+            messages.insert(
+                0,
+                Content(role="user", parts=[Part.from_text(text=" ")]),
+            )
+
         if tool_results:
             messages.append(_create_google_tool_response_content(tool_results))
         generateContentConfig = GenerateContentConfig(
