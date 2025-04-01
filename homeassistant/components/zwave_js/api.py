@@ -1116,8 +1116,9 @@ async def websocket_provision_smart_start_node(
             if driver.controller.own_node
             else None,
         )
-        if area_id := msg.get(AREA_ID):
-            dev_reg.async_update_device(device.id, area_id=area_id)
+        dev_reg.async_update_device(
+            device.id, area_id=msg.get(AREA_ID), name_by_user=device_name
+        )
 
         if provisioning_info.additional_properties is None:
             provisioning_info.additional_properties = {}
