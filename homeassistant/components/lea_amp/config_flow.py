@@ -10,7 +10,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
 
-from .const import DOMAIN
+from .const import DOMAIN, PORT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +46,7 @@ def getDeviceName(ip_address):
     _LOGGER.log(logging.INFO, "Connect to %s", ip_address)
     msg = "get /amp/deviceInfo/deviceName\n"
     mySocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    address = (ip_address, 4321)
+    address = (ip_address, int(PORT))
     mySocket.connect(address)
 
     mySocket.send(msg.encode())

@@ -8,6 +8,7 @@ import logging
 import socket
 from typing import Any
 
+from .const import DISCOVERY_INTERVAL, PORT, UPDATE_INTERVAL
 from .message import (
     DevStatusResponse,
     GetModelMessage,
@@ -24,12 +25,6 @@ from .message import (
 )
 from .zone import LeaZone
 from .zone_registry import ZoneRegistry
-
-PORT = "4321"
-
-DISCOVERY_INTERVAL = 10
-EVICT_INTERVAL = DISCOVERY_INTERVAL * 3
-UPDATE_INTERVAL = 5
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -97,10 +92,10 @@ class LeaController:
         _LOGGER.log(logging.INFO, "Discover enabled %s", str(self._discovery_enabled))
         _LOGGER.log(logging.INFO, "Update enabled %s", str(self._update_enabled))
 
-        if self._discovery_enabled or self._registry.has_queued_zones:
-            self.send_discovery_message()
-        if self._update_enabled:
-            self.send_update_message()
+        # if self._discovery_enabled or self._registry.has_queued_zones:
+        # self.send_discovery_message()
+        # if self._update_enabled:
+        # self.send_update_message()
 
     def cleanup(self) -> asyncio.Event:
         """Stop discovering. Stop updating. Close connection."""
@@ -273,43 +268,119 @@ class LeaController:
 
     def _handle_num_inputs(self, value: str):
         _LOGGER.log(logging.INFO, "_handle_num_inputs: %s", str(value))
-        if "8D" in value:
-            sourcesList = [
-                "Analog 1",
-                "Analog 2",
-                "Analog 1+2",
-                "Analog 3",
-                "Analog 4",
-                "Analog 3+4",
-                "Analog 5",
-                "Analog 6",
-                "Analog 5+6",
-                "Analog 7",
-                "Analog 8",
-                "Analog 7+8",
-                "Dante 1",
-                "Dante 2",
-                "Dante 1+2",
-                "Dante 3",
-                "Dante 4",
-                "Dante 3+4",
-                "Dante 5",
-                "Dante 6",
-                "Dante 5+6",
-                "Dante 7",
-                "Dante 8",
-                "Dante 7+8",
-            ]
-            # int(value) + 1
-            for i in range(1, 9):
-                zone = LeaZone(self, str(i))
-                zone._sourcesList = sourcesList  # noqa: SLF001
-                zone._model = "8D"  # noqa: SLF001
-                if self._call_discovered_callback(zone, True):
-                    zone = self._registry.add_discovered_zone(zone)
-                    _LOGGER.log(logging.INFO, "zone discovered: %s", zone)
-                else:
-                    _LOGGER.log(logging.INFO, "zone %s ignored", zone)
+        if "8D" in value or "8N" in value:
+            zonesRange = 9
+            if "8D" in value:
+                model = "8D"
+                sourcesList = [
+                    "Analog 1",
+                    "Analog 2",
+                    "Analog 1+2",
+                    "Analog 3",
+                    "Analog 4",
+                    "Analog 3+4",
+                    "Analog 5",
+                    "Analog 6",
+                    "Analog 5+6",
+                    "Analog 7",
+                    "Analog 8",
+                    "Analog 7+8",
+                    "Dante 1",
+                    "Dante 2",
+                    "Dante 1+2",
+                    "Dante 3",
+                    "Dante 4",
+                    "Dante 3+4",
+                    "Dante 5",
+                    "Dante 6",
+                    "Dante 5+6",
+                    "Dante 7",
+                    "Dante 8",
+                    "Dante 7+8",
+                ]
+            else:
+                model = "8N"
+                sourcesList = [
+                    "Analog 1",
+                    "Analog 2",
+                    "Analog 1+2",
+                    "Analog 3",
+                    "Analog 4",
+                    "Analog 3+4",
+                    "Analog 5",
+                    "Analog 6",
+                    "Analog 5+6",
+                    "Analog 7",
+                    "Analog 8",
+                    "Analog 7+8",
+                ]
+        elif "4D" in value or "4N" in value:
+            zonesRange = 5
+            if "4D" in value:
+                model = "4D"
+                sourcesList = [
+                    "Analog 1",
+                    "Analog 2",
+                    "Analog 1+2",
+                    "Analog 3",
+                    "Analog 4",
+                    "Analog 3+4",
+                    "Dante 1",
+                    "Dante 2",
+                    "Dante 1+2",
+                    "Dante 3",
+                    "Dante 4",
+                    "Dante 3+4",
+                    "Dante 5",
+                    "Dante 6",
+                    "Dante 5+6",
+                    "Dante 7",
+                    "Dante 8",
+                    "Dante 7+8",
+                ]
+            else:
+                model = "4N"
+                sourcesList = [
+                    "Analog 1",
+                    "Analog 2",
+                    "Analog 1+2",
+                    "Analog 3",
+                    "Analog 4",
+                    "Analog 3+4",
+                ]
+        elif "2D" in value or "2N" in value:
+            zonesRange = 3
+            if "2D" in value:
+                model = "2D"
+                sourcesList = [
+                    "Analog 1",
+                    "Analog 2",
+                    "Analog 1+2",
+                    "Dante 1",
+                    "Dante 2",
+                    "Dante 1+2",
+                    "Dante 3",
+                    "Dante 4",
+                    "Dante 3+4",
+                    "Dante 5",
+                    "Dante 6",
+                    "Dante 5+6",
+                    "Dante 7",
+                    "Dante 8",
+                    "Dante 7+8",
+                ]
+            else:
+                model = "2N"
+                sourcesList = ["Analog 1", "Analog 2", "Analog 1+2"]
+        for i in range(1, zonesRange):
+            zone = LeaZone(self, str(i))
+            zone._sourcesList = sourcesList  # noqa: SLF001
+            zone._model = model  # noqa: SLF001
+            if self._call_discovered_callback(zone, True):
+                zone = self._registry.add_discovered_zone(zone)
+                _LOGGER.log(logging.INFO, "zone discovered: %s", zone)
+            else:
+                _LOGGER.log(logging.INFO, "zone %s ignored", zone)
 
     def _call_discovered_callback(self, zone: LeaZone, is_new: bool) -> bool:
         if not self._zone_discovered_callback:
