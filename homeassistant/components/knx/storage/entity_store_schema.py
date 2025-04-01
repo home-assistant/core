@@ -25,6 +25,7 @@ from ..const import (
     DOMAIN,
     SUPPORTED_PLATFORMS_UI,
     ColorTempModes,
+    CoverConf,
 )
 from ..validation import sync_state_validator
 from .const import (
@@ -57,11 +58,6 @@ from .const import (
     CONF_GA_WHITE_BRIGHTNESS,
     CONF_GA_WHITE_SWITCH,
     CONF_GA_WRITE,
-    CONF_INVERT_ANGLE,
-    CONF_INVERT_POSITION,
-    CONF_INVERT_UPDOWN,
-    CONF_TRAVELLING_TIME_DOWN,
-    CONF_TRAVELLING_TIME_UP,
 )
 from .knx_selector import GASelector
 
@@ -139,25 +135,25 @@ COVER_SCHEMA = vol.Schema(
             vol.Schema(
                 {
                     **optional_ga_schema(CONF_GA_UP_DOWN, GASelector(state=False)),
-                    vol.Optional(CONF_INVERT_UPDOWN): selector.BooleanSelector(),
+                    vol.Optional(CoverConf.INVERT_UPDOWN): selector.BooleanSelector(),
                     **optional_ga_schema(CONF_GA_STOP, GASelector(state=False)),
                     **optional_ga_schema(CONF_GA_STEP, GASelector(state=False)),
                     **optional_ga_schema(CONF_GA_POSITION_SET, GASelector(state=False)),
                     **optional_ga_schema(
                         CONF_GA_POSITION_STATE, GASelector(write=False)
                     ),
-                    vol.Optional(CONF_INVERT_POSITION): selector.BooleanSelector(),
+                    vol.Optional(CoverConf.INVERT_POSITION): selector.BooleanSelector(),
                     **optional_ga_schema(CONF_GA_ANGLE, GASelector()),
-                    vol.Optional(CONF_INVERT_ANGLE): selector.BooleanSelector(),
+                    vol.Optional(CoverConf.INVERT_ANGLE): selector.BooleanSelector(),
                     vol.Optional(
-                        CONF_TRAVELLING_TIME_DOWN, default=25
+                        CoverConf.TRAVELLING_TIME_DOWN, default=25
                     ): selector.NumberSelector(
                         selector.NumberSelectorConfig(
                             min=0, max=1000, step=0.1, unit_of_measurement="s"
                         )
                     ),
                     vol.Optional(
-                        CONF_TRAVELLING_TIME_UP, default=25
+                        CoverConf.TRAVELLING_TIME_UP, default=25
                     ): selector.NumberSelector(
                         selector.NumberSelectorConfig(
                             min=0, max=1000, step=0.1, unit_of_measurement="s"

@@ -29,7 +29,7 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType
 
 from . import KNXModule
-from .const import CONF_SYNC_STATE, DOMAIN, KNX_MODULE_KEY
+from .const import CONF_SYNC_STATE, DOMAIN, KNX_MODULE_KEY, CoverConf
 from .entity import KnxUiEntity, KnxUiEntityPlatformController, KnxYamlEntity
 from .schema import CoverSchema
 from .storage.const import (
@@ -43,11 +43,6 @@ from .storage.const import (
     CONF_GA_STOP,
     CONF_GA_UP_DOWN,
     CONF_GA_WRITE,
-    CONF_INVERT_ANGLE,
-    CONF_INVERT_POSITION,
-    CONF_INVERT_UPDOWN,
-    CONF_TRAVELLING_TIME_DOWN,
-    CONF_TRAVELLING_TIME_UP,
 )
 
 
@@ -214,11 +209,11 @@ class KnxYamlCover(_KnxCover, KnxYamlEntity):
                     CoverSchema.CONF_ANGLE_STATE_ADDRESS
                 ),
                 group_address_position=config.get(CoverSchema.CONF_POSITION_ADDRESS),
-                travel_time_down=config[CoverSchema.CONF_TRAVELLING_TIME_DOWN],
-                travel_time_up=config[CoverSchema.CONF_TRAVELLING_TIME_UP],
-                invert_updown=config[CoverSchema.CONF_INVERT_UPDOWN],
-                invert_position=config[CoverSchema.CONF_INVERT_POSITION],
-                invert_angle=config[CoverSchema.CONF_INVERT_ANGLE],
+                travel_time_down=config[CoverConf.TRAVELLING_TIME_DOWN],
+                travel_time_up=config[CoverConf.TRAVELLING_TIME_UP],
+                invert_updown=config[CoverConf.INVERT_UPDOWN],
+                invert_position=config[CoverConf.INVERT_POSITION],
+                invert_angle=config[CoverConf.INVERT_ANGLE],
             ),
         )
         self.init_base()
@@ -261,11 +256,11 @@ def _create_ui_cover(xknx: XKNX, knx_config: ConfigType, name: str) -> XknxCover
         group_address_position_state=get_addresses(CONF_GA_POSITION_STATE),
         group_address_angle=get_address(CONF_GA_ANGLE),
         group_address_angle_state=get_addresses(CONF_GA_ANGLE),
-        travel_time_down=knx_config[CONF_TRAVELLING_TIME_DOWN],
-        travel_time_up=knx_config[CONF_TRAVELLING_TIME_UP],
-        invert_updown=knx_config.get(CONF_INVERT_UPDOWN, False),
-        invert_position=knx_config.get(CONF_INVERT_POSITION, False),
-        invert_angle=knx_config.get(CONF_INVERT_ANGLE, False),
+        travel_time_down=knx_config[CoverConf.TRAVELLING_TIME_DOWN],
+        travel_time_up=knx_config[CoverConf.TRAVELLING_TIME_UP],
+        invert_updown=knx_config.get(CoverConf.INVERT_UPDOWN, False),
+        invert_position=knx_config.get(CoverConf.INVERT_POSITION, False),
+        invert_angle=knx_config.get(CoverConf.INVERT_ANGLE, False),
         sync_state=knx_config[CONF_SYNC_STATE],
     )
 
