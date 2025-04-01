@@ -71,17 +71,28 @@ class HkAvrDevice(MediaPlayerEntity):
         self._current_source = avr.current_source
 
     def update(self) -> None:
-        """Update the state of this media_player."""
-        if self._avr.is_on():
-            self._attr_state = MediaPlayerState.ON
-        elif self._avr.is_off():
+        """Update the state of this media_player by pinging the device."""
+        try:
+            # Send one ping packet with a 1-second timeout.
+            result = subprocess.run(
+                ["ping", "-c", "1", "-W", "1", self._host],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            if result.returncode == 0:
+                self._attr_state = MediaPlayerState.ON
+                _LOGGER.debug("Ping successful; device %s is online.", self._host)
+            else:
+                self._attr_state = MediaPlayerState.OFF
+                _LOGGER.debug("Ping failed; device %s is offline.", self._host)
+        except Exception as e:
             self._attr_state = MediaPlayerState.OFF
-        else:
-            self._attr_state = None
+            _LOGGER.error("Error pinging device %s: %s", self._host, e)
 
+        # Update additional status info from the AVR as needed.
         self._muted = self._avr.muted
         self._current_source = self._avr.current_source
-
+        
     @property
     def name(self):
         """Return the name of the device."""
