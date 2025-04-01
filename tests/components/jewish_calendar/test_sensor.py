@@ -172,7 +172,7 @@ async def test_jewish_calendar_sensor(
     sensor_object = hass.states.get(f"sensor.jewish_calendar_{sensor}")
     assert sensor_object.state == result
 
-    if attrs := getattr(results, "attr", None):
+    if attrs := results.get("attr"):
         assert sensor_object.attributes == attrs
 
 
