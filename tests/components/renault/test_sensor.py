@@ -10,7 +10,7 @@ from renault_api.kamereon.exceptions import QuotaLimitException
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -178,7 +178,7 @@ async def test_sensor_throttling_during_setup(
 
     # Initial state
     entity_id = "sensor.reg_number_battery"
-    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
     # Test QuotaLimitException recovery, with new battery level
     for get_data_mock in patches.values():
