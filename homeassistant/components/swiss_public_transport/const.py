@@ -23,6 +23,8 @@ CONNECTIONS_MAX = 15
 IS_ARRIVAL_OPTIONS = ["departure", "arrival"]
 TIME_MODE_OPTIONS = ["now", "fixed", "offset"]
 
+DIAGNOSE_STATS_MAX_AGE = 7
+
 
 PLACEHOLDERS = {
     "stationboard_url": "http://transport.opendata.ch/examples/stationboard.html",
