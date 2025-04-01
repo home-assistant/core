@@ -102,7 +102,13 @@
       "message": "Error trying to update Reolink firmware: {err}"
     },
     "config_entry_not_ready": {
-      "message": "Error while trying to setup {host}: {err}"
+      "message": "Error while trying to set up {host}: {err}"
+    },
+    "update_already_running": {
+      "message": "Reolink firmware update already running, wait on completion before starting another"
+    },
+    "firmware_rate_limit": {
+      "message": "Reolink firmware update server reached hourly rate limit: updating can be tried again in 1 hour"
     }
   },
   "issues": {
@@ -562,6 +568,21 @@
       "ai_animal_sensitivity": {
         "name": "AI animal sensitivity"
       },
+      "crossline_sensitivity": {
+        "name": "AI crossline {zone_name} sensitivity"
+      },
+      "intrusion_sensitivity": {
+        "name": "AI intrusion {zone_name} sensitivity"
+      },
+      "linger_sensitivity": {
+        "name": "AI linger {zone_name} sensitivity"
+      },
+      "forgotten_item_sensitivity": {
+        "name": "AI item forgotten {zone_name} sensitivity"
+      },
+      "taken_item_sensitivity": {
+        "name": "AI item taken {zone_name} sensitivity"
+      },
       "ai_face_delay": {
         "name": "AI face delay"
       },
@@ -579,6 +600,18 @@
       },
       "ai_animal_delay": {
         "name": "AI animal delay"
+      },
+      "intrusion_delay": {
+        "name": "AI intrusion {zone_name} delay"
+      },
+      "linger_delay": {
+        "name": "AI linger {zone_name} delay"
+      },
+      "forgotten_item_delay": {
+        "name": "AI item forgotten {zone_name} delay"
+      },
+      "taken_item_delay": {
+        "name": "AI item taken {zone_name} delay"
       },
       "auto_quick_reply_time": {
         "name": "Auto quick reply time"
@@ -809,8 +842,8 @@
         "state": {
           "off": "[%key:common::state::off%]",
           "disarm": "Disarmed",
-          "home": "Home",
-          "away": "Away"
+          "home": "[%key:common::state::home%]",
+          "away": "[%key:common::state::not_home%]"
         }
       }
     },

@@ -1311,7 +1311,7 @@ class _QueuedScriptRun(_ScriptRun):
 
     lock_acquired = False
 
-    async def async_run(self) -> None:
+    async def async_run(self) -> ScriptRunResult | None:
         """Run script."""
         # Wait for previous run, if any, to finish by attempting to acquire the script's
         # shared lock. At the same time monitor if we've been told to stop.
@@ -1325,7 +1325,7 @@ class _QueuedScriptRun(_ScriptRun):
 
         self.lock_acquired = True
         # We've acquired the lock so we can go ahead and start the run.
-        await super().async_run()
+        return await super().async_run()
 
     def _finish(self) -> None:
         if self.lock_acquired:
