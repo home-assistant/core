@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: LEAAMPConfigEntry) -> bool:
     """Set up LEA AMP local from a config entry."""
 
-    ip_address = entry.data["ip_address"]
+    ip_address = entry.data["IP Address"]
     hass.data[DOMAIN] = {"ip": ip_address}
 
     _LOGGER.log(logging.INFO, "async_setup_entry")
