@@ -31,6 +31,7 @@ from tests.common import (
     MockModule,
     MockUser,
     mock_integration,
+    mock_platform,
     register_auth_provider,
 )
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -1286,3 +1287,59 @@ async def test_wait_integration_startup(
 
     # The component has been loaded
     assert "test" in hass.config.components
+
+
+async def test_not_setup_platform_if_onboarded(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test if onboarding is done, we don't setup platforms."""
+    mock_storage(hass_storage, {"done": onboarding.STEPS})
+
+    platform_mock = Mock(async_setup_views=AsyncMock(), spec=["async_setup_views"])
+    mock_platform(hass, "test.onboarding", platform_mock)
+    assert await async_setup_component(hass, "test", {})
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(hass, "onboarding", {})
+    await hass.async_block_till_done()
+
+    assert len(platform_mock.async_setup_views.mock_calls) == 0
+
+
+async def test_setup_platform_if_not_onboarded(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test if onboarding is not done, we setup platforms."""
+    platform_mock = Mock(async_setup_views=AsyncMock(), spec=["async_setup_views"])
+    mock_platform(hass, "test.onboarding", platform_mock)
+    assert await async_setup_component(hass, "test", {})
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(hass, "onboarding", {})
+    await hass.async_block_till_done()
+
+    platform_mock.async_setup_views.assert_awaited_once_with(hass, {"done": []})
+
+
+@pytest.mark.parametrize(
+    "platform_mock",
+    [
+        Mock(some_method=AsyncMock(), spec=["some_method"]),
+        Mock(spec=[]),
+    ],
+)
+async def test_bad_platform(
+    hass: HomeAssistant,
+    platform_mock: Mock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test loading onboarding platform which doesn't have the expected methods."""
+    mock_platform(hass, "test.onboarding", platform_mock)
+    assert await async_setup_component(hass, "test", {})
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(hass, "onboarding", {})
+    await hass.async_block_till_done()
+
+    assert platform_mock.mock_calls == []
+    assert "'test.onboarding' is not a valid onboarding platform" in caplog.text

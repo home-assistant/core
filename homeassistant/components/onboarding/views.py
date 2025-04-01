@@ -6,6 +6,7 @@ import asyncio
 from collections.abc import Callable, Coroutine
 from functools import wraps
 from http import HTTPStatus
+import logging
 from typing import TYPE_CHECKING, Any, Concatenate, Protocol, cast
 
 from aiohttp import web
@@ -46,6 +47,8 @@ from .const import (
     STEPS,
 )
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup(
     hass: HomeAssistant, data: OnboardingStoreData, store: OnboardingStorage
@@ -85,7 +88,11 @@ async def _register_onboarding_platform(
 ) -> None:
     """Register a onboarding platform."""
     if not hasattr(platform, "async_setup_views"):
-        raise HomeAssistantError(f"Invalid onboarding platform {platform}")
+        _LOGGER.debug(
+            "'%s.onboarding' is not a valid onboarding platform",
+            integration_domain,
+        )
+        return
     await platform.async_setup_views(hass, hass.data[DOMAIN].steps)
 
 
