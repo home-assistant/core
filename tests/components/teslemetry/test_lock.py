@@ -57,7 +57,7 @@ async def test_lock_services(
     entity_id = "lock.test_lock"
 
     with patch(
-        "homeassistant.components.teslemetry.VehicleSpecific.door_lock",
+        "tesla_fleet_api.teslemetry.Vehicle.door_lock",
         return_value=COMMAND_OK,
     ) as call:
         await hass.services.async_call(
@@ -71,7 +71,7 @@ async def test_lock_services(
         call.assert_called_once()
 
     with patch(
-        "homeassistant.components.teslemetry.VehicleSpecific.door_unlock",
+        "tesla_fleet_api.teslemetry.Vehicle.door_unlock",
         return_value=COMMAND_OK,
     ) as call:
         await hass.services.async_call(
@@ -95,7 +95,7 @@ async def test_lock_services(
         )
 
     with patch(
-        "homeassistant.components.teslemetry.VehicleSpecific.charge_port_door_open",
+        "tesla_fleet_api.teslemetry.Vehicle.charge_port_door_open",
         return_value=COMMAND_OK,
     ) as call:
         await hass.services.async_call(

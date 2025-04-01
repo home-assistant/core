@@ -43,6 +43,7 @@ class SmartThingsSwitchEntityDescription(SwitchEntityDescription):
     """Describe a SmartThings switch entity."""
 
     status_attribute: Attribute
+    component_translation_key: dict[str, str] | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -72,7 +73,14 @@ CAPABILITY_TO_SWITCHES: dict[Capability | str, SmartThingsSwitchEntityDescriptio
         key=Capability.SAMSUNG_CE_WASHER_BUBBLE_SOAK,
         translation_key="bubble_soak",
         status_attribute=Attribute.STATUS,
-    )
+    ),
+    Capability.SWITCH: SmartThingsSwitchEntityDescription(
+        key=Capability.SWITCH,
+        status_attribute=Attribute.SWITCH,
+        component_translation_key={
+            "icemaker": "ice_maker",
+        },
+    ),
 }
 
 
@@ -107,10 +115,19 @@ async def async_setup_entry(
             device,
             description,
             Capability(capability),
+            component,
         )
         for device in entry_data.devices.values()
         for capability, description in CAPABILITY_TO_SWITCHES.items()
-        if capability in device.status[MAIN]
+        for component in device.status
+        if capability in device.status[component]
+        and (
+            (description.component_translation_key is None and component == MAIN)
+            or (
+                description.component_translation_key is not None
+                and component in description.component_translation_key
+            )
+        )
     )
     async_add_entities(entities)
 
@@ -119,6 +136,7 @@ class SmartThingsSwitch(SmartThingsEntity, SwitchEntity):
     """Define a SmartThings switch."""
 
     entity_description: SmartThingsSwitchEntityDescription
+    created_issue: bool = False
 
     def __init__(
         self,
@@ -126,12 +144,19 @@ class SmartThingsSwitch(SmartThingsEntity, SwitchEntity):
         device: FullDevice,
         entity_description: SmartThingsSwitchEntityDescription,
         capability: Capability,
+        component: str = MAIN,
     ) -> None:
         """Initialize the switch."""
-        super().__init__(client, device, {capability})
+        super().__init__(client, device, {capability}, component=component)
         self.entity_description = entity_description
         self.switch_capability = capability
-        self._attr_unique_id = f"{device.device.device_id}_{MAIN}_{capability}_{entity_description.status_attribute}_{entity_description.status_attribute}"
+        self._attr_unique_id = f"{device.device.device_id}_{component}_{capability}_{entity_description.status_attribute}_{entity_description.status_attribute}"
+        if (
+            translation_keys := entity_description.component_translation_key
+        ) is not None and (
+            translation_key := translation_keys.get(component)
+        ) is not None:
+            self._attr_translation_key = translation_key
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
@@ -160,14 +185,26 @@ class SmartThingsSwitch(SmartThingsEntity, SwitchEntity):
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         await super().async_added_to_hass()
-        if self.entity_description != SWITCH or self.device.device.components[
-            MAIN
-        ].manufacturer_category not in {
-            Category.DRYER,
-            Category.WASHER,
-            Category.MICROWAVE,
-            Category.DISHWASHER,
-        }:
+        media_player = all(
+            capability in self.device.status[MAIN]
+            for capability in (
+                Capability.AUDIO_MUTE,
+                Capability.AUDIO_VOLUME,
+                Capability.MEDIA_PLAYBACK,
+            )
+        )
+        if (
+            self.entity_description != SWITCH
+            and self.device.device.components[MAIN].manufacturer_category
+            not in {
+                Category.CLOTHING_CARE_MACHINE,
+                Category.COOKTOP,
+                Category.DRYER,
+                Category.WASHER,
+                Category.MICROWAVE,
+                Category.DISHWASHER,
+            }
+        ) or (self.entity_description != SWITCH and not media_player):
             return
         automations = automations_with_entity(self.hass, self.entity_id)
         scripts = scripts_with_entity(self.hass, self.entity_id)
@@ -185,6 +222,9 @@ class SmartThingsSwitch(SmartThingsEntity, SwitchEntity):
             if (item := entity_reg.async_get(entity_id))
         ]
 
+        identifier = "media_player" if media_player else "appliance"
+
+        self.created_issue = True
         async_create_issue(
             self.hass,
             DOMAIN,
@@ -192,7 +232,7 @@ class SmartThingsSwitch(SmartThingsEntity, SwitchEntity):
             breaks_in_ha_version="2025.10.0",
             is_fixable=False,
             severity=IssueSeverity.WARNING,
-            translation_key="deprecated_switch_appliance",
+            translation_key=f"deprecated_switch_{identifier}",
             translation_placeholders={
                 "entity": self.entity_id,
                 "items": "\n".join(items_list),
@@ -202,14 +242,7 @@ class SmartThingsSwitch(SmartThingsEntity, SwitchEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Call when entity will be removed from hass."""
         await super().async_will_remove_from_hass()
-        if self.entity_description != SWITCH or self.device.device.components[
-            MAIN
-        ].manufacturer_category not in {
-            Category.DRYER,
-            Category.WASHER,
-            Category.MICROWAVE,
-            Category.DISHWASHER,
-        }:
+        if not self.created_issue:
             return
         async_delete_issue(self.hass, DOMAIN, f"deprecated_switch_{self.entity_id}")
 

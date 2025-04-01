@@ -110,17 +110,71 @@
     }
   },
   "issues": {
+    "deprecated_time_alarm_clock_in_automations_scripts": {
+      "title": "Deprecated alarm clock entity detected in some automations or scripts",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::home_connect::issues::deprecated_time_alarm_clock_in_automations_scripts::title%]",
+            "description": "The alarm clock entity `{entity_id}`, which is deprecated because it's being moved to the `number` platform, is used in the following automations or scripts:\n{items}\n\nPlease, fix this issue by updating your automations or scripts to use the new `number` entity."
+          }
+        }
+      }
+    },
+    "deprecated_time_alarm_clock": {
+      "title": "Deprecated alarm clock entity",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::home_connect::issues::deprecated_time_alarm_clock::title%]",
+            "description": "The alarm clock entity `{entity_id}` is deprecated because it's being moved to the `number` platform.\n\nPlease use the new `number` entity."
+          }
+        }
+      }
+    },
     "deprecated_binary_common_door_sensor": {
       "title": "Deprecated binary door sensor detected in some automations or scripts",
-      "description": "The binary door sensor `{entity}`, which is deprecated, is used in the following automations or scripts:\n{items}\n\nA sensor entity with additional possible states is available and should be used going forward; Please use it on the above automations or scripts to fix this issue."
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::home_connect::issues::deprecated_binary_common_door_sensor::title%]",
+            "description": "The binary door sensor `{entity}`, which is deprecated, is used in the following automations or scripts:\n{items}\n\nA sensor entity with additional possible states is available and should be used going forward; Please use it on the above automations or scripts to fix this issue."
+          }
+        }
+      }
     },
     "deprecated_command_actions": {
       "title": "The command related actions are deprecated in favor of the new buttons",
-      "description": "The `pause_program` and `resume_program` actions have been deprecated in favor of new button entities, if the command is available for your appliance. Please update your automations, scripts and panels that use this action to use the button entities instead, and press on submit to fix the issue."
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::home_connect::issues::deprecated_command_actions::title%]",
+            "description": "The `pause_program` and `resume_program` actions have been deprecated in favor of new button entities, if the command is available for your appliance. Please update your automations, scripts and panels that use this action to use the button entities instead, and press on submit to fix the issue."
+          }
+        }
+      }
+    },
+    "deprecated_program_switch_in_automations_scripts": {
+      "title": "Deprecated program switch detected in some automations or scripts",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::home_connect::issues::deprecated_program_switch_in_automations_scripts::title%]",
+            "description": "Program switches are deprecated and {entity_id} is used in the following automations or scripts:\n{items}\n\nYou can use the active program select entity to run the program without any additional options and get the current running program on the above automations or scripts to fix this issue."
+          }
+        }
+      }
     },
     "deprecated_program_switch": {
-      "title": "Deprecated program switch detected in some automations or scripts",
-      "description": "Program switches are deprecated and {entity_id} is used in the following automations or scripts:\n{items}\n\nYou can use the active program select entity to run the program without any additional options and get the current running program on the above automations or scripts to fix this issue."
+      "title": "Deprecated program switch entities",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::home_connect::issues::deprecated_program_switch::title%]",
+            "description": "The switch entity `{entity_id}` and all the other program switches are deprecated.\n\nPlease use the active program select entity instead."
+          }
+        }
+      }
     },
     "deprecated_set_program_and_option_actions": {
       "title": "The executed action is deprecated",
@@ -457,7 +511,7 @@
     },
     "spin_speed": {
       "options": {
-        "laundry_care_washer_enum_type_spin_speed_off": "Off",
+        "laundry_care_washer_enum_type_spin_speed_off": "[%key:common::state::off%]",
         "laundry_care_washer_enum_type_spin_speed_r_p_m_400": "400 rpm",
         "laundry_care_washer_enum_type_spin_speed_r_p_m_600": "600 rpm",
         "laundry_care_washer_enum_type_spin_speed_r_p_m_700": "700 rpm",
@@ -467,7 +521,7 @@
         "laundry_care_washer_enum_type_spin_speed_r_p_m_1200": "1200 rpm",
         "laundry_care_washer_enum_type_spin_speed_r_p_m_1400": "1400 rpm",
         "laundry_care_washer_enum_type_spin_speed_r_p_m_1600": "1600 rpm",
-        "laundry_care_washer_enum_type_spin_speed_ul_off": "Off",
+        "laundry_care_washer_enum_type_spin_speed_ul_off": "[%key:common::state::off%]",
         "laundry_care_washer_enum_type_spin_speed_ul_low": "Low",
         "laundry_care_washer_enum_type_spin_speed_ul_medium": "Medium",
         "laundry_care_washer_enum_type_spin_speed_ul_high": "High"
@@ -475,7 +529,7 @@
     },
     "vario_perfect": {
       "options": {
-        "laundry_care_common_enum_type_vario_perfect_off": "Off",
+        "laundry_care_common_enum_type_vario_perfect_off": "[%key:common::state::off%]",
         "laundry_care_common_enum_type_vario_perfect_eco_perfect": "Eco perfect",
         "laundry_care_common_enum_type_vario_perfect_speed_perfect": "Speed perfect"
       }
@@ -868,6 +922,9 @@
       }
     },
     "number": {
+      "alarm_clock": {
+        "name": "Alarm clock"
+      },
       "refrigerator_setpoint_temperature": {
         "name": "Refrigerator temperature"
       },
@@ -1437,7 +1494,7 @@
       "spin_speed": {
         "name": "[%key:component::home_connect::services::set_program_and_options::fields::laundry_care_washer_option_spin_speed::name%]",
         "state": {
-          "laundry_care_washer_enum_type_spin_speed_off": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_off%]",
+          "laundry_care_washer_enum_type_spin_speed_off": "[%key:common::state::off%]",
           "laundry_care_washer_enum_type_spin_speed_r_p_m_400": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_r_p_m_400%]",
           "laundry_care_washer_enum_type_spin_speed_r_p_m_600": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_r_p_m_600%]",
           "laundry_care_washer_enum_type_spin_speed_r_p_m_700": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_r_p_m_700%]",
@@ -1447,7 +1504,7 @@
           "laundry_care_washer_enum_type_spin_speed_r_p_m_1200": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_r_p_m_1200%]",
           "laundry_care_washer_enum_type_spin_speed_r_p_m_1400": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_r_p_m_1400%]",
           "laundry_care_washer_enum_type_spin_speed_r_p_m_1600": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_r_p_m_1600%]",
-          "laundry_care_washer_enum_type_spin_speed_ul_off": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_ul_off%]",
+          "laundry_care_washer_enum_type_spin_speed_ul_off": "[%key:common::state::off%]",
           "laundry_care_washer_enum_type_spin_speed_ul_low": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_ul_low%]",
           "laundry_care_washer_enum_type_spin_speed_ul_medium": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_ul_medium%]",
           "laundry_care_washer_enum_type_spin_speed_ul_high": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_ul_high%]"
@@ -1456,7 +1513,7 @@
       "vario_perfect": {
         "name": "[%key:component::home_connect::services::set_program_and_options::fields::laundry_care_washer_option_vario_perfect::name%]",
         "state": {
-          "laundry_care_common_enum_type_vario_perfect_off": "[%key:component::home_connect::selector::vario_perfect::options::laundry_care_common_enum_type_vario_perfect_off%]",
+          "laundry_care_common_enum_type_vario_perfect_off": "[%key:common::state::off%]",
           "laundry_care_common_enum_type_vario_perfect_eco_perfect": "[%key:component::home_connect::selector::vario_perfect::options::laundry_care_common_enum_type_vario_perfect_eco_perfect%]",
           "laundry_care_common_enum_type_vario_perfect_speed_perfect": "[%key:component::home_connect::selector::vario_perfect::options::laundry_care_common_enum_type_vario_perfect_speed_perfect%]"
         }
