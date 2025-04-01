@@ -89,7 +89,7 @@ async def test_climate_features(
     features: ClimateEntityFeature,
     hvac_modes: list[HVACMode],
 ) -> None:
-    """Test available features of cliamte entities."""
+    """Test available features of climate entities."""
     await setup_mock_climate(hass, mock_config_entry, mock_homee, file)
 
     attributes = hass.states.get(entity_id).attributes
