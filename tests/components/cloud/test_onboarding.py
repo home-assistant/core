@@ -24,14 +24,12 @@ def mock_onboarding_storage(hass_storage, data):
 
 
 @pytest.fixture(autouse=True)
-def auth_active(hass: HomeAssistant) -> None:
+async def auth_active(hass: HomeAssistant) -> None:
     """Ensure auth is always active."""
-    hass.loop.run_until_complete(
-        register_auth_provider(hass, {"type": "homeassistant"})
-    )
+    await register_auth_provider(hass, {"type": "homeassistant"})
 
 
-@pytest.fixture(name="setup_cloud")
+@pytest.fixture(name="setup_cloud", autouse=True)
 async def setup_cloud_fixture(hass: HomeAssistant, cloud: MagicMock) -> None:
     """Fixture that sets up cloud."""
     assert await async_setup_component(hass, "homeassistant", {})
@@ -39,7 +37,6 @@ async def setup_cloud_fixture(hass: HomeAssistant, cloud: MagicMock) -> None:
     await hass.async_block_till_done()
 
 
-@pytest.mark.usefixtures("setup_cloud")
 async def test_onboarding_cloud_forgot_password(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
@@ -64,7 +61,6 @@ async def test_onboarding_cloud_forgot_password(
     assert mock_cognito.async_forgot_password.call_count == 1
 
 
-@pytest.mark.usefixtures("setup_cloud")
 async def test_onboarding_cloud_login(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
@@ -89,7 +85,6 @@ async def test_onboarding_cloud_login(
     assert cloud.login.call_count == 1
 
 
-@pytest.mark.usefixtures("setup_cloud")
 async def test_onboarding_cloud_logout(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
@@ -111,7 +106,6 @@ async def test_onboarding_cloud_logout(
     assert cloud.logout.call_count == 1
 
 
-@pytest.mark.usefixtures("setup_cloud")
 async def test_onboarding_cloud_status(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
