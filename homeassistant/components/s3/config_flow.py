@@ -27,6 +27,8 @@ from .const import (
     CONF_ENDPOINT_URL,
     CONF_SECRET_ACCESS_KEY,
     DEFAULT_ENDPOINT_URL,
+    DESCRIPTION_AWS_S3_DOCS_URL,
+    DESCRIPTION_BOTO3_DOCS_URL,
     DOMAIN,
 )
 
@@ -77,4 +79,8 @@ class S3ConfigFlow(ConfigFlow, domain=DOMAIN):
                 STEP_USER_DATA_SCHEMA, user_input
             ),
             errors=errors,
+            description_placeholders={
+                "aws_s3_docs_url": DESCRIPTION_AWS_S3_DOCS_URL,
+                "boto3_docs_url": DESCRIPTION_BOTO3_DOCS_URL,
+            },
         )
