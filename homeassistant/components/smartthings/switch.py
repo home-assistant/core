@@ -52,7 +52,13 @@ CAPABILITY_TO_SWITCHES: dict[Capability | str, SmartThingsSwitchEntityDescriptio
         exists_fn=lambda status: (
             status[Attribute.SUPPORTED_LIGHTING_LEVELS].value == ["on", "off"]
         ),
-    )
+    ),
+    Capability.SAMSUNG_CE_AIR_CONDITIONER_BEEP: SmartThingsSwitchEntityDescription(
+        key=Capability.SAMSUNG_CE_AIR_CONDITIONER_BEEP,
+        translation_key="beep",
+        status_attribute=Attribute.BEEP,
+        exists_fn=lambda status: (status[Attribute.BEEP].value in {"on", "off"}),
+    ),
 }
 
 

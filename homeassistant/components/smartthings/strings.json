@@ -431,6 +431,9 @@
     "switch": {
       "light": {
         "name": "Light"
+      },
+      "beep": {
+        "name": "Beep"
       }
     }
   },

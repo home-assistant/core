@@ -21,6 +21,13 @@
           "on": "mdi:lightbulb-on",
           "off": "mdi:lightbulb-off"
         }
+      },
+      "beep": {
+        "default": "mdi:volume-off",
+        "state": {
+          "on": "mdi:volume-high",
+          "off": "mdi:volume-off"
+        }
       }
     }
   }
