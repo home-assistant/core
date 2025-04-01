@@ -902,7 +902,7 @@
         }
       },
       "current_job_mode_dehumidifier": {
-        "name": "Operating mode",
+        "name": "[%key:component::lg_thinq::entity::sensor::current_job_mode::name%]",
         "state": {
           "air_clean": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::air_clean%]",
           "clothes_dry": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::clothes_dry%]",
