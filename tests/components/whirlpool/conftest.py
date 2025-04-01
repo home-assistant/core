@@ -153,12 +153,12 @@ def side_effect_function(*args, **kwargs):
     return None
 
 
-def get_sensor_mock(said):
+def get_sensor_mock(said: str, data_model: str):
     """Get a mock of a sensor."""
     mock_sensor = mock.Mock(said=said)
     mock_sensor.name = f"WasherDryer {said}"
     mock_sensor.register_attr_callback = MagicMock()
-    mock_sensor.appliance_info.data_model = "washer_dryer_model"
+    mock_sensor.appliance_info.data_model = data_model
     mock_sensor.appliance_info.category = "washer_dryer"
     mock_sensor.appliance_info.model_number = "12345"
     mock_sensor.get_online.return_value = True
@@ -179,13 +179,13 @@ def get_sensor_mock(said):
 @pytest.fixture(name="mock_sensor1_api", autouse=False)
 def fixture_mock_sensor1_api():
     """Set up sensor API fixture."""
-    return get_sensor_mock(MOCK_SAID3)
+    return get_sensor_mock(MOCK_SAID3, "washer")
 
 
 @pytest.fixture(name="mock_sensor2_api", autouse=False)
 def fixture_mock_sensor2_api():
     """Set up sensor API fixture."""
-    return get_sensor_mock(MOCK_SAID4)
+    return get_sensor_mock(MOCK_SAID4, "dryer")
 
 
 @pytest.fixture(name="mock_sensor_api_instances", autouse=False)

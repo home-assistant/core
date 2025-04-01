@@ -15,7 +15,7 @@
         "data_description": {
           "host": "The hostname or IP address of your Reolink device. For example: '192.168.1.25'.",
           "port": "The HTTP(s) port to connect to the Reolink device API. For HTTP normally: '80', for HTTPS normally '443'.",
-          "use_https": "Use a HTTPS (SSL) connection to the Reolink device.",
+          "use_https": "Use an HTTPS (SSL) connection to the Reolink device.",
           "baichuan_port": "The 'Basic Service Port' to connect to the Reolink device over TCP. Normally '9000' unless manually changed in the Reolink desktop client.",
           "username": "Username to login to the Reolink device itself. Not the Reolink cloud account.",
           "password": "Password to login to the Reolink device itself. Not the Reolink cloud account."
@@ -66,7 +66,7 @@
       "message": "Invalid input parameter: {err}"
     },
     "api_error": {
-      "message": "The device responded with a error: {err}"
+      "message": "The device responded with an error: {err}"
     },
     "invalid_content_type": {
       "message": "Received a different content type than expected: {err}"
@@ -103,6 +103,12 @@
     },
     "config_entry_not_ready": {
       "message": "Error while trying to set up {host}: {err}"
+    },
+    "update_already_running": {
+      "message": "Reolink firmware update already running, wait on completion before starting another"
+    },
+    "firmware_rate_limit": {
+      "message": "Reolink firmware update server reached hourly rate limit: updating can be tried again in 1 hour"
     }
   },
   "issues": {
@@ -124,7 +130,7 @@
     },
     "firmware_update": {
       "title": "Reolink firmware update required",
-      "description": "\"{name}\" with model \"{model}\" and hardware version \"{hw_version}\" is running a old firmware version \"{current_firmware}\", while at least firmware version \"{required_firmware}\" is required for proper operation of the Reolink integration. The firmware can be updated by pressing \"install\" in the more info dialog of the update entity of \"{name}\" from within Home Assistant. Alternatively, the latest firmware can be downloaded from the [Reolink download center]({download_link})."
+      "description": "\"{name}\" with model \"{model}\" and hardware version \"{hw_version}\" is running an old firmware version \"{current_firmware}\", while at least firmware version \"{required_firmware}\" is required for proper operation of the Reolink integration. The firmware can be updated by pressing \"install\" in the more info dialog of the update entity of \"{name}\" from within Home Assistant. Alternatively, the latest firmware can be downloaded from the [Reolink download center]({download_link})."
     },
     "hub_switch_deprecated": {
       "title": "Reolink Home Hub switches deprecated",
@@ -836,8 +842,8 @@
         "state": {
           "off": "[%key:common::state::off%]",
           "disarm": "Disarmed",
-          "home": "Home",
-          "away": "Away"
+          "home": "[%key:common::state::home%]",
+          "away": "[%key:common::state::not_home%]"
         }
       }
     },
@@ -887,7 +893,7 @@
     },
     "switch": {
       "ir_lights": {
-        "name": "Infra red lights in night mode"
+        "name": "Infrared lights in night mode"
       },
       "record_audio": {
         "name": "Record audio"
