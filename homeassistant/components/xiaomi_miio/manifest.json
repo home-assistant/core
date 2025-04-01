@@ -8,4 +8,5 @@
   "loggers": ["micloud", "miio"],
   "requirements": ["construct==2.10.68", "micloud==0.5", "python-miio==0.5.12"],
   "zeroconf": ["_miio._udp.local."]
+  "version": "0.1.0"
 }
