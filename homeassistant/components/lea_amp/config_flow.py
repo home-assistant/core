@@ -27,7 +27,7 @@ class ExampleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Step User."""
         # Specify items in the order they are to be displayed in the UI
         if user_input is not None:
-            getDeviceName(user_input)
+            getDeviceName(user_input["IP Address"])
             # return self.async_create_entry(title="Lea AMP", data=user_input)
 
         return self.async_show_form(
