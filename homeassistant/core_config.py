@@ -581,9 +581,7 @@ class Config:
         self.all_components: set[str] = set()
 
         # Set of loaded components
-        self.components: _ComponentSet = _ComponentSet(
-            self.top_level_components, self.all_components
-        )
+        self.components = _ComponentSet(self.top_level_components, self.all_components)
 
         # API (HTTP) server configuration
         self.api: ApiConfig | None = None
