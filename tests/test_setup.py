@@ -458,6 +458,29 @@ async def test_set_domains_to_be_loaded(hass: HomeAssistant) -> None:
     assert not hass.data[setup.DATA_SETUP_DONE]
 
 
+async def test_component_setup_after_dependencies(hass: HomeAssistant) -> None:
+    """Test that after dependencies are set up before the component."""
+    mock_integration(hass, MockModule("dep"))
+    mock_integration(
+        hass, MockModule("comp", partial_manifest={"after_dependencies": ["dep"]})
+    )
+    mock_integration(
+        hass, MockModule("comp2", partial_manifest={"after_dependencies": ["dep"]})
+    )
+
+    setup.async_set_domains_to_be_loaded(hass, {"comp"})
+
+    assert await setup.async_setup_component(hass, "comp", {})
+    assert "comp" in hass.config.components
+    assert "dep" not in hass.config.components
+
+    setup.async_set_domains_to_be_loaded(hass, {"comp2", "dep"})
+
+    assert await setup.async_setup_component(hass, "comp2", {})
+    assert "comp2" in hass.config.components
+    assert "dep" in hass.config.components
+
+
 async def test_component_setup_with_validation_and_dependency(
     hass: HomeAssistant,
 ) -> None:

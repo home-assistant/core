@@ -478,7 +478,7 @@ arcam-fmj==1.8.1
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.43.0
+async-upnp-client==0.44.0
 
 # homeassistant.components.arve
 asyncarve==0.1.1
@@ -984,7 +984,7 @@ hole==0.8.0
 holidays==0.69
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250328.0
+home-assistant-frontend==20250331.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.3.28
@@ -2189,7 +2189,7 @@ sensirion-ble==0.1.1
 sensorpro-ble==0.5.3
 
 # homeassistant.components.sensorpush_cloud
-sensorpush-api==2.1.1
+sensorpush-api==2.1.2
 
 # homeassistant.components.sensorpush
 sensorpush-ble==1.7.1
