@@ -74,28 +74,24 @@ class PropertyZWaveJSEntityDescription(BinarySensorEntityDescription):
 #
 # The following notifications have been moved to diagnostic:
 # Smoke Alarm
-# - State idle
 # - Alarm silenced
 # - Replacement required
 # - Replacement required, End-of-life
 # - Maintenance required, planned periodic inspection
 # - Maintenance required, dust in device
 # CO Alarm
-# - State idle
 # - Carbon monoxide test
 # - Replacement required
 # - Replacement required, End-of-life
 # - Alarm silenced
 # - Maintenance required, planned periodic inspection
 # CO2 Alarm
-# - State idle
 # - Carbon dioxide test
 # - Replacement required
 # - Replacement required, End-of-life
 # - Alarm silenced
 # - Maintenance required, planned periodic inspection
 # Heat Alarm
-# - State idle
 # - Rapid temperature rise (location provided)
 # - Rapid temperature rise
 # - Rapid temperature fall (location provided)
@@ -107,7 +103,6 @@ class PropertyZWaveJSEntityDescription(BinarySensorEntityDescription):
 # - Maintenance required, planned periodic inspection
 
 # Water Alarm
-# - State idle
 # - Replace water filter
 # - Sump pump failure
 
