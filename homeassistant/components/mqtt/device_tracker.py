@@ -180,5 +180,5 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
         self._attr_extra_state_attributes = {
             attribute: value
             for attribute, value in extra_state_attributes.items()
-            if attribute not in (ATTR_LATITUDE, ATTR_LONGITUDE, ATTR_GPS_ACCURACY)
+            if attribute not in {ATTR_GPS_ACCURACY, ATTR_LATITUDE, ATTR_LONGITUDE}
         }
