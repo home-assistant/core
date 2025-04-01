@@ -77,10 +77,13 @@ class ElevenLabsConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             try:
-                voices, _ = await get_voices_models(self.hass, user_input[CONF_API_KEY])
+                api_key = user_input[CONF_API_KEY]
+                voices, _ = await get_voices_models(self.hass, api_key)
             except ApiError:
                 errors["base"] = "invalid_api_key"
             else:
+                await self.async_set_unique_id(api_key)
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title="ElevenLabs",
                     data=user_input,
