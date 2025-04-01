@@ -928,6 +928,17 @@
           "vacation": "Vacation"
         }
       },
+      "current_job_mode_dehumidifier": {
+        "name": "[%key:component::lg_thinq::entity::sensor::current_job_mode::name%]",
+        "state": {
+          "air_clean": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::air_clean%]",
+          "clothes_dry": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::clothes_dry%]",
+          "intensive_dry": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::intensive_dry%]",
+          "quiet_humidity": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::quiet_humidity%]",
+          "rapid_humidity": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::rapid_humidity%]",
+          "smart_humidity": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::smart_humidity%]"
+        }
+      },
       "operation_mode": {
         "name": "Operation",
         "state": {
