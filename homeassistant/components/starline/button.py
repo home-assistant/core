@@ -64,7 +64,7 @@ class StarlineButton(StarlineEntity, ButtonEntity):
         self.entity_description = description
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self._device.online
 
