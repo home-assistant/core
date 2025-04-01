@@ -1,0 +1,521 @@
+{
+  "items": [
+    {
+      "deviceId": "5758b2ec-563e-f39b-ec39-208e54aabf60",
+      "name": "Samsung-Refrigerator",
+      "label": "Frigo",
+      "manufacturerName": "Samsung Electronics",
+      "presentationId": "DA-REF-NORMAL-01011",
+      "deviceManufacturerCode": "Samsung Electronics",
+      "locationId": "d91ee683-be36-4124-9200-c0030253fbc2",
+      "ownerId": "60b5179d-607f-f754-a648-6e1e21aeeb31",
+      "roomId": "c4f98377-534d-422f-b061-a4f3e281ddf5",
+      "deviceTypeName": "Samsung OCF Refrigerator",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "contactSensor",
+              "version": 1
+            },
+            {
+              "id": "execute",
+              "version": 1
+            },
+            {
+              "id": "ocf",
+              "version": 1
+            },
+            {
+              "id": "powerConsumptionReport",
+              "version": 1
+            },
+            {
+              "id": "demandResponseLoadControl",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            },
+            {
+              "id": "refrigeration",
+              "version": 1
+            },
+            {
+              "id": "temperatureMeasurement",
+              "version": 1
+            },
+            {
+              "id": "thermostatCoolingSetpoint",
+              "version": 1
+            },
+            {
+              "id": "custom.deodorFilter",
+              "version": 1
+            },
+            {
+              "id": "custom.dustFilter",
+              "version": 1
+            },
+            {
+              "id": "custom.deviceReportStateConfiguration",
+              "version": 1
+            },
+            {
+              "id": "custom.energyType",
+              "version": 1
+            },
+            {
+              "id": "custom.fridgeMode",
+              "version": 1
+            },
+            {
+              "id": "custom.disabledCapabilities",
+              "version": 1
+            },
+            {
+              "id": "custom.disabledComponents",
+              "version": 1
+            },
+            {
+              "id": "custom.waterFilter",
+              "version": 1
+            },
+            {
+              "id": "samsungce.softwareUpdate",
+              "version": 1
+            },
+            {
+              "id": "samsungce.deviceIdentification",
+              "version": 1
+            },
+            {
+              "id": "samsungce.driverVersion",
+              "version": 1
+            },
+            {
+              "id": "samsungce.fridgeVacationMode",
+              "version": 1
+            },
+            {
+              "id": "samsungce.powerCool",
+              "version": 1
+            },
+            {
+              "id": "samsungce.powerFreeze",
+              "version": 1
+            },
+            {
+              "id": "samsungce.sabbathMode",
+              "version": 1
+            },
+            {
+              "id": "samsungce.selfCheck",
+              "version": 1
+            },
+            {
+              "id": "samsungce.viewInside",
+              "version": 1
+            },
+            {
+              "id": "samsungce.fridgeWelcomeLighting",
+              "version": 1
+            },
+            {
+              "id": "samsungce.quickControl",
+              "version": 1
+            },
+            {
+              "id": "sec.diagnosticsInformation",
+              "version": 1
+            },
+            {
+              "id": "sec.wifiConfiguration",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Refrigerator",
+              "categoryType": "manufacturer"
+            }
+          ]
+        },
+        {
+          "id": "freezer",
+          "label": "freezer",
+          "capabilities": [
+            {
+              "id": "contactSensor",
+              "version": 1
+            },
+            {
+              "id": "temperatureMeasurement",
+              "version": 1
+            },
+            {
+              "id": "thermostatCoolingSetpoint",
+              "version": 1
+            },
+            {
+              "id": "custom.disabledCapabilities",
+              "version": 1
+            },
+            {
+              "id": "custom.fridgeMode",
+              "version": 1
+            },
+            {
+              "id": "custom.thermostatSetpointControl",
+              "version": 1
+            },
+            {
+              "id": "samsungce.temperatureSetting",
+              "version": 1
+            },
+            {
+              "id": "samsungce.freezerConvertMode",
+              "version": 1
+            },
+            {
+              "id": "samsungce.unavailableCapabilities",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Other",
+              "categoryType": "manufacturer"
+            }
+          ]
+        },
+        {
+          "id": "cooler",
+          "label": "cooler",
+          "capabilities": [
+            {
+              "id": "contactSensor",
+              "version": 1
+            },
+            {
+              "id": "temperatureMeasurement",
+              "version": 1
+            },
+            {
+              "id": "thermostatCoolingSetpoint",
+              "version": 1
+            },
+            {
+              "id": "custom.disabledCapabilities",
+              "version": 1
+            },
+            {
+              "id": "custom.fridgeMode",
+              "version": 1
+            },
+            {
+              "id": "custom.thermostatSetpointControl",
+              "version": 1
+            },
+            {
+              "id": "samsungce.temperatureSetting",
+              "version": 1
+            },
+            {
+              "id": "samsungce.unavailableCapabilities",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Other",
+              "categoryType": "manufacturer"
+            }
+          ]
+        },
+        {
+          "id": "cvroom",
+          "label": "cvroom",
+          "capabilities": [
+            {
+              "id": "contactSensor",
+              "version": 1
+            },
+            {
+              "id": "temperatureMeasurement",
+              "version": 1
+            },
+            {
+              "id": "thermostatCoolingSetpoint",
+              "version": 1
+            },
+            {
+              "id": "custom.disabledCapabilities",
+              "version": 1
+            },
+            {
+              "id": "custom.fridgeMode",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Other",
+              "categoryType": "manufacturer"
+            }
+          ]
+        },
+        {
+          "id": "onedoor",
+          "label": "onedoor",
+          "capabilities": [
+            {
+              "id": "contactSensor",
+              "version": 1
+            },
+            {
+              "id": "temperatureMeasurement",
+              "version": 1
+            },
+            {
+              "id": "thermostatCoolingSetpoint",
+              "version": 1
+            },
+            {
+              "id": "custom.disabledCapabilities",
+              "version": 1
+            },
+            {
+              "id": "custom.fridgeMode",
+              "version": 1
+            },
+            {
+              "id": "custom.thermostatSetpointControl",
+              "version": 1
+            },
+            {
+              "id": "samsungce.temperatureSetting",
+              "version": 1
+            },
+            {
+              "id": "samsungce.freezerConvertMode",
+              "version": 1
+            },
+            {
+              "id": "samsungce.unavailableCapabilities",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Other",
+              "categoryType": "manufacturer"
+            }
+          ]
+        },
+        {
+          "id": "icemaker",
+          "label": "icemaker",
+          "capabilities": [
+            {
+              "id": "switch",
+              "version": 1
+            },
+            {
+              "id": "custom.disabledCapabilities",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Other",
+              "categoryType": "manufacturer"
+            }
+          ]
+        },
+        {
+          "id": "icemaker-02",
+          "label": "icemaker-02",
+          "capabilities": [
+            {
+              "id": "switch",
+              "version": 1
+            },
+            {
+              "id": "custom.disabledCapabilities",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Other",
+              "categoryType": "manufacturer"
+            }
+          ]
+        },
+        {
+          "id": "icemaker-03",
+          "label": "icemaker-03",
+          "capabilities": [
+            {
+              "id": "switch",
+              "version": 1
+            },
+            {
+              "id": "custom.disabledCapabilities",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Other",
+              "categoryType": "manufacturer"
+            }
+          ]
+        },
+        {
+          "id": "scale-10",
+          "label": "scale-10",
+          "capabilities": [
+            {
+              "id": "samsungce.weightMeasurement",
+              "version": 1
+            },
+            {
+              "id": "samsungce.weightMeasurementCalibration",
+              "version": 1
+            },
+            {
+              "id": "samsungce.connectionState",
+              "version": 1
+            },
+            {
+              "id": "custom.disabledCapabilities",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Other",
+              "categoryType": "manufacturer"
+            }
+          ]
+        },
+        {
+          "id": "scale-11",
+          "label": "scale-11",
+          "capabilities": [
+            {
+              "id": "samsungce.weightMeasurement",
+              "version": 1
+            },
+            {
+              "id": "custom.disabledCapabilities",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Other",
+              "categoryType": "manufacturer"
+            }
+          ]
+        },
+        {
+          "id": "pantry-01",
+          "label": "pantry-01",
+          "capabilities": [
+            {
+              "id": "samsungce.fridgePantryInfo",
+              "version": 1
+            },
+            {
+              "id": "samsungce.fridgePantryMode",
+              "version": 1
+            },
+            {
+              "id": "samsungce.meatAging",
+              "version": 1
+            },
+            {
+              "id": "samsungce.foodDefrost",
+              "version": 1
+            },
+            {
+              "id": "custom.disabledCapabilities",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Other",
+              "categoryType": "manufacturer"
+            }
+          ]
+        },
+        {
+          "id": "pantry-02",
+          "label": "pantry-02",
+          "capabilities": [
+            {
+              "id": "samsungce.fridgePantryInfo",
+              "version": 1
+            },
+            {
+              "id": "samsungce.fridgePantryMode",
+              "version": 1
+            },
+            {
+              "id": "samsungce.meatAging",
+              "version": 1
+            },
+            {
+              "id": "samsungce.foodDefrost",
+              "version": 1
+            },
+            {
+              "id": "custom.disabledCapabilities",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Other",
+              "categoryType": "manufacturer"
+            }
+          ]
+        }
+      ],
+      "createTime": "2024-12-01T18:22:14.880Z",
+      "profile": {
+        "id": "37c7b355-bdaa-371b-b246-dbdf2a7f9c84"
+      },
+      "ocf": {
+        "ocfDeviceType": "oic.d.refrigerator",
+        "name": "Samsung-Refrigerator",
+        "specVersion": "core.1.1.0",
+        "verticalDomainSpecVersion": "1.2.1",
+        "manufacturerName": "Samsung Electronics",
+        "modelNumber": "TP1X_REF_21K|00156941|00050126001611304100000030010000",
+        "platformVersion": "DAWIT 2.0",
+        "platformOS": "TizenRT 3.1",
+        "hwVersion": "Realtek",
+        "firmwareVersion": "A-RFWW-TP1-22-REV1_20241030",
+        "vendorId": "DA-REF-NORMAL-01011",
+        "vendorResourceClientServerVersion": "Realtek Release 3.1.240221",
+        "lastSignupTime": "2024-12-01T18:22:14.807976528Z",
+        "transferCandidate": false,
+        "additionalAuthCodeRequired": false
+      },
+      "type": "OCF",
+      "restrictionTier": 0,
+      "allowed": null,
+      "executionContext": "CLOUD",
+      "relationships": []
+    }
+  ],
+  "_links": {}
+}

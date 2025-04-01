@@ -13,7 +13,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     PERCENTAGE,
@@ -27,8 +26,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_SENSOR_INDICES, DOMAIN
-from .coordinator import PurpleAirDataUpdateCoordinator
+from .const import CONF_SENSOR_INDICES
+from .coordinator import PurpleAirConfigEntry
 from .entity import PurpleAirEntity
 
 CONCENTRATION_PARTICLES_PER_100_MILLILITERS = f"particles/100{UnitOfVolume.MILLILITERS}"
@@ -165,13 +164,12 @@ SENSOR_DESCRIPTIONS = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: PurpleAirConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up PurpleAir sensors based on a config entry."""
-    coordinator: PurpleAirDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        PurpleAirSensorEntity(coordinator, entry, sensor_index, description)
+        PurpleAirSensorEntity(entry, sensor_index, description)
         for sensor_index in entry.options[CONF_SENSOR_INDICES]
         for description in SENSOR_DESCRIPTIONS
     )
@@ -184,13 +182,12 @@ class PurpleAirSensorEntity(PurpleAirEntity, SensorEntity):
 
     def __init__(
         self,
-        coordinator: PurpleAirDataUpdateCoordinator,
-        entry: ConfigEntry,
+        entry: PurpleAirConfigEntry,
         sensor_index: int,
         description: PurpleAirSensorEntityDescription,
     ) -> None:
         """Initialize."""
-        super().__init__(coordinator, entry, sensor_index)
+        super().__init__(entry, sensor_index)
 
         self._attr_unique_id = f"{self._sensor_index}-{description.key}"
         self.entity_description = description

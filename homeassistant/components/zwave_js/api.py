@@ -405,6 +405,7 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(
         hass, websocket_try_parse_dsk_from_qr_code_string
     )
+    websocket_api.async_register_command(hass, websocket_lookup_device)
     websocket_api.async_register_command(hass, websocket_supports_feature)
     websocket_api.async_register_command(hass, websocket_stop_inclusion)
     websocket_api.async_register_command(hass, websocket_stop_exclusion)
@@ -454,6 +455,8 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_node_capabilities)
     websocket_api.async_register_command(hass, websocket_invoke_cc_api)
     websocket_api.async_register_command(hass, websocket_get_integration_settings)
+    websocket_api.async_register_command(hass, websocket_backup_nvm)
+    websocket_api.async_register_command(hass, websocket_restore_nvm)
     hass.http.register_view(FirmwareUploadView(dr.async_get(hass)))
 
 
@@ -518,6 +521,7 @@ async def websocket_network_status(
             "supported_function_types": controller.supported_function_types,
             "suc_node_id": controller.suc_node_id,
             "supports_timers": controller.supports_timers,
+            "supports_long_range": controller.supports_long_range,
             "is_rebuilding_routes": controller.is_rebuilding_routes,
             "inclusion_state": controller.inclusion_state,
             "rf_region": controller.rf_region,
@@ -972,13 +976,7 @@ async def websocket_validate_dsk_and_enter_pin(
     {
         vol.Required(TYPE): "zwave_js/provision_smart_start_node",
         vol.Required(ENTRY_ID): str,
-        vol.Exclusive(
-            PLANNED_PROVISIONING_ENTRY, "options"
-        ): PLANNED_PROVISIONING_ENTRY_SCHEMA,
-        vol.Exclusive(
-            QR_PROVISIONING_INFORMATION, "options"
-        ): QR_PROVISIONING_INFORMATION_SCHEMA,
-        vol.Exclusive(QR_CODE_STRING, "options"): QR_CODE_STRING_SCHEMA,
+        vol.Required(QR_PROVISIONING_INFORMATION): QR_PROVISIONING_INFORMATION_SCHEMA,
     }
 )
 @websocket_api.async_response
@@ -993,28 +991,10 @@ async def websocket_provision_smart_start_node(
     driver: Driver,
 ) -> None:
     """Pre-provision a smart start node."""
-    try:
-        cv.has_at_least_one_key(
-            PLANNED_PROVISIONING_ENTRY, QR_PROVISIONING_INFORMATION, QR_CODE_STRING
-        )(msg)
-    except vol.Invalid as err:
-        connection.send_error(
-            msg[ID],
-            ERR_INVALID_FORMAT,
-            err.args[0],
-        )
-        return
 
-    provisioning_info = (
-        msg.get(PLANNED_PROVISIONING_ENTRY)
-        or msg.get(QR_PROVISIONING_INFORMATION)
-        or msg[QR_CODE_STRING]
-    )
+    provisioning_info = msg[QR_PROVISIONING_INFORMATION]
 
-    if (
-        QR_PROVISIONING_INFORMATION in msg
-        and provisioning_info.version == QRCodeVersion.S2
-    ):
+    if provisioning_info.version == QRCodeVersion.S2:
         connection.send_error(
             msg[ID],
             ERR_INVALID_FORMAT,
@@ -1133,6 +1113,41 @@ async def websocket_try_parse_dsk_from_qr_code_string(
         msg[ID],
         await async_try_parse_dsk_from_qr_code_string(client, msg[QR_CODE_STRING]),
     )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/lookup_device",
+        vol.Required(ENTRY_ID): str,
+        vol.Required(MANUFACTURER_ID): int,
+        vol.Required(PRODUCT_TYPE): int,
+        vol.Required(PRODUCT_ID): int,
+        vol.Optional(APPLICATION_VERSION): str,
+    }
+)
+@websocket_api.async_response
+@async_handle_failed_command
+@async_get_entry
+async def websocket_lookup_device(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+    entry: ConfigEntry,
+    client: Client,
+    driver: Driver,
+) -> None:
+    """Look up the definition of a given device in the configuration DB."""
+    device = await driver.config_manager.lookup_device(
+        msg[MANUFACTURER_ID],
+        msg[PRODUCT_TYPE],
+        msg[PRODUCT_ID],
+        msg.get(APPLICATION_VERSION),
+    )
+    if device is None:
+        connection.send_error(msg[ID], ERR_NOT_FOUND, "Device not found")
+    else:
+        connection.send_result(msg[ID], device.to_dict())
 
 
 @websocket_api.require_admin
@@ -2779,3 +2794,126 @@ def websocket_get_integration_settings(
             CONF_INSTALLER_MODE: hass.data[DOMAIN].get(CONF_INSTALLER_MODE, False),
         },
     )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/backup_nvm",
+        vol.Required(ENTRY_ID): str,
+    }
+)
+@websocket_api.async_response
+@async_handle_failed_command
+@async_get_entry
+async def websocket_backup_nvm(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+    entry: ConfigEntry,
+    client: Client,
+    driver: Driver,
+) -> None:
+    """Backup NVM data."""
+    controller = driver.controller
+
+    @callback
+    def async_cleanup() -> None:
+        """Remove signal listeners."""
+        for unsub in unsubs:
+            unsub()
+
+    @callback
+    def forward_progress(event: dict) -> None:
+        """Forward progress events to websocket."""
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID],
+                {
+                    "event": event["event"],
+                    "bytesRead": event["bytesRead"],
+                    "total": event["total"],
+                },
+            )
+        )
+
+    # Set up subscription for progress events
+    connection.subscriptions[msg["id"]] = async_cleanup
+    msg[DATA_UNSUBSCRIBE] = unsubs = [
+        controller.on("nvm backup progress", forward_progress),
+    ]
+
+    result = await controller.async_backup_nvm_raw_base64()
+    # Send the finished event with the backup data
+    connection.send_message(
+        websocket_api.event_message(
+            msg[ID],
+            {
+                "event": "finished",
+                "data": result,
+            },
+        )
+    )
+    connection.send_result(msg[ID])
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/restore_nvm",
+        vol.Required(ENTRY_ID): str,
+        vol.Required("data"): str,
+    }
+)
+@websocket_api.async_response
+@async_handle_failed_command
+@async_get_entry
+async def websocket_restore_nvm(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+    entry: ConfigEntry,
+    client: Client,
+    driver: Driver,
+) -> None:
+    """Restore NVM data."""
+    controller = driver.controller
+
+    @callback
+    def async_cleanup() -> None:
+        """Remove signal listeners."""
+        for unsub in unsubs:
+            unsub()
+
+    @callback
+    def forward_progress(event: dict) -> None:
+        """Forward progress events to websocket."""
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID],
+                {
+                    "event": event["event"],
+                    "bytesRead": event.get("bytesRead"),
+                    "bytesWritten": event.get("bytesWritten"),
+                    "total": event["total"],
+                },
+            )
+        )
+
+    # Set up subscription for progress events
+    connection.subscriptions[msg["id"]] = async_cleanup
+    msg[DATA_UNSUBSCRIBE] = unsubs = [
+        controller.on("nvm convert progress", forward_progress),
+        controller.on("nvm restore progress", forward_progress),
+    ]
+
+    await controller.async_restore_nvm_base64(msg["data"])
+    connection.send_message(
+        websocket_api.event_message(
+            msg[ID],
+            {
+                "event": "finished",
+            },
+        )
+    )
+    connection.send_result(msg[ID])
