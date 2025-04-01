@@ -552,6 +552,36 @@ async def test_node_alerts(
             }
         ]
 
+    # Test missing node with no provisioning entry
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "3245146787-12")},
+    )
+    assert device
+    await ws_client.send_json_auto_id(
+        {
+            TYPE: "zwave_js/node_alerts",
+            DEVICE_ID: device.id,
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_FOUND
+
+    # Test integration not loaded error - need to unload the integration
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await ws_client.send_json_auto_id(
+        {
+            TYPE: "zwave_js/node_alerts",
+            DEVICE_ID: device.id,
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_LOADED
+
 
 async def test_add_node(
     hass: HomeAssistant,
