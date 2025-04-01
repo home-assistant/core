@@ -1,4 +1,4 @@
-"""Test homee climate entities."""
+"""Test Homee climate entities."""
 
 from unittest.mock import MagicMock, patch
 
