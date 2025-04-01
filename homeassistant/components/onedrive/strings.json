@@ -71,11 +71,11 @@
   "issues": {
     "drive_full": {
       "title": "OneDrive data cap exceeded",
-      "description": "Your OneDrive has exceeded your quota limit. This means your next backup will fail. Please free up some space or upgrade your OneDrive plan. Currently using {used} bytes of {total} bytes."
+      "description": "Your OneDrive has exceeded your quota limit. This means your next backup will fail. Please free up some space or upgrade your OneDrive plan. Currently using {used} GiB of {total} GiB."
     },
     "drive_almost_full": {
       "title": "OneDrive near data cap",
-      "description": "Your OneDrive is near your quota limit. If you go over this limit your drive will be temporarily frozen and your backups will start failing. Please free up some space or upgrade your OneDrive plan. Currently using {used} bytes of {total} bytes."
+      "description": "Your OneDrive is near your quota limit. If you go over this limit your drive will be temporarily frozen and your backups will start failing. Please free up some space or upgrade your OneDrive plan. Currently using {used} GiB of {total} GiB."
     }
   },
   "exceptions": {
