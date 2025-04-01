@@ -5,7 +5,7 @@ rules:
     comment: |
       This integration does not provide additional actions.
   appropriate-polling: done
-  brands: done
+  brands: done #TODO
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
