@@ -24,7 +24,7 @@ from .entity import WhirlpoolEntity
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
-WASHER_DRYER_TANK_FILL = {
+WASHER_TANK_FILL = {
     "0": "unknown",
     "1": "empty",
     "2": "25",
@@ -87,7 +87,7 @@ def washer_dryer_state(washer_dryer: WasherDryer) -> str | None:
 class WhirlpoolSensorEntityDescription(SensorEntityDescription):
     """Describes a Whirlpool sensor entity."""
 
-    value_fn: Callable
+    value_fn: Callable[[Appliance], str | None]
 
 
 WASHER_DRYER_STATE_OPTIONS = (
@@ -109,9 +109,9 @@ WASHER_SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
         translation_key="whirlpool_tank",
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.ENUM,
-        options=list(WASHER_DRYER_TANK_FILL.values()),
-        value_fn=lambda WasherDryer: WASHER_DRYER_TANK_FILL.get(
-            WasherDryer.get_attribute("WashCavity_OpStatusBulkDispense1Level")
+        options=list(WASHER_TANK_FILL.values()),
+        value_fn=lambda washer: WASHER_TANK_FILL.get(
+            washer.get_attribute("WashCavity_OpStatusBulkDispense1Level")
         ),
     ),
 )
@@ -152,16 +152,12 @@ async def async_setup_entry(
         )
 
         entities.extend(
-            [
-                WhirlpoolSensor(washer_dryer, description)
-                for description in sensor_descriptions
-            ]
+            WhirlpoolSensor(washer_dryer, description)
+            for description in sensor_descriptions
         )
         entities.extend(
-            [
-                WasherDryerTimeSensor(washer_dryer, description)
-                for description in WASHER_DRYER_TIME_SENSORS
-            ]
+            WasherDryerTimeSensor(washer_dryer, description)
+            for description in WASHER_DRYER_TIME_SENSORS
         )
     async_add_entities(entities)
 
@@ -176,7 +172,6 @@ class WhirlpoolSensor(WhirlpoolEntity, SensorEntity):
     ) -> None:
         """Initialize the washer sensor."""
         super().__init__(appliance, unique_id_suffix=f"-{description.key}")
-
         self.entity_description: WhirlpoolSensorEntityDescription = description
 
     @property
@@ -195,9 +190,9 @@ class WasherDryerTimeSensor(WhirlpoolEntity, RestoreSensor):
     ) -> None:
         """Initialize the washer sensor."""
         super().__init__(washer_dryer, unique_id_suffix=f"-{description.key}")
-        self._wd: WasherDryer = washer_dryer
+        self.entity_description = description
 
-        self.entity_description: SensorEntityDescription = description
+        self._wd = washer_dryer
         self._running: bool | None = None
         self._value: datetime | None = None
 
