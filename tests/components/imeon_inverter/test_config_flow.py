@@ -105,7 +105,6 @@ async def test_form_exception(
 
 async def test_manual_setup_already_exists(
     hass: HomeAssistant,
-    mock_imeon_inverter: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that a flow with an existing id aborts."""
@@ -170,3 +169,20 @@ async def test_ssdp(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"Imeon {TEST_SERIAL}"
     assert result["data"] == TEST_USER_INPUT
+
+
+async def test_ssdp_already_exist(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that a ssdp discovery flow with an existing id aborts."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_SSDP},
+        data=TEST_DISCOVER,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"

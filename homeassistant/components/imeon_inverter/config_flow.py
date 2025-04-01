@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 from imeon_inverter_api.inverter import Inverter
 import voluptuous as vol
 
-from homeassistant.config_entries import HANDLERS, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_MODEL_NUMBER,
@@ -21,7 +21,6 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-@HANDLERS.register(DOMAIN)
 class ImeonInverterConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle the initial setup flow for Imeon Inverters."""
 
@@ -69,7 +68,7 @@ class ImeonInverterConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 if not errors:
                     # Check if entry already exists
-                    await self.async_set_unique_id(serial)
+                    await self.async_set_unique_id(serial, raise_on_progress=False)
                     self._abort_if_unique_id_configured()
 
                     # Create a new configuration entry if login succeeds

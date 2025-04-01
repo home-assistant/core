@@ -36,7 +36,7 @@ TEST_DISCOVER = SsdpServiceInfo(
         ATTR_UPNP_MANUFACTURER: "IMEON",
         ATTR_UPNP_MODEL_NAME: "IMEON",
         ATTR_UPNP_FRIENDLY_NAME: f"IMEON-{TEST_SERIAL}",
-        ATTR_UPNP_SERIAL: "{TEST_SERIAL}",
+        ATTR_UPNP_SERIAL: TEST_SERIAL,
         ATTR_UPNP_UDN: "uuid:01234567-89ab-cdef-0123-456789abcdef",
         ATTR_UPNP_DEVICE_TYPE: "urn:schemas-upnp-org:device:Basic:1",
     },
