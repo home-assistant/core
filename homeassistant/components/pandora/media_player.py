@@ -94,25 +94,20 @@ class PandoraMediaPlayer(MediaPlayerEntity):
         self._attr_media_duration = 0
         self._pianobar: pexpect.spawn[str] | None = None
 
-    async def async_turn_on(self) -> None:
-        """Turn the media player on."""
-        if self.state != MediaPlayerState.OFF:
-            return
-        self._pianobar = pexpect.spawn("pianobar", encoding="utf-8")
-        # #122027 if pexpect attempts to sleep at any point, a critical error is thrown
-        # "Caught blocking call to sleep ... inside the event loop"
-        self._pianobar.delaybeforesend = None
-        self._pianobar.delayafterread = None
-        self._pianobar.delayafterclose = 0
-        self._pianobar.delayafterterminate = 0
+    async def start_pianobar(self) -> bool:
+        pianobar = pexpect.spawn("pianobar", encoding="utf-8")
+        pianobar.delaybeforesend = None
+        pianobar.delayafterread = None
+        pianobar.delayafterclose = 0
+        pianobar.delayafterterminate = 0
         _LOGGER.debug("Started pianobar subprocess")
-        mode = await self._pianobar.expect(
+        mode = await pianobar.expect(
             ["Receiving new playlist", "Select station:", "Email:"],
             async_=True,
         )
         if mode == 1:
             # station list was presented. dismiss it.
-            self._pianobar.sendcontrol("m")
+            pianobar.sendcontrol("m")
         elif mode == 2:
             _LOGGER.warning(
                 "The pianobar client is not configured to log in. "
@@ -120,16 +115,20 @@ class PandoraMediaPlayer(MediaPlayerEntity):
                 "https://www.home-assistant.io/integrations/pandora/"
             )
             # pass through the email/password prompts to quit cleanly
-            self._pianobar.sendcontrol("m")
-            self._pianobar.sendcontrol("m")
-            self._pianobar.terminate()
-            self._pianobar = None
-            return
-        await self._update_stations()
-        await self.update_playing_status()
+            pianobar.sendcontrol("m")
+            pianobar.sendcontrol("m")
+            pianobar.terminate()
+            return False
+        self._pianobar = pianobar
+        return True
 
-        self._attr_state = MediaPlayerState.IDLE
-        self.schedule_update_ha_state()
+    async def async_turn_on(self) -> None:
+        """Turn the media player on."""
+        if self.state == MediaPlayerState.OFF and await self.start_pianobar():
+            await self._update_stations()
+            await self.update_playing_status()
+            self._attr_state = MediaPlayerState.IDLE
+            self.schedule_update_ha_state()
 
     def turn_off(self) -> None:
         """Turn the media player off."""
