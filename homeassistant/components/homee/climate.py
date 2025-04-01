@@ -167,13 +167,13 @@ class HomeeClimate(HomeeNodeEntity, ClimateEntity):
 
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
-        if self._heating_mode is not None:
-            await self.async_set_homee_value(self._heating_mode, 1)
+        assert self._heating_mode is not None
+        await self.async_set_homee_value(self._heating_mode, 1)
 
     async def async_turn_off(self) -> None:
         """Turn the entity on."""
-        if self._heating_mode is not None:
-            await self.async_set_homee_value(self._heating_mode, 0)
+        assert self._heating_mode is not None
+        await self.async_set_homee_value(self._heating_mode, 0)
 
 
 def get_climate_features(
