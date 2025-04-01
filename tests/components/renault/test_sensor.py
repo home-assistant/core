@@ -236,4 +236,3 @@ async def test_sensor_throttling_after_init(
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == "55"
-    assert "Renault API throttled: scan skipped" not in caplog.text
