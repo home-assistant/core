@@ -89,7 +89,7 @@ async def _register_onboarding_platform(
     await platform.async_setup_views(hass, hass.data[DOMAIN].steps)
 
 
-class _BaseOnboardingView(HomeAssistantView):
+class BaseOnboardingView(HomeAssistantView):
     """Base class for onboarding views."""
 
     def __init__(self, data: OnboardingStoreData) -> None:
@@ -97,13 +97,13 @@ class _BaseOnboardingView(HomeAssistantView):
         self._data = data
 
 
-class _NoAuthBaseOnboardingView(_BaseOnboardingView):
+class NoAuthBaseOnboardingView(BaseOnboardingView):
     """Base class for unauthenticated onboarding views."""
 
     requires_auth = False
 
 
-class OnboardingStatusView(_NoAuthBaseOnboardingView):
+class OnboardingStatusView(NoAuthBaseOnboardingView):
     """Return the onboarding status."""
 
     url = "/api/onboarding"
@@ -121,7 +121,7 @@ class OnboardingStatusView(_NoAuthBaseOnboardingView):
         )
 
 
-class InstallationTypeOnboardingView(_NoAuthBaseOnboardingView):
+class InstallationTypeOnboardingView(NoAuthBaseOnboardingView):
     """Return the installation type during onboarding."""
 
     url = "/api/onboarding/installation_type"
@@ -137,7 +137,7 @@ class InstallationTypeOnboardingView(_NoAuthBaseOnboardingView):
         return self.json({"installation_type": info["installation_type"]})
 
 
-class _BaseOnboardingStepView(_BaseOnboardingView):
+class _BaseOnboardingStepView(BaseOnboardingView):
     """Base class for an onboarding step."""
 
     step: str
@@ -324,7 +324,7 @@ class IntegrationOnboardingView(_BaseOnboardingStepView):
             return self.json({"auth_code": auth_code})
 
 
-class WaitIntegrationOnboardingView(_NoAuthBaseOnboardingView):
+class WaitIntegrationOnboardingView(NoAuthBaseOnboardingView):
     """Get backup info view."""
 
     url = "/api/onboarding/integration/wait"
@@ -370,7 +370,7 @@ class AnalyticsOnboardingView(_BaseOnboardingStepView):
             return self.json({})
 
 
-def with_backup_manager[_ViewT: _BaseOnboardingView, **_P](
+def with_backup_manager[_ViewT: BaseOnboardingView, **_P](
     func: Callable[
         Concatenate[_ViewT, BackupManager, web.Request, _P],
         Coroutine[Any, Any, web.Response],
@@ -402,7 +402,7 @@ def with_backup_manager[_ViewT: _BaseOnboardingView, **_P](
     return with_backup
 
 
-class BackupInfoView(_NoAuthBaseOnboardingView):
+class BackupInfoView(NoAuthBaseOnboardingView):
     """Get backup info view."""
 
     url = "/api/onboarding/backup/info"
@@ -421,7 +421,7 @@ class BackupInfoView(_NoAuthBaseOnboardingView):
         )
 
 
-class RestoreBackupView(_NoAuthBaseOnboardingView):
+class RestoreBackupView(NoAuthBaseOnboardingView):
     """Restore backup view."""
 
     url = "/api/onboarding/backup/restore"
@@ -466,7 +466,7 @@ class RestoreBackupView(_NoAuthBaseOnboardingView):
         return web.Response(status=HTTPStatus.OK)
 
 
-class UploadBackupView(_NoAuthBaseOnboardingView, backup_http.UploadBackupView):
+class UploadBackupView(NoAuthBaseOnboardingView, backup_http.UploadBackupView):
     """Upload backup view."""
 
     url = "/api/onboarding/backup/upload"
