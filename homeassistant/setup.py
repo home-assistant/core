@@ -214,6 +214,10 @@ async def _async_process_dependencies(
     }
 
     to_be_loaded = hass.data.get(DATA_SETUP_DONE, {})
+    # We don't want to just wait for the futures from `to_be_loaded` here.
+    # We want to ensure that our after_dependencies are always actually
+    # scheduled to be set up, as if for whatever reason they had not been,
+    # we would deadlock waiting for them here.
     for dep in integration.after_dependencies:
         if (
             dep not in dependencies_tasks
