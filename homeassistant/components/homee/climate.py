@@ -145,17 +145,17 @@ class HomeeClimate(HomeeNodeEntity, ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         # Currently only HEAT and OFF are supported.
-        if self._heating_mode is not None:
-            await self.async_set_homee_value(
-                self._heating_mode, float(hvac_mode == HVACMode.HEAT)
-            )
+        assert self._heating_mode is not None
+        await self.async_set_homee_value(
+            self._heating_mode, float(hvac_mode == HVACMode.HEAT)
+        )
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new target preset mode."""
-        if self._heating_mode is not None and self._attr_preset_modes is not None:
-            await self.async_set_homee_value(
-                self._heating_mode, self._attr_preset_modes.index(preset_mode) + 1
-            )
+        assert self._heating_mode is not None and self._attr_preset_modes is not None
+        await self.async_set_homee_value(
+            self._heating_mode, self._attr_preset_modes.index(preset_mode) + 1
+        )
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
