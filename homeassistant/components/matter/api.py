@@ -257,6 +257,7 @@ async def websocket_get_node_binding(
     matter: MatterAdapter,
     node: MatterNode,
 ) -> None:
+    """Get the bindings info in binding cluster at endpoints."""
     ret = {
         k: v.get_attribute_value(30, 0)
         for k, v in node.endpoints.items()
@@ -284,6 +285,7 @@ async def websocket_set_node_binding(
     matter: MatterAdapter,
     node: MatterNode,
 ) -> None:
+    """Set node bindings info in binding cluster of endpoint."""
     attribute_path = f"{msg['endpoint']}/30/0"
     result = await matter.matter_client.write_attribute(
         node_id=node.node_id,
