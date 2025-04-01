@@ -293,11 +293,10 @@ turn_on:
               - light.LightEntityFeature.FLASH
           selector:
             select:
+              translation_key: flash
               options:
-                - label: "Long"
-                  value: "long"
-                - label: "Short"
-                  value: "short"
+                - long
+                - short
 
 turn_off:
   target:
