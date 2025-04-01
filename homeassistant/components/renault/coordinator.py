@@ -92,7 +92,7 @@ class RenaultDataUpdateCoordinator(DataUpdateCoordinator[T]):
             self._hub.set_throttled()
             if self._has_already_worked:
                 self.assumed_state = True
-                self.logger.exception("Renault API throttled")
+                self.logger.warning("Renault API throttled")
                 return self.data
 
             raise UpdateFailed(f"Renault API throttled: {err}") from err
