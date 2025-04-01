@@ -41,6 +41,11 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig, SelectOptionDict
+
+# Declaring Constants
+READ_WRITE = "read_write"
+READ_ONLY = "read_only"
 
 class OAuth2FlowHandler(
     config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN
@@ -243,6 +248,10 @@ class OAuth2FlowHandler(
 
 class OptionsFlowHandler(OptionsFlow):
     """Google Calendar options flow."""
+    
+    def __init__(self, config_entry: ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -250,20 +259,36 @@ class OptionsFlowHandler(OptionsFlow):
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
+        
+        #adding options here 
+        options = [
+            SelectOptionDict(value=READ_WRITE, label="Read/Write access (can create events)"),
+            SelectOptionDict(value=READ_ONLY, label="Read-only access"),
+        ]
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_CALENDAR_ACCESS,
-                        default=self.config_entry.options.get(CONF_CALENDAR_ACCESS),
-                    ): vol.In(
-                        {
-                            "read_write": "Read/Write access (can create events)",
-                            "read_only": "Read-only access",
-                        }
-                    )
-                }
-            ),
+            data_schema=vol.Schema({
+                vol.Required(
+                    CONF_CALENDAR_ACCESS,
+                    default=self.config_entry.options.get(CONF_CALENDAR_ACCESS, READ_ONLY),
+                ): SelectSelector(SelectSelectorConfig(options=options))
+            }),
         )
+
+        # return self.async_show_form(
+        #     step_id="init",
+        #     data_schema=vol.Schema(
+        #         {
+        #             vol.Required(
+        #                 CONF_CALENDAR_ACCESS,
+        #                 default=self.config_entry.options.get(CONF_CALENDAR_ACCESS),
+        #             ): vol.In(
+        #                 {
+        #                     "read_write": "Read/Write access (can create events)",
+        #                     "read_only": "Read-only access",
+        #                 }
+        #             )
+        #         }
+        #     ),
+        # )
