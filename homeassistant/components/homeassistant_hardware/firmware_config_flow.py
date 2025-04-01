@@ -33,6 +33,7 @@ from .util import (
     OwningIntegration,
     get_otbr_addon_manager,
     get_zigbee_flasher_addon_manager,
+    guess_firmware_info,
     guess_hardware_owners,
     probe_silabs_firmware_info,
 )
@@ -511,6 +512,16 @@ class BaseFirmwareConfigFlow(BaseFirmwareInstallFlow, ConfigFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm a discovery."""
+        assert self._device is not None
+        fw_info = await guess_firmware_info(self.hass, self._device)
+
+        # If our guess for the firmware type is actually running, we can save the user
+        # an unnecessary confirmation and silently confirm the flow
+        for owner in fw_info.owners:
+            if await owner.is_running(self.hass):
+                self._probed_firmware_info = fw_info
+                return self._async_flow_finished()
+
         return await self.async_step_pick_firmware()
 
 
