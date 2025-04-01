@@ -57,13 +57,13 @@ async def validate_config_entry(
     resolved_destination = convert_to_waypoint(hass, destination)
     client_options = ClientOptions(api_key=api_key)
     client = RoutesAsyncClient(client_options=client_options)
+    field_mask = "routes.duration"
+    request = ComputeRoutesRequest(
+        origin=resolved_origin,
+        destination=resolved_destination,
+        travel_mode=RouteTravelMode.DRIVE,
+    )
     try:
-        request = ComputeRoutesRequest(
-            origin=resolved_origin,
-            destination=resolved_destination,
-            travel_mode=RouteTravelMode.DRIVE,
-        )
-        field_mask = "routes.duration"
         await client.compute_routes(
             request, metadata=[("x-goog-fieldmask", field_mask)]
         )
