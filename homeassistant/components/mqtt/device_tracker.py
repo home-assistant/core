@@ -111,6 +111,7 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
         self._value_template = MqttValueTemplate(
             config.get(CONF_VALUE_TEMPLATE), entity=self
         ).async_render_with_possible_json_value
+        self._attr_source_type = self._config[CONF_SOURCE_TYPE]
 
     @callback
     def _tracker_message_received(self, msg: ReceiveMessage) -> None:
@@ -181,9 +182,3 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
             for attribute, value in extra_state_attributes.items()
             if attribute not in (ATTR_LATITUDE, ATTR_LONGITUDE, ATTR_GPS_ACCURACY)
         }
-
-    @property
-    def source_type(self) -> SourceType:
-        """Return the source type, eg gps or router, of the device."""
-        source_type: SourceType = self._config[CONF_SOURCE_TYPE]
-        return source_type

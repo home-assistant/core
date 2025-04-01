@@ -399,6 +399,7 @@ class MqttAttributesMixin(Entity):
 
     _attributes_extra_blocked: frozenset[str] = frozenset()
     _attr_tpl: Callable[[ReceivePayloadType], ReceivePayloadType] | None = None
+    _process_update_extra_state_attributes: Callable[[dict[str, Any]], None]
 
     def __init__(self, config: ConfigType) -> None:
         """Initialize the JSON attributes mixin."""
