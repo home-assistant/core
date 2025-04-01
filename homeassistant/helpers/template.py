@@ -2004,14 +2004,15 @@ def apply(value, fn, *args, **kwargs):
 
 def as_function(macro: jinja2.runtime.Macro) -> Callable[..., Any]:
     """Turn a macro with a 'returns' keyword argument into a function that returns what that argument is called with."""
-    return_value = None
-
-    def returns(value):
-        nonlocal return_value
-        return_value = value
-        return value
 
     def wrapper(value, *args, **kwargs):
+        return_value = None
+
+        def returns(value):
+            nonlocal return_value
+            return_value = value
+            return value
+
         # Call the callable with the value and other args
         macro(value, *args, **kwargs, returns=returns)
         return return_value
