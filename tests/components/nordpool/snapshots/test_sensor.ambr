@@ -1386,7 +1386,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': '1.16612',
   })
 # ---
 # name: test_sensor[sensor.nord_pool_se4_exchange_rate-entry]

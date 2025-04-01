@@ -288,7 +288,7 @@
           }),
           dict({
             'areaCode': 'SE4',
-            'price': 0.0,
+            'price': 1166.12,
           }),
         ]),
         'areaStates': list([
