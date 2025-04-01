@@ -81,7 +81,7 @@ class RenaultDataUpdateCoordinator(DataUpdateCoordinator[T]):
 
         try:
             async with _PARALLEL_SEMAPHORE:
-                data = await self._call_update_method()
+                data = await self.update_method()
 
         except AccessDeniedException as err:
             # This can mean both a temporary error or a permanent error. If it has
