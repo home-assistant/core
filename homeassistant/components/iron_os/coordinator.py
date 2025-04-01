@@ -81,7 +81,6 @@ class IronOSBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         """Set up the coordinator."""
         try:
             self.device_info = await self.device.get_device_info()
-
         except CommunicationError as e:
             raise UpdateFailed("Cannot connect to device") from e
 
@@ -138,7 +137,9 @@ class IronOSSettingsCoordinator(IronOSBaseCoordinator[SettingsDataResponse]):
 
         if self.device.is_connected and characteristics:
             try:
-                return await self.device.get_settings(list(characteristics))
+                return await self.device.get_settings(
+                    list(characteristics | {CharSetting.TEMP_UNIT})
+                )
             except CommunicationError as e:
                 _LOGGER.debug("Failed to fetch settings", exc_info=e)
 
