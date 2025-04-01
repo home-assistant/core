@@ -184,7 +184,7 @@ async def test_sensor_unit_system(
     config_entry.add_to_hass(hass)
     with (
         patch(
-            "google.maps.routing_v2.RoutesAsyncClient.compute_routes"
+            "homeassistant.components.google_travel_time.sensor.RoutesAsyncClient.compute_routes",
         ) as compute_routes_mock,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
