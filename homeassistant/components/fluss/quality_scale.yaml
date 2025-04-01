@@ -1,16 +1,13 @@
 rules:
   # Bronze
-  action-setup:
-    status: exempt
-    comment: |
-      This integration does not provide additional actions.
+  action-setup: done
   appropriate-polling: done
   brands: done #TODO
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
-  docs-actions:
+  docs-actions: #Needd to do this here
     status: exempt
     comment: |
       This integration does not use any actions.
