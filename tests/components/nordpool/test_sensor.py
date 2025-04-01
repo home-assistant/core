@@ -35,7 +35,7 @@ async def test_sensor(
 
 @pytest.mark.freeze_time("2024-11-05T18:00:00+00:00")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_sensor_current_and_average_price_is_0(
+async def test_sensor_current_price_is_0(
     hass: HomeAssistant, load_int: ConfigEntry
 ) -> None:
     """Test the Nord Pool sensor working if price is 0."""
