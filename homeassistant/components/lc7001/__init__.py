@@ -1,4 +1,4 @@
-"""The Legrand Whole Home Lighting integration."""
+"""The Legrand Whole House Lighting integration."""
 
 import logging
 
@@ -14,7 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: LcConfigEntry) -> bool:
-    """Set up Legrand Whole Home Lighting from a config entry."""
+    """Set up Legrand Whole House Lighting from a config entry."""
 
     engine = Engine(
         host=entry.data[CONF_HOST],

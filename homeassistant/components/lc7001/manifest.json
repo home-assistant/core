@@ -1,6 +1,6 @@
 {
   "domain": "lc7001",
-  "name": "Legrand Whole Home Lighting",
+  "name": "Legrand Whole House Lighting",
   "codeowners": ["@bas.tard"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/lc7001",

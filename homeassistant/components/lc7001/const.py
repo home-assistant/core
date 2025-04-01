@@ -1,4 +1,4 @@
-"""Constants for the Legrand Whole Home Lighting integration."""
+"""Constants for the Legrand Whole House Lighting integration."""
 
 DOMAIN = "lc7001"
 

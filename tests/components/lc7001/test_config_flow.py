@@ -1,4 +1,4 @@
-"""Test the Legrand Whole Home Lighting config flow."""
+"""Test the Legrand Whole House Lighting config flow."""
 
 from unittest.mock import AsyncMock, patch
 

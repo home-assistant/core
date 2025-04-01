@@ -1,4 +1,4 @@
-"""Config flow for the Legrand Whole Home Lighting integration."""
+"""Config flow for the Legrand Whole House Lighting integration."""
 
 import logging
 from typing import Any
@@ -24,7 +24,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 
 class LcConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Legrand Whole Home Lighting."""
+    """Handle a config flow for Legrand Whole House Lighting."""
 
     VERSION = 1
 

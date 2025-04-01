@@ -1,4 +1,4 @@
-"""Common fixtures for the Legrand Whole Home Lighting tests."""
+"""Common fixtures for the Legrand Whole House Lighting tests."""
 
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
