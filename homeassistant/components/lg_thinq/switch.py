@@ -271,7 +271,7 @@ class ThinQSwitchEntity(ThinQEntity, SwitchEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return (
+        return super().available and (
             self.device_state is None
             or self.is_on
             or (
