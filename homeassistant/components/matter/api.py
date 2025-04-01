@@ -257,8 +257,13 @@ async def websocket_get_node_binding(
     matter: MatterAdapter,
     node: MatterNode,
 ) -> None:
-    ret = {k: v.get_attribute_value(30,0) for k, v in node.endpoints.items() if v.has_cluster(30)}
+    ret = {
+        k: v.get_attribute_value(30, 0)
+        for k, v in node.endpoints.items()
+        if v.has_cluster(30)
+    }
     connection.send_result(msg[ID], ret)
+
 
 @websocket_api.websocket_command(
     {
@@ -279,13 +284,14 @@ async def websocket_set_node_binding(
     matter: MatterAdapter,
     node: MatterNode,
 ) -> None:
-    attribute_path=f"{msg["endpoint"]}/30/0"
+    attribute_path = f"{msg['endpoint']}/30/0"
     result = await matter.matter_client.write_attribute(
         node_id=node.node_id,
         attribute_path=attribute_path,
         value=msg["bindings"],
     )
     connection.send_result(msg[ID], result)
+
 
 @websocket_api.websocket_command(
     {
