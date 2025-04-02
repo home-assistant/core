@@ -330,7 +330,10 @@ async def test_trigger_number(hass: HomeAssistant) -> None:
                             "max": "{{ trigger.event.data.max_beers }}",
                             "step": "{{ trigger.event.data.step }}",
                             "unit_of_measurement": "beer",
-                            "set_value": {"event": "test_number_event"},
+                            "set_value": {
+                                "event": "test_number_event",
+                                "event_data": {"entity_id": "{{ this.entity_id }}"},
+                            },
                             "optimistic": True,
                         },
                     ],
@@ -379,6 +382,9 @@ async def test_trigger_number(hass: HomeAssistant) -> None:
     )
     assert len(events) == 1
     assert events[0].event_type == "test_number_event"
+    entity_id = events[0].data.get("entity_id")
+    assert entity_id is not None
+    assert entity_id == "number.hello_name"
 
 
 def _verify(

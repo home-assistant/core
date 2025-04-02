@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
-from collections.abc import Iterable
+from collections.abc import AsyncIterator, Iterable
+from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from enum import StrEnum
 import logging
@@ -42,6 +43,7 @@ class ApplicationType(StrEnum):
     CPC = "cpc"
     EZSP = "ezsp"
     SPINEL = "spinel"
+    ROUTER = "router"
 
     @classmethod
     def from_flasher_application_type(
@@ -104,6 +106,28 @@ class OwningAddon:
         else:
             return addon_info.state == AddonState.RUNNING
 
+    @asynccontextmanager
+    async def temporarily_stop(self, hass: HomeAssistant) -> AsyncIterator[None]:
+        """Temporarily stop the add-on, restarting it after completion."""
+        addon_manager = self._get_addon_manager(hass)
+
+        try:
+            addon_info = await addon_manager.async_get_addon_info()
+        except AddonError:
+            yield
+            return
+
+        if addon_info.state != AddonState.RUNNING:
+            yield
+            return
+
+        try:
+            await addon_manager.async_stop_addon()
+            await addon_manager.async_wait_until_addon_state(AddonState.NOT_RUNNING)
+            yield
+        finally:
+            await addon_manager.async_start_addon_waiting()
+
 
 @dataclass(kw_only=True)
 class OwningIntegration:
@@ -121,6 +145,23 @@ class OwningIntegration:
             ConfigEntryState.SETUP_RETRY,
             ConfigEntryState.SETUP_IN_PROGRESS,
         )
+
+    @asynccontextmanager
+    async def temporarily_stop(self, hass: HomeAssistant) -> AsyncIterator[None]:
+        """Temporarily stop the integration, restarting it after completion."""
+        if (entry := hass.config_entries.async_get_entry(self.config_entry_id)) is None:
+            yield
+            return
+
+        if entry.state != ConfigEntryState.LOADED:
+            yield
+            return
+
+        try:
+            await hass.config_entries.async_unload(entry.entry_id)
+            yield
+        finally:
+            await hass.config_entries.async_setup(entry.entry_id)
 
 
 @dataclass(kw_only=True)
@@ -248,10 +289,10 @@ async def guess_firmware_info(hass: HomeAssistant, device_path: str) -> Firmware
     return guesses[-1][0]
 
 
-async def probe_silabs_firmware_type(
+async def probe_silabs_firmware_info(
     device: str, *, probe_methods: Iterable[ApplicationType] | None = None
-) -> ApplicationType | None:
-    """Probe the running firmware on a Silabs device."""
+) -> FirmwareInfo | None:
+    """Probe the running firmware on a SiLabs device."""
     flasher = Flasher(
         device=device,
         **(
@@ -269,4 +310,26 @@ async def probe_silabs_firmware_type(
     if flasher.app_type is None:
         return None
 
-    return ApplicationType.from_flasher_application_type(flasher.app_type)
+    return FirmwareInfo(
+        device=device,
+        firmware_type=ApplicationType.from_flasher_application_type(flasher.app_type),
+        firmware_version=(
+            flasher.app_version.orig_version
+            if flasher.app_version is not None
+            else None
+        ),
+        source="probe",
+        owners=[],
+    )
+
+
+async def probe_silabs_firmware_type(
+    device: str, *, probe_methods: Iterable[ApplicationType] | None = None
+) -> ApplicationType | None:
+    """Probe the running firmware type on a SiLabs device."""
+
+    fw_info = await probe_silabs_firmware_info(device, probe_methods=probe_methods)
+    if fw_info is None:
+        return None
+
+    return fw_info.firmware_type

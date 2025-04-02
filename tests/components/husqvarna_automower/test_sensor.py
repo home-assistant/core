@@ -110,6 +110,18 @@ async def test_work_area_sensor(
     state = hass.states.get("sensor.test_mower_1_work_area")
     assert state.state == "my_lawn"
 
+    # Test EPOS mower, which returns work_area_id = 0, when no
+    # work area is active and has no default work_area_id=0
+    values[TEST_MOWER_ID].mower.work_area_id = 0
+    del values[TEST_MOWER_ID].work_areas[0]
+    del values[TEST_MOWER_ID].work_area_dict[0]
+    mock_automower_client.get_status.return_value = values
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.test_mower_1_work_area")
+    assert state.state == "no_work_area_active"
+
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(

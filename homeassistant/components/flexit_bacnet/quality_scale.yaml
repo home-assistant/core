@@ -52,7 +52,7 @@ rules:
     status: exempt
     comment: |
       Integration doesn't require any form of authentication.
-  test-coverage: todo
+  test-coverage: done
   # Gold
   entity-translations: done
   entity-device-class: done

@@ -400,10 +400,7 @@ async def test_available_flows(
 ############################
 
 
-@pytest.mark.parametrize(
-    "ignore_translations",
-    ["component.test.config.error.Should be unique."],
-)
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_initialize_flow(hass: HomeAssistant, client: TestClient) -> None:
     """Test we can initialize a flow."""
     mock_platform(hass, "test.config_flow", None)
@@ -513,10 +510,7 @@ async def test_initialize_flow_unauth(
     assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
-@pytest.mark.parametrize(
-    "ignore_translations",
-    ["component.test.config.abort.bla"],
-)
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_abort(hass: HomeAssistant, client: TestClient) -> None:
     """Test a flow that aborts."""
     mock_platform(hass, "test.config_flow", None)
@@ -826,10 +820,7 @@ async def test_get_progress_index_unauth(
     assert response["error"]["code"] == "unauthorized"
 
 
-@pytest.mark.parametrize(
-    "ignore_translations",
-    ["component.test.config.error.Should be unique."],
-)
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_get_progress_flow(hass: HomeAssistant, client: TestClient) -> None:
     """Test we can query the API for same result as we get from init a flow."""
     mock_platform(hass, "test.config_flow", None)
@@ -863,10 +854,7 @@ async def test_get_progress_flow(hass: HomeAssistant, client: TestClient) -> Non
     assert data == data2
 
 
-@pytest.mark.parametrize(
-    "ignore_translations",
-    ["component.test.config.error.Should be unique."],
-)
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_get_progress_flow_unauth(
     hass: HomeAssistant, client: TestClient, hass_admin_user: MockUser
 ) -> None:
@@ -1205,7 +1193,7 @@ async def test_subentry_reconfigure_flow(hass: HomeAssistant, client) -> None:
             async def async_step_reconfigure(self, user_input=None):
                 if user_input is not None:
                     return self.async_update_and_abort(
-                        self._get_reconfigure_entry(),
+                        self._get_entry(),
                         self._get_reconfigure_subentry(),
                         title="Test Entry",
                         data={"test": "blah"},
@@ -2870,10 +2858,7 @@ async def test_flow_with_multiple_schema_errors_base(
         }
 
 
-@pytest.mark.parametrize(
-    "ignore_translations",
-    ["component.test.config.abort.reconfigure_successful"],
-)
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 @pytest.mark.usefixtures("freezer")
 async def test_supports_reconfigure(
     hass: HomeAssistant,

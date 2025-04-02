@@ -21,6 +21,8 @@ from .const import UNIT_DOWNLOADS
 from .coordinator import PyLoadConfigEntry, PyLoadData
 from .entity import BasePyLoadEntity
 
+PARALLEL_UPDATES = 0
+
 
 class PyLoadSensorEntity(StrEnum):
     """pyLoad Sensor Entities."""

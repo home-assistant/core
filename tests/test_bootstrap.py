@@ -12,7 +12,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from homeassistant import bootstrap, config as config_util, loader, runner
+from homeassistant import bootstrap, config as config_util, core, loader, runner
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     BASE_PLATFORMS,
@@ -572,7 +572,7 @@ async def test_setup_after_deps_not_present(hass: HomeAssistant) -> None:
         MockModule(
             domain="second_dep",
             async_setup=gen_domain_setup("second_dep"),
-            partial_manifest={"after_dependencies": ["first_dep"]},
+            partial_manifest={"after_dependencies": ["first_dep", "root"]},
         ),
     )
 
@@ -787,6 +787,9 @@ async def test_setup_hass_recovery_mode(
 ) -> None:
     """Test it works."""
     with (
+        patch(
+            "homeassistant.core.HomeAssistant", wraps=core.HomeAssistant
+        ) as mock_hass,
         patch("homeassistant.components.browser.setup") as browser_setup,
         patch(
             "homeassistant.config_entries.ConfigEntries.async_domains",
@@ -804,6 +807,8 @@ async def test_setup_hass_recovery_mode(
                 recovery_mode=True,
             ),
         )
+
+    mock_hass.assert_called_once()
 
     assert "recovery_mode" in hass.config.components
     assert len(mock_mount_local_lib_path.mock_calls) == 0
@@ -1164,6 +1169,7 @@ async def test_bootstrap_is_cancellation_safe(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test cancellation during async_setup_component does not cancel bootstrap."""
+    mock_integration(hass, MockModule(domain="cancel_integration"))
     with patch.object(
         bootstrap, "async_setup_component", side_effect=asyncio.CancelledError
     ):
@@ -1178,6 +1184,18 @@ async def test_bootstrap_empty_integrations(hass: HomeAssistant) -> None:
     """Test setting up an empty integrations does not raise."""
     await bootstrap._async_setup_multi_components(hass, set(), {})
     await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_bootstrap_log_already_setup_stage(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test logging when all integrations in a stage were already setup."""
+    with patch.object(bootstrap, "STAGE_1_INTEGRATIONS", {"frontend"}):
+        await bootstrap._async_set_up_integrations(hass, {})
+        await hass.async_block_till_done()
+
+    assert "Already set up stage 1: {'frontend'}" in caplog.text
 
 
 @pytest.fixture(name="mock_mqtt_config_flow")
@@ -1522,4 +1540,74 @@ def test_should_rollover_is_always_false() -> None:
             "any.log", delay=True
         ).shouldRollover(Mock())
         is False
+    )
+
+
+async def test_no_base_platforms_loaded_before_recorder(hass: HomeAssistant) -> None:
+    """Verify stage 0 not load base platforms before recorder.
+
+    If a stage 0 integration implements base platforms or has a base
+    platform in its dependencies and it loads before the recorder,
+    because of platform-based YAML schema, it may inadvertently
+    load integrations that expect the recorder to already be loaded.
+    We need to ensure that doesn't happen.
+    """
+    IGNORE_BASE_PLATFORM_FILES = {
+        # config/scene.py is not a platform
+        "config": {"scene.py"},
+        # websocket_api/sensor.py is using the platform YAML schema
+        # we must not migrate it to an integration key until
+        # we remove the platform YAML schema support for sensors
+        "websocket_api": {"sensor.py"},
+    }
+
+    integrations_before_recorder: set[str] = set()
+    for _, integrations, _ in bootstrap.STAGE_0_INTEGRATIONS:
+        integrations_before_recorder |= integrations
+        if "recorder" in integrations:
+            break
+    else:
+        pytest.fail("recorder not in stage 0")
+
+    integrations_or_excs = await loader.async_get_integrations(
+        hass, integrations_before_recorder
+    )
+    integrations: dict[str, Integration] = {}
+    for domain, integration in integrations_or_excs.items():
+        assert not isinstance(integrations_or_excs, Exception)
+        integrations[domain] = integration
+
+    integrations_all_dependencies = await loader.resolve_integrations_dependencies(
+        hass, integrations.values()
+    )
+    all_integrations = integrations.copy()
+    all_integrations.update(
+        (domain, loader.async_get_loaded_integration(hass, domain))
+        for domains in integrations_all_dependencies.values()
+        for domain in domains
+    )
+
+    problems: dict[str, set[str]] = {}
+    for domain in integrations:
+        domain_with_base_platforms_deps = (
+            integrations_all_dependencies[domain] & BASE_PLATFORMS
+        )
+        if domain_with_base_platforms_deps:
+            problems[domain] = domain_with_base_platforms_deps
+    assert not problems, (
+        f"Integrations that are setup before recorder have base platforms in their dependencies: {problems}"
+    )
+
+    base_platform_py_files = {f"{base_platform}.py" for base_platform in BASE_PLATFORMS}
+
+    for domain, integration in all_integrations.items():
+        integration_base_platforms_files = (
+            integration._top_level_files & base_platform_py_files
+        )
+        if ignore := IGNORE_BASE_PLATFORM_FILES.get(domain):
+            integration_base_platforms_files -= ignore
+        if integration_base_platforms_files:
+            problems[domain] = integration_base_platforms_files
+    assert not problems, (
+        f"Integrations that are setup before recorder implement base platforms: {problems}"
     )

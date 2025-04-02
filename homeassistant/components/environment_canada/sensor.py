@@ -167,6 +167,8 @@ SENSOR_TYPES: tuple[ECSensorEntityDescription, ...] = (
         translation_key="wind_bearing",
         native_unit_of_measurement=DEGREE,
         value_fn=lambda data: data.conditions.get("wind_bearing", {}).get("value"),
+        device_class=SensorDeviceClass.WIND_DIRECTION,
+        state_class=SensorStateClass.MEASUREMENT_ANGLE,
     ),
     ECSensorEntityDescription(
         key="wind_chill",
