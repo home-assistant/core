@@ -115,7 +115,6 @@ class ComelitHumidifierEntity(CoordinatorEntity[ComelitSerialBridge], Humidifier
         self._api = coordinator.api
         self._device = device
         super().__init__(coordinator)
-        self._attr_name = device_class.name.lower()
         # Use config_entry.entry_id as base for unique_id
         # because no serial number or mac is available
         self._attr_unique_id = f"{config_entry_entry_id}-{device.index}-{device_class}"
