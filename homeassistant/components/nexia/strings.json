@@ -55,10 +55,10 @@
         "name": "Zone setpoint status"
       },
       "get_humidify_setpoint": {
-        "name": "Heating Humidify Setpoint"
+        "name": "Heating humidify setpoint"
       },
       "get_dehumidify_setpoint": {
-        "name": "Cooling Dehumidify Setpoint"
+        "name": "Cooling dehumidify setpoint"
       }
     },
     "switch": {
@@ -83,7 +83,7 @@
     },
     "set_humidify_setpoint": {
       "name": "Set humidify setpoint",
-      "description": "Sets the target humidity.",
+      "description": "Sets the target humidity for heating.",
       "fields": {
         "humidity": {
           "name": "Humidity",
