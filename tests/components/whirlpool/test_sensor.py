@@ -66,7 +66,7 @@ async def test_dryer_sensor_values(
 
     await init_integration(hass)
 
-    entity_id = f"sensor.washerdryer_{MOCK_SAID4}_state"
+    entity_id = f"sensor.washerdryer_{MOCK_SAID4}_none"
     mock_instance = mock_sensor2_api
     entry = entity_registry.async_get(entity_id)
     assert entry
@@ -130,7 +130,7 @@ async def test_washer_sensor_values(
     )
     await hass.async_block_till_done()
 
-    entity_id = f"sensor.washerdryer_{MOCK_SAID3}_state"
+    entity_id = f"sensor.washerdryer_{MOCK_SAID3}_none"
     mock_instance = mock_sensor1_api
     entry = entity_registry.async_get(entity_id)
     assert entry

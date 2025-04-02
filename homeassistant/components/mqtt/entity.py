@@ -399,7 +399,11 @@ class MqttAttributesMixin(Entity):
 
     _attributes_extra_blocked: frozenset[str] = frozenset()
     _attr_tpl: Callable[[ReceivePayloadType], ReceivePayloadType] | None = None
+    _message_callback: Callable[
+        [MessageCallbackType, set[str] | None, ReceiveMessage], None
+    ]
     _process_update_extra_state_attributes: Callable[[dict[str, Any]], None]
+
 
     def __init__(self, config: ConfigType) -> None:
         """Initialize the JSON attributes mixin."""
@@ -434,7 +438,7 @@ class MqttAttributesMixin(Entity):
                 CONF_JSON_ATTRS_TOPIC: {
                     "topic": self._attributes_config.get(CONF_JSON_ATTRS_TOPIC),
                     "msg_callback": partial(
-                        self._message_callback,  # type: ignore[attr-defined]
+                        self._message_callback,
                         self._attributes_message_received,
                         {
                             "_attr_extra_state_attributes",
@@ -492,6 +496,10 @@ class MqttAttributesMixin(Entity):
 
 class MqttAvailabilityMixin(Entity):
     """Mixin used for platforms that report availability."""
+
+    _message_callback: Callable[
+        [MessageCallbackType, set[str] | None, ReceiveMessage], None
+    ]
 
     def __init__(self, config: ConfigType) -> None:
         """Initialize the availability mixin."""
@@ -558,7 +566,7 @@ class MqttAvailabilityMixin(Entity):
             f"availability_{topic}": {
                 "topic": topic,
                 "msg_callback": partial(
-                    self._message_callback,  # type: ignore[attr-defined]
+                    self._message_callback,
                     self._availability_message_received,
                     {"available"},
                 ),
