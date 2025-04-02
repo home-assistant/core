@@ -29,6 +29,7 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.util import color as color_util
 
 from ..bridge import HueBridge
@@ -239,9 +240,18 @@ class HueLight(HueBaseEntity, LightEntity):
         if effect_str == DEPRECATED_EFFECT_NONE:
             # deprecated effect "None" is now "off"
             effect_str = EFFECT_OFF
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                "deprecated_effect_none",
+                breaks_in_ha_version="2025.10.0",
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="deprecated_effect_none",
+            )
             self.logger.warning(
                 "Detected deprecated effect 'None' in %s, use 'off' instead. "
-                "This will stop working in HA 2025.12",
+                "This will stop working in HA 2025.10",
                 self.entity_id,
             )
         if effect_str == EFFECT_OFF:
