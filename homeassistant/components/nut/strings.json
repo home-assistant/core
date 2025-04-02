@@ -38,15 +38,6 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "scan_interval": "Scan Interval (seconds)"
-        }
-      }
-    }
-  },
   "device_automation": {
     "action_type": {
       "beeper_disable": "Disable UPS beeper/buzzer",
