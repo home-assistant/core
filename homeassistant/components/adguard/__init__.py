@@ -55,6 +55,7 @@ class AdGuardData:
 
     client: AdGuardHome
     version: str
+    auth_token: str | None = None
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AdGuardConfigEntry) -> bool:
@@ -71,11 +72,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: AdGuardConfigEntry) -> b
     )
 
     try:
+        # Get auth token first
+        auth_token = await adguard.authenticate()
+        # Then get version
         version = await adguard.version()
     except AdGuardHomeConnectionError as exception:
         raise ConfigEntryNotReady from exception
 
-    entry.runtime_data = AdGuardData(adguard, version)
+    entry.runtime_data = AdGuardData(adguard, version, auth_token)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -132,3 +136,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: AdGuardConfigEntry) -> 
         hass.services.async_remove(DOMAIN, SERVICE_REFRESH)
 
     return unload_ok
+
