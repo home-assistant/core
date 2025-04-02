@@ -15,10 +15,6 @@ from .message import (
     MessageResponseFactory,
     OnOffMessage,
     ZoneEnabledMsg,
-    getMuteMessage,
-    getSourceMessage,
-    getVolumeMessage,
-    getZoneName,
     setMuteMessage,
     setSourceMessage,
     setVolumeMessage,
@@ -92,12 +88,12 @@ class LeaController:
         _LOGGER.log(logging.INFO, "Discover enabled %s", str(self._discovery_enabled))
         _LOGGER.log(logging.INFO, "Update enabled %s", str(self._update_enabled))
 
-        self._discovery_enabled = False
-        self._update_enabled = True
-        # if self._discovery_enabled or self._registry.has_queued_zones:
-        # self.send_discovery_message()
-        # if self._update_enabled:
-        # self.send_update_message()
+        # self._discovery_enabled = False
+        # self._update_enabled = True
+        if self._discovery_enabled or self._registry.has_queued_zones:
+            self.send_discovery_message()
+        if self._update_enabled:
+            self.send_update_message()
 
     def cleanup(self) -> asyncio.Event:
         """Stop discovering. Stop updating. Close connection."""
@@ -403,7 +399,7 @@ class LeaController:
 
     def _send_update_message(self, zone_id: str):
         self._send_message(ZoneEnabledMsg(zone_id))
-        self._send_message(getMuteMessage(zone_id))
-        self._send_message(getVolumeMessage(zone_id))
-        self._send_message(getSourceMessage(zone_id))
-        self._send_message(getZoneName(zone_id))
+        # self._send_message(getMuteMessage(zone_id))
+        # self._send_message(getVolumeMessage(zone_id))
+        # self._send_message(getSourceMessage(zone_id))
+        # self._send_message(getZoneName(zone_id))
