@@ -8,7 +8,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfPower
+from homeassistant.const import DEGREE, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -86,6 +86,16 @@ async def async_setup_entry(
                 device_class=None,
                 state_class=None,
                 unit_of_measurement=UnitOfPower.WATT,
+            ),
+            DemoSensor(
+                device_unique_id="statistics_issues",
+                unique_id="statistics_issue_5",
+                device_name="Statistics issues",
+                entity_name="Issue 5",
+                state=100,
+                device_class=SensorDeviceClass.WIND_DIRECTION,
+                state_class=SensorStateClass.MEASUREMENT_ANGLE,
+                unit_of_measurement=DEGREE,
             ),
         ]
     )

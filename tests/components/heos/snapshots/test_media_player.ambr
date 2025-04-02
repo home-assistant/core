@@ -159,6 +159,32 @@
     'title': 'Music Sources',
   })
 # ---
+# name: test_get_queue
+  dict({
+    'media_player.test_player': dict({
+      'queue': list([
+        dict({
+          'album': 'Espresso',
+          'album_id': '356276481',
+          'artist': 'Sabrina Carpenter',
+          'image_url': 'http://resources.wimpmusic.com/images/e4f2d75f/a69e/4b8a/b800/e18546b1ad4c/640x640.jpg',
+          'media_id': '356276483',
+          'queue_id': 1,
+          'song': 'Espresso',
+        }),
+        dict({
+          'album': 'A Bar Song (Tipsy)',
+          'album_id': '354365596',
+          'artist': 'Shaboozey',
+          'image_url': 'http://resources.wimpmusic.com/images/d05b8da3/4fae/45ff/ac1b/7ab7caab3523/640x640.jpg',
+          'media_id': '354365598',
+          'queue_id': 2,
+          'song': 'A Bar Song (Tipsy)',
+        }),
+      ]),
+    }),
+  })
+# ---
 # name: test_state_attributes
   StateSnapshot({
     'attributes': ReadOnlyDict({

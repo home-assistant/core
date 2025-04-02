@@ -244,6 +244,7 @@ class HomeConnectDoorBinarySensor(HomeConnectBinarySensor):
                     BSH_DOOR_STATE_LOCKED: False,
                     BSH_DOOR_STATE_OPEN: True,
                 },
+                entity_registry_enabled_default=False,
             ),
         )
         self._attr_unique_id = f"{appliance.info.ha_id}-Door"
@@ -283,7 +284,8 @@ class HomeConnectDoorBinarySensor(HomeConnectBinarySensor):
             DOMAIN,
             f"deprecated_binary_common_door_sensor_{self.entity_id}",
             breaks_in_ha_version="2025.5.0",
-            is_fixable=False,
+            is_fixable=True,
+            is_persistent=True,
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_binary_common_door_sensor",
             translation_placeholders={

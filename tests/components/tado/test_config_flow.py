@@ -234,13 +234,19 @@ async def test_homekit(hass: HomeAssistant, mock_tado_api: MagicMock) -> None:
             type="mock_type",
         ),
     )
-    assert result["type"] is FlowResultType.SHOW_PROGRESS_DONE
-    flow = next(
-        flow
-        for flow in hass.config_entries.flow.async_progress()
-        if flow["flow_id"] == result["flow_id"]
-    )
-    assert flow["context"]["unique_id"] == "AA:BB:CC:DD:EE:FF"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "homekit_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "1"
+
+
+async def test_homekit_already_setup(
+    hass: HomeAssistant, mock_tado_api: MagicMock
+) -> None:
+    """Test that we abort from homekit if tado is already setup."""
 
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_USERNAME: "mock", CONF_PASSWORD: "mock"}
@@ -261,3 +267,4 @@ async def test_homekit(hass: HomeAssistant, mock_tado_api: MagicMock) -> None:
         ),
     )
     assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
