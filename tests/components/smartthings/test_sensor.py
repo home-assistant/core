@@ -77,6 +77,14 @@ async def test_state_update(
         ),
         (
             "vd_stv_2017_k",
+            f"4588d2d9-a8cf-40f4-9a0b-ed5dfbaccda1_{MAIN}_{Capability.AUDIO_VOLUME}_{Attribute.VOLUME}_{Attribute.VOLUME}",
+            "tv_samsung_8_series_49_volume",
+            "media_player",
+            "sensor.tv_samsung_8_series_49_volume",
+            "13",
+        ),
+        (
+            "vd_stv_2017_k",
             f"4588d2d9-a8cf-40f4-9a0b-ed5dfbaccda1_{MAIN}_{Capability.MEDIA_INPUT_SOURCE}_{Attribute.INPUT_SOURCE}_{Attribute.INPUT_SOURCE}",
             "tv_samsung_8_series_49_media_input_source",
             "media_player",
@@ -206,6 +214,14 @@ async def test_create_issue_with_items(
             "media_player",
             "sensor.tv_samsung_8_series_49_media_playback_status",
             STATE_UNKNOWN,
+        ),
+        (
+            "vd_stv_2017_k",
+            f"4588d2d9-a8cf-40f4-9a0b-ed5dfbaccda1_{MAIN}_{Capability.AUDIO_VOLUME}_{Attribute.VOLUME}_{Attribute.VOLUME}",
+            "tv_samsung_8_series_49_volume",
+            "media_player",
+            "sensor.tv_samsung_8_series_49_volume",
+            "13",
         ),
         (
             "vd_stv_2017_k",
