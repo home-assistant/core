@@ -13,7 +13,7 @@
           "host": "The IP address or hostname of your NUT server.",
           "port": "The network port of your NUT server. The NUT server's default port is '3493'.",
           "username": "The username to log into the NUT server. This is configured in NUT.",
-          "password": "The password assocaited with the username to log into the NUT server. This is configured in NUT."
+          "password": "The password associated with the username to log into the NUT server. This is configured in NUT."
         }
       },
       "ups": {
