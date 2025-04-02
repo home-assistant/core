@@ -96,13 +96,13 @@ class LeaController:
         """Start."""
 
         await self.createConnection()
-        self.start_client(self._ip_address, int(self._port))
         # self._discovery_enabled = False
         # self._update_enabled = True
         if self._discovery_enabled or self._registry.has_queued_zones:
             self.send_discovery_message()
         if self._update_enabled:
             self.send_update_message()
+        self.start_client(self._ip_address, int(self._port))
 
     def cleanup(self) -> asyncio.Event:
         """Stop discovering. Stop updating. Close connection."""
