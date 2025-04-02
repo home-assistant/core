@@ -102,7 +102,7 @@ class LeaController:
             self.send_discovery_message()
         if self._update_enabled:
             self.send_update_message()
-        self.start_client(self._ip_address, int(self._port))
+        # self.start_client(self._ip_address, int(self._port))
 
     def cleanup(self) -> asyncio.Event:
         """Stop discovering. Stop updating. Close connection."""
