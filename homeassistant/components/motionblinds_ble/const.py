@@ -26,3 +26,5 @@ MANUFACTURER = "Motionblinds"
 
 OPTION_DISCONNECT_TIME = "disconnect_time"
 OPTION_PERMANENT_CONNECTION = "permanent_connection"
+
+DESCRIPTION_API_KEY_DOCS_URL = "https://www.home-assistant.io/integrations/motion_blinds/#retrieving-the-api-key"
