@@ -59,7 +59,11 @@ from homeassistant.loader import (
     async_get_integration_descriptions,
     async_get_integrations,
 )
-from homeassistant.setup import async_get_loaded_integrations, async_get_setup_timings
+from homeassistant.setup import (
+    DATA_SETUP_DONE,
+    async_get_loaded_integrations,
+    async_get_setup_timings,
+)
 from homeassistant.util.json import format_unserializable_data
 
 from . import const, decorators, messages
@@ -98,6 +102,7 @@ def async_register_commands(
     async_reg(hass, handle_subscribe_entities)
     async_reg(hass, handle_supported_features)
     async_reg(hass, handle_integration_descriptions)
+    async_reg(hass, handle_integration_wait)
 
 
 def pong_message(iden: int) -> dict[str, Any]:
@@ -923,3 +928,27 @@ async def handle_integration_descriptions(
 ) -> None:
     """Get metadata for all brands and integrations."""
     connection.send_result(msg["id"], await async_get_integration_descriptions(hass))
+
+
+@decorators.websocket_command(
+    {
+        vol.Required("type"): "integration/wait",
+        vol.Required("domain"): str,
+    }
+)
+@decorators.async_response
+async def handle_integration_wait(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle wait for integration command."""
+
+    domain = msg["domain"]
+    setup_done = hass.data.get(DATA_SETUP_DONE, {})
+
+    # Wait for the integration to be set up
+    if setup_future := setup_done.get(domain):
+        await setup_future
+
+    connection.send_result(
+        msg["id"], {"integration_loaded": domain in hass.config.components}
+    )

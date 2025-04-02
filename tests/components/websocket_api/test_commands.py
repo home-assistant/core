@@ -2824,3 +2824,30 @@ async def test_subscribe_entities_chained_state_change(
 
     await websocket_client.close()
     await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(
+    ("domain", "result"),
+    [
+        ("config", {"integration_loaded": True}),
+        ("non_existing_domain", {"integration_loaded": False}),
+    ],
+)
+async def test_wait_integration(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    domain: str,
+    result: dict[str, Any],
+) -> None:
+    """Test we can get wait for an integration to load."""
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json_auto_id({"type": "integration/wait", "domain": domain})
+    response = await ws_client.receive_json()
+    assert response == {
+        "id": ANY,
+        "result": result,
+        "success": True,
+        "type": "result",
+    }
