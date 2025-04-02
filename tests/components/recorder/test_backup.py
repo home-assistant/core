@@ -17,7 +17,7 @@ async def test_async_pre_backup(recorder_mock: Recorder, hass: HomeAssistant) ->
         "homeassistant.components.recorder.core.Recorder.lock_database"
     ) as lock_mock:
         await async_pre_backup(hass)
-        assert lock_mock.called
+    assert lock_mock.called
 
 
 RAISES_HASS_NOT_RUNNING = pytest.raises(
@@ -76,12 +76,16 @@ async def test_async_pre_backup_with_migration(
     """Test pre backup with migration."""
     with (
         patch(
+            "homeassistant.components.recorder.core.Recorder.lock_database"
+        ) as lock_mock,
+        patch(
             "homeassistant.components.recorder.backup.async_migration_in_progress",
             return_value=True,
         ),
-        pytest.raises(HomeAssistantError),
+        pytest.raises(HomeAssistantError, match="Database migration in progress"),
     ):
         await async_pre_backup(hass)
+    assert not lock_mock.called
 
 
 async def test_async_post_backup(recorder_mock: Recorder, hass: HomeAssistant) -> None:
@@ -90,7 +94,7 @@ async def test_async_post_backup(recorder_mock: Recorder, hass: HomeAssistant) -
         "homeassistant.components.recorder.core.Recorder.unlock_database"
     ) as unlock_mock:
         await async_post_backup(hass)
-        assert unlock_mock.called
+    assert unlock_mock.called
 
 
 async def test_async_post_backup_failure(
@@ -102,7 +106,9 @@ async def test_async_post_backup_failure(
             "homeassistant.components.recorder.core.Recorder.unlock_database",
             return_value=False,
         ) as unlock_mock,
-        pytest.raises(HomeAssistantError),
+        pytest.raises(
+            HomeAssistantError, match="Could not release database write lock"
+        ),
     ):
         await async_post_backup(hass)
     assert unlock_mock.called

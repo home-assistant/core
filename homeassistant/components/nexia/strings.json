@@ -86,8 +86,8 @@
       }
     },
     "set_hvac_run_mode": {
-      "name": "Set hvac run mode",
-      "description": "Sets the HVAC operation mode.",
+      "name": "Set HVAC run mode",
+      "description": "Sets the run and/or operation mode of the HVAC system.",
       "fields": {
         "run_mode": {
           "name": "Run mode",

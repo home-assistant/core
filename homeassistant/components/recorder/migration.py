@@ -9,7 +9,7 @@ from dataclasses import dataclass, replace as dataclass_replace
 from datetime import timedelta
 import logging
 from time import time
-from typing import TYPE_CHECKING, Any, cast, final
+from typing import TYPE_CHECKING, Any, TypedDict, cast, final
 from uuid import UUID
 
 import sqlalchemy
@@ -81,7 +81,7 @@ from .db_schema import (
     StatisticsRuns,
     StatisticsShortTerm,
 )
-from .models import process_timestamp
+from .models import StatisticMeanType, process_timestamp
 from .models.time import datetime_to_timestamp_or_none
 from .queries import (
     batch_cleanup_entity_ids,
@@ -144,24 +144,32 @@ class _ColumnTypesForDialect:
     big_int_type: str
     timestamp_type: str
     context_bin_type: str
+    small_int_type: str
+    double_type: str
 
 
 _MYSQL_COLUMN_TYPES = _ColumnTypesForDialect(
     big_int_type="INTEGER(20)",
     timestamp_type=DOUBLE_PRECISION_TYPE_SQL,
     context_bin_type=f"BLOB({CONTEXT_ID_BIN_MAX_LENGTH})",
+    small_int_type="SMALLINT",
+    double_type=DOUBLE_PRECISION_TYPE_SQL,
 )
 
 _POSTGRESQL_COLUMN_TYPES = _ColumnTypesForDialect(
     big_int_type="INTEGER",
     timestamp_type=DOUBLE_PRECISION_TYPE_SQL,
     context_bin_type="BYTEA",
+    small_int_type="SMALLINT",
+    double_type=DOUBLE_PRECISION_TYPE_SQL,
 )
 
 _SQLITE_COLUMN_TYPES = _ColumnTypesForDialect(
     big_int_type="INTEGER",
     timestamp_type="FLOAT",
     context_bin_type="BLOB",
+    small_int_type="INTEGER",
+    double_type="FLOAT",
 )
 
 _COLUMN_TYPES_FOR_DIALECT: dict[SupportedDialect | None, _ColumnTypesForDialect] = {
@@ -712,6 +720,11 @@ def _modify_columns(
                 raise
 
 
+class _FKAlterDict(TypedDict):
+    old_fk: ForeignKeyConstraint
+    columns: list[str]
+
+
 def _update_states_table_with_foreign_key_options(
     session_maker: Callable[[], Session], engine: Engine
 ) -> None:
@@ -729,7 +742,7 @@ def _update_states_table_with_foreign_key_options(
 
     inspector = sqlalchemy.inspect(engine)
     tmp_states_table = Table(TABLE_STATES, MetaData())
-    alters = [
+    alters: list[_FKAlterDict] = [
         {
             "old_fk": ForeignKeyConstraint(
                 (), (), name=foreign_key["name"], table=tmp_states_table
@@ -755,14 +768,14 @@ def _update_states_table_with_foreign_key_options(
         with session_scope(session=session_maker()) as session:
             try:
                 connection = session.connection()
-                connection.execute(DropConstraint(alter["old_fk"]))  # type: ignore[no-untyped-call]
+                connection.execute(DropConstraint(alter["old_fk"]))
                 for fkc in states_key_constraints:
                     if fkc.column_keys == alter["columns"]:
                         # AddConstraint mutates the constraint passed to it, we need to
                         # undo that to avoid changing the behavior of the table schema.
                         # https://github.com/sqlalchemy/sqlalchemy/blob/96f1172812f858fead45cdc7874abac76f45b339/lib/sqlalchemy/sql/ddl.py#L746-L748
                         create_rule = fkc._create_rule  # noqa: SLF001
-                        add_constraint = AddConstraint(fkc)  # type: ignore[no-untyped-call]
+                        add_constraint = AddConstraint(fkc)
                         fkc._create_rule = create_rule  # noqa: SLF001
                         connection.execute(add_constraint)
             except (InternalError, OperationalError):
@@ -800,7 +813,7 @@ def _drop_foreign_key_constraints(
         with session_scope(session=session_maker()) as session:
             try:
                 connection = session.connection()
-                connection.execute(DropConstraint(drop))  # type: ignore[no-untyped-call]
+                connection.execute(DropConstraint(drop))
             except (InternalError, OperationalError):
                 _LOGGER.exception(
                     "Could not drop foreign constraints in %s table on %s",
@@ -845,7 +858,7 @@ def _restore_foreign_key_constraints(
         # undo that to avoid changing the behavior of the table schema.
         # https://github.com/sqlalchemy/sqlalchemy/blob/96f1172812f858fead45cdc7874abac76f45b339/lib/sqlalchemy/sql/ddl.py#L746-L748
         create_rule = constraint._create_rule  # noqa: SLF001
-        add_constraint = AddConstraint(constraint)  # type: ignore[no-untyped-call]
+        add_constraint = AddConstraint(constraint)
         constraint._create_rule = create_rule  # noqa: SLF001
         try:
             _add_constraint(session_maker, add_constraint, table, column)
@@ -1986,6 +1999,42 @@ class _SchemaVersion48Migrator(_SchemaVersionMigrator, target_version=48):
         # queries can be used. For most systems, this should
         # be very fast and nothing will be migrated.
         _migrate_columns_to_timestamp(self.instance, self.session_maker, self.engine)
+
+
+class _SchemaVersion49Migrator(_SchemaVersionMigrator, target_version=49):
+    def _apply_update(self) -> None:
+        """Version specific update method."""
+        _add_columns(
+            self.session_maker,
+            "statistics_meta",
+            [
+                f"mean_type {self.column_types.small_int_type} NOT NULL DEFAULT {StatisticMeanType.NONE.value}"
+            ],
+        )
+
+        for table in ("statistics", "statistics_short_term"):
+            _add_columns(
+                self.session_maker,
+                table,
+                [f"mean_weight {self.column_types.double_type}"],
+            )
+
+        with session_scope(session=self.session_maker()) as session:
+            connection = session.connection()
+            connection.execute(
+                text(
+                    "UPDATE statistics_meta SET mean_type=:mean_type WHERE has_mean=true"
+                ),
+                {"mean_type": StatisticMeanType.ARITHMETIC.value},
+            )
+
+
+class _SchemaVersion50Migrator(_SchemaVersionMigrator, target_version=50):
+    def _apply_update(self) -> None:
+        """Version specific update method."""
+        with session_scope(session=self.session_maker()) as session:
+            connection = session.connection()
+            connection.execute(text("UPDATE statistics_meta SET has_mean=NULL"))
 
 
 def _migrate_statistics_columns_to_timestamp_removing_duplicates(

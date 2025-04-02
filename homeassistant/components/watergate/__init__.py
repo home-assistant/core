@@ -18,8 +18,9 @@ from homeassistant.components.webhook import (
 )
 from homeassistant.const import CONF_IP_ADDRESS, CONF_WEBHOOK_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import DOMAIN
+from .const import AUTO_SHUT_OFF_EVENT_NAME, DOMAIN
 from .coordinator import WatergateConfigEntry, WatergateDataCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,8 +29,10 @@ WEBHOOK_TELEMETRY_TYPE = "telemetry"
 WEBHOOK_VALVE_TYPE = "valve"
 WEBHOOK_WIFI_CHANGED_TYPE = "wifi-changed"
 WEBHOOK_POWER_SUPPLY_CHANGED_TYPE = "power-supply-changed"
+WEBHOOK_AUTO_SHUT_OFF = "auto-shut-off-report"
 
 PLATFORMS: list[Platform] = [
+    Platform.EVENT,
     Platform.SENSOR,
     Platform.VALVE,
 ]
@@ -120,6 +123,10 @@ def get_webhook_handler(
             coordinator_data.networking.rssi = data.rssi
         elif body_type == WEBHOOK_POWER_SUPPLY_CHANGED_TYPE:
             coordinator_data.state.power_supply = data.supply
+        elif body_type == WEBHOOK_AUTO_SHUT_OFF:
+            async_dispatcher_send(
+                hass, AUTO_SHUT_OFF_EVENT_NAME.format(data.type.lower()), data
+            )
 
         coordinator.async_set_updated_data(coordinator_data)
 

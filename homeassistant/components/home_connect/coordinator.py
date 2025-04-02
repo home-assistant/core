@@ -155,7 +155,7 @@ class HomeConnectCoordinator(
             f"home_connect-events_listener_task-{self.config_entry.entry_id}",
         )
 
-    async def _event_listener(self) -> None:  # noqa: C901
+    async def _event_listener(self) -> None:
         """Match event with listener for event type."""
         retry_time = 10
         while True:
@@ -232,15 +232,15 @@ class HomeConnectCoordinator(
                                 self.data[event_message_ha_id].update(appliance_data)
                             else:
                                 self.data[event_message_ha_id] = appliance_data
-                            for listener, context in list(
-                                self._special_listeners.values()
-                            ) + list(self._listeners.values()):
-                                assert isinstance(context, tuple)
+                            for listener, context in self._special_listeners.values():
                                 if (
                                     EventKey.BSH_COMMON_APPLIANCE_DEPAIRED
                                     not in context
                                 ):
                                     listener()
+                            self._call_all_event_listeners_for_appliance(
+                                event_message_ha_id
+                            )
 
                         case EventType.DISCONNECTED:
                             self.data[event_message_ha_id].info.connected = False
@@ -267,7 +267,7 @@ class HomeConnectCoordinator(
                 _LOGGER.debug(
                     "Non-breaking error (%s) while listening for events,"
                     " continuing in %s seconds",
-                    type(error).__name__,
+                    error,
                     retry_time,
                 )
                 await asyncio_sleep(retry_time)
@@ -278,13 +278,6 @@ class HomeConnectCoordinator(
                     self.config_entry.entry_id
                 )
                 break
-
-            # Trigger to delete the possible depaired device entities
-            # from known_entities variable at common.py
-            for listener, context in self._special_listeners.values():
-                assert isinstance(context, tuple)
-                if EventKey.BSH_COMMON_APPLIANCE_DEPAIRED in context:
-                    listener()
 
     @callback
     def _call_event_listener(self, event_message: EventMessage) -> None:
@@ -389,6 +382,13 @@ class HomeConnectCoordinator(
                     remove_config_entry_id=self.config_entry.entry_id,
                 )
 
+        # Trigger to delete the possible depaired device entities
+        # from known_entities variable at common.py
+        for listener, context in self._special_listeners.values():
+            assert isinstance(context, tuple)
+            if EventKey.BSH_COMMON_APPLIANCE_DEPAIRED in context:
+                listener()
+
     async def _get_appliance_data(
         self,
         appliance: HomeAppliance,
@@ -415,9 +415,7 @@ class HomeConnectCoordinator(
             _LOGGER.debug(
                 "Error fetching settings for %s: %s",
                 appliance.ha_id,
-                error
-                if isinstance(error, HomeConnectApiError)
-                else type(error).__name__,
+                error,
             )
             settings = {}
         try:
@@ -431,9 +429,7 @@ class HomeConnectCoordinator(
             _LOGGER.debug(
                 "Error fetching status for %s: %s",
                 appliance.ha_id,
-                error
-                if isinstance(error, HomeConnectApiError)
-                else type(error).__name__,
+                error,
             )
             status = {}
 
@@ -449,9 +445,7 @@ class HomeConnectCoordinator(
                 _LOGGER.debug(
                     "Error fetching programs for %s: %s",
                     appliance.ha_id,
-                    error
-                    if isinstance(error, HomeConnectApiError)
-                    else type(error).__name__,
+                    error,
                 )
             else:
                 programs.extend(all_programs.programs)
@@ -545,9 +539,7 @@ class HomeConnectCoordinator(
             _LOGGER.debug(
                 "Error fetching options for %s: %s",
                 ha_id,
-                error
-                if isinstance(error, HomeConnectApiError)
-                else type(error).__name__,
+                error,
             )
             return {}
 

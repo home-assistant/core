@@ -86,8 +86,8 @@ async def validate_station(
     except UnknownError as error:
         _LOGGER.error("Unknown error occurred during validation %s", str(error))
         errors["base"] = "cannot_connect"
-    except Exception as error:  # noqa: BLE001
-        _LOGGER.error("Unknown exception occurred during validation %s", str(error))
+    except Exception:
+        _LOGGER.exception("Unknown exception occurred during validation")
         errors["base"] = "cannot_connect"
 
     return (stations, errors)
@@ -266,7 +266,7 @@ class TVTrainConfigFlow(ConfigFlow, domain=DOMAIN):
                 {
                     CONF_API_KEY: api_key,
                     CONF_FROM: train_from,
-                    CONF_TO: user_input[CONF_TO],
+                    CONF_TO: train_to,
                     CONF_TIME: train_time,
                     CONF_WEEKDAY: train_days,
                     CONF_FILTER_PRODUCT: filter_product,
