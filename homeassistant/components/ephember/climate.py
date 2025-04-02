@@ -12,6 +12,7 @@ from pyephember2.pyephember2 import (
     zone_current_temperature,
     zone_is_active,
     zone_is_boost_active,
+    zone_is_hotwater,
     zone_mode,
     zone_name,
     zone_target_temperature,
@@ -37,9 +38,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
-
-# Hot water devices - no temperature control
-HotWaterDevices = [4, 514]
 
 # Return cached results if last scan was less then this time ago
 SCAN_INTERVAL = timedelta(seconds=120)
@@ -93,10 +91,7 @@ class EphEmberThermostat(ClimateEntity):
         self.unique_id = zone["zoneid"]
 
         # hot water = true, is immersive device without target temperature control.
-        if zone["deviceType"] in HotWaterDevices:
-            self._hot_water = True
-        else:
-            self._hot_water = False
+        self._hot_water = zone_is_hotwater(zone)
 
         self._attr_name = self._zone_name
 
@@ -117,20 +112,12 @@ class EphEmberThermostat(ClimateEntity):
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        match self._zone["deviceType"]:
-            case 514:
-                return None
-            case _:
-                return zone_current_temperature(self._zone)
+        return zone_current_temperature(self._zone)
 
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        match self._zone["deviceType"]:
-            case 514:
-                return None
-            case _:
-                return zone_target_temperature(self._zone)
+        return zone_target_temperature(self._zone)
 
     @property
     def hvac_action(self) -> HVACAction:
