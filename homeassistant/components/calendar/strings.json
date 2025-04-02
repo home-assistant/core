@@ -72,6 +72,24 @@
         }
       }
     },
+    "delete_event": {
+      "name": "Delete event",
+      "description": "Deletes an existing calendar event.",
+      "fields": {
+        "uid": {
+          "name": "Event ID",
+          "description": "The ID of the event to delete."
+        },
+        "recurrence_id": {
+          "name": "Recurrence ID",
+          "description": "The ID of the recurrence to delete. If not set, the event will be deleted."
+        },
+        "recurrence_range": {
+          "name": "Recurrence range",
+          "description": "The range of the recurrence to delete. If not set, the event will be deleted."
+        }
+      }
+    },
     "get_events": {
       "name": "Get events",
       "description": "Get events on a calendar within a time range.",

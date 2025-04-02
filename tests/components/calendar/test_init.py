@@ -410,6 +410,25 @@ async def test_create_event_service_invalid_params(
         )
 
 
+async def test_unsupported_delete_event_service(hass: HomeAssistant) -> None:
+    """Test unsupported service call."""
+    await async_setup_component(hass, "homeassistant", {})
+    with pytest.raises(
+        ServiceNotSupported,
+        match="Entity calendar.calendar_1 does not "
+        "support action calendar.delete_event",
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "delete_event",
+            {
+                "uid": "5522a20f-362f-4650-bbcd-9614fa77322b",
+            },
+            target={"entity_id": "calendar.calendar_1"},
+            blocking=True,
+        )
+
+
 @pytest.mark.parametrize(
     "frozen_time", ["2023-06-22 10:30:00+00:00"], ids=["frozen_time"]
 )

@@ -57,6 +57,7 @@ EVENT_DURATION = "duration"
 
 # Fields for the list events service
 LIST_EVENT_FIELDS = {
+    EVENT_UID,
     "start",
     "end",
     EVENT_SUMMARY,
