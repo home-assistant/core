@@ -44,12 +44,9 @@ from .const import (
     UPNP_SVC_MAIN_TV_AGENT,
     UPNP_SVC_RENDERING_CONTROL,
 )
-from .coordinator import SamsungTVDataUpdateCoordinator
+from .coordinator import SamsungTVConfigEntry, SamsungTVDataUpdateCoordinator
 
 PLATFORMS = [Platform.MEDIA_PLAYER, Platform.REMOTE]
-
-
-SamsungTVConfigEntry = ConfigEntry[SamsungTVDataUpdateCoordinator]
 
 
 @callback
@@ -165,7 +162,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SamsungTVConfigEntry) ->
     entry.async_on_unload(debounced_reloader.async_shutdown)
     entry.async_on_unload(entry.add_update_listener(debounced_reloader.async_call))
 
-    coordinator = SamsungTVDataUpdateCoordinator(hass, bridge)
+    coordinator = SamsungTVDataUpdateCoordinator(hass, entry, bridge)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

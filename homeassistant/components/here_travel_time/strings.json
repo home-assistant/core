@@ -5,11 +5,11 @@
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
           "api_key": "[%key:common::config_flow::data::api_key%]",
-          "mode": "Travel Mode"
+          "mode": "Travel mode"
         }
       },
       "origin_menu": {
-        "title": "Choose Origin",
+        "title": "Choose origin",
         "menu_options": {
           "origin_coordinates": "Using a map location",
           "origin_entity": "Using an entity"
@@ -28,7 +28,7 @@
         }
       },
       "destination_menu": {
-        "title": "Choose Destination",
+        "title": "Choose destination",
         "menu_options": {
           "destination_coordinates": "[%key:component::here_travel_time::config::step::origin_menu::menu_options::origin_coordinates%]",
           "destination_entity": "[%key:component::here_travel_time::config::step::origin_menu::menu_options::origin_entity%]"
@@ -60,13 +60,13 @@
     "step": {
       "init": {
         "data": {
-          "traffic_mode": "Traffic Mode",
-          "route_mode": "Route Mode",
+          "traffic_mode": "Traffic mode",
+          "route_mode": "Route mode",
           "unit_system": "Unit system"
         }
       },
       "time_menu": {
-        "title": "Choose Time Type",
+        "title": "Choose time type",
         "menu_options": {
           "departure_time": "Configure a departure time",
           "arrival_time": "Configure an arrival time",
@@ -74,15 +74,15 @@
         }
       },
       "departure_time": {
-        "title": "Choose Departure Time",
+        "title": "Choose departure time",
         "data": {
-          "departure_time": "Departure Time"
+          "departure_time": "Departure time"
         }
       },
       "arrival_time": {
-        "title": "Choose Arrival Time",
+        "title": "Choose arrival time",
         "data": {
-          "arrival_time": "Arrival Time"
+          "arrival_time": "Arrival time"
         }
       }
     }

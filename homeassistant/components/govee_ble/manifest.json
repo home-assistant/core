@@ -39,6 +39,10 @@
       "connectable": false
     },
     {
+      "local_name": "GV5179*",
+      "connectable": false
+    },
+    {
       "local_name": "GVH5127*",
       "connectable": false
     },
@@ -131,5 +135,5 @@
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/govee_ble",
   "iot_class": "local_push",
-  "requirements": ["govee-ble==0.42.0"]
+  "requirements": ["govee-ble==0.43.1"]
 }

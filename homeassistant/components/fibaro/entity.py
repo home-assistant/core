@@ -11,6 +11,8 @@ from pyfibaro.fibaro_device import DeviceModel
 from homeassistant.const import ATTR_ARMED, ATTR_BATTERY_LEVEL
 from homeassistant.helpers.entity import Entity
 
+from . import FibaroController
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -22,7 +24,7 @@ class FibaroEntity(Entity):
     def __init__(self, fibaro_device: DeviceModel) -> None:
         """Initialize the device."""
         self.fibaro_device = fibaro_device
-        self.controller = fibaro_device.fibaro_controller
+        self.controller: FibaroController = fibaro_device.fibaro_controller
         self.ha_id = fibaro_device.ha_id
         self._attr_name = fibaro_device.friendly_name
         self._attr_unique_id = fibaro_device.unique_id_str
@@ -53,15 +55,6 @@ class FibaroEntity(Entity):
         if self.fibaro_device.value_2.has_value:
             return self.fibaro_device.value_2.int_value()
         return None
-
-    def dont_know_message(self, cmd: str) -> None:
-        """Make a warning in case we don't know how to perform an action."""
-        _LOGGER.warning(
-            "Not sure how to %s: %s (available actions: %s)",
-            cmd,
-            str(self.ha_id),
-            str(self.fibaro_device.actions),
-        )
 
     def set_level(self, level: int) -> None:
         """Set the level of Fibaro device."""
@@ -97,11 +90,7 @@ class FibaroEntity(Entity):
 
     def action(self, cmd: str, *args: Any) -> None:
         """Perform an action on the Fibaro HC."""
-        if cmd in self.fibaro_device.actions:
-            self.fibaro_device.execute_action(cmd, args)
-            _LOGGER.debug("-> %s.%s%s called", str(self.ha_id), str(cmd), str(args))
-        else:
-            self.dont_know_message(cmd)
+        self.fibaro_device.execute_action(cmd, args)
 
     @property
     def current_binary_state(self) -> bool:

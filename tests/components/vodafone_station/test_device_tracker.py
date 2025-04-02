@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-from .const import DEVICE_1_MAC
+from .const import DEVICE_1_HOST, DEVICE_1_MAC
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -45,10 +45,9 @@ async def test_consider_home(
     """Test if device is considered not_home when disconnected."""
     await setup_integration(hass, mock_config_entry)
 
-    device_tracker = "device_tracker.vodafone_station_xx_xx_xx_xx_xx_xx"
+    device_tracker = f"device_tracker.{DEVICE_1_HOST}"
 
-    state = hass.states.get(device_tracker)
-    assert state
+    assert (state := hass.states.get(device_tracker))
     assert state.state == STATE_HOME
 
     mock_vodafone_station_router.get_devices_data.return_value[
@@ -59,6 +58,5 @@ async def test_consider_home(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get(device_tracker)
-    assert state
+    assert (state := hass.states.get(device_tracker))
     assert state.state == STATE_NOT_HOME

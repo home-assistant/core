@@ -113,9 +113,14 @@ async def list_serial_ports(hass: HomeAssistant) -> list[ListPortInfo]:
     except HomeAssistantError:
         pass
     else:
-        yellow_radio = next(p for p in ports if p.device == "/dev/ttyAMA1")
-        yellow_radio.description = "Yellow Zigbee module"
-        yellow_radio.manufacturer = "Nabu Casa"
+        # PySerial does not properly handle the Yellow's serial port with the CM5
+        # so we manually include it
+        port = ListPortInfo(device="/dev/ttyAMA1", skip_link_detection=True)
+        port.description = "Yellow Zigbee module"
+        port.manufacturer = "Nabu Casa"
+
+        ports = [p for p in ports if not p.device.startswith("/dev/ttyAMA")]
+        ports.insert(0, port)
 
     if is_hassio(hass):
         # Present the multi-PAN addon as a setup option, if it's available

@@ -8,7 +8,8 @@
     "abort": {
       "not_sonos_device": "Discovered device is not a Sonos device",
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
-      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "not_ipv4_address": "No IPv4 address in SSDP discovery information"
     }
   },
   "issues": {
@@ -87,7 +88,7 @@
   "services": {
     "snapshot": {
       "name": "Snapshot",
-      "description": "Takes a snapshot of the media player.",
+      "description": "Takes a snapshot of a media player.",
       "fields": {
         "entity_id": {
           "name": "Entity",
@@ -95,13 +96,13 @@
         },
         "with_group": {
           "name": "With group",
-          "description": "True or False. Also snapshot the group layout."
+          "description": "Whether the snapshot should include the group layout and the state of other speakers in the group."
         }
       }
     },
     "restore": {
       "name": "Restore",
-      "description": "Restores a snapshot of the media player.",
+      "description": "Restores a snapshot of a media player.",
       "fields": {
         "entity_id": {
           "name": "Entity",
@@ -109,7 +110,7 @@
         },
         "with_group": {
           "name": "[%key:component::sonos::services::snapshot::fields::with_group::name%]",
-          "description": "True or False. Also restore the group layout."
+          "description": "Whether the group layout and the state of other speakers in the group should also be restored."
         }
       }
     },
@@ -129,7 +130,7 @@
     },
     "play_queue": {
       "name": "Play queue",
-      "description": "Start playing the queue from the first item.",
+      "description": "Starts playing the queue from the first item.",
       "fields": {
         "queue_position": {
           "name": "Queue position",
@@ -153,23 +154,23 @@
       "fields": {
         "alarm_id": {
           "name": "Alarm ID",
-          "description": "ID for the alarm to be updated."
+          "description": "The ID of the alarm to be updated."
         },
         "time": {
           "name": "Time",
-          "description": "Set time for the alarm."
+          "description": "The time for the alarm."
         },
         "volume": {
           "name": "Volume",
-          "description": "Set alarm volume level."
+          "description": "The alarm volume level."
         },
         "enabled": {
           "name": "Alarm enabled",
-          "description": "Enable or disable the alarm."
+          "description": "Whether or not to enable the alarm."
         },
         "include_linked_zones": {
           "name": "Include linked zones",
-          "description": "Enable or disable including grouped rooms."
+          "description": "Whether the alarm also plays on grouped players."
         }
       }
     },

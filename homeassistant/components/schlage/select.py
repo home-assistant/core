@@ -5,10 +5,9 @@ from __future__ import annotations
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SchlageConfigEntry
-from .coordinator import LockData, SchlageDataUpdateCoordinator
+from .coordinator import LockData, SchlageConfigEntry, SchlageDataUpdateCoordinator
 from .entity import SchlageEntity
 
 _DESCRIPTIONS = (
@@ -33,7 +32,7 @@ _DESCRIPTIONS = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: SchlageConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up selects based on a config entry."""
     coordinator = config_entry.runtime_data

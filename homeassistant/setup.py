@@ -132,7 +132,13 @@ def async_set_domains_to_be_loaded(hass: core.HomeAssistant, domains: set[str]) 
      - Keep track of domains which will load but have not yet finished loading
     """
     setup_done_futures = hass.data.setdefault(DATA_SETUP_DONE, {})
-    setup_done_futures.update({domain: hass.loop.create_future() for domain in domains})
+    setup_futures = hass.data.setdefault(DATA_SETUP, {})
+    old_domains = set(setup_futures) | set(setup_done_futures) | hass.config.components
+    if overlap := old_domains & domains:
+        _LOGGER.debug("Domains to be loaded %s already loaded or pending", overlap)
+    setup_done_futures.update(
+        {domain: hass.loop.create_future() for domain in domains - old_domains}
+    )
 
 
 def setup_component(hass: core.HomeAssistant, domain: str, config: ConfigType) -> bool:
@@ -207,17 +213,24 @@ async def _async_process_dependencies(
         if dep not in hass.config.components
     }
 
-    after_dependencies_tasks: dict[str, asyncio.Future[bool]] = {}
     to_be_loaded = hass.data.get(DATA_SETUP_DONE, {})
+    # We don't want to just wait for the futures from `to_be_loaded` here.
+    # We want to ensure that our after_dependencies are always actually
+    # scheduled to be set up, as if for whatever reason they had not been,
+    # we would deadlock waiting for them here.
     for dep in integration.after_dependencies:
         if (
             dep not in dependencies_tasks
             and dep in to_be_loaded
             and dep not in hass.config.components
         ):
-            after_dependencies_tasks[dep] = to_be_loaded[dep]
+            dependencies_tasks[dep] = setup_futures.get(dep) or create_eager_task(
+                async_setup_component(hass, dep, config),
+                name=f"setup {dep} as after dependency of {integration.domain}",
+                loop=hass.loop,
+            )
 
-    if not dependencies_tasks and not after_dependencies_tasks:
+    if not dependencies_tasks:
         return []
 
     if dependencies_tasks:
@@ -226,17 +239,9 @@ async def _async_process_dependencies(
             integration.domain,
             dependencies_tasks.keys(),
         )
-    if after_dependencies_tasks:
-        _LOGGER.debug(
-            "Dependency %s will wait for after dependencies %s",
-            integration.domain,
-            after_dependencies_tasks.keys(),
-        )
 
     async with hass.timeout.async_freeze(integration.domain):
-        results = await asyncio.gather(
-            *dependencies_tasks.values(), *after_dependencies_tasks.values()
-        )
+        results = await asyncio.gather(*dependencies_tasks.values())
 
     failed = [
         domain for idx, domain in enumerate(dependencies_tasks) if not results[idx]
@@ -317,7 +322,7 @@ async def _async_setup_component(
             translation.async_load_integrations(hass, integration_set), loop=hass.loop
         )
     # Validate all dependencies exist and there are no circular dependencies
-    if not await integration.resolve_dependencies():
+    if await integration.resolve_dependencies() is None:
         return False
 
     # Process requirements as soon as possible, so we can import the component
@@ -381,7 +386,7 @@ async def _async_setup_component(
             },
         )
 
-    _LOGGER.info("Setting up %s", domain)
+    _LOGGER.debug("Setting up %s", domain)
 
     with async_start_setup(hass, integration=domain, phase=SetupPhases.SETUP):
         if hasattr(component, "PLATFORM_SCHEMA"):
@@ -777,7 +782,7 @@ def async_start_setup(
         # platforms, but we only care about the longest time.
         group_setup_times[phase] = max(group_setup_times[phase], time_taken)
         if group is None:
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Setup of domain %s took %.2f seconds", integration, time_taken
             )
         elif _LOGGER.isEnabledFor(logging.DEBUG):

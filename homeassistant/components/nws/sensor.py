@@ -24,7 +24,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     TimestampDataUpdateCoordinator,
@@ -114,6 +114,8 @@ SENSOR_TYPES: tuple[NWSSensorEntityDescription, ...] = (
         icon="mdi:compass-rose",
         native_unit_of_measurement=DEGREE,
         unit_convert=DEGREE,
+        device_class=SensorDeviceClass.WIND_DIRECTION,
+        state_class=SensorStateClass.MEASUREMENT_ANGLE,
     ),
     NWSSensorEntityDescription(
         key="barometricPressure",
@@ -148,7 +150,9 @@ SENSOR_TYPES: tuple[NWSSensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: NWSConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: NWSConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the NWS weather platform."""
     nws_data = entry.runtime_data

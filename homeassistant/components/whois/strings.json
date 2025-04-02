@@ -11,7 +11,9 @@
       "unexpected_response": "Unexpected response from whois server",
       "unknown_date_format": "Unknown date format in whois server response",
       "unknown_tld": "The given TLD is unknown or not available to this integration",
-      "whois_command_failed": "Whois command failed: could not retrieve whois information"
+      "whois_command_failed": "Whois command failed: could not retrieve whois information",
+      "private_registry": "The given domain is registered in a private registry and cannot be monitored",
+      "quota_exceeded": "Your whois quota has been exceeded for this TLD"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"

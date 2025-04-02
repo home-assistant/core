@@ -41,6 +41,7 @@ from .const import (
     CONF_ALLOW_SERVICE_CALLS,
     CONF_DEVICE_NAME,
     CONF_NOISE_PSK,
+    CONF_SUBSCRIBE_LOGS,
     DEFAULT_ALLOW_SERVICE_CALLS,
     DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
     DOMAIN,
@@ -127,7 +128,22 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             self._password = ""
             return await self._async_authenticate_or_add()
 
+        if error is None and entry_data.get(CONF_NOISE_PSK):
+            return await self.async_step_reauth_encryption_removed_confirm()
         return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_encryption_removed_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reauthorization flow when encryption was removed."""
+        if user_input is not None:
+            self._noise_psk = None
+            return self._async_get_entry()
+
+        return self.async_show_form(
+            step_id="reauth_encryption_removed_confirm",
+            description_placeholders={"name": self._name},
+        )
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
@@ -507,6 +523,10 @@ class OptionsFlowHandler(OptionsFlow):
                     default=self.config_entry.options.get(
                         CONF_ALLOW_SERVICE_CALLS, DEFAULT_ALLOW_SERVICE_CALLS
                     ),
+                ): bool,
+                vol.Required(
+                    CONF_SUBSCRIBE_LOGS,
+                    default=self.config_entry.options.get(CONF_SUBSCRIBE_LOGS, False),
                 ): bool,
             }
         )

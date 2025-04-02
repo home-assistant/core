@@ -20,7 +20,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AirVisualProConfigEntry
 from .entity import AirVisualProEntity
@@ -130,7 +130,7 @@ def async_get_aqi_locale(settings: dict[str, Any]) -> str:
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AirVisualProConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up AirVisual sensors based on a config entry."""
     async_add_entities(

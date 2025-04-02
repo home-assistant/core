@@ -22,7 +22,7 @@ from homeassistant.config_entries import SOURCE_HASSIO, ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import VlcConfigEntry
@@ -39,7 +39,9 @@ def _get_str(data: dict, key: str) -> str | None:
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: VlcConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: VlcConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the vlc platform."""
     # CONF_NAME is only present in imported YAML.

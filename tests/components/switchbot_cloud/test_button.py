@@ -28,10 +28,7 @@ async def test_pressmode_bot(
 
     mock_get_status.return_value = {"deviceMode": "pressMode"}
 
-    entry = configure_integration(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
+    entry = await configure_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
 
     entity_id = "button.bot_1"
@@ -63,9 +60,6 @@ async def test_switchmode_bot_no_button_entity(
 
     mock_get_status.return_value = {"deviceMode": "switchMode"}
 
-    entry = configure_integration(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
+    entry = await configure_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
     assert not hass.states.async_entity_ids(BUTTON_DOMAIN)

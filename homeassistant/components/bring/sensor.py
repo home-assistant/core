@@ -6,9 +6,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
 
-from bring_api import BringUserSettingsResponse
+from bring_api import BringList, BringUserSettingsResponse
 from bring_api.const import BRING_SUPPORTED_LOCALES
-from bring_api.types import BringList
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -17,11 +16,10 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import BringConfigEntry
-from .coordinator import BringData, BringDataUpdateCoordinator
+from .coordinator import BringConfigEntry, BringData, BringDataUpdateCoordinator
 from .entity import BringBaseEntity
 from .util import list_language, sum_attributes
 
@@ -87,7 +85,7 @@ SENSOR_DESCRIPTIONS: tuple[BringSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: BringConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
     coordinator = config_entry.runtime_data
