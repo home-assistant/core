@@ -6,14 +6,29 @@ import logging
 import os.path
 
 from homeassistant.components.homeassistant_hardware.util import guess_firmware_info
-from homeassistant.components.usb import USBDevice, async_register_port_event_callback
+from homeassistant.components.usb import (
+    USBDevice,
+    async_register_port_event_callback,
+    scan_serial_ports,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DESCRIPTION, DEVICE, DOMAIN, FIRMWARE, FIRMWARE_VERSION, PRODUCT
+from .const import (
+    DESCRIPTION,
+    DEVICE,
+    DOMAIN,
+    FIRMWARE,
+    FIRMWARE_VERSION,
+    MANUFACTURER,
+    PID,
+    PRODUCT,
+    SERIAL_NUMBER,
+    VID,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,7 +88,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
     """Migrate old entry."""
 
     _LOGGER.debug(
-        "Migrating from version %s:%s", config_entry.version, config_entry.minor_version
+        "Migrating from version %s.%s", config_entry.version, config_entry.minor_version
     )
 
     if config_entry.version == 1:
@@ -107,6 +122,43 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                 version=1,
                 minor_version=3,
             )
+
+        if config_entry.minor_version == 3:
+            # Old SkyConnect config entries were missing keys
+            if any(
+                key not in config_entry.data
+                for key in (VID, PID, MANUFACTURER, PRODUCT, SERIAL_NUMBER)
+            ):
+                serial_ports = await hass.async_add_executor_job(scan_serial_ports)
+                serial_ports_info = {port.device: port for port in serial_ports}
+                device = config_entry.data[DEVICE]
+
+                if not (usb_info := serial_ports_info.get(device)):
+                    raise HomeAssistantError(
+                        f"USB device {device} is missing, cannot migrate"
+                    )
+
+                hass.config_entries.async_update_entry(
+                    config_entry,
+                    data={
+                        **config_entry.data,
+                        VID: usb_info.vid,
+                        PID: usb_info.pid,
+                        MANUFACTURER: usb_info.manufacturer,
+                        PRODUCT: usb_info.description,
+                        DESCRIPTION: usb_info.description,
+                        SERIAL_NUMBER: usb_info.serial_number,
+                    },
+                    version=1,
+                    minor_version=4,
+                )
+            else:
+                # Existing entries are migrated by just incrementing the version
+                hass.config_entries.async_update_entry(
+                    config_entry,
+                    version=1,
+                    minor_version=4,
+                )
 
         _LOGGER.debug(
             "Migration to version %s.%s successful",

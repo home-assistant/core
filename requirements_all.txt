@@ -639,7 +639,7 @@ bluetooth-auto-recovery==1.4.5
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
 # homeassistant.components.private_ble_device
-bluetooth-data-tools==1.26.1
+bluetooth-data-tools==1.26.5
 
 # homeassistant.components.bond
 bond-async==0.2.1
@@ -758,7 +758,7 @@ debugpy==1.8.13
 # decora==0.6
 
 # homeassistant.components.ecovacs
-deebot-client==12.4.0
+deebot-client==12.5.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -1157,7 +1157,7 @@ hole==0.8.0
 holidays==0.69
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250331.0
+home-assistant-frontend==20250401.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.3.28
@@ -2718,7 +2718,7 @@ sensirion-ble==0.1.1
 sensorpro-ble==0.5.3
 
 # homeassistant.components.sensorpush_cloud
-sensorpush-api==2.1.1
+sensorpush-api==2.1.2
 
 # homeassistant.components.sensorpush
 sensorpush-ble==1.7.1
@@ -3158,7 +3158,7 @@ zeroconf==0.146.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.54
+zha==0.0.55
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.13
