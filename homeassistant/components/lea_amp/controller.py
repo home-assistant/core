@@ -82,8 +82,9 @@ class LeaController:
             DevStatusResponse.command: self._handle_response_received,
         }
 
-    async def start(self):
-        """Start: Get Number of inputs."""
+    async def createConnection(self):
+        """Create Connection."""
+
         self._transport = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         address = (self._ip_address, int(self._port))
         self._transport.connect(address)
@@ -91,6 +92,11 @@ class LeaController:
         _LOGGER.log(logging.INFO, "Discover enabled %s", str(self._discovery_enabled))
         _LOGGER.log(logging.INFO, "Update enabled %s", str(self._update_enabled))
 
+    async def start(self):
+        """Start."""
+
+        self.createConnection()
+        self.start_client(self._ip_address, int(self._port))
         # self._discovery_enabled = False
         # self._update_enabled = True
         if self._discovery_enabled or self._registry.has_queued_zones:
@@ -187,6 +193,7 @@ class LeaController:
 
         if not self._transport:
             _LOGGER.log(logging.INFO, "Transport not available")
+            self.createConnection()
             return
         _LOGGER.log(logging.INFO, "Discovery enabled: %s", str(self._discovery_enabled))
         if self._discovery_enabled:
@@ -206,7 +213,6 @@ class LeaController:
         """Send Update Message."""
 
         if self._transport:
-            # self._send_update_message("1")
             for d in self._registry.discovered_zones.values():
                 _LOGGER.log(logging.INFO, "zone id: %s", str(d.zone_id))
                 self._send_update_message(d.zone_id)
@@ -392,6 +398,7 @@ class LeaController:
         _LOGGER.log(logging.INFO, "_send_message message:%s", message)
         if not self._transport:
             _LOGGER.log(logging.INFO, "Transport not available")
+            self.createConnection()
             return
         self._transport.send(message.encode())
         data = self._transport.recv(2048)
@@ -405,10 +412,24 @@ class LeaController:
         self._send_message(getMuteMessage(zone_id))
         self._send_message(getVolumeMessage(zone_id))
         self._send_message(getSourceMessage(zone_id))
+        # self._send_message(getZoneName(zone_id))
+
+    def start_client(self, host, port):
+        """Start Client."""
+        # Create a TCP/IP socket
+        client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        # Connect to the server
+        client_socket.connect((host, port))
+        # Send some data
+        client_socket.sendall(b"subscribe /amp/channels/1/output/mute")
+        # Receive the response from the server
+        data = client_socket.recv(1024)
+        _LOGGER.log(logging.INFO, "response data: %s", str(data))
+
+    def _subscribe_message(self, zone_id: str):
         self._send_message("subscribe /amp/channels/" + zone_id + "/output/mute")
         self._send_message("subscribe /amp/channels/" + zone_id + "/output/fader")
         self._send_message("subscribe /amp/channels/" + zone_id + "/output/enable")
         self._send_message(
             "subscribe /amp/channels/" + zone_id + "/inputSelector/primary"
         )
-        # self._send_message(getZoneName(zone_id))
