@@ -124,6 +124,7 @@ TRAIT_MODES = f"{PREFIX_TRAITS}Modes"
 TRAIT_OBJECT_DETECTION = f"{PREFIX_TRAITS}ObjectDetection"
 TRAIT_ON_OFF = f"{PREFIX_TRAITS}OnOff"
 TRAIT_OPEN_CLOSE = f"{PREFIX_TRAITS}OpenClose"
+TRAIT_REBOOT = f"{PREFIX_TRAITS}Reboot"
 TRAIT_SCENE = f"{PREFIX_TRAITS}Scene"
 TRAIT_SENSOR_STATE = f"{PREFIX_TRAITS}SensorState"
 TRAIT_START_STOP = f"{PREFIX_TRAITS}StartStop"
@@ -158,6 +159,7 @@ COMMAND_OPEN_CLOSE_RELATIVE = f"{PREFIX_COMMANDS}OpenCloseRelative"
 COMMAND_PAUSE_UNPAUSE = f"{PREFIX_COMMANDS}PauseUnpause"
 COMMAND_REVERSE = f"{PREFIX_COMMANDS}Reverse"
 COMMAND_PREVIOUS_INPUT = f"{PREFIX_COMMANDS}PreviousInput"
+COMMAND_REBOOT = f"{PREFIX_COMMANDS}Reboot"
 COMMAND_SELECT_CHANNEL = f"{PREFIX_COMMANDS}selectChannel"
 COMMAND_SET_TEMPERATURE = f"{PREFIX_COMMANDS}SetTemperature"
 COMMAND_SET_FAN_SPEED = f"{PREFIX_COMMANDS}SetFanSpeed"
@@ -2858,3 +2860,47 @@ class SensorStateTrait(_Trait):
         return create_sensor_state(
             binary_sensor_data[0], current_state=binary_sensor_data[1][value]
         )
+
+
+@register_trait
+class RebootTrait(_Trait):
+    """Trait to reboot device.
+
+    https://developers.google.com/actions/smarthome/traits/reboot
+    """
+
+    name = TRAIT_REBOOT
+    commands = [COMMAND_REBOOT]
+
+    @classmethod
+    def supported(cls, domain, features, device_class, _):
+        """Test if reboot is supported."""
+        return (
+            domain == button.DOMAIN and device_class == button.ButtonDeviceClass.RESTART
+        )
+
+    @staticmethod
+    def might_2fa(domain, features, device_class):
+        """Return if the trait might ask for 2FA."""
+        return True
+
+    def sync_attributes(self) -> dict[str, Any]:
+        """Return attributes for a sync request."""
+        return {}
+
+    def query_attributes(self) -> dict[str, Any]:
+        """Return the attributes of this trait for this entity."""
+        return {}
+
+    async def execute(self, command, data, params, challenge):
+        """Execute a reboot command."""
+        if command == COMMAND_REBOOT:
+            await self.hass.services.async_call(
+                button.DOMAIN,
+                button.SERVICE_PRESS,
+                {ATTR_ENTITY_ID: self.state.entity_id},
+                blocking=not self.config.should_report_state,
+                context=data.context,
+            )
+        else:
+            raise SmartHomeError(ERR_NOT_SUPPORTED, "Command not supported")
