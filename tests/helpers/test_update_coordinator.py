@@ -19,7 +19,7 @@ from homeassistant.exceptions import (
     ConfigEntryError,
     ConfigEntryNotReady,
 )
-from homeassistant.helpers import frame, update_coordinator
+from homeassistant.helpers import update_coordinator
 from homeassistant.util.dt import utcnow
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -638,7 +638,6 @@ async def test_async_config_entry_first_refresh_invalid_state(
 
 
 @pytest.mark.usefixtures("mock_integration_frame")
-@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 async def test_async_config_entry_first_refresh_invalid_state_in_integration(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:

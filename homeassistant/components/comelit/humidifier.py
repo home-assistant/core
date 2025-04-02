@@ -16,13 +16,16 @@ from homeassistant.components.humidifier import (
     HumidifierEntity,
     HumidifierEntityFeature,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import ComelitConfigEntry, ComelitSerialBridge
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 class HumidifierComelitMode(StrEnum):
@@ -121,62 +124,41 @@ class ComelitHumidifierEntity(CoordinatorEntity[ComelitSerialBridge], Humidifier
         self._active_mode = active_mode
         self._active_action = active_action
         self._set_command = set_command
+        self._update_attributes()
 
-    @property
-    def _humidifier(self) -> list[Any]:
-        """Return humidifier device data."""
+    def _update_attributes(self) -> None:
+        """Update class attributes."""
+        device = self.coordinator.data[CLIMATE][self._device.index]
+        if not isinstance(device.val, list):
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="invalid_clima_data"
+            )
+
         # CLIMATE has a 2 item tuple:
         # - first  for Clima
         # - second for Humidifier
-        return self.coordinator.data[CLIMATE][self._device.index].val[1]
+        values = device.val[1]
 
-    @property
-    def _api_mode(self) -> str:
-        """Return device mode."""
-        # Values from API: "O", "L", "U"
-        return self._humidifier[2]
+        _active = values[1]
+        _mode = values[2]  # Values from API: "O", "L", "U"
+        _automatic = values[3] == HumidifierComelitMode.AUTO
 
-    @property
-    def _api_active(self) -> bool:
-        "Return device active/idle."
-        return self._humidifier[1]
+        self._attr_action = HumidifierAction.IDLE
+        if _mode == HumidifierComelitMode.OFF:
+            self._attr_action = HumidifierAction.OFF
+        if _active and _mode == self._active_mode:
+            self._attr_action = self._active_action
 
-    @property
-    def _api_automatic(self) -> bool:
-        """Return device in automatic/manual mode."""
-        return self._humidifier[3] == HumidifierComelitMode.AUTO
+        self._attr_current_humidity = values[0] / 10
+        self._attr_is_on = _mode == self._active_mode
+        self._attr_mode = MODE_AUTO if _automatic else MODE_NORMAL
+        self._attr_target_humidity = values[4] / 10
 
-    @property
-    def target_humidity(self) -> float:
-        """Set target humidity."""
-        return self._humidifier[4] / 10
-
-    @property
-    def current_humidity(self) -> float:
-        """Return current humidity."""
-        return self._humidifier[0] / 10
-
-    @property
-    def is_on(self) -> bool | None:
-        """Return true is humidifier is on."""
-        return self._api_mode == self._active_mode
-
-    @property
-    def mode(self) -> str | None:
-        """Return current mode."""
-        return MODE_AUTO if self._api_automatic else MODE_NORMAL
-
-    @property
-    def action(self) -> HumidifierAction | None:
-        """Return current action."""
-
-        if self._api_mode == HumidifierComelitMode.OFF:
-            return HumidifierAction.OFF
-
-        if self._api_active and self._api_mode == self._active_mode:
-            return self._active_action
-
-        return HumidifierAction.IDLE
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._update_attributes()
+        super()._handle_coordinator_update()
 
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
@@ -192,12 +174,16 @@ class ComelitHumidifierEntity(CoordinatorEntity[ComelitSerialBridge], Humidifier
         await self.coordinator.api.set_humidity_status(
             self._device.index, HumidifierComelitCommand.SET, humidity
         )
+        self._attr_target_humidity = humidity
+        self.async_write_ha_state()
 
     async def async_set_mode(self, mode: str) -> None:
         """Set humidifier mode."""
         await self.coordinator.api.set_humidity_status(
             self._device.index, MODE_TO_ACTION[mode]
         )
+        self._attr_mode = mode
+        self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on."""
