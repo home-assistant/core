@@ -15,7 +15,7 @@ from .const import CONF_RTSP_PORT, LOGGER
 from .coordinator import FoscamConfigEntry, FoscamCoordinator
 from .foscamcgi import FoscamCamera
 
-PLATFORMS = [Platform.CAMERA, Platform.NOTIFY, Platform.NUMBER, Platform.SWITCH]
+PLATFORMS = [Platform.CAMERA, Platform.SWITCH]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: FoscamConfigEntry) -> bool:
