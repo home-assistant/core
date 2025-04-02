@@ -10,13 +10,16 @@
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of your NUT server."
+          "host": "The IP address or hostname of your NUT server.",
+          "port": "The network port of your NUT server. The NUT server's default port is '3493'.",
+          "username": "The username to log into the NUT server. This is configured in NUT.",
+          "password": "The password assocaited with the username to log into the NUT server. This is configured in NUT."
         }
       },
       "ups": {
-        "title": "Choose the UPS to Monitor",
+        "title": "Choose the NUT server UPS to monitor",
         "data": {
-          "alias": "Alias"
+          "alias": "NUT server UPS name"
         }
       },
       "reauth_confirm": {
