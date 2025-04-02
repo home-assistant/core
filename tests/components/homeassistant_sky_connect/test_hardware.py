@@ -75,6 +75,7 @@ async def test_hardware_info(
         minor_version=2,
     )
     config_entry_bad.add_to_hass(hass)
+    assert not await hass.config_entries.async_setup(config_entry_bad.entry_id)
 
     client = await hass_ws_client(hass)
 
