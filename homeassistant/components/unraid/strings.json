@@ -1,0 +1,26 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "host": "Host",
+          "api_key": "API Key"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Unable to connect to Unraid."
+    },
+    "abort": {
+      "already_configured": "Device is already configured.",
+      "cannot_connect": "Unable to connect to Unraid."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "drive_temperature": {
+        "name": "Drive Temperature"
+      }
+    }
+  }
+}

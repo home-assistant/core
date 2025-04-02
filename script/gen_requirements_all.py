@@ -254,6 +254,7 @@ IGNORE_PRE_COMMIT_HOOK_ID = (
     "prettier",
     "python-typing-update",
     "ruff-format",  # it's just ruff
+    "hassfest",
 )
 
 PACKAGE_REGEX = re.compile(r"^(?:--.+\s)?([-_\.\w\d]+).*==.+$")

@@ -780,6 +780,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/kaiterra/ @Michsior14
 /homeassistant/components/kaleidescape/ @SteveEasley
 /tests/components/kaleidescape/ @SteveEasley
+/homeassistant/components/kat_bulgaria/ @Nedevski
+/tests/components/kat_bulgaria/ @Nedevski
 /homeassistant/components/keba/ @dannerph
 /homeassistant/components/keenetic_ndms2/ @foxel
 /tests/components/keenetic_ndms2/ @foxel
@@ -1611,6 +1613,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/unifiled/ @florisvdk
 /homeassistant/components/unifiprotect/ @RaHehl
 /tests/components/unifiprotect/ @RaHehl
+/homeassistant/components/unraid/ @Nedevski
 /homeassistant/components/upb/ @gwww
 /tests/components/upb/ @gwww
 /homeassistant/components/upc_connect/ @pvizeli @fabaff

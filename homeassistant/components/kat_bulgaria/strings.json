@@ -1,0 +1,56 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "person_name": "Person name",
+          "egn": "Unified Civil Number (EGN)",
+          "driving_license_number": "Driving license number"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "KAT's website is down, try again.",
+      "invalid_config": "Invalid EGN or Driver License Number.",
+      "unknown": "Unknown error, check the logs for more details."
+    },
+    "abort": {
+      "already_configured": "Device is already configured.",
+      "cannot_connect": "KAT's website is down, try again.",
+      "invalid_config": "Invalid EGN or Driver License Number.",
+      "unknown": "Unknown error, check the logs for more details."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "has_tickets": {
+        "name": "Has Tickets",
+        "state": {
+          "on": "Yes",
+          "off": "No"
+        }
+      },
+      "has_non_served_tickets": {
+        "name": "Has Non-Served Tickets",
+        "state": {
+          "on": "Yes",
+          "off": "No"
+        }
+      }
+    },
+    "sensor": {
+      "total_ticket_count": {
+        "name": "Count Total"
+      },
+      "served_ticket_count": {
+        "name": "Count Served"
+      },
+      "non_served_ticket_count": {
+        "name": "Count Non-Served"
+      },
+      "total_ticket_amount_owed": {
+        "name": "Total BGN Owed"
+      }
+    }
+  }
+}

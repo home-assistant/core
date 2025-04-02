@@ -3105,6 +3105,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "kat_bulgaria": {
+      "name": "KAT Bulgaria",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "keba": {
       "name": "Keba Charging Station",
       "integration_type": "hub",
@@ -6803,6 +6809,12 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "calculated"
+    },
+    "unraid": {
+      "name": "Unraid",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "upb": {
       "name": "Universal Powerline Bus (UPB)",

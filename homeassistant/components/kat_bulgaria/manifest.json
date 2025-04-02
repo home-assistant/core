@@ -1,0 +1,11 @@
+{
+  "domain": "kat_bulgaria",
+  "name": "KAT Bulgaria",
+  "codeowners": ["@Nedevski"],
+  "config_flow": true,
+  "documentation": "https://github.com/Nedevski/hacs_kat_bulgaria",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/Nedevski/hacs_kat_bulgaria/issues",
+  "requirements": ["kat_bulgaria==1.2.1"],
+  "version": "1.0.10"
+}

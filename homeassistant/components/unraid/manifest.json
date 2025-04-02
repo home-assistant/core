@@ -1,0 +1,10 @@
+{
+  "domain": "unraid",
+  "name": "Unraid",
+  "codeowners": ["@Nedevski"],
+  "config_flow": true,
+  "documentation": "https://github.com/Nedevski/hacs_kat_bulgaria",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/Nedevski/hacs_kat_bulgaria/issues",
+  "version": "1.0.10"
+}
