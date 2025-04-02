@@ -60,13 +60,11 @@ class HomeAssistantQueueListener(logging.handlers.QueueListener):
 
         module_name = record.name
 
-        skip_flag: bool | None = self._module_log_count_skip_flags.get(module_name)
-        if skip_flag:
+        if skip_flag := self._module_log_count_skip_flags.get(module_name):
             return
 
-        if skip_flag is None:
-            if self._update_skip_flags(module_name):
-                return
+        if skip_flag is None and self._update_skip_flags(module_name):
+            return
 
         self._log_counts[module_name] += 1
         module_count = self._log_counts[module_name]
