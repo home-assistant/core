@@ -135,9 +135,9 @@
         "state_attributes": {
           "preset_mode": {
             "state": {
-              "low": "Low",
-              "medium": "Medium",
-              "high": "High",
+              "low": "[%key:common::state::low%]",
+              "medium": "[%key:common::state::medium%]",
+              "high": "[%key:common::state::high%]",
               "auto": "Auto",
               "natural_wind": "Natural wind",
               "sleep_wind": "Sleep wind"
@@ -189,9 +189,9 @@
       "sensitivity_level": {
         "name": "Sensitivity",
         "state": {
-          "low": "[%key:component::matter::entity::fan::fan::state_attributes::preset_mode::state::low%]",
+          "low": "[%key:common::state::low%]",
           "standard": "Standard",
-          "high": "[%key:component::matter::entity::fan::fan::state_attributes::preset_mode::state::high%]"
+          "high": "[%key:common::state::high%]"
         }
       },
       "startup_on_off": {
@@ -230,7 +230,7 @@
         "name": "Contamination state",
         "state": {
           "normal": "Normal",
-          "low": "[%key:component::matter::entity::fan::fan::state_attributes::preset_mode::state::low%]",
+          "low": "[%key:common::state::low%]",
           "warning": "Warning",
           "critical": "Critical"
         }
