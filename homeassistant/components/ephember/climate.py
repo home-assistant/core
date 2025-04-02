@@ -68,8 +68,6 @@ def setup_platform(
     """Set up the ephember thermostat."""
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
-    ember = EphEmber
-    homes = []
 
     try:
         ember = EphEmber(username, password)
