@@ -3,6 +3,8 @@
 from unittest.mock import Mock
 
 from homeassistant.components.light import (
+    ATTR_BRIGHTNESS_PCT,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     DOMAIN as LIGHT_DOMAIN,
     ColorMode,
@@ -655,7 +657,29 @@ async def test_light_turn_on_service_deprecation(
     """Test calling the turn on service on a light."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
 
+    test_light_id = "light.hue_light_with_color_temperature_only"
+
     await setup_platform(hass, mock_bridge_v2, "light")
+
+    # now call the HA turn_on service
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: test_light_id,
+            ATTR_BRIGHTNESS_PCT: 100,
+            ATTR_COLOR_TEMP_KELVIN: 300,
+        },
+        blocking=True,
+    )
+
+    event = {
+        "id": "3a6710fa-4474-4eba-b533-5e6e72968feb",
+        "type": "light",
+        "effects": {"status": "candle"},
+    }
+    mock_bridge_v2.api.emit_event("update", event)
+    await hass.async_block_till_done()
 
     # test disable effect
     # it should send a request with effect set to "no_effect"
@@ -663,9 +687,9 @@ async def test_light_turn_on_service_deprecation(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.hue_light_with_color_temperature_only",
+            ATTR_ENTITY_ID: test_light_id,
             ATTR_EFFECT: "None",
         },
         blocking=True,
     )
-    assert mock_bridge_v2.mock_requests[0]["json"]["effects"]["effect"] == "no_effect"
+    assert mock_bridge_v2.mock_requests[1]["json"]["effects"]["effect"] == "no_effect"
