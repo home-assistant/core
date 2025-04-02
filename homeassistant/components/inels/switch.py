@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from collections.abc import Callable
+from dataclasses import dataclass, replace
 from typing import Any
 
 from inelsmqtt.devices import Device
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import slugify
 
@@ -17,38 +18,60 @@ from .const import ICON_SWITCH, LOGGER
 from .entity import InelsBaseEntity
 
 
-# SWITCH PLATFORM
-@dataclass
-class InelsSwitchAlert:
-    """Inels switch alert property description."""
+@dataclass(frozen=True, kw_only=True)
+class InelsSwitchEntityDescription(SwitchEntityDescription):
+    """Class describing iNELS switch entities."""
 
-    key: str
-    message: str
-
-
-relay_overflow = InelsSwitchAlert(key="overflow", message="Relay overflow in %s of %s")
-
-
-@dataclass
-class InelsSwitchType:
-    """Inels switch property description."""
-
-    name: str = ""
-    icon: str = ""
-    alerts: list[InelsSwitchAlert] | None = None
+    icon: str = ICON_SWITCH
+    name: str | None = None
+    value_fn: Callable[[Device, int], bool | None]
+    set_fn: Callable[[Device, int, bool], None]
+    name_fn: Callable[[Device, str, int | None], str]
+    get_state_fn: Callable[[Device, int], Any]
+    get_last_state_fn: Callable[[Device, int], Any]
+    alerts: list[tuple[str, str]] | None = None
 
 
 SWITCH_TYPES = [
-    ("bit", {}),
-    ("simple_relay", {}),
-    ("relay", {"alerts": [relay_overflow]}),
+    InelsSwitchEntityDescription(
+        key="bit",
+        value_fn=lambda device, index: device.state.bit[index].is_on,
+        set_fn=lambda device, index, value: setattr(
+            device.state.bit[index], "is_on", value
+        ),
+        name_fn=lambda device, key, index: f"{key} {device.state.bit[index].addr}",
+        get_state_fn=lambda device, index: device.state.bit[index],
+        get_last_state_fn=lambda device, index: device.last_values.ha_value.bit[index],
+    ),
+    InelsSwitchEntityDescription(
+        key="simple_relay",
+        value_fn=lambda device, index: device.state.simple_relay[index].is_on,
+        set_fn=lambda device, index, value: setattr(
+            device.state.simple_relay[index], "is_on", value
+        ),
+        name_fn=lambda device, key, index: key
+        if index is None
+        else f"{key} {index + 1}",
+        get_state_fn=lambda device, index: device.state.simple_relay[index],
+        get_last_state_fn=lambda device,
+        index: device.last_values.ha_value.simple_relay[index],
+    ),
+    InelsSwitchEntityDescription(
+        key="relay",
+        value_fn=lambda device, index: device.state.relay[index].is_on,
+        set_fn=lambda device, index, value: setattr(
+            device.state.relay[index], "is_on", value
+        ),
+        name_fn=lambda device, key, index: key
+        if index is None
+        else f"{key} {index + 1}",
+        get_state_fn=lambda device, index: device.state.relay[index],
+        get_last_state_fn=lambda device, index: device.last_values.ha_value.relay[
+            index
+        ],
+        alerts=[("overflow", "Relay overflow in %s of %s")],
+    ),
 ]
-
-
-INELS_SWITCH_TYPES: dict[str, InelsSwitchType] = {
-    key: InelsSwitchType(name=key, icon=ICON_SWITCH, **properties)
-    for key, properties in SWITCH_TYPES
-}
 
 
 async def async_setup_entry(
@@ -56,75 +79,50 @@ async def async_setup_entry(
     entry: InelsConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Load iNELS switch.."""
+    """Load iNELS switch."""
+    entities: list[InelsSwitch] = []
 
-    items = INELS_SWITCH_TYPES.items()
-    entities: list[InelsBaseEntity] = []
     for device in entry.runtime_data.devices:
-        for key, type_dict in items:
-            if hasattr(device.state, key):
-                if len(device.state.__dict__[key]) == 1:
+        for description in SWITCH_TYPES:
+            if hasattr(device.state, description.key):
+                values_cnt = len(getattr(device.state, description.key))
+                for idx in range(values_cnt):
+                    name = description.name_fn(
+                        device,
+                        description.key,
+                        None if values_cnt == 1 else idx,
+                    )
+                    entity_description = replace(description, name=name)
                     entities.append(
-                        InelsBusSwitch(
+                        InelsSwitch(
                             device=device,
-                            key=key,
-                            index=0,
-                            description=InelsSwitchEntityDescription(
-                                key=key,
-                                name=type_dict.name,
-                                icon=type_dict.icon,
-                                alerts=getattr(type_dict, "alerts", None),
-                            ),
+                            description=entity_description,
+                            index=idx,
                         )
                     )
-                else:
-                    entities.extend(
-                        [
-                            InelsBusSwitch(
-                                device=device,
-                                key=key,
-                                index=k,
-                                description=InelsSwitchEntityDescription(
-                                    key=f"{key}{k}",
-                                    name=f"{type_dict.name} {k + 1}"
-                                    if device.inels_type != "BITS"
-                                    else f"Bit {device.state.__dict__[key][k].addr}",
-                                    icon=type_dict.icon,
-                                    alerts=getattr(type_dict, "alerts", None),
-                                ),
-                            )
-                            for k in range(len(device.state.__dict__[key]))
-                        ]
-                    )
+
     async_add_entities(entities, False)
 
 
-@dataclass(frozen=True)
-class InelsSwitchEntityDescription(SwitchEntityDescription):
-    """Class for description inels entities."""
-
-    name: str | None
-    alerts: list[InelsSwitchAlert] | None = None
-
-
-class InelsBusSwitch(InelsBaseEntity, SwitchEntity):
-    """The platform class required by Home Assistant, bus version."""
+class InelsSwitch(InelsBaseEntity, SwitchEntity):
+    """The platform class required by Home Assistant."""
 
     entity_description: InelsSwitchEntityDescription
 
     def __init__(
         self,
         device: Device,
-        key: str,
-        index: int,
         description: InelsSwitchEntityDescription,
+        index: int = 0,
     ) -> None:
-        """Initialize a bus switch."""
-        super().__init__(device=device, key=key, index=index)
-
+        """Initialize the switch."""
+        super().__init__(device=device, key=description.key, index=index)
         self.entity_description = description
 
-        self._attr_unique_id = slugify(f"{self._attr_unique_id}_{description.key}")
+        # Include index in unique_id for devices with multiple switches
+        unique_key = f"{description.key}{index}" if index else description.key
+
+        self._attr_unique_id = slugify(f"{self._attr_unique_id}_{unique_key}")
         self._attr_name = description.name
 
     @property
@@ -132,50 +130,51 @@ class InelsBusSwitch(InelsBaseEntity, SwitchEntity):
         """Return entity availability."""
         if self.entity_description.alerts:
             try:
-                last_state = self._device.last_values.ha_value.__dict__[self.key][
-                    self.index
-                ]
+                last_state = self.entity_description.get_last_state_fn(
+                    self._device, self._index
+                )
             except (KeyError, IndexError, AttributeError):
                 last_state = None
 
-            for alert in self.entity_description.alerts:
-                if getattr(
-                    self._device.state.__dict__[self.key][self.index], alert.key, None
-                ):
-                    if not last_state or not getattr(last_state, alert.key):
-                        LOGGER.warning(
-                            alert.message, self.name, self._device.state_topic
-                        )
+            current_value = self.entity_description.get_state_fn(
+                self._device, self._index
+            )
+            for alert_key, alert_msg in self.entity_description.alerts:
+                if getattr(current_value, alert_key, None):
+                    if not last_state or not getattr(last_state, alert_key, None):
+                        LOGGER.warning(alert_msg, self.name, self._device.state_topic)
                     return False
         return super().available
-
-    @property
-    def is_on(self) -> bool | None:
-        """Return if switch is on."""
-        state: bool | None = self._device.state.__dict__[self._key][self._index].is_on
-        return state
 
     @property
     def icon(self) -> str | None:
         """Switch icon."""
         return self.entity_description.icon
 
+    @callback
+    def _async_update_attrs(self) -> None:
+        """Update attrs from device."""
+        self._attr_is_on = self.entity_description.value_fn(self._device, self._index)
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return if switch is on."""
+        return self.entity_description.value_fn(self._device, self._index)
+
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the switch to turn off."""
         if not self._device.is_available:
             return
-
-        ha_val = self._device.state
-        ha_val.__dict__[self.key][self.index].is_on = False
-
-        await self.hass.async_add_executor_job(self._device.set_ha_value, ha_val)
+        self.entity_description.set_fn(self._device, self._index, False)
+        await self.hass.async_add_executor_job(
+            self._device.set_ha_value, self._device.state
+        )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the switch to turn on."""
         if not self._device.is_available:
             return
-
-        ha_val = self._device.state
-        ha_val.__dict__[self.key][self.index].is_on = True
-
-        await self.hass.async_add_executor_job(self._device.set_ha_value, ha_val)
+        self.entity_description.set_fn(self._device, self._index, True)
+        await self.hass.async_add_executor_job(
+            self._device.set_ha_value, self._device.state
+        )
