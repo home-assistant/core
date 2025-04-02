@@ -82,22 +82,22 @@
       }
     },
     "set_humidify_setpoint": {
-      "name": "Set humidify set point",
+      "name": "Set humidify setpoint",
       "description": "Sets the target humidity.",
       "fields": {
         "humidity": {
-          "name": "Heating Humidify Setpoint",
-          "description": "The humidification setpoint."
+          "name": "Humidity",
+          "description": "The setpoint for humidification when heating."
         }
       }
     },
     "set_dehumidify_setpoint": {
-      "name": "Set dehumidify set point",
-      "description": "Sets the target humidity.",
+      "name": "Set dehumidify setpoint",
+      "description": "Sets the target humidity for cooling.",
       "fields": {
         "humidity": {
-          "name": "Cooling Dehumidify Setpoint",
-          "description": "The dehumidification setpoint."
+          "name": "Humidity",
+          "description": "The setpoint for dehumidification when cooling."
         }
       }
     },
