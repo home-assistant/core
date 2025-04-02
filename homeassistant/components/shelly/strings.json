@@ -210,10 +210,10 @@
         "state": {
           "checking": "Checking",
           "closed": "[%key:common::state::closed%]",
-          "closing": "Closing",
+          "closing": "[%key:common::state::closing%]",
           "failure": "Failure",
           "opened": "Opened",
-          "opening": "Opening"
+          "opening": "[%key:common::state::opening%]"
         }
       }
     }

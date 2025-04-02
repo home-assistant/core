@@ -95,3 +95,6 @@ LIGHT_PROFILES = [
     NodeProfile.WIFI_DIMMABLE_LIGHT,
     NodeProfile.WIFI_ON_OFF_DIMMABLE_METERING_SWITCH,
 ]
+
+# Climate Presets
+PRESET_MANUAL = "manual"

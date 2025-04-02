@@ -131,6 +131,17 @@
         "name": "Ventilate"
       }
     },
+    "climate": {
+      "homee": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "manual": "Manual"
+            }
+          }
+        }
+      }
+    },
     "light": {
       "light_instance": {
         "name": "Light {instance}"
@@ -297,8 +308,8 @@
           "open": "[%key:common::state::open%]",
           "closed": "[%key:common::state::closed%]",
           "partial": "Partially open",
-          "opening": "Opening",
-          "closing": "Closing"
+          "opening": "[%key:common::state::opening%]",
+          "closing": "[%key:common::state::closing%]"
         }
       },
       "uv": {
