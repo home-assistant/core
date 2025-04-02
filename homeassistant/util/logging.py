@@ -30,9 +30,10 @@ class HomeAssistantQueueListener(logging.handlers.QueueListener):
     MAX_LOGS_COUNT = 200
 
     EXCLUDED_LOG_COUNT_MODULES = [
-        "homeassistant.setup",
         "homeassistant.components.automation",
         "homeassistant.components.script",
+        "homeassistant.setup",
+        "homeassistant.util.logging",
     ]
 
     _last_reset: float
@@ -43,7 +44,7 @@ class HomeAssistantQueueListener(logging.handlers.QueueListener):
     ) -> None:
         """Initialize the handler."""
         super().__init__(queue, *handlers)
-        self._module_log_count_skip_flags: dict[str, bool] = {__name__: True}
+        self._module_log_count_skip_flags: dict[str, bool] = {}
         self._reset_counters(time.time())
 
     @override
@@ -58,8 +59,14 @@ class HomeAssistantQueueListener(logging.handlers.QueueListener):
             self._reset_counters(record.created)
 
         module_name = record.name
-        if self._check_skip_flag(module_name):
+
+        skip_flag: bool | None = self._module_log_count_skip_flags.get(module_name)
+        if skip_flag:
             return
+
+        if skip_flag is None:
+            if self._update_skip_flags(module_name):
+                return
 
         self._log_counts[module_name] += 1
         module_count = self._log_counts[module_name]
@@ -78,18 +85,12 @@ class HomeAssistantQueueListener(logging.handlers.QueueListener):
         self._last_reset = time_sec
         self._log_counts = defaultdict(int)
 
-    def _check_skip_flag(self, module_name: str) -> bool:
-        skip_flag: bool | None = self._module_log_count_skip_flags.get(module_name)
-        if skip_flag:
-            return True
-
-        if skip_flag is None and any(
+    def _update_skip_flags(self, module_name: str) -> bool:
+        excluded = any(
             module_name.startswith(prefix) for prefix in self.EXCLUDED_LOG_COUNT_MODULES
-        ):
-            self._module_log_count_skip_flags[module_name] = True
-            return True
-
-        return False
+        )
+        self._module_log_count_skip_flags[module_name] = excluded
+        return excluded
 
 
 class HomeAssistantQueueHandler(logging.handlers.QueueHandler):
