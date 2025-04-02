@@ -49,6 +49,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
 
     _failed_addon_name: str
     _failed_addon_reason: str
+    _failed_addon_exc: Exception
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Instantiate base flow."""
@@ -236,6 +237,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
             _LOGGER.error(err)
             self._failed_addon_name = addon_manager.addon_name
             self._failed_addon_reason = "addon_install_failed"
+            self._failed_addon_exc = err
             return self.async_show_progress_done(next_step_id="addon_operation_failed")
         finally:
             self.addon_install_task = None
@@ -251,6 +253,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
             description_placeholders={
                 **self._get_translation_placeholders(),
                 "addon_name": self._failed_addon_name,
+                "message": str(self._failed_addon_exc),
             },
         )
 
@@ -303,6 +306,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
             _LOGGER.error(err)
             self._failed_addon_name = fw_flasher_manager.addon_name
             self._failed_addon_reason = "addon_start_failed"
+            self._failed_addon_exc = err
             return self.async_show_progress_done(next_step_id="addon_operation_failed")
         finally:
             self.addon_start_task = None
@@ -463,6 +467,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
             _LOGGER.error(err)
             self._failed_addon_name = otbr_manager.addon_name
             self._failed_addon_reason = "addon_start_failed"
+            self._failed_addon_exc = err
             return self.async_show_progress_done(next_step_id="addon_operation_failed")
         finally:
             self.addon_start_task = None
