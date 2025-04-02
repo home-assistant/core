@@ -11,7 +11,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
 )
 from homeassistant.components.fritzbox.const import DOMAIN as FB_DOMAIN
-from homeassistant.components.sensor import ATTR_STATE_CLASS, DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
+    DOMAIN as SENSOR_DOMAIN,
+    SensorStateClass,
+)
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
@@ -71,7 +75,7 @@ async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
     assert state.state == "23"
     assert state.attributes[ATTR_FRIENDLY_NAME] == f"{CONF_FAKE_NAME} Battery"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
-    assert ATTR_STATE_CLASS not in state.attributes
+    assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.MEASUREMENT
 
 
 async def test_is_off(hass: HomeAssistant, fritz: Mock) -> None:
