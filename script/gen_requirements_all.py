@@ -266,7 +266,8 @@ def has_tests(module: str) -> bool:
     Test if exists: tests/components/hue/__init__.py
     """
     path = (
-        Path(module.replace(".", "/").replace("homeassistant", "tests")) / "__init__.py"
+        Path(module.replace(".", "/").replace("homeassistant", "tests", 1))
+        / "__init__.py"
     )
     return path.exists()
 
