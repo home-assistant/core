@@ -12,7 +12,7 @@
         "data_description": {
           "host": "The IP address or hostname of your NUT server.",
           "port": "The network port of your NUT server. The NUT server's default port is '3493'.",
-          "username": "The username to sign in to your NUT server. The usernmae is optional.",
+          "username": "The username to sign in to your NUT server. The username is optional.",
           "password": "The password to sign in to your NUT server. The password is optional."
         }
       },
