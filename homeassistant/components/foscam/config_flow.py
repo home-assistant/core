@@ -2,7 +2,6 @@
 
 from typing import Any
 
-from libpyfoscam import FoscamCamera
 from libpyfoscam.foscam import (
     ERROR_FOSCAM_AUTH,
     ERROR_FOSCAM_UNAVAILABLE,
@@ -22,6 +21,7 @@ from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import CONF_RTSP_PORT, CONF_STREAM, DOMAIN, LOGGER
+from .foscamcgi import FoscamCamera
 
 STREAMS = ["Main", "Sub"]
 
