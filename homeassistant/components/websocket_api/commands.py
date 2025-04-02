@@ -942,7 +942,7 @@ async def handle_integration_wait(
 ) -> None:
     """Handle wait for integration command."""
 
-    domain = msg["domain"]
+    domain: str = msg["domain"]
     setup_done = hass.data.get(DATA_SETUP_DONE, {})
 
     # Wait for the integration to be set up
