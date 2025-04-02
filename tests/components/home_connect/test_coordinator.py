@@ -287,7 +287,7 @@ async def test_event_listener(
     assert config_entry.state == ConfigEntryState.LOADED
 
     state = hass.states.get(entity_id)
-    assert state
+
     event_message = EventMessage(
         appliance.ha_id,
         event_type,
@@ -309,7 +309,8 @@ async def test_event_listener(
 
     new_state = hass.states.get(entity_id)
     assert new_state
-    assert new_state.state != state.state
+    if state is not None:
+        assert new_state.state != state.state
 
     # Following, we are gonna check that the listeners are clean up correctly
     new_entity_id = entity_id + "_new"

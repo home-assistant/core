@@ -842,8 +842,8 @@
         "state": {
           "off": "[%key:common::state::off%]",
           "disarm": "Disarmed",
-          "home": "Home",
-          "away": "Away"
+          "home": "[%key:common::state::home%]",
+          "away": "[%key:common::state::not_home%]"
         }
       }
     },

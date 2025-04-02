@@ -42,9 +42,9 @@
     "sensor": {
       "zone_status": {
         "state": {
+          "open": "[%key:common::state::open%]",
           "alarm": "Alarm",
           "armed": "Armed",
-          "open": "Open",
           "excluded": "Excluded",
           "faulty": "Faulty",
           "inhibited": "Inhibited",

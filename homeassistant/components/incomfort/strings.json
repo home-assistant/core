@@ -118,7 +118,7 @@
           "tapwater_int": "Tap water internal",
           "sensor_test": "Sensor test",
           "central_heating": "Central heating",
-          "standby": "Stand-by",
+          "standby": "[%key:common::state::standby%]",
           "postrun_boyler": "Post run boiler",
           "service": "Service",
           "tapwater": "Tap water",

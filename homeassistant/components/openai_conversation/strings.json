@@ -89,7 +89,7 @@
     },
     "generate_content": {
       "name": "Generate content",
-      "description": "Sends a conversational query to ChatGPT including any attached image files",
+      "description": "Sends a conversational query to ChatGPT including any attached image or PDF files",
       "fields": {
         "config_entry": {
           "name": "Config entry",

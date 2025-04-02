@@ -57,7 +57,6 @@ from .common import (
     MockPlatform,
     async_capture_events,
     async_fire_time_changed,
-    async_get_persistent_notifications,
     flush_store,
     mock_config_flow,
     mock_integration,
@@ -1368,59 +1367,6 @@ async def test_async_forward_entry_setup_deprecated(
     ) in caplog.text
 
 
-async def test_discovery_notification(
-    hass: HomeAssistant, manager: config_entries.ConfigEntries
-) -> None:
-    """Test that we create/dismiss a notification when source is discovery."""
-    mock_integration(hass, MockModule("test"))
-    mock_platform(hass, "test.config_flow", None)
-
-    class TestFlow(config_entries.ConfigFlow):
-        """Test flow."""
-
-        VERSION = 5
-
-        async def async_step_discovery(self, discovery_info):
-            """Test discovery step."""
-            return self.async_show_form(step_id="discovery_confirm")
-
-        async def async_step_discovery_confirm(self, discovery_info):
-            """Test discovery confirm step."""
-            return self.async_create_entry(title="Test Title", data={"token": "abcd"})
-
-    with mock_config_flow("test", TestFlow):
-        notifications = async_get_persistent_notifications(hass)
-        assert "config_entry_discovery" not in notifications
-
-        # Start first discovery flow to assert that discovery notification fires
-        flow1 = await hass.config_entries.flow.async_init(
-            "test", context={"source": config_entries.SOURCE_DISCOVERY}
-        )
-        await hass.async_block_till_done()
-        notifications = async_get_persistent_notifications(hass)
-        assert "config_entry_discovery" in notifications
-
-        # Start a second discovery flow so we can finish the first and assert that
-        # the discovery notification persists until the second one is complete
-        flow2 = await hass.config_entries.flow.async_init(
-            "test", context={"source": config_entries.SOURCE_DISCOVERY}
-        )
-
-        flow1 = await hass.config_entries.flow.async_configure(flow1["flow_id"], {})
-        assert flow1["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-
-        await hass.async_block_till_done()
-        notifications = async_get_persistent_notifications(hass)
-        assert "config_entry_discovery" in notifications
-
-        flow2 = await hass.config_entries.flow.async_configure(flow2["flow_id"], {})
-        assert flow2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-
-        await hass.async_block_till_done()
-        notifications = async_get_persistent_notifications(hass)
-        assert "config_entry_discovery" not in notifications
-
-
 async def test_reauth_issue(
     hass: HomeAssistant,
     manager: config_entries.ConfigEntries,
@@ -1465,30 +1411,6 @@ async def test_reauth_issue(
     result = await hass.config_entries.flow.async_configure(issue.data["flow_id"], {})
     assert result["type"] == FlowResultType.ABORT
     assert len(issue_registry.issues) == 0
-
-
-async def test_discovery_notification_not_created(hass: HomeAssistant) -> None:
-    """Test that we not create a notification when discovery is aborted."""
-    mock_integration(hass, MockModule("test"))
-    mock_platform(hass, "test.config_flow", None)
-
-    class TestFlow(config_entries.ConfigFlow):
-        """Test flow."""
-
-        VERSION = 5
-
-        async def async_step_discovery(self, discovery_info):
-            """Test discovery step."""
-            return self.async_abort(reason="test")
-
-    with mock_config_flow("test", TestFlow):
-        await hass.config_entries.flow.async_init(
-            "test", context={"source": config_entries.SOURCE_DISCOVERY}
-        )
-
-    await hass.async_block_till_done()
-    state = hass.states.get("persistent_notification.config_entry_discovery")
-    assert state is None
 
 
 async def test_loading_default_config(hass: HomeAssistant) -> None:
@@ -4188,10 +4110,6 @@ async def test_partial_flows_hidden(
         # While it's blocked it shouldn't be visible or trigger discovery notifications
         assert len(hass.config_entries.flow.async_progress()) == 0
 
-        await hass.async_block_till_done()
-        notifications = async_get_persistent_notifications(hass)
-        assert "config_entry_discovery" not in notifications
-
         # Let the flow init complete
         pause_discovery.set()
 
@@ -4200,10 +4118,6 @@ async def test_partial_flows_hidden(
         result = await init_task
         assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert len(hass.config_entries.flow.async_progress()) == 1
-
-        await hass.async_block_till_done()
-        notifications = async_get_persistent_notifications(hass)
-        assert "config_entry_discovery" in notifications
 
 
 async def test_async_setup_init_entry(

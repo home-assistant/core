@@ -38,15 +38,6 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "scan_interval": "Scan Interval (seconds)"
-        }
-      }
-    }
-  },
   "device_automation": {
     "action_type": {
       "beeper_disable": "Disable UPS beeper/buzzer",
@@ -83,9 +74,27 @@
     },
     "sensor": {
       "ambient_humidity": { "name": "Ambient humidity" },
-      "ambient_humidity_status": { "name": "Ambient humidity status" },
+      "ambient_humidity_status": {
+        "name": "Ambient humidity status",
+        "state": {
+          "good": "Good",
+          "warning-low": "Warning low",
+          "critical-low": "Critical low",
+          "warning-high": "Warning high",
+          "critical-high": "Critical high"
+        }
+      },
       "ambient_temperature": { "name": "Ambient temperature" },
-      "ambient_temperature_status": { "name": "Ambient temperature status" },
+      "ambient_temperature_status": {
+        "name": "Ambient temperature status",
+        "state": {
+          "good": "[%key:component::nut::entity::sensor::ambient_humidity_status::state::good%]",
+          "warning-low": "[%key:component::nut::entity::sensor::ambient_humidity_status::state::warning-low%]",
+          "critical-low": "[%key:component::nut::entity::sensor::ambient_humidity_status::state::critical-low%]",
+          "warning-high": "[%key:component::nut::entity::sensor::ambient_humidity_status::state::warning-high%]",
+          "critical-high": "[%key:component::nut::entity::sensor::ambient_humidity_status::state::critical-high%]"
+        }
+      },
       "battery_alarm_threshold": { "name": "Battery alarm threshold" },
       "battery_capacity": { "name": "Battery capacity" },
       "battery_charge": { "name": "Battery charge" },
@@ -216,6 +225,20 @@
     },
     "switch": {
       "outlet_number_load_poweronoff": { "name": "Power outlet {outlet_name}" }
+    }
+  },
+  "exceptions": {
+    "data_fetch_error": {
+      "message": "Error fetching UPS state: {err}"
+    },
+    "device_authentication": {
+      "message": "Device authentication error: {err}"
+    },
+    "device_invalid": {
+      "message": "Unable to find a NUT device with ID {device_id}"
+    },
+    "nut_command_error": {
+      "message": "Error running command {command_name}, {err}"
     }
   }
 }

@@ -2,11 +2,13 @@
 
 ATTR_PASSWORD = "password"
 ATTR_USERNAME = "username"
+ATTR_QUEUE_IDS = "queue_ids"
 DOMAIN = "heos"
 ENTRY_TITLE = "HEOS System"
 SERVICE_GET_QUEUE = "get_queue"
 SERVICE_GROUP_VOLUME_SET = "group_volume_set"
 SERVICE_GROUP_VOLUME_DOWN = "group_volume_down"
 SERVICE_GROUP_VOLUME_UP = "group_volume_up"
+SERVICE_REMOVE_FROM_QUEUE = "remove_from_queue"
 SERVICE_SIGN_IN = "sign_in"
 SERVICE_SIGN_OUT = "sign_out"

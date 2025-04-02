@@ -19,7 +19,7 @@
         "description": "Please enter a ThinQ [PAT(Personal Access Token)]({pat_url}) created with your LG ThinQ account.",
         "data": {
           "access_token": "Personal Access Token",
-          "country": "Country"
+          "country": "[%key:common::config_flow::data::country%]"
         }
       }
     }

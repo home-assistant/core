@@ -1,7 +1,5 @@
 """The Washer/Dryer Sensor for Whirlpool Appliances."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -65,8 +63,6 @@ CYCLE_FUNC = [
 ]
 
 DOOR_OPEN = "door_open"
-ICON_D = "mdi:tumble-dryer"
-ICON_W = "mdi:washing-machine"
 
 _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(minutes=5)
@@ -124,6 +120,7 @@ SENSOR_TIMER: tuple[SensorEntityDescription] = (
         key="timeremaining",
         translation_key="end_time",
         device_class=SensorDeviceClass.TIMESTAMP,
+        icon="mdi:progress-clock",
     ),
 )
 
@@ -161,10 +158,11 @@ class WasherDryerClass(SensorEntity):
         """Initialize the washer sensor."""
         self._wd: WasherDryer = washer_dryer
 
-        if washer_dryer.name == "dryer":
-            self._attr_icon = ICON_D
-        else:
-            self._attr_icon = ICON_W
+        self._attr_icon = (
+            "mdi:tumble-dryer"
+            if "dryer" in washer_dryer.appliance_info.data_model.lower()
+            else "mdi:washing-machine"
+        )
 
         self.entity_description: WhirlpoolSensorEntityDescription = description
         self._attr_device_info = DeviceInfo(
@@ -204,11 +202,6 @@ class WasherDryerTimeClass(RestoreSensor):
     ) -> None:
         """Initialize the washer sensor."""
         self._wd: WasherDryer = washer_dryer
-
-        if washer_dryer.name == "dryer":
-            self._attr_icon = ICON_D
-        else:
-            self._attr_icon = ICON_W
 
         self.entity_description: SensorEntityDescription = description
         self._running: bool | None = None

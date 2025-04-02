@@ -125,6 +125,19 @@ MOCK_SUBENTRY_SENSOR_COMPONENT_LAST_RESET = {
         "entity_picture": "https://example.com/e9261f6feed443e7b7d5f3fbe2a47412",
     },
 }
+MOCK_SUBENTRY_SWITCH_COMPONENT = {
+    "3faf1318016c46c5aea26707eeb6f12e": {
+        "platform": "switch",
+        "name": "Outlet",
+        "device_class": "outlet",
+        "command_topic": "test-topic",
+        "state_topic": "test-topic",
+        "command_template": "{{ value }}",
+        "value_template": "{{ value_json.value }}",
+        "entity_picture": "https://example.com/3faf1318016c46c5aea26707eeb6f12e",
+        "optimistic": True,
+    },
+}
 
 # Bogus light component just for code coverage
 # Note that light cannot be setup through the UI yet
@@ -223,7 +236,17 @@ MOCK_SENSOR_SUBENTRY_DATA_SINGLE_LAST_RESET_TEMPLATE = {
     },
     "components": MOCK_SUBENTRY_SENSOR_COMPONENT_LAST_RESET,
 }
-
+MOCK_SWITCH_SUBENTRY_DATA_SINGLE_STATE_CLASS = {
+    "device": {
+        "name": "Test switch",
+        "sw_version": "1.0",
+        "hw_version": "2.1 rev a",
+        "model": "Model XL",
+        "model_id": "mn002",
+        "configuration_url": "https://example.com",
+    },
+    "components": MOCK_SUBENTRY_SWITCH_COMPONENT,
+}
 MOCK_SUBENTRY_DATA_BAD_COMPONENT_SCHEMA = {
     "device": {
         "name": "Milk notifier",
@@ -246,7 +269,8 @@ MOCK_SUBENTRY_DATA_SET_MIX = {
     },
     "components": MOCK_SUBENTRY_NOTIFY_COMPONENT1
     | MOCK_SUBENTRY_NOTIFY_COMPONENT2
-    | MOCK_SUBENTRY_LIGHT_COMPONENT,
+    | MOCK_SUBENTRY_LIGHT_COMPONENT
+    | MOCK_SUBENTRY_SWITCH_COMPONENT,
 } | MOCK_SUBENTRY_AVAILABILITY_DATA
 _SENTINEL = object()
 
