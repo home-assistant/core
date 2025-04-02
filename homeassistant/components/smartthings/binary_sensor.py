@@ -19,7 +19,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FullDevice, SmartThingsConfigEntry
-from .const import MAIN
+from .const import INVALID_SWITCH_CATEGORIES, MAIN
 from .entity import SmartThingsEntity
 from .util import deprecate_entity
 
@@ -127,14 +127,7 @@ CAPABILITY_TO_SENSORS: dict[
             key=Attribute.SWITCH,
             device_class=BinarySensorDeviceClass.POWER,
             is_on_key="on",
-            category={
-                Category.CLOTHING_CARE_MACHINE,
-                Category.COOKTOP,
-                Category.DISHWASHER,
-                Category.DRYER,
-                Category.MICROWAVE,
-                Category.WASHER,
-            },
+            category=INVALID_SWITCH_CATEGORIES,
         )
     },
     Capability.TAMPER_ALERT: {
