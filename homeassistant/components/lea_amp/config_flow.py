@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN, PORT
 
@@ -25,24 +26,29 @@ class ExampleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Step User."""
-        # Specify items in the order they are to be displayed in the UI
-        if user_input is not None:
-            deviceName = getDeviceName(user_input["IP Address"])
-            _LOGGER.log(logging.INFO, "deviceName %s", str(deviceName))
-            if not deviceName:
-                _LOGGER.log(logging.INFO, "deviceName %s", str(deviceName))
 
-            else:
+        # Specify items in the order they are to be displayed in the UI
+        try:
+            if user_input is not None:
+                deviceName = getDeviceName(user_input["IP Address"])
+                _LOGGER.log(logging.INFO, "deviceName %s", str(deviceName))
+                if not deviceName:
+                    _LOGGER.log(logging.INFO, "deviceName %s", str(deviceName))
+                    raise ConfigEntryNotReady  # noqa: TRY301
+
                 return self.async_create_entry(title=deviceName, data=user_input)
 
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required("IP Address"): str,
-                }
-            ),
-        )
+            return self.async_show_form(
+                step_id="user",
+                data_schema=vol.Schema(
+                    {
+                        vol.Required("IP Address"): str,
+                    }
+                ),
+            )
+        except ConfigEntryNotReady:
+            self.data["base"] = "cannot connect"
+            return self.async_show_form(step_id="user", errors=self.data)
 
 
 def getDeviceName(ip_address):
