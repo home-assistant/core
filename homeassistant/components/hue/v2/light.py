@@ -28,7 +28,6 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import color as color_util
 
@@ -259,11 +258,6 @@ class HueLight(HueBaseEntity, LightEntity):
                 if transition is None:
                     # a transition is required for timed effect, default to 10 minutes
                     transition = 600000
-                if effect == TimedEffectStatus.UNKNOWN:
-                    # guard against invalid effect value
-                    raise HomeAssistantError(
-                        f"Effect {effect_str} is invalid for {self.entity_id}"
-                    )
             # we need to clear color values if an effect is applied
             color_temp = None
             xy_color = None
