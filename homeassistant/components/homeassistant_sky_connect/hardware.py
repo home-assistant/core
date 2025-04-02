@@ -5,30 +5,42 @@ from __future__ import annotations
 from homeassistant.components.hardware.models import HardwareInfo, USBInfo
 from homeassistant.core import HomeAssistant, callback
 
-from .const import DOMAIN
+from .config_flow import HomeAssistantSkyConnectConfigFlow
+from .const import DOMAIN, MANUFACTURER, PID, PRODUCT, SERIAL_NUMBER, VID
 from .util import get_hardware_variant
 
 DOCUMENTATION_URL = "https://skyconnect.home-assistant.io/documentation/"
+EXPECTED_ENTRY_VERSION = (
+    HomeAssistantSkyConnectConfigFlow.VERSION,
+    HomeAssistantSkyConnectConfigFlow.MINOR_VERSION,
+)
 
 
 @callback
 def async_info(hass: HomeAssistant) -> list[HardwareInfo]:
     """Return board info."""
     entries = hass.config_entries.async_entries(DOMAIN)
+    info = []
 
-    return [
-        HardwareInfo(
+    for entry in entries:
+        # Ignore unmigrated config entries in the hardware page
+        if (entry.version, entry.minor_version) < EXPECTED_ENTRY_VERSION:
+            continue
+
+        hw_info = HardwareInfo(
             board=None,
             config_entries=[entry.entry_id],
             dongle=USBInfo(
-                vid=entry.data["vid"],
-                pid=entry.data["pid"],
-                serial_number=entry.data["serial_number"],
-                manufacturer=entry.data["manufacturer"],
-                description=entry.data["product"],
+                vid=entry.data[VID],
+                pid=entry.data[PID],
+                serial_number=entry.data[SERIAL_NUMBER],
+                manufacturer=entry.data[MANUFACTURER],
+                description=entry.data[PRODUCT],
             ),
             name=get_hardware_variant(entry).full_name,
             url=DOCUMENTATION_URL,
         )
-        for entry in entries
-    ]
+
+        info.append(hw_info)
+
+    return info
