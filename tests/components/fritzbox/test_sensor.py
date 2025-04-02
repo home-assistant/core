@@ -71,7 +71,7 @@ async def test_setup(
             "23",
             f"{CONF_FAKE_NAME} Battery",
             PERCENTAGE,
-            None,
+            SensorStateClass.MEASUREMENT,
             EntityCategory.DIAGNOSTIC,
         ],
     )
