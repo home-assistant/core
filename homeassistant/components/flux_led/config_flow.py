@@ -156,7 +156,6 @@ class FluxLedConfigFlow(ConfigFlow, domain=DOMAIN):
         self.host = host
         if self.hass.config_entries.flow.async_has_matching_flow(self):
             return self.async_abort(reason="already_in_progress")
-        self._async_abort_entries_match({CONF_HOST: host})
         if not device[ATTR_MODEL_DESCRIPTION]:
             mac_address = device[ATTR_ID]
             assert mac_address is not None
@@ -206,18 +205,11 @@ class FluxLedConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     @callback
-    def _async_abort_if_host_configured(self, host: str) -> None:
-        """Abort if the host is already configured unless its an ignored entry."""
-        for entry in self._async_current_entries(include_ignore=False):
-            if entry.data.get(CONF_HOST) == host:
-                raise AbortFlow("already_configured")
-
-    @callback
     def _async_create_entry_from_device(
         self, device: FluxLEDDiscovery
     ) -> ConfigFlowResult:
         """Create a config entry from a device."""
-        self._async_abort_if_host_configured(device[ATTR_IPADDR])
+        self._async_abort_entries_match({CONF_HOST: device[ATTR_IPADDR]})
         name = async_name_from_discovery(device)
         data: dict[str, Any] = {CONF_HOST: device[ATTR_IPADDR]}
         async_populate_data_from_discovery(data, data, device)
@@ -296,7 +288,7 @@ class FluxLedConfigFlow(ConfigFlow, domain=DOMAIN):
         self, host: str, discovery: FluxLEDDiscovery | None
     ) -> FluxLEDDiscovery:
         """Try to connect."""
-        self._async_abort_if_host_configured(host)
+        self._async_abort_entries_match({CONF_HOST: host})
         if (device := await async_discover_device(self.hass, host)) and device[
             ATTR_MODEL_DESCRIPTION
         ]:
