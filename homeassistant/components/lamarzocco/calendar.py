@@ -3,7 +3,8 @@
 from collections.abc import Iterator
 from datetime import datetime, timedelta
 
-from pylamarzocco.models import LaMarzoccoWakeUpSleepEntry
+from pylamarzocco.const import WeekDay
+from pylamarzocco.models import WakeUpScheduleSettings
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.core import HomeAssistant
@@ -18,15 +19,15 @@ PARALLEL_UPDATES = 0
 
 CALENDAR_KEY = "auto_on_off_schedule"
 
-DAY_OF_WEEK = [
-    "monday",
-    "tuesday",
-    "wednesday",
-    "thursday",
-    "friday",
-    "saturday",
-    "sunday",
-]
+WEEKDAY_TO_ENUM = {
+    0: WeekDay.MONDAY,
+    1: WeekDay.TUESDAY,
+    2: WeekDay.WEDNESDAY,
+    3: WeekDay.THURSDAY,
+    4: WeekDay.FRIDAY,
+    5: WeekDay.SATURDAY,
+    6: WeekDay.SUNDAY,
+}
 
 
 async def async_setup_entry(
@@ -37,9 +38,10 @@ async def async_setup_entry(
     """Set up switch entities and services."""
 
     coordinator = entry.runtime_data.config_coordinator
+
     async_add_entities(
-        LaMarzoccoCalendarEntity(coordinator, CALENDAR_KEY, wake_up_sleep_entry)
-        for wake_up_sleep_entry in coordinator.device.config.wake_up_sleep_entries.values()
+        LaMarzoccoCalendarEntity(coordinator, CALENDAR_KEY, schedule)
+        for schedule in coordinator.device.schedule.smart_wake_up_sleep.schedules
     )
 
 
@@ -52,12 +54,13 @@ class LaMarzoccoCalendarEntity(LaMarzoccoBaseEntity, CalendarEntity):
         self,
         coordinator: LaMarzoccoUpdateCoordinator,
         key: str,
-        wake_up_sleep_entry: LaMarzoccoWakeUpSleepEntry,
+        schedule: WakeUpScheduleSettings,
     ) -> None:
         """Set up calendar."""
-        super().__init__(coordinator, f"{key}_{wake_up_sleep_entry.entry_id}")
-        self.wake_up_sleep_entry = wake_up_sleep_entry
-        self._attr_translation_placeholders = {"id": wake_up_sleep_entry.entry_id}
+        assert schedule.identifier
+        super().__init__(coordinator, f"{key}_{schedule.identifier}")
+        self._schedule_entry = schedule
+        self._attr_translation_placeholders = {"id": schedule.identifier}
 
     @property
     def event(self) -> CalendarEvent | None:
@@ -113,23 +116,28 @@ class LaMarzoccoCalendarEntity(LaMarzoccoBaseEntity, CalendarEntity):
         """Return calendar event for a given weekday."""
 
         # check first if auto/on off is turned on in general
-        if not self.wake_up_sleep_entry.enabled:
+        if not self._schedule_entry.enabled:
             return None
 
         # parse the schedule for the day
 
-        if DAY_OF_WEEK[date.weekday()] not in self.wake_up_sleep_entry.days:
+        if WEEKDAY_TO_ENUM[date.weekday()] not in self._schedule_entry.days:
             return None
 
-        hour_on, minute_on = self.wake_up_sleep_entry.time_on.split(":")
-        hour_off, minute_off = self.wake_up_sleep_entry.time_off.split(":")
+        on_time_minutes = self._schedule_entry.on_time_minutes
+        off_time_minutes = self._schedule_entry.off_time_minutes
 
-        # if off time is 24:00, then it means the off time is the next day
-        # only for legacy schedules
+        hour_on = on_time_minutes // 60
+        minute_on = on_time_minutes % 60
+        hour_off = off_time_minutes // 60
+        minute_off = off_time_minutes % 60
+
         day_offset = 0
-        if hour_off == "24":
+        if hour_off == 24:
+            # if the machine is scheduled to turn off at midnight, we need to
+            # set the end date to the next day
             day_offset = 1
-            hour_off = "0"
+            hour_off = 0
 
         end_date = date.replace(
             hour=int(hour_off),

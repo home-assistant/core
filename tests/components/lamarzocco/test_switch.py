@@ -3,6 +3,7 @@
 from typing import Any
 from unittest.mock import MagicMock, patch
 
+from pylamarzocco.const import SmartStandByType
 from pylamarzocco.exceptions import RequestNotSuccessful
 import pytest
 from syrupy import SnapshotAssertion
@@ -47,7 +48,7 @@ async def test_switches(
         (
             "_smart_standby_enabled",
             "set_smart_standby",
-            {"mode": "LastBrewing", "minutes": 10},
+            {"mode": SmartStandByType.POWER_ON, "minutes": 10},
         ),
     ],
 )
@@ -124,12 +125,18 @@ async def test_auto_on_off_switches(
             blocking=True,
         )
 
-        wake_up_sleep_entry = mock_lamarzocco.config.wake_up_sleep_entries[
-            wake_up_sleep_entry_id
-        ]
+        wake_up_sleep_entry = next(
+            (
+                schedule
+                for schedule in mock_lamarzocco.schedule.smart_wake_up_sleep.schedules
+                if schedule.identifier == wake_up_sleep_entry_id
+            ),
+            None,
+        )
+        assert wake_up_sleep_entry
         wake_up_sleep_entry.enabled = False
 
-        mock_lamarzocco.set_wake_up_sleep.assert_called_with(wake_up_sleep_entry)
+        mock_lamarzocco.set_wakeup_schedule.assert_called_with(wake_up_sleep_entry)
 
         await hass.services.async_call(
             SWITCH_DOMAIN,
@@ -140,7 +147,7 @@ async def test_auto_on_off_switches(
             blocking=True,
         )
         wake_up_sleep_entry.enabled = True
-        mock_lamarzocco.set_wake_up_sleep.assert_called_with(wake_up_sleep_entry)
+        mock_lamarzocco.set_wakeup_schedule.assert_called_with(wake_up_sleep_entry)
 
 
 async def test_switch_exceptions(
@@ -183,7 +190,7 @@ async def test_switch_exceptions(
     state = hass.states.get(f"switch.{serial_number}_auto_on_off_os2oswx")
     assert state
 
-    mock_lamarzocco.set_wake_up_sleep.side_effect = RequestNotSuccessful("Boom")
+    mock_lamarzocco.set_wakeup_schedule.side_effect = RequestNotSuccessful("Boom")
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             SWITCH_DOMAIN,
