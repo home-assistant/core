@@ -240,11 +240,11 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
         Set the target for the current mode if in [heat, cool]
         otherwise set both targets to the clamped values.
         """
-
-        if self._zone.get_current_mode() == OPERATION_MODE_HEAT:
+        zone_current_mode = self._zone.get_current_mode()
+        if zone_current_mode == OPERATION_MODE_HEAT:
             if self._thermostat.has_humidify_support():
                 await self.async_set_humidify_setpoint(humidity)
-        elif self._zone.get_current_mode() == OPERATION_MODE_COOL:
+        elif zone_current_mode == OPERATION_MODE_COOL:
             if self._thermostat.has_dehumidify_support():
                 await self.async_set_dehumidify_setpoint(humidity)
         else:
