@@ -323,7 +323,7 @@ async def _async_setup_component(
             translation.async_load_integrations(hass, integration_set), loop=hass.loop
         )
     # Validate all dependencies exist and there are no circular dependencies
-    if not await integration.resolve_dependencies():
+    if await integration.resolve_dependencies() is None:
         return False
 
     # Process requirements as soon as possible, so we can import the component
@@ -387,7 +387,7 @@ async def _async_setup_component(
             },
         )
 
-    _LOGGER.info("Setting up %s", domain)
+    _LOGGER.debug("Setting up %s", domain)
 
     with async_start_setup(hass, integration=domain, phase=SetupPhases.SETUP):
         if hasattr(component, "PLATFORM_SCHEMA"):
@@ -783,7 +783,7 @@ def async_start_setup(
         # platforms, but we only care about the longest time.
         group_setup_times[phase] = max(group_setup_times[phase], time_taken)
         if group is None:
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Setup of domain %s took %.2f seconds", integration, time_taken
             )
         elif _LOGGER.isEnabledFor(logging.DEBUG):

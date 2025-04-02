@@ -44,7 +44,7 @@
   "entity": {
     "select": {
       "global_override": {
-        "name": "global override",
+        "name": "Global override",
         "state": {
           "away": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::away%]",
           "comfort": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::comfort%]",
@@ -53,7 +53,7 @@
         }
       },
       "week_profile": {
-        "name": "week profile"
+        "name": "Week profile"
       }
     }
   }

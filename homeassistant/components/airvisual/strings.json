@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "geography_by_coords": {
-        "title": "Configure a Geography",
+        "title": "Configure a geography",
         "description": "Use the AirVisual cloud API to monitor a latitude/longitude.",
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
@@ -56,12 +56,12 @@
     "sensor": {
       "pollutant_label": {
         "state": {
-          "co": "Carbon Monoxide",
-          "n2": "Nitrogen Dioxide",
+          "co": "Carbon monoxide",
+          "n2": "Nitrogen dioxide",
           "o3": "Ozone",
           "p1": "PM10",
           "p2": "PM2.5",
-          "s2": "Sulfur Dioxide"
+          "s2": "Sulfur dioxide"
         }
       },
       "pollutant_level": {

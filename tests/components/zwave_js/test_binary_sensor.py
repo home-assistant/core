@@ -1,5 +1,6 @@
 """Test the Z-Wave JS binary sensor platform."""
 
+import pytest
 from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
 
@@ -10,6 +11,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNKNOWN,
     EntityCategory,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -24,6 +26,12 @@ from .common import (
 )
 
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture
+def platforms() -> list[str]:
+    """Fixture to specify platforms to test."""
+    return [Platform.BINARY_SENSOR]
 
 
 async def test_low_battery_sensor(
