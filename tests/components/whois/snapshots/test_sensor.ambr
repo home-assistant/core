@@ -167,6 +167,7 @@
       'friendly_name': 'home-assistant.io Days until expiration',
       'name_servers': 'ns1.example.com ns2.example.com',
       'registrar': 'My Registrar',
+      'status': 'OK',
       'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
       'updated': '2022-01-01T00:00:00+01:00',
     }),
