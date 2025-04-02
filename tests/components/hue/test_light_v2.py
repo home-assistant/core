@@ -3,8 +3,6 @@
 from unittest.mock import Mock
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS_PCT,
-    ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     DOMAIN as LIGHT_DOMAIN,
     ColorMode,
@@ -661,18 +659,6 @@ async def test_light_turn_on_service_deprecation(
 
     await setup_platform(hass, mock_bridge_v2, "light")
 
-    # now call the HA turn_on service
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {
-            ATTR_ENTITY_ID: test_light_id,
-            ATTR_BRIGHTNESS_PCT: 100,
-            ATTR_COLOR_TEMP_KELVIN: 300,
-        },
-        blocking=True,
-    )
-
     event = {
         "id": "3a6710fa-4474-4eba-b533-5e6e72968feb",
         "type": "light",
@@ -692,4 +678,4 @@ async def test_light_turn_on_service_deprecation(
         },
         blocking=True,
     )
-    assert mock_bridge_v2.mock_requests[1]["json"]["effects"]["effect"] == "no_effect"
+    assert mock_bridge_v2.mock_requests[0]["json"]["effects"]["effect"] == "no_effect"
