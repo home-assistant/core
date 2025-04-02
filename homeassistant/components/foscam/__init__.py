@@ -1,7 +1,5 @@
 """The foscam component."""
 
-from libpyfoscam import FoscamCamera
-
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -10,13 +8,14 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
+from homeassistant.helpers.entity_registry import async_migrate_entries
 
 from .config_flow import DEFAULT_RTSP_PORT
 from .const import CONF_RTSP_PORT, LOGGER
 from .coordinator import FoscamConfigEntry, FoscamCoordinator
+from .foscamcgi import FoscamCamera
 
-PLATFORMS = [Platform.CAMERA, Platform.SWITCH]
+PLATFORMS = [Platform.CAMERA, Platform.NOTIFY, Platform.NUMBER, Platform.SWITCH]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: FoscamConfigEntry) -> bool:
@@ -30,14 +29,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: FoscamConfigEntry) -> bo
         verbose=False,
     )
     coordinator = FoscamCoordinator(hass, entry, session)
-
+    await hass.async_add_executor_job(session.set_sub_stream_format, 1)
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator
-
-    # Migrate to correct unique IDs for switches
-    await async_migrate_entities(hass, entry)
-
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -86,24 +81,3 @@ async def async_migrate_entry(hass: HomeAssistant, entry: FoscamConfigEntry) -> 
     LOGGER.debug("Migration to version %s successful", entry.version)
 
     return True
-
-
-async def async_migrate_entities(hass: HomeAssistant, entry: FoscamConfigEntry) -> None:
-    """Migrate old entry."""
-
-    @callback
-    def _update_unique_id(
-        entity_entry: RegistryEntry,
-    ) -> dict[str, str] | None:
-        """Update unique ID of entity entry."""
-        if (
-            entity_entry.domain == Platform.SWITCH
-            and entity_entry.unique_id == "sleep_switch"
-        ):
-            entity_new_unique_id = f"{entity_entry.config_entry_id}_sleep_switch"
-            return {"new_unique_id": entity_new_unique_id}
-
-        return None
-
-    # Migrate entities
-    await async_migrate_entries(hass, entry.entry_id, _update_unique_id)
