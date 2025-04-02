@@ -11,12 +11,10 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DOMAIN
+from .const import CONNECTION_TIMEOUT, DOMAIN, PORT
 from .coordinator import LEAAMPApiCoordinator, LEAAMPConfigEntry
 
 PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER]
-CONNECTION_TIMEOUT = 5  # seconds
-PORT = "4321"
 
 _LOGGER = logging.getLogger(__name__)
 

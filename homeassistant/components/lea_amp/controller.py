@@ -92,6 +92,8 @@ class LeaController:
         _LOGGER.log(logging.INFO, "Discover enabled %s", str(self._discovery_enabled))
         _LOGGER.log(logging.INFO, "Update enabled %s", str(self._update_enabled))
 
+        self._discovery_enabled = False
+        self._update_enabled = True
         # if self._discovery_enabled or self._registry.has_queued_zones:
         # self.send_discovery_message()
         # if self._update_enabled:
