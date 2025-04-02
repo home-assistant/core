@@ -1815,6 +1815,12 @@
         }
       }
     },
+    "eve": {
+      "name": "Eve",
+      "iot_standards": [
+        "matter"
+      ]
+    },
     "evergy": {
       "name": "Evergy",
       "integration_type": "virtual",
