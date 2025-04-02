@@ -32,6 +32,7 @@ from homeassistant.util.read_only_dict import ReadOnlyDict
 
 from .const import (
     ATTR_MESSAGE,
+    ATTR_PTZ_SLOT,
     DOMAIN,
     KEYRINGS_KEY_TYPE,
     KEYRINGS_KEY_TYPE_ID_FINGERPRINT,
@@ -39,6 +40,8 @@ from .const import (
     KEYRINGS_ULP_ID,
     KEYRINGS_USER_FULL_NAME,
     KEYRINGS_USER_STATUS,
+    PTZ_SLOT_HOME,
+    PTZ_SLOT_NAME_HOME,
 )
 from .data import async_ufp_instance_for_config_entry_ids
 
@@ -48,13 +51,15 @@ SERVICE_SET_PRIVACY_ZONE = "set_privacy_zone"
 SERVICE_REMOVE_PRIVACY_ZONE = "remove_privacy_zone"
 SERVICE_SET_CHIME_PAIRED = "set_chime_paired_doorbells"
 SERVICE_GET_USER_KEYRING_INFO = "get_user_keyring_info"
+SERVICE_PTZ_GOTO_PRESET = "ptz_goto_preset"
 
-ALL_GLOBAL_SERIVCES = [
+ALL_GLOBAL_SERVICES = [
     SERVICE_ADD_DOORBELL_TEXT,
     SERVICE_REMOVE_DOORBELL_TEXT,
     SERVICE_SET_CHIME_PAIRED,
     SERVICE_REMOVE_PRIVACY_ZONE,
     SERVICE_GET_USER_KEYRING_INFO,
+    SERVICE_PTZ_GOTO_PRESET,
 ]
 
 DOORBELL_TEXT_SCHEMA = vol.All(
@@ -92,6 +97,21 @@ GET_USER_KEYRING_INFO_SCHEMA = vol.All(
         {
             **cv.ENTITY_SERVICE_FIELDS,
         },
+    ),
+    cv.has_at_least_one_key(ATTR_DEVICE_ID),
+)
+
+PTZ_GOTO_PRESET_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            **cv.ENTITY_SERVICE_FIELDS,
+            vol.Required(ATTR_PTZ_SLOT): vol.Any(
+                # String for named slot...
+                cv.string,
+                # ...or int >= -1 for numbered slot where -1 is the Home position
+                vol.All(vol.Coerce(int), vol.Range(min=-1)),
+            ),
+        }
     ),
     cv.has_at_least_one_key(ATTR_DEVICE_ID),
 )
@@ -269,6 +289,35 @@ async def get_user_keyring_info(call: ServiceCall) -> ServiceResponse:
     return response
 
 
+async def ptz_goto_preset(call: ServiceCall) -> None:
+    """Instruct a PTZ Camera to go to the specified preset by name or slot ID."""
+    camera = _async_get_ufp_camera(call)
+    if not camera.feature_flags.is_ptz:
+        raise ServiceValidationError(f"{camera.display_name} is not a PTZ Camera")
+
+    slot_id: int | None = None
+    slot = call.data.get(ATTR_PTZ_SLOT)
+    if isinstance(slot, int):
+        slot_id = slot
+    elif isinstance(slot, str):
+        if slot.casefold() == PTZ_SLOT_NAME_HOME.casefold():
+            slot_id = PTZ_SLOT_HOME
+        else:
+            for preset in await camera.get_ptz_presets():
+                if preset.name.casefold() == slot.casefold():
+                    slot_id = preset.slot
+                    break
+
+        if slot_id is None:
+            raise ServiceValidationError(
+                f"Slot index not specified and no slot with name {slot} not found"
+            )
+    else:
+        raise ServiceValidationError(f"Unsupported slot value {slot}")
+
+    await camera.goto_ptz_slot(slot=slot_id)
+
+
 SERVICES = [
     (
         SERVICE_ADD_DOORBELL_TEXT,
@@ -299,6 +348,12 @@ SERVICES = [
         get_user_keyring_info,
         GET_USER_KEYRING_INFO_SCHEMA,
         SupportsResponse.ONLY,
+    ),
+    (
+        SERVICE_PTZ_GOTO_PRESET,
+        ptz_goto_preset,
+        PTZ_GOTO_PRESET_SCHEMA,
+        SupportsResponse.NONE,
     ),
 ]
 
