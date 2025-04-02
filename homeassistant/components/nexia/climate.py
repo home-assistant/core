@@ -266,8 +266,8 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
 
         # If heat is on, always return humidify value first
         if (
-            self._zone.get_current_mode() == OPERATION_MODE_HEAT
-            and self._has_humidify_support
+            self._has_humidify_support
+            and self._zone.get_current_mode() == OPERATION_MODE_HEAT
         ):
             return percent_conv(self._thermostat.get_humidify_setpoint())
         # Fall back to previous behavior of returning dehumidify value then humidify
