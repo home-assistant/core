@@ -69,26 +69,14 @@ def setup_platform(
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
 
-    try:
-        ember = EphEmber(username, password)
-    except RuntimeError:
-        _LOGGER.error("Cannot login to EphEmber")
+    ember = EphEmber(username, password)
+    homes = ember.get_zones()
 
-    try:
-        homes = ember.get_zones()
-    except RuntimeError:
-        _LOGGER.error("Fail to get zones")
-        return
+    allZones = [
+        EphEmberThermostat(ember, zone) for home in homes for zone in home["zones"]
+    ]
 
-    try:
-        for home in homes:
-            for zone in home["zones"]:
-                add_entities([EphEmberThermostat(ember, zone)])
-    except RuntimeError:
-        _LOGGER.error("Cannot connect to EphEmber")
-        return
-
-    return
+    add_entities(allZones)
 
 
 class EphEmberThermostat(ClimateEntity):
