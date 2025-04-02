@@ -110,7 +110,7 @@ RtmAPI==0.7.2
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-SQLAlchemy==2.0.39
+SQLAlchemy==2.0.40
 
 # homeassistant.components.tami4
 Tami4EdgeAPI==3.0
@@ -344,7 +344,7 @@ aioridwell==2024.01.0
 aioruckus==0.42
 
 # homeassistant.components.russound_rio
-aiorussound==4.4.0
+aiorussound==4.5.0
 
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
@@ -404,7 +404,7 @@ aiowaqi==3.1.0
 aiowatttime==0.1.1
 
 # homeassistant.components.webdav
-aiowebdav2==0.4.4
+aiowebdav2==0.4.5
 
 # homeassistant.components.webostv
 aiowebostv==0.7.3
@@ -478,7 +478,7 @@ arcam-fmj==1.8.1
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.43.0
+async-upnp-client==0.44.0
 
 # homeassistant.components.arve
 asyncarve==0.1.1
@@ -564,7 +564,7 @@ bluetooth-auto-recovery==1.4.5
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
 # homeassistant.components.private_ble_device
-bluetooth-data-tools==1.26.1
+bluetooth-data-tools==1.26.5
 
 # homeassistant.components.bond
 bond-async==0.2.1
@@ -649,7 +649,7 @@ dbus-fast==2.43.0
 debugpy==1.8.13
 
 # homeassistant.components.ecovacs
-deebot-client==12.4.0
+deebot-client==12.5.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -984,7 +984,7 @@ hole==0.8.0
 holidays==0.69
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250328.0
+home-assistant-frontend==20250401.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.3.28
@@ -1305,7 +1305,7 @@ objgraph==3.5.0
 odp-amsterdam==6.0.2
 
 # homeassistant.components.ohme
-ohme==1.4.1
+ohme==1.5.1
 
 # homeassistant.components.ollama
 ollama==0.4.7
@@ -1814,7 +1814,7 @@ pypalazzetti==0.1.19
 pypck==0.8.5
 
 # homeassistant.components.pglab
-pypglab==0.0.3
+pypglab==0.0.5
 
 # homeassistant.components.pjlink
 pypjlink2==1.2.1
@@ -2189,7 +2189,7 @@ sensirion-ble==0.1.1
 sensorpro-ble==0.5.3
 
 # homeassistant.components.sensorpush_cloud
-sensorpush-api==2.1.1
+sensorpush-api==2.1.2
 
 # homeassistant.components.sensorpush
 sensorpush-ble==1.7.1
@@ -2542,7 +2542,7 @@ zeroconf==0.146.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.54
+zha==0.0.55
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.62.0
