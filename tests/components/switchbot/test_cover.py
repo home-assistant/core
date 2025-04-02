@@ -470,7 +470,7 @@ async def test_roller_shade_controlling(
             assert state.attributes[ATTR_CURRENT_POSITION] == 5
 
         # Test set position
-        manufacturer_data = b"\xfbgA`\x98\xe8\x1d%2\x12\x85"
+        manufacturer_data = b"\xb0\xe9\xfeT\x90\x1b,\x08\x32\x11\x04'\x00"
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_SET_COVER_POSITION,
