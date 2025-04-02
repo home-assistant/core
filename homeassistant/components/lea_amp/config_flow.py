@@ -47,17 +47,22 @@ def getDeviceName(ip_address):
     msg = "get /amp/deviceInfo/deviceName\n"
     mySocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     address = (ip_address, int(PORT))
-    mySocket.connect(address)
+    try:
+        mySocket.connect(address)
 
-    mySocket.send(msg.encode())
-    # while True:
-    data = mySocket.recv(2048)
-    if data:
-        _LOGGER.log(logging.INFO, "response data: %s", str(data))
-        data = data.decode()
-        deviceName = data.replace("/amp/deviceInfo/deviceName", "")
-        deviceName = deviceName.replace("\n", "")
-        deviceName = deviceName.replace('"', "")
+        mySocket.send(msg.encode())
+        # while True:
+        data = mySocket.recv(2048)
+        if data:
+            _LOGGER.log(logging.INFO, "response data: %s", str(data))
+            data = data.decode()
+            deviceName = data.replace("/amp/deviceInfo/deviceName", "")
+            deviceName = deviceName.replace("\n", "")
+            deviceName = deviceName.replace('"', "")
+            mySocket.close()
+
+            return deviceName
+    except (TimeoutError, OSError, ConnectionRefusedError):
+        return False
+    finally:
         mySocket.close()
-
-    return deviceName
