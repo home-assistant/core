@@ -44,6 +44,9 @@ FALLBACK_MIN_KELVIN = 6500
 FALLBACK_MAX_KELVIN = 2000
 FALLBACK_KELVIN = 5800  # halfway
 
+# HA 2025.4 replaced the deprecated effect "None" with HA default "off"
+DEPRECATED_EFFECT_NONE = "None"
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -233,6 +236,14 @@ class HueLight(HueBaseEntity, LightEntity):
         self._color_temp_active = color_temp is not None
         flash = kwargs.get(ATTR_FLASH)
         effect = effect_str = kwargs.get(ATTR_EFFECT)
+        if effect_str == DEPRECATED_EFFECT_NONE:
+            # deprecated effect "None" is now "off"
+            effect_str = EFFECT_OFF
+            self.logger.warning(
+                "Detected deprecated effect 'None' in %s, use 'off' instead. "
+                "This will stop working in a future version.",
+                self.entity_id,
+            )
         if effect_str == EFFECT_OFF:
             # ignore effect if set to "off" and we have no effect active
             # the special effect "off" is only used to stop an active effect
