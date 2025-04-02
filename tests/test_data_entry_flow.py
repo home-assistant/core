@@ -155,6 +155,21 @@ async def test_abort_removes_instance(manager: MockFlowManager) -> None:
     assert len(manager.mock_created_entries) == 0
 
 
+async def test_abort_aborted_flow(manager: MockFlowManager) -> None:
+    """Test return abort from aborted flow."""
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            manager.async_abort(self.flow_id)
+            return self.async_abort(reason="blah")
+
+    form = await manager.async_init("test")
+    assert form["reason"] == "blah"
+    assert len(manager.async_progress()) == 0
+    assert len(manager.mock_created_entries) == 0
+
+
 async def test_abort_calls_async_remove(manager: MockFlowManager) -> None:
     """Test abort calling the async_remove FlowHandler method."""
 
@@ -204,6 +219,28 @@ async def test_create_saves_data(manager: MockFlowManager) -> None:
         VERSION = 5
 
         async def async_step_init(self, user_input=None):
+            return self.async_create_entry(title="Test Title", data="Test Data")
+
+    await manager.async_init("test")
+    assert len(manager.async_progress()) == 0
+    assert len(manager.mock_created_entries) == 1
+
+    entry = manager.mock_created_entries[0]
+    assert entry["handler"] == "test"
+    assert entry["title"] == "Test Title"
+    assert entry["data"] == "Test Data"
+    assert entry["source"] is None
+
+
+async def test_create_aborted_flow(manager: MockFlowManager) -> None:
+    """Test return create_entry from aborted flow."""
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        VERSION = 5
+
+        async def async_step_init(self, user_input=None):
+            manager.async_abort(self.flow_id)
             return self.async_create_entry(title="Test Title", data="Test Data")
 
     await manager.async_init("test")
