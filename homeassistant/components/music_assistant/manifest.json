@@ -6,6 +6,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/music_assistant",
   "iot_class": "local_push",
+  "quality_scale": "bronze",
   "loggers": ["music_assistant"],
   "requirements": ["music-assistant-client==1.2.0"],
   "zeroconf": ["_mass._tcp.local."]
