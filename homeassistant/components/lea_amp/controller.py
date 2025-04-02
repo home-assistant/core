@@ -15,6 +15,9 @@ from .message import (
     MessageResponseFactory,
     OnOffMessage,
     ZoneEnabledMsg,
+    getMuteMessage,
+    getSourceMessage,
+    getVolumeMessage,
     setMuteMessage,
     setSourceMessage,
     setVolumeMessage,
@@ -399,7 +402,13 @@ class LeaController:
 
     def _send_update_message(self, zone_id: str):
         self._send_message(ZoneEnabledMsg(zone_id))
-        # self._send_message(getMuteMessage(zone_id))
-        # self._send_message(getVolumeMessage(zone_id))
-        # self._send_message(getSourceMessage(zone_id))
+        self._send_message(getMuteMessage(zone_id))
+        self._send_message(getVolumeMessage(zone_id))
+        self._send_message(getSourceMessage(zone_id))
+        self._send_message("subscribe /amp/channels/" + zone_id + "/output/mute")
+        self._send_message("subscribe /amp/channels/" + zone_id + "/output/fader")
+        self._send_message("subscribe /amp/channels/" + zone_id + "/output/enable")
+        self._send_message(
+            "subscribe /amp/channels/" + zone_id + "/inputSelector/primary"
+        )
         # self._send_message(getZoneName(zone_id))
