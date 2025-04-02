@@ -24,7 +24,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: LcConfigEntry) -> bool:
 
     try:
         engine.connect()
-        engine.start()
         await engine.waitForState(ConnectionState.Ready)
     except TimeoutError:
         return False

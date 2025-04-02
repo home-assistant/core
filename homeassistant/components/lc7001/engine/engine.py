@@ -15,6 +15,11 @@ from .system import ReportSystemProperties, SystemInfo, SystemPropertyList
 from .utils import encrypt
 from .zone import ListZones, ReportZoneProperties, ZonePropertyList
 
+
+class AuthError(ConnectionRefusedError):
+    """Authentication failed error."""
+
+
 _LOGGER = logging.getLogger(__name__)
 
 PACKET_DELIMITER = "\x00"
@@ -22,6 +27,7 @@ PACKET_DELIMITER_BYTES = b"\x00"
 REGEX_HELLO = r"^Hello V1[ \r\n]*"
 REGEX_CHALLENGE = r"^([0-9A-F]{32}) [0-9A-F]{12}[ \r\n]*"
 REGEX_ACCEPTED = r"\[OK\][ \r\n]*"
+REGEX_REJECTED = r"\[INVALID\][ \r\n]*"
 
 
 class ConnectionState(StrEnum):
@@ -33,6 +39,8 @@ class ConnectionState(StrEnum):
     Challenged = auto()
     Authenticated = auto()
     Ready = auto()
+    Rejected = auto()
+    Error = auto()
 
 
 def createPacket(jsonString: str) -> Packet | None:
@@ -89,11 +97,14 @@ class Engine(EventEmitter):
 
     def connect(self) -> None:
         """Connect to the LC7001 hub."""
+        self.connection.settimeout(10)
         self.connection.connect((self.host, self.port))
         self._changeState(ConnectionState.Connected)
+        self.start()
 
-    def disconnect(self) -> None:
+    async def disconnect(self) -> None:
         """Disconnect from the LC7001 hub."""
+        await self.stop()
         self.connection.close()
         self._changeState(ConnectionState.Disconnected)
 
@@ -104,9 +115,17 @@ class Engine(EventEmitter):
             self.emit("StateChanged", newState=newState, previousState=previousState)
 
     async def waitForState(
-        self, stateToWaitFor: ConnectionState, timeout: float = 10.0
+        self,
+        stateToWaitFor: ConnectionState,
+        timeout: float = 10.0,
     ) -> None:
         """Wait for a specific state for a certain time."""
+
+        statesToWaitFor: set[ConnectionState] = set()
+        statesToWaitFor.add(stateToWaitFor)
+        statesToWaitFor.add(ConnectionState.Disconnected)
+        statesToWaitFor.add(ConnectionState.Rejected)
+        statesToWaitFor.add(ConnectionState.Error)
 
         lock = Lock()
 
@@ -117,12 +136,21 @@ class Engine(EventEmitter):
         def onStateChanged(
             newState: ConnectionState, previousState: ConnectionState
         ) -> None:
-            if newState == stateToWaitFor:
+            if newState in statesToWaitFor:
                 lock.release()
 
         try:
             # pylint: disable-next=consider-using-with
             lock.acquire(blocking=True, timeout=timeout)
+
+            if self.state == ConnectionState.Disconnected:
+                raise ConnectionError
+
+            if self.state == ConnectionState.Error:
+                raise ConnectionError
+
+            if self.state == ConnectionState.Rejected:
+                raise AuthError
         finally:
             self.off("StateChanged", onStateChanged)
 
@@ -187,7 +215,15 @@ class Engine(EventEmitter):
         """Run the message loop."""
         message = ""
         while self.running:
-            messages = self.connection.recv(2048).split(PACKET_DELIMITER_BYTES)
+            try:
+                messages = self.connection.recv(2048).split(PACKET_DELIMITER_BYTES)
+            except Exception:
+                _LOGGER.exception("Connection error")
+                self.running = False
+                self.thread = None
+                self._changeState(ConnectionState.Error)
+                return
+
             for currentMessageAsBytes in messages:
                 currentMessage = currentMessageAsBytes.decode().replace(
                     PACKET_DELIMITER, ""
@@ -212,6 +248,14 @@ class Engine(EventEmitter):
                             message = ""
 
                     case ConnectionState.Challenged:
+                        m = re.search(REGEX_REJECTED, message)
+                        if m:
+                            _LOGGER.error("Password was rejected")
+                            self.running = False
+                            self.thread = None
+                            self._changeState(ConnectionState.Rejected)
+                            return
+
                         m = re.search(REGEX_ACCEPTED, message)
                         if m:
                             self._changeState(ConnectionState.Authenticated)

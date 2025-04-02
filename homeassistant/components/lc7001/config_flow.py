@@ -10,7 +10,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.exceptions import HomeAssistantError, IntegrationError
 
 from .const import DEFAULT_HOST, DEFAULT_PORT, DEVICE_HUB, DOMAIN
-from .engine.engine import ConnectionState, Engine
+from .engine.engine import AuthError, ConnectionState, Engine
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,16 +51,24 @@ class LcConfigFlow(ConfigFlow, domain=DOMAIN):
             engine = Engine(host=host, port=port, password=password)
 
             engine.connect()
-            engine.start()
 
             await engine.waitForState(ConnectionState.Ready)
             mac = engine.systemInfo.MACAddress
 
         except TimeoutError as error:
+            _LOGGER.exception("Could not connect to LC7001")
+            raise CannotConnect from error
+
+        except AuthError as error:
+            _LOGGER.exception("Could not connect to LC7001")
+            raise InvalidAuth from error
+
+        except Exception as error:
+            _LOGGER.exception("Could not connect to LC7001")
             raise CannotConnect from error
 
         finally:
-            engine.disconnect()
+            await engine.disconnect()
 
         # Return info that you want to store in the config entry.
         return {"title": DEVICE_HUB, "mac": mac}
@@ -76,9 +84,11 @@ class LcConfigFlow(ConfigFlow, domain=DOMAIN):
                 info = await self.validate_input(data=user_input)
 
             except CannotConnect:
+                _LOGGER.exception("Cannot connect")
                 errors["base"] = "cannot_connect"
 
             except InvalidAuth:
+                _LOGGER.exception("Invalid authentication")
                 errors["base"] = "invalid_auth"
 
             except Exception:
