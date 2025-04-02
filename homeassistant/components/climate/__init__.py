@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from datetime import timedelta
 import functools as ft
 import logging
@@ -938,7 +939,8 @@ async def async_service_temperature_set(
                 max_temp,
                 temp_unit,
             )
-            if check_temp - min_temp < -1e-9 or check_temp - max_temp > 1e-9:
+            if ((check_temp < min_temp and not math.isclose(min_temp, check_temp)) or
+                    (max_temp < check_temp and not math.isclose(max_temp, check_temp))):
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="temp_out_of_range",
