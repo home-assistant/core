@@ -404,7 +404,6 @@ class MqttAttributesMixin(Entity):
     ]
     _process_update_extra_state_attributes: Callable[[dict[str, Any]], None]
 
-
     def __init__(self, config: ConfigType) -> None:
         """Initialize the JSON attributes mixin."""
         self._attributes_sub_state: dict[str, EntitySubscription] = {}
