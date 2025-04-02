@@ -3,14 +3,19 @@
 import asyncio
 from copy import deepcopy
 import logging
-from unittest.mock import AsyncMock, call, patch
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import AddonsOptions
 import pytest
 from zwave_js_server.client import Client
 from zwave_js_server.event import Event
-from zwave_js_server.exceptions import BaseZwaveJSServerError, InvalidServerVersion
+from zwave_js_server.exceptions import (
+    BaseZwaveJSServerError,
+    InvalidServerVersion,
+    NotConnected,
+)
 from zwave_js_server.model.node import Node
 from zwave_js_server.model.version import VersionInfo
 
@@ -21,7 +26,7 @@ from homeassistant.components.zwave_js import DOMAIN
 from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
@@ -32,7 +37,11 @@ from homeassistant.setup import async_setup_component
 
 from .common import AIR_TEMPERATURE_SENSOR, EATON_RF9640_ENTITY
 
-from tests.common import MockConfigEntry, async_get_persistent_notifications
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_get_persistent_notifications,
+)
 from tests.typing import WebSocketGenerator
 
 
@@ -127,24 +136,215 @@ async def test_noop_statistics(hass: HomeAssistant, client) -> None:
         assert not mock_cmd2.called
 
 
-@pytest.mark.parametrize("error", [BaseZwaveJSServerError("Boom"), Exception("Boom")])
-async def test_listen_failure(hass: HomeAssistant, client, error) -> None:
-    """Test we handle errors during client listen."""
+async def test_driver_ready_timeout_during_setup(
+    hass: HomeAssistant,
+    client: MagicMock,
+    listen_block: asyncio.Event,
+) -> None:
+    """Test we handle driver ready timeout during setup."""
 
-    async def listen(driver_ready):
-        """Mock the client listen method."""
-        # Set the connect side effect to stop an endless loop on reload.
-        client.connect.side_effect = BaseZwaveJSServerError("Boom")
-        raise error
+    async def listen(driver_ready: asyncio.Event) -> None:
+        """Mock listen."""
+        await listen_block.wait()
 
     client.listen.side_effect = listen
+
+    entry = MockConfigEntry(
+        domain="zwave_js",
+        data={"url": "ws://test.org", "data_collection_opted_in": True},
+    )
+    entry.add_to_hass(hass)
+    assert client.disconnect.call_count == 0
+
+    with patch("homeassistant.components.zwave_js.DRIVER_READY_TIMEOUT", new=0):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert client.disconnect.call_count == 1
+
+
+@pytest.mark.parametrize("core_state", [CoreState.running, CoreState.stopping])
+@pytest.mark.parametrize(
+    ("listen_future_result_method", "listen_future_result"),
+    [
+        ("set_exception", BaseZwaveJSServerError("Boom")),
+        ("set_exception", Exception("Boom")),
+        ("set_result", None),
+    ],
+)
+async def test_listen_done_during_setup_before_forward_entry(
+    hass: HomeAssistant,
+    client: MagicMock,
+    listen_block: asyncio.Event,
+    listen_result: asyncio.Future[None],
+    core_state: CoreState,
+    listen_future_result_method: str,
+    listen_future_result: Exception | None,
+) -> None:
+    """Test listen task finishing during setup before forward entry."""
+    assert hass.state is CoreState.running
+
+    async def listen(driver_ready: asyncio.Event) -> None:
+        await listen_block.wait()
+        await listen_result
+        async_fire_time_changed(hass, fire_all=True)
+
+    client.listen.side_effect = listen
+    hass.set_state(core_state)
+    listen_block.set()
+    getattr(listen_result, listen_future_result_method)(listen_future_result)
+
     entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
+    assert client.disconnect.call_count == 0
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert client.disconnect.call_count == 1
+
+
+async def test_not_connected_during_setup_after_forward_entry(
+    hass: HomeAssistant,
+    client: MagicMock,
+    listen_block: asyncio.Event,
+    listen_result: asyncio.Future[None],
+) -> None:
+    """Test we handle not connected client during setup after forward entry."""
+
+    async def send_command_side_effect(*args: Any, **kwargs: Any) -> None:
+        """Mock send command."""
+        listen_block.set()
+        listen_result.set_result(None)
+        # Yield to allow the listen task to run
+        await asyncio.sleep(0)
+        raise NotConnected("Boom")
+
+    async def listen(driver_ready: asyncio.Event) -> None:
+        """Mock listen."""
+        driver_ready.set()
+        client.async_send_command.side_effect = send_command_side_effect
+        await listen_block.wait()
+        await listen_result
+
+    client.listen.side_effect = listen
+
+    entry = MockConfigEntry(
+        domain="zwave_js",
+        data={"url": "ws://test.org", "data_collection_opted_in": True},
+    )
+    entry.add_to_hass(hass)
+    assert client.disconnect.call_count == 0
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert client.disconnect.call_count == 1
+
+
+@pytest.mark.parametrize("core_state", [CoreState.running, CoreState.stopping])
+@pytest.mark.parametrize(
+    ("listen_future_result_method", "listen_future_result"),
+    [
+        ("set_exception", BaseZwaveJSServerError("Boom")),
+        ("set_exception", Exception("Boom")),
+        ("set_result", None),
+    ],
+)
+async def test_listen_done_during_setup_after_forward_entry(
+    hass: HomeAssistant,
+    client: MagicMock,
+    listen_block: asyncio.Event,
+    listen_result: asyncio.Future[None],
+    core_state: CoreState,
+    listen_future_result_method: str,
+    listen_future_result: Exception | None,
+) -> None:
+    """Test listen task finishing during setup after forward entry."""
+    assert hass.state is CoreState.running
+
+    async def send_command_side_effect(*args: Any, **kwargs: Any) -> None:
+        """Mock send command."""
+        listen_block.set()
+        getattr(listen_result, listen_future_result_method)(listen_future_result)
+        # Yield to allow the listen task to run
+        await asyncio.sleep(0)
+
+    async def listen(driver_ready: asyncio.Event) -> None:
+        """Mock listen."""
+        driver_ready.set()
+        client.async_send_command.side_effect = send_command_side_effect
+        await listen_block.wait()
+        await listen_result
+
+    client.listen.side_effect = listen
+    hass.set_state(core_state)
+
+    entry = MockConfigEntry(
+        domain="zwave_js",
+        data={"url": "ws://test.org", "data_collection_opted_in": True},
+    )
+    entry.add_to_hass(hass)
+    assert client.disconnect.call_count == 0
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert client.disconnect.call_count == 1
+
+
+@pytest.mark.parametrize(
+    ("core_state", "final_config_entry_state", "disconnect_call_count"),
+    [
+        (
+            CoreState.running,
+            ConfigEntryState.SETUP_RETRY,
+            2,
+        ),  # the reload will cause a disconnect call too
+        (
+            CoreState.stopping,
+            ConfigEntryState.LOADED,
+            0,
+        ),  # the home assistant stop event will handle the disconnect
+    ],
+)
+@pytest.mark.parametrize(
+    ("listen_future_result_method", "listen_future_result"),
+    [
+        ("set_exception", BaseZwaveJSServerError("Boom")),
+        ("set_exception", Exception("Boom")),
+        ("set_result", None),
+    ],
+)
+async def test_listen_done_after_setup(
+    hass: HomeAssistant,
+    client: MagicMock,
+    integration: MockConfigEntry,
+    listen_block: asyncio.Event,
+    listen_result: asyncio.Future[None],
+    core_state: CoreState,
+    listen_future_result_method: str,
+    listen_future_result: Exception | None,
+    final_config_entry_state: ConfigEntryState,
+    disconnect_call_count: int,
+) -> None:
+    """Test listen task finishing after setup."""
+    config_entry = integration
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert hass.state is CoreState.running
+    assert client.disconnect.call_count == 0
+
+    hass.set_state(core_state)
+    listen_block.set()
+    getattr(listen_result, listen_future_result_method)(listen_future_result)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is final_config_entry_state
+    assert client.disconnect.call_count == disconnect_call_count
 
 
 async def test_new_entity_on_value_added(
