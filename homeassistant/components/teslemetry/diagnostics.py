@@ -35,7 +35,9 @@ async def async_get_config_entry_diagnostics(
     vehicles = [
         {
             "data": async_redact_data(x.coordinator.data, VEHICLE_REDACT),
-            # Stream diag will go here when implemented
+            "stream": {
+                "config": x.stream_vehicle.config,
+            },
         }
         for x in entry.runtime_data.vehicles
     ]
@@ -45,6 +47,7 @@ async def async_get_config_entry_diagnostics(
             if x.live_coordinator
             else None,
             "info": async_redact_data(x.info_coordinator.data, ENERGY_INFO_REDACT),
+            "history": x.history_coordinator.data if x.history_coordinator else None,
         }
         for x in entry.runtime_data.energysites
     ]

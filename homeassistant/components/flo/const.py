@@ -4,7 +4,6 @@ import logging
 
 LOGGER = logging.getLogger(__package__)
 
-CLIENT = "client"
 DOMAIN = "flo"
 FLO_HOME = "home"
 FLO_AWAY = "away"

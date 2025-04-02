@@ -311,11 +311,24 @@ async def async_update_device(
     update the device with the new location so they can
     figure out where the adapter is.
     """
+    address = details[ADAPTER_ADDRESS]
+    connections = {(dr.CONNECTION_BLUETOOTH, address)}
     device_registry = dr.async_get(hass)
+    # We only have one device for the config entry
+    # so if the address has been corrected, make
+    # sure the device entry reflects the correct
+    # address
+    for device in dr.async_entries_for_config_entry(device_registry, entry.entry_id):
+        for conn_type, conn_value in device.connections:
+            if conn_type == dr.CONNECTION_BLUETOOTH and conn_value != address:
+                device_registry.async_update_device(
+                    device.id, new_connections=connections
+                )
+                break
     device_entry = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        name=adapter_human_name(adapter, details[ADAPTER_ADDRESS]),
-        connections={(dr.CONNECTION_BLUETOOTH, details[ADAPTER_ADDRESS])},
+        name=adapter_human_name(adapter, address),
+        connections=connections,
         manufacturer=details[ADAPTER_MANUFACTURER],
         model=adapter_model(details),
         sw_version=details.get(ADAPTER_SW_VERSION),
@@ -342,9 +355,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     )
                 )
             )
+            return True
         address = entry.unique_id
         assert address is not None
-        assert source_entry is not None
         source_domain = entry.data[CONF_SOURCE_DOMAIN]
         if mac_manufacturer := await get_manufacturer_from_mac(address):
             manufacturer = f"{mac_manufacturer} ({source_domain})"

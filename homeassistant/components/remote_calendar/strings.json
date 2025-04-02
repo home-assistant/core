@@ -1,0 +1,34 @@
+{
+  "title": "Remote Calendar",
+  "config": {
+    "step": {
+      "user": {
+        "description": "Please choose a name for the calendar to be imported",
+        "data": {
+          "calendar_name": "Calendar name",
+          "url": "Calendar URL"
+        },
+        "data_description": {
+          "calendar_name": "The name of the calendar shown in the UI.",
+          "url": "The URL of the remote calendar."
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "forbidden": "The server understood the request but refuses to authorize it.",
+      "invalid_ics_file": "[%key:component::local_calendar::config::error::invalid_ics_file%]"
+    }
+  },
+  "exceptions": {
+    "unable_to_fetch": {
+      "message": "Unable to fetch calendar data: {err}"
+    },
+    "unable_to_parse": {
+      "message": "Unable to parse calendar data: {err}"
+    }
+  }
+}

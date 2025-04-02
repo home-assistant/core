@@ -11,12 +11,17 @@ from onedrive_personal_sdk.exceptions import (
     HashMismatchError,
     OneDriveException,
 )
+from onedrive_personal_sdk.models.items import File
 import pytest
 
 from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, AgentBackup
-from homeassistant.components.onedrive.const import DOMAIN
+from homeassistant.components.onedrive.backup import (
+    async_register_backup_agents_listener,
+)
+from homeassistant.components.onedrive.const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.backup import async_initialize_backup
 from homeassistant.setup import async_setup_component
 
 from . import setup_integration
@@ -31,7 +36,8 @@ async def setup_backup_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> AsyncGenerator[None]:
-    """Set up onedrive integration."""
+    """Set up onedrive and backup integrations."""
+    async_initialize_backup(hass)
     with (
         patch("homeassistant.components.backup.is_hassio", return_value=False),
         patch("homeassistant.components.backup.store.STORE_DELAY_SAVE", 0),
@@ -152,7 +158,7 @@ async def test_agents_delete(
 
     assert response["success"]
     assert response["result"] == {"agent_errors": {}}
-    mock_onedrive_client.delete_drive_item.assert_called_once()
+    assert mock_onedrive_client.delete_drive_item.call_count == 2
 
 
 async def test_agents_upload(
@@ -239,6 +245,28 @@ async def test_agents_download(
     )
     assert resp.status == 200
     assert await resp.content.read() == b"backup data"
+
+
+async def test_error_on_agents_download(
+    hass_client: ClientSessionGenerator,
+    mock_onedrive_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    mock_backup_file: File,
+    mock_metadata_file: File,
+) -> None:
+    """Test we get not found on an not existing backup on download."""
+    client = await hass_client()
+    backup_id = BACKUP_METADATA["backup_id"]
+    mock_onedrive_client.list_drive_items.side_effect = [
+        [mock_backup_file, mock_metadata_file],
+        [],
+    ]
+
+    with patch("homeassistant.components.onedrive.backup.CACHE_TTL", -1):
+        resp = await client.get(
+            f"/api/backup/download/{backup_id}?agent_id={DOMAIN}.{mock_config_entry.unique_id}"
+        )
+    assert resp.status == 404
 
 
 @pytest.mark.parametrize(
@@ -349,3 +377,15 @@ async def test_reauth_on_403(
     assert "context" in flow
     assert flow["context"]["source"] == SOURCE_REAUTH
     assert flow["context"]["entry_id"] == mock_config_entry.entry_id
+
+
+async def test_listeners_get_cleaned_up(hass: HomeAssistant) -> None:
+    """Test listener gets cleaned up."""
+    listener = MagicMock()
+    remove_listener = async_register_backup_agents_listener(hass, listener=listener)
+
+    # make sure it's the last listener
+    hass.data[DATA_BACKUP_AGENT_LISTENERS] = [listener]
+    remove_listener()
+
+    assert hass.data.get(DATA_BACKUP_AGENT_LISTENERS) is None

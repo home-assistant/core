@@ -6,10 +6,13 @@ from typing import Any
 
 from libpyfoscam import FoscamCamera
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, LOGGER
+
+type FoscamConfigEntry = ConfigEntry[FoscamCoordinator]
 
 
 class FoscamCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -18,12 +21,14 @@ class FoscamCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def __init__(
         self,
         hass: HomeAssistant,
+        entry: FoscamConfigEntry,
         session: FoscamCamera,
     ) -> None:
         """Initialize my coordinator."""
         super().__init__(
             hass,
             LOGGER,
+            config_entry=entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=30),
         )

@@ -1,4 +1,14 @@
 {
+  "entity": {
+    "switch": {
+      "child_lock": {
+        "default": "mdi:lock-open-variant",
+        "state": {
+          "on": "mdi:lock"
+        }
+      }
+    }
+  },
   "services": {
     "set_climate_timer": {
       "service": "mdi:timer"

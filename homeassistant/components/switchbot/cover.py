@@ -17,7 +17,7 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .coordinator import SwitchbotConfigEntry, SwitchbotDataUpdateCoordinator
@@ -31,7 +31,7 @@ PARALLEL_UPDATES = 0
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SwitchbotConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Switchbot curtain based on a config entry."""
     coordinator = entry.runtime_data
@@ -154,7 +154,7 @@ class SwitchBotBlindTiltEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
             ATTR_CURRENT_TILT_POSITION
         )
         self._last_run_success = last_state.attributes.get("last_run_success")
-        if (_tilt := self._attr_current_cover_position) is not None:
+        if (_tilt := self._attr_current_cover_tilt_position) is not None:
             self._attr_is_closed = (_tilt < self.CLOSED_DOWN_THRESHOLD) or (
                 _tilt > self.CLOSED_UP_THRESHOLD
             )

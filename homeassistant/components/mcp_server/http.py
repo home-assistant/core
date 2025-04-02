@@ -25,7 +25,6 @@ from mcp import types
 
 from homeassistant.components import conversation
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import llm
@@ -56,11 +55,9 @@ def async_get_config_entry(hass: HomeAssistant) -> MCPServerConfigEntry:
 
     Will raise an HTTP error if the expected configuration is not present.
     """
-    config_entries: list[MCPServerConfigEntry] = [
-        config_entry
-        for config_entry in hass.config_entries.async_entries(DOMAIN)
-        if config_entry.state == ConfigEntryState.LOADED
-    ]
+    config_entries: list[MCPServerConfigEntry] = (
+        hass.config_entries.async_loaded_entries(DOMAIN)
+    )
     if not config_entries:
         raise HTTPNotFound(text="Model Context Protocol server is not configured")
     if len(config_entries) > 1:

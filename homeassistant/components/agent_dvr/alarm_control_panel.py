@@ -9,7 +9,7 @@ from homeassistant.components.alarm_control_panel import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AgentDVRConfigEntry
 from .const import DOMAIN as AGENT_DOMAIN
@@ -24,7 +24,7 @@ CONST_ALARM_CONTROL_PANEL_NAME = "Alarm Panel"
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: AgentDVRConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Agent DVR Alarm Control Panels."""
     async_add_entities([AgentBaseStation(config_entry.runtime_data)])

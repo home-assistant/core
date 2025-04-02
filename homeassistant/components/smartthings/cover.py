@@ -2,25 +2,23 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
 from typing import Any
 
-from pysmartthings import Attribute, Capability
+from pysmartthings import Attribute, Capability, Command, SmartThings
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    DOMAIN as COVER_DOMAIN,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
     CoverState,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DATA_BROKERS, DOMAIN
+from . import FullDevice, SmartThingsConfigEntry
+from .const import MAIN
 from .entity import SmartThingsEntity
 
 VALUE_TO_STATE = {
@@ -32,114 +30,108 @@ VALUE_TO_STATE = {
     "unknown": None,
 }
 
+CAPABILITIES = (Capability.WINDOW_SHADE, Capability.DOOR_CONTROL)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: SmartThingsConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add covers for a config entry."""
-    broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
+    entry_data = entry.runtime_data
     async_add_entities(
-        [
-            SmartThingsCover(device)
-            for device in broker.devices.values()
-            if broker.any_assigned(device.device_id, COVER_DOMAIN)
-        ],
-        True,
+        SmartThingsCover(entry_data.client, device, Capability(capability))
+        for device in entry_data.devices.values()
+        for capability in device.status[MAIN]
+        if capability in CAPABILITIES
     )
-
-
-def get_capabilities(capabilities: Sequence[str]) -> Sequence[str] | None:
-    """Return all capabilities supported if minimum required are present."""
-    min_required = [
-        Capability.door_control,
-        Capability.garage_door_control,
-        Capability.window_shade,
-    ]
-    # Must have one of the min_required
-    if any(capability in capabilities for capability in min_required):
-        # Return all capabilities supported/consumed
-        return [
-            *min_required,
-            Capability.battery,
-            Capability.switch_level,
-            Capability.window_shade_level,
-        ]
-
-    return None
 
 
 class SmartThingsCover(SmartThingsEntity, CoverEntity):
     """Define a SmartThings cover."""
 
-    def __init__(self, device):
+    _attr_name = None
+    _state: CoverState | None = None
+
+    def __init__(
+        self,
+        client: SmartThings,
+        device: FullDevice,
+        capability: Capability,
+    ) -> None:
         """Initialize the cover class."""
-        super().__init__(device)
-        self._current_cover_position = None
-        self._state = None
+        super().__init__(
+            client,
+            device,
+            {
+                capability,
+                Capability.BATTERY,
+                Capability.WINDOW_SHADE_LEVEL,
+                Capability.SWITCH_LEVEL,
+            },
+        )
+        self.capability = capability
         self._attr_supported_features = (
             CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
         )
-        if (
-            Capability.switch_level in device.capabilities
-            or Capability.window_shade_level in device.capabilities
-        ):
+        if self.supports_capability(Capability.WINDOW_SHADE_LEVEL):
+            self.level_capability = Capability.WINDOW_SHADE_LEVEL
+            self.level_command = Command.SET_SHADE_LEVEL
+        else:
+            self.level_capability = Capability.SWITCH_LEVEL
+            self.level_command = Command.SET_LEVEL
+        if self.supports_capability(
+            Capability.SWITCH_LEVEL
+        ) or self.supports_capability(Capability.WINDOW_SHADE_LEVEL):
             self._attr_supported_features |= CoverEntityFeature.SET_POSITION
 
-        if Capability.door_control in device.capabilities:
+        if self.supports_capability(Capability.DOOR_CONTROL):
             self._attr_device_class = CoverDeviceClass.DOOR
-        elif Capability.window_shade in device.capabilities:
+        elif self.supports_capability(Capability.WINDOW_SHADE):
             self._attr_device_class = CoverDeviceClass.SHADE
-        elif Capability.garage_door_control in device.capabilities:
-            self._attr_device_class = CoverDeviceClass.GARAGE
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
-        # Same command for all 3 supported capabilities
-        await self._device.close(set_status=True)
-        # State is set optimistically in the commands above, therefore update
-        # the entity state ahead of receiving the confirming push updates
-        self.async_schedule_update_ha_state(True)
+        await self.execute_device_command(self.capability, Command.CLOSE)
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        # Same for all capability types
-        await self._device.open(set_status=True)
-        # State is set optimistically in the commands above, therefore update
-        # the entity state ahead of receiving the confirming push updates
-        self.async_schedule_update_ha_state(True)
+        await self.execute_device_command(self.capability, Command.OPEN)
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        if not self.supported_features & CoverEntityFeature.SET_POSITION:
-            return
-        # Do not set_status=True as device will report progress.
-        if Capability.window_shade_level in self._device.capabilities:
-            await self._device.set_window_shade_level(
-                kwargs[ATTR_POSITION], set_status=False
-            )
-        else:
-            await self._device.set_level(kwargs[ATTR_POSITION], set_status=False)
+        await self.execute_device_command(
+            self.level_capability,
+            self.level_command,
+            argument=kwargs[ATTR_POSITION],
+        )
 
-    async def async_update(self) -> None:
+    def _update_attr(self) -> None:
         """Update the attrs of the cover."""
-        if Capability.door_control in self._device.capabilities:
-            self._state = VALUE_TO_STATE.get(self._device.status.door)
-        elif Capability.window_shade in self._device.capabilities:
-            self._state = VALUE_TO_STATE.get(self._device.status.window_shade)
-        elif Capability.garage_door_control in self._device.capabilities:
-            self._state = VALUE_TO_STATE.get(self._device.status.door)
+        attribute = {
+            Capability.WINDOW_SHADE: Attribute.WINDOW_SHADE,
+            Capability.DOOR_CONTROL: Attribute.DOOR,
+        }[self.capability]
+        self._state = VALUE_TO_STATE.get(
+            self.get_attribute_value(self.capability, attribute)
+        )
 
-        if Capability.window_shade_level in self._device.capabilities:
-            self._attr_current_cover_position = self._device.status.shade_level
-        elif Capability.switch_level in self._device.capabilities:
-            self._attr_current_cover_position = self._device.status.level
+        if self.supports_capability(Capability.SWITCH_LEVEL):
+            self._attr_current_cover_position = self.get_attribute_value(
+                Capability.SWITCH_LEVEL, Attribute.LEVEL
+            )
+        elif self.supports_capability(Capability.WINDOW_SHADE_LEVEL):
+            self._attr_current_cover_position = self.get_attribute_value(
+                Capability.WINDOW_SHADE_LEVEL, Attribute.SHADE_LEVEL
+            )
 
+        # Deprecated, remove in 2025.10
         self._attr_extra_state_attributes = {}
-        battery = self._device.status.attributes[Attribute.battery].value
-        if battery is not None:
-            self._attr_extra_state_attributes[ATTR_BATTERY_LEVEL] = battery
+        if self.supports_capability(Capability.BATTERY):
+            self._attr_extra_state_attributes[ATTR_BATTERY_LEVEL] = (
+                self.get_attribute_value(Capability.BATTERY, Attribute.BATTERY)
+            )
 
     @property
     def is_opening(self) -> bool:

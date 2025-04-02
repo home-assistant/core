@@ -27,7 +27,6 @@ from homeassistant.const import (
     CONF_MAC,
     CONF_PASSWORD,
     CONF_PORT,
-    CONF_SCAN_INTERVAL,
     CONF_SSL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
@@ -41,6 +40,7 @@ from homeassistant.helpers.service_info.ssdp import (
 )
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
+from .common import mock_dsm_information
 from .consts import (
     DEVICE_TOKEN,
     HOST,
@@ -73,7 +73,7 @@ def mock_controller_service():
             volumes_ids=["volume_1"],
             update=AsyncMock(return_value=True),
         )
-        dsm.information = Mock(serial=SERIAL)
+        dsm.information = mock_dsm_information()
         dsm.file = AsyncMock(get_shared_folders=AsyncMock(return_value=None))
         yield dsm
 
@@ -96,7 +96,7 @@ def mock_controller_service_2sa():
             volumes_ids=["volume_1"],
             update=AsyncMock(return_value=True),
         )
-        dsm.information = Mock(serial=SERIAL)
+        dsm.information = mock_dsm_information()
         dsm.file = AsyncMock(get_shared_folders=AsyncMock(return_value=None))
         yield dsm
 
@@ -117,7 +117,7 @@ def mock_controller_service_vdsm():
             volumes_ids=["volume_1"],
             update=AsyncMock(return_value=True),
         )
-        dsm.information = Mock(serial=SERIAL)
+        dsm.information = mock_dsm_information()
         dsm.file = AsyncMock(get_shared_folders=AsyncMock(return_value=None))
         yield dsm
 
@@ -138,7 +138,7 @@ def mock_controller_service_with_filestation():
             volumes_ids=["volume_1"],
             update=AsyncMock(return_value=True),
         )
-        dsm.information = Mock(serial=SERIAL)
+        dsm.information = mock_dsm_information()
         dsm.file = AsyncMock(
             get_shared_folders=AsyncMock(
                 return_value=[
@@ -171,7 +171,7 @@ def mock_controller_service_failed():
             volumes_ids=[],
             update=AsyncMock(return_value=True),
         )
-        dsm.information = Mock(serial=None)
+        dsm.information = mock_dsm_information(serial=None)
         dsm.file = AsyncMock(get_shared_folders=AsyncMock(return_value=None))
         yield dsm
 
@@ -681,14 +681,12 @@ async def test_options_flow(
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            CONF_SCAN_INTERVAL: 2,
             CONF_SNAPSHOT_QUALITY: 0,
             CONF_BACKUP_PATH: "my_nackup_path",
             CONF_BACKUP_SHARE: "/ha_backup",
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert config_entry.options[CONF_SCAN_INTERVAL] == 2
     assert config_entry.options[CONF_SNAPSHOT_QUALITY] == 0
     assert config_entry.options[CONF_BACKUP_PATH] == "my_nackup_path"
     assert config_entry.options[CONF_BACKUP_SHARE] == "/ha_backup"

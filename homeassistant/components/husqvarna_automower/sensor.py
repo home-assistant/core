@@ -23,7 +23,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfLength, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import AutomowerConfigEntry
@@ -227,12 +227,16 @@ def _get_work_area_names(data: MowerAttributes) -> list[str]:
 @callback
 def _get_current_work_area_name(data: MowerAttributes) -> str:
     """Return the name of the current work area."""
-    if data.mower.work_area_id is None:
-        return STATE_NO_WORK_AREA_ACTIVE
     if TYPE_CHECKING:
         # Sensor does not get created if values are None
         assert data.work_areas is not None
-    return data.work_areas[data.mower.work_area_id].name
+    if (
+        data.mower.work_area_id is not None
+        and data.mower.work_area_id in data.work_areas
+    ):
+        return data.work_areas[data.mower.work_area_id].name
+
+    return STATE_NO_WORK_AREA_ACTIVE
 
 
 @callback
@@ -294,6 +298,18 @@ MOWER_SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfTime.HOURS,
         exists_fn=lambda data: data.statistics.cutting_blade_usage_time is not None,
         value_fn=attrgetter("statistics.cutting_blade_usage_time"),
+    ),
+    AutomowerSensorEntityDescription(
+        key="downtime",
+        translation_key="downtime",
+        state_class=SensorStateClass.TOTAL,
+        device_class=SensorDeviceClass.DURATION,
+        entity_registry_enabled_default=False,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_display_precision=0,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        exists_fn=lambda data: data.statistics.downtime is not None,
+        value_fn=attrgetter("statistics.downtime"),
     ),
     AutomowerSensorEntityDescription(
         key="total_charging_time",
@@ -368,6 +384,18 @@ MOWER_SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
         value_fn=attrgetter("statistics.total_drive_distance"),
     ),
     AutomowerSensorEntityDescription(
+        key="uptime",
+        translation_key="uptime",
+        state_class=SensorStateClass.TOTAL,
+        device_class=SensorDeviceClass.DURATION,
+        entity_registry_enabled_default=False,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_display_precision=0,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        exists_fn=lambda data: data.statistics.uptime is not None,
+        value_fn=attrgetter("statistics.uptime"),
+    ),
+    AutomowerSensorEntityDescription(
         key="next_start_timestamp",
         translation_key="next_start_timestamp",
         device_class=SensorDeviceClass.TIMESTAMP,
@@ -430,7 +458,7 @@ WORK_AREA_SENSOR_TYPES: tuple[WorkAreaSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AutomowerConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensor platform."""
     coordinator = entry.runtime_data
