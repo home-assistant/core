@@ -114,7 +114,7 @@ async def test_switch_availability(
         (True, True, STATE_UNAVAILABLE),
     ],
 )
-async def test_light_availability_with_alerts(
+async def test_switch_availability_with_alerts(
     hass: HomeAssistant,
     setup_entity,
     entity_config,
@@ -126,13 +126,12 @@ async def test_light_availability_with_alerts(
     expected_state,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test light entity behavior under different alert conditions."""
-
+    """Test switch entity behavior under different alert conditions."""
     caplog.set_level(logging.WARNING)
 
     last_value_param = entity_config[last_value] if last_value else None
 
-    light = await setup_entity(
+    switch = await setup_entity(
         entity_config,
         status_value=entity_config["alerts"][alert_key],
         gw_available=gw_available,
@@ -140,8 +139,8 @@ async def test_light_availability_with_alerts(
         last_value=last_value_param,
     )
 
-    assert light is not None
-    assert light.state == expected_state
+    assert switch is not None
+    assert switch.state == expected_state
     assert any(expected_log in record.message for record in caplog.records)
 
 
