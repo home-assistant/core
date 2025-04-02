@@ -18,7 +18,7 @@ import pathlib
 import sys
 import time
 from types import ModuleType
-from typing import TYPE_CHECKING, Any, Literal, Protocol, TypedDict, cast
+from typing import TYPE_CHECKING, Any, Literal, Protocol, TypedDict, cast, final
 
 from awesomeversion import (
     AwesomeVersion,
@@ -646,6 +646,7 @@ def async_register_preload_platform(hass: HomeAssistant, platform_name: str) -> 
         preload_platforms.append(platform_name)
 
 
+@final  # Final to allow direct checking of the type instead of using isinstance
 class Integration:
     """An integration in Home Assistant."""
 
