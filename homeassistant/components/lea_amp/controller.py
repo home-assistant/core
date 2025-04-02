@@ -95,7 +95,7 @@ class LeaController:
     async def start(self):
         """Start."""
 
-        self.createConnection()
+        await self.createConnection()
         self.start_client(self._ip_address, int(self._port))
         # self._discovery_enabled = False
         # self._update_enabled = True
