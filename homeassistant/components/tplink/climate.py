@@ -22,7 +22,7 @@ from homeassistant.components.climate import (
 from homeassistant.const import PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TPLinkConfigEntry, legacy_device_id
 from .const import DOMAIN, UNIT_MAPPING
@@ -71,7 +71,7 @@ CLIMATE_DESCRIPTIONS: tuple[TPLinkClimateEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: TPLinkConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up climate entities."""
     data = config_entry.runtime_data

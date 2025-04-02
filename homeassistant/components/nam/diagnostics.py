@@ -9,7 +9,7 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from . import NAMConfigEntry
+from .coordinator import NAMConfigEntry
 
 TO_REDACT = {CONF_PASSWORD, CONF_USERNAME}
 

@@ -11,7 +11,7 @@ from homeassistant import config_entries
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
@@ -30,7 +30,7 @@ DEFAULT_PERCENTAGE: Final = 50
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: config_entries.ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up fan(s) for KNX platform."""
     knx_module = hass.data[KNX_MODULE_KEY]

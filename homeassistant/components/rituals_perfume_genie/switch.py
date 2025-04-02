@@ -11,7 +11,7 @@ from pyrituals import Diffuser
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import RitualsDataUpdateCoordinator
@@ -42,7 +42,7 @@ ENTITY_DESCRIPTIONS = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the diffuser switch."""
     coordinators: dict[str, RitualsDataUpdateCoordinator] = hass.data[DOMAIN][

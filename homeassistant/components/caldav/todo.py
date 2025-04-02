@@ -20,7 +20,7 @@ from homeassistant.components.todo import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import CalDavConfigEntry
@@ -46,7 +46,7 @@ TODO_STATUS_MAP_INV: dict[TodoItemStatus, str] = {
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: CalDavConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the CalDav todo platform for a config entry."""
     calendars = await async_get_calendars(hass, entry.runtime_data, SUPPORTED_COMPONENT)
@@ -138,6 +138,8 @@ class WebDavTodoListEntity(TodoListEntity):
             await self.hass.async_add_executor_job(
                 partial(self._calendar.save_todo, **item_data),
             )
+            # refreshing async otherwise it would take too much time
+            self.hass.async_create_task(self.async_update_ha_state(force_refresh=True))
         except (requests.ConnectionError, DAVError) as err:
             raise HomeAssistantError(f"CalDAV save error: {err}") from err
 
@@ -172,6 +174,8 @@ class WebDavTodoListEntity(TodoListEntity):
                     obj_type="todo",
                 ),
             )
+            # refreshing async otherwise it would take too much time
+            self.hass.async_create_task(self.async_update_ha_state(force_refresh=True))
         except (requests.ConnectionError, DAVError) as err:
             raise HomeAssistantError(f"CalDAV save error: {err}") from err
 
@@ -195,3 +199,5 @@ class WebDavTodoListEntity(TodoListEntity):
                 await self.hass.async_add_executor_job(item.delete)
             except (requests.ConnectionError, DAVError) as err:
                 raise HomeAssistantError(f"CalDAV delete error: {err}") from err
+        # refreshing async otherwise it would take too much time
+        self.hass.async_create_task(self.async_update_ha_state(force_refresh=True))

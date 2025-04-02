@@ -6,9 +6,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import FytaConfigEntry
 from .const import DOMAIN
-from .coordinator import FytaCoordinator
+from .coordinator import FytaConfigEntry, FytaCoordinator
 
 
 class FytaPlantEntity(CoordinatorEntity[FytaCoordinator]):

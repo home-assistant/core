@@ -3,7 +3,7 @@
 import logging
 from typing import Any, cast
 
-from aiohomeconnect.model import EventKey, ProgramKey, SettingKey
+from aiohomeconnect.model import EventKey, OptionKey, ProgramKey, SettingKey
 from aiohomeconnect.model.error import HomeConnectError
 from aiohomeconnect.model.program import EnumerateProgram
 
@@ -13,7 +13,7 @@ from homeassistant.components.switch import SwitchEntity, SwitchEntityDescriptio
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.issue_registry import (
     IssueSeverity,
     async_create_issue,
@@ -21,26 +21,19 @@ from homeassistant.helpers.issue_registry import (
 )
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
-from .const import (
-    BSH_POWER_OFF,
-    BSH_POWER_ON,
-    BSH_POWER_STANDBY,
-    DOMAIN,
-    SVE_TRANSLATION_PLACEHOLDER_APPLIANCE_NAME,
-    SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID,
-    SVE_TRANSLATION_PLACEHOLDER_KEY,
-    SVE_TRANSLATION_PLACEHOLDER_VALUE,
-)
+from .common import setup_home_connect_entry
+from .const import BSH_POWER_OFF, BSH_POWER_ON, BSH_POWER_STANDBY, DOMAIN
 from .coordinator import (
     HomeConnectApplianceData,
     HomeConnectConfigEntry,
     HomeConnectCoordinator,
 )
-from .entity import HomeConnectEntity
+from .entity import HomeConnectEntity, HomeConnectOptionEntity
 from .utils import get_dict_from_home_connect_error
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 1
 
 SWITCHES = (
     SwitchEntityDescription(
@@ -99,34 +92,111 @@ POWER_SWITCH_DESCRIPTION = SwitchEntityDescription(
     translation_key="power",
 )
 
+SWITCH_OPTIONS = (
+    SwitchEntityDescription(
+        key=OptionKey.CONSUMER_PRODUCTS_COFFEE_MAKER_MULTIPLE_BEVERAGES,
+        translation_key="multiple_beverages",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.DISHCARE_DISHWASHER_INTENSIV_ZONE,
+        translation_key="intensiv_zone",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.DISHCARE_DISHWASHER_BRILLIANCE_DRY,
+        translation_key="brilliance_dry",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.DISHCARE_DISHWASHER_VARIO_SPEED_PLUS,
+        translation_key="vario_speed_plus",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.DISHCARE_DISHWASHER_SILENCE_ON_DEMAND,
+        translation_key="silence_on_demand",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.DISHCARE_DISHWASHER_HALF_LOAD,
+        translation_key="half_load",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.DISHCARE_DISHWASHER_EXTRA_DRY,
+        translation_key="extra_dry",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.DISHCARE_DISHWASHER_HYGIENE_PLUS,
+        translation_key="hygiene_plus",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.DISHCARE_DISHWASHER_ECO_DRY,
+        translation_key="eco_dry",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.DISHCARE_DISHWASHER_ZEOLITE_DRY,
+        translation_key="zeolite_dry",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.COOKING_OVEN_FAST_PRE_HEAT,
+        translation_key="fast_pre_heat",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.LAUNDRY_CARE_WASHER_I_DOS_1_ACTIVE,
+        translation_key="i_dos1_active",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.LAUNDRY_CARE_WASHER_I_DOS_2_ACTIVE,
+        translation_key="i_dos2_active",
+    ),
+)
+
+
+def _get_entities_for_appliance(
+    entry: HomeConnectConfigEntry,
+    appliance: HomeConnectApplianceData,
+) -> list[HomeConnectEntity]:
+    """Get a list of entities."""
+    entities: list[HomeConnectEntity] = []
+    entities.extend(
+        HomeConnectProgramSwitch(entry.runtime_data, appliance, program)
+        for program in appliance.programs
+        if program.key != ProgramKey.UNKNOWN
+    )
+    if SettingKey.BSH_COMMON_POWER_STATE in appliance.settings:
+        entities.append(
+            HomeConnectPowerSwitch(
+                entry.runtime_data, appliance, POWER_SWITCH_DESCRIPTION
+            )
+        )
+    entities.extend(
+        HomeConnectSwitch(entry.runtime_data, appliance, description)
+        for description in SWITCHES
+        if description.key in appliance.settings
+    )
+    return entities
+
+
+def _get_option_entities_for_appliance(
+    entry: HomeConnectConfigEntry,
+    appliance: HomeConnectApplianceData,
+) -> list[HomeConnectOptionEntity]:
+    """Get a list of currently available option entities."""
+    return [
+        HomeConnectSwitchOptionEntity(entry.runtime_data, appliance, description)
+        for description in SWITCH_OPTIONS
+        if description.key in appliance.options
+    ]
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: HomeConnectConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Home Connect switch."""
-
-    entities: list[SwitchEntity] = []
-    for appliance in entry.runtime_data.data.values():
-        entities.extend(
-            HomeConnectProgramSwitch(entry.runtime_data, appliance, program)
-            for program in appliance.programs
-            if program.key != ProgramKey.UNKNOWN
-        )
-        if SettingKey.BSH_COMMON_POWER_STATE in appliance.settings:
-            entities.append(
-                HomeConnectPowerSwitch(
-                    entry.runtime_data, appliance, POWER_SWITCH_DESCRIPTION
-                )
-            )
-        entities.extend(
-            HomeConnectSwitch(entry.runtime_data, appliance, description)
-            for description in SWITCHES
-            if description.key in appliance.settings
-        )
-
-    async_add_entities(entities)
+    setup_home_connect_entry(
+        entry,
+        _get_entities_for_appliance,
+        async_add_entities,
+        _get_option_entities_for_appliance,
+    )
 
 
 class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):
@@ -147,8 +217,8 @@ class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):
                 translation_key="turn_on",
                 translation_placeholders={
                     **get_dict_from_home_connect_error(err),
-                    SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID: self.entity_id,
-                    SVE_TRANSLATION_PLACEHOLDER_KEY: self.bsh_key,
+                    "entity_id": self.entity_id,
+                    "key": self.bsh_key,
                 },
             ) from err
 
@@ -167,8 +237,8 @@ class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):
                 translation_key="turn_off",
                 translation_placeholders={
                     **get_dict_from_home_connect_error(err),
-                    SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID: self.entity_id,
-                    SVE_TRANSLATION_PLACEHOLDER_KEY: self.bsh_key,
+                    "entity_id": self.entity_id,
+                    "key": self.bsh_key,
                 },
             ) from err
 
@@ -192,15 +262,18 @@ class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
             desc = " ".join(
                 ["Program", program.key.split(".")[-3], program.key.split(".")[-1]]
             )
+        self.program = program
         super().__init__(
             coordinator,
             appliance,
-            SwitchEntityDescription(key=EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM),
+            SwitchEntityDescription(
+                key=EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
+                entity_registry_enabled_default=False,
+            ),
         )
         self._attr_name = f"{appliance.info.name} {desc}"
         self._attr_unique_id = f"{appliance.info.ha_id}-{desc}"
         self._attr_has_entity_name = False
-        self.program = program
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
@@ -234,11 +307,12 @@ class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
         async_create_issue(
             self.hass,
             DOMAIN,
-            f"deprecated_program_switch_{self.entity_id}",
+            f"deprecated_program_switch_in_automations_scripts_{self.entity_id}",
             breaks_in_ha_version="2025.6.0",
-            is_fixable=False,
+            is_fixable=True,
+            is_persistent=True,
             severity=IssueSeverity.WARNING,
-            translation_key="deprecated_program_switch",
+            translation_key="deprecated_program_switch_in_automations_scripts",
             translation_placeholders={
                 "entity_id": self.entity_id,
                 "items": "\n".join(items_list),
@@ -248,11 +322,33 @@ class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Call when entity will be removed from hass."""
         async_delete_issue(
+            self.hass,
+            DOMAIN,
+            f"deprecated_program_switch_in_automations_scripts_{self.entity_id}",
+        )
+        async_delete_issue(
             self.hass, DOMAIN, f"deprecated_program_switch_{self.entity_id}"
+        )
+
+    def create_action_handler_issue(self) -> None:
+        """Create deprecation issue."""
+        async_create_issue(
+            self.hass,
+            DOMAIN,
+            f"deprecated_program_switch_{self.entity_id}",
+            breaks_in_ha_version="2025.6.0",
+            is_fixable=True,
+            is_persistent=True,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_program_switch",
+            translation_placeholders={
+                "entity_id": self.entity_id,
+            },
         )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Start the program."""
+        self.create_action_handler_issue()
         try:
             await self.coordinator.client.start_program(
                 self.appliance.info.ha_id, program_key=self.program.key
@@ -269,6 +365,7 @@ class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Stop the program."""
+        self.create_action_handler_issue()
         try:
             await self.coordinator.client.stop_program(self.appliance.info.ha_id)
         except HomeConnectError as err:
@@ -306,7 +403,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
                 translation_key="power_on",
                 translation_placeholders={
                     **get_dict_from_home_connect_error(err),
-                    SVE_TRANSLATION_PLACEHOLDER_APPLIANCE_NAME: self.appliance.info.name,
+                    "appliance_name": self.appliance.info.name,
                 },
             ) from err
 
@@ -319,7 +416,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
                     translation_domain=DOMAIN,
                     translation_key="unable_to_retrieve_turn_off",
                     translation_placeholders={
-                        SVE_TRANSLATION_PLACEHOLDER_APPLIANCE_NAME: self.appliance.info.name
+                        "appliance_name": self.appliance.info.name
                     },
                 )
 
@@ -327,9 +424,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="turn_off_not_supported",
-                translation_placeholders={
-                    SVE_TRANSLATION_PLACEHOLDER_APPLIANCE_NAME: self.appliance.info.name
-                },
+                translation_placeholders={"appliance_name": self.appliance.info.name},
             )
         try:
             await self.coordinator.client.set_setting(
@@ -344,8 +439,8 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
                 translation_key="power_off",
                 translation_placeholders={
                     **get_dict_from_home_connect_error(err),
-                    SVE_TRANSLATION_PLACEHOLDER_APPLIANCE_NAME: self.appliance.info.name,
-                    SVE_TRANSLATION_PLACEHOLDER_VALUE: self.power_off_state,
+                    "appliance_name": self.appliance.info.name,
+                    "value": self.power_off_state,
                 },
             ) from err
 
@@ -392,3 +487,19 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
             self.power_off_state = BSH_POWER_STANDBY
         else:
             self.power_off_state = None
+
+
+class HomeConnectSwitchOptionEntity(HomeConnectOptionEntity, SwitchEntity):
+    """Switch option class for Home Connect."""
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn on the option."""
+        await self.async_set_option(True)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off the option."""
+        await self.async_set_option(False)
+
+    def update_native_value(self) -> None:
+        """Set the value of the entity."""
+        self._attr_is_on = cast(bool | None, self.option_value)

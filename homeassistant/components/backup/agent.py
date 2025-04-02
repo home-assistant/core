@@ -11,13 +11,7 @@ from propcache.api import cached_property
 
 from homeassistant.core import HomeAssistant, callback
 
-from .models import AgentBackup, BackupError
-
-
-class BackupAgentError(BackupError):
-    """Base class for backup agent errors."""
-
-    error_code = "backup_agent_error"
+from .models import AgentBackup, BackupAgentError
 
 
 class BackupAgentUnreachableError(BackupAgentError):
@@ -25,12 +19,6 @@ class BackupAgentUnreachableError(BackupAgentError):
 
     error_code = "backup_agent_unreachable"
     _message = "The backup agent is unreachable."
-
-
-class BackupNotFound(BackupAgentError):
-    """Raised when a backup is not found."""
-
-    error_code = "backup_not_found"
 
 
 class BackupAgent(abc.ABC):
@@ -52,6 +40,8 @@ class BackupAgent(abc.ABC):
         **kwargs: Any,
     ) -> AsyncIterator[bytes]:
         """Download a backup file.
+
+        Raises BackupNotFound if the backup does not exist.
 
         :param backup_id: The ID of the backup that was returned in async_list_backups.
         :return: An async iterator that yields bytes.
@@ -79,6 +69,8 @@ class BackupAgent(abc.ABC):
     ) -> None:
         """Delete a backup file.
 
+        Raises BackupNotFound if the backup does not exist.
+
         :param backup_id: The ID of the backup that was returned in async_list_backups.
         """
 
@@ -91,8 +83,11 @@ class BackupAgent(abc.ABC):
         self,
         backup_id: str,
         **kwargs: Any,
-    ) -> AgentBackup | None:
-        """Return a backup."""
+    ) -> AgentBackup:
+        """Return a backup.
+
+        Raises BackupNotFound if the backup does not exist.
+        """
 
 
 class LocalBackupAgent(BackupAgent):

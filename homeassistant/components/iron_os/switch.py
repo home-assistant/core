@@ -12,7 +12,7 @@ from pynecil import CharSetting, SettingsDataResponse
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import IronOSConfigEntry
 from .coordinator import IronOSCoordinators
@@ -100,7 +100,7 @@ SWITCH_DESCRIPTIONS: tuple[IronOSSwitchEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: IronOSConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switches from a config entry."""
 

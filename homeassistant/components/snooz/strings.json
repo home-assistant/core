@@ -27,25 +27,25 @@
   "services": {
     "transition_on": {
       "name": "Transition on",
-      "description": "Transitions to a target volume level over time.",
+      "description": "Transitions the volume level over a specified duration. If the device is powered off, the transition will start at the lowest volume level.",
       "fields": {
         "duration": {
           "name": "Transition duration",
-          "description": "Time it takes to reach the target volume level."
+          "description": "Time to transition to the target volume."
         },
         "volume": {
           "name": "Target volume",
-          "description": "If not specified, the volume level is read from the device."
+          "description": "Relative volume level. If not specified, the setting on the device is used."
         }
       }
     },
     "transition_off": {
       "name": "Transition off",
-      "description": "Transitions volume off over time.",
+      "description": "Transitions the volume level to the lowest setting over a specified duration, then powers off the device.",
       "fields": {
         "duration": {
           "name": "[%key:component::snooz::services::transition_on::fields::duration::name%]",
-          "description": "Time it takes to turn off."
+          "description": "Time to complete the transition."
         }
       }
     }

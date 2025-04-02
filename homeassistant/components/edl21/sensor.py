@@ -30,7 +30,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utcnow
 
 from .const import (
@@ -289,7 +289,7 @@ SENSOR_UNIT_MAPPING = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the EDL21 sensor."""
     api = EDL21(hass, config_entry.data, async_add_entities)
@@ -317,7 +317,7 @@ class EDL21:
         self,
         hass: HomeAssistant,
         config: Mapping[str, Any],
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Initialize an EDL21 object."""
         self._registered_obis: set[tuple[str, str]] = set()

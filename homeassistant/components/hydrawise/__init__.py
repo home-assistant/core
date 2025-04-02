@@ -39,10 +39,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         app_id=APP_ID,
     )
 
-    main_coordinator = HydrawiseMainDataUpdateCoordinator(hass, hydrawise)
+    main_coordinator = HydrawiseMainDataUpdateCoordinator(hass, config_entry, hydrawise)
     await main_coordinator.async_config_entry_first_refresh()
     water_use_coordinator = HydrawiseWaterUseDataUpdateCoordinator(
-        hass, hydrawise, main_coordinator
+        hass, config_entry, hydrawise, main_coordinator
     )
     await water_use_coordinator.async_config_entry_first_refresh()
     hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = (

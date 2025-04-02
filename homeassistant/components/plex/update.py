@@ -11,7 +11,7 @@ from homeassistant.components.update import UpdateEntity, UpdateEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_SERVER_IDENTIFIER
 from .helpers import get_plex_server
@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Plex update entities from a config entry."""
     server_id = config_entry.data[CONF_SERVER_IDENTIFIER]

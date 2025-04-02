@@ -94,7 +94,9 @@ class MockAssistSatellite(AssistSatelliteEntity):
         self, start_announcement: AssistSatelliteConfiguration
     ) -> None:
         """Start a conversation from the satellite."""
-        self.start_conversations.append((self._extra_system_prompt, start_announcement))
+        self.start_conversations.append(
+            (self._conversation_id, self._extra_system_prompt, start_announcement)
+        )
 
 
 @pytest.fixture

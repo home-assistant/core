@@ -499,6 +499,18 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "341513*",
     },
     {
+        "domain": "roborock",
+        "macaddress": "249E7D*",
+    },
+    {
+        "domain": "roborock",
+        "macaddress": "B04A39*",
+    },
+    {
+        "domain": "roborock",
+        "hostname": "roborock-*",
+    },
+    {
         "domain": "roomba",
         "hostname": "irobot-*",
         "macaddress": "501479*",
@@ -615,6 +627,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "domain": "smartthings",
         "hostname": "hub*",
         "macaddress": "286D97*",
+    },
+    {
+        "domain": "smlight",
+        "registered_devices": True,
     },
     {
         "domain": "solaredge",

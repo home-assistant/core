@@ -22,15 +22,16 @@ class SmartyCoordinator(DataUpdateCoordinator[None]):
     software_version: str
     configuration_version: str
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: SmartyConfigEntry) -> None:
         """Initialize."""
         super().__init__(
             hass,
             logger=_LOGGER,
+            config_entry=config_entry,
             name="Smarty",
             update_interval=timedelta(seconds=30),
         )
-        self.client = Smarty(host=self.config_entry.data[CONF_HOST])
+        self.client = Smarty(host=config_entry.data[CONF_HOST])
 
     async def _async_setup(self) -> None:
         if not await self.hass.async_add_executor_job(self.client.update):

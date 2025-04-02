@@ -57,7 +57,7 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN
@@ -96,7 +96,7 @@ ILLUMINATION_DEVICE_ATTRIBUTES = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the HomematicIP Cloud sensors from a config entry."""
     hap = hass.data[DOMAIN][config_entry.unique_id]
