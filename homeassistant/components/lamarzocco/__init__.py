@@ -53,17 +53,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
     )
 
     # initialize the firmware update coordinator early to check the firmware version
-    firmware_device = LaMarzoccoMachine(
+    settings_device = LaMarzoccoMachine(
         serial_number=entry.unique_id,
         cloud_client=cloud_client,
     )
 
-    firmware_coordinator = LaMarzoccoSettingsUpdateCoordinator(
-        hass, entry, firmware_device
+    settings_coordinator = LaMarzoccoSettingsUpdateCoordinator(
+        hass, entry, settings_device
     )
-    await firmware_coordinator.async_config_entry_first_refresh()
+    await settings_coordinator.async_config_entry_first_refresh()
     gateway_version = version.parse(
-        firmware_device.settings.firmwares[FirmwareType.GATEWAY].build_version
+        settings_device.settings.firmwares[FirmwareType.GATEWAY].build_version
     )
 
     if gateway_version < version.parse("v5.0.9"):
@@ -82,7 +82,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
     bluetooth_client: LaMarzoccoBluetoothClient | None = None
     if (
         entry.options.get(CONF_USE_BLUETOOTH, True)
-        and firmware_device.settings.ble_auth_token
+        and settings_device.settings.ble_auth_token
     ):
         if CONF_MAC not in entry.data:
             for discovery_info in async_discovered_service_info(hass):
@@ -105,7 +105,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
             _LOGGER.debug("Initializing Bluetooth device")
             bluetooth_client = LaMarzoccoBluetoothClient(
                 address_or_ble_device=entry.data[CONF_MAC],
-                ble_token=firmware_device.settings.ble_auth_token,
+                ble_token=settings_device.settings.ble_auth_token,
             )
 
     device = LaMarzoccoMachine(
@@ -116,7 +116,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
 
     coordinators = LaMarzoccoRuntimeData(
         LaMarzoccoConfigUpdateCoordinator(hass, entry, device),
-        firmware_coordinator,
+        settings_coordinator,
     )
 
     await coordinators.config_coordinator.async_config_entry_first_refresh()

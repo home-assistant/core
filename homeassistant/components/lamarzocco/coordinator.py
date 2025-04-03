@@ -30,7 +30,7 @@ class LaMarzoccoRuntimeData:
     """Runtime data for La Marzocco."""
 
     config_coordinator: LaMarzoccoConfigUpdateCoordinator
-    firmware_coordinator: LaMarzoccoSettingsUpdateCoordinator
+    settings_coordinator: LaMarzoccoSettingsUpdateCoordinator
 
 
 type LaMarzoccoConfigEntry = ConfigEntry[LaMarzoccoRuntimeData]
