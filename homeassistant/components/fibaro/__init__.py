@@ -301,6 +301,7 @@ class FibaroController:
                 device.ha_id = (
                     f"{slugify(room_name)}_{slugify(device.name)}_{device.fibaro_id}"
                 )
+                platform = None
                 if device.enabled and (not device.is_plugin or self._import_plugins):
                     platform = self._map_device_to_platform(device)
                 if platform is None:

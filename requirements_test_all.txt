@@ -67,7 +67,7 @@ PyMetno==0.13.0
 PyMicroBot==0.0.17
 
 # homeassistant.components.nina
-PyNINA==0.3.4
+PyNINA==0.3.5
 
 # homeassistant.components.mobile_app
 # homeassistant.components.owntracks
@@ -81,7 +81,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-PySwitchbot==0.58.0
+PySwitchbot==0.59.0
 
 # homeassistant.components.syncthru
 PySyncThru==0.8.0
@@ -1551,7 +1551,7 @@ pycryptodome==3.22.0
 pycsspeechtts==1.0.8
 
 # homeassistant.components.daikin
-pydaikin==2.14.1
+pydaikin==2.15.0
 
 # homeassistant.components.deako
 pydeako==0.6.0
@@ -1593,7 +1593,7 @@ pyeiscp==0.0.7
 pyemoncms==0.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.25.1
+pyenphase==1.25.5
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
@@ -1901,7 +1901,7 @@ pysmartthings==3.0.1
 pysmarty2==0.10.2
 
 # homeassistant.components.smhi
-pysmhi==1.0.0
+pysmhi==1.0.1
 
 # homeassistant.components.edl21
 pysml==0.0.12
@@ -2019,7 +2019,7 @@ python-snoo==0.6.5
 python-songpal==0.16.2
 
 # homeassistant.components.tado
-python-tado==0.18.9
+python-tado==0.18.11
 
 # homeassistant.components.technove
 python-technove==2.0.0
@@ -2322,7 +2322,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==1.0.16
+tesla-fleet-api==1.0.17
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.2
@@ -2475,7 +2475,7 @@ webmin-xmlrpc==0.0.2
 weheat==2025.2.26
 
 # homeassistant.components.whirlpool
-whirlpool-sixth-sense==0.19.1
+whirlpool-sixth-sense==0.20.0
 
 # homeassistant.components.whois
 whois==0.9.27
