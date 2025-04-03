@@ -19,7 +19,7 @@
         "description": "Please enter a ThinQ [PAT(Personal Access Token)]({pat_url}) created with your LG ThinQ account.",
         "data": {
           "access_token": "Personal Access Token",
-          "country": "Country"
+          "country": "[%key:common::config_flow::data::country%]"
         }
       }
     }
@@ -926,6 +926,17 @@
           "turbo": "[%key:component::lg_thinq::entity::select::wind_strength::state::power%]",
           "up_feature": "Additional mode",
           "vacation": "Vacation"
+        }
+      },
+      "current_job_mode_dehumidifier": {
+        "name": "[%key:component::lg_thinq::entity::sensor::current_job_mode::name%]",
+        "state": {
+          "air_clean": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::air_clean%]",
+          "clothes_dry": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::clothes_dry%]",
+          "intensive_dry": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::intensive_dry%]",
+          "quiet_humidity": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::quiet_humidity%]",
+          "rapid_humidity": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::rapid_humidity%]",
+          "smart_humidity": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::smart_humidity%]"
         }
       },
       "operation_mode": {

@@ -896,7 +896,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "sfr_box",
     "sharkiq",
     "shell_command",
-    "shelly",
     "shodan",
     "shopping_list",
     "sia",

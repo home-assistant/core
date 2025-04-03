@@ -120,7 +120,7 @@ def rewrite_legacy_to_modern_conf(
     return switches
 
 
-def rewrite_options_to_moder_conf(option_config: dict[str, dict]) -> dict[str, dict]:
+def rewrite_options_to_modern_conf(option_config: dict[str, dict]) -> dict[str, dict]:
     """Rewrite option configuration to modern configuration."""
     option_config = {**option_config}
 
@@ -189,7 +189,7 @@ async def async_setup_entry(
     """Initialize config entry."""
     _options = dict(config_entry.options)
     _options.pop("template_type")
-    _options = rewrite_options_to_moder_conf(_options)
+    _options = rewrite_options_to_modern_conf(_options)
     validated_config = SWITCH_CONFIG_SCHEMA(_options)
     async_add_entities([SwitchTemplate(hass, validated_config, config_entry.entry_id)])
 
@@ -199,7 +199,8 @@ def async_create_preview_switch(
     hass: HomeAssistant, name: str, config: dict[str, Any]
 ) -> SwitchTemplate:
     """Create a preview switch."""
-    validated_config = SWITCH_CONFIG_SCHEMA(config | {CONF_NAME: name})
+    updated_config = rewrite_options_to_modern_conf(config)
+    validated_config = SWITCH_CONFIG_SCHEMA(updated_config | {CONF_NAME: name})
     return SwitchTemplate(hass, validated_config, None)
 
 

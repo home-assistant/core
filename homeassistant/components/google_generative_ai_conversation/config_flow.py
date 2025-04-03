@@ -7,7 +7,7 @@ import logging
 from types import MappingProxyType
 from typing import Any
 
-from google import genai  # type: ignore[attr-defined]
+from google import genai
 from google.genai.errors import APIError, ClientError
 from requests.exceptions import Timeout
 import voluptuous as vol
