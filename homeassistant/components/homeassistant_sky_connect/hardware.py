@@ -6,7 +6,7 @@ from homeassistant.components.hardware.models import HardwareInfo, USBInfo
 from homeassistant.core import HomeAssistant, callback
 
 from .config_flow import HomeAssistantSkyConnectConfigFlow
-from .const import DOMAIN, MANUFACTURER, PID, PRODUCT, SERIAL_NUMBER, VID
+from .const import DOMAIN
 from .util import get_hardware_variant
 
 DOCUMENTATION_URL = "https://skyconnect.home-assistant.io/documentation/"
@@ -25,11 +25,11 @@ def async_info(hass: HomeAssistant) -> list[HardwareInfo]:
             board=None,
             config_entries=[entry.entry_id],
             dongle=USBInfo(
-                vid=entry.data[VID],
-                pid=entry.data[PID],
-                serial_number=entry.data[SERIAL_NUMBER],
-                manufacturer=entry.data[MANUFACTURER],
-                description=entry.data[PRODUCT],
+                vid=entry.data["vid"],
+                pid=entry.data["pid"],
+                serial_number=entry.data["serial_number"],
+                manufacturer=entry.data["manufacturer"],
+                description=entry.data["product"],
             ),
             name=get_hardware_variant(entry).full_name,
             url=DOCUMENTATION_URL,
