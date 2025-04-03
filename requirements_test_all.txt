@@ -81,7 +81,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-PySwitchbot==0.58.0
+PySwitchbot==0.59.0
 
 # homeassistant.components.syncthru
 PySyncThru==0.8.0
@@ -1593,7 +1593,7 @@ pyeiscp==0.0.7
 pyemoncms==0.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.25.1
+pyenphase==1.25.5
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
@@ -1898,7 +1898,7 @@ pysmartthings==3.0.1
 pysmarty2==0.10.2
 
 # homeassistant.components.smhi
-pysmhi==1.0.0
+pysmhi==1.0.1
 
 # homeassistant.components.edl21
 pysml==0.0.12
@@ -2319,7 +2319,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==1.0.16
+tesla-fleet-api==1.0.17
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.2
