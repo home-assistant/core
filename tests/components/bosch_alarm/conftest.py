@@ -80,7 +80,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 @pytest.fixture
 def points() -> Generator[dict[int, Point]]:
-    """Define a mocked point."""
+    """Define a mocked door."""
     names = [
         "Window",
         "Door",
@@ -147,11 +147,11 @@ def area() -> Generator[Area]:
 @pytest.fixture
 def mock_panel(
     area: AsyncMock,
-    model_name: str,
-    serial_number: str | None,
     door: AsyncMock,
     output: AsyncMock,
     points: dict[int, AsyncMock],
+    model_name: str,
+    serial_number: str | None,
 ) -> Generator[AsyncMock]:
     """Define a fixture to set up Bosch Alarm."""
     with (
