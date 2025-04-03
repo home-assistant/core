@@ -7,7 +7,7 @@ from collections.abc import Awaitable, Callable
 from contextvars import ContextVar
 from http import HTTPStatus
 import logging
-from typing import Any, Final
+from typing import TYPE_CHECKING, Any, Final, Protocol
 
 from aiohttp import web
 from aiohttp.typedefs import LooseHeaders
@@ -30,7 +30,18 @@ from .json import find_paths_unserializable_data, json_bytes, json_dumps
 _LOGGER = logging.getLogger(__name__)
 
 
+class HandlerProtocol(Protocol):
+    """Define a handler protocol."""
+
+    def __call__(  # noqa: D102
+        self, request: web.Request, *args: Any, **kwds: Any
+    ) -> Awaitable[HandlerResponseType] | HandlerResponseType: ...
+
+
 type AllowCorsType = Callable[[AbstractRoute | AbstractResource], None]
+type HandlerResponseInnerType = web.StreamResponse | bytes | str | None
+type HandlerResponseTupleType = tuple[HandlerResponseInnerType, HTTPStatus]
+type HandlerResponseType = HandlerResponseInnerType | HandlerResponseTupleType
 KEY_AUTHENTICATED: Final = "ha_authenticated"
 KEY_ALLOW_ALL_CORS = AppKey[AllowCorsType]("allow_all_cors")
 KEY_ALLOW_CONFIGURED_CORS = AppKey[AllowCorsType]("allow_configured_cors")
@@ -40,9 +51,18 @@ current_request: ContextVar[Request | None] = ContextVar(
     "current_request", default=None
 )
 
+_COMMON_RESPONSE_TYPES = {
+    web.StreamResponse,
+    web.FileResponse,
+    web.Response,
+    web.WebSocketResponse,
+}
+
 
 def request_handler_factory(
-    hass: HomeAssistant, view: HomeAssistantView, handler: Callable
+    hass: HomeAssistant,
+    view: HomeAssistantView,
+    handler: HandlerProtocol,
 ) -> Callable[[web.Request], Awaitable[web.StreamResponse]]:
     """Wrap the handler classes."""
     is_coroutinefunction = asyncio.iscoroutinefunction(handler)
@@ -69,10 +89,13 @@ def request_handler_factory(
             )
 
         try:
+            result = handler(request, **request.match_info)
             if is_coroutinefunction:
-                result = await handler(request, **request.match_info)
-            else:
-                result = handler(request, **request.match_info)
+                if TYPE_CHECKING:
+                    assert isinstance(result, Awaitable)
+                result = await result
+            elif TYPE_CHECKING:
+                assert not isinstance(result, Awaitable)
         except vol.Invalid as err:
             raise HTTPBadRequest from err
         except exceptions.ServiceNotFound as err:
@@ -80,13 +103,17 @@ def request_handler_factory(
         except exceptions.Unauthorized as err:
             raise HTTPUnauthorized from err
 
-        if isinstance(result, web.StreamResponse):
+        # Fast path for common types since its almost always web.Response
+        if type(result) in _COMMON_RESPONSE_TYPES or isinstance(
+            result, web.StreamResponse
+        ):
             # The method handler returned a ready-made Response, how nice of it
-            return result
+            return result  # type: ignore[return-value]
 
-        status_code = HTTPStatus.OK
         if isinstance(result, tuple):
             result, status_code = result
+        else:
+            status_code = HTTPStatus.OK
 
         if isinstance(result, bytes):
             return web.Response(body=result, status=status_code)
@@ -107,6 +134,13 @@ def request_handler_factory(
 class HomeAssistantView:
     """Base view for all views."""
 
+    get: HandlerProtocol | None
+    post: HandlerProtocol | None
+    delete: HandlerProtocol | None
+    put: HandlerProtocol | None
+    patch: HandlerProtocol | None
+    head: HandlerProtocol | None
+    options: HandlerProtocol | None
     url: str | None = None
     extra_urls: list[str] = []
     # Views inheriting from this class can override this
@@ -168,14 +202,17 @@ class HomeAssistantView:
         assert self.url is not None, "No url set for view"
         urls = [self.url, *self.extra_urls]
         routes: list[AbstractRoute] = []
+        handler: HandlerProtocol | None
 
         for method in ("get", "post", "delete", "put", "patch", "head", "options"):
             if not (handler := getattr(self, method, None)):
                 continue
 
-            handler = request_handler_factory(hass, self, handler)
+            wrapped_handler = request_handler_factory(hass, self, handler)
 
-            routes.extend(router.add_route(method, url, handler) for url in urls)
+            routes.extend(
+                router.add_route(method, url, wrapped_handler) for url in urls
+            )
 
         # Use `get` because CORS middleware is not be loaded in emulated_hue
         if self.cors_allowed:
