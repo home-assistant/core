@@ -23,9 +23,17 @@ from . import (
     _patch_async_setup_entry,
 )
 
+from tests.conftest import MockConfigEntry
+
 DHCP_DISCOVERY = DhcpServiceInfo(
     ip="1.1.1.1",
     hostname="SMA_INVERTER_123456",
+    macaddress="0015BB00abcd",
+)
+
+DHCP_DISCOVERY_DUPLICATE = DhcpServiceInfo(
+    ip="1.1.1.1",
+    hostname="SMA123456789",
     macaddress="0015BB00abcd",
 )
 
@@ -88,10 +96,10 @@ async def test_form_exceptions(
     assert len(mock_setup_entry.mock_calls) == 0
 
 
-async def test_form_already_configured(hass: HomeAssistant, mock_config_entry) -> None:
+async def test_form_already_configured(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test starting a flow by user when already configured."""
-    mock_config_entry.add_to_hass(hass)
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -141,33 +149,16 @@ async def test_dhcp_discovery(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_dhcp_already_configured(hass: HomeAssistant, mock_config_entry) -> None:
+async def test_dhcp_already_configured(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test starting a flow by dhcp when already configured."""
-    mock_config_entry.add_to_hass(hass)
-
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_DHCP},
-        data=DHCP_DISCOVERY,
+        DOMAIN, context={"source": SOURCE_DHCP}, data=DHCP_DISCOVERY_DUPLICATE
     )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "discovery_confirm"
-
-    with (
-        patch("pysma.SMA.new_session", return_value=True),
-        patch("pysma.SMA.device_info", return_value=MOCK_DEVICE),
-        patch("pysma.SMA.close_session", return_value=True),
-        _patch_async_setup_entry() as mock_setup_entry,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            MOCK_DHCP_DISCOVERY_INPUT,
-        )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert len(mock_setup_entry.mock_calls) == 0
 
 
 @pytest.mark.parametrize(
