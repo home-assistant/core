@@ -125,7 +125,7 @@ def will_options_be_rendered_again(current_options, new_options) -> bool:
 
 
 @pytest.mark.parametrize(
-    ("current_options", "new_options", "expected_options"),
+    ("current_options", "new_options", "expected_options", "errors"),
     [
         (
             {
@@ -152,6 +152,7 @@ def will_options_be_rendered_again(current_options, new_options) -> bool:
                 CONF_DANGEROUS_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
                 CONF_USE_GOOGLE_SEARCH_TOOL: RECOMMENDED_USE_GOOGLE_SEARCH_TOOL,
             },
+            None,
         ),
         (
             {
@@ -174,6 +175,52 @@ def will_options_be_rendered_again(current_options, new_options) -> bool:
                 CONF_LLM_HASS_API: "assist",
                 CONF_PROMPT: "",
             },
+            None,
+        ),
+        (
+            {
+                CONF_RECOMMENDED: False,
+                CONF_PROMPT: "Speak like a pirate",
+                CONF_TEMPERATURE: 0.3,
+                CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
+                CONF_TOP_P: RECOMMENDED_TOP_P,
+                CONF_TOP_K: RECOMMENDED_TOP_K,
+                CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_HARASSMENT_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_HATE_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_SEXUAL_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_DANGEROUS_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_USE_GOOGLE_SEARCH_TOOL: RECOMMENDED_USE_GOOGLE_SEARCH_TOOL,
+            },
+            {
+                CONF_RECOMMENDED: False,
+                CONF_PROMPT: "Speak like a pirate",
+                CONF_TEMPERATURE: 0.3,
+                CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
+                CONF_TOP_P: RECOMMENDED_TOP_P,
+                CONF_TOP_K: RECOMMENDED_TOP_K,
+                CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_HARASSMENT_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_HATE_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_SEXUAL_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_DANGEROUS_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_USE_GOOGLE_SEARCH_TOOL: True,
+            },
+            {
+                CONF_RECOMMENDED: False,
+                CONF_PROMPT: "Speak like a pirate",
+                CONF_TEMPERATURE: 0.3,
+                CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
+                CONF_TOP_P: RECOMMENDED_TOP_P,
+                CONF_TOP_K: RECOMMENDED_TOP_K,
+                CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_HARASSMENT_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_HATE_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_SEXUAL_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_DANGEROUS_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_USE_GOOGLE_SEARCH_TOOL: True,
+            },
+            None,
         ),
         (
             {
@@ -208,7 +255,6 @@ def will_options_be_rendered_again(current_options, new_options) -> bool:
             {
                 CONF_RECOMMENDED: False,
                 CONF_PROMPT: "Speak like a pirate",
-                CONF_LLM_HASS_API: "assist",
                 CONF_TEMPERATURE: 0.3,
                 CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
                 CONF_TOP_P: RECOMMENDED_TOP_P,
@@ -218,52 +264,9 @@ def will_options_be_rendered_again(current_options, new_options) -> bool:
                 CONF_HATE_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
                 CONF_SEXUAL_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
                 CONF_DANGEROUS_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_USE_GOOGLE_SEARCH_TOOL: True,
             },
-        ),
-        (
-            {
-                CONF_RECOMMENDED: False,
-                CONF_PROMPT: "Speak like a pirate",
-                CONF_LLM_HASS_API: "assist",
-                CONF_TEMPERATURE: 0.3,
-                CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
-                CONF_TOP_P: RECOMMENDED_TOP_P,
-                CONF_TOP_K: RECOMMENDED_TOP_K,
-                CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
-                CONF_HARASSMENT_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
-                CONF_HATE_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
-                CONF_SEXUAL_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
-                CONF_DANGEROUS_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
-            },
-            {
-                CONF_RECOMMENDED: False,
-                CONF_PROMPT: "Speak like a pirate",
-                CONF_LLM_HASS_API: "none",
-                CONF_TEMPERATURE: 0.3,
-                CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
-                CONF_USE_GOOGLE_SEARCH_TOOL: RECOMMENDED_USE_GOOGLE_SEARCH_TOOL,
-                CONF_TOP_P: RECOMMENDED_TOP_P,
-                CONF_TOP_K: RECOMMENDED_TOP_K,
-                CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
-                CONF_HARASSMENT_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
-                CONF_HATE_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
-                CONF_SEXUAL_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
-                CONF_DANGEROUS_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
-            },
-            {
-                CONF_RECOMMENDED: False,
-                CONF_PROMPT: "Speak like a pirate",
-                CONF_TEMPERATURE: 0.3,
-                CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
-                CONF_TOP_P: RECOMMENDED_TOP_P,
-                CONF_TOP_K: RECOMMENDED_TOP_K,
-                CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
-                CONF_HARASSMENT_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
-                CONF_HATE_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
-                CONF_SEXUAL_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
-                CONF_DANGEROUS_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
-                CONF_USE_GOOGLE_SEARCH_TOOL: RECOMMENDED_USE_GOOGLE_SEARCH_TOOL,
-            },
+            {CONF_USE_GOOGLE_SEARCH_TOOL: "invalid_google_search_option"},
         ),
     ],
 )
@@ -274,6 +277,7 @@ async def test_options_switching(
     current_options,
     new_options,
     expected_options,
+    errors,
 ) -> None:
     """Test the options form."""
     with patch("google.genai.models.AsyncModels.get"):
@@ -320,8 +324,13 @@ async def test_options_switching(
             new_options,
         )
     await hass.async_block_till_done()
-    assert options["type"] is FlowResultType.CREATE_ENTRY
-    assert options["data"] == expected_options
+    if errors is None:
+        assert options["type"] is FlowResultType.CREATE_ENTRY
+        assert options["data"] == expected_options
+
+    else:
+        assert options["type"] is FlowResultType.FORM
+    assert options.get("errors", None) == errors
 
 
 @pytest.mark.parametrize(

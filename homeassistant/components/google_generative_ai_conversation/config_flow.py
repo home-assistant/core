@@ -172,7 +172,6 @@ class GoogleGenerativeAIOptionsFlow(OptionsFlow):
         self.last_rendered_recommended = config_entry.options.get(
             CONF_RECOMMENDED, False
         )
-        self.last_rendered_assist = config_entry.options.get(CONF_LLM_HASS_API, "none")
         self._genai_client = config_entry.runtime_data
 
     async def async_step_init(
@@ -180,35 +179,30 @@ class GoogleGenerativeAIOptionsFlow(OptionsFlow):
     ) -> ConfigFlowResult:
         """Manage the options."""
         options: dict[str, Any] | MappingProxyType[str, Any] = self.config_entry.options
+        errors: dict[str, str] = {}
 
         if user_input is not None:
-            if user_input[CONF_RECOMMENDED] == self.last_rendered_recommended and (
-                user_input[CONF_LLM_HASS_API] == self.last_rendered_assist
-                or user_input[CONF_LLM_HASS_API] != "none"
-            ):
+            if user_input[CONF_RECOMMENDED] == self.last_rendered_recommended:
                 if user_input[CONF_LLM_HASS_API] == "none":
                     user_input.pop(CONF_LLM_HASS_API)
-                else:
-                    user_input.pop(CONF_USE_GOOGLE_SEARCH_TOOL, None)
-                return self.async_create_entry(title="", data=user_input)
+                if not (
+                    user_input.get(CONF_LLM_HASS_API, "none") != "none"
+                    and user_input.get(CONF_USE_GOOGLE_SEARCH_TOOL, False) is True
+                ):
+                    # Don't allow to save options that enable the Google Seearch tool with an Assist API
+                    return self.async_create_entry(title="", data=user_input)
+                errors[CONF_USE_GOOGLE_SEARCH_TOOL] = "invalid_google_search_option"
 
             # Re-render the options again, now with the recommended options shown/hidden
-            # also with the google search option shown/hidden
             self.last_rendered_recommended = user_input[CONF_RECOMMENDED]
-            self.last_rendered_assist = user_input[CONF_LLM_HASS_API]
 
-            options = {
-                CONF_RECOMMENDED: user_input[CONF_RECOMMENDED],
-                CONF_PROMPT: user_input[CONF_PROMPT],
-                CONF_LLM_HASS_API: user_input[CONF_LLM_HASS_API],
-            }
+            options = user_input
 
         schema = await google_generative_ai_config_option_schema(
             self.hass, options, self._genai_client
         )
         return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(schema),
+            step_id="init", data_schema=vol.Schema(schema), errors=errors
         )
 
 
@@ -305,24 +299,6 @@ async def google_generative_ai_config_option_schema(
             ): SelectSelector(
                 SelectSelectorConfig(mode=SelectSelectorMode.DROPDOWN, options=models)
             ),
-        }
-    )
-
-    if options.get(CONF_LLM_HASS_API, "none") == "none":
-        schema.update(
-            {
-                vol.Optional(
-                    CONF_USE_GOOGLE_SEARCH_TOOL,
-                    description={
-                        "suggested_value": options.get(CONF_USE_GOOGLE_SEARCH_TOOL),
-                    },
-                    default=RECOMMENDED_USE_GOOGLE_SEARCH_TOOL,
-                ): bool,
-            }
-        )
-
-    schema.update(
-        {
             vol.Optional(
                 CONF_TEMPERATURE,
                 description={"suggested_value": options.get(CONF_TEMPERATURE)},
@@ -369,7 +345,13 @@ async def google_generative_ai_config_option_schema(
                 },
                 default=RECOMMENDED_HARM_BLOCK_THRESHOLD,
             ): harm_block_thresholds_selector,
+            vol.Optional(
+                CONF_USE_GOOGLE_SEARCH_TOOL,
+                description={
+                    "suggested_value": options.get(CONF_USE_GOOGLE_SEARCH_TOOL),
+                },
+                default=RECOMMENDED_USE_GOOGLE_SEARCH_TOOL,
+            ): bool,
         }
     )
-
     return schema
