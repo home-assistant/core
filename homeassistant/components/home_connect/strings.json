@@ -487,9 +487,9 @@
     },
     "warming_level": {
       "options": {
-        "cooking_oven_enum_type_warming_level_low": "Low",
-        "cooking_oven_enum_type_warming_level_medium": "Medium",
-        "cooking_oven_enum_type_warming_level_high": "High"
+        "cooking_oven_enum_type_warming_level_low": "[%key:common::state::low%]",
+        "cooking_oven_enum_type_warming_level_medium": "[%key:common::state::medium%]",
+        "cooking_oven_enum_type_warming_level_high": "[%key:common::state::high%]"
       }
     },
     "washer_temperature": {
@@ -522,9 +522,9 @@
         "laundry_care_washer_enum_type_spin_speed_r_p_m_1400": "1400 rpm",
         "laundry_care_washer_enum_type_spin_speed_r_p_m_1600": "1600 rpm",
         "laundry_care_washer_enum_type_spin_speed_ul_off": "[%key:common::state::off%]",
-        "laundry_care_washer_enum_type_spin_speed_ul_low": "Low",
-        "laundry_care_washer_enum_type_spin_speed_ul_medium": "Medium",
-        "laundry_care_washer_enum_type_spin_speed_ul_high": "High"
+        "laundry_care_washer_enum_type_spin_speed_ul_low": "[%key:common::state::low%]",
+        "laundry_care_washer_enum_type_spin_speed_ul_medium": "[%key:common::state::medium%]",
+        "laundry_care_washer_enum_type_spin_speed_ul_high": "[%key:common::state::high%]"
       }
     },
     "vario_perfect": {
