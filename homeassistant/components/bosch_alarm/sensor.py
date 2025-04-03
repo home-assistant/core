@@ -151,7 +151,7 @@ class FaultingPointsSensor(SensorEntity):
         self.panel = panel
         self._area = panel.areas[area_id]
         self._attr_unique_id = f"{unique_id}_faults"
-        self._attr_name = f"{self._area.name} Faulting Points"
+        self._attr_translation_placeholders = {"area": self._area.name}
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
             name=self._area.name,
@@ -188,7 +188,7 @@ class AreaReadyToArmSensor(SensorEntity):
         self._area = panel.areas[area_id]
         self._attr_unique_id = f"{unique_id}_ready_to_arm"
         self._attr_should_poll = False
-        self._attr_name = f"{self._area.name} Ready To Arm"
+        self._attr_translation_placeholders = {"area": self._area.name}
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
             name=self._area.name,
@@ -221,6 +221,7 @@ class AreaAlarmsSensor(SensorEntity):
 
     _attr_has_entity_name = True
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_translation_key = "alarms"
 
     def __init__(self, panel: Panel, area_id: int, unique_id: str) -> None:
         """Set up a faults sensor entity for a bosch alarm panel."""

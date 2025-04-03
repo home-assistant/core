@@ -32,5 +32,21 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "alarms": {
+        "name": "{area} Alarms"
+      },
+      "faulting_points": {
+        "name": "Faulting Points"
+      },
+      "panel_faults": {
+        "name": "Panel Faults"
+      },
+      "ready_to_arm": {
+        "name": "{area} Ready To Arm"
+      }
+    }
   }
 }
