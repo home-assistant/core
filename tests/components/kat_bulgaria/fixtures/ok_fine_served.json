@@ -1,0 +1,48 @@
+{
+  "obligationsData": [
+    {
+      "unitGroup": 1,
+      "errorNoDataFound": false,
+      "errorReadingData": false,
+      "obligations": [
+        {
+          "status": 0,
+          "amount": 100,
+          "discountAmount": 70,
+          "bankName": "БНБ",
+          "bic": "BNBGBGSD",
+          "iban": "BG64BNBG96613100147701",
+          "paymentReason": "ЕЛ.ФИШ СЕРИЯ K 0000000 29.03.2024",
+          "pepCin": "epayments_ais_client_GUID",
+          "expirationDate": "2024-08-26T23:59:59",
+          "obligationDate": "2024-08-26T00:00:00",
+          "obligationIdentifier": "KAT|TICKET|17720000",
+          "type": 2,
+          "serviceID": 349,
+          "additionalData": {
+            "isServed": "True",
+            "discount": "30",
+            "documentType": "TICKET",
+            "documentSeries": "K",
+            "documentNumber": "123456",
+            "documentIdentifier": "99999999",
+            "amount": "100",
+            "issueDate": "2024-03-29",
+            "obligedPersonIdent": "970101****",
+            "obligedPersonIdentType": "person",
+            "vehicleNumber": "PB 0000 АА",
+            "breachDate": "2024-01-25",
+            "breachOfOrder": "чл. 21, ал. 1, от ЗДвП"
+          },
+          "andSourceId": 1
+        }
+      ]
+    },
+    {
+      "unitGroup": 2,
+      "errorNoDataFound": false,
+      "errorReadingData": false,
+      "obligations": []
+    }
+  ]
+}
