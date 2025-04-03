@@ -243,8 +243,11 @@ async def test_create_aborted_flow(manager: MockFlowManager) -> None:
             manager.async_abort(self.flow_id)
             return self.async_create_entry(title="Test Title", data="Test Data")
 
-    await manager.async_init("test")
+    with pytest.raises(data_entry_flow.UnknownFlow):
+        await manager.async_init("test")
     assert len(manager.async_progress()) == 0
+
+    # The entry is created even if the flow is aborted
     assert len(manager.mock_created_entries) == 1
 
     entry = manager.mock_created_entries[0]
