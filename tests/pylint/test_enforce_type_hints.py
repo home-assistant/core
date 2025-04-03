@@ -1370,7 +1370,7 @@ def test_valid_generic(
     async def async_setup_entry( #@
         hass: HomeAssistant,
         entry: {entry_annotation},
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         pass
     """,
@@ -1402,7 +1402,7 @@ def test_invalid_generic(
     async def async_setup_entry( #@
         hass: HomeAssistant,
         entry: {entry_annotation}, #@
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         pass
     """,

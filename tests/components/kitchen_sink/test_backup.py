@@ -2,7 +2,7 @@
 
 from collections.abc import AsyncGenerator
 from io import StringIO
-from unittest.mock import patch
+from unittest.mock import ANY, patch
 
 import pytest
 
@@ -15,6 +15,7 @@ from homeassistant.components.backup import (
 from homeassistant.components.kitchen_sink import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import instance_id
+from homeassistant.helpers.backup import async_initialize_backup
 from homeassistant.setup import async_setup_component
 
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
@@ -35,7 +36,8 @@ async def backup_only() -> AsyncGenerator[None]:
 
 @pytest.fixture(autouse=True)
 async def setup_integration(hass: HomeAssistant) -> AsyncGenerator[None]:
-    """Set up Kitchen Sink integration."""
+    """Set up Kitchen Sink and backup integrations."""
+    async_initialize_backup(hass)
     with patch("homeassistant.components.backup.is_hassio", return_value=False):
         assert await async_setup_component(hass, BACKUP_DOMAIN, {BACKUP_DOMAIN: {}})
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
@@ -102,17 +104,16 @@ async def test_agents_list_backups(
     assert response["result"]["backups"] == [
         {
             "addons": [{"name": "Test", "slug": "test", "version": "1.0.0"}],
-            "agent_ids": ["kitchen_sink.syncer"],
+            "agents": {"kitchen_sink.syncer": {"protected": False, "size": 1234}},
             "backup_id": "abc123",
             "database_included": False,
             "date": "1970-01-01T00:00:00Z",
+            "extra_metadata": {},
             "failed_agent_ids": [],
             "folders": ["media", "share"],
             "homeassistant_included": True,
             "homeassistant_version": "2024.12.0",
             "name": "Kitchen sink syncer",
-            "protected": False,
-            "size": 1234,
             "with_automatic_settings": None,
         }
     ]
@@ -185,17 +186,16 @@ async def test_agents_upload(
     assert len(backup_list) == 2
     assert backup_list[1] == {
         "addons": [{"name": "Test", "slug": "test", "version": "1.0.0"}],
-        "agent_ids": ["kitchen_sink.syncer"],
+        "agents": {"kitchen_sink.syncer": {"protected": False, "size": 0.0}},
         "backup_id": "test-backup",
         "database_included": True,
         "date": "1970-01-01T00:00:00.000Z",
+        "extra_metadata": {"instance_id": ANY, "with_automatic_settings": False},
         "failed_agent_ids": [],
         "folders": ["media", "share"],
         "homeassistant_included": True,
         "homeassistant_version": "2024.12.0",
         "name": "Test",
-        "protected": False,
-        "size": 0.0,
         "with_automatic_settings": False,
     }
 

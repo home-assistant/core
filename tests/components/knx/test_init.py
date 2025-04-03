@@ -226,7 +226,7 @@ async def test_init_connection_handling(
         data=config_entry_data,
     )
     knx.mock_config_entry = config_entry
-    await knx.setup_integration({})
+    await knx.setup_integration()
 
     assert hass.data.get(KNX_DOMAIN) is not None
 
@@ -280,7 +280,7 @@ async def _init_switch_and_wait_for_first_state_updater_run(
         title="KNX", domain=KNX_DOMAIN, data=config_entry_data
     )
     knx.mock_config_entry = config_entry
-    await knx.setup_integration({})
+    await knx.setup_integration()
     await create_ui_entity(
         platform=Platform.SWITCH,
         knx_data={
@@ -354,7 +354,7 @@ async def test_async_remove_entry(
         },
     )
     knx.mock_config_entry = config_entry
-    await knx.setup_integration({})
+    await knx.setup_integration()
 
     with (
         patch("pathlib.Path.unlink") as unlink_mock,

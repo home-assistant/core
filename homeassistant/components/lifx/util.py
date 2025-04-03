@@ -113,7 +113,7 @@ def find_hsbk(hass: HomeAssistant, **kwargs: Any) -> list[float | int | None] | 
         saturation = int(saturation / 100 * 65535)
         kelvin = 3500
 
-    if _ATTR_COLOR_TEMP in kwargs:
+    if ATTR_COLOR_TEMP_KELVIN not in kwargs and _ATTR_COLOR_TEMP in kwargs:
         # added in 2025.1, can be removed in 2026.1
         _LOGGER.warning(
             "The 'color_temp' parameter is deprecated. Please use 'color_temp_kelvin' for"

@@ -7,23 +7,26 @@ import socket
 import motionmount
 
 from homeassistant.components.select import SelectEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import MotionMountConfigEntry
 from .const import DOMAIN, WALL_PRESET_NAME
 from .entity import MotionMountEntity
 
 _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=60)
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: MotionMountConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Vogel's MotionMount from a config entry."""
-    mm = hass.data[DOMAIN][entry.entry_id]
+    mm = entry.runtime_data
 
     async_add_entities([MotionMountPresets(mm, entry)], True)
 
@@ -37,7 +40,7 @@ class MotionMountPresets(MotionMountEntity, SelectEntity):
     def __init__(
         self,
         mm: motionmount.MotionMount,
-        config_entry: ConfigEntry,
+        config_entry: MotionMountConfigEntry,
     ) -> None:
         """Initialize Preset selector."""
         super().__init__(mm, config_entry)

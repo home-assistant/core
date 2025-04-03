@@ -1,11 +1,15 @@
 """Ohme coordinators."""
 
+from __future__ import annotations
+
 from abc import abstractmethod
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
 from ohme import ApiException, OhmeApiClient
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -14,18 +18,34 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
+@dataclass()
+class OhmeRuntimeData:
+    """Dataclass to hold ohme coordinators."""
+
+    charge_session_coordinator: OhmeChargeSessionCoordinator
+    advanced_settings_coordinator: OhmeAdvancedSettingsCoordinator
+    device_info_coordinator: OhmeDeviceInfoCoordinator
+
+
+type OhmeConfigEntry = ConfigEntry[OhmeRuntimeData]
+
+
 class OhmeBaseCoordinator(DataUpdateCoordinator[None]):
     """Base for all Ohme coordinators."""
 
+    config_entry: OhmeConfigEntry
     client: OhmeApiClient
     _default_update_interval: timedelta | None = timedelta(minutes=1)
     coordinator_name: str = ""
 
-    def __init__(self, hass: HomeAssistant, client: OhmeApiClient) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: OhmeConfigEntry, client: OhmeApiClient
+    ) -> None:
         """Initialise coordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name="",
             update_interval=self._default_update_interval,
         )

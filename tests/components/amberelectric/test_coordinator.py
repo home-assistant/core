@@ -16,10 +16,12 @@ from amberelectric.models.spike_status import SpikeStatus
 from dateutil import parser
 import pytest
 
+from homeassistant.components.amberelectric.const import CONF_SITE_ID, CONF_SITE_NAME
 from homeassistant.components.amberelectric.coordinator import (
     AmberUpdateCoordinator,
     normalize_descriptor,
 )
+from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
@@ -31,6 +33,17 @@ from .helpers import (
     GENERAL_CHANNEL,
     GENERAL_ONLY_SITE_ID,
     generate_current_interval,
+)
+
+from tests.common import MockConfigEntry
+
+MOCKED_ENTRY = MockConfigEntry(
+    domain="amberelectric",
+    data={
+        CONF_SITE_NAME: "mock_title",
+        CONF_API_TOKEN: "psk_0000000000000000",
+        CONF_SITE_ID: GENERAL_ONLY_SITE_ID,
+    },
 )
 
 
@@ -101,7 +114,9 @@ async def test_fetch_general_site(hass: HomeAssistant, current_price_api: Mock) 
     """Test fetching a site with only a general channel."""
 
     current_price_api.get_current_prices.return_value = GENERAL_CHANNEL
-    data_service = AmberUpdateCoordinator(hass, current_price_api, GENERAL_ONLY_SITE_ID)
+    data_service = AmberUpdateCoordinator(
+        hass, MOCKED_ENTRY, current_price_api, GENERAL_ONLY_SITE_ID
+    )
     result = await data_service._async_update_data()
 
     current_price_api.get_current_prices.assert_called_with(
@@ -130,7 +145,9 @@ async def test_fetch_no_general_site(
     """Test fetching a site with no general channel."""
 
     current_price_api.get_current_prices.return_value = CONTROLLED_LOAD_CHANNEL
-    data_service = AmberUpdateCoordinator(hass, current_price_api, GENERAL_ONLY_SITE_ID)
+    data_service = AmberUpdateCoordinator(
+        hass, MOCKED_ENTRY, current_price_api, GENERAL_ONLY_SITE_ID
+    )
     with pytest.raises(UpdateFailed):
         await data_service._async_update_data()
 
@@ -143,7 +160,9 @@ async def test_fetch_api_error(hass: HomeAssistant, current_price_api: Mock) -> 
     """Test that the old values are maintained if a second call fails."""
 
     current_price_api.get_current_prices.return_value = GENERAL_CHANNEL
-    data_service = AmberUpdateCoordinator(hass, current_price_api, GENERAL_ONLY_SITE_ID)
+    data_service = AmberUpdateCoordinator(
+        hass, MOCKED_ENTRY, current_price_api, GENERAL_ONLY_SITE_ID
+    )
     result = await data_service._async_update_data()
 
     current_price_api.get_current_prices.assert_called_with(
@@ -193,7 +212,7 @@ async def test_fetch_general_and_controlled_load_site(
         GENERAL_CHANNEL + CONTROLLED_LOAD_CHANNEL
     )
     data_service = AmberUpdateCoordinator(
-        hass, current_price_api, GENERAL_AND_CONTROLLED_SITE_ID
+        hass, MOCKED_ENTRY, current_price_api, GENERAL_AND_CONTROLLED_SITE_ID
     )
     result = await data_service._async_update_data()
 
@@ -233,7 +252,7 @@ async def test_fetch_general_and_feed_in_site(
         GENERAL_CHANNEL + FEED_IN_CHANNEL
     )
     data_service = AmberUpdateCoordinator(
-        hass, current_price_api, GENERAL_AND_FEED_IN_SITE_ID
+        hass, MOCKED_ENTRY, current_price_api, GENERAL_AND_FEED_IN_SITE_ID
     )
     result = await data_service._async_update_data()
 
@@ -273,7 +292,9 @@ async def test_fetch_potential_spike(
     ]
     general_channel[0].actual_instance.spike_status = SpikeStatus.POTENTIAL
     current_price_api.get_current_prices.return_value = general_channel
-    data_service = AmberUpdateCoordinator(hass, current_price_api, GENERAL_ONLY_SITE_ID)
+    data_service = AmberUpdateCoordinator(
+        hass, MOCKED_ENTRY, current_price_api, GENERAL_ONLY_SITE_ID
+    )
     result = await data_service._async_update_data()
     assert result["grid"]["price_spike"] == "potential"
 
@@ -288,6 +309,8 @@ async def test_fetch_spike(hass: HomeAssistant, current_price_api: Mock) -> None
     ]
     general_channel[0].actual_instance.spike_status = SpikeStatus.SPIKE
     current_price_api.get_current_prices.return_value = general_channel
-    data_service = AmberUpdateCoordinator(hass, current_price_api, GENERAL_ONLY_SITE_ID)
+    data_service = AmberUpdateCoordinator(
+        hass, MOCKED_ENTRY, current_price_api, GENERAL_ONLY_SITE_ID
+    )
     result = await data_service._async_update_data()
     assert result["grid"]["price_spike"] == "spike"

@@ -19,7 +19,11 @@ from homeassistant.components.vacuum import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    translation,
+)
 
 from . import DEVICE_ID, _mocked_device, setup_platform_for_device, snapshot_platform
 
@@ -59,8 +63,12 @@ async def test_vacuum(
     state = hass.states.get(ENTITY_ID)
     assert state.state == VacuumActivity.DOCKED
 
-    assert state.attributes[ATTR_FAN_SPEED] == "Max"
+    assert state.attributes[ATTR_FAN_SPEED] == "max"
     assert state.attributes[ATTR_BATTERY_LEVEL] == 100
+    result = translation.async_translate_state(
+        hass, "max", "vacuum", "tplink", "vacuum.state_attributes.fan_speed", None
+    )
+    assert result == "Max"
 
 
 async def test_states(
@@ -90,7 +98,7 @@ async def test_states(
             SERVICE_SET_FAN_SPEED,
             Module.Clean,
             "set_fan_speed_preset",
-            {ATTR_FAN_SPEED: "Quiet"},
+            {ATTR_FAN_SPEED: "quiet"},
         ),
         (SERVICE_LOCATE, Module.Speaker, "locate", {}),
     ],

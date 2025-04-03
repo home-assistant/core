@@ -634,6 +634,38 @@ async def test_async_step_user_with_found_devices(hass: HomeAssistant) -> None:
     assert result2["result"].unique_id == "58:2D:34:35:93:21"
 
 
+async def test_async_step_user_replace_ignored_entry(hass: HomeAssistant) -> None:
+    """Test setup from service info can replace an ignored entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=LYWSDCGQ_SERVICE_INFO.address,
+        data={},
+        source=config_entries.SOURCE_IGNORE,
+    )
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.xiaomi_ble.config_flow.async_discovered_service_info",
+        return_value=[LYWSDCGQ_SERVICE_INFO],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    with patch(
+        "homeassistant.components.xiaomi_ble.async_setup_entry", return_value=True
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"address": "58:2D:34:35:93:21"},
+        )
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "Temperature/Humidity Sensor 9321 (LYWSDCGQ)"
+    assert result2["data"] == {}
+    assert result2["result"].unique_id == "58:2D:34:35:93:21"
+
+
 async def test_async_step_user_short_payload(hass: HomeAssistant) -> None:
     """Test setup from service info cache with devices found but short payloads."""
     with patch(

@@ -30,11 +30,12 @@ class ArveCoordinator(DataUpdateCoordinator[ArveSensProData]):
     config_entry: ArveConfigEntry
     devices: ArveDevices
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: ArveConfigEntry) -> None:
         """Initialize Arve coordinator."""
         super().__init__(
             hass,
             LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=60),
         )

@@ -1,115 +1,379 @@
-"""Test for the SmartThings switch platform.
+"""Test for the SmartThings switch platform."""
 
-The only mocking required is of the underlying SmartThings API object so
-real HTTP calls are not initiated during testing.
-"""
+from unittest.mock import AsyncMock
 
-from pysmartthings import Attribute, Capability
+from pysmartthings import Attribute, Capability, Command
+import pytest
+from syrupy import SnapshotAssertion
 
-from homeassistant.components.smartthings.const import DOMAIN, SIGNAL_SMARTTHINGS_UPDATE
+from homeassistant.components import automation, script
+from homeassistant.components.automation import automations_with_entity
+from homeassistant.components.script import scripts_with_entity
+from homeassistant.components.smartthings.const import DOMAIN, MAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.setup import async_setup_component
 
-from .conftest import setup_platform
+from . import setup_integration, snapshot_smartthings_entities, trigger_update
+
+from tests.common import MockConfigEntry
 
 
-async def test_entity_and_device_attributes(
+async def test_all_entities(
     hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    device_factory,
 ) -> None:
-    """Test the attributes of the entity are correct."""
-    # Arrange
-    device = device_factory(
-        "Switch_1",
-        [Capability.switch],
+    """Test all entities."""
+    await setup_integration(hass, mock_config_entry)
+
+    snapshot_smartthings_entities(hass, entity_registry, snapshot, Platform.SWITCH)
+
+
+@pytest.mark.parametrize("device_fixture", ["c2c_arlo_pro_3_switch"])
+@pytest.mark.parametrize(
+    ("action", "command"),
+    [
+        (SERVICE_TURN_ON, Command.ON),
+        (SERVICE_TURN_OFF, Command.OFF),
+    ],
+)
+async def test_switch_turn_on_off(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    action: str,
+    command: Command,
+) -> None:
+    """Test switch turn on and off command."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        action,
+        {ATTR_ENTITY_ID: "switch.2nd_floor_hallway"},
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "10e06a70-ee7d-4832-85e9-a0a06a7a05bd", Capability.SWITCH, command, MAIN
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_wm_wd_000001"])
+@pytest.mark.parametrize(
+    ("action", "argument"),
+    [
+        (SERVICE_TURN_ON, "on"),
+        (SERVICE_TURN_OFF, "off"),
+    ],
+)
+async def test_command_switch_turn_on_off(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    action: str,
+    argument: str,
+) -> None:
+    """Test switch turn on and off command."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        action,
+        {ATTR_ENTITY_ID: "switch.dryer_wrinkle_prevent"},
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "02f7256e-8353-5bdd-547f-bd5b1647e01b",
+        Capability.CUSTOM_DRYER_WRINKLE_PREVENT,
+        Command.SET_DRYER_WRINKLE_PREVENT,
+        MAIN,
+        argument,
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["c2c_arlo_pro_3_switch"])
+async def test_state_update(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test state update."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("switch.2nd_floor_hallway").state == STATE_ON
+
+    await trigger_update(
+        hass,
+        devices,
+        "10e06a70-ee7d-4832-85e9-a0a06a7a05bd",
+        Capability.SWITCH,
+        Attribute.SWITCH,
+        "off",
+    )
+
+    assert hass.states.get("switch.2nd_floor_hallway").state == STATE_OFF
+
+
+@pytest.mark.parametrize(
+    ("device_fixture", "device_id", "suggested_object_id", "issue_string"),
+    [
+        (
+            "da_ks_cooktop_31001",
+            "808dbd84-f357-47e2-a0cd-3b66fa22d584",
+            "induction_hob",
+            "appliance",
+        ),
+        (
+            "da_ks_microwave_0101x",
+            "2bad3237-4886-e699-1b90-4a51a3d55c8a",
+            "microwave",
+            "appliance",
+        ),
+        (
+            "da_wm_dw_000001",
+            "f36dc7ce-cac0-0667-dc14-a3704eb5e676",
+            "dishwasher",
+            "appliance",
+        ),
+        (
+            "da_wm_sc_000001",
+            "b93211bf-9d96-bd21-3b2f-964fcc87f5cc",
+            "airdresser",
+            "appliance",
+        ),
+        (
+            "da_wm_wd_000001",
+            "02f7256e-8353-5bdd-547f-bd5b1647e01b",
+            "dryer",
+            "appliance",
+        ),
+        (
+            "da_wm_wm_000001",
+            "f984b91d-f250-9d42-3436-33f09a422a47",
+            "washer",
+            "appliance",
+        ),
+        (
+            "hw_q80r_soundbar",
+            "afcf3b91-0000-1111-2222-ddff2a0a6577",
+            "soundbar",
+            "media_player",
+        ),
+        (
+            "vd_network_audio_002s",
+            "0d94e5db-8501-2355-eb4f-214163702cac",
+            "soundbar_living",
+            "media_player",
+        ),
+        (
+            "vd_stv_2017_k",
+            "4588d2d9-a8cf-40f4-9a0b-ed5dfbaccda1",
+            "tv_samsung_8_series_49",
+            "media_player",
+        ),
+    ],
+)
+async def test_create_issue_with_items(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    device_id: str,
+    suggested_object_id: str,
+    issue_string: str,
+) -> None:
+    """Test we create an issue when an automation or script is using a deprecated entity."""
+    entity_id = f"switch.{suggested_object_id}"
+    issue_id = f"deprecated_switch_{issue_string}_{entity_id}"
+
+    entity_entry = entity_registry.async_get_or_create(
+        SWITCH_DOMAIN,
+        DOMAIN,
+        f"{device_id}_{MAIN}_{Capability.SWITCH}_{Attribute.SWITCH}_{Attribute.SWITCH}",
+        suggested_object_id=suggested_object_id,
+        original_name=suggested_object_id,
+    )
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
         {
-            Attribute.switch: "on",
-            Attribute.mnmo: "123",
-            Attribute.mnmn: "Generic manufacturer",
-            Attribute.mnhw: "v4.56",
-            Attribute.mnfv: "v7.89",
+            automation.DOMAIN: {
+                "id": "test",
+                "alias": "test",
+                "trigger": {"platform": "state", "entity_id": entity_id},
+                "action": {
+                    "action": "automation.turn_on",
+                    "target": {
+                        "entity_id": "automation.test",
+                    },
+                },
+            }
         },
     )
-    # Act
-    await setup_platform(hass, SWITCH_DOMAIN, devices=[device])
-    # Assert
-    entry = entity_registry.async_get("switch.switch_1")
-    assert entry
-    assert entry.unique_id == device.device_id
-
-    entry = device_registry.async_get_device(identifiers={(DOMAIN, device.device_id)})
-    assert entry
-    assert entry.configuration_url == "https://account.smartthings.com"
-    assert entry.identifiers == {(DOMAIN, device.device_id)}
-    assert entry.name == device.label
-    assert entry.model == "123"
-    assert entry.manufacturer == "Generic manufacturer"
-    assert entry.hw_version == "v4.56"
-    assert entry.sw_version == "v7.89"
-
-
-async def test_turn_off(hass: HomeAssistant, device_factory) -> None:
-    """Test the switch turns of successfully."""
-    # Arrange
-    device = device_factory("Switch_1", [Capability.switch], {Attribute.switch: "on"})
-    await setup_platform(hass, SWITCH_DOMAIN, devices=[device])
-    # Act
-    await hass.services.async_call(
-        "switch", "turn_off", {"entity_id": "switch.switch_1"}, blocking=True
+    assert await async_setup_component(
+        hass,
+        script.DOMAIN,
+        {
+            script.DOMAIN: {
+                "test": {
+                    "sequence": [
+                        {
+                            "condition": "state",
+                            "entity_id": entity_id,
+                            "state": "on",
+                        },
+                    ],
+                }
+            }
+        },
     )
-    # Assert
-    state = hass.states.get("switch.switch_1")
-    assert state is not None
-    assert state.state == "off"
 
+    await setup_integration(hass, mock_config_entry)
 
-async def test_turn_on(hass: HomeAssistant, device_factory) -> None:
-    """Test the switch turns of successfully."""
-    # Arrange
-    device = device_factory(
-        "Switch_1",
-        [Capability.switch, Capability.power_meter, Capability.energy_meter],
-        {Attribute.switch: "off", Attribute.power: 355, Attribute.energy: 11.422},
+    assert hass.states.get(entity_id).state in [STATE_OFF, STATE_ON]
+
+    assert automations_with_entity(hass, entity_id)[0] == "automation.test"
+    assert scripts_with_entity(hass, entity_id)[0] == "script.test"
+
+    assert len(issue_registry.issues) == 1
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.translation_key == f"deprecated_switch_{issue_string}_scripts"
+    assert issue.translation_placeholders == {
+        "entity_id": entity_id,
+        "entity_name": suggested_object_id,
+        "items": "- [test](/config/automation/edit/test)\n- [test](/config/script/edit/test)",
+    }
+
+    entity_registry.async_update_entity(
+        entity_entry.entity_id,
+        disabled_by=er.RegistryEntryDisabler.USER,
     )
-    await setup_platform(hass, SWITCH_DOMAIN, devices=[device])
-    # Act
-    await hass.services.async_call(
-        "switch", "turn_on", {"entity_id": "switch.switch_1"}, blocking=True
-    )
-    # Assert
-    state = hass.states.get("switch.switch_1")
-    assert state is not None
-    assert state.state == "on"
 
-
-async def test_update_from_signal(hass: HomeAssistant, device_factory) -> None:
-    """Test the switch updates when receiving a signal."""
-    # Arrange
-    device = device_factory("Switch_1", [Capability.switch], {Attribute.switch: "off"})
-    await setup_platform(hass, SWITCH_DOMAIN, devices=[device])
-    await device.switch_on(True)
-    # Act
-    async_dispatcher_send(hass, SIGNAL_SMARTTHINGS_UPDATE, [device.device_id])
-    # Assert
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    state = hass.states.get("switch.switch_1")
-    assert state is not None
-    assert state.state == "on"
+
+    # Assert the issue is no longer present
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert len(issue_registry.issues) == 0
 
 
-async def test_unload_config_entry(hass: HomeAssistant, device_factory) -> None:
-    """Test the switch is removed when the config entry is unloaded."""
-    # Arrange
-    device = device_factory("Switch 1", [Capability.switch], {Attribute.switch: "on"})
-    config_entry = await setup_platform(hass, SWITCH_DOMAIN, devices=[device])
-    config_entry.mock_state(hass, ConfigEntryState.LOADED)
-    # Act
-    await hass.config_entries.async_forward_entry_unload(config_entry, "switch")
-    # Assert
-    assert hass.states.get("switch.switch_1").state == STATE_UNAVAILABLE
+@pytest.mark.parametrize(
+    ("device_fixture", "device_id", "suggested_object_id", "issue_string"),
+    [
+        (
+            "da_ks_cooktop_31001",
+            "808dbd84-f357-47e2-a0cd-3b66fa22d584",
+            "induction_hob",
+            "appliance",
+        ),
+        (
+            "da_ks_microwave_0101x",
+            "2bad3237-4886-e699-1b90-4a51a3d55c8a",
+            "microwave",
+            "appliance",
+        ),
+        (
+            "da_wm_dw_000001",
+            "f36dc7ce-cac0-0667-dc14-a3704eb5e676",
+            "dishwasher",
+            "appliance",
+        ),
+        (
+            "da_wm_sc_000001",
+            "b93211bf-9d96-bd21-3b2f-964fcc87f5cc",
+            "airdresser",
+            "appliance",
+        ),
+        (
+            "da_wm_wd_000001",
+            "02f7256e-8353-5bdd-547f-bd5b1647e01b",
+            "dryer",
+            "appliance",
+        ),
+        (
+            "da_wm_wm_000001",
+            "f984b91d-f250-9d42-3436-33f09a422a47",
+            "washer",
+            "appliance",
+        ),
+        (
+            "hw_q80r_soundbar",
+            "afcf3b91-0000-1111-2222-ddff2a0a6577",
+            "soundbar",
+            "media_player",
+        ),
+        (
+            "vd_network_audio_002s",
+            "0d94e5db-8501-2355-eb4f-214163702cac",
+            "soundbar_living",
+            "media_player",
+        ),
+        (
+            "vd_stv_2017_k",
+            "4588d2d9-a8cf-40f4-9a0b-ed5dfbaccda1",
+            "tv_samsung_8_series_49",
+            "media_player",
+        ),
+    ],
+)
+async def test_create_issue(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    device_id: str,
+    suggested_object_id: str,
+    issue_string: str,
+) -> None:
+    """Test we create an issue when an automation or script is using a deprecated entity."""
+    entity_id = f"switch.{suggested_object_id}"
+    issue_id = f"deprecated_switch_{issue_string}_{entity_id}"
+
+    entity_entry = entity_registry.async_get_or_create(
+        SWITCH_DOMAIN,
+        DOMAIN,
+        f"{device_id}_{MAIN}_{Capability.SWITCH}_{Attribute.SWITCH}_{Attribute.SWITCH}",
+        suggested_object_id=suggested_object_id,
+        original_name=suggested_object_id,
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(entity_id).state in [STATE_OFF, STATE_ON]
+
+    assert len(issue_registry.issues) == 1
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.translation_key == f"deprecated_switch_{issue_string}"
+    assert issue.translation_placeholders == {
+        "entity_id": entity_id,
+        "entity_name": suggested_object_id,
+    }
+
+    entity_registry.async_update_entity(
+        entity_entry.entity_id,
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Assert the issue is no longer present
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert len(issue_registry.issues) == 0

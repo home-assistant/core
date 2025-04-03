@@ -8,35 +8,32 @@ from qbusmqttapi.state import QbusMqttOnOffState, StateType
 from homeassistant.components.mqtt import ReceiveMessage
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import QbusConfigEntry
-from .entity import QbusEntity
+from .entity import QbusEntity, add_new_outputs
 
 PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: QbusConfigEntry, add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: QbusConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switch entities."""
-    coordinator = entry.runtime_data
 
+    coordinator = entry.runtime_data
     added_outputs: list[QbusMqttOutput] = []
 
-    # Local function that calls add_entities for new entities
     def _check_outputs() -> None:
-        added_output_ids = {k.id for k in added_outputs}
-
-        new_outputs = [
-            item
-            for item in coordinator.data
-            if item.type == "onoff" and item.id not in added_output_ids
-        ]
-
-        if new_outputs:
-            added_outputs.extend(new_outputs)
-            add_entities([QbusSwitch(output) for output in new_outputs])
+        add_new_outputs(
+            coordinator,
+            added_outputs,
+            lambda output: output.type == "onoff",
+            QbusSwitch,
+            async_add_entities,
+        )
 
     _check_outputs()
     entry.async_on_unload(coordinator.async_add_listener(_check_outputs))
@@ -47,10 +44,7 @@ class QbusSwitch(QbusEntity, SwitchEntity):
 
     _attr_device_class = SwitchDeviceClass.SWITCH
 
-    def __init__(
-        self,
-        mqtt_output: QbusMqttOutput,
-    ) -> None:
+    def __init__(self, mqtt_output: QbusMqttOutput) -> None:
         """Initialize switch entity."""
 
         super().__init__(mqtt_output)
@@ -63,7 +57,6 @@ class QbusSwitch(QbusEntity, SwitchEntity):
         state.write_value(True)
 
         await self._async_publish_output_state(state)
-        self._attr_is_on = True
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
@@ -71,7 +64,6 @@ class QbusSwitch(QbusEntity, SwitchEntity):
         state.write_value(False)
 
         await self._async_publish_output_state(state)
-        self._attr_is_on = False
 
     async def _state_received(self, msg: ReceiveMessage) -> None:
         output = self._message_factory.parse_output_state(

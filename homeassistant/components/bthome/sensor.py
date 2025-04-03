@@ -42,7 +42,7 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 
 from .coordinator import BTHomePassiveBluetoothDataProcessor
@@ -66,6 +66,21 @@ SENSOR_DESCRIPTIONS = {
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    # Channel (-)
+    (BTHomeExtendedSensorDeviceClass.CHANNEL, None): SensorEntityDescription(
+        key=str(BTHomeExtendedSensorDeviceClass.CHANNEL),
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # Conductivity (µS/cm)
+    (
+        BTHomeSensorDeviceClass.CONDUCTIVITY,
+        Units.CONDUCTIVITY,
+    ): SensorEntityDescription(
+        key=f"{BTHomeSensorDeviceClass.CONDUCTIVITY}_{Units.CONDUCTIVITY}",
+        device_class=SensorDeviceClass.CONDUCTIVITY,
+        native_unit_of_measurement=UnitOfConductivity.MICROSIEMENS_PER_CM,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     # Count (-)
     (BTHomeSensorDeviceClass.COUNT, None): SensorEntityDescription(
@@ -97,6 +112,12 @@ SENSOR_DESCRIPTIONS = {
         key=f"{BTHomeSensorDeviceClass.DEW_POINT}_{Units.TEMP_CELSIUS}",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # Directions (°)
+    (BTHomeExtendedSensorDeviceClass.DIRECTION, Units.DEGREE): SensorEntityDescription(
+        key=f"{BTHomeExtendedSensorDeviceClass.DIRECTION}_{Units.DEGREE}",
+        native_unit_of_measurement=DEGREE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     # Distance (mm)
@@ -219,6 +240,16 @@ SENSOR_DESCRIPTIONS = {
         key=f"{BTHomeSensorDeviceClass.POWER}_{Units.POWER_WATT}",
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # Precipitation (mm)
+    (
+        BTHomeExtendedSensorDeviceClass.PRECIPITATION,
+        Units.LENGTH_MILLIMETERS,
+    ): SensorEntityDescription(
+        key=f"{BTHomeExtendedSensorDeviceClass.PRECIPITATION}_{Units.LENGTH_MILLIMETERS}",
+        device_class=SensorDeviceClass.PRECIPITATION,
+        native_unit_of_measurement=UnitOfLength.MILLIMETERS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     # Pressure (mbar)
@@ -357,16 +388,6 @@ SENSOR_DESCRIPTIONS = {
         native_unit_of_measurement=UnitOfVolume.LITERS,
         state_class=SensorStateClass.TOTAL,
     ),
-    # Conductivity (µS/cm)
-    (
-        BTHomeSensorDeviceClass.CONDUCTIVITY,
-        Units.CONDUCTIVITY,
-    ): SensorEntityDescription(
-        key=f"{BTHomeSensorDeviceClass.CONDUCTIVITY}_{Units.CONDUCTIVITY}",
-        device_class=SensorDeviceClass.CONDUCTIVITY,
-        native_unit_of_measurement=UnitOfConductivity.MICROSIEMENS_PER_CM,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
 }
 
 
@@ -402,7 +423,7 @@ def sensor_update_to_bluetooth_data_update(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: BTHomeConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the BTHome BLE sensors."""
     coordinator = entry.runtime_data

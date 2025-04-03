@@ -79,6 +79,7 @@
         'uptime_s': 356,
         'wifi_rssi_db': -77,
         'wifi_ssid': '**REDACTED**',
+        'wifi_strength_pct': 100,
       }),
     }),
     'entry': dict({
@@ -169,6 +170,7 @@
         'uptime_s': None,
         'wifi_rssi_db': None,
         'wifi_ssid': '**REDACTED**',
+        'wifi_strength_pct': 92,
       }),
     }),
     'entry': dict({
@@ -259,6 +261,7 @@
         'uptime_s': None,
         'wifi_rssi_db': None,
         'wifi_ssid': '**REDACTED**',
+        'wifi_strength_pct': 92,
       }),
     }),
     'entry': dict({
@@ -385,6 +388,7 @@
         'uptime_s': None,
         'wifi_rssi_db': None,
         'wifi_ssid': '**REDACTED**',
+        'wifi_strength_pct': 100,
       }),
     }),
     'entry': dict({
@@ -479,6 +483,7 @@
         'uptime_s': None,
         'wifi_rssi_db': None,
         'wifi_ssid': '**REDACTED**',
+        'wifi_strength_pct': 94,
       }),
     }),
     'entry': dict({
@@ -573,6 +578,7 @@
         'uptime_s': None,
         'wifi_rssi_db': None,
         'wifi_ssid': '**REDACTED**',
+        'wifi_strength_pct': 100,
       }),
     }),
     'entry': dict({
@@ -663,6 +669,7 @@
         'uptime_s': None,
         'wifi_rssi_db': None,
         'wifi_ssid': '**REDACTED**',
+        'wifi_strength_pct': 84,
       }),
     }),
     'entry': dict({
@@ -753,6 +760,7 @@
         'uptime_s': None,
         'wifi_rssi_db': None,
         'wifi_ssid': '**REDACTED**',
+        'wifi_strength_pct': 92,
       }),
     }),
     'entry': dict({
@@ -843,6 +851,7 @@
         'uptime_s': None,
         'wifi_rssi_db': None,
         'wifi_ssid': '**REDACTED**',
+        'wifi_strength_pct': 92,
       }),
     }),
     'entry': dict({

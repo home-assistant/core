@@ -14,6 +14,7 @@ from cookidoo_api import (
     CookidooIngredientItem,
     CookidooRequestException,
     CookidooSubscription,
+    CookidooUserInfo,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -42,6 +43,7 @@ class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
     """A Cookidoo Data Update Coordinator."""
 
     config_entry: CookidooConfigEntry
+    user: CookidooUserInfo
 
     def __init__(
         self, hass: HomeAssistant, cookidoo: Cookidoo, entry: CookidooConfigEntry
@@ -59,6 +61,7 @@ class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
     async def _async_setup(self) -> None:
         try:
             await self.cookidoo.login()
+            self.user = await self.cookidoo.get_user_info()
         except CookidooRequestException as e:
             raise UpdateFailed(
                 translation_domain=DOMAIN,

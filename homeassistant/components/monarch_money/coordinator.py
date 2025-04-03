@@ -30,21 +30,26 @@ class MonarchData:
     cashflow_summary: MonarchCashflowSummary
 
 
+type MonarchMoneyConfigEntry = ConfigEntry[MonarchMoneyDataUpdateCoordinator]
+
+
 class MonarchMoneyDataUpdateCoordinator(DataUpdateCoordinator[MonarchData]):
     """Data update coordinator for Monarch Money."""
 
-    config_entry: ConfigEntry
+    config_entry: MonarchMoneyConfigEntry
     subscription_id: str
 
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: MonarchMoneyConfigEntry,
         client: TypedMonarchMoney,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass=hass,
             logger=LOGGER,
+            config_entry=config_entry,
             name="monarchmoney",
             update_interval=timedelta(hours=4),
         )

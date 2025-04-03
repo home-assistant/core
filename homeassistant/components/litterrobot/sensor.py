@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Generic
 
-from pylitterbot import FeederRobot, LitterRobot, LitterRobot4, Robot
+from pylitterbot import FeederRobot, LitterRobot, LitterRobot4, Pet, Robot
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -17,10 +17,10 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfMass
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import LitterRobotConfigEntry
-from .entity import LitterRobotEntity, _RobotT
+from .entity import LitterRobotEntity, _WhiskerEntityT
 
 
 def icon_for_gauge_level(gauge_level: int | None = None, offset: int = 0) -> str:
@@ -35,11 +35,11 @@ def icon_for_gauge_level(gauge_level: int | None = None, offset: int = 0) -> str
 
 
 @dataclass(frozen=True, kw_only=True)
-class RobotSensorEntityDescription(SensorEntityDescription, Generic[_RobotT]):
+class RobotSensorEntityDescription(SensorEntityDescription, Generic[_WhiskerEntityT]):
     """A class that describes robot sensor entities."""
 
     icon_fn: Callable[[Any], str | None] = lambda _: None
-    value_fn: Callable[[_RobotT], float | datetime | str | None]
+    value_fn: Callable[[_WhiskerEntityT], float | datetime | str | None]
 
 
 ROBOT_SENSOR_MAP: dict[type[Robot], list[RobotSensorEntityDescription]] = {
@@ -146,15 +146,25 @@ ROBOT_SENSOR_MAP: dict[type[Robot], list[RobotSensorEntityDescription]] = {
     ],
 }
 
+PET_SENSORS: list[RobotSensorEntityDescription] = [
+    RobotSensorEntityDescription[Pet](
+        key="weight",
+        device_class=SensorDeviceClass.WEIGHT,
+        native_unit_of_measurement=UnitOfMass.POUNDS,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda pet: pet.weight,
+    )
+]
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: LitterRobotConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Litter-Robot sensors using config entry."""
     coordinator = entry.runtime_data
-    async_add_entities(
+    entities: list[LitterRobotSensorEntity] = [
         LitterRobotSensorEntity(
             robot=robot, coordinator=coordinator, description=description
         )
@@ -162,13 +172,21 @@ async def async_setup_entry(
         for robot_type, entity_descriptions in ROBOT_SENSOR_MAP.items()
         if isinstance(robot, robot_type)
         for description in entity_descriptions
+    ]
+    entities.extend(
+        LitterRobotSensorEntity(
+            robot=pet, coordinator=coordinator, description=description
+        )
+        for pet in coordinator.account.pets
+        for description in PET_SENSORS
     )
+    async_add_entities(entities)
 
 
-class LitterRobotSensorEntity(LitterRobotEntity[_RobotT], SensorEntity):
+class LitterRobotSensorEntity(LitterRobotEntity[_WhiskerEntityT], SensorEntity):
     """Litter-Robot sensor entity."""
 
-    entity_description: RobotSensorEntityDescription[_RobotT]
+    entity_description: RobotSensorEntityDescription[_WhiskerEntityT]
 
     @property
     def native_value(self) -> float | datetime | str | None:

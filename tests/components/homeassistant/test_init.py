@@ -6,7 +6,7 @@ import pytest
 import voluptuous as vol
 import yaml
 
-from homeassistant import config
+from homeassistant import config, core as ha
 from homeassistant.components.homeassistant import (
     ATTR_ENTRY_ID,
     ATTR_SAFE_MODE,
@@ -30,7 +30,6 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-import homeassistant.core as ha
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import entity, entity_registry as er

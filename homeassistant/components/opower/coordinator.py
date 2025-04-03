@@ -2,29 +2,31 @@
 
 from datetime import datetime, timedelta
 import logging
-from types import MappingProxyType
-from typing import Any, cast
+from typing import cast
 
-import aiohttp
 from opower import (
     Account,
     AggregateType,
-    CannotConnect,
     CostRead,
     Forecast,
-    InvalidAuth,
     MeterType,
     Opower,
     ReadResolution,
 )
+from opower.exceptions import ApiException, CannotConnect, InvalidAuth
 
 from homeassistant.components.recorder import get_instance
-from homeassistant.components.recorder.models import StatisticData, StatisticMetaData
+from homeassistant.components.recorder.models import (
+    StatisticData,
+    StatisticMeanType,
+    StatisticMetaData,
+)
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
     get_last_statistics,
     statistics_during_period,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, UnitOfEnergy, UnitOfVolume
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -36,19 +38,24 @@ from .const import CONF_TOTP_SECRET, CONF_UTILITY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+type OpowerConfigEntry = ConfigEntry[OpowerCoordinator]
+
 
 class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
     """Handle fetching Opower data, updating sensors and inserting statistics."""
 
+    config_entry: OpowerConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
-        entry_data: MappingProxyType[str, Any],
+        config_entry: OpowerConfigEntry,
     ) -> None:
         """Initialize the data handler."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name="Opower",
             # Data is updated daily on Opower.
             # Refresh every 12h to be at most 12h behind.
@@ -56,10 +63,10 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
         )
         self.api = Opower(
             aiohttp_client.async_get_clientsession(hass),
-            entry_data[CONF_UTILITY],
-            entry_data[CONF_USERNAME],
-            entry_data[CONF_PASSWORD],
-            entry_data.get(CONF_TOTP_SECRET),
+            config_entry.data[CONF_UTILITY],
+            config_entry.data[CONF_USERNAME],
+            config_entry.data[CONF_PASSWORD],
+            config_entry.data.get(CONF_TOTP_SECRET),
         )
 
         @callback
@@ -89,7 +96,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
             raise UpdateFailed(f"Error during login: {err}") from err
         try:
             forecasts: list[Forecast] = await self.api.async_get_forecast()
-        except aiohttp.ClientError as err:
+        except ApiException as err:
             _LOGGER.error("Error getting forecasts: %s", err)
             raise
         _LOGGER.debug("Updating sensor data with: %s", forecasts)
@@ -102,7 +109,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
         """Insert Opower statistics."""
         try:
             accounts = await self.api.async_get_accounts()
-        except aiohttp.ClientError as err:
+        except ApiException as err:
             _LOGGER.error("Error getting accounts: %s", err)
             raise
         for account in accounts:
@@ -198,7 +205,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                 f"{account.meter_type.name.lower()} {account.utility_account_id}"
             )
             cost_metadata = StatisticMetaData(
-                has_mean=False,
+                mean_type=StatisticMeanType.NONE,
                 has_sum=True,
                 name=f"{name_prefix} cost",
                 source=DOMAIN,
@@ -206,7 +213,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                 unit_of_measurement=None,
             )
             consumption_metadata = StatisticMetaData(
-                has_mean=False,
+                mean_type=StatisticMeanType.NONE,
                 has_sum=True,
                 name=f"{name_prefix} consumption",
                 source=DOMAIN,
@@ -271,7 +278,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
             cost_reads = await self.api.async_get_cost_reads(
                 account, AggregateType.BILL, start, end
             )
-        except aiohttp.ClientError as err:
+        except ApiException as err:
             _LOGGER.error("Error getting monthly cost reads: %s", err)
             raise
         _LOGGER.debug("Got %s monthly cost reads", len(cost_reads))
@@ -290,7 +297,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
             daily_cost_reads = await self.api.async_get_cost_reads(
                 account, AggregateType.DAY, start, end
             )
-        except aiohttp.ClientError as err:
+        except ApiException as err:
             _LOGGER.error("Error getting daily cost reads: %s", err)
             raise
         _LOGGER.debug("Got %s daily cost reads", len(daily_cost_reads))
@@ -308,7 +315,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
             hourly_cost_reads = await self.api.async_get_cost_reads(
                 account, AggregateType.HOUR, start, end
             )
-        except aiohttp.ClientError as err:
+        except ApiException as err:
             _LOGGER.error("Error getting hourly cost reads: %s", err)
             raise
         _LOGGER.debug("Got %s hourly cost reads", len(hourly_cost_reads))

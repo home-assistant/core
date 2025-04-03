@@ -9,16 +9,19 @@ from aiocomelit.const import LIGHT, STATE_OFF, STATE_ON
 
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import ComelitConfigEntry, ComelitSerialBridge
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ComelitConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Comelit lights."""
 
@@ -56,7 +59,8 @@ class ComelitLightEntity(CoordinatorEntity[ComelitSerialBridge], LightEntity):
     async def _light_set_state(self, state: int) -> None:
         """Set desired light state."""
         await self.coordinator.api.set_device_status(LIGHT, self._device.index, state)
-        await self.coordinator.async_request_refresh()
+        self.coordinator.data[LIGHT][self._device.index].status = state
+        self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""

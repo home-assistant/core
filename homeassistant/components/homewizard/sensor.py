@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from typing import Final
 
 from homewizard_energy.models import CombinedModels, ExternalDevice
@@ -18,6 +19,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     ATTR_VIA_DEVICE,
     PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS,
     EntityCategory,
     UnitOfApparentPower,
     UnitOfElectricCurrent,
@@ -31,12 +33,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.util.dt import utcnow
 
-from . import HomeWizardConfigEntry
 from .const import DOMAIN
-from .coordinator import HWEnergyDeviceUpdateCoordinator
+from .coordinator import HomeWizardConfigEntry, HWEnergyDeviceUpdateCoordinator
 from .entity import HomeWizardEntity
 
 PARALLEL_UPDATES = 1
@@ -48,7 +50,7 @@ class HomeWizardSensorEntityDescription(SensorEntityDescription):
 
     enabled_fn: Callable[[CombinedModels], bool] = lambda x: True
     has_fn: Callable[[CombinedModels], bool]
-    value_fn: Callable[[CombinedModels], StateType]
+    value_fn: Callable[[CombinedModels], StateType | datetime]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -62,6 +64,15 @@ class HomeWizardExternalSensorEntityDescription(SensorEntityDescription):
 def to_percentage(value: float | None) -> float | None:
     """Convert 0..1 value to percentage when value is not None."""
     return value * 100 if value is not None else None
+
+
+def time_to_datetime(value: int | None) -> datetime | None:
+    """Convert seconds to datetime when value is not None."""
+    return (
+        utcnow().replace(microsecond=0) - timedelta(seconds=value)
+        if value is not None
+        else None
+    )
 
 
 SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
@@ -116,8 +127,30 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        has_fn=lambda data: data.measurement.wifi_strength is not None,
-        value_fn=lambda data: data.measurement.wifi_strength,
+        has_fn=(
+            lambda data: data.system is not None
+            and data.system.wifi_strength_pct is not None
+        ),
+        value_fn=(
+            lambda data: data.system.wifi_strength_pct
+            if data.system is not None
+            else None
+        ),
+    ),
+    HomeWizardSensorEntityDescription(
+        key="wifi_rssi",
+        translation_key="wifi_rssi",
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        has_fn=(
+            lambda data: data.system is not None
+            and data.system.wifi_rssi_db is not None
+        ),
+        value_fn=(
+            lambda data: data.system.wifi_rssi_db if data.system is not None else None
+        ),
     ),
     HomeWizardSensorEntityDescription(
         key="total_power_import_kwh",
@@ -604,6 +637,19 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         has_fn=lambda data: data.measurement.cycles is not None,
         value_fn=lambda data: data.measurement.cycles,
     ),
+    HomeWizardSensorEntityDescription(
+        key="uptime",
+        translation_key="uptime",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        has_fn=(
+            lambda data: data.system is not None and data.system.uptime_s is not None
+        ),
+        value_fn=(
+            lambda data: time_to_datetime(data.system.uptime_s) if data.system else None
+        ),
+    ),
 )
 
 
@@ -644,7 +690,7 @@ EXTERNAL_SENSORS = {
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: HomeWizardConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize sensors."""
 
@@ -690,7 +736,7 @@ class HomeWizardSensorEntity(HomeWizardEntity, SensorEntity):
             self._attr_entity_registry_enabled_default = False
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime | None:
         """Return the sensor value."""
         return self.entity_description.value_fn(self.coordinator.data)
 

@@ -10,7 +10,7 @@ from homeassistant.components.homewizard.const import UPDATE_INTERVAL
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed
 
@@ -19,6 +19,7 @@ pytestmark = [
 ]
 
 
+@pytest.mark.freeze_time("2025-01-28 21:45:00")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     ("device_fixture", "entity_ids"),
@@ -107,6 +108,8 @@ pytestmark = [
                 "sensor.device_voltage_swells_detected_phase_2",
                 "sensor.device_voltage_swells_detected_phase_3",
                 "sensor.device_water_usage",
+                "sensor.device_wi_fi_ssid",
+                "sensor.device_wi_fi_strength",
             ],
         ),
         (
@@ -301,7 +304,10 @@ pytestmark = [
                 "sensor.device_frequency",
                 "sensor.device_power",
                 "sensor.device_state_of_charge",
+                "sensor.device_uptime",
                 "sensor.device_voltage",
+                "sensor.device_wi_fi_rssi",
+                "sensor.device_wi_fi_ssid",
             ],
         ),
     ],
@@ -449,7 +455,9 @@ async def test_sensors(
             [
                 "sensor.device_current",
                 "sensor.device_frequency",
+                "sensor.device_uptime",
                 "sensor.device_voltage",
+                "sensor.device_wi_fi_rssi",
             ],
         ),
     ],
@@ -546,6 +554,7 @@ async def test_external_sensors_unreachable(
                 "sensor.device_state_of_charge",
                 "sensor.device_tariff",
                 "sensor.device_total_water_usage",
+                "sensor.device_uptime",
                 "sensor.device_voltage_phase_1",
                 "sensor.device_voltage_phase_2",
                 "sensor.device_voltage_phase_3",
@@ -557,6 +566,7 @@ async def test_external_sensors_unreachable(
                 "sensor.device_voltage_swells_detected_phase_3",
                 "sensor.device_voltage",
                 "sensor.device_water_usage",
+                "sensor.device_wi_fi_rssi",
             ],
         ),
         (
@@ -595,6 +605,7 @@ async def test_external_sensors_unreachable(
                 "sensor.device_state_of_charge",
                 "sensor.device_tariff",
                 "sensor.device_total_water_usage",
+                "sensor.device_uptime",
                 "sensor.device_voltage_phase_1",
                 "sensor.device_voltage_phase_2",
                 "sensor.device_voltage_phase_3",
@@ -605,6 +616,7 @@ async def test_external_sensors_unreachable(
                 "sensor.device_voltage_swells_detected_phase_2",
                 "sensor.device_voltage_swells_detected_phase_3",
                 "sensor.device_water_usage",
+                "sensor.device_wi_fi_rssi",
             ],
         ),
         (
@@ -651,6 +663,7 @@ async def test_external_sensors_unreachable(
                 "sensor.device_smart_meter_model",
                 "sensor.device_state_of_charge",
                 "sensor.device_tariff",
+                "sensor.device_uptime",
                 "sensor.device_voltage_phase_1",
                 "sensor.device_voltage_phase_2",
                 "sensor.device_voltage_phase_3",
@@ -661,6 +674,7 @@ async def test_external_sensors_unreachable(
                 "sensor.device_voltage_swells_detected_phase_2",
                 "sensor.device_voltage_swells_detected_phase_3",
                 "sensor.device_voltage",
+                "sensor.device_wi_fi_rssi",
             ],
         ),
         (
@@ -701,6 +715,7 @@ async def test_external_sensors_unreachable(
                 "sensor.device_state_of_charge",
                 "sensor.device_tariff",
                 "sensor.device_total_water_usage",
+                "sensor.device_uptime",
                 "sensor.device_voltage_phase_1",
                 "sensor.device_voltage_phase_2",
                 "sensor.device_voltage_phase_3",
@@ -711,6 +726,7 @@ async def test_external_sensors_unreachable(
                 "sensor.device_voltage_swells_detected_phase_2",
                 "sensor.device_voltage_swells_detected_phase_3",
                 "sensor.device_water_usage",
+                "sensor.device_wi_fi_rssi",
             ],
         ),
         (
@@ -739,6 +755,7 @@ async def test_external_sensors_unreachable(
                 "sensor.device_state_of_charge",
                 "sensor.device_tariff",
                 "sensor.device_total_water_usage",
+                "sensor.device_uptime",
                 "sensor.device_voltage_phase_1",
                 "sensor.device_voltage_phase_2",
                 "sensor.device_voltage_phase_3",
@@ -750,6 +767,7 @@ async def test_external_sensors_unreachable(
                 "sensor.device_voltage_swells_detected_phase_3",
                 "sensor.device_voltage",
                 "sensor.device_water_usage",
+                "sensor.device_wi_fi_rssi",
             ],
         ),
         (
@@ -790,6 +808,7 @@ async def test_external_sensors_unreachable(
                 "sensor.device_state_of_charge",
                 "sensor.device_tariff",
                 "sensor.device_total_water_usage",
+                "sensor.device_uptime",
                 "sensor.device_voltage_phase_1",
                 "sensor.device_voltage_phase_2",
                 "sensor.device_voltage_phase_3",
@@ -800,6 +819,7 @@ async def test_external_sensors_unreachable(
                 "sensor.device_voltage_swells_detected_phase_2",
                 "sensor.device_voltage_swells_detected_phase_3",
                 "sensor.device_water_usage",
+                "sensor.device_wi_fi_rssi",
             ],
         ),
         (
@@ -828,6 +848,7 @@ async def test_external_sensors_unreachable(
                 "sensor.device_state_of_charge",
                 "sensor.device_tariff",
                 "sensor.device_total_water_usage",
+                "sensor.device_uptime",
                 "sensor.device_voltage_phase_1",
                 "sensor.device_voltage_phase_2",
                 "sensor.device_voltage_phase_3",
@@ -839,6 +860,7 @@ async def test_external_sensors_unreachable(
                 "sensor.device_voltage_swells_detected_phase_3",
                 "sensor.device_voltage",
                 "sensor.device_water_usage",
+                "sensor.device_wi_fi_rssi",
             ],
         ),
         (
@@ -887,6 +909,7 @@ async def test_external_sensors_unreachable(
                 "sensor.device_voltage_swells_detected_phase_2",
                 "sensor.device_voltage_swells_detected_phase_3",
                 "sensor.device_water_usage",
+                "sensor.device_wi_fi_strength",
             ],
         ),
     ],

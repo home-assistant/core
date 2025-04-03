@@ -9,7 +9,7 @@ from vultr import Vultr as VultrAPI
 from homeassistant.components import persistent_notification
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 

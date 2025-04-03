@@ -12,6 +12,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize("chosen_env", ["anna_heatpump_heating"], indirect=True)
+@pytest.mark.parametrize("cooling_present", [True], indirect=True)
 @pytest.mark.parametrize(
     ("entity_id", "expected_state"),
     [
@@ -35,6 +36,7 @@ async def test_anna_climate_binary_sensor_entities(
 
 
 @pytest.mark.parametrize("chosen_env", ["anna_heatpump_heating"], indirect=True)
+@pytest.mark.parametrize("cooling_present", [True], indirect=True)
 async def test_anna_climate_binary_sensor_change(
     hass: HomeAssistant, mock_smile_anna: MagicMock, init_integration: MockConfigEntry
 ) -> None:

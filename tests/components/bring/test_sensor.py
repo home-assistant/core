@@ -26,15 +26,19 @@ def sensor_only() -> Generator[None]:
         yield
 
 
-@pytest.mark.usefixtures("mock_bring_client")
 async def test_setup(
     hass: HomeAssistant,
     bring_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
+    mock_bring_client: AsyncMock,
 ) -> None:
     """Snapshot test states of sensor platform."""
 
+    mock_bring_client.get_list.side_effect = [
+        BringItemsResponse.from_json(load_fixture("items.json", DOMAIN)),
+        BringItemsResponse.from_json(load_fixture("items2.json", DOMAIN)),
+    ]
     bring_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(bring_config_entry.entry_id)
     await hass.async_block_till_done()

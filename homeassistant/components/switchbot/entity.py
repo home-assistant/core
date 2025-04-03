@@ -61,7 +61,7 @@ class SwitchbotEntity(
         return self.coordinator.device.parsed_data
 
     @property
-    def extra_state_attributes(self) -> Mapping[Any, Any]:
+    def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the state attributes."""
         return {"last_run_success": self._last_run_success}
 

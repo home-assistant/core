@@ -426,7 +426,7 @@ async def test_restore_history_from_dbus(
         address: AdvertisementHistory(
             ble_device,
             generate_advertisement_data(local_name="name"),
-            HCI0_SOURCE_ADDRESS,
+            "hci0",
         )
     }
 
@@ -438,6 +438,8 @@ async def test_restore_history_from_dbus(
         await hass.async_block_till_done()
 
     assert bluetooth.async_ble_device_from_address(hass, address) is ble_device
+    info = bluetooth.async_last_service_info(hass, address, False)
+    assert info.source == "00:00:00:00:00:01"
 
 
 @pytest.mark.usefixtures("one_adapter")
@@ -1017,8 +1019,6 @@ async def test_goes_unavailable_dismisses_discovery_and_makes_discoverable(
 
         def clear_all_devices(self) -> None:
             """Clear all devices."""
-            self._discovered_device_advertisement_datas.clear()
-            self._discovered_device_timestamps.clear()
             self._previous_service_info.clear()
 
     connector = (
@@ -1444,8 +1444,6 @@ async def test_bluetooth_rediscover(
 
         def clear_all_devices(self) -> None:
             """Clear all devices."""
-            self._discovered_device_advertisement_datas.clear()
-            self._discovered_device_timestamps.clear()
             self._previous_service_info.clear()
 
     connector = (
@@ -1623,8 +1621,6 @@ async def test_bluetooth_rediscover_no_match(
 
         def clear_all_devices(self) -> None:
             """Clear all devices."""
-            self._discovered_device_advertisement_datas.clear()
-            self._discovered_device_timestamps.clear()
             self._previous_service_info.clear()
 
     connector = (

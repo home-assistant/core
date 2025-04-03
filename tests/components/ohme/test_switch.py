@@ -1,6 +1,6 @@
 """Tests for switches."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from syrupy import SnapshotAssertion
 
@@ -32,7 +32,49 @@ async def test_switches(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-async def test_switch_on(
+async def test_cap_switch_on(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test the switch turn_on action."""
+    await setup_integration(hass, mock_config_entry)
+    mock_client.async_change_price_cap = AsyncMock()
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: "switch.ohme_home_pro_price_cap",
+        },
+        blocking=True,
+    )
+
+    mock_client.async_change_price_cap.assert_called_once_with(True)
+
+
+async def test_cap_switch_off(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test the switch turn_off action."""
+    await setup_integration(hass, mock_config_entry)
+    mock_client.async_change_price_cap = AsyncMock()
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {
+            ATTR_ENTITY_ID: "switch.ohme_home_pro_price_cap",
+        },
+        blocking=True,
+    )
+
+    mock_client.async_change_price_cap.assert_called_once_with(False)
+
+
+async def test_config_switch_on(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_client: MagicMock,
@@ -52,7 +94,7 @@ async def test_switch_on(
     assert len(mock_client.async_set_configuration_value.mock_calls) == 1
 
 
-async def test_switch_off(
+async def test_config_switch_off(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_client: MagicMock,

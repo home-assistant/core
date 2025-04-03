@@ -61,6 +61,8 @@ def mock_homee() -> Generator[AsyncMock]:
         homee.settings = MagicMock()
         homee.settings.uid = HOMEE_ID
         homee.settings.homee_name = HOMEE_NAME
+        homee.settings.version = "1.2.3"
+        homee.settings.mac_address = "00:05:55:11:ee:cc"
         homee.reconnect_interval = 10
         homee.connected = True
 

@@ -15,19 +15,19 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import LitterRobotConfigEntry
-from .entity import LitterRobotEntity, _RobotT
+from .entity import LitterRobotEntity, _WhiskerEntityT
 
 
 @dataclass(frozen=True, kw_only=True)
 class RobotBinarySensorEntityDescription(
-    BinarySensorEntityDescription, Generic[_RobotT]
+    BinarySensorEntityDescription, Generic[_WhiskerEntityT]
 ):
     """A class that describes robot binary sensor entities."""
 
-    is_on_fn: Callable[[_RobotT], bool]
+    is_on_fn: Callable[[_WhiskerEntityT], bool]
 
 
 BINARY_SENSOR_MAP: dict[type[Robot], tuple[RobotBinarySensorEntityDescription, ...]] = {
@@ -63,7 +63,7 @@ BINARY_SENSOR_MAP: dict[type[Robot], tuple[RobotBinarySensorEntityDescription, .
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: LitterRobotConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Litter-Robot binary sensors using config entry."""
     coordinator = entry.runtime_data
@@ -78,10 +78,12 @@ async def async_setup_entry(
     )
 
 
-class LitterRobotBinarySensorEntity(LitterRobotEntity[_RobotT], BinarySensorEntity):
+class LitterRobotBinarySensorEntity(
+    LitterRobotEntity[_WhiskerEntityT], BinarySensorEntity
+):
     """Litter-Robot binary sensor entity."""
 
-    entity_description: RobotBinarySensorEntityDescription[_RobotT]
+    entity_description: RobotBinarySensorEntityDescription[_WhiskerEntityT]
 
     @property
     def is_on(self) -> bool:

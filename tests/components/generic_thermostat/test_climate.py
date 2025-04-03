@@ -7,7 +7,7 @@ from freezegun import freeze_time
 import pytest
 import voluptuous as vol
 
-from homeassistant import config as hass_config
+from homeassistant import config as hass_config, core as ha
 from homeassistant.components import input_boolean, switch
 from homeassistant.components.climate import (
     ATTR_PRESET_MODE,
@@ -35,7 +35,6 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfTemperature,
 )
-import homeassistant.core as ha
 from homeassistant.core import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
     CoreState,
@@ -1118,6 +1117,52 @@ async def test_precision(hass: HomeAssistant) -> None:
     assert state.attributes.get("temperature") == 55.3
     # check that target_temp_step defaults to precision
     assert state.attributes.get("target_temp_step") == 0.1
+
+
+@pytest.fixture(
+    params=[
+        HVACMode.HEAT,
+        HVACMode.COOL,
+    ]
+)
+async def setup_comp_10(hass: HomeAssistant, request: pytest.FixtureRequest) -> None:
+    """Initialize components."""
+    assert await async_setup_component(
+        hass,
+        CLIMATE_DOMAIN,
+        {
+            "climate": {
+                "platform": "generic_thermostat",
+                "name": "test",
+                "cold_tolerance": 0,
+                "hot_tolerance": 0,
+                "target_temp": 25,
+                "heater": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "initial_hvac_mode": request.param,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("setup_comp_10")
+async def test_zero_tolerances(hass: HomeAssistant) -> None:
+    """Test that having a zero tolerance doesn't cause the switch to flip-flop."""
+
+    # if the switch is off, it should remain off
+    calls = _setup_switch(hass, False)
+    _setup_sensor(hass, 25)
+    await hass.async_block_till_done()
+    await common.async_set_temperature(hass, 25)
+    assert len(calls) == 0
+
+    # if the switch is on, it should turn off
+    calls = _setup_switch(hass, True)
+    _setup_sensor(hass, 25)
+    await hass.async_block_till_done()
+    await common.async_set_temperature(hass, 25)
+    assert len(calls) == 1
 
 
 async def test_custom_setup_params(hass: HomeAssistant) -> None:

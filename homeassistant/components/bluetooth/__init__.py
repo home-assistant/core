@@ -5,7 +5,7 @@ from __future__ import annotations
 import datetime
 import logging
 import platform
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from bleak_retry_connector import BleakSlotManager
 from bluetooth_adapters import (
@@ -80,6 +80,7 @@ from .const import (
     CONF_DETAILS,
     CONF_PASSIVE,
     CONF_SOURCE_CONFIG_ENTRY_ID,
+    CONF_SOURCE_DEVICE_ID,
     CONF_SOURCE_DOMAIN,
     CONF_SOURCE_MODEL,
     DOMAIN,
@@ -297,7 +298,11 @@ async def async_discover_adapters(
 
 
 async def async_update_device(
-    hass: HomeAssistant, entry: ConfigEntry, adapter: str, details: AdapterDetails
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    adapter: str,
+    details: AdapterDetails,
+    via_device_id: str | None = None,
 ) -> None:
     """Update device registry entry.
 
@@ -306,15 +311,34 @@ async def async_update_device(
     update the device with the new location so they can
     figure out where the adapter is.
     """
-    dr.async_get(hass).async_get_or_create(
+    address = details[ADAPTER_ADDRESS]
+    connections = {(dr.CONNECTION_BLUETOOTH, address)}
+    device_registry = dr.async_get(hass)
+    # We only have one device for the config entry
+    # so if the address has been corrected, make
+    # sure the device entry reflects the correct
+    # address
+    for device in dr.async_entries_for_config_entry(device_registry, entry.entry_id):
+        for conn_type, conn_value in device.connections:
+            if conn_type == dr.CONNECTION_BLUETOOTH and conn_value != address:
+                device_registry.async_update_device(
+                    device.id, new_connections=connections
+                )
+                break
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        name=adapter_human_name(adapter, details[ADAPTER_ADDRESS]),
-        connections={(dr.CONNECTION_BLUETOOTH, details[ADAPTER_ADDRESS])},
+        name=adapter_human_name(adapter, address),
+        connections=connections,
         manufacturer=details[ADAPTER_MANUFACTURER],
         model=adapter_model(details),
         sw_version=details.get(ADAPTER_SW_VERSION),
         hw_version=details.get(ADAPTER_HW_VERSION),
     )
+    if via_device_id and (via_device_entry := device_registry.async_get(via_device_id)):
+        kwargs: dict[str, Any] = {"via_device_id": via_device_id}
+        if not device_entry.area_id and via_device_entry.area_id:
+            kwargs["area_id"] = via_device_entry.area_id
+        device_registry.async_update_device(device_entry.id, **kwargs)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -331,9 +355,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     )
                 )
             )
+            return True
         address = entry.unique_id
         assert address is not None
-        assert source_entry is not None
         source_domain = entry.data[CONF_SOURCE_DOMAIN]
         if mac_manufacturer := await get_manufacturer_from_mac(address):
             manufacturer = f"{mac_manufacturer} ({source_domain})"
@@ -349,6 +373,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry,
             source_entry.title,
             details,
+            entry.data.get(CONF_SOURCE_DEVICE_ID),
         )
         return True
     manager = _get_manager(hass)

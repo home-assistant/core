@@ -147,6 +147,7 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="discovery_confirm",
+            description_placeholders={"host": self._discovery_data[CONF_HOST]},
             errors=errors,
         )
 
@@ -233,12 +234,7 @@ class OnewireOptionsFlowHandler(OptionsFlow):
                         INPUT_ENTRY_DEVICE_SELECTION,
                         default=self._get_current_configured_sensors(),
                         description="Multiselect with list of devices to choose from",
-                    ): cv.multi_select(
-                        {
-                            friendly_name: False
-                            for friendly_name in self.configurable_devices
-                        }
-                    ),
+                    ): cv.multi_select(dict.fromkeys(self.configurable_devices, False)),
                 }
             ),
             errors=errors,

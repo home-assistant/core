@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from typing import Final
 
-from homeassistant.const import Platform, UnitOfTemperature
+from kasa.smart.modules.clean import AreaUnit
+
+from homeassistant.const import Platform, UnitOfArea, UnitOfTemperature
 
 DOMAIN = "tplink"
 
@@ -47,4 +49,6 @@ PLATFORMS: Final = [
 UNIT_MAPPING = {
     "celsius": UnitOfTemperature.CELSIUS,
     "fahrenheit": UnitOfTemperature.FAHRENHEIT,
+    AreaUnit.Sqm: UnitOfArea.SQUARE_METERS,
+    AreaUnit.Sqft: UnitOfArea.SQUARE_FEET,
 }

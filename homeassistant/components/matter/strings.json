@@ -135,9 +135,9 @@
         "state_attributes": {
           "preset_mode": {
             "state": {
-              "low": "Low",
-              "medium": "Medium",
-              "high": "High",
+              "low": "[%key:common::state::low%]",
+              "medium": "[%key:common::state::medium%]",
+              "high": "[%key:common::state::high%]",
               "auto": "Auto",
               "natural_wind": "Natural wind",
               "sleep_wind": "Sleep wind"
@@ -160,7 +160,7 @@
         "name": "On/Off transition time"
       },
       "altitude": {
-        "name": "Altitude above Sea Level"
+        "name": "Altitude above sea level"
       },
       "temperature_offset": {
         "name": "Temperature offset"
@@ -183,12 +183,15 @@
       "mode": {
         "name": "Mode"
       },
+      "device_energy_management_mode": {
+        "name": "Energy management mode"
+      },
       "sensitivity_level": {
         "name": "Sensitivity",
         "state": {
-          "low": "[%key:component::matter::entity::fan::fan::state_attributes::preset_mode::state::low%]",
+          "low": "[%key:common::state::low%]",
           "standard": "Standard",
-          "high": "[%key:component::matter::entity::fan::fan::state_attributes::preset_mode::state::high%]"
+          "high": "[%key:common::state::high%]"
         }
       },
       "startup_on_off": {
@@ -205,6 +208,18 @@
       },
       "temperature_display_mode": {
         "name": "Temperature display mode"
+      },
+      "laundry_washer_number_of_rinses": {
+        "name": "Number of rinses",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "normal": "Normal",
+          "extra": "Extra",
+          "max": "Max"
+        }
+      },
+      "laundry_washer_spin_speed": {
+        "name": "Spin speed"
       }
     },
     "sensor": {
@@ -215,7 +230,7 @@
         "name": "Contamination state",
         "state": {
           "normal": "Normal",
-          "low": "[%key:component::matter::entity::fan::fan::state_attributes::preset_mode::state::low%]",
+          "low": "[%key:common::state::low%]",
           "warning": "Warning",
           "critical": "Critical"
         }
@@ -243,10 +258,13 @@
       "operational_state": {
         "name": "Operational state",
         "state": {
-          "stopped": "Stopped",
+          "stopped": "[%key:common::state::stopped%]",
           "running": "Running",
           "paused": "[%key:common::state::paused%]",
-          "error": "Error"
+          "error": "Error",
+          "seeking_charger": "Seeking charger",
+          "charging": "[%key:common::state::charging%]",
+          "docked": "Docked"
         }
       },
       "switch_current_position": {

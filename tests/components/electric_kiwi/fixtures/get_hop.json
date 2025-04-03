@@ -1,16 +1,18 @@
 {
   "data": {
-    "connection_id": "3",
-    "customer_number": 1000001,
-    "end": {
-      "end_time": "5:00 PM",
-      "interval": "34"
-    },
+    "type": "hop_customer",
+    "customer_id": 123456,
+    "service_type": "electricity",
+    "connection_id": 515363,
+    "billing_id": 1247975,
     "start": {
-      "start_time": "4:00 PM",
-      "interval": "33"
+      "interval": "33",
+      "start_time": "4:00 PM"
     },
-    "type": "hop_customer"
+    "end": {
+      "interval": "34",
+      "end_time": "5:00 PM"
+    }
   },
   "status": 1
 }
