@@ -4792,7 +4792,7 @@ async def test_compile_statistics_hourly_daily_monthly_summary(
                 ("sensor.test5", lambda x: _weighted_circular_mean(x)[0]),
             ):
                 expected_average = (
-                    mean_fn(expected_means[entity_id][i])
+                    mean_fn(expected_means[entity_id][i * 12 : (i + 1) * 12])
                     if entity_id in expected_means
                     else None
                 )
