@@ -8,32 +8,10 @@ from syrupy import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
 
+from .test_common import get_device_discovery_payload, send_discovery_message
+
 from tests.common import async_fire_mqtt_message
 from tests.typing import MqttMockHAClient
-
-
-async def send_discovery_message(hass: HomeAssistant) -> None:
-    """Send mqtt discovery message."""
-
-    topic = "pglab/discovery/E-Board-DD53AC85/config"
-    payload = {
-        "ip": "192.168.1.16",
-        "mac": "80:34:28:1B:18:5A",
-        "name": "test",
-        "hw": "1.0.7",
-        "fw": "1.0.0",
-        "type": "E-Board",
-        "id": "E-Board-DD53AC85",
-        "manufacturer": "PG LAB Electronics",
-        "params": {"shutters": 0, "boards": "00000000"},
-    }
-
-    async_fire_mqtt_message(
-        hass,
-        topic,
-        json.dumps(payload),
-    )
-    await hass.async_block_till_done()
 
 
 @freeze_time("2024-02-26 01:21:34")
@@ -55,7 +33,12 @@ async def test_sensors(
     """Check if sensors are properly created and updated."""
 
     # send the discovery message to make E-BOARD device discoverable
-    await send_discovery_message(hass)
+    payload = get_device_discovery_payload(
+        number_of_shutters=0,
+        number_of_boards=0,
+    )
+
+    await send_discovery_message(hass, payload)
 
     # check initial sensors state
     state = hass.states.get(f"sensor.test_{sensor_suffix}")

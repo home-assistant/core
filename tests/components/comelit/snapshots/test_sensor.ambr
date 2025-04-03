@@ -1,0 +1,76 @@
+# serializer version: 1
+# name: test_all_entities[sensor.zone0-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'alarm',
+        'armed',
+        'open',
+        'excluded',
+        'faulty',
+        'inhibited',
+        'isolated',
+        'rest',
+        'sabotated',
+        'unavailable',
+        'unknown',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.zone0',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'comelit',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'zone_status',
+    'unique_id': 'vedo_config_entry_id-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.zone0-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Zone0',
+      'options': list([
+        'alarm',
+        'armed',
+        'open',
+        'excluded',
+        'faulty',
+        'inhibited',
+        'isolated',
+        'rest',
+        'sabotated',
+        'unavailable',
+        'unknown',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.zone0',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'rest',
+  })
+# ---
