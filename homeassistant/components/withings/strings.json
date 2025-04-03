@@ -313,9 +313,9 @@
       "battery": {
         "name": "[%key:component::sensor::entity_component::battery::name%]",
         "state": {
-          "low": "Low",
-          "medium": "Medium",
-          "high": "High"
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]"
         }
       }
     }

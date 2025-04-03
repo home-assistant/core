@@ -132,7 +132,7 @@
       "name": "Charging",
       "state": {
         "off": "Not charging",
-        "on": "Charging"
+        "on": "[%key:common::state::charging%]"
       }
     },
     "carbon_monoxide": {
