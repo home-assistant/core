@@ -80,7 +80,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 @pytest.fixture
 def points() -> Generator[dict[int, Point]]:
-    """Define a mocked door."""
+    """Define a mocked point."""
     names = [
         "Window",
         "Door",
@@ -152,8 +152,6 @@ def mock_panel(
     door: AsyncMock,
     output: AsyncMock,
     points: dict[int, AsyncMock],
-    model_name: str,
-    serial_number: str | None,
 ) -> Generator[AsyncMock]:
     """Define a fixture to set up Bosch Alarm."""
     with (
@@ -177,29 +175,6 @@ def mock_panel(
         client.faults_observer = AsyncMock(spec=Observable)
         client.history_observer = AsyncMock(spec=Observable)
         yield client
-
-
-@pytest.fixture
-def points() -> Generator[dict[int, Point]]:
-    """Define a mocked door."""
-    names = [
-        "Window",
-        "Door",
-        "Motion Detector",
-        "CO Detector",
-        "Smoke Detector",
-        "Glassbreak Sensor",
-        "Bedroom",
-    ]
-    points = {}
-    for i, name in enumerate(names):
-        mock = AsyncMock(spec=Point)
-        mock.name = name
-        mock.status_observer = AsyncMock(spec=Observable)
-        mock.is_open.return_value = False
-        mock.is_normal.return_value = True
-        points[i] = mock
-    return points
 
 
 @pytest.fixture
