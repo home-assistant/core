@@ -4545,16 +4545,16 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity[sensor.livingroom_wi_fi-state]
+# name: test_entity[sensor.livingroom_wi_fi_strength-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Livingroom Wi-Fi',
+      'friendly_name': 'Livingroom Wi-Fi strength',
       'latitude': 13.377726,
       'longitude': 52.516263,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.livingroom_wi_fi',
+    'entity_id': 'sensor.livingroom_wi_fi_strength',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
