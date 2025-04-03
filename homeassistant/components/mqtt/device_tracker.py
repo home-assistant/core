@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import logging
+from numbers import Number
 from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
@@ -28,8 +29,13 @@ from homeassistant.helpers.typing import ConfigType, VolSchemaType
 
 from . import subscription
 from .config import MQTT_BASE_SCHEMA
-from .const import CONF_PAYLOAD_RESET, CONF_STATE_TOPIC
-from .entity import CONF_JSON_ATTRS_TOPIC, MqttEntity, async_setup_entity_entry_helper
+from .const import (
+    CONF_JSON_ATTRS_TEMPLATE,
+    CONF_JSON_ATTRS_TOPIC,
+    CONF_PAYLOAD_RESET,
+    CONF_STATE_TOPIC,
+)
+from .entity import MqttEntity, async_setup_entity_entry_helper
 from .models import MqttValueTemplate, ReceiveMessage
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_subscribe_topic
@@ -153,30 +159,40 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
         """Extract the location from the extra state attributes."""
         if (
             ATTR_LATITUDE in extra_state_attributes
-            and ATTR_LONGITUDE in extra_state_attributes
+            or ATTR_LONGITUDE in extra_state_attributes
         ):
-            try:
-                self._attr_latitude = float(extra_state_attributes[ATTR_LATITUDE])
-                self._attr_longitude = float(extra_state_attributes[ATTR_LONGITUDE])
-            except (ValueError, TypeError):
-                # Reset location
+            latitude: float | None
+            longitude: float | None
+            gps_accuracy: int
+            # Reset manually set location to allow automatic zone detection
+            self._attr_location_name = None
+            if isinstance(
+                latitude := extra_state_attributes.get(ATTR_LATITUDE), Number
+            ) and isinstance(
+                longitude := extra_state_attributes.get(ATTR_LONGITUDE), Number
+            ):
+                self._attr_latitude = latitude
+                self._attr_longitude = longitude
+            else:
+                # Invalid or incomplete coordinates, reset location
                 self._attr_latitude = None
                 self._attr_longitude = None
-            finally:
-                self._attr_location_name = None
-        else:
-            # Reset location name and coordinates
-            self._attr_latitude = None
-            self._attr_longitude = None
-            self._attr_location_name = None
-
-        if ATTR_GPS_ACCURACY in extra_state_attributes:
-            try:
-                self._attr_location_accuracy = round(
-                    float(extra_state_attributes[ATTR_GPS_ACCURACY])
+                _LOGGER.warning(
+                    "Extra state attributes received at % and template %s "
+                    "contain invalid or incomplete location info. Got %s",
+                    self._config.get(CONF_JSON_ATTRS_TEMPLATE),
+                    self._config.get(CONF_JSON_ATTRS_TOPIC),
+                    extra_state_attributes,
                 )
-            except (ValueError, TypeError):
-                self._attr_location_accuracy = 0
+
+            self._attr_location_accuracy = (
+                gps_accuracy
+                if ATTR_GPS_ACCURACY in extra_state_attributes
+                and isinstance(
+                    gps_accuracy := extra_state_attributes[ATTR_GPS_ACCURACY], Number
+                )
+                else 0
+            )
 
         self._attr_extra_state_attributes = {
             attribute: value

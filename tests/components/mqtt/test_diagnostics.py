@@ -238,7 +238,7 @@ async def test_redact_diagnostics(
                 "original_icon": None,
                 "state": {
                     "attributes": {
-                        "gps_accuracy": 2,
+                        "gps_accuracy": 1.5,
                         "latitude": "**REDACTED**",
                         "longitude": "**REDACTED**",
                         "source_type": "gps",
