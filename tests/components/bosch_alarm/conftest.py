@@ -4,7 +4,7 @@ from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from bosch_alarm_mode2.panel import Area
+from bosch_alarm_mode2.panel import Area, Point
 from bosch_alarm_mode2.utils import Observable
 import pytest
 
@@ -95,7 +95,10 @@ def area() -> Generator[Area]:
 
 @pytest.fixture
 def mock_panel(
-    area: AsyncMock, model_name: str, serial_number: str | None
+    area: AsyncMock,
+    model_name: str,
+    serial_number: str | None,
+    points: dict[int, AsyncMock],
 ) -> Generator[AsyncMock]:
     """Define a fixture to set up Bosch Alarm."""
     with (
@@ -106,11 +109,35 @@ def mock_panel(
     ):
         client = mock_panel.return_value
         client.areas = {1: area}
+        client.points = points
         client.model = model_name
         client.firmware_version = "1.0.0"
         client.serial_number = serial_number
         client.connection_status_observer = AsyncMock(spec=Observable)
         yield client
+
+
+@pytest.fixture
+def points() -> Generator[dict[int, Point]]:
+    """Define a mocked door."""
+    names = [
+        "Window",
+        "Door",
+        "Motion Detector",
+        "CO Detector",
+        "Smoke Detector",
+        "Glassbreak Sensor",
+        "Bedroom",
+    ]
+    points = {}
+    for i, name in enumerate(names):
+        mock = AsyncMock(spec=Point)
+        mock.name = name
+        mock.status_observer = AsyncMock(spec=Observable)
+        mock.is_open.return_value = False
+        mock.is_normal.return_value = True
+        points[i] = mock
+    return points
 
 
 @pytest.fixture
