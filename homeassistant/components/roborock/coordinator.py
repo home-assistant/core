@@ -255,6 +255,9 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             )
             current_roborock_map_info.image = parsed_image
             current_roborock_map_info.last_updated = dt_util.utcnow()
+            current_roborock_map_info.last_status = (
+                self.roborock_device_info.props.status.state_name
+            )
         current_roborock_map_info.map_data = parsed_map
 
     async def _verify_api(self) -> None:
@@ -291,7 +294,6 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
 
     async def _async_update_data(self) -> DeviceProp:
         """Update data via library."""
-        previous_state = self.roborock_device_info.props.status.state_name
         try:
             # Update device props and standard api information
             await self._update_device_prop()
@@ -308,7 +310,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
                     and (dt_util.utcnow() - self.maps[self.current_map].last_updated)
                     > IMAGE_CACHE_INTERVAL
                 )
-                or previous_state != new_status.state_name
+                or self.maps[self.current_map].last_status != new_status.state_name
             ):
                 try:
                     await self.update_map()
