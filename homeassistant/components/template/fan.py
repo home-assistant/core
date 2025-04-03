@@ -260,7 +260,7 @@ class TemplateFan(TemplateEntity, FanEntity):
         """Set the percentage speed of the fan."""
         self._percentage = percentage
 
-        if (script := self._action_scripts.get(CONF_SET_PERCENTAGE_ACTION)) is not None:
+        if script := self._action_scripts.get(CONF_SET_PERCENTAGE_ACTION):
             await self.async_run_script(
                 script,
                 run_variables={ATTR_PERCENTAGE: self._percentage},
@@ -275,9 +275,7 @@ class TemplateFan(TemplateEntity, FanEntity):
         """Set the preset_mode of the fan."""
         self._preset_mode = preset_mode
 
-        if (
-            script := self._action_scripts.get(CONF_SET_PRESET_MODE_ACTION)
-        ) is not None:
+        if script := self._action_scripts.get(CONF_SET_PRESET_MODE_ACTION):
             await self.async_run_script(
                 script,
                 run_variables={ATTR_PRESET_MODE: self._preset_mode},

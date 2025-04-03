@@ -14,7 +14,7 @@
     "step": {
       "auth": {
         "data": {
-          "country": "Country",
+          "country": "[%key:common::config_flow::data::country%]",
           "override_rest_url": "REST URL",
           "override_mqtt_url": "MQTT URL",
           "password": "[%key:common::config_flow::data::password%]",

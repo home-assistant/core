@@ -185,27 +185,27 @@ class TemplateVacuum(TemplateEntity, StateVacuumEntity):
 
     async def async_pause(self) -> None:
         """Pause the cleaning task."""
-        if (script := self._action_scripts.get(SERVICE_PAUSE)) is not None:
+        if script := self._action_scripts.get(SERVICE_PAUSE):
             await self.async_run_script(script, context=self._context)
 
     async def async_stop(self, **kwargs: Any) -> None:
         """Stop the cleaning task."""
-        if (script := self._action_scripts.get(SERVICE_STOP)) is not None:
+        if script := self._action_scripts.get(SERVICE_STOP):
             await self.async_run_script(script, context=self._context)
 
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Set the vacuum cleaner to return to the dock."""
-        if (script := self._action_scripts.get(SERVICE_RETURN_TO_BASE)) is not None:
+        if script := self._action_scripts.get(SERVICE_RETURN_TO_BASE):
             await self.async_run_script(script, context=self._context)
 
     async def async_clean_spot(self, **kwargs: Any) -> None:
         """Perform a spot clean-up."""
-        if (script := self._action_scripts.get(SERVICE_CLEAN_SPOT)) is not None:
+        if script := self._action_scripts.get(SERVICE_CLEAN_SPOT):
             await self.async_run_script(script, context=self._context)
 
     async def async_locate(self, **kwargs: Any) -> None:
         """Locate the vacuum cleaner."""
-        if (script := self._action_scripts.get(SERVICE_LOCATE)) is not None:
+        if script := self._action_scripts.get(SERVICE_LOCATE):
             await self.async_run_script(script, context=self._context)
 
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
@@ -219,7 +219,7 @@ class TemplateVacuum(TemplateEntity, StateVacuumEntity):
             )
             return
 
-        if (script := self._action_scripts.get(SERVICE_SET_FAN_SPEED)) is not None:
+        if script := self._action_scripts.get(SERVICE_SET_FAN_SPEED):
             await self.async_run_script(
                 script, run_variables={ATTR_FAN_SPEED: fan_speed}, context=self._context
             )
