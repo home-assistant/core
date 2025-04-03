@@ -21,6 +21,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.util.ssl import client_context_no_verify
 
 from .const import KEY_MAC, TIMEOUT
 from .coordinator import DaikinConfigEntry, DaikinCoordinator
@@ -48,6 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaikinConfigEntry) -> bo
                 key=entry.data.get(CONF_API_KEY),
                 uuid=entry.data.get(CONF_UUID),
                 password=entry.data.get(CONF_PASSWORD),
+                ssl_context=client_context_no_verify(),
             )
         _LOGGER.debug("Connection to %s successful", host)
     except TimeoutError as err:
