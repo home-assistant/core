@@ -25,7 +25,7 @@ from homeassistant.components.persistent_notification import async_dismiss
 from homeassistant.components.zwave_js import DOMAIN
 from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
@@ -347,6 +347,7 @@ async def test_listen_done_after_setup(
     assert client.disconnect.call_count == disconnect_call_count
 
 
+@pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
 async def test_new_entity_on_value_added(
     hass: HomeAssistant, multisensor_6, client, integration
 ) -> None:
