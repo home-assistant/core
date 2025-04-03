@@ -178,9 +178,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             entity.pop(CONF_RESOURCE, None)
 
             if entity[CONF_DOMAIN] == Platform.CLIMATE:
-                entity[CONF_DOMAIN_DATA][CONF_TARGET_VALUE_LOCKED] = entity[
-                    CONF_DOMAIN_DATA
-                ].get(CONF_TARGET_VALUE_LOCKED, -1)
+                entity[CONF_DOMAIN_DATA].setdefault(CONF_TARGET_VALUE_LOCKED, -1)
 
         new_data[CONF_ENTITIES] = new_entities_data
 
