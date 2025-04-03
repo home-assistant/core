@@ -72,8 +72,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: AdGuardConfigEntry) -> b
     )
 
     try:
-        # Get auth token first
-        auth_token = await adguard.authenticate()
+        # Get auth token first if supported
+        auth_token = None
+        if hasattr(adguard, "authenticate"):
+            auth_token = await adguard.authenticate()
         # Then get version
         version = await adguard.version()
     except AdGuardHomeConnectionError as exception:
