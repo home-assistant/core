@@ -8,7 +8,12 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from homeassistant.components.calendar import DOMAIN, CalendarEntity, CalendarEvent
+from homeassistant.components.calendar import (
+    DOMAIN,
+    CalendarEntity,
+    CalendarEntityFeature,
+    CalendarEvent,
+)
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -89,6 +94,24 @@ class MockCalendarEntity(CalendarEntity):
                 continue
             events.append(event)
         return events
+
+
+class MockCalendarEntityDelete(MockCalendarEntity):
+    """Test Calendar delete entity."""
+
+    _attr_supported_features = CalendarEntityFeature.DELETE_EVENT
+
+    async def async_delete_event(
+        self,
+        uid: str,
+        recurrence_id: str | None = None,
+        recurrence_range: str | None = None,
+    ) -> None:
+        """Delete an event on the calendar."""
+        if uid != "17fd4a63-9c8a-45ef-9c25-4c4c447a4912":
+            raise ValueError(
+                "No existing item with uid/recurrence_id: " + uid + "/None"
+            )
 
 
 @pytest.fixture
@@ -196,4 +219,17 @@ def create_test_entities() -> list[MockCalendarEntity]:
     )
     entity2.async_get_events = AsyncMock(wraps=entity2.async_get_events)
 
-    return [entity1, entity2]
+    deletable_event = dt_util.now() + datetime.timedelta(minutes=45)
+    entity3 = MockCalendarEntityDelete(
+        "Calendar 3",
+        [
+            CalendarEvent(
+                start=deletable_event,
+                end=deletable_event + datetime.timedelta(minutes=30),
+                uid="17fd4a63-9c8a-45ef-9c25-4c4c447a4912",
+                summary="Delete Event",
+            )
+        ],
+    )
+
+    return [entity1, entity2, entity3]

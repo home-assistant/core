@@ -13,7 +13,12 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
-from homeassistant.components.calendar import DOMAIN, SERVICE_GET_EVENTS
+from homeassistant.components.calendar import (
+    CREATE_EVENT_SERVICE,
+    DELETE_EVENT_SERVICE,
+    DOMAIN,
+    SERVICE_GET_EVENTS,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceNotSupported
 from homeassistant.setup import async_setup_component
@@ -123,6 +128,7 @@ async def test_calendars_http_api(
     assert data == [
         {"entity_id": "calendar.calendar_1", "name": "Calendar 1"},
         {"entity_id": "calendar.calendar_2", "name": "Calendar 2"},
+        {"entity_id": "calendar.calendar_3", "name": "Calendar 3"},
     ]
 
 
@@ -224,7 +230,7 @@ async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             DOMAIN,
-            "create_event",
+            CREATE_EVENT_SERVICE,
             {
                 "start_date_time": "1997-07-14T17:00:00+00:00",
                 "end_date_time": "1997-07-15T04:00:00+00:00",
@@ -399,13 +405,44 @@ async def test_create_event_service_invalid_params(
 
     with pytest.raises(expected_error, match=error_match):
         await hass.services.async_call(
-            "calendar",
-            "create_event",
+            DOMAIN,
+            CREATE_EVENT_SERVICE,
             {
                 "summary": "Bastille Day Party",
                 **date_fields,
             },
             target={"entity_id": "calendar.calendar_1"},
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
+    ("service_data", "expected_error", "error_match"),
+    [
+        (
+            {"uid": "5522a20f-362f-4650-bbcd-9614fa77322b"},
+            ValueError,
+            "No existing item with uid/recurrence_id: 5522a20f-362f-4650-bbcd-9614fa77322b/None",
+        ),
+    ],
+    ids=[
+        "no_existing_item",
+    ],
+)
+async def test_delete_event_service_invalid_params(
+    hass: HomeAssistant,
+    service_data: dict[str, str],
+    expected_error: type[Exception],
+    error_match: str | None,
+) -> None:
+    """Test deleting an event using the delete_event service."""
+
+    with pytest.raises(expected_error, match=error_match):
+        await hass.services.async_call(
+            DOMAIN,
+            DELETE_EVENT_SERVICE,
+            service_data,
+            target={"entity_id": "calendar.calendar_3"},
             blocking=True,
         )
 
@@ -420,7 +457,7 @@ async def test_unsupported_delete_event_service(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             DOMAIN,
-            "delete_event",
+            DELETE_EVENT_SERVICE,
             {
                 "uid": "5522a20f-362f-4650-bbcd-9614fa77322b",
             },
