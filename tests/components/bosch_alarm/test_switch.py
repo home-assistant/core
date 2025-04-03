@@ -29,7 +29,7 @@ async def test_update_switch_device(
     output: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that alarm panel state changes after arming the panel."""
+    """Test that output state changes after turning on the output."""
     await setup_integration(hass, mock_config_entry)
     entity_id = "switch.output_a"
     assert hass.states.get(entity_id).state == STATE_OFF
@@ -42,6 +42,28 @@ async def test_update_switch_device(
     output.is_active.return_value = True
     await call_observable(hass, output.status_observer)
     assert hass.states.get(entity_id).state == STATE_ON
+
+
+async def test_update_door_device(
+    hass: HomeAssistant,
+    mock_panel: AsyncMock,
+    door: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that door state changes after unlocking the door."""
+    await setup_integration(hass, mock_config_entry)
+    entity_id = "switch.main_door"
+    assert hass.states.get(entity_id).state == STATE_ON
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        "turn_off",
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    door.is_locked.return_value = False
+    door.is_open.return_value = True
+    await call_observable(hass, door.status_observer)
+    assert hass.states.get(entity_id).state == STATE_OFF
 
 
 async def test_switch(
