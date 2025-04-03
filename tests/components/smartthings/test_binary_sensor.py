@@ -60,7 +60,6 @@ async def test_state_update(
     assert hass.states.get("binary_sensor.refrigerator_cooler_door").state == STATE_ON
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     ("device_fixture", "unique_id", "suggested_object_id", "issue_string", "entity_id"),
     [
@@ -167,7 +166,6 @@ async def test_create_issue_with_items(
     assert len(issue_registry.issues) == 0
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     ("device_fixture", "unique_id", "suggested_object_id", "issue_string", "entity_id"),
     [

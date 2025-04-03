@@ -36,11 +36,9 @@ from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(autouse=True)
-def auth_active(hass: HomeAssistant) -> None:
+async def auth_active(hass: HomeAssistant) -> None:
     """Ensure auth is always active."""
-    hass.loop.run_until_complete(
-        register_auth_provider(hass, {"type": "homeassistant"})
-    )
+    await register_auth_provider(hass, {"type": "homeassistant"})
 
 
 @pytest.fixture(name="rpi")

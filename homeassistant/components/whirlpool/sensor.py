@@ -25,12 +25,12 @@ from .entity import WhirlpoolEntity
 SCAN_INTERVAL = timedelta(minutes=5)
 
 WASHER_TANK_FILL = {
-    "0": "unknown",
-    "1": "empty",
-    "2": "25",
-    "3": "50",
-    "4": "100",
-    "5": "active",
+    0: "unknown",
+    1: "empty",
+    2: "25",
+    3: "50",
+    4: "100",
+    5: "active",
 }
 
 WASHER_DRYER_MACHINE_STATE = {
@@ -70,7 +70,7 @@ STATE_DOOR_OPEN = "door_open"
 def washer_dryer_state(washer_dryer: WasherDryer) -> str | None:
     """Determine correct states for a washer/dryer."""
 
-    if washer_dryer.get_attribute("Cavity_OpStatusDoorOpen") == "1":
+    if washer_dryer.get_door_open():
         return STATE_DOOR_OPEN
 
     machine_state = washer_dryer.get_machine_state()
@@ -110,9 +110,7 @@ WASHER_SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.ENUM,
         options=list(WASHER_TANK_FILL.values()),
-        value_fn=lambda washer: WASHER_TANK_FILL.get(
-            washer.get_attribute("WashCavity_OpStatusBulkDispense1Level")
-        ),
+        value_fn=lambda washer: WASHER_TANK_FILL.get(washer.get_dispense_1_level()),
     ),
 )
 
@@ -224,9 +222,7 @@ class WasherDryerTimeSensor(WhirlpoolEntity, RestoreSensor):
         if machine_state is MachineState.RunningMainCycle:
             self._running = True
 
-            new_timestamp = now + timedelta(
-                seconds=int(self._wd.get_attribute("Cavity_TimeStatusEstTimeRemaining"))
-            )
+            new_timestamp = now + timedelta(seconds=self._wd.get_time_remaining())
 
             if self._value is None or (
                 isinstance(self._value, datetime)

@@ -13,7 +13,7 @@ from homeassistant.const import CONF_API_KEY, CONF_URL
 
 from .api import (
     PterodactylAPI,
-    PterodactylConfigurationError,
+    PterodactylAuthorizationError,
     PterodactylConnectionError,
 )
 from .const import DOMAIN
@@ -49,7 +49,9 @@ class PterodactylConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 await api.async_init()
-            except (PterodactylConfigurationError, PterodactylConnectionError):
+            except PterodactylAuthorizationError:
+                errors["base"] = "invalid_auth"
+            except PterodactylConnectionError:
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception occurred during config flow")

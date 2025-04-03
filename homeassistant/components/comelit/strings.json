@@ -52,7 +52,9 @@
           "rest": "Rest",
           "sabotated": "Sabotated"
         }
-      },
+      }
+    },
+    "humidifier": {
       "humidifier": {
         "name": "Humidifier"
       },
