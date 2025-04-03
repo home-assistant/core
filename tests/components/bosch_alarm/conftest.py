@@ -4,7 +4,7 @@ from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from bosch_alarm_mode2.panel import Area
+from bosch_alarm_mode2.panel import Area, Output
 from bosch_alarm_mode2.utils import Observable
 import pytest
 
@@ -28,6 +28,16 @@ from tests.common import MockConfigEntry
 def model(request: pytest.FixtureRequest) -> Generator[str]:
     """Return every device."""
     return request.param
+
+
+@pytest.fixture
+def entity_id(model: str) -> str | None:
+    """Return extra config entry data."""
+    return {
+        "solution_3000": "bosch_solution_3000",
+        "amax_3000": "bosch_amax_3000",
+        "b5512": "bosch_b5512_us1b",
+    }.get(model)
 
 
 @pytest.fixture
@@ -69,6 +79,16 @@ def serial_number(model: str) -> str | None:
 
 
 @pytest.fixture
+def output() -> Generator[Output]:
+    """Define a mocked output."""
+    mock = AsyncMock(spec=Output)
+    mock.name = "Output A"
+    mock.status_observer = AsyncMock(spec=Observable)
+    mock.is_active.return_value = False
+    return mock
+
+
+@pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
@@ -95,7 +115,7 @@ def area() -> Generator[Area]:
 
 @pytest.fixture
 def mock_panel(
-    area: AsyncMock, model_name: str, serial_number: str | None
+    area: AsyncMock, output: AsyncMock, model_name: str, serial_number: str | None
 ) -> Generator[AsyncMock]:
     """Define a fixture to set up Bosch Alarm."""
     with (
@@ -106,6 +126,7 @@ def mock_panel(
     ):
         client = mock_panel.return_value
         client.areas = {1: area}
+        client.outputs = {1: output}
         client.model = model_name
         client.firmware_version = "1.0.0"
         client.serial_number = serial_number
