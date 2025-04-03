@@ -58,6 +58,7 @@ class ThinQEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
             self._attr_translation_key = (
                 f"{entity_description.translation_key}_for_location"
             )
+        self.device_state = coordinator.api.get_device_state(self.location)
 
     @property
     def data(self) -> PropertyState:
