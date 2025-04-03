@@ -91,7 +91,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'away',
+    'state': 'home_and_away_ready',
   })
 # ---
 # name: test_sensor[amax_3000][sensor.area1_faulting_points-entry]
@@ -328,7 +328,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'away',
+    'state': 'home_and_away_ready',
   })
 # ---
 # name: test_sensor[b5512][sensor.area1_faulting_points-entry]
@@ -565,7 +565,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'away',
+    'state': 'home_and_away_ready',
   })
 # ---
 # name: test_sensor[solution_3000][sensor.area1_faulting_points-entry]
