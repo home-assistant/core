@@ -35,6 +35,18 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.AQI,
     ),
     SensorEntityDescription(
+        key="pm10",
+        device_class=SensorDeviceClass.PM10,
+    ),
+    SensorEntityDescription(
+        key="pm2_5",
+        device_class=SensorDeviceClass.PM25
+    ),
+    SensorEntityDescription(                         
+        key="pm1",                                   
+        device_class=SensorDeviceClass.PM1,                  
+    ), 
+    SensorEntityDescription(
         key="humidity",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
