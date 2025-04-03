@@ -28,7 +28,7 @@
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'alarms',
     'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_area_1_alarms',
     'unit_of_measurement': None,
   })
@@ -45,53 +45,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'No Alarms',
-  })
-# ---
-# name: test_sensor[amax_3000][sensor.area1_area1_faulting_points-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.area1_area1_faulting_points',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Area1 Faulting Points',
-    'platform': 'bosch_alarm',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'faulting_points',
-    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_area_1_faults',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[amax_3000][sensor.area1_area1_faulting_points-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Area1 Area1 Faulting Points',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.area1_area1_faulting_points',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '[]',
   })
 # ---
 # name: test_sensor[amax_3000][sensor.area1_area1_ready_to_arm-entry]
@@ -139,6 +92,53 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'away',
+  })
+# ---
+# name: test_sensor[amax_3000][sensor.area1_faulting_points-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.area1_faulting_points',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Faulting Points',
+    'platform': 'bosch_alarm',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'faulting_points',
+    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_area_1_faults',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[amax_3000][sensor.area1_faulting_points-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Area1 Faulting Points',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.area1_faulting_points',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '[]',
   })
 # ---
 # name: test_sensor[amax_3000][sensor.bosch_amax_3000_faults-entry]
@@ -265,7 +265,7 @@
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'alarms',
     'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_area_1_alarms',
     'unit_of_measurement': None,
   })
@@ -282,53 +282,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'No Alarms',
-  })
-# ---
-# name: test_sensor[b5512][sensor.area1_area1_faulting_points-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.area1_area1_faulting_points',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Area1 Faulting Points',
-    'platform': 'bosch_alarm',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'faulting_points',
-    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_area_1_faults',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[b5512][sensor.area1_area1_faulting_points-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Area1 Area1 Faulting Points',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.area1_area1_faulting_points',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '[]',
   })
 # ---
 # name: test_sensor[b5512][sensor.area1_area1_ready_to_arm-entry]
@@ -376,6 +329,53 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'away',
+  })
+# ---
+# name: test_sensor[b5512][sensor.area1_faulting_points-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.area1_faulting_points',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Faulting Points',
+    'platform': 'bosch_alarm',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'faulting_points',
+    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_area_1_faults',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[b5512][sensor.area1_faulting_points-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Area1 Faulting Points',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.area1_faulting_points',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '[]',
   })
 # ---
 # name: test_sensor[b5512][sensor.bosch_b5512_us1b_faults-entry]
@@ -502,7 +502,7 @@
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'alarms',
     'unique_id': '1234567890_area_1_alarms',
     'unit_of_measurement': None,
   })
@@ -519,53 +519,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'No Alarms',
-  })
-# ---
-# name: test_sensor[solution_3000][sensor.area1_area1_faulting_points-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.area1_area1_faulting_points',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Area1 Faulting Points',
-    'platform': 'bosch_alarm',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'faulting_points',
-    'unique_id': '1234567890_area_1_faults',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[solution_3000][sensor.area1_area1_faulting_points-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Area1 Area1 Faulting Points',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.area1_area1_faulting_points',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '[]',
   })
 # ---
 # name: test_sensor[solution_3000][sensor.area1_area1_ready_to_arm-entry]
@@ -613,6 +566,53 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'away',
+  })
+# ---
+# name: test_sensor[solution_3000][sensor.area1_faulting_points-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.area1_faulting_points',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Faulting Points',
+    'platform': 'bosch_alarm',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'faulting_points',
+    'unique_id': '1234567890_area_1_faults',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[solution_3000][sensor.area1_faulting_points-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Area1 Faulting Points',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.area1_faulting_points',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '[]',
   })
 # ---
 # name: test_sensor[solution_3000][sensor.bosch_solution_3000_faults-entry]
