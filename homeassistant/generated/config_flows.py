@@ -557,6 +557,7 @@ FLOWS = {
         "sfr_box",
         "sharkiq",
         "shelly",
+        "shelly_light",
         "shopping_list",
         "sia",
         "simplefin",

@@ -596,6 +596,10 @@ ZEROCONF = {
             "name": "shelly*",
         },
         {
+            "domain": "shelly_light",
+            "name": "shelly*",
+        },
+        {
             "domain": "slide_local",
             "name": "slide*",
         },
@@ -806,6 +810,9 @@ ZEROCONF = {
     "_shelly._tcp.local.": [
         {
             "domain": "shelly",
+        },
+        {
+            "domain": "shelly_light",
         },
     ],
     "_sideplay._tcp.local.": [

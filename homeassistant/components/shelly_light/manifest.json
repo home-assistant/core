@@ -1,0 +1,35 @@
+{
+  "domain": "shelly_light",
+  "name": "ShellyLighting",
+  "codeowners": ["@InnovoDeveloper"],
+  "config_flow": true,
+  "dhcp": [
+    {
+      "hostname": "shelly*"
+    },
+    {
+      "macaddress": "2C3AE8*"
+    },
+    {
+      "macaddress": "7CDDE9*"
+    }
+  ],
+  "documentation": "https://www.home-assistant.io/integrations/shelly_light",
+  "homekit": {
+    "models": []
+  },
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "loggers": ["aioshelly"],
+  "quality_scale": "bronze",
+  "requirements": ["aiohttp==3.8.0", "zeroconf==0.38.0", "aioshelly==13.4.0"],
+  "zeroconf": [
+    {
+      "type": "_http._tcp.local.",
+      "name": "shelly*"
+    },
+    {
+      "type": "_shelly._tcp.local."
+    }
+  ]
+}

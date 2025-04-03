@@ -1,0 +1,22 @@
+{
+  "title": "Shelly Light",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configure Shelly Light",
+        "description": "Set up your Shelly lighting devices",
+        "data": {
+          "host": "Host/IP Address"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect",
+      "invalid_auth": "Invalid authentication",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "Device already configured"
+    }
+  }
+}

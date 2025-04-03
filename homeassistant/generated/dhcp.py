@@ -583,6 +583,18 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "hostname": "sensibo*",
     },
     {
+        "domain": "shelly_light",
+        "hostname": "shelly*",
+    },
+    {
+        "domain": "shelly_light",
+        "macaddress": "2C3AE8*",
+    },
+    {
+        "domain": "shelly_light",
+        "macaddress": "7CDDE9*",
+    },
+    {
         "domain": "simplisafe",
         "hostname": "simplisafe*",
         "macaddress": "30AEA4*",
