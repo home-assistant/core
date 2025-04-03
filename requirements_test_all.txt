@@ -1590,7 +1590,7 @@ pyeiscp==0.0.7
 pyemoncms==0.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.25.1
+pyenphase==1.25.5
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
@@ -1895,7 +1895,7 @@ pysmartthings==3.0.1
 pysmarty2==0.10.2
 
 # homeassistant.components.smhi
-pysmhi==1.0.0
+pysmhi==1.0.1
 
 # homeassistant.components.edl21
 pysml==0.0.12
