@@ -13,10 +13,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import BoschAlarmConfigEntry
 from .const import DOMAIN
 
-READY_STATE_NO = "no"
-READY_STATE_HOME = "home"
-READY_STATE_AWAY = "away"
-
 
 async def async_setup_entry(
     hass: HomeAssistant | None,
@@ -201,10 +197,10 @@ class AreaReadyToArmSensor(SensorEntity):
     def native_value(self) -> str:
         """The state of this entity."""
         if self._area.all_ready:
-            return READY_STATE_AWAY
+            return "home_and_away_ready"
         if self._area.part_ready:
-            return READY_STATE_HOME
-        return READY_STATE_NO
+            return "home_ready"
+        return "not_ready"
 
     async def async_added_to_hass(self) -> None:
         """Observe state changes."""
