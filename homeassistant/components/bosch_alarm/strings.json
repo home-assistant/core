@@ -32,5 +32,18 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "entity": {
+    "switch": {
+      "secured": {
+        "name": "Secured"
+      },
+      "cycling": {
+        "name": "Cycling"
+      },
+      "locked": {
+        "name": "Locked"
+      }
+    }
   }
 }

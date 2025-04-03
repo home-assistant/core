@@ -44,7 +44,7 @@ async def test_update_switch_device(
     assert hass.states.get(entity_id).state == STATE_ON
 
 
-async def test_update_door_device(
+async def test_unlock_door(
     hass: HomeAssistant,
     mock_panel: AsyncMock,
     door: AsyncMock,
@@ -52,7 +52,7 @@ async def test_update_door_device(
 ) -> None:
     """Test that door state changes after unlocking the door."""
     await setup_integration(hass, mock_config_entry)
-    entity_id = "switch.main_door"
+    entity_id = "switch.main_door_locked"
     assert hass.states.get(entity_id).state == STATE_ON
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -62,6 +62,76 @@ async def test_update_door_device(
     )
     door.is_locked.return_value = False
     door.is_open.return_value = True
+    await call_observable(hass, door.status_observer)
+    assert hass.states.get(entity_id).state == STATE_OFF
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        "turn_on",
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    door.is_locked.return_value = True
+    door.is_open.return_value = False
+    await call_observable(hass, door.status_observer)
+    assert hass.states.get(entity_id).state == STATE_ON
+
+
+async def test_secure_door(
+    hass: HomeAssistant,
+    mock_panel: AsyncMock,
+    door: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that door state changes after unlocking the door."""
+    await setup_integration(hass, mock_config_entry)
+    entity_id = "switch.main_door_secured"
+    assert hass.states.get(entity_id).state == STATE_OFF
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        "turn_on",
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    door.is_secured.return_value = True
+    await call_observable(hass, door.status_observer)
+    assert hass.states.get(entity_id).state == STATE_ON
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        "turn_off",
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    door.is_secured.return_value = False
+    await call_observable(hass, door.status_observer)
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+
+async def test_cycle_door(
+    hass: HomeAssistant,
+    mock_panel: AsyncMock,
+    door: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that door state changes after unlocking the door."""
+    await setup_integration(hass, mock_config_entry)
+    entity_id = "switch.main_door_cycling"
+    assert hass.states.get(entity_id).state == STATE_OFF
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        "turn_on",
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    door.is_cycling.return_value = True
+    await call_observable(hass, door.status_observer)
+    assert hass.states.get(entity_id).state == STATE_ON
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        "turn_off",
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    door.is_cycling.return_value = False
     await call_observable(hass, door.status_observer)
     assert hass.states.get(entity_id).state == STATE_OFF
 
