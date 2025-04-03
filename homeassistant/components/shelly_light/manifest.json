@@ -22,7 +22,12 @@
   "iot_class": "local_push",
   "loggers": ["aioshelly"],
   "quality_scale": "bronze",
-  "requirements": ["aiohttp==3.8.0", "zeroconf==0.38.0", "aioshelly==13.4.0"],
+  "requirements": [
+    "aiohttp==3.11.14",
+    "zeroconf==0.146.0",
+    "aioshelly==13.4.0"
+  ],
+
   "zeroconf": [
     {
       "type": "_http._tcp.local.",

@@ -255,7 +255,7 @@ aiohomeconnect==0.16.3
 aiohomekit==3.2.8
 
 # homeassistant.components.shelly_light
-aiohttp==3.8.0
+aiohttp==3.11.14
 
 # homeassistant.components.mcp_server
 aiohttp_sse==2.2.0
@@ -2536,11 +2536,9 @@ yt-dlp[default]==2025.02.19
 # homeassistant.components.zamg
 zamg==0.3.6
 
+# homeassistant.components.shelly_light
 # homeassistant.components.zeroconf
 zeroconf==0.146.0
-
-# homeassistant.components.shelly_light
-zeroconf==0.38.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.2
