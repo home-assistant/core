@@ -116,12 +116,7 @@ async def test_form(hass: HomeAssistant) -> None:
 
 def will_options_be_rendered_again(current_options, new_options) -> bool:
     """Determine if options will be rendered again."""
-    return current_options.get(CONF_RECOMMENDED) != new_options.get(
-        CONF_RECOMMENDED
-    ) or (
-        current_options.get(CONF_LLM_HASS_API) != new_options.get(CONF_LLM_HASS_API)
-        and new_options.get(CONF_LLM_HASS_API, "none") == "none"
-    )
+    return current_options.get(CONF_RECOMMENDED) != new_options.get(CONF_RECOMMENDED)
 
 
 @pytest.mark.parametrize(
@@ -297,16 +292,6 @@ async def test_options_switching(
             **current_options,
             CONF_RECOMMENDED: new_options[CONF_RECOMMENDED],
         }
-
-        if (
-            current_options.get(CONF_LLM_HASS_API) != new_options.get(CONF_LLM_HASS_API)
-            and new_options.get(CONF_LLM_HASS_API) is not None
-        ):
-            retry_options = {
-                **retry_options,
-                CONF_LLM_HASS_API: new_options[CONF_LLM_HASS_API],
-            }
-
         with patch(
             "google.genai.models.AsyncModels.list",
             return_value=get_models_pager(),
