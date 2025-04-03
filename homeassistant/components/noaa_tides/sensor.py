@@ -7,37 +7,46 @@ import logging
 from typing import TYPE_CHECKING, Any, Literal, TypedDict
 
 import noaa_coops as coops
-import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_NAME, CONF_TIME_ZONE, CONF_UNIT_SYSTEM
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from .helpers import get_station_unique_id
+from . import NoaaTidesConfigEntry
+from .const import (
+    CONF_STATION_ID,
+    DEFAULT_TIMEZONE,
+    DOMAIN,
+    NAME,
+    TIMEZONES,
+    UNIT_SYSTEMS,
+)
+from .helpers import get_default_unit_system, get_station_unique_id
 
 if TYPE_CHECKING:
     from pandas import Timestamp
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_STATION_ID = "station_id"
-
 DEFAULT_NAME = "NOAA Tides"
-DEFAULT_TIMEZONE = "lst_ldt"
 
 SCAN_INTERVAL = timedelta(minutes=60)
 
-TIMEZONES = ["gmt", "lst", "lst_ldt"]
-UNIT_SYSTEMS = ["english", "metric"]
+DEPRECATE_YAML_IN_HA_VERSION = "2025.10.0"
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
@@ -49,41 +58,121 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the NOAA Tides and Currents sensor."""
+
+    _LOGGER.debug("Importing from configuration.yaml: %s", config)
+
     station_id = config[CONF_STATION_ID]
-    name = config.get(CONF_NAME)
-    timezone = config.get(CONF_TIME_ZONE)
+    timezone = config.get(CONF_TIME_ZONE, DEFAULT_TIMEZONE)
+    unit_system = config.get(CONF_UNIT_SYSTEM, get_default_unit_system(hass))
 
-    if CONF_UNIT_SYSTEM in config:
-        unit_system = config[CONF_UNIT_SYSTEM]
-    elif hass.config.units is METRIC_SYSTEM:
-        unit_system = UNIT_SYSTEMS[1]
-    else:
-        unit_system = UNIT_SYSTEMS[0]
+    user_data = {
+        CONF_STATION_ID: station_id,
+        CONF_TIME_ZONE: timezone,
+        CONF_UNIT_SYSTEM: unit_system,
+    }
 
-    try:
-        station = coops.Station(station_id, unit_system)
-    except KeyError:
-        _LOGGER.error("NOAA Tides Sensor station_id %s does not exist", station_id)
-        return
-    except requests.exceptions.ConnectionError as exception:
-        _LOGGER.error(
-            "Connection error during setup in NOAA Tides Sensor for station_id: %s",
-            station_id,
-        )
-        raise PlatformNotReady from exception
-
-    noaa_sensor = NOAATidesAndCurrentsSensor(
-        name, station_id, timezone, unit_system, station
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=user_data,
     )
 
-    add_entities([noaa_sensor], True)
+    if result["type"] is FlowResultType.CREATE_ENTRY or (
+        result["type"] is FlowResultType.ABORT
+        and result["reason"] == "already_configured"
+    ):
+        async_create_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            breaks_in_ha_version=DEPRECATE_YAML_IN_HA_VERSION,
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": NAME,
+            },
+        )
+        return
+
+    if (
+        result["type"] is FlowResultType.FORM
+        and result["errors"] is not None
+        and result["errors"]["base"] is not None
+    ):
+        _LOGGER.error(
+            "Cannot import %s from configuration.yaml (station_id = %s): %s",
+            DOMAIN,
+            station_id,
+            result["errors"]["base"],
+        )
+        async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{result['errors']['base']}",
+            breaks_in_ha_version=DEPRECATE_YAML_IN_HA_VERSION,
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key=f"deprecated_yaml_import_issue_{result['errors']['base']}",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": NAME,
+            },
+        )
+        return
+
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml_import_issue_unknown",
+        breaks_in_ha_version="2025.2.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml_import_issue_unknown",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": NAME,
+        },
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: NoaaTidesConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Add NOAA Tides sensor entry."""
+
+    data = entry.runtime_data
+
+    device_id = get_station_unique_id(data.station_id)
+    device_info = DeviceInfo(
+        identifiers={(DOMAIN, device_id)},
+        name=data.name,
+        entry_type=DeviceEntryType.SERVICE,
+    )
+
+    summary_sensor = NOAATidesAndCurrentsSensor(
+        name=data.name,
+        station_id=data.station_id,
+        timezone=data.timezone,
+        unit_system=data.unit_system,
+        station=data.station,
+        device_info=device_info,
+    )
+
+    async_add_entities([summary_sensor], True)
 
 
 class NOAATidesData(TypedDict):
@@ -99,15 +188,24 @@ class NOAATidesAndCurrentsSensor(SensorEntity):
 
     _attr_attribution = "Data provided by NOAA"
 
-    def __init__(self, name, station_id, timezone, unit_system, station) -> None:
+    def __init__(
+        self,
+        name: str | None,
+        station_id: str,
+        timezone: str | None,
+        unit_system: str,
+        station: coops.Station,
+        device_info: DeviceInfo | None = None,
+    ) -> None:
         """Initialize the sensor."""
-        self._name = name
+        self._name = name if name is not None else DEFAULT_NAME
         self._station_id = station_id
-        self._timezone = timezone
+        self._timezone = timezone if timezone is not None else DEFAULT_TIMEZONE
         self._unit_system = unit_system
         self._station = station
         self.data: NOAATidesData | None = None
         self._attr_unique_id = f"{get_station_unique_id(station_id)}_summary"
+        self._attr_device_info = device_info
 
     @property
     def name(self) -> str:
@@ -141,7 +239,7 @@ class NOAATidesAndCurrentsSensor(SensorEntity):
         return attr
 
     @property
-    def native_value(self):
+    def native_value(self) -> str | None:
         """Return the state of the device."""
         if self.data is None:
             return None
@@ -181,5 +279,5 @@ class NOAATidesAndCurrentsSensor(SensorEntity):
                 begin.strftime("%m-%d-%Y %H:%M"),
             )
         except ValueError as err:
-            _LOGGER.error("Check NOAA Tides and Currents: %s", err.args)
+            _LOGGER.error("Check %s and Currents: %s", NAME, err.args)
             self.data = None
