@@ -28,7 +28,6 @@ from homeassistant.const import (
     CONF_MAC,
     CONF_NAME,
     CONF_PASSWORD,
-    CONF_TOKEN,
     CONF_USERNAME,
 )
 from homeassistant.core import callback
@@ -176,10 +175,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 return self.async_create_entry(
                     title=selected_device.name,
-                    data={
-                        **self._config,
-                        CONF_TOKEN: selected_device.ble_auth_token or "",
-                    },
+                    data=self._config,
                 )
 
         machine_options = [

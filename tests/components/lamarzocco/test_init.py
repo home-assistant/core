@@ -8,7 +8,6 @@ from pylamarzocco.models import WebSocketDetails
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.lamarzocco.config_flow import CONF_MACHINE
 from homeassistant.components.lamarzocco.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
@@ -16,7 +15,6 @@ from homeassistant.const import (
     CONF_MAC,
     CONF_MODEL,
     CONF_NAME,
-    CONF_TOKEN,
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant
@@ -131,34 +129,8 @@ async def test_v2_migration(
     assert entry_v2.version == 3
     assert dict(entry_v2.data) == {
         **USER_INPUT,
-        CONF_TOKEN: "",
         CONF_MAC: "aa:bb:cc:dd:ee:ff",
     }
-
-
-async def test_migration_errors(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_cloud_client: MagicMock,
-    mock_lamarzocco: MagicMock,
-) -> None:
-    """Test errors during migration."""
-
-    mock_cloud_client.list_things.side_effect = RequestNotSuccessful("Error")
-
-    entry_v2 = MockConfigEntry(
-        domain=DOMAIN,
-        version=2,
-        unique_id=mock_lamarzocco.serial_number,
-        data={
-            **USER_INPUT,
-            CONF_MACHINE: mock_lamarzocco.serial_number,
-        },
-    )
-    entry_v2.add_to_hass(hass)
-
-    assert not await hass.config_entries.async_setup(entry_v2.entry_id)
-    assert entry_v2.state is ConfigEntryState.MIGRATION_ERROR
 
 
 async def test_config_flow_entry_migration_downgrade(

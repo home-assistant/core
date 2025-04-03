@@ -9,16 +9,9 @@ from pylamarzocco import (
     LaMarzoccoMachine,
 )
 from pylamarzocco.const import FirmwareType
-from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
 
 from homeassistant.components.bluetooth import async_discovered_service_info
-from homeassistant.const import (
-    CONF_MAC,
-    CONF_PASSWORD,
-    CONF_TOKEN,
-    CONF_USERNAME,
-    Platform,
-)
+from homeassistant.const import CONF_MAC, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
@@ -112,7 +105,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
             _LOGGER.debug("Initializing Bluetooth device")
             bluetooth_client = LaMarzoccoBluetoothClient(
                 address_or_ble_device=entry.data[CONF_MAC],
-                ble_token=entry.data[CONF_TOKEN],
+                ble_token=firmware_device.settings.ble_auth_token,
             )
 
     device = LaMarzoccoMachine(
@@ -161,27 +154,11 @@ async def async_migrate_entry(
         return False
 
     if entry.version == 2:
-        cloud_client = LaMarzoccoCloudClient(
-            username=entry.data[CONF_USERNAME],
-            password=entry.data[CONF_PASSWORD],
-        )
-        try:
-            things = await cloud_client.list_things()
-        except (AuthFail, RequestNotSuccessful) as exc:
-            _LOGGER.error("Migration failed with error %s", exc)
-            return False
         v3_data = {
             CONF_USERNAME: entry.data[CONF_USERNAME],
             CONF_PASSWORD: entry.data[CONF_PASSWORD],
-            CONF_TOKEN: next(
-                (
-                    thing.ble_auth_token or ""
-                    for thing in things
-                    if thing.serial_number == entry.unique_id
-                ),
-                "",
-            ),
         }
+
         if CONF_MAC in entry.data:
             v3_data[CONF_MAC] = entry.data[CONF_MAC]
         hass.config_entries.async_update_entry(
