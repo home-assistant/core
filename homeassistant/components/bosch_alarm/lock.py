@@ -41,19 +41,23 @@ class PanelLockEntity(LockEntity):
     """A lock entity for a door on a bosch alarm panel."""
 
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, panel: Panel, door_id: int, unique_id: str) -> None:
         """Set up a lock entity for a door on a bosch alarm panel."""
         self.panel = panel
         self._door = panel.doors[door_id]
-        self._attr_name = self._door.name
         self._attr_unique_id = f"{unique_id}_door_{door_id}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
-            name=f"Bosch {panel.model}",
+            name=self._door.name,
             manufacturer="Bosch Security Systems",
             model=panel.model,
             sw_version=panel.firmware_version,
+            via_device=(
+                DOMAIN,
+                unique_id,
+            ),
         )
         self._door_id = door_id
 

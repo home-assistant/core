@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_lock[amax_3000][lock.bosch_amax_3000_main_door-entry]
+# name: test_lock[amax_3000][lock.main_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,7 +12,7 @@
     'disabled_by': None,
     'domain': 'lock',
     'entity_category': None,
-    'entity_id': 'lock.bosch_amax_3000_main_door',
+    'entity_id': 'lock.main_door',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -24,7 +24,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Main Door',
+    'original_name': None,
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -33,21 +33,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_lock[amax_3000][lock.bosch_amax_3000_main_door-state]
+# name: test_lock[amax_3000][lock.main_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bosch AMAX 3000 Main Door',
+      'friendly_name': 'Main Door',
       'supported_features': <LockEntityFeature: 0>,
     }),
     'context': <ANY>,
-    'entity_id': 'lock.bosch_amax_3000_main_door',
+    'entity_id': 'lock.main_door',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'locked',
   })
 # ---
-# name: test_lock[b5512][lock.bosch_b5512_us1b_main_door-entry]
+# name: test_lock[b5512][lock.main_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -60,7 +60,7 @@
     'disabled_by': None,
     'domain': 'lock',
     'entity_category': None,
-    'entity_id': 'lock.bosch_b5512_us1b_main_door',
+    'entity_id': 'lock.main_door',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -72,7 +72,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Main Door',
+    'original_name': None,
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -81,21 +81,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_lock[b5512][lock.bosch_b5512_us1b_main_door-state]
+# name: test_lock[b5512][lock.main_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bosch B5512 (US1B) Main Door',
+      'friendly_name': 'Main Door',
       'supported_features': <LockEntityFeature: 0>,
     }),
     'context': <ANY>,
-    'entity_id': 'lock.bosch_b5512_us1b_main_door',
+    'entity_id': 'lock.main_door',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'locked',
   })
 # ---
-# name: test_lock[solution_3000][lock.bosch_solution_3000_main_door-entry]
+# name: test_lock[solution_3000][lock.main_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -108,7 +108,7 @@
     'disabled_by': None,
     'domain': 'lock',
     'entity_category': None,
-    'entity_id': 'lock.bosch_solution_3000_main_door',
+    'entity_id': 'lock.main_door',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -120,7 +120,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Main Door',
+    'original_name': None,
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -129,14 +129,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_lock[solution_3000][lock.bosch_solution_3000_main_door-state]
+# name: test_lock[solution_3000][lock.main_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bosch Solution 3000 Main Door',
+      'friendly_name': 'Main Door',
       'supported_features': <LockEntityFeature: 0>,
     }),
     'context': <ANY>,
-    'entity_id': 'lock.bosch_solution_3000_main_door',
+    'entity_id': 'lock.main_door',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

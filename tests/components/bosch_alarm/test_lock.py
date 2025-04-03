@@ -32,7 +32,7 @@ async def test_update_lock_device(
 ) -> None:
     """Test that lock stats update when locking and unlocking the door."""
     await setup_integration(hass, mock_config_entry)
-    entity_id = f"lock.{entity_id}_main_door"
+    entity_id = "lock.main_door"
     assert hass.states.get(entity_id).state == LockState.LOCKED
     await hass.services.async_call(
         LOCK_DOMAIN,
