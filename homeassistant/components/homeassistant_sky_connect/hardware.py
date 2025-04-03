@@ -36,5 +36,5 @@ def async_info(hass: HomeAssistant) -> list[HardwareInfo]:
         )
         for entry in entries
         # Ignore unmigrated config entries in the hardware page
-        if (entry.version, entry.minor_version) < EXPECTED_ENTRY_VERSION
+        if (entry.version, entry.minor_version) == EXPECTED_ENTRY_VERSION
     ]
