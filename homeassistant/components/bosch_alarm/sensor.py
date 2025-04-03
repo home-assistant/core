@@ -229,6 +229,7 @@ class AreaAlarmsSensor(SensorEntity):
         self._area = panel.areas[area_id]
         self._attr_unique_id = f"{unique_id}_alarms"
         self._attr_should_poll = False
+        self._attr_translation_placeholders = {"area": self._area.name}
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
             name=self._area.name,
