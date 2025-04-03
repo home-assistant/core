@@ -1503,17 +1503,13 @@ class ConfigEntriesFlowManager(
                 future.set_result(None)
         self._discovery_event_debouncer.async_shutdown()
 
-    async def async_finish_flow(
+    @callback
+    def _cleanup_flow(
         self,
-        flow: data_entry_flow.FlowHandler[ConfigFlowContext, ConfigFlowResult],
+        flow: ConfigFlow,
         result: ConfigFlowResult,
-    ) -> ConfigFlowResult:
-        """Finish a config flow and add an entry.
-
-        This method is called when a flow step returns FlowResultType.ABORT or
-        FlowResultType.CREATE_ENTRY.
-        """
-        flow = cast(ConfigFlow, flow)
+    ) -> None:
+        """Clean up after a config flow."""
 
         # Mark the step as done.
         # We do this to avoid a circular dependency where async_finish_flow sets up a
@@ -1565,6 +1561,29 @@ class ConfigEntriesFlowManager(
                 self.config_entries.async_update_entry(
                     entry, discovery_keys=new_discovery_keys
                 )
+
+    async def async_flow_aborted(
+        self,
+        flow: data_entry_flow.FlowHandler[ConfigFlowContext, ConfigFlowResult],
+        result: ConfigFlowResult,
+    ) -> None:
+        """Handle an aborted config flow."""
+        self._cleanup_flow(cast(ConfigFlow, flow), result)
+
+    async def async_finish_flow(
+        self,
+        flow: data_entry_flow.FlowHandler[ConfigFlowContext, ConfigFlowResult],
+        result: ConfigFlowResult,
+    ) -> ConfigFlowResult:
+        """Finish a config flow and add an entry.
+
+        This method is called when a flow step returns FlowResultType.ABORT or
+        FlowResultType.CREATE_ENTRY.
+        """
+        flow = cast(ConfigFlow, flow)
+        self._cleanup_flow(flow, result)
+
+        if result["type"] != data_entry_flow.FlowResultType.CREATE_ENTRY:
             return result
 
         # Avoid adding a config entry for a integration

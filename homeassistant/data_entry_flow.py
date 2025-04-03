@@ -207,6 +207,13 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         Handler key is the domain of the component that we want to set up.
         """
 
+    async def async_flow_aborted(
+        self,
+        flow: FlowHandler[_FlowContextT, _FlowResultT, _HandlerT],
+        result: _FlowResultT,
+    ) -> None:
+        """Handle an aborted data entry flow."""
+
     @abc.abstractmethod
     async def async_finish_flow(
         self,
@@ -484,6 +491,11 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
                 reason=err.reason,
                 description_placeholders=err.description_placeholders,
             )
+
+        if flow.flow_id not in self._progress:
+            # The flow was removed during the step
+            await self.async_flow_aborted(flow, result.copy())
+            raise UnknownFlow
 
         # Setup the flow handler's preview if needed
         if result.get("preview") is not None:
