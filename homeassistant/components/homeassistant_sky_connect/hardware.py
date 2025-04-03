@@ -20,14 +20,8 @@ EXPECTED_ENTRY_VERSION = (
 def async_info(hass: HomeAssistant) -> list[HardwareInfo]:
     """Return board info."""
     entries = hass.config_entries.async_entries(DOMAIN)
-    info = []
-
-    for entry in entries:
-        # Ignore unmigrated config entries in the hardware page
-        if (entry.version, entry.minor_version) < EXPECTED_ENTRY_VERSION:
-            continue
-
-        hw_info = HardwareInfo(
+    return [
+        HardwareInfo(
             board=None,
             config_entries=[entry.entry_id],
             dongle=USBInfo(
@@ -40,7 +34,7 @@ def async_info(hass: HomeAssistant) -> list[HardwareInfo]:
             name=get_hardware_variant(entry).full_name,
             url=DOCUMENTATION_URL,
         )
-
-        info.append(hw_info)
-
-    return info
+        for entry in entries
+        # Ignore unmigrated config entries in the hardware page
+        if (entry.version, entry.minor_version) < EXPECTED_ENTRY_VERSION
+    ]
