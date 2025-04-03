@@ -6,8 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/daikin",
   "iot_class": "local_polling",
   "loggers": ["pydaikin"],
-  "requirements": [
-    "git+https://github.com/fredrike/pydaikin@fix-blocking-event-loop"
-  ],
+  "requirements": ["pydaikin==2.15.0"],
   "zeroconf": ["_dkapi._tcp.local."]
 }
