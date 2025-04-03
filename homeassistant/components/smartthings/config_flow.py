@@ -9,7 +9,10 @@ from pysmartthings import SmartThings
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    AbstractOAuth2FlowHandler,
+    async_get_implementations,
+)
 
 from .const import CONF_LOCATION_ID, DOMAIN, OLD_DATA, REQUESTED_SCOPES, SCOPES
 
@@ -36,8 +39,9 @@ class SmartThingsConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Check we have the cloud integration set up."""
-        if "cloud" not in self.hass.config.components:
+        """Check for any OAuth implementations before asking for cloud."""
+        implementations = await async_get_implementations(self.hass, self.DOMAIN)
+        if not implementations:
             return self.async_abort(
                 reason="cloud_not_enabled",
                 description_placeholders={"default_config": "default_config"},

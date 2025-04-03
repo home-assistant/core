@@ -231,6 +231,7 @@ async def test_duplicate_entry(
 
 
 @pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.no_oauth_credentials
 async def test_no_cloud(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -238,7 +239,7 @@ async def test_no_cloud(
     mock_smartthings: AsyncMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
-    """Check we abort when cloud is not enabled."""
+    """Check if we abort when no OAuth implementations are available."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -412,6 +413,7 @@ async def test_reauth_account_mismatch(
 
 
 @pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.no_oauth_credentials
 async def test_reauthentication_no_cloud(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -590,6 +592,7 @@ async def test_migration_wrong_location(
 
 
 @pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.no_oauth_credentials
 async def test_migration_no_cloud(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,

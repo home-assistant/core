@@ -32,6 +32,14 @@ from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry, load_fixture
 
 
+# Define a marker for tests that should skip the credentials setup
+def pytest_configure(config):
+    """Add custom no_oauth_credentials marker."""
+    config.addinivalue_line(
+        "markers", "no_oauth_credentials: mark test to skip OAuth credentials setup"
+    )
+
+
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
@@ -49,8 +57,13 @@ def mock_expires_at() -> int:
 
 
 @pytest.fixture(autouse=True)
-async def setup_credentials(hass: HomeAssistant) -> None:
+async def setup_credentials(
+    hass: HomeAssistant, request: pytest.FixtureRequest
+) -> None:
     """Fixture to setup credentials."""
+    if request.node.get_closest_marker("no_oauth_credentials"):
+        return
+
     assert await async_setup_component(hass, "application_credentials", {})
     await async_import_client_credential(
         hass,
