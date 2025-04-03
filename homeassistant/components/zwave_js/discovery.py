@@ -1305,10 +1305,14 @@ def async_discover_single_value(
             continue
 
         # check device_class_generic
+        # If the value has an endpoint but it is missing on the node
+        # we can't match the endpoint device class to the schema device class.
+        # This could happen if the value is discovered after the node is ready.
         if schema.device_class_generic and (
             (
                 (endpoint := value.endpoint) is None
-                or (device_class := value.node.endpoints[endpoint].device_class) is None
+                or (node_endpoint := value.node.endpoints.get(endpoint)) is None
+                or (device_class := node_endpoint.device_class) is None
                 or not any(
                     device_class.generic.label == val
                     for val in schema.device_class_generic
@@ -1325,10 +1329,14 @@ def async_discover_single_value(
             continue
 
         # check device_class_specific
+        # If the value has an endpoint but it is missing on the node
+        # we can't match the endpoint device class to the schema device class.
+        # This could happen if the value is discovered after the node is ready.
         if schema.device_class_specific and (
             (
                 (endpoint := value.endpoint) is None
-                or (device_class := value.node.endpoints[endpoint].device_class) is None
+                or (node_endpoint := value.node.endpoints.get(endpoint)) is None
+                or (device_class := node_endpoint.device_class) is None
                 or not any(
                     device_class.specific.label == val
                     for val in schema.device_class_specific
