@@ -79,16 +79,6 @@ def serial_number(model: str) -> str | None:
 
 
 @pytest.fixture
-def output() -> Generator[Output]:
-    """Define a mocked output."""
-    mock = AsyncMock(spec=Output)
-    mock.name = "Output A"
-    mock.status_observer = AsyncMock(spec=Observable)
-    mock.is_active.return_value = False
-    return mock
-
-
-@pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
