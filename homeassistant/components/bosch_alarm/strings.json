@@ -36,7 +36,7 @@
   "entity": {
     "sensor": {
       "alarms": {
-        "name": "{area} Alarms"
+        "name": "Alarms"
       },
       "faulting_points": {
         "name": "Faulting Points"
@@ -45,10 +45,10 @@
         "name": "Panel Faults"
       },
       "ready_to_arm": {
-        "name": "{area} Ready To Arm",
+        "name": "Ready To Arm",
         "state": {
           "not_ready": "Not ready to arm",
-          "home_ready": "ready to arm home, but not away",
+          "home_ready": "Ready to arm home, but not away",
           "home_and_away_ready": "Ready to arm for both home and away"
         }
       }
