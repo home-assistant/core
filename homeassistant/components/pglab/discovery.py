@@ -220,7 +220,7 @@ class PGLabDiscovery:
                 configuration_url=f"http://{pglab_device.ip}/",
                 connections={(CONNECTION_NETWORK_MAC, pglab_device.mac)},
                 identifiers={(DOMAIN, pglab_device.id)},
-                manufacturer=pglab_device.manufactor,
+                manufacturer=pglab_device.manufacturer,
                 model=pglab_device.type,
                 name=pglab_device.name,
                 sw_version=pglab_device.firmware_version,
