@@ -9,9 +9,16 @@ from pylamarzocco import (
     LaMarzoccoMachine,
 )
 from pylamarzocco.const import FirmwareType
+from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
 
 from homeassistant.components.bluetooth import async_discovered_service_info
-from homeassistant.const import CONF_MAC, CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.const import (
+    CONF_MAC,
+    CONF_PASSWORD,
+    CONF_TOKEN,
+    CONF_USERNAME,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
@@ -80,9 +87,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
 
     # initialize Bluetooth
     bluetooth_client: LaMarzoccoBluetoothClient | None = None
-    if (
-        entry.options.get(CONF_USE_BLUETOOTH, True)
-        and settings_device.settings.ble_auth_token
+    if entry.options.get(CONF_USE_BLUETOOTH, True) and (
+        token := settings_device.settings.ble_auth_token
     ):
         if CONF_MAC not in entry.data:
             for discovery_info in async_discovered_service_info(hass):
@@ -101,11 +107,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
                         },
                     )
 
+        if not entry.data[CONF_TOKEN]:
+            # update the token in the config entry
+            hass.config_entries.async_update_entry(
+                entry,
+                data={
+                    **entry.data,
+                    CONF_TOKEN: token,
+                },
+            )
+
         if CONF_MAC in entry.data:
             _LOGGER.debug("Initializing Bluetooth device")
             bluetooth_client = LaMarzoccoBluetoothClient(
                 address_or_ble_device=entry.data[CONF_MAC],
-                ble_token=settings_device.settings.ble_auth_token,
+                ble_token=token,
             )
 
     device = LaMarzoccoMachine(
@@ -154,11 +170,27 @@ async def async_migrate_entry(
         return False
 
     if entry.version == 2:
+        cloud_client = LaMarzoccoCloudClient(
+            username=entry.data[CONF_USERNAME],
+            password=entry.data[CONF_PASSWORD],
+        )
+        try:
+            things = await cloud_client.list_things()
+        except (AuthFail, RequestNotSuccessful) as exc:
+            _LOGGER.error("Migration failed with error %s", exc)
+            return False
         v3_data = {
             CONF_USERNAME: entry.data[CONF_USERNAME],
             CONF_PASSWORD: entry.data[CONF_PASSWORD],
+            CONF_TOKEN: next(
+                (
+                    thing.ble_auth_token
+                    for thing in things
+                    if thing.serial_number == entry.unique_id
+                ),
+                None,
+            ),
         }
-
         if CONF_MAC in entry.data:
             v3_data[CONF_MAC] = entry.data[CONF_MAC]
         hass.config_entries.async_update_entry(

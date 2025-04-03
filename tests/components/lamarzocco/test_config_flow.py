@@ -17,7 +17,7 @@ from homeassistant.config_entries import (
     ConfigEntryState,
     ConfigFlowResult,
 )
-from homeassistant.const import CONF_ADDRESS, CONF_MAC, CONF_PASSWORD
+from homeassistant.const import CONF_ADDRESS, CONF_MAC, CONF_PASSWORD, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
@@ -58,6 +58,7 @@ async def __do_sucessful_machine_selection_step(
     assert result3["title"] == "GS012345"
     assert result3["data"] == {
         **USER_INPUT,
+        CONF_TOKEN: None,
     }
 
 
@@ -264,6 +265,8 @@ async def test_bluetooth_discovery(
     service_info = get_bluetooth_service_info(
         ModelName.GS3_MP, mock_lamarzocco.serial_number
     )
+    mock_cloud_client.list_things.return_value[0].ble_auth_token = "dummyToken"
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_BLUETOOTH}, data=service_info
     )
@@ -281,6 +284,7 @@ async def test_bluetooth_discovery(
     assert result2["data"] == {
         **USER_INPUT,
         CONF_MAC: "aa:bb:cc:dd:ee:ff",
+        CONF_TOKEN: "dummyToken",
     }
 
 
@@ -346,6 +350,7 @@ async def test_bluetooth_discovery_errors(
     assert result2["data"] == {
         **USER_INPUT,
         CONF_MAC: "aa:bb:cc:dd:ee:ff",
+        CONF_TOKEN: None,
     }
 
 
@@ -378,6 +383,7 @@ async def test_dhcp_discovery(
     assert result2["data"] == {
         **USER_INPUT,
         CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
+        CONF_TOKEN: None,
     }
 
 
