@@ -71,7 +71,7 @@ class TeslemetryVehicleSensorEntityDescription(SensorEntityDescription):
     polling_value_fn: Callable[[StateType], StateType] = lambda x: x
     nullable: bool = False
     streaming_listener: Callable[
-        [TeslemetryStreamVehicle, Callable[[typing.TypeVar('T') | None], None]],
+        [TeslemetryStreamVehicle, Callable[[str | int | float | None], None]],
         Callable[[], None],
     ] | None = None
     streaming_value_fn: Callable[[str | int | float], StateType] = lambda x: x
@@ -84,9 +84,6 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         polling=True,
         streaming_listener=lambda x, y: x.listen_DetailedChargeState(y),
         polling_value_fn=lambda value: CHARGE_STATES.get(str(value)),
-        streaming_value_fn=lambda value: CHARGE_STATES.get(
-            str(value).replace("DetailedChargeState", "")
-        ),
         options=list(CHARGE_STATES.values()),
         device_class=SensorDeviceClass.ENUM,
     ),
@@ -102,10 +99,12 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
     TeslemetryVehicleSensorEntityDescription(
         key="charge_state_usable_battery_level",
         polling=True,
+        streaming_listener=lambda x, y: x.listen_Soc(y),
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         entity_registry_enabled_default=False,
+        suggested_display_precision=1,
     ),
     TeslemetryVehicleSensorEntityDescription(
         key="charge_state_charge_energy_added",
@@ -127,8 +126,9 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
     TeslemetryVehicleSensorEntityDescription(
         key="charge_state_charger_voltage",
         polling=True,
-        streaming_key=Signal.CHARGER_VOLTAGE,
+        streaming_listener=lambda x, y: x.listen_ChargerVoltage(y),
         streaming_firmware="2024.44.32",
+>>>>>>> 862d240ec79 (wip)
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
