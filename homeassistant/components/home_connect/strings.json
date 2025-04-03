@@ -1468,9 +1468,9 @@
       "warming_level": {
         "name": "[%key:component::home_connect::services::set_program_and_options::fields::cooking_oven_option_warming_level::name%]",
         "state": {
-          "cooking_oven_enum_type_warming_level_low": "[%key:component::home_connect::selector::warming_level::options::cooking_oven_enum_type_warming_level_low%]",
-          "cooking_oven_enum_type_warming_level_medium": "[%key:component::home_connect::selector::warming_level::options::cooking_oven_enum_type_warming_level_medium%]",
-          "cooking_oven_enum_type_warming_level_high": "[%key:component::home_connect::selector::warming_level::options::cooking_oven_enum_type_warming_level_high%]"
+          "cooking_oven_enum_type_warming_level_low": "[%key:common::state::low%]",
+          "cooking_oven_enum_type_warming_level_medium": "[%key:common::state::medium%]",
+          "cooking_oven_enum_type_warming_level_high": "[%key:common::state::high%]"
         }
       },
       "washer_temperature": {
@@ -1505,9 +1505,9 @@
           "laundry_care_washer_enum_type_spin_speed_r_p_m_1400": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_r_p_m_1400%]",
           "laundry_care_washer_enum_type_spin_speed_r_p_m_1600": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_r_p_m_1600%]",
           "laundry_care_washer_enum_type_spin_speed_ul_off": "[%key:common::state::off%]",
-          "laundry_care_washer_enum_type_spin_speed_ul_low": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_ul_low%]",
-          "laundry_care_washer_enum_type_spin_speed_ul_medium": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_ul_medium%]",
-          "laundry_care_washer_enum_type_spin_speed_ul_high": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_ul_high%]"
+          "laundry_care_washer_enum_type_spin_speed_ul_low": "[%key:common::state::low%]",
+          "laundry_care_washer_enum_type_spin_speed_ul_medium": "[%key:common::state::medium%]",
+          "laundry_care_washer_enum_type_spin_speed_ul_high": "[%key:common::state::high%]"
         }
       },
       "vario_perfect": {
