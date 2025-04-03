@@ -84,8 +84,15 @@ def area() -> Generator[Area]:
     mock = AsyncMock(spec=Area)
     mock.name = "Area1"
     mock.status_observer = AsyncMock(spec=Observable)
+    mock.alarm_observer = AsyncMock(spec=Observable)
+    mock.ready_observer = AsyncMock(spec=Observable)
+    mock.alarms = []
+    mock.faults = []
+    mock.all_ready = True
+    mock.part_ready = True
     mock.is_triggered.return_value = False
     mock.is_disarmed.return_value = True
+    mock.is_armed.return_value = False
     mock.is_arming.return_value = False
     mock.is_pending.return_value = False
     mock.is_part_armed.return_value = False
@@ -107,9 +114,13 @@ def mock_panel(
         client = mock_panel.return_value
         client.areas = {1: area}
         client.model = model_name
+        client.faults = []
+        client.events = []
         client.firmware_version = "1.0.0"
         client.serial_number = serial_number
         client.connection_status_observer = AsyncMock(spec=Observable)
+        client.faults_observer = AsyncMock(spec=Observable)
+        client.history_observer = AsyncMock(spec=Observable)
         yield client
 
 
