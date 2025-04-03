@@ -364,6 +364,7 @@ homeassistant.components.notify.*
 homeassistant.components.notion.*
 homeassistant.components.number.*
 homeassistant.components.nut.*
+homeassistant.components.ohme.*
 homeassistant.components.onboarding.*
 homeassistant.components.oncue.*
 homeassistant.components.onedrive.*

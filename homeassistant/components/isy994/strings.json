@@ -90,7 +90,7 @@
     },
     "get_zwave_parameter": {
       "name": "Get Z-Wave Parameter",
-      "description": "Requests a Z-Wave device parameter via the ISY. The parameter value will be returned as a entity extra state attribute with the name \"ZW_#\" where \"#\" is the parameter number.",
+      "description": "Requests a Z-Wave device parameter via the ISY. The parameter value will be returned as an entity extra state attribute with the name \"ZW_#\" where \"#\" is the parameter number.",
       "fields": {
         "parameter": {
           "name": "Parameter",
@@ -100,7 +100,7 @@
     },
     "set_zwave_parameter": {
       "name": "Set Z-Wave parameter",
-      "description": "Updates a Z-Wave device parameter via the ISY. The parameter value will also be returned as a entity extra state attribute with the name \"ZW_#\" where \"#\" is the parameter number.",
+      "description": "Updates a Z-Wave device parameter via the ISY. The parameter value will also be returned as an entity extra state attribute with the name \"ZW_#\" where \"#\" is the parameter number.",
       "fields": {
         "parameter": {
           "name": "[%key:component::isy994::services::get_zwave_parameter::fields::parameter::name%]",
