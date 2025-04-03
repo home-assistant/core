@@ -39,13 +39,13 @@
         "name": "Alarms"
       },
       "faulting_points": {
-        "name": "Faulting Points"
+        "name": "Faulting points"
       },
       "panel_faults": {
-        "name": "Panel Faults"
+        "name": "Panel faults"
       },
       "ready_to_arm": {
-        "name": "Ready To Arm",
+        "name": "Ready to arm",
         "state": {
           "not_ready": "Not ready to arm",
           "home_ready": "Ready to arm home, but not away",
