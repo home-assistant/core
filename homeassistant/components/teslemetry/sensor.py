@@ -71,9 +71,9 @@ class TeslemetryVehicleSensorEntityDescription(SensorEntityDescription):
     polling_value_fn: Callable[[StateType], StateType] = lambda x: x
     nullable: bool = False
     streaming_listener: Callable[
-        [TeslemetryStreamVehicle, Callable[[int | None], None]],
+        [TeslemetryStreamVehicle, Callable[[typing.TypeVar('T') | None], None]],
         Callable[[], None],
-    ]
+    ] | None = None
     streaming_value_fn: Callable[[str | int | float], StateType] = lambda x: x
     streaming_firmware: str = "2024.26"
 
@@ -550,7 +550,7 @@ async def async_setup_entry(
         for description in VEHICLE_DESCRIPTIONS:
             if (
                 not vehicle.api.pre2021
-                and description.streaming_key
+                and description.streaming_listener
                 and vehicle.firmware >= description.streaming_firmware
             ):
                 entities.append(TeslemetryStreamSensorEntity(vehicle, description))
@@ -616,8 +616,7 @@ class TeslemetryStreamSensorEntity(TeslemetryVehicleStreamEntity, RestoreSensor)
     ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
-        assert description.streaming_key
-        super().__init__(data, description.key, description.streaming_key)
+        super().__init__(data, description.key)
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
@@ -625,6 +624,12 @@ class TeslemetryStreamSensorEntity(TeslemetryVehicleStreamEntity, RestoreSensor)
 
         if (sensor_data := await self.async_get_last_sensor_data()) is not None:
             self._attr_native_value = sensor_data.native_value
+
+        self.async_on_remove(
+            self.entity_description.streaming_listener(
+                self.vehicle.stream_vehicle, self._async_value_from_stream
+            )
+        )
 
     @cached_property
     def available(self) -> bool:
