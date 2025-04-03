@@ -567,7 +567,7 @@ bluetooth-auto-recovery==1.4.5
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
 # homeassistant.components.private_ble_device
-bluetooth-data-tools==1.26.1
+bluetooth-data-tools==1.26.5
 
 # homeassistant.components.bond
 bond-async==0.2.1
@@ -652,7 +652,7 @@ dbus-fast==2.43.0
 debugpy==1.8.13
 
 # homeassistant.components.ecovacs
-deebot-client==12.4.0
+deebot-client==12.5.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -2545,7 +2545,7 @@ zeroconf==0.146.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.54
+zha==0.0.55
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.62.0
