@@ -19,7 +19,7 @@
         "description": "Please enter a ThinQ [PAT(Personal Access Token)]({pat_url}) created with your LG ThinQ account.",
         "data": {
           "access_token": "Personal Access Token",
-          "country": "Country"
+          "country": "[%key:common::config_flow::data::country%]"
         }
       }
     }
@@ -411,7 +411,7 @@
           "cancel": "Cancel",
           "carbonation": "Carbonation",
           "change_condition": "Settings Change",
-          "charging": "Charging",
+          "charging": "[%key:common::state::charging%]",
           "charging_complete": "Charging completed",
           "checking_turbidity": "Detecting soil level",
           "cleaning": "Cleaning",
@@ -498,7 +498,7 @@
           "cancel": "[%key:component::lg_thinq::entity::sensor::current_state::state::cancel%]",
           "carbonation": "[%key:component::lg_thinq::entity::sensor::current_state::state::carbonation%]",
           "change_condition": "[%key:component::lg_thinq::entity::sensor::current_state::state::change_condition%]",
-          "charging": "[%key:component::lg_thinq::entity::sensor::current_state::state::charging%]",
+          "charging": "[%key:common::state::charging%]",
           "charging_complete": "[%key:component::lg_thinq::entity::sensor::current_state::state::charging_complete%]",
           "checking_turbidity": "[%key:component::lg_thinq::entity::sensor::current_state::state::checking_turbidity%]",
           "cleaning": "[%key:component::lg_thinq::entity::sensor::current_state::state::cleaning%]",
@@ -926,6 +926,17 @@
           "turbo": "[%key:component::lg_thinq::entity::select::wind_strength::state::power%]",
           "up_feature": "Additional mode",
           "vacation": "Vacation"
+        }
+      },
+      "current_job_mode_dehumidifier": {
+        "name": "[%key:component::lg_thinq::entity::sensor::current_job_mode::name%]",
+        "state": {
+          "air_clean": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::air_clean%]",
+          "clothes_dry": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::clothes_dry%]",
+          "intensive_dry": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::intensive_dry%]",
+          "quiet_humidity": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::quiet_humidity%]",
+          "rapid_humidity": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::rapid_humidity%]",
+          "smart_humidity": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::smart_humidity%]"
         }
       },
       "operation_mode": {

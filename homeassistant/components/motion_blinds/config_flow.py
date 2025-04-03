@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from motionblinds import MotionDiscovery, MotionGateway
@@ -27,6 +28,8 @@ from .const import (
     DOMAIN,
 )
 from .gateway import ConnectMotionGateway
+
+_LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -93,7 +96,8 @@ class MotionBlindsFlowHandler(ConfigFlow, domain=DOMAIN):
         try:
             # key not needed for GetDeviceList request
             await self.hass.async_add_executor_job(gateway.GetDeviceList)
-        except Exception:  # noqa: BLE001
+        except Exception:
+            _LOGGER.exception("Failed to connect to Motion Gateway")
             return self.async_abort(reason="not_motionblinds")
 
         if not gateway.available:
@@ -156,6 +160,7 @@ class MotionBlindsFlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             key = user_input[CONF_API_KEY]
+            assert self._host
 
             connect_gateway_class = ConnectMotionGateway(self.hass)
             if not await connect_gateway_class.async_connect_gateway(self._host, key):

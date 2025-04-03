@@ -4,10 +4,13 @@ from typing import cast
 
 from aiohomeconnect.model import EventKey, OptionKey, ProgramKey, SettingKey, StatusKey
 
+from homeassistant.const import UnitOfTemperature, UnitOfTime, UnitOfVolume
+
 from .utils import bsh_key_to_translation_key
 
 DOMAIN = "home_connect"
 
+API_DEFAULT_RETRY_AFTER = 60
 
 APPLIANCES_WITH_PROGRAMS = (
     "CleaningRobot",
@@ -20,6 +23,13 @@ APPLIANCES_WITH_PROGRAMS = (
     "Washer",
     "WasherDryer",
 )
+
+UNIT_MAP = {
+    "seconds": UnitOfTime.SECONDS,
+    "ml": UnitOfVolume.MILLILITERS,
+    "°C": UnitOfTemperature.CELSIUS,
+    "°F": UnitOfTemperature.FAHRENHEIT,
+}
 
 
 BSH_POWER_ON = "BSH.Common.EnumType.PowerState.On"
@@ -68,13 +78,6 @@ ATTR_VALUE = "value"
 
 AFFECTS_TO_ACTIVE_PROGRAM = "active_program"
 AFFECTS_TO_SELECTED_PROGRAM = "selected_program"
-
-SVE_TRANSLATION_KEY_SET_SETTING = "set_setting_entity"
-SVE_TRANSLATION_PLACEHOLDER_APPLIANCE_NAME = "appliance_name"
-SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID = "entity_id"
-SVE_TRANSLATION_PLACEHOLDER_PROGRAM = "program"
-SVE_TRANSLATION_PLACEHOLDER_KEY = "key"
-SVE_TRANSLATION_PLACEHOLDER_VALUE = "value"
 
 
 TRANSLATION_KEYS_PROGRAMS_MAP = {
@@ -275,7 +278,9 @@ SPIN_SPEED_OPTIONS = {
         "LaundryCare.Washer.EnumType.SpinSpeed.Off",
         "LaundryCare.Washer.EnumType.SpinSpeed.RPM400",
         "LaundryCare.Washer.EnumType.SpinSpeed.RPM600",
+        "LaundryCare.Washer.EnumType.SpinSpeed.RPM700",
         "LaundryCare.Washer.EnumType.SpinSpeed.RPM800",
+        "LaundryCare.Washer.EnumType.SpinSpeed.RPM900",
         "LaundryCare.Washer.EnumType.SpinSpeed.RPM1000",
         "LaundryCare.Washer.EnumType.SpinSpeed.RPM1200",
         "LaundryCare.Washer.EnumType.SpinSpeed.RPM1400",

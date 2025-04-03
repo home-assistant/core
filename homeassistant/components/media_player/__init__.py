@@ -1031,7 +1031,6 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         if self.state in {
             MediaPlayerState.OFF,
-            MediaPlayerState.IDLE,
             MediaPlayerState.STANDBY,
         }:
             await self.async_turn_on()

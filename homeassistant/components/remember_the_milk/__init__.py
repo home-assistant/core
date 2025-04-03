@@ -75,8 +75,14 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 def _create_instance(
-    hass, account_name, api_key, shared_secret, token, stored_rtm_config, component
-):
+    hass: HomeAssistant,
+    account_name: str,
+    api_key: str,
+    shared_secret: str,
+    token: str,
+    stored_rtm_config: RememberTheMilkConfiguration,
+    component: EntityComponent[RememberTheMilkEntity],
+) -> None:
     entity = RememberTheMilkEntity(
         account_name, api_key, shared_secret, token, stored_rtm_config
     )
@@ -96,9 +102,13 @@ def _create_instance(
 
 
 def _register_new_account(
-    hass, account_name, api_key, shared_secret, stored_rtm_config, component
-):
-    request_id = None
+    hass: HomeAssistant,
+    account_name: str,
+    api_key: str,
+    shared_secret: str,
+    stored_rtm_config: RememberTheMilkConfiguration,
+    component: EntityComponent[RememberTheMilkEntity],
+) -> None:
     api = Rtm(api_key, shared_secret, "write", None)
     url, frob = api.authenticate_desktop()
     LOGGER.debug("Sent authentication request to server")

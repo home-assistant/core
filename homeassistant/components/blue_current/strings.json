@@ -28,7 +28,7 @@
         "name": "Activity",
         "state": {
           "available": "Available",
-          "charging": "Charging",
+          "charging": "[%key:common::state::charging%]",
           "unavailable": "Unavailable",
           "error": "Error",
           "offline": "Offline"
@@ -37,7 +37,7 @@
       "vehicle_status": {
         "name": "Vehicle status",
         "state": {
-          "standby": "Standby",
+          "standby": "[%key:common::state::standby%]",
           "vehicle_detected": "Detected",
           "ready": "Ready",
           "no_power": "No power",
