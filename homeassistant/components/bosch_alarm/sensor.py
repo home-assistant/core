@@ -25,7 +25,6 @@ async def async_setup_entry(
     unique_id = config_entry.unique_id or config_entry.entry_id
     async_add_entities(
         [
-            PanelHistorySensor(panel, unique_id),
             PanelFaultsSensor(panel, unique_id),
         ]
     )
@@ -56,48 +55,6 @@ async def async_setup_entry(
 
 
 PARALLEL_UPDATES = 0
-
-
-class PanelHistorySensor(SensorEntity):
-    """A history sensor entity for a bosch alarm panel."""
-
-    _attr_has_entity_name = True
-    _attr_name = "History"
-
-    def __init__(self, panel: Panel, unique_id: str) -> None:
-        """Set up a history sensor entity for a bosch alarm panel."""
-        self.panel = panel
-        self._attr_entity_category = EntityCategory.DIAGNOSTIC
-        self._attr_unique_id = f"{unique_id}_history"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, unique_id)},
-            name=f"Bosch {panel.model}",
-            manufacturer="Bosch Security Systems",
-            model=panel.model,
-            sw_version=panel.firmware_version,
-        )
-
-    @property
-    def icon(self) -> str | None:
-        """The icon for this history entity."""
-        return "mdi:history"
-
-    @property
-    def native_value(self) -> str:
-        """The state for this history entity."""
-        events = self.panel.events
-        if events:
-            return str(events[-1])
-        return "No events"
-
-    async def async_added_to_hass(self) -> None:
-        """Observe state changes."""
-        await super().async_added_to_hass()
-        self.panel.history_observer.attach(self.schedule_update_ha_state)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Stop observing state changes."""
-        self.panel.history_observer.detach(self.schedule_update_ha_state)
 
 
 class PanelFaultsSensor(SensorEntity):
