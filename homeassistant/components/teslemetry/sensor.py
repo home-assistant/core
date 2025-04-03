@@ -128,7 +128,6 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         polling=True,
         streaming_listener=lambda x, y: x.listen_ChargerVoltage(y),
         streaming_firmware="2024.44.32",
->>>>>>> 862d240ec79 (wip)
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
