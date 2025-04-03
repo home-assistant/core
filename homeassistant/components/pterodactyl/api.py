@@ -1,23 +1,20 @@
 """API module of the Pterodactyl integration."""
 
 from dataclasses import dataclass
+from enum import StrEnum
 import logging
 
 from pydactyl import PterodactylClient
-from pydactyl.exceptions import (
-    BadRequestError,
-    ClientConfigError,
-    PterodactylApiError,
-    PydactylError,
-)
+from pydactyl.exceptions import BadRequestError, PterodactylApiError
+from requests.exceptions import ConnectionError, HTTPError
 
 from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class PterodactylConfigurationError(Exception):
-    """Raised when the configuration is invalid."""
+class PterodactylAuthorizationError(Exception):
+    """Raised when access to server is unauthorized."""
 
 
 class PterodactylConnectionError(Exception):
@@ -32,12 +29,24 @@ class PterodactylData:
     uuid: str
     identifier: str
     state: str
-    memory_utilization: int
     cpu_utilization: float
-    disk_utilization: int
-    network_rx_utilization: int
-    network_tx_utilization: int
+    cpu_limit: int
+    disk_usage: int
+    disk_limit: int
+    memory_usage: int
+    memory_limit: int
+    network_inbound: int
+    network_outbound: int
     uptime: int
+
+
+class PterodactylCommand(StrEnum):
+    """Command enum for the Pterodactyl server."""
+
+    START_SERVER = "start"
+    STOP_SERVER = "stop"
+    RESTART_SERVER = "restart"
+    FORCE_STOP_SERVER = "kill"
 
 
 class PterodactylAPI:
@@ -62,13 +71,12 @@ class PterodactylAPI:
             paginated_response = await self.hass.async_add_executor_job(
                 self.pterodactyl.client.servers.list_servers
             )
-        except ClientConfigError as error:
-            raise PterodactylConfigurationError(error) from error
-        except (
-            PydactylError,
-            BadRequestError,
-            PterodactylApiError,
-        ) as error:
+        except (BadRequestError, PterodactylApiError, ConnectionError) as error:
+            raise PterodactylConnectionError(error) from error
+        except HTTPError as error:
+            if error.response.status_code == 401:
+                raise PterodactylAuthorizationError(error) from error
+
             raise PterodactylConnectionError(error) from error
         else:
             game_servers = paginated_response.collect()
@@ -95,11 +103,12 @@ class PterodactylAPI:
                 server, utilization = await self.hass.async_add_executor_job(
                     self.get_server_data, identifier
                 )
-            except (
-                PydactylError,
-                BadRequestError,
-                PterodactylApiError,
-            ) as error:
+            except (BadRequestError, PterodactylApiError, ConnectionError) as error:
+                raise PterodactylConnectionError(error) from error
+            except HTTPError as error:
+                if error.response.status_code == 401:
+                    raise PterodactylAuthorizationError(error) from error
+
                 raise PterodactylConnectionError(error) from error
             else:
                 data[identifier] = PterodactylData(
@@ -108,13 +117,34 @@ class PterodactylAPI:
                     identifier=identifier,
                     state=utilization["current_state"],
                     cpu_utilization=utilization["resources"]["cpu_absolute"],
-                    memory_utilization=utilization["resources"]["memory_bytes"],
-                    disk_utilization=utilization["resources"]["disk_bytes"],
-                    network_rx_utilization=utilization["resources"]["network_rx_bytes"],
-                    network_tx_utilization=utilization["resources"]["network_tx_bytes"],
+                    cpu_limit=server["limits"]["cpu"],
+                    memory_usage=utilization["resources"]["memory_bytes"],
+                    memory_limit=server["limits"]["memory"],
+                    disk_usage=utilization["resources"]["disk_bytes"],
+                    disk_limit=server["limits"]["disk"],
+                    network_inbound=utilization["resources"]["network_rx_bytes"],
+                    network_outbound=utilization["resources"]["network_tx_bytes"],
                     uptime=utilization["resources"]["uptime"],
                 )
 
                 _LOGGER.debug("%s", data[identifier])
 
         return data
+
+    async def async_send_command(
+        self, identifier: str, command: PterodactylCommand
+    ) -> None:
+        """Send a command to the Pterodactyl server."""
+        try:
+            await self.hass.async_add_executor_job(
+                self.pterodactyl.client.servers.send_power_action,  # type: ignore[union-attr]
+                identifier,
+                command,
+            )
+        except (BadRequestError, PterodactylApiError, ConnectionError) as error:
+            raise PterodactylConnectionError(error) from error
+        except HTTPError as error:
+            if error.response.status_code == 401:
+                raise PterodactylAuthorizationError(error) from error
+
+            raise PterodactylConnectionError(error) from error

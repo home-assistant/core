@@ -40,8 +40,7 @@ async def test_coordinator_device_cleanup(
 
     device_tracker = f"device_tracker.{DEVICE_1_HOST}"
 
-    state = hass.states.get(device_tracker)
-    assert state is not None
+    assert hass.states.get(device_tracker)
 
     mock_vodafone_station_router.get_devices_data.return_value = {
         DEVICE_2_MAC: VodafoneStationDevice(
@@ -59,10 +58,10 @@ async def test_coordinator_device_cleanup(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get(device_tracker)
-    assert state is None
+    assert hass.states.get(device_tracker) is None
     assert f"Skipping entity {DEVICE_2_HOST}" in caplog.text
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_1_MAC)})
-    assert device is None
+    assert (
+        device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_1_MAC)}) is None
+    )
     assert f"Removing device: {DEVICE_1_HOST}" in caplog.text

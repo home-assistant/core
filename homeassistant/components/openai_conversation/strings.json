@@ -46,16 +46,16 @@
   "selector": {
     "reasoning_effort": {
       "options": {
-        "low": "Low",
-        "medium": "Medium",
-        "high": "High"
+        "low": "[%key:common::state::low%]",
+        "medium": "[%key:common::state::medium%]",
+        "high": "[%key:common::state::high%]"
       }
     },
     "search_context_size": {
       "options": {
-        "low": "Low",
-        "medium": "Medium",
-        "high": "High"
+        "low": "[%key:common::state::low%]",
+        "medium": "[%key:common::state::medium%]",
+        "high": "[%key:common::state::high%]"
       }
     }
   },
@@ -89,7 +89,7 @@
     },
     "generate_content": {
       "name": "Generate content",
-      "description": "Sends a conversational query to ChatGPT including any attached image files",
+      "description": "Sends a conversational query to ChatGPT including any attached image or PDF files",
       "fields": {
         "config_entry": {
           "name": "Config entry",
