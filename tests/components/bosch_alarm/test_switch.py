@@ -27,12 +27,11 @@ async def test_update_switch_device(
     hass: HomeAssistant,
     mock_panel: AsyncMock,
     output: AsyncMock,
-    entity_id: str,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that alarm panel state changes after arming the panel."""
     await setup_integration(hass, mock_config_entry)
-    entity_id = f"switch.{entity_id}_output_a"
+    entity_id = "switch.output_a"
     assert hass.states.get(entity_id).state == STATE_OFF
     await hass.services.async_call(
         SWITCH_DOMAIN,

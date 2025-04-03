@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_switch[amax_3000][switch.bosch_amax_3000_output_a-entry]
+# name: test_switch[amax_3000][switch.output_a-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,7 +12,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.bosch_amax_3000_output_a',
+    'entity_id': 'switch.output_a',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -24,7 +24,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Output A',
+    'original_name': None,
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -33,20 +33,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch[amax_3000][switch.bosch_amax_3000_output_a-state]
+# name: test_switch[amax_3000][switch.output_a-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bosch AMAX 3000 Output A',
+      'friendly_name': 'Output A',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.bosch_amax_3000_output_a',
+    'entity_id': 'switch.output_a',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_switch[b5512][switch.bosch_b5512_us1b_output_a-entry]
+# name: test_switch[b5512][switch.output_a-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -59,7 +59,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.bosch_b5512_us1b_output_a',
+    'entity_id': 'switch.output_a',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -71,7 +71,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Output A',
+    'original_name': None,
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -80,20 +80,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch[b5512][switch.bosch_b5512_us1b_output_a-state]
+# name: test_switch[b5512][switch.output_a-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bosch B5512 (US1B) Output A',
+      'friendly_name': 'Output A',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.bosch_b5512_us1b_output_a',
+    'entity_id': 'switch.output_a',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_switch[solution_3000][switch.bosch_solution_3000_output_a-entry]
+# name: test_switch[solution_3000][switch.output_a-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -106,7 +106,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.bosch_solution_3000_output_a',
+    'entity_id': 'switch.output_a',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -118,7 +118,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Output A',
+    'original_name': None,
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -127,13 +127,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch[solution_3000][switch.bosch_solution_3000_output_a-state]
+# name: test_switch[solution_3000][switch.output_a-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bosch Solution 3000 Output A',
+      'friendly_name': 'Output A',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.bosch_solution_3000_output_a',
+    'entity_id': 'switch.output_a',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

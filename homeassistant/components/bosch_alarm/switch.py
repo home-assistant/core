@@ -39,20 +39,24 @@ class PanelOutputEntity(SwitchEntity):
     """An output entity for a bosch alarm panel."""
 
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, panel: Panel, output_id: int, unique_id: str) -> None:
         """Set up an output entity for a bosch alarm panel."""
         self.panel = panel
         self._output = panel.outputs[output_id]
         self._output_id = output_id
-        self._attr_name = self._output.name
         self._observer = self._output.status_observer
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
-            name=f"Bosch {panel.model}",
+            name=self._output.name,
             manufacturer="Bosch Security Systems",
             model=panel.model,
             sw_version=panel.firmware_version,
+            via_device=(
+                DOMAIN,
+                unique_id,
+            ),
         )
         self._attr_unique_id = f"{unique_id}_output_{output_id}"
 
