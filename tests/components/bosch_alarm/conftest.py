@@ -31,16 +31,6 @@ def model(request: pytest.FixtureRequest) -> Generator[str]:
 
 
 @pytest.fixture
-def entity_id(model: str) -> str | None:
-    """Return extra config entry data."""
-    return {
-        "solution_3000": "bosch_solution_3000",
-        "amax_3000": "bosch_amax_3000",
-        "b5512": "bosch_b5512_us1b",
-    }.get(model)
-
-
-@pytest.fixture
 def extra_config_entry_data(
     model: str, model_name: str, config_flow_data: dict[str, Any]
 ) -> dict[str, Any]:
