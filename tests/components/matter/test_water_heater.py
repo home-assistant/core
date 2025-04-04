@@ -2,13 +2,16 @@
 
 from unittest.mock import MagicMock, call
 
+from chip.clusters import Objects as clusters
 from matter_server.client.models.node import MatterNode
+from matter_server.common.helpers.util import create_attribute_path_from_attribute
 import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.water_heater import (
     STATE_ECO,
     STATE_HIGH_DEMAND,
+    STATE_OFF,
     WaterHeaterEntityFeature,
 )
 from homeassistant.const import Platform
@@ -91,3 +94,22 @@ async def test_water_heater_service_calls(
         value=5200,
     )
     matter_client.write_attribute.reset_mock()
+
+    # test change mode to off
+    await hass.services.async_call(
+        "water_heater",
+        "set_operation_mode",
+        {"entity_id": "water_heater.water_heater", "operation_mode": STATE_OFF},
+        blocking=True,
+    )
+
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=2,
+            attribute=clusters.Thermostat.Attributes.SystemMode,
+        ),
+        value=0,
+    )
+    matter_client.send_device_command.reset_mock()
