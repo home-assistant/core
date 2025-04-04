@@ -4499,6 +4499,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
@@ -5064,7 +5067,7 @@
   '2'
 # ---
 # name: test_sensors_streaming[sensor.test_charging-state]
-  'charging'
+  'unavailable'
 # ---
 # name: test_sensors_streaming[sensor.test_time_to_arrival-state]
   'unknown'
