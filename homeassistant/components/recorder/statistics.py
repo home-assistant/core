@@ -2407,7 +2407,7 @@ def _sorted_statistics_to_dict(
     row_mapping = tuple(
         (column, field_map[column])
         for key in types
-        for column in ({key, *_type_column_mapping[key]})
+        for column in ({key, *_type_column_mapping.get(key, ())})
         if column in field_map
     )
     # Append all statistic entries, and optionally do unit conversion
