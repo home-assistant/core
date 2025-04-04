@@ -47,7 +47,7 @@
       "message": "Could not connect to \"{target}\"."
     },
     "unknown_error": {
-      "message": "An unknown error occurred while setting the Date & Time on \"{target}\"."
+      "message": "An unknown error occurred while setting the date and time on \"{target}\"."
     }
   },
   "services": {
@@ -61,7 +61,7 @@
         },
         "config_entry_id": {
           "name": "Integration ID",
-          "description": "The Bosch Alarm Integration ID."
+          "description": "The Bosch Alarm integration ID."
         }
       }
     }
