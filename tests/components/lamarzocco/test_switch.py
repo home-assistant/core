@@ -125,13 +125,10 @@ async def test_auto_on_off_switches(
             blocking=True,
         )
 
-        wake_up_sleep_entry = next(
-            (
-                schedule
-                for schedule in mock_lamarzocco.schedule.smart_wake_up_sleep.schedules
-                if schedule.identifier == wake_up_sleep_entry_id
-            ),
-            None,
+        wake_up_sleep_entry = (
+            mock_lamarzocco.schedule.smart_wake_up_sleep.schedules_dict[
+                wake_up_sleep_entry_id
+            ]
         )
         assert wake_up_sleep_entry
         wake_up_sleep_entry.enabled = False

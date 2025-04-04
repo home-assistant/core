@@ -4,7 +4,6 @@ from collections.abc import Iterator
 from datetime import datetime, timedelta
 
 from pylamarzocco.const import WeekDay
-from pylamarzocco.models import WakeUpScheduleSettings
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.core import HomeAssistant
@@ -40,8 +39,9 @@ async def async_setup_entry(
     coordinator = entry.runtime_data.config_coordinator
 
     async_add_entities(
-        LaMarzoccoCalendarEntity(coordinator, CALENDAR_KEY, schedule)
+        LaMarzoccoCalendarEntity(coordinator, CALENDAR_KEY, schedule.identifier)
         for schedule in coordinator.device.schedule.smart_wake_up_sleep.schedules
+        if schedule.identifier
     )
 
 
@@ -54,13 +54,12 @@ class LaMarzoccoCalendarEntity(LaMarzoccoBaseEntity, CalendarEntity):
         self,
         coordinator: LaMarzoccoUpdateCoordinator,
         key: str,
-        schedule: WakeUpScheduleSettings,
+        identifier: str,
     ) -> None:
         """Set up calendar."""
-        assert schedule.identifier
-        super().__init__(coordinator, f"{key}_{schedule.identifier}")
-        self._schedule_entry = schedule
-        self._attr_translation_placeholders = {"id": schedule.identifier}
+        super().__init__(coordinator, f"{key}_{identifier}")
+        self._identifier = identifier
+        self._attr_translation_placeholders = {"id": identifier}
 
     @property
     def event(self) -> CalendarEvent | None:
@@ -115,22 +114,24 @@ class LaMarzoccoCalendarEntity(LaMarzoccoBaseEntity, CalendarEntity):
     def _async_get_calendar_event(self, date: datetime) -> CalendarEvent | None:
         """Return calendar event for a given weekday."""
 
+        schedule_entry = (
+            self.coordinator.device.schedule.smart_wake_up_sleep.schedules_dict[
+                self._identifier
+            ]
+        )
         # check first if auto/on off is turned on in general
-        if not self._schedule_entry.enabled:
+        if not schedule_entry.enabled:
             return None
 
         # parse the schedule for the day
 
-        if WEEKDAY_TO_ENUM[date.weekday()] not in self._schedule_entry.days:
+        if WEEKDAY_TO_ENUM[date.weekday()] not in schedule_entry.days:
             return None
 
-        on_time_minutes = self._schedule_entry.on_time_minutes
-        off_time_minutes = self._schedule_entry.off_time_minutes
-
-        hour_on = on_time_minutes // 60
-        minute_on = on_time_minutes % 60
-        hour_off = off_time_minutes // 60
-        minute_off = off_time_minutes % 60
+        hour_on = schedule_entry.on_time_minutes // 60
+        minute_on = schedule_entry.on_time_minutes % 60
+        hour_off = schedule_entry.off_time_minutes // 60
+        minute_off = schedule_entry.off_time_minutes % 60
 
         day_offset = 0
         if hour_off == 24:
