@@ -629,12 +629,12 @@ class TeslemetryStreamSensorEntity(TeslemetryVehicleStreamEntity, RestoreSensor)
         if (sensor_data := await self.async_get_last_sensor_data()) is not None:
             self._attr_native_value = sensor_data.native_value
 
-        assert self.entity_description.streaming_listener
-        self.async_on_remove(
-            self.entity_description.streaming_listener(
-                self.vehicle.stream_vehicle, self._async_value_from_stream
+        if self.entity_description.streaming_listener is not None:
+            self.async_on_remove(
+                self.entity_description.streaming_listener(
+                    self.vehicle.stream_vehicle, self._async_value_from_stream
+                )
             )
-        )
 
     @cached_property
     def available(self) -> bool:
