@@ -1,6 +1,6 @@
 """Test Matter sensors."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, call
 
 from matter_server.client.models.node import MatterNode
 import pytest
@@ -60,3 +60,34 @@ async def test_water_heater(
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get("water_heater.water_heater")
     assert state.state == STATE_HIGH_DEMAND
+
+
+@pytest.mark.parametrize("node_fixture", ["silabs_water_heater"])
+async def test_water_heater_service_calls(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test water_heater platform service calls."""
+    # test single-setpoint temperature adjustment when boost mode is active
+    state = hass.states.get("water_heater.water_heater")
+
+    assert state
+    assert state.state == STATE_ECO
+    await hass.services.async_call(
+        "water_heater",
+        "set_temperature",
+        {
+            "entity_id": "water_heater.water_heater",
+            "temperature": 52,
+        },
+        blocking=True,
+    )
+
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args == call(
+        node_id=matter_node.node_id,
+        attribute_path="2/513/18",
+        value=5200,
+    )
+    matter_client.write_attribute.reset_mock()
