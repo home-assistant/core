@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from homelink.provider import Provider
+from homelink.mqtt_provider import MQTTProvider
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -40,7 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeLinkConfigEntry) -> 
         aiohttp_client.async_get_clientsession(hass), session
     )
 
-    provider = Provider(authenticated_session)
+    provider = MQTTProvider(authenticated_session)
     coordinator = HomeLinkCoordinator(hass, provider, entry)
 
     await coordinator.async_config_entry_first_refresh()
