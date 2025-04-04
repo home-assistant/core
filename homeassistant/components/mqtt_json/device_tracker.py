@@ -59,7 +59,7 @@ async def async_setup_scanner(
 
         await _async_setup_scanner(hass, config, async_see)
 
-    hass.create_task(_async_wait_for_mqtt_and_set_up(), "mqtt_json setup")
+    hass.async_create_task(_async_wait_for_mqtt_and_set_up(), "mqtt_json setup")
     return True
 
 

@@ -128,7 +128,7 @@ async def async_setup_platform(
 
         await mqtt.async_subscribe(hass, TOPIC, async_sensor_event_received, 0)
 
-    hass.create_task(_async_setup_mqtt(), "arwn setup")
+    hass.async_create_task(_async_setup_mqtt(), "arwn setup")
 
     @callback
     def async_sensor_event_received(msg: mqtt.ReceiveMessage) -> None:

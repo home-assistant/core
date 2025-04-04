@@ -102,7 +102,7 @@ async def async_setup_platform(
             ]
         )
 
-    hass.create_task(_async_setup_entities(), "mqtt_room setup")
+    hass.async_create_task(_async_setup_entities(), "mqtt_room setup")
 
 
 class MQTTRoomSensor(SensorEntity):

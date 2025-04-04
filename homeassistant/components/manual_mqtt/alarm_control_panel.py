@@ -230,7 +230,7 @@ async def async_setup_platform(
             ]
         )
 
-    hass.create_task(_async_setup_entities(), "manual_mqtt setup")
+    hass.async_create_task(_async_setup_entities(), "manual_mqtt setup")
 
 
 class ManualMQTTAlarm(AlarmControlPanelEntity):
