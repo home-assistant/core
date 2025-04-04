@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-import math
 from datetime import timedelta
 import functools as ft
 import logging
+import math
 from typing import Any, Literal, final
 
 from propcache.api import cached_property
@@ -939,8 +939,9 @@ async def async_service_temperature_set(
                 max_temp,
                 temp_unit,
             )
-            if ((check_temp < min_temp and not math.isclose(min_temp, check_temp)) or
-                    (max_temp < check_temp and not math.isclose(max_temp, check_temp))):
+            if (check_temp < min_temp and not math.isclose(min_temp, check_temp)) or (
+                max_temp < check_temp and not math.isclose(max_temp, check_temp)
+            ):
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="temp_out_of_range",
