@@ -37,7 +37,7 @@
     'previous_unique_id': None,
     'supported_features': <MediaPlayerEntityFeature: 23949>,
     'translation_key': None,
-    'unique_id': 'afcf3b91-0000-1111-2222-ddff2a0a6577',
+    'unique_id': 'afcf3b91-0000-1111-2222-ddff2a0a6577_main',
     'unit_of_measurement': None,
   })
 # ---
@@ -99,7 +99,7 @@
     'previous_unique_id': None,
     'supported_features': <MediaPlayerEntityFeature: 318477>,
     'translation_key': None,
-    'unique_id': 'c9276e43-fe3c-88c3-1dcc-2eb79e292b8c',
+    'unique_id': 'c9276e43-fe3c-88c3-1dcc-2eb79e292b8c_main',
     'unit_of_measurement': None,
   })
 # ---
@@ -153,7 +153,7 @@
     'previous_unique_id': None,
     'supported_features': <MediaPlayerEntityFeature: 21517>,
     'translation_key': None,
-    'unique_id': 'c85fced9-c474-4a47-93c2-037cc7829536',
+    'unique_id': 'c85fced9-c474-4a47-93c2-037cc7829536_main',
     'unit_of_measurement': None,
   })
 # ---
@@ -207,7 +207,7 @@
     'previous_unique_id': None,
     'supported_features': <MediaPlayerEntityFeature: 21901>,
     'translation_key': None,
-    'unique_id': '0d94e5db-8501-2355-eb4f-214163702cac',
+    'unique_id': '0d94e5db-8501-2355-eb4f-214163702cac_main',
     'unit_of_measurement': None,
   })
 # ---
@@ -225,6 +225,71 @@
     }),
     'context': <ANY>,
     'entity_id': 'media_player.soundbar_living',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[vd_stv_2017_k][media_player.tv_samsung_8_series_49-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'source_list': list([
+        'digitalTv',
+        'HDMI1',
+        'HDMI4',
+        'HDMI4',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.tv_samsung_8_series_49',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <MediaPlayerDeviceClass.TV: 'tv'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 23997>,
+    'translation_key': None,
+    'unique_id': '4588d2d9-a8cf-40f4-9a0b-ed5dfbaccda1_main',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[vd_stv_2017_k][media_player.tv_samsung_8_series_49-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'tv',
+      'friendly_name': '[TV] Samsung 8 Series (49)',
+      'is_volume_muted': True,
+      'source': 'HDMI1',
+      'source_list': list([
+        'digitalTv',
+        'HDMI1',
+        'HDMI4',
+        'HDMI4',
+      ]),
+      'supported_features': <MediaPlayerEntityFeature: 23997>,
+      'volume_level': 0.13,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.tv_samsung_8_series_49',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

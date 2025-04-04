@@ -89,6 +89,7 @@ class ShellyEntryData:
     rpc: ShellyRpcCoordinator | None = None
     rpc_poll: ShellyRpcPollingCoordinator | None = None
     rpc_script_events: dict[int, list[str]] | None = None
+    rpc_supports_scripts: bool | None = None
 
 
 type ShellyConfigEntry = ConfigEntry[ShellyEntryData]
@@ -716,7 +717,8 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         is updated.
         """
         if not self.sleep_period:
-            await self._async_connect_ble_scanner()
+            if self.config_entry.runtime_data.rpc_supports_scripts:
+                await self._async_connect_ble_scanner()
         else:
             await self._async_setup_outbound_websocket()
 

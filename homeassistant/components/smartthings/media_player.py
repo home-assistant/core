@@ -22,7 +22,6 @@ from .entity import SmartThingsEntity
 
 MEDIA_PLAYER_CAPABILITIES = (
     Capability.AUDIO_MUTE,
-    Capability.AUDIO_TRACK_DATA,
     Capability.AUDIO_VOLUME,
     Capability.MEDIA_PLAYBACK,
 )
@@ -241,10 +240,14 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
     def media_title(self) -> str | None:
         """Title of current playing media."""
         if (
-            track_data := self.get_attribute_value(
-                Capability.AUDIO_TRACK_DATA, Attribute.AUDIO_TRACK_DATA
+            not self.supports_capability(Capability.AUDIO_TRACK_DATA)
+            or (
+                track_data := self.get_attribute_value(
+                    Capability.AUDIO_TRACK_DATA, Attribute.AUDIO_TRACK_DATA
+                )
             )
-        ) is None:
+            is None
+        ):
             return None
         return track_data.get("title", None)
 
@@ -252,10 +255,14 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
     def media_artist(self) -> str | None:
         """Artist of current playing media."""
         if (
-            track_data := self.get_attribute_value(
-                Capability.AUDIO_TRACK_DATA, Attribute.AUDIO_TRACK_DATA
+            not self.supports_capability(Capability.AUDIO_TRACK_DATA)
+            or (
+                track_data := self.get_attribute_value(
+                    Capability.AUDIO_TRACK_DATA, Attribute.AUDIO_TRACK_DATA
+                )
             )
-        ) is None:
+            is None
+        ):
             return None
         return track_data.get("artist")
 

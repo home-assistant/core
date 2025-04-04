@@ -5,8 +5,8 @@
         "title": "Define the Velbus connection",
         "description": "How do you want to configure the Velbus hub?",
         "menu_options": {
-          "network": "Via a network connection",
-          "usbselect": "Via an USB device"
+          "network": "Via network connection",
+          "usbselect": "Via USB device"
         }
       },
       "network": {

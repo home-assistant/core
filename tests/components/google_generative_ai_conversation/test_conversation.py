@@ -104,28 +104,24 @@ async def test_function_call(
 
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     assert result.response.as_dict()["speech"]["plain"]["speech"] == "Hi there!"
-    mock_tool_call = mock_create.mock_calls[2][2]["message"]
-    assert mock_tool_call.model_dump() == {
-        "parts": [
-            {
-                "code_execution_result": None,
-                "executable_code": None,
-                "file_data": None,
-                "function_call": None,
-                "function_response": {
-                    "id": None,
-                    "name": "test_tool",
-                    "response": {
-                        "result": "Test response",
-                    },
-                },
-                "inline_data": None,
-                "text": None,
-                "thought": None,
-                "video_metadata": None,
+    mock_tool_response_parts = mock_create.mock_calls[2][2]["message"]
+    assert len(mock_tool_response_parts) == 1
+    assert mock_tool_response_parts[0].model_dump() == {
+        "code_execution_result": None,
+        "executable_code": None,
+        "file_data": None,
+        "function_call": None,
+        "function_response": {
+            "id": None,
+            "name": "test_tool",
+            "response": {
+                "result": "Test response",
             },
-        ],
-        "role": None,
+        },
+        "inline_data": None,
+        "text": None,
+        "thought": None,
+        "video_metadata": None,
     }
 
     mock_tool.async_call.assert_awaited_once_with(
@@ -292,28 +288,24 @@ async def test_function_call_without_parameters(
 
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     assert result.response.as_dict()["speech"]["plain"]["speech"] == "Hi there!"
-    mock_tool_call = mock_create.mock_calls[2][2]["message"]
-    assert mock_tool_call.model_dump() == {
-        "parts": [
-            {
-                "code_execution_result": None,
-                "executable_code": None,
-                "file_data": None,
-                "function_call": None,
-                "function_response": {
-                    "id": None,
-                    "name": "test_tool",
-                    "response": {
-                        "result": "Test response",
-                    },
-                },
-                "inline_data": None,
-                "text": None,
-                "thought": None,
-                "video_metadata": None,
+    mock_tool_response_parts = mock_create.mock_calls[2][2]["message"]
+    assert len(mock_tool_response_parts) == 1
+    assert mock_tool_response_parts[0].model_dump() == {
+        "code_execution_result": None,
+        "executable_code": None,
+        "file_data": None,
+        "function_call": None,
+        "function_response": {
+            "id": None,
+            "name": "test_tool",
+            "response": {
+                "result": "Test response",
             },
-        ],
-        "role": None,
+        },
+        "inline_data": None,
+        "text": None,
+        "thought": None,
+        "video_metadata": None,
     }
 
     mock_tool.async_call.assert_awaited_once_with(
@@ -390,29 +382,25 @@ async def test_function_exception(
 
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     assert result.response.as_dict()["speech"]["plain"]["speech"] == "Hi there!"
-    mock_tool_call = mock_create.mock_calls[2][2]["message"]
-    assert mock_tool_call.model_dump() == {
-        "parts": [
-            {
-                "code_execution_result": None,
-                "executable_code": None,
-                "file_data": None,
-                "function_call": None,
-                "function_response": {
-                    "id": None,
-                    "name": "test_tool",
-                    "response": {
-                        "error": "HomeAssistantError",
-                        "error_text": "Test tool exception",
-                    },
-                },
-                "inline_data": None,
-                "text": None,
-                "thought": None,
-                "video_metadata": None,
+    mock_tool_response_parts = mock_create.mock_calls[2][2]["message"]
+    assert len(mock_tool_response_parts) == 1
+    assert mock_tool_response_parts[0].model_dump() == {
+        "code_execution_result": None,
+        "executable_code": None,
+        "file_data": None,
+        "function_call": None,
+        "function_response": {
+            "id": None,
+            "name": "test_tool",
+            "response": {
+                "error": "HomeAssistantError",
+                "error_text": "Test tool exception",
             },
-        ],
-        "role": None,
+        },
+        "inline_data": None,
+        "text": None,
+        "thought": None,
+        "video_metadata": None,
     }
     mock_tool.async_call.assert_awaited_once_with(
         hass,
@@ -727,3 +715,48 @@ async def test_empty_content_in_chat_history(
 
         assert actual_history[0].parts[0].text == first_input
         assert actual_history[1].parts[0].text == " "
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_history_always_user_first_turn(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test that the user is always first in the chat history."""
+    with (
+        chat_session.async_get_chat_session(hass) as session,
+        async_get_chat_log(hass, session) as chat_log,
+    ):
+        chat_log.async_add_assistant_content_without_tools(
+            conversation.AssistantContent(
+                agent_id="conversation.google_generative_ai_conversation",
+                content="Garage door left open, do you want to close it?",
+            )
+        )
+
+    with patch("google.genai.chats.AsyncChats.create") as mock_create:
+        mock_chat = AsyncMock()
+        mock_create.return_value.send_message = mock_chat
+        chat_response = Mock(prompt_feedback=None)
+        mock_chat.return_value = chat_response
+        chat_response.candidates = [Mock(content=Mock(parts=[]))]
+
+        await conversation.async_converse(
+            hass,
+            "hello",
+            chat_log.conversation_id,
+            Context(),
+            agent_id="conversation.google_generative_ai_conversation",
+        )
+
+    _, kwargs = mock_create.call_args
+    actual_history = kwargs.get("history")
+
+    assert actual_history[0].parts[0].text == " "
+    assert actual_history[0].role == "user"
+    assert (
+        actual_history[1].parts[0].text
+        == "Garage door left open, do you want to close it?"
+    )
+    assert actual_history[1].role == "model"
