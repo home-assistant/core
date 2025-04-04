@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 from datetime import timedelta
-import logging
 
-import requests
+from pyopenhardwaremonitor.api import SensorNode
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -16,19 +15,17 @@ from homeassistant.components.sensor import (
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import Throttle
-from homeassistant.util.dt import utcnow
+from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-_LOGGER = logging.getLogger(__name__)
+from .coordinator import (
+    OpenHardwareMonitorConfigEntry,
+    OpenHardwareMonitorDataCoordinator,
+)
 
 STATE_MIN_VALUE = "minimal_value"
 STATE_MAX_VALUE = "maximum_value"
-STATE_VALUE = "value"
-STATE_OBJECT = "object"
-CONF_INTERVAL = "interval"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=15)
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -37,171 +34,127 @@ RETRY_INTERVAL = timedelta(seconds=30)
 OHM_VALUE = "Value"
 OHM_MIN = "Min"
 OHM_MAX = "Max"
-OHM_CHILDREN = "Children"
 OHM_NAME = "Text"
+OHM_ID = "id"
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_HOST): cv.string, vol.Optional(CONF_PORT, default=8085): cv.port}
 )
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: OpenHardwareMonitorConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Open Hardware Monitor platform."""
-    data = OpenHardwareMonitorData(config, hass)
-    if data.data is None:
+    coordinator = config_entry.runtime_data
+    if not coordinator.data:
         raise PlatformNotReady
-    add_entities(data.devices, True)
+
+    sensor_data = coordinator.data
+    entities = [
+        OpenHardwareMonitorSensorDevice(
+            node=sensor_data[k],
+            coordinator=coordinator,
+            # self, fullname, path, unit_of_measurement, id, child_names, json
+        )
+        for k in sensor_data
+    ]
+    async_add_entities(entities, True)
 
 
-class OpenHardwareMonitorDevice(SensorEntity):
-    """Device used to display information from OpenHardwareMonitor."""
+class OpenHardwareMonitorSensorDevice(
+    CoordinatorEntity[OpenHardwareMonitorDataCoordinator], SensorEntity
+):
+    """Sensor entity used to display information from OpenHardwareMonitor."""
 
     _attr_state_class = SensorStateClass.MEASUREMENT
 
-    def __init__(self, data, name, path, unit_of_measurement):
+    def __init__(
+        self,
+        node: SensorNode,
+        coordinator: OpenHardwareMonitorDataCoordinator,
+    ) -> None:
         """Initialize an OpenHardwareMonitor sensor."""
-        self._name = name
-        self._data = data
-        self.path = path
-        self.attributes = {}
-        self._unit_of_measurement = unit_of_measurement
+        super().__init__(coordinator=coordinator)
 
-        self.value = None
+        self._node = node
+        self._attr_available = bool(node)
+        self._fullname = node["FullName"]
+        self._attr_unique_id = f"ohm-{self._fullname}"
+
+        value_parts = node.get("Value", "").split(" ")
+        self._unit_of_measurement = value_parts[1] if len(value_parts) > 1 else None
+        self.value = self.parse_number(value_parts[0]) if len(value_parts) > 0 else None
+
+        self._apply_data(node)
+        self._attr_device_info = coordinator.resolve_device_info_for_node(node)
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the device."""
-        return self._name
+        return self._fullname
 
     @property
-    def native_unit_of_measurement(self):
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
         return self._unit_of_measurement
 
     @property
     def native_value(self):
         """Return the state of the device."""
-        if self.value == "-":
-            return None
-        return self.value
+        return None if self.value == "-" else self.value
 
     @property
     def extra_state_attributes(self):
         """Return the state attributes of the entity."""
         return self.attributes
 
+    @property
+    def device_info(self) -> dr.DeviceInfo | None:
+        """Information about this entity's device."""
+        return self._attr_device_info
+
     @classmethod
     def parse_number(cls, string):
         """In some locales a decimal numbers uses ',' instead of '.'."""
         return string.replace(",", ".")
 
-    def update(self) -> None:
-        """Update the device from a new JSON object."""
-        self._data.update()
-
-        array = self._data.data[OHM_CHILDREN]
-        _attributes = {}
-
-        for path_index, path_number in enumerate(self.path):
-            values = array[path_number]
-
-            if path_index == len(self.path) - 1:
-                self.value = self.parse_number(values[OHM_VALUE].split(" ")[0])
-                _attributes.update(
-                    {
-                        "name": values[OHM_NAME],
-                        STATE_MIN_VALUE: self.parse_number(
-                            values[OHM_MIN].split(" ")[0]
-                        ),
-                        STATE_MAX_VALUE: self.parse_number(
-                            values[OHM_MAX].split(" ")[0]
-                        ),
-                    }
-                )
-
-                self.attributes = _attributes
-                return
-            array = array[path_number][OHM_CHILDREN]
-            _attributes.update({f"level_{path_index}": values[OHM_NAME]})
-
-
-class OpenHardwareMonitorData:
-    """Class used to pull data from OHM and create sensors."""
-
-    def __init__(self, config, hass):
-        """Initialize the Open Hardware Monitor data-handler."""
-        self.data = None
-        self._config = config
-        self._hass = hass
-        self.devices = []
-        self.initialize(utcnow())
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
-        """Hit by the timer with the configured interval."""
-        if self.data is None:
-            self.initialize(utcnow())
-        else:
-            self.refresh()
-
-    def refresh(self):
-        """Download and parse JSON from OHM."""
-        data_url = (
-            f"http://{self._config.get(CONF_HOST)}:"
-            f"{self._config.get(CONF_PORT)}/data.json"
+    def _apply_data(self, node: SensorNode) -> None:
+        # Update info
+        self._node = node
+        self._fullname = (
+            node["FullName"]
+            if node.get("FullName")
+            else self._fullname or node[OHM_NAME]
         )
 
-        try:
-            response = requests.get(data_url, timeout=30)
-            self.data = response.json()
-        except requests.exceptions.ConnectionError:
-            _LOGGER.debug("ConnectionError: Is OpenHardwareMonitor running?")
+        # Update value
+        value_parts = node.get("Value", "").split(" ")
+        self._unit_of_measurement = (
+            value_parts[1]
+            if len(value_parts) > 1 and not self._unit_of_measurement
+            else self._unit_of_measurement
+        )
+        self.value = (
+            self.parse_number(value_parts[0]) if len(value_parts) > 0 else self.value
+        )
 
-    def initialize(self, now):
-        """Parse of the sensors and adding of devices."""
-        self.refresh()
+        # Update attributes
+        self.attributes = {
+            "computer": node.get("ComputerName"),
+            "parents": str(node.get("ParentNames")),
+            "name": node[OHM_NAME],
+            STATE_MIN_VALUE: self.parse_number(node[OHM_MIN].split(" ")[0]),
+            STATE_MAX_VALUE: self.parse_number(node[OHM_MAX].split(" ")[0]),
+            "id": node.get(OHM_ID),
+            "sensorId": node.get("SensorId"),
+            "type": node.get("Type"),
+        }
 
-        if self.data is None:
-            return
-
-        self.devices = self.parse_children(self.data, [], [], [])
-
-    def parse_children(self, json, devices, path, names):
-        """Recursively loop through child objects, finding the values."""
-        result = devices.copy()
-
-        if json[OHM_CHILDREN]:
-            for child_index in range(len(json[OHM_CHILDREN])):
-                child_path = path.copy()
-                child_path.append(child_index)
-
-                child_names = names.copy()
-                if path:
-                    child_names.append(json[OHM_NAME])
-
-                obj = json[OHM_CHILDREN][child_index]
-
-                added_devices = self.parse_children(
-                    obj, devices, child_path, child_names
-                )
-
-                result = result + added_devices
-            return result
-
-        if json[OHM_VALUE].find(" ") == -1:
-            return result
-
-        unit_of_measurement = json[OHM_VALUE].split(" ")[1]
-        child_names = names.copy()
-        child_names.append(json[OHM_NAME])
-        fullname = " ".join(child_names)
-
-        dev = OpenHardwareMonitorDevice(self, fullname, path, unit_of_measurement)
-
-        result.append(dev)
-        return result
+    def _handle_coordinator_update(self):
+        if node := self.coordinator.get_sensor_node(self._fullname):
+            self._apply_data(node)
+        self._attr_available = bool(node)
+        return super()._handle_coordinator_update()
