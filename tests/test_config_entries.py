@@ -8883,15 +8883,17 @@ async def test_add_description_placeholder_automatically_not_overwrites(
 
 
 @pytest.mark.parametrize(
-    ("domain", "expected_log"),
+    ("domain", "source", "expected_log"),
     [
-        ("some_integration", True),
-        ("mobile_app", False),
+        ("some_integration", config_entries.SOURCE_USER, True),
+        ("some_integration", config_entries.SOURCE_IGNORE, False),
+        ("mobile_app", config_entries.SOURCE_USER, False),
     ],
 )
 async def test_create_entry_existing_unique_id(
     hass: HomeAssistant,
     domain: str,
+    source: str,
     expected_log: bool,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -8902,6 +8904,7 @@ async def test_create_entry_existing_unique_id(
         entry_id="01J915Q6T9F6G5V0QJX6HBC94T",
         data={"host": "any", "port": 123},
         unique_id="mock-unique-id",
+        source=source,
     )
     entry.add_to_hass(hass)
 

@@ -901,7 +901,7 @@ eufylife-ble-client==0.1.8
 # evdev==1.6.1
 
 # homeassistant.components.evohome
-evohome-async==1.0.4
+evohome-async==1.0.5
 
 # homeassistant.components.bryant_evolution
 evolutionhttp==0.0.18
@@ -954,7 +954,7 @@ fnv-hash-fast==1.4.0
 foobot_async==1.0.0
 
 # homeassistant.components.forecast_solar
-forecast-solar==4.0.0
+forecast-solar==4.1.0
 
 # homeassistant.components.fortios
 fortiosapi==1.0.5
@@ -1157,7 +1157,7 @@ hole==0.8.0
 holidays==0.69
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250401.0
+home-assistant-frontend==20250404.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.3.28
@@ -1891,7 +1891,7 @@ pycsspeechtts==1.0.8
 # pycups==2.0.4
 
 # homeassistant.components.daikin
-pydaikin==2.14.1
+pydaikin==2.15.0
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
@@ -1948,7 +1948,7 @@ pyeiscp==0.0.7
 pyemoncms==0.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.25.1
+pyenphase==1.25.5
 
 # homeassistant.components.envisalink
 pyenvisalink==4.7
@@ -2319,13 +2319,13 @@ pysma==0.7.5
 pysmappee==0.2.29
 
 # homeassistant.components.smartthings
-pysmartthings==3.0.1
+pysmartthings==3.0.2
 
 # homeassistant.components.smarty
 pysmarty2==0.10.2
 
 # homeassistant.components.smhi
-pysmhi==1.0.0
+pysmhi==1.0.1
 
 # homeassistant.components.edl21
 pysml==0.0.12
@@ -2482,7 +2482,7 @@ python-snoo==0.6.5
 python-songpal==0.16.2
 
 # homeassistant.components.tado
-python-tado==0.18.9
+python-tado==0.18.11
 
 # homeassistant.components.technove
 python-technove==2.0.0
@@ -2878,7 +2878,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==1.0.16
+tesla-fleet-api==1.0.17
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.2
