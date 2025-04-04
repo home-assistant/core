@@ -189,9 +189,13 @@ class BackupAgentClient:
 
         """
 
-        metadata_file = f"{self.cfg.runtime_data.backup_location}/.{backup.backup_id}.metadata.json"
+        metadata_file = (
+            f"{self.cfg.runtime_data.backup_location}/.{backup.backup_id}.metadata.json"
+        )
         if not await self.sftp.exists(metadata_file):
-            raise FileNotFoundError(f"Metadata file not found at remote location: {metadata_file}")
+            raise FileNotFoundError(
+                f"Metadata file not found at remote location: {metadata_file}"
+            )
 
         async with self.sftp.open(metadata_file, "r") as f:
             return BackupMetadata(
@@ -213,7 +217,9 @@ class BackupAgentClient:
         # remove the metadata file.
         if not await self.sftp.exists(metadata.file_path):
             await self.sftp.unlink(metadata.metadata_file)
-            raise FileNotFoundError(f"File at provided remote location: {metadata.file_path} does not exist.")
+            raise FileNotFoundError(
+                f"File at provided remote location: {metadata.file_path} does not exist."
+            )
 
         LOGGER.debug("Removing file at path: %s", metadata.file_path)
         await self.sftp.unlink(metadata.file_path)
