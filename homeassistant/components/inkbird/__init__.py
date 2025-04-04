@@ -18,7 +18,7 @@ from homeassistant.components.bluetooth.active_update_processor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import CoreState, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import CONF_DEVICE_TYPE, DOMAIN
@@ -63,16 +63,14 @@ class INKBIRDActiveBluetoothProcessorCoordinator(ActiveBluetoothProcessorCoordin
         self, last_service_info: BluetoothServiceInfoBleak
     ) -> SensorUpdate:
         """Poll the device."""
-        return await self._data.async_poll()
+        return await self._data.async_poll(last_service_info.device)
 
     @callback
     def _async_needs_poll(
         self, service_info: BluetoothServiceInfoBleak, last_poll: float | None
     ) -> bool:
-        # Only poll if hass is running, we need to poll,
-        # and we actually have a way to connect to the device
         return (
-            self.hass.state is CoreState.running
+            not self.hass.is_stopping
             and self._data.poll_needed(service_info, last_poll)
             and bool(
                 async_ble_device_from_address(
