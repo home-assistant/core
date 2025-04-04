@@ -467,7 +467,7 @@ async def test_evse_sensor(
     state = hass.states.get("sensor.evse_user_max_charge_current")
     assert state
     assert state.state == "63.0"
-    
+
 
 @pytest.mark.parametrize("node_fixture", ["silabs_water_heater"])
 async def test_water_heater(
