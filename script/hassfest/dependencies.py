@@ -161,6 +161,12 @@ IGNORE_VIOLATIONS = {
     # This would be a circular dep
     ("http", "network"),
     ("http", "cloud"),
+    # These integrations use a platform setup and could cause a deadlock
+    # as they wait for the MQTT to set up.
+    ("arwn", "mqtt"),
+    ("manual_mqtt", "mqtt"),
+    ("mqtt_json", "mqtt"),
+    ("mqtt_room", "mqtt"),
     # This would be a circular dep
     ("zha", "homeassistant_hardware"),
     ("zha", "homeassistant_sky_connect"),
