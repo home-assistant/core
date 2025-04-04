@@ -1,4 +1,4 @@
-"""Tests for the Actron Air integration setup."""
+"""Tests for the ActronAir integration setup."""
 
 from unittest.mock import AsyncMock, patch
 

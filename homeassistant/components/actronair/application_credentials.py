@@ -1,10 +1,9 @@
-"""application_credentials platform the Actron Air integration."""
+"""application_credentials platform the ActronAir integration."""
 
 from homeassistant.components.application_credentials import AuthorizationServer
 from homeassistant.core import HomeAssistant
 
-OAUTH2_AUTHORIZE = "https://nimbus.actronair.com.au/authorize"
-OAUTH2_TOKEN = "https://nimbus.actronair.com.au/api/v0/oauth/token"
+from .const import OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 
 
 async def async_get_authorization_server(hass: HomeAssistant) -> AuthorizationServer:

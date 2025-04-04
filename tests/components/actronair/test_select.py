@@ -10,8 +10,9 @@ from homeassistant.core import HomeAssistant
 async def test_select_entity(hass: HomeAssistant) -> None:
     """Test AC system selector entity."""
     mock_coordinator = AsyncMock()
+    entry = AsyncMock()
     entity = ACSystemSelectEntity(
-        hass, mock_coordinator, mock_coordinator, None, "1234"
+        hass, mock_coordinator, mock_coordinator, None, "1234", entry
     )
 
     assert entity.name == "AC System Selector"

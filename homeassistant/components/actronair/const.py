@@ -1,12 +1,15 @@
-"""Constants for the Actron Air integration."""
+"""Constants for the ActronAir integration."""
 
 DOMAIN = "actronair"
 
-OAUTH2_AUTHORIZE = "https://neo-api.actronair.com.au/authorize"
-OAUTH2_TOKEN = "https://neo-api.actronair.com.au/api/v0/oauth/token"
+OAUTH2_AUTHORIZE = "https://nimbus.actronair.com.au/authorize"
+OAUTH2_TOKEN = "https://nimbus.actronair.com.au/api/v0/oauth/token"
+DEVICE_AUTH_URL = "https://nimbus.actronair.com.au/connect"
+OAUTH2_USER_INFO = "https://nimbus.actronair.com.au/api/v0/client/account"
 AC_SYSTEMS_COORDINATOR = "ac_system_coordinator"
 SYSTEM_STATUS_COORDINATOR = "system_status_coordinator"
 AA_AC_SELECT_KEY = "selected_ac_system"
 AA_AC_SELECT_NAME = "AC System Selector"
 NEO_WC = "neo"
 SELECTED_AC_SERIAL = "selected_ac_serial"
+CLIENT_ID = "home_assistant"

@@ -1,4 +1,4 @@
-"""The Actron Air integration."""
+"""The ActronAir integration."""
 
 from __future__ import annotations
 
@@ -14,6 +14,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
 from . import api
+from .config_flow import ActronAirOAuth2FlowHandler
 from .const import AC_SYSTEMS_COORDINATOR, DOMAIN, SYSTEM_STATUS_COORDINATOR
 from .coordinator import (
     ActronAirACSystemsDataCoordinator,
@@ -31,7 +32,13 @@ type ActronAirAuthConfigEntry = ConfigEntry[api.AsyncConfigEntryAuth]
 async def async_setup_entry(
     hass: HomeAssistant, entry: ActronAirAuthConfigEntry
 ) -> bool:
-    """Set up Actron Air from a config entry."""
+    """Set up ActronAir from a config entry."""
+    hass.data.setdefault(DOMAIN, {})
+    config_entry_oauth2_flow.async_register_implementation(
+        hass,
+        DOMAIN,
+        ActronAirOAuth2FlowHandler,  # type: ignore[arg-type]
+    )
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
             hass, entry

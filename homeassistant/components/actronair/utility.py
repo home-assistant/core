@@ -21,7 +21,7 @@ STORAGE_VERSION = 1
 
 
 def get_HASS_ac_mode_from_ActronAir_ac_mode(actronair_ac_mode: str) -> HVACMode:
-    """Convert Actron Air AC Mode to Home Assistant AC Mode."""
+    """Convert ActronAir AC Mode to Home Assistant AC Mode."""
     match actronair_ac_mode:
         case "AUTO":
             return HVACMode.AUTO
@@ -36,7 +36,7 @@ def get_HASS_ac_mode_from_ActronAir_ac_mode(actronair_ac_mode: str) -> HVACMode:
 
 
 def get_ActronAir_ac_mode_from_HASS_ac_mode(ac_mode: HVACMode) -> str:
-    """Convert Home Assistant AC Mode to Actron Air AC Mode."""
+    """Convert Home Assistant AC Mode to ActronAir AC Mode."""
     match ac_mode:
         case HVACMode.AUTO:
             return "AUTO"
@@ -51,7 +51,7 @@ def get_ActronAir_ac_mode_from_HASS_ac_mode(ac_mode: HVACMode) -> str:
 
 
 def get_HASS_fan_mode_from_ActronAir_fan_mode(actronair_fan_mode: str) -> Any:
-    """Convert Actron Air AC Fan Mode to Home Assistant AC Fan Mode."""
+    """Convert ActronAir AC Fan Mode to Home Assistant AC Fan Mode."""
     match actronair_fan_mode:
         case "HIGH":
             return FAN_HIGH
@@ -66,7 +66,7 @@ def get_HASS_fan_mode_from_ActronAir_fan_mode(actronair_fan_mode: str) -> Any:
 
 
 def get_ActronAir_fan_mode_from_HASS_fan_mode(fan_mode: str) -> str:
-    """Convert Actron Air AC Fan Mode to Home Assistant AC Fan Mode."""
+    """Convert ActronAir AC Fan Mode to Home Assistant AC Fan Mode."""
     match fan_mode:
         case "high":
             return "HIGH"

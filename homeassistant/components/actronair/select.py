@@ -6,8 +6,7 @@ from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-
-# from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -58,6 +57,7 @@ async def async_setup_entry(
                 acSystemStatusCoordinator,
                 store,
                 selected_ac,
+                entry,
             )
         ],
         update_before_add=True,
@@ -81,12 +81,14 @@ class ACSystemSelectEntity(CoordinatorEntity, SelectEntity):
         acSystemStatusCoordinator: ActronAirSystemStatusDataCoordinator,
         store,
         selected_ac,
+        entry: ConfigEntry,
     ) -> None:
         """Initialize the select entity."""
         super().__init__(acSystemStatusCoordinator)
         self.hass = hass
         self.store = store
         self.selected_ac = selected_ac
+        self.entry = entry
 
         # Get available AC systems
         self._attr_options = []
@@ -132,6 +134,18 @@ class ACSystemSelectEntity(CoordinatorEntity, SelectEntity):
         await self.store.async_save({SELECTED_AC_SERIAL: selected_ac_serial})
         self._attr_current_option = option
         self.hass.data[DOMAIN][SELECTED_AC_SERIAL] = selected_ac_serial
-        self.async_write_ha_state()
+
+        deviceRegistry = dr.async_get(self.hass)
+        device_ids_to_remove = [
+            device_entry.id
+            for device_entry in deviceRegistry.devices.values()
+            if self.entry.entry_id in device_entry.config_entries
+        ]
+
+        for device_id in device_ids_to_remove:
+            deviceRegistry.async_remove_device(device_id)
+
         # Refresh data coordinator to fetch details for the new selection
         await self.coordinator.async_request_refresh()
+        await self.hass.config_entries.async_reload(self.entry.entry_id)
+        self.async_write_ha_state()

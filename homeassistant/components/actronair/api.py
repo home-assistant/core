@@ -1,4 +1,4 @@
-"""API for Actron Air bound to Home Assistant OAuth."""
+"""API for ActronAir bound to Home Assistant OAuth."""
 
 from typing import cast
 
@@ -8,7 +8,7 @@ from aiohttp import ClientSession
 from homeassistant.helpers import config_entry_oauth2_flow
 
 
-class AsyncConfigEntryAuth(AbstractAuth):  # my_pypi_package.AbstractAuth):
+class AsyncConfigEntryAuth(AbstractAuth):
     """Provide actronair authentication tied to an OAuth2 based config entry."""
 
     def __init__(
@@ -16,7 +16,7 @@ class AsyncConfigEntryAuth(AbstractAuth):  # my_pypi_package.AbstractAuth):
         websession: ClientSession,
         oauth_session: config_entry_oauth2_flow.OAuth2Session,
     ) -> None:
-        """Initialize Actron Air auth."""
+        """Initialize ActronAir auth."""
         super().__init__(websession, ACP_BASE_URL)
         self._oauth_session = oauth_session
 

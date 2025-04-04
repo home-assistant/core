@@ -1,11 +1,11 @@
 {
   "domain": "actronair",
-  "name": "Actron Air",
+  "name": "ActronAir",
   "codeowners": ["@JagadishDhanamjayam"],
   "config_flow": true,
   "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/actronair",
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",
-  "requirements": ["actronair-api==0.1.3"]
+  "requirements": ["actronair-api==0.1.6", "qrcode==7.3"]
 }

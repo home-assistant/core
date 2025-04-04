@@ -1,4 +1,4 @@
-"""Actron Air coordinators."""
+"""ActronAir coordinators."""
 
 import asyncio
 from datetime import timedelta
@@ -33,7 +33,7 @@ class ActronAirACSystemsDataCoordinator(DataUpdateCoordinator[list[ACSystem]]):
         super().__init__(
             hass,
             _LOGGER,
-            name="Actron Air AC Systems list",
+            name="ActronAir AC Systems list",
             update_interval=ACCOUNT_SCAN_INTERVAL,
         )
         self.aa_api = aa_api
@@ -78,17 +78,20 @@ class ActronAirACSystemsDataCoordinator(DataUpdateCoordinator[list[ACSystem]]):
 class ActronAirSystemStatusDataCoordinator(DataUpdateCoordinator[SystemStatus]):
     """ActronAir AC System Status Data object."""
 
+    ac_system_status: SystemStatus = {}
+    aa_api: ActronAirApi = None
+
     def __init__(self, hass: HomeAssistant, aa_api: ActronAirApi) -> None:
         """Initialize ActronAirSystemStatusDataCoordinator."""
         super().__init__(
             hass,
             _LOGGER,
-            name="Actron Air AC System Status",
+            name="ActronAir AC System Status",
             update_interval=STATUS_SCAN_INTERVAL,
         )
         self.hass = hass
         self.aa_api = aa_api
-        self.acSystemStatus: SystemStatus = {}
+        self.ac_system_status: SystemStatus = {}
 
     async def async_added_to_hass(self):
         """Handle when the entity is added to Home Assistant."""
@@ -105,14 +108,14 @@ class ActronAirSystemStatusDataCoordinator(DataUpdateCoordinator[SystemStatus]):
             selectedSerial = self.hass.data[DOMAIN].get(SELECTED_AC_SERIAL, None)
             if selectedSerial is not None and selectedSerial != {}:
                 async with asyncio.timeout(60):
-                    self.acSystemStatus = await self.aa_api.async_getACSystemStatus(
+                    self.ac_system_status = await self.aa_api.async_getACSystemStatus(
                         selectedSerial
                     )
-                if self.acSystemStatus is None or self.acSystemStatus == {}:
+                if self.ac_system_status is None or self.ac_system_status == {}:
                     raise UpdateFailed(
                         f"No status received for AC system {selectedSerial}"
                     )
-                return self.acSystemStatus
+                return self.ac_system_status
 
         except AuthException as auth_err:
             raise ConfigEntryAuthFailed from auth_err
