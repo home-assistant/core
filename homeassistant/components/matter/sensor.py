@@ -77,6 +77,25 @@ OPERATIONAL_STATE_MAP = {
     clusters.RvcOperationalState.Enums.OperationalStateEnum.kDocked: "docked",
 }
 
+EVSE_FAULT_STATE_MAP = {
+    clusters.EnergyEvse.Enums.FaultStateEnum.kNoError: "no_error",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kMeterFailure: "meter_failure",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kOverVoltage: "over_voltage",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kUnderVoltage: "under_voltage",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kOverCurrent: "over_current",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kContactWetFailure: "contact_wet_failure",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kContactDryFailure: "contact_dry_failure",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kPowerLoss: "power_loss",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kPowerQuality: "power_quality",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kPilotShortCircuit: "pilot_short_circuit",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kEmergencyStop: "emergency_stop",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kEVDisconnected: "ev_disconnected",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kWrongPowerSupply: "wrong_power_supply",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kLiveNeutralSwap: "live_neutral_swap",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kOverTemperature: "over_temperature",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kOther: "other",
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -903,5 +922,78 @@ DISCOVERY_SCHEMAS = [
         ),
         # don't discover this entry if the supported state list is empty
         secondary_value_is_not=[],
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="EnergyEvseFaultState",
+            translation_key="evse_fault_state",
+            device_class=SensorDeviceClass.ENUM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            options=list(EVSE_FAULT_STATE_MAP.values()),
+            measurement_to_ha=EVSE_FAULT_STATE_MAP.get,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.EnergyEvse.Attributes.FaultState,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="EnergyEvseCircuitCapacity",
+            translation_key="evse_circuit_capacity",
+            device_class=SensorDeviceClass.CURRENT,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
+            suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+            suggested_display_precision=2,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.EnergyEvse.Attributes.CircuitCapacity,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="EnergyEvseMinimumChargeCurrent",
+            translation_key="evse_min_charge_current",
+            device_class=SensorDeviceClass.CURRENT,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
+            suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+            suggested_display_precision=2,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.EnergyEvse.Attributes.MinimumChargeCurrent,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="EnergyEvseMaximumChargeCurrent",
+            translation_key="evse_max_charge_current",
+            device_class=SensorDeviceClass.CURRENT,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
+            suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+            suggested_display_precision=2,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.EnergyEvse.Attributes.MaximumChargeCurrent,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="EnergyEvseUserMaximumChargeCurrent",
+            translation_key="evse_user_max_charge_current",
+            device_class=SensorDeviceClass.CURRENT,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
+            suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+            suggested_display_precision=2,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.EnergyEvse.Attributes.UserMaximumChargeCurrent,),
     ),
 ]
