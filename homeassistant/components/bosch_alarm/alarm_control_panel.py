@@ -13,8 +13,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import BoschAlarmConfigEntry
 from .const import DOMAIN
+from .types import BoschAlarmConfigEntry
 
 
 async def async_setup_entry(

@@ -6,17 +6,25 @@ from ssl import SSLError
 
 from bosch_alarm_mode2 import Panel
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_INSTALLER_CODE, CONF_USER_CODE, DOMAIN
+from .services import setup_services
+from .types import BoschAlarmConfigEntry
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 PLATFORMS: list[Platform] = [Platform.ALARM_CONTROL_PANEL]
 
-type BoschAlarmConfigEntry = ConfigEntry[Panel]
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up bosch alarm services."""
+    setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: BoschAlarmConfigEntry) -> bool:

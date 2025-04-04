@@ -32,5 +32,38 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "exceptions": {
+    "integration_not_found": {
+      "message": "Integration \"{target}\" not found in registry."
+    },
+    "not_loaded": {
+      "message": "{target} is not loaded."
+    },
+    "incorrect_year": {
+      "message": "Bosch alarm panels only support years between 2010 and 2037."
+    },
+    "connection_error": {
+      "message": "Could not connect to \"{target}\"."
+    },
+    "unknown_error": {
+      "message": "An unknown error occurred while setting the Date & Time on \"{target}\"."
+    }
+  },
+  "services": {
+    "set_date_time": {
+      "name": "Set the date and time on the panel",
+      "description": "Set the date and time on the panel",
+      "fields": {
+        "datetime": {
+          "name": "Date and time to set",
+          "description": "The date and time to set. The time zone of the Home Assistant instance is assumed. Defaults to current date and time if unset."
+        },
+        "config_entry_id": {
+          "name": "Integration ID",
+          "description": "The Bosch Alarm Integration ID."
+        }
+      }
+    }
   }
 }
