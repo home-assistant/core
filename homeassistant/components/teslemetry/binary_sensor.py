@@ -31,6 +31,12 @@ from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
 PARALLEL_UPDATES = 0
 
+WINDOW_STATES = {
+    "Opened": True,
+    "PartiallyOpen": True,
+    "Closed": False,
+}
+
 
 @dataclass(frozen=True, kw_only=True)
 class TeslemetryBinarySensorEntityDescription(BinarySensorEntityDescription):
@@ -157,7 +163,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryBinarySensorEntityDescription, ...] = (
         key="vehicle_state_fd_window",
         polling=True,
         streaming_listener=lambda x, y: x.listen_FrontDriverWindow(
-            lambda z: y(None if z is None else z != "Closed")
+            lambda z: y(WINDOW_STATES.get(z))
         ),
         device_class=BinarySensorDeviceClass.WINDOW,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -166,7 +172,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryBinarySensorEntityDescription, ...] = (
         key="vehicle_state_fp_window",
         polling=True,
         streaming_listener=lambda x, y: x.listen_FrontPassengerWindow(
-            lambda z: y(None if z is None else z != "Closed")
+            lambda z: y(WINDOW_STATES.get(z))
         ),
         device_class=BinarySensorDeviceClass.WINDOW,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -175,7 +181,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryBinarySensorEntityDescription, ...] = (
         key="vehicle_state_rd_window",
         polling=True,
         streaming_listener=lambda x, y: x.listen_RearDriverWindow(
-            lambda z: y(None if z is None else z != "Closed")
+            lambda z: y(WINDOW_STATES.get(z))
         ),
         device_class=BinarySensorDeviceClass.WINDOW,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -184,7 +190,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryBinarySensorEntityDescription, ...] = (
         key="vehicle_state_rp_window",
         polling=True,
         streaming_listener=lambda x, y: x.listen_RearPassengerWindow(
-            lambda z: y(None if z is None else z != "Closed")
+            lambda z: y(WINDOW_STATES.get(z))
         ),
         device_class=BinarySensorDeviceClass.WINDOW,
         entity_category=EntityCategory.DIAGNOSTIC,
