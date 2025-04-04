@@ -3276,6 +3276,57 @@
     'state': '0.1',
   })
 # ---
+# name: test_sensors[silabs_water_heater][sensor.water_heater_hot_water_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.water_heater_hot_water_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Hot water level',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'tank_percentage',
+    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-2-WaterHeaterManagementTankPercentage-148-4',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[silabs_water_heater][sensor.water_heater_hot_water_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Water Heater Hot water level',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.water_heater_hot_water_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '40',
+  })
+# ---
 # name: test_sensors[silabs_water_heater][sensor.water_heater_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -3390,57 +3441,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '4.0',
-  })
-# ---
-# name: test_sensors[silabs_water_heater][sensor.water_heater_tank_percentage-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.water_heater_tank_percentage',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Tank percentage',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'tank_percentage',
-    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-2-WaterHeaterManagementTankPercentage-148-4',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_sensors[silabs_water_heater][sensor.water_heater_tank_percentage-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Water Heater Tank percentage',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.water_heater_tank_percentage',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '40',
   })
 # ---
 # name: test_sensors[silabs_water_heater][sensor.water_heater_tank_volume-entry]

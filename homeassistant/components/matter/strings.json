@@ -280,7 +280,7 @@
         "name": "Tank volume"
       },
       "tank_percentage": {
-        "name": "Tank percentage"
+        "name": "Hot water level"
       },
       "estimated_heat_required": {
         "name": "Required heating energy"
