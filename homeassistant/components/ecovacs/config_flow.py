@@ -172,7 +172,13 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input:
-            self._async_abort_entries_match({CONF_USERNAME: user_input[CONF_USERNAME]})
+            self._async_abort_entries_match(
+                {
+                    CONF_USERNAME: user_input[CONF_USERNAME],
+                    CONF_OVERRIDE_REST_URL: user_input.get(CONF_OVERRIDE_REST_URL),
+                    CONF_OVERRIDE_MQTT_URL: user_input.get(CONF_OVERRIDE_MQTT_URL),
+                }
+            )
 
             errors = await _validate_input(self.hass, user_input)
 
@@ -214,6 +220,9 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=self.add_suggested_values_to_schema(
                 data_schema=vol.Schema(schema), suggested_values=user_input
             ),
+            description_placeholders={
+                "account_name": "Ecovacs",
+            },
             errors=errors,
             last_step=True,
         )
