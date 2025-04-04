@@ -12,6 +12,7 @@ from homeassistant.components.lamarzocco.config_flow import CONF_MACHINE
 from homeassistant.components.lamarzocco.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
+    CONF_ADDRESS,
     CONF_HOST,
     CONF_MAC,
     CONF_MODEL,
@@ -59,6 +60,29 @@ async def test_config_entry_not_ready(
 
     assert len(mock_lamarzocco.get_dashboard.mock_calls) == 1
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_state"),
+    [
+        (AuthFail(""), ConfigEntryState.SETUP_ERROR),
+        (RequestNotSuccessful(""), ConfigEntryState.SETUP_RETRY),
+    ],
+)
+async def test_get_settings_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_cloud_client: MagicMock,
+    side_effect: Exception,
+    expected_state: ConfigEntryState,
+) -> None:
+    """Test error during initial settings get."""
+    mock_cloud_client.get_thing_settings.side_effect = side_effect
+
+    await async_init_integration(hass, mock_config_entry)
+
+    assert len(mock_cloud_client.get_thing_settings.mock_calls) == 1
+    assert mock_config_entry.state is expected_state
 
 
 async def test_invalid_auth(
@@ -175,12 +199,14 @@ async def test_bluetooth_is_set_from_discovery(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_lamarzocco: MagicMock,
+    mock_cloud_client: MagicMock,
 ) -> None:
     """Check we can fill a device from discovery info."""
 
     service_info = get_bluetooth_service_info(
         ModelName.GS3_MP, mock_lamarzocco.serial_number
     )
+    mock_cloud_client.get_thing_settings.return_value.ble_auth_token = "token"
     with (
         patch(
             "homeassistant.components.lamarzocco.async_discovered_service_info",
@@ -191,10 +217,9 @@ async def test_bluetooth_is_set_from_discovery(
         ) as mock_machine_class,
     ):
         mock_machine_class.return_value = mock_lamarzocco
-        mock_lamarzocco.settings.ble_auth_token = "token"
         await async_init_integration(hass, mock_config_entry)
     discovery.assert_called_once()
-    assert mock_machine_class.call_count == 2
+    assert mock_machine_class.call_count == 1
     _, kwargs = mock_machine_class.call_args
     assert kwargs["bluetooth_client"] is not None
 
@@ -232,11 +257,14 @@ async def test_gateway_version_issue(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_lamarzocco: MagicMock,
+    mock_cloud_client: MagicMock,
     version: str,
     issue_exists: bool,
 ) -> None:
     """Make sure we get the issue for certain gateway firmware versions."""
-    mock_lamarzocco.settings.firmwares[FirmwareType.GATEWAY].build_version = version
+    mock_cloud_client.get_thing_settings.return_value.firmwares[
+        FirmwareType.GATEWAY
+    ].build_version = version
 
     await async_init_integration(hass, mock_config_entry)
 
@@ -248,18 +276,30 @@ async def test_gateway_version_issue(
 async def test_device(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
-    mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the device."""
-
+    mock_config_entry = MockConfigEntry(
+        title="My LaMarzocco",
+        domain=DOMAIN,
+        version=3,
+        data=USER_INPUT
+        | {
+            CONF_ADDRESS: "00:00:00:00:00:00",
+            CONF_TOKEN: "token",
+            CONF_MAC: "aa:bb:cc:dd:ee:ff",
+        },
+        unique_id=mock_lamarzocco.serial_number,
+    )
     await async_init_integration(hass, mock_config_entry)
 
     hass.config_entries.async_update_entry(
         mock_config_entry,
-        data={**mock_config_entry.data, CONF_MAC: "aa:bb:cc:dd:ee:ff"},
+        data={
+            **mock_config_entry.data,
+        },
     )
 
     state = hass.states.get(f"switch.{mock_lamarzocco.serial_number}")

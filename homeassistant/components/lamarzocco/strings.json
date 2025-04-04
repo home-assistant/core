@@ -32,7 +32,7 @@
         }
       },
       "machine_selection": {
-        "description": "Select the machine you want to integrate. Set the \"IP\" to get access to shot time related sensors.",
+        "description": "Select the machine you want to integrate.",
         "data": {
           "machine": "Machine"
         },

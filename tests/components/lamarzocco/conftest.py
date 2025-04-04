@@ -65,7 +65,7 @@ def device_fixture() -> ModelName:
     return ModelName.GS3_AV
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def mock_cloud_client() -> Generator[MagicMock]:
     """Return a mocked LM cloud client."""
     with (
@@ -82,6 +82,9 @@ def mock_cloud_client() -> Generator[MagicMock]:
         client.list_things.return_value = [
             Thing.from_dict(load_json_object_fixture("thing.json", DOMAIN))
         ]
+        client.get_thing_settings.return_value = ThingSettings.from_dict(
+            load_json_object_fixture("settings.json", DOMAIN)
+        )
         yield client
 
 

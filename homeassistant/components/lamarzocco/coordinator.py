@@ -21,7 +21,7 @@ from .const import DOMAIN
 
 SCAN_INTERVAL = timedelta(seconds=30)
 FIRMWARE_UPDATE_INTERVAL = timedelta(hours=1)
-STATISTICS_UPDATE_INTERVAL = timedelta(minutes=5)
+SCHEDULE_UPDATE_INTERVAL = timedelta(minutes=5)
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -31,6 +31,7 @@ class LaMarzoccoRuntimeData:
 
     config_coordinator: LaMarzoccoConfigUpdateCoordinator
     settings_coordinator: LaMarzoccoSettingsUpdateCoordinator
+    schedule_coordinator: LaMarzoccoScheduleUpdateCoordinator
 
 
 type LaMarzoccoConfigEntry = ConfigEntry[LaMarzoccoRuntimeData]
@@ -113,11 +114,22 @@ class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
 
 
 class LaMarzoccoSettingsUpdateCoordinator(LaMarzoccoUpdateCoordinator):
-    """Coordinator for La Marzocco firmware."""
+    """Coordinator for La Marzocco settings."""
 
     _default_update_interval = FIRMWARE_UPDATE_INTERVAL
 
     async def _internal_async_update_data(self) -> None:
         """Fetch data from API endpoint."""
         await self.device.get_settings()
-        _LOGGER.debug("Current firmware: %s", self.device.settings.to_dict())
+        _LOGGER.debug("Current settings: %s", self.device.settings.to_dict())
+
+
+class LaMarzoccoScheduleUpdateCoordinator(LaMarzoccoUpdateCoordinator):
+    """Coordinator for La Marzocco schedule."""
+
+    _default_update_interval = SCHEDULE_UPDATE_INTERVAL
+
+    async def _internal_async_update_data(self) -> None:
+        """Fetch data from API endpoint."""
+        await self.device.get_schedule()
+        _LOGGER.debug("Current schedule: %s", self.device.schedule.to_dict())

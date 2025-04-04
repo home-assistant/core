@@ -36,7 +36,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up switch entities and services."""
 
-    coordinator = entry.runtime_data.config_coordinator
+    coordinator = entry.runtime_data.schedule_coordinator
 
     async_add_entities(
         LaMarzoccoCalendarEntity(coordinator, CALENDAR_KEY, schedule.identifier)

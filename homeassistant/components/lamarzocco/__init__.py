@@ -1,5 +1,6 @@
 """The La Marzocco integration."""
 
+import asyncio
 import logging
 
 from packaging import version
@@ -20,6 +21,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
@@ -28,6 +30,7 @@ from .coordinator import (
     LaMarzoccoConfigEntry,
     LaMarzoccoConfigUpdateCoordinator,
     LaMarzoccoRuntimeData,
+    LaMarzoccoScheduleUpdateCoordinator,
     LaMarzoccoSettingsUpdateCoordinator,
 )
 
@@ -59,18 +62,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
         client=client,
     )
 
-    # initialize the firmware update coordinator early to check the firmware version
-    settings_device = LaMarzoccoMachine(
-        serial_number=entry.unique_id,
-        cloud_client=cloud_client,
-    )
+    try:
+        settings = await cloud_client.get_thing_settings(serial)
+    except AuthFail as ex:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN, translation_key="authentication_failed"
+        ) from ex
+    except RequestNotSuccessful as ex:
+        _LOGGER.debug(ex, exc_info=True)
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN, translation_key="api_error"
+        ) from ex
 
-    settings_coordinator = LaMarzoccoSettingsUpdateCoordinator(
-        hass, entry, settings_device
-    )
-    await settings_coordinator.async_config_entry_first_refresh()
     gateway_version = version.parse(
-        settings_device.settings.firmwares[FirmwareType.GATEWAY].build_version
+        settings.firmwares[FirmwareType.GATEWAY].build_version
     )
 
     if gateway_version < version.parse("v5.0.9"):
@@ -88,7 +93,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
     # initialize Bluetooth
     bluetooth_client: LaMarzoccoBluetoothClient | None = None
     if entry.options.get(CONF_USE_BLUETOOTH, True) and (
-        token := settings_device.settings.ble_auth_token
+        token := settings.ble_auth_token
     ):
         if CONF_MAC not in entry.data:
             for discovery_info in async_discovered_service_info(hass):
@@ -132,10 +137,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
 
     coordinators = LaMarzoccoRuntimeData(
         LaMarzoccoConfigUpdateCoordinator(hass, entry, device),
-        settings_coordinator,
+        LaMarzoccoSettingsUpdateCoordinator(hass, entry, device),
+        LaMarzoccoScheduleUpdateCoordinator(hass, entry, device),
     )
 
-    await coordinators.config_coordinator.async_config_entry_first_refresh()
+    await asyncio.gather(
+        coordinators.config_coordinator.async_config_entry_first_refresh(),
+        coordinators.settings_coordinator.async_config_entry_first_refresh(),
+        coordinators.schedule_coordinator.async_config_entry_first_refresh(),
+    )
+
     entry.runtime_data = coordinators
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
