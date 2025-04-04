@@ -63,7 +63,7 @@ class INKBIRDActiveBluetoothProcessorCoordinator(ActiveBluetoothProcessorCoordin
         self, last_service_info: BluetoothServiceInfoBleak
     ) -> SensorUpdate:
         """Poll the device."""
-        return await self._data.async_poll(last_service_info.address)
+        return await self._data.async_poll()
 
     @callback
     def _async_needs_poll(
