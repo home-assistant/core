@@ -82,9 +82,8 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
     _platform_translation_key = "water_heater"
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
-        """Set new target temperatures."""
+        """Set new target temperature."""
         target_temperature: float | None = kwargs.get(ATTR_TEMPERATURE)
-        self._attr_target_temperature = target_temperature
         if target_temperature is not None:
             if self.target_temperature != target_temperature:
                 matter_attribute = (
@@ -107,9 +106,7 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
         )
         system_mode_value = WATER_HEATER_SYSTEM_MODE_MAP.get(operation_mode)
         if system_mode_value is None:
-            raise ServiceValidationError(
-                f"Unsupported hvac mode {operation_mode} in Matter"
-            )
+            raise ServiceValidationError(f"Unsupported mode {operation_mode} in Matter")
         await self.write_attribute(
             value=system_mode_value,
             matter_attribute=clusters.Thermostat.Attributes.SystemMode,
