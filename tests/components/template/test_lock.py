@@ -731,10 +731,12 @@ async def test_emtpy_action_config(hass: HomeAssistant) -> None:
             {
                 lock.DOMAIN: {
                     "platform": "template",
+                    "value_template": "{{ 0 == 1 }}",
                     "lock": [],
                     "unlock": [],
                     "open": [],
                     "name": "test_template_lock",
+                    "optimistic": True,
                 },
             },
         )
