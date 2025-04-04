@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_diagnostics[amax_3000]
+# name: test_diagnostics[amax_3000-None]
   dict({
     'data': dict({
       'areas': list([
@@ -96,7 +96,7 @@
     }),
   })
 # ---
-# name: test_diagnostics[b5512]
+# name: test_diagnostics[b5512-None]
   dict({
     'data': dict({
       'areas': list([
@@ -192,7 +192,7 @@
     }),
   })
 # ---
-# name: test_diagnostics[solution_3000]
+# name: test_diagnostics[solution_3000-None]
   dict({
     'data': dict({
       'areas': list([

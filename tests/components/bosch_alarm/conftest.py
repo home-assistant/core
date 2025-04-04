@@ -13,7 +13,13 @@ from homeassistant.components.bosch_alarm.const import (
     CONF_USER_CODE,
     DOMAIN,
 )
-from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_PASSWORD, CONF_PORT
+from homeassistant.const import (
+    CONF_CODE,
+    CONF_HOST,
+    CONF_MODEL,
+    CONF_PASSWORD,
+    CONF_PORT,
+)
 
 from tests.common import MockConfigEntry
 
@@ -36,6 +42,12 @@ def extra_config_entry_data(
 ) -> dict[str, Any]:
     """Return extra config entry data."""
     return {CONF_MODEL: model_name} | config_flow_data
+
+
+@pytest.fixture(params=[None])
+def arming_code(request: pytest.FixtureRequest) -> str | None:
+    """Return arming code."""
+    return request.param
 
 
 @pytest.fixture
@@ -179,7 +191,9 @@ def mock_panel(
 
 @pytest.fixture
 def mock_config_entry(
-    extra_config_entry_data: dict[str, Any], serial_number: str | None
+    extra_config_entry_data: dict[str, Any],
+    serial_number: str | None,
+    arming_code: str | None,
 ) -> MockConfigEntry:
     """Mock config entry for bosch alarm."""
     return MockConfigEntry(
@@ -192,4 +206,5 @@ def mock_config_entry(
             CONF_MODEL: "bosch_alarm_test_data.model",
         }
         | extra_config_entry_data,
+        options={CONF_CODE: arming_code},
     )
