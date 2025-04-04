@@ -318,7 +318,7 @@
     },
     "water_heater": {
       "water_heater": {
-        "name": "Water heater"
+        "name": "[%key:component::water_heater::title%]"
       }
     }
   },
