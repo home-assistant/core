@@ -50,7 +50,12 @@ class HomeLinkCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.config_entry = config_entry
         self.buttons: list[HomeLinkEventEntity] = []
 
+    async def async_on_unload(self, _event):
+        """Disconnect and unregister when unloaded."""
+        await self.provider.disable()
+
     async def _async_setup(self):
+        """Set up the coordinator."""
         await self.provider.enable(get_default_context())
 
         await self.discover_devices()
