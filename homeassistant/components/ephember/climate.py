@@ -67,8 +67,16 @@ def setup_platform(
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
 
-    ember = EphEmber(username, password)
-    homes = ember.get_zones()
+    try:
+        ember = EphEmber(username, password)
+    except RuntimeError:
+        _LOGGER.error("Cannot login to EphEmber")
+
+    try:
+        homes = ember.get_zones()
+    except RuntimeError:
+        _LOGGER.error("Fail to get zones")
+        return
 
     allZones = [
         EphEmberThermostat(ember, zone) for home in homes for zone in home["zones"]
