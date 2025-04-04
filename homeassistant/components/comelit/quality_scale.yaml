@@ -57,12 +57,8 @@ rules:
     comment: no known limitations, yet
   docs-supported-devices: done
   docs-supported-functions: done
-  docs-troubleshooting:
-    status: todo
-    comment: add some info for troubleshooting
-  docs-use-cases:
-    status: todo
-    comment: add some use caes
+  docs-troubleshooting: done
+  docs-use-cases: done
   dynamic-devices: done
   entity-category: done
   entity-device-class: done
