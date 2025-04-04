@@ -120,10 +120,15 @@ async def async_setup_platform(
 ) -> None:
     """Set up the ARWN platform."""
 
-    # Make sure MQTT integration is enabled and the client is available
-    if not await mqtt.async_wait_for_mqtt_client(hass):
-        _LOGGER.error("MQTT integration is not available")
-        return
+    async def _async_setup_mqtt() -> None:
+        # Make sure MQTT integration is enabled and the client is available
+        if not await mqtt.async_wait_for_mqtt_client(hass):
+            _LOGGER.error("MQTT integration is not available")
+            return
+
+        await mqtt.async_subscribe(hass, TOPIC, async_sensor_event_received, 0)
+
+    hass.create_task(_async_setup_mqtt(), "arwn setup")
 
     @callback
     def async_sensor_event_received(msg: mqtt.ReceiveMessage) -> None:
@@ -166,8 +171,6 @@ async def async_setup_platform(
                     {"name": sensor.name, "event": event},
                 )
                 store[sensor.name].set_event(event)
-
-    await mqtt.async_subscribe(hass, TOPIC, async_sensor_event_received, 0)
 
 
 class ArwnSensor(SensorEntity):

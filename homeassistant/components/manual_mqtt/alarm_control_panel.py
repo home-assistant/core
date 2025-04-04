@@ -199,34 +199,38 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the manual MQTT alarm platform."""
-    # Make sure MQTT integration is enabled and the client is available
-    # We cannot count on dependencies as the alarm_control_panel platform setup
-    # also will be triggered when mqtt is loading the `alarm_control_panel` platform
-    if not await mqtt.async_wait_for_mqtt_client(hass):
-        _LOGGER.error("MQTT integration is not available")
-        return
-    add_entities(
-        [
-            ManualMQTTAlarm(
-                hass,
-                config[CONF_NAME],
-                config.get(CONF_CODE),
-                config.get(CONF_CODE_TEMPLATE),
-                config.get(CONF_DISARM_AFTER_TRIGGER, DEFAULT_DISARM_AFTER_TRIGGER),
-                config.get(mqtt.CONF_STATE_TOPIC),
-                config.get(mqtt.CONF_COMMAND_TOPIC),
-                config.get(mqtt.CONF_QOS),
-                config.get(CONF_CODE_ARM_REQUIRED),
-                config.get(CONF_PAYLOAD_DISARM),
-                config.get(CONF_PAYLOAD_ARM_HOME),
-                config.get(CONF_PAYLOAD_ARM_AWAY),
-                config.get(CONF_PAYLOAD_ARM_NIGHT),
-                config.get(CONF_PAYLOAD_ARM_VACATION),
-                config.get(CONF_PAYLOAD_ARM_CUSTOM_BYPASS),
-                config,
-            )
-        ]
-    )
+
+    async def _async_setup_entities() -> None:
+        # Make sure MQTT integration is enabled and the client is available
+        # We cannot count on dependencies as the alarm_control_panel platform setup
+        # also will be triggered when mqtt is loading the `alarm_control_panel` platform
+        if not await mqtt.async_wait_for_mqtt_client(hass):
+            _LOGGER.error("MQTT integration is not available")
+            return
+        add_entities(
+            [
+                ManualMQTTAlarm(
+                    hass,
+                    config[CONF_NAME],
+                    config.get(CONF_CODE),
+                    config.get(CONF_CODE_TEMPLATE),
+                    config.get(CONF_DISARM_AFTER_TRIGGER, DEFAULT_DISARM_AFTER_TRIGGER),
+                    config.get(mqtt.CONF_STATE_TOPIC),
+                    config.get(mqtt.CONF_COMMAND_TOPIC),
+                    config.get(mqtt.CONF_QOS),
+                    config.get(CONF_CODE_ARM_REQUIRED),
+                    config.get(CONF_PAYLOAD_DISARM),
+                    config.get(CONF_PAYLOAD_ARM_HOME),
+                    config.get(CONF_PAYLOAD_ARM_AWAY),
+                    config.get(CONF_PAYLOAD_ARM_NIGHT),
+                    config.get(CONF_PAYLOAD_ARM_VACATION),
+                    config.get(CONF_PAYLOAD_ARM_CUSTOM_BYPASS),
+                    config,
+                )
+            ]
+        )
+
+    hass.create_task(_async_setup_entities(), "manual_mqtt setup")
 
 
 class ManualMQTTAlarm(AlarmControlPanelEntity):

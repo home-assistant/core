@@ -48,13 +48,27 @@ async def async_setup_scanner(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> bool:
     """Set up the MQTT JSON tracker."""
-    # Make sure MQTT integration is enabled and the client is available
-    # We cannot count on dependencies as the device_tracker platform setup
-    # also will be triggered when mqtt is loading the `device_tracker` platform
-    if not await mqtt.async_wait_for_mqtt_client(hass):
-        _LOGGER.error("MQTT integration is not available")
-        return False
 
+    async def _async_wait_for_mqtt_and_set_up() -> None:
+        # Make sure MQTT integration is enabled and the client is available
+        # We cannot count on dependencies as the device_tracker platform setup
+        # also will be triggered when mqtt is loading the `device_tracker` platform
+        if not await mqtt.async_wait_for_mqtt_client(hass):
+            _LOGGER.error("MQTT integration is not available")
+            return
+
+        await _async_setup_scanner(hass, config, async_see)
+
+    hass.create_task(_async_wait_for_mqtt_and_set_up(), "mqtt_json setup")
+    return True
+
+
+async def _async_setup_scanner(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_see: AsyncSeeCallback,
+) -> None:
+    """Set up MQTT JSON tracker."""
     devices = config[CONF_DEVICES]
     qos = config[CONF_QOS]
 
@@ -82,8 +96,6 @@ async def async_setup_scanner(
             hass.async_create_task(async_see(**kwargs))
 
         await mqtt.async_subscribe(hass, topic, async_message_received, qos)
-
-    return True
 
 
 def _parse_see_args(dev_id, data):

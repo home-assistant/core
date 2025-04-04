@@ -78,7 +78,7 @@ async def test_no_mqtt(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) ->
             }
         },
     )
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     state = hass.states.get(SENSOR_STATE)
     assert state is None
     assert "MQTT integration is not available" in caplog.text
@@ -100,7 +100,7 @@ async def test_room_update(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> 
             }
         },
     )
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     await send_message(hass, BEDROOM_TOPIC, FAR_MESSAGE)
     await assert_state(hass, BEDROOM)
@@ -141,7 +141,7 @@ async def test_unique_id_is_set(
             }
         },
     )
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     state = hass.states.get(SENSOR_STATE)
     assert state.state is not None
 

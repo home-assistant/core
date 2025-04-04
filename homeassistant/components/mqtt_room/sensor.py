@@ -81,24 +81,28 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up MQTT room Sensor."""
-    # Make sure MQTT integration is enabled and the client is available
-    # We cannot count on dependencies as the sensor platform setup
-    # also will be triggered when mqtt is loading the `sensor` platform
-    if not await mqtt.async_wait_for_mqtt_client(hass):
-        _LOGGER.error("MQTT integration is not available")
-        return
-    async_add_entities(
-        [
-            MQTTRoomSensor(
-                config.get(CONF_NAME),
-                config[CONF_STATE_TOPIC],
-                config[CONF_DEVICE_ID],
-                config[CONF_TIMEOUT],
-                config[CONF_AWAY_TIMEOUT],
-                config.get(CONF_UNIQUE_ID),
-            )
-        ]
-    )
+
+    async def _async_setup_entities() -> None:
+        # Make sure MQTT integration is enabled and the client is available
+        # We cannot count on dependencies as the sensor platform setup
+        # also will be triggered when mqtt is loading the `sensor` platform
+        if not await mqtt.async_wait_for_mqtt_client(hass):
+            _LOGGER.error("MQTT integration is not available")
+            return
+        async_add_entities(
+            [
+                MQTTRoomSensor(
+                    config.get(CONF_NAME),
+                    config[CONF_STATE_TOPIC],
+                    config[CONF_DEVICE_ID],
+                    config[CONF_TIMEOUT],
+                    config[CONF_AWAY_TIMEOUT],
+                    config.get(CONF_UNIQUE_ID),
+                )
+            ]
+        )
+
+    hass.create_task(_async_setup_entities(), "mqtt_room setup")
 
 
 class MQTTRoomSensor(SensorEntity):

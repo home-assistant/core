@@ -103,7 +103,7 @@ async def test_no_pending(
             }
         },
     )
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     entity_id = "alarm_control_panel.test"
 
@@ -155,7 +155,7 @@ async def test_no_pending_when_code_not_req(
             }
         },
     )
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     entity_id = "alarm_control_panel.test"
 
@@ -206,7 +206,7 @@ async def test_with_pending(
             }
         },
     )
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     entity_id = "alarm_control_panel.test"
 
