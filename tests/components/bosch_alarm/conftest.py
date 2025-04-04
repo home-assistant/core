@@ -14,6 +14,7 @@ from homeassistant.components.bosch_alarm.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_PASSWORD, CONF_PORT
+from homeassistant.helpers.device_registry import format_mac
 
 from tests.common import MockConfigEntry
 
@@ -36,6 +37,12 @@ def extra_config_entry_data(
 ) -> dict[str, Any]:
     """Return extra config entry data."""
     return {CONF_MODEL: model_name} | config_flow_data
+
+
+@pytest.fixture(params=[None])
+def mac_address(request: pytest.FixtureRequest) -> str | None:
+    """Return entity mac address."""
+    return request.param
 
 
 @pytest.fixture
@@ -179,12 +186,14 @@ def mock_panel(
 
 @pytest.fixture
 def mock_config_entry(
-    extra_config_entry_data: dict[str, Any], serial_number: str | None
+    extra_config_entry_data: dict[str, Any],
+    serial_number: str | None,
+    mac_address: str | None,
 ) -> MockConfigEntry:
     """Mock config entry for bosch alarm."""
     return MockConfigEntry(
         domain=DOMAIN,
-        unique_id=serial_number,
+        unique_id=(mac_address and format_mac(mac_address)) or serial_number,
         entry_id="01JQ917ACKQ33HHM7YCFXYZX51",
         data={
             CONF_HOST: "0.0.0.0",
