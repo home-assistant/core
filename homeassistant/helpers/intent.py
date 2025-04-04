@@ -38,7 +38,7 @@ from .typing import VolSchemaType
 _LOGGER = logging.getLogger(__name__)
 type _SlotsType = dict[str, Any]
 type _IntentSlotsType = dict[
-    str | tuple[str, str], VolSchemaType | Callable[[Any], Any]
+    str | tuple[str, str], IntentSlotInfo | VolSchemaType | Callable[[Any], Any]
 ]
 
 INTENT_TURN_OFF = "HassTurnOff"
@@ -59,6 +59,7 @@ INTENT_GET_CURRENT_DATE = "HassGetCurrentDate"
 INTENT_GET_CURRENT_TIME = "HassGetCurrentTime"
 INTENT_RESPOND = "HassRespond"
 INTENT_BROADCAST = "HassBroadcast"
+INTENT_GET_TEMPERATURE = "HassClimateGetTemperature"
 
 SLOT_SCHEMA = vol.Schema({}, extra=vol.ALLOW_EXTRA)
 
@@ -215,6 +216,9 @@ class MatchFailedReason(Enum):
     DUPLICATE_NAME = auto()
     """Two or more entities matched the same name constraint and could not be disambiguated."""
 
+    MULTIPLE_TARGETS = auto()
+    """Two or more entities matched when a single target is required."""
+
     def is_no_entities_reason(self) -> bool:
         """Return True if the match failed because no entities matched."""
         return self not in (
@@ -255,6 +259,9 @@ class MatchTargetsConstraints:
     allow_duplicate_names: bool = False
     """True if entities with duplicate names are allowed in result."""
 
+    single_target: bool = False
+    """True if result must contain a single target."""
+
     @property
     def has_constraints(self) -> bool:
         """Returns True if at least one constraint is set (ignores assistant)."""
@@ -266,6 +273,7 @@ class MatchTargetsConstraints:
             or self.device_classes
             or self.features
             or self.states
+            or self.single_target
         )
 
 
@@ -291,7 +299,7 @@ class MatchTargetsResult:
     """Reason for failed match when is_match = False."""
 
     states: list[State] = field(default_factory=list)
-    """List of matched entity states when is_match = True."""
+    """List of matched entity states."""
 
     no_match_name: str | None = None
     """Name of invalid area/floor or duplicate name when match fails for those reasons."""
@@ -357,7 +365,6 @@ class MatchTargetsCandidate:
     is_exposed: bool
     entity: entity_registry.RegistryEntry | None = None
     area: area_registry.AreaEntry | None = None
-    floor: floor_registry.FloorEntry | None = None
     device: device_registry.DeviceEntry | None = None
     matched_name: str | None = None
 
@@ -500,12 +507,22 @@ def _add_areas(
             candidate.area = areas.async_get_area(candidate.device.area_id)
 
 
+def _default_area_candidate_filter(
+    candidate: MatchTargetsCandidate, possible_area_ids: Collection[str]
+) -> bool:
+    """Keep candidates in the possible areas."""
+    return (candidate.area is not None) and (candidate.area.id in possible_area_ids)
+
+
 @callback
 def async_match_targets(  # noqa: C901
     hass: HomeAssistant,
     constraints: MatchTargetsConstraints,
     preferences: MatchTargetsPreferences | None = None,
     states: list[State] | None = None,
+    area_candidate_filter: Callable[
+        [MatchTargetsCandidate, Collection[str]], bool
+    ] = _default_area_candidate_filter,
 ) -> MatchTargetsResult:
     """Match entities based on constraints in order to handle an intent."""
     preferences = preferences or MatchTargetsPreferences()
@@ -549,6 +566,7 @@ def async_match_targets(  # noqa: C901
         or constraints.device_classes
         or constraints.area_name
         or constraints.floor_name
+        or constraints.single_target
     ):
         if constraints.assistant:
             # Check exposure
@@ -615,9 +633,7 @@ def async_match_targets(  # noqa: C901
             }
 
             candidates = [
-                c
-                for c in candidates
-                if (c.area is not None) and (c.area.id in possible_area_ids)
+                c for c in candidates if area_candidate_filter(c, possible_area_ids)
             ]
             if not candidates:
                 return MatchTargetsResult(
@@ -641,9 +657,7 @@ def async_match_targets(  # noqa: C901
             # May be constrained by floors above
             possible_area_ids.intersection_update(matching_area_ids)
             candidates = [
-                c
-                for c in candidates
-                if (c.area is not None) and (c.area.id in possible_area_ids)
+                c for c in candidates if area_candidate_filter(c, possible_area_ids)
             ]
             if not candidates:
                 return MatchTargetsResult(
@@ -693,7 +707,7 @@ def async_match_targets(  # noqa: C901
                 group_candidates = [
                     c
                     for c in group_candidates
-                    if (c.area is not None) and (c.area.id == preferences.area_id)
+                    if area_candidate_filter(c, {preferences.area_id})
                 ]
                 if len(group_candidates) < 2:
                     # Disambiguated by area
@@ -718,6 +732,48 @@ def async_match_targets(  # noqa: C901
             )
 
         candidates = final_candidates
+
+    if constraints.single_target and len(candidates) > 1:
+        # Find best match using preferences
+        if not (preferences.area_id or preferences.floor_id):
+            # No preferences
+            return MatchTargetsResult(
+                False,
+                MatchFailedReason.MULTIPLE_TARGETS,
+                states=[c.state for c in candidates],
+            )
+
+        if not areas_added:
+            ar = area_registry.async_get(hass)
+            dr = device_registry.async_get(hass)
+            _add_areas(ar, dr, candidates)
+            areas_added = True
+
+        filtered_candidates: list[MatchTargetsCandidate] = candidates
+        if preferences.area_id:
+            # Filter by area
+            filtered_candidates = [
+                c for c in candidates if area_candidate_filter(c, {preferences.area_id})
+            ]
+
+        if (len(filtered_candidates) > 1) and preferences.floor_id:
+            # Filter by floor
+            filtered_candidates = [
+                c
+                for c in candidates
+                if c.area and (c.area.floor_id == preferences.floor_id)
+            ]
+
+        if len(filtered_candidates) != 1:
+            # Filtering could not restrict to a single target
+            return MatchTargetsResult(
+                False,
+                MatchFailedReason.MULTIPLE_TARGETS,
+                states=[c.state for c in candidates],
+            )
+
+        # Filtering succeeded
+        candidates = filtered_candidates
 
     return MatchTargetsResult(
         True,
@@ -818,6 +874,34 @@ def non_empty_string(value: Any) -> str:
     return value_str
 
 
+@dataclass(kw_only=True)
+class IntentSlotInfo:
+    """Details about how intent slots are processed and validated."""
+
+    service_data_name: str | None = None
+    """Optional name of the service data input to map to this slot."""
+
+    description: str | None = None
+    """Human readable description of the slot."""
+
+    value_schema: VolSchemaType | Callable[[Any], Any] = vol.Any
+    """Validator for the slot."""
+
+
+def _convert_slot_info(
+    key: str | tuple[str, str],
+    value: IntentSlotInfo | VolSchemaType | Callable[[Any], Any],
+) -> tuple[str, IntentSlotInfo]:
+    """Create an IntentSlotInfo from the various supported input arguments."""
+    if isinstance(value, IntentSlotInfo):
+        if not isinstance(key, str):
+            raise TypeError("Tuple key and IntentSlotDescription value not supported")
+        return key, value
+    if isinstance(key, tuple):
+        return key[0], IntentSlotInfo(service_data_name=key[1], value_schema=value)
+    return key, IntentSlotInfo(value_schema=value)
+
+
 class DynamicServiceIntentHandler(IntentHandler):
     """Service Intent handler registration (dynamic).
 
@@ -851,23 +935,14 @@ class DynamicServiceIntentHandler(IntentHandler):
         self.platforms = platforms
         self.device_classes = device_classes
 
-        self.required_slots: _IntentSlotsType = {}
-        if required_slots:
-            for key, value_schema in required_slots.items():
-                if isinstance(key, str):
-                    # Slot name/service data key
-                    key = (key, key)
-
-                self.required_slots[key] = value_schema
-
-        self.optional_slots: _IntentSlotsType = {}
-        if optional_slots:
-            for key, value_schema in optional_slots.items():
-                if isinstance(key, str):
-                    # Slot name/service data key
-                    key = (key, key)
-
-                self.optional_slots[key] = value_schema
+        self.required_slots: dict[str, IntentSlotInfo] = dict(
+            _convert_slot_info(key, value)
+            for key, value in (required_slots or {}).items()
+        )
+        self.optional_slots: dict[str, IntentSlotInfo] = dict(
+            _convert_slot_info(key, value)
+            for key, value in (optional_slots or {}).items()
+        )
 
     @cached_property
     def slot_schema(self) -> dict:
@@ -908,16 +983,20 @@ class DynamicServiceIntentHandler(IntentHandler):
         if self.required_slots:
             slot_schema.update(
                 {
-                    vol.Required(key[0]): validator
-                    for key, validator in self.required_slots.items()
+                    vol.Required(
+                        key, description=slot_info.description
+                    ): slot_info.value_schema
+                    for key, slot_info in self.required_slots.items()
                 }
             )
 
         if self.optional_slots:
             slot_schema.update(
                 {
-                    vol.Optional(key[0]): validator
-                    for key, validator in self.optional_slots.items()
+                    vol.Optional(
+                        key, description=slot_info.description
+                    ): slot_info.value_schema
+                    for key, slot_info in self.optional_slots.items()
                 }
             )
 
@@ -1100,18 +1179,15 @@ class DynamicServiceIntentHandler(IntentHandler):
 
         service_data: dict[str, Any] = {ATTR_ENTITY_ID: state.entity_id}
         if self.required_slots:
-            service_data.update(
-                {
-                    key[1]: intent_obj.slots[key[0]]["value"]
-                    for key in self.required_slots
-                }
-            )
+            for key, slot_info in self.required_slots.items():
+                service_data[slot_info.service_data_name or key] = intent_obj.slots[
+                    key
+                ]["value"]
 
         if self.optional_slots:
-            for key in self.optional_slots:
-                value = intent_obj.slots.get(key[0])
-                if value:
-                    service_data[key[1]] = value["value"]
+            for key, slot_info in self.optional_slots.items():
+                if value := intent_obj.slots.get(key):
+                    service_data[slot_info.service_data_name or key] = value["value"]
 
         await self._run_then_background(
             hass.async_create_task_internal(

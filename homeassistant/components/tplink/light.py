@@ -18,6 +18,7 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
+    DOMAIN as LIGHT_DOMAIN,
     EFFECT_OFF,
     ColorMode,
     LightEntity,
@@ -27,8 +28,8 @@ from homeassistant.components.light import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 
 from . import TPLinkConfigEntry, legacy_device_id
@@ -141,11 +142,38 @@ def _async_build_base_effect(
     }
 
 
+def _get_backwards_compatible_light_unique_id(
+    device: Device, entity_description: TPLinkModuleEntityDescription
+) -> str:
+    """Return unique ID for the entity."""
+    # For historical reasons the light platform uses the mac address as
+    # the unique id whereas all other platforms use device_id.
+
+    # For backwards compat with pyHS100
+    if device.device_type is DeviceType.Dimmer and isinstance(device, IotDevice):
+        # Dimmers used to use the switch format since
+        # pyHS100 treated them as SmartPlug but the old code
+        # created them as lights
+        # https://github.com/home-assistant/core/blob/2021.9.7/ \
+        # homeassistant/components/tplink/common.py#L86
+        return legacy_device_id(device)
+
+    # Newer devices can have child lights. While there isn't currently
+    # an example of a device with more than one light we use the device_id
+    # for consistency and future proofing
+    if device.parent or device.children:
+        return legacy_device_id(device)
+
+    return device.mac.replace(":", "").upper()
+
+
 @dataclass(frozen=True, kw_only=True)
 class TPLinkLightEntityDescription(
     LightEntityDescription, TPLinkModuleEntityDescription
 ):
     """Base class for tplink light entity description."""
+
+    unique_id_fn = _get_backwards_compatible_light_unique_id
 
 
 LIGHT_DESCRIPTIONS: tuple[TPLinkLightEntityDescription, ...] = (
@@ -168,7 +196,7 @@ LIGHT_EFFECT_DESCRIPTIONS: tuple[TPLinkLightEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: TPLinkConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up lights."""
     data = config_entry.runtime_data
@@ -186,6 +214,7 @@ async def async_setup_entry(
             coordinator=parent_coordinator,
             entity_class=TPLinkLightEntity,
             descriptions=LIGHT_DESCRIPTIONS,
+            platform_domain=LIGHT_DOMAIN,
             known_child_device_ids=known_child_device_ids_light,
             first_check=first_check,
         )
@@ -196,6 +225,7 @@ async def async_setup_entry(
                 coordinator=parent_coordinator,
                 entity_class=TPLinkLightEffectEntity,
                 descriptions=LIGHT_EFFECT_DESCRIPTIONS,
+                platform_domain=LIGHT_DOMAIN,
                 known_child_device_ids=known_child_device_ids_light_effect,
                 first_check=first_check,
             )
@@ -241,29 +271,6 @@ class TPLinkLightEntity(CoordinatedTPLinkModuleEntity, LightEntity):
         if len(self._attr_supported_color_modes) == 1:
             # If the light supports only a single color mode, set it now
             self._fixed_color_mode = next(iter(self._attr_supported_color_modes))
-
-    def _get_unique_id(self) -> str:
-        """Return unique ID for the entity."""
-        # For historical reasons the light platform uses the mac address as
-        # the unique id whereas all other platforms use device_id.
-        device = self._device
-
-        # For backwards compat with pyHS100
-        if device.device_type is DeviceType.Dimmer and isinstance(device, IotDevice):
-            # Dimmers used to use the switch format since
-            # pyHS100 treated them as SmartPlug but the old code
-            # created them as lights
-            # https://github.com/home-assistant/core/blob/2021.9.7/ \
-            # homeassistant/components/tplink/common.py#L86
-            return legacy_device_id(device)
-
-        # Newer devices can have child lights. While there isn't currently
-        # an example of a device with more than one light we use the device_id
-        # for consistency and future proofing
-        if self._parent or device.children:
-            return legacy_device_id(device)
-
-        return device.mac.replace(":", "").upper()
 
     @callback
     def _async_extract_brightness_transition(

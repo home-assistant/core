@@ -7,6 +7,7 @@ from datetime import timedelta
 from refoss_ha.controller.device import BaseDevice
 from refoss_ha.exceptions import DeviceTimeoutError
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -16,11 +17,16 @@ from .const import _LOGGER, DOMAIN, MAX_ERRORS
 class RefossDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Manages polling for state changes from the device."""
 
-    def __init__(self, hass: HomeAssistant, device: BaseDevice) -> None:
+    config_entry: ConfigEntry
+
+    def __init__(
+        self, hass: HomeAssistant, config_entry: ConfigEntry, device: BaseDevice
+    ) -> None:
         """Initialize the data update coordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=f"{DOMAIN}-{device.device_info.dev_name}",
             update_interval=timedelta(seconds=15),
         )

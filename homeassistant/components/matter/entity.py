@@ -2,21 +2,27 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
+import functools
 import logging
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, Concatenate, cast
 
 from chip.clusters import Objects as clusters
-from chip.clusters.Objects import ClusterAttributeDescriptor, NullValue
-from matter_server.common.helpers.util import create_attribute_path
+from chip.clusters.Objects import ClusterAttributeDescriptor, ClusterCommand, NullValue
+from matter_server.common.errors import MatterError
+from matter_server.common.helpers.util import (
+    create_attribute_path,
+    create_attribute_path_from_attribute,
+)
 from matter_server.common.models import EventType, ServerInfoMessage
 from propcache.api import cached_property
 
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
-import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.typing import UndefinedType
 
 from .const import DOMAIN, FEATUREMAP_ATTRIBUTE_ID, ID_TYPE_DEVICE_ID
@@ -31,6 +37,23 @@ if TYPE_CHECKING:
 LOGGER = logging.getLogger(__name__)
 
 
+def catch_matter_error[_R, **P](
+    func: Callable[Concatenate[MatterEntity, P], Coroutine[Any, Any, _R]],
+) -> Callable[Concatenate[MatterEntity, P], Coroutine[Any, Any, _R]]:
+    """Catch Matter errors and convert to Home Assistant error."""
+
+    @functools.wraps(func)
+    async def wrapper(self: MatterEntity, *args: P.args, **kwargs: P.kwargs) -> _R:
+        """Catch Matter errors and convert to Home Assistant error."""
+        try:
+            return await func(self, *args, **kwargs)
+        except MatterError as err:
+            error_msg = str(err) or err.__class__.__name__
+            raise HomeAssistantError(error_msg) from err
+
+    return wrapper
+
+
 @dataclass(frozen=True)
 class MatterEntityDescription(EntityDescription):
     """Describe the Matter entity."""
@@ -38,6 +61,7 @@ class MatterEntityDescription(EntityDescription):
     # convert the value from the primary attribute to the value used by HA
     measurement_to_ha: Callable[[Any], Any] | None = None
     ha_to_native_value: Callable[[Any], Any] | None = None
+    command_timeout: int | None = None
 
 
 class MatterEntity(Entity):
@@ -217,4 +241,39 @@ class MatterEntity(Entity):
         """Return AttributePath by providing the endpoint and Attribute class."""
         return create_attribute_path(
             self._endpoint.endpoint_id, attribute.cluster_id, attribute.attribute_id
+        )
+
+    @catch_matter_error
+    async def send_device_command(
+        self,
+        command: ClusterCommand,
+        **kwargs: Any,
+    ) -> None:
+        """Send device command on the primary attribute's endpoint."""
+        await self.matter_client.send_device_command(
+            node_id=self._endpoint.node.node_id,
+            endpoint_id=self._endpoint.endpoint_id,
+            command=command,
+            **kwargs,
+        )
+
+    @catch_matter_error
+    async def write_attribute(
+        self,
+        value: Any,
+        matter_attribute: type[ClusterAttributeDescriptor] | None = None,
+    ) -> Any:
+        """Write an attribute(value) on the primary endpoint.
+
+        If matter_attribute is not provided, the primary attribute of the entity is used.
+        """
+        if matter_attribute is None:
+            matter_attribute = self._entity_info.primary_attribute
+        return await self.matter_client.write_attribute(
+            node_id=self._endpoint.node.node_id,
+            attribute_path=create_attribute_path_from_attribute(
+                self._endpoint.endpoint_id,
+                matter_attribute,
+            ),
+            value=value,
         )

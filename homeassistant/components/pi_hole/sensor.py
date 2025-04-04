@@ -7,7 +7,7 @@ from hole import Hole
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.const import CONF_NAME, PERCENTAGE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -47,7 +47,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: PiHoleConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Pi-hole sensor."""
     name = entry.data[CONF_NAME]

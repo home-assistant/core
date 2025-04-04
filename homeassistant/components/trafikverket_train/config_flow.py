@@ -24,8 +24,8 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_WEEKDAY, WEEKDAYS
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
@@ -86,8 +86,8 @@ async def validate_station(
     except UnknownError as error:
         _LOGGER.error("Unknown error occurred during validation %s", str(error))
         errors["base"] = "cannot_connect"
-    except Exception as error:  # noqa: BLE001
-        _LOGGER.error("Unknown exception occurred during validation %s", str(error))
+    except Exception:
+        _LOGGER.exception("Unknown exception occurred during validation")
         errors["base"] = "cannot_connect"
 
     return (stations, errors)
@@ -101,6 +101,9 @@ class TVTrainConfigFlow(ConfigFlow, domain=DOMAIN):
 
     _from_stations: list[StationInfoModel]
     _to_stations: list[StationInfoModel]
+    _time: str | None
+    _days: list
+    _product: str | None
     _data: dict[str, Any]
 
     @staticmethod
@@ -243,8 +246,10 @@ class TVTrainConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the select station step."""
         if user_input is not None:
             api_key: str = self._data[CONF_API_KEY]
-            train_from: str = user_input[CONF_FROM]
-            train_to: str = user_input[CONF_TO]
+            train_from: str = (
+                user_input.get(CONF_FROM) or self._from_stations[0].signature
+            )
+            train_to: str = user_input.get(CONF_TO) or self._to_stations[0].signature
             train_time: str | None = self._data.get(CONF_TIME)
             train_days: list = self._data[CONF_WEEKDAY]
             filter_product: str | None = self._data[CONF_FILTER_PRODUCT]
@@ -261,7 +266,7 @@ class TVTrainConfigFlow(ConfigFlow, domain=DOMAIN):
                 {
                     CONF_API_KEY: api_key,
                     CONF_FROM: train_from,
-                    CONF_TO: user_input[CONF_TO],
+                    CONF_TO: train_to,
                     CONF_TIME: train_time,
                     CONF_WEEKDAY: train_days,
                     CONF_FILTER_PRODUCT: filter_product,

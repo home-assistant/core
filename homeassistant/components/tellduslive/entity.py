@@ -33,7 +33,7 @@ class TelldusLiveEntity(Entity):
         self._id = device_id
         self._client = client
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         _LOGGER.debug("Created device %s", self)
         self.async_on_remove(
@@ -58,12 +58,12 @@ class TelldusLiveEntity(Entity):
         return self.device.state
 
     @property
-    def assumed_state(self):
+    def assumed_state(self) -> bool:
         """Return true if unable to access real state of entity."""
         return True
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return true if device is not offline."""
         return self._client.is_available(self.device_id)
 

@@ -1169,7 +1169,6 @@ async def test_manual_port_override(
         host,
         credentials=None,
         port_override=port,
-        uses_http=True,
         connection_type=CONN_PARAMS_KLAP,
     )
     mock_device = _mocked_device(
@@ -1491,7 +1490,6 @@ async def test_integration_discovery_with_ip_change(
     # Check that init set the new host correctly before calling connect
     assert config.host == IP_ADDRESS
     config.host = IP_ADDRESS2
-    config.uses_http = False  # Not passed in to new config class
     config.http_client = "Foo"
     mock_connect["connect"].assert_awaited_once_with(config=config)
 
@@ -1578,7 +1576,6 @@ async def test_integration_discovery_with_connection_change(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     config.host = IP_ADDRESS2
-    config.uses_http = False  # Not passed in to new config class
     config.http_client = "Foo"
     config.aes_keys = AES_KEYS
     mock_connect["connect"].assert_awaited_once_with(config=config)
@@ -1847,7 +1844,6 @@ async def test_reauth_update_with_encryption_change(
         connection_type=Device.ConnectionParameters(
             Device.Family.SmartTapoPlug, Device.EncryptionType.Klap
         ),
-        uses_http=True,
     )
     mock_device = _mocked_device(
         alias="my_device",

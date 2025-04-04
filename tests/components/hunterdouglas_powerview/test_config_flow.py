@@ -9,7 +9,7 @@ from homeassistant.components.hunterdouglas_powerview.const import DOMAIN
 from homeassistant.const import CONF_API_VERSION, CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-import homeassistant.helpers.entity_registry as er
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 

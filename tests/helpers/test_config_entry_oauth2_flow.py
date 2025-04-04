@@ -1,11 +1,11 @@
 """Tests for the Somfy config flow."""
 
-from collections.abc import Generator
+from collections.abc import AsyncGenerator, Generator
 from http import HTTPStatus
 import logging
 import time
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import aiohttp
 import pytest
@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.network import NoURLAvailableError
 
-from tests.common import MockConfigEntry, mock_platform
+from tests.common import MockConfigEntry, MockModule, mock_integration, mock_platform
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
@@ -27,6 +27,11 @@ ACCESS_TOKEN_1 = "mock-access-token-1"
 ACCESS_TOKEN_2 = "mock-access-token-2"
 AUTHORIZE_URL = "https://example.como/auth/authorize"
 TOKEN_URL = "https://example.como/auth/token"
+MOCK_SECRET_TOKEN_URLSAFE = (
+    "token-"
+    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+)
 
 
 @pytest.fixture
@@ -38,6 +43,22 @@ async def local_impl(
     return config_entry_oauth2_flow.LocalOAuth2Implementation(
         hass, TEST_DOMAIN, CLIENT_ID, CLIENT_SECRET, AUTHORIZE_URL, TOKEN_URL
     )
+
+
+@pytest.fixture
+async def local_impl_pkce(
+    hass: HomeAssistant,
+) -> AsyncGenerator[config_entry_oauth2_flow.LocalOAuth2ImplementationWithPkce]:
+    """Local implementation."""
+    assert await setup.async_setup_component(hass, "auth", {})
+    with patch(
+        "homeassistant.helpers.config_entry_oauth2_flow.secrets.token_urlsafe",
+        return_value=MOCK_SECRET_TOKEN_URLSAFE
+        + "bbbbbb",  # Add some characters that should be removed by the logic.
+    ):
+        yield config_entry_oauth2_flow.LocalOAuth2ImplementationWithPkce(
+            hass, TEST_DOMAIN, CLIENT_ID, AUTHORIZE_URL, TOKEN_URL
+        )
 
 
 @pytest.fixture
@@ -595,6 +616,13 @@ async def test_abort_discovered_existing_entries(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.parametrize(
+    ("additional_components", "expected_redirect_uri"),
+    [
+        ([], "https://example.com/auth/external/callback"),
+        (["my"], "https://my.home-assistant.io/redirect/oauth"),
+    ],
+)
 @pytest.mark.usefixtures("current_request_with_host")
 async def test_full_flow(
     hass: HomeAssistant,
@@ -602,8 +630,12 @@ async def test_full_flow(
     local_impl: config_entry_oauth2_flow.LocalOAuth2Implementation,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
+    additional_components: list[str],
+    expected_redirect_uri: str,
 ) -> None:
     """Check full flow."""
+    for component in additional_components:
+        assert await setup.async_setup_component(hass, component, {})
     flow_handler.async_register_implementation(hass, local_impl)
     config_entry_oauth2_flow.async_register_implementation(
         hass, TEST_DOMAIN, MockOAuth2Implementation()
@@ -625,14 +657,14 @@ async def test_full_flow(
         hass,
         {
             "flow_id": result["flow_id"],
-            "redirect_uri": "https://example.com/auth/external/callback",
+            "redirect_uri": expected_redirect_uri,
         },
     )
 
     assert result["type"] == data_entry_flow.FlowResultType.EXTERNAL_STEP
     assert result["url"] == (
         f"{AUTHORIZE_URL}?response_type=code&client_id={CLIENT_ID}"
-        "&redirect_uri=https://example.com/auth/external/callback"
+        f"&redirect_uri={expected_redirect_uri}"
         f"&state={state}&scope=read+write"
     )
 
@@ -952,3 +984,143 @@ async def test_oauth2_without_secret_init(
     client = await hass_client_no_auth()
     resp = await client.get("/auth/external/callback?code=abcd&state=qwer")
     assert resp.status == 400
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_abort_oauth_with_pkce_rejected(
+    hass: HomeAssistant,
+    flow_handler: type[config_entry_oauth2_flow.AbstractOAuth2FlowHandler],
+    local_impl_pkce: config_entry_oauth2_flow.LocalOAuth2ImplementationWithPkce,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
+    """Check bad oauth token."""
+    flow_handler.async_register_implementation(hass, local_impl_pkce)
+
+    result = await hass.config_entries.flow.async_init(
+        TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+
+    code_challenge = local_impl_pkce.compute_code_challenge(MOCK_SECRET_TOKEN_URLSAFE)
+    assert result["type"] == data_entry_flow.FlowResultType.EXTERNAL_STEP
+
+    assert result["url"].startswith(f"{AUTHORIZE_URL}?")
+    assert f"client_id={CLIENT_ID}" in result["url"]
+    assert "redirect_uri=https://example.com/auth/external/callback" in result["url"]
+    assert f"state={state}" in result["url"]
+    assert "scope=read+write" in result["url"]
+    assert "response_type=code" in result["url"]
+    assert f"code_challenge={code_challenge}" in result["url"]
+    assert "code_challenge_method=S256" in result["url"]
+
+    client = await hass_client_no_auth()
+    resp = await client.get(
+        f"/auth/external/callback?error=access_denied&state={state}"
+    )
+    assert resp.status == 200
+    assert resp.headers["content-type"] == "text/html; charset=utf-8"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "user_rejected_authorize"
+    assert result["description_placeholders"] == {"error": "access_denied"}
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_oauth_with_pkce_adds_code_verifier_to_token_resolve(
+    hass: HomeAssistant,
+    flow_handler: type[config_entry_oauth2_flow.AbstractOAuth2FlowHandler],
+    local_impl_pkce: config_entry_oauth2_flow.LocalOAuth2ImplementationWithPkce,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Check pkce flow."""
+
+    mock_integration(
+        hass,
+        MockModule(
+            domain=TEST_DOMAIN,
+            async_setup_entry=AsyncMock(return_value=True),
+        ),
+    )
+    mock_platform(hass, f"{TEST_DOMAIN}.config_flow", None)
+    flow_handler.async_register_implementation(hass, local_impl_pkce)
+
+    result = await hass.config_entries.flow.async_init(
+        TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+
+    code_challenge = local_impl_pkce.compute_code_challenge(MOCK_SECRET_TOKEN_URLSAFE)
+    assert result["type"] == data_entry_flow.FlowResultType.EXTERNAL_STEP
+
+    assert result["url"].startswith(f"{AUTHORIZE_URL}?")
+    assert f"client_id={CLIENT_ID}" in result["url"]
+    assert "redirect_uri=https://example.com/auth/external/callback" in result["url"]
+    assert f"state={state}" in result["url"]
+    assert "scope=read+write" in result["url"]
+    assert "response_type=code" in result["url"]
+    assert f"code_challenge={code_challenge}" in result["url"]
+    assert "code_challenge_method=S256" in result["url"]
+
+    # Setup the response when HA tries to fetch a token with the code
+    aioclient_mock.post(
+        TOKEN_URL,
+        json={
+            "refresh_token": REFRESH_TOKEN,
+            "access_token": ACCESS_TOKEN_1,
+            "type": "bearer",
+            "expires_in": 60,
+        },
+    )
+
+    client = await hass_client_no_auth()
+    # trigger the callback
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == 200
+    assert resp.headers["content-type"] == "text/html; charset=utf-8"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    # Verify the token resolve request occurred
+    assert len(aioclient_mock.mock_calls) == 1
+    assert aioclient_mock.mock_calls[0][2] == {
+        "client_id": CLIENT_ID,
+        "grant_type": "authorization_code",
+        "code": "abcd",
+        "redirect_uri": "https://example.com/auth/external/callback",
+        "code_verifier": MOCK_SECRET_TOKEN_URLSAFE,
+    }
+
+
+@pytest.mark.parametrize("code_verifier_length", [40, 129])
+def test_generate_code_verifier_invalid_length(code_verifier_length: int) -> None:
+    """Test generate_code_verifier with an invalid length."""
+    with pytest.raises(ValueError):
+        config_entry_oauth2_flow.LocalOAuth2ImplementationWithPkce.generate_code_verifier(
+            code_verifier_length
+        )
+
+
+@pytest.mark.parametrize("code_verifier", ["", "yyy", "a" * 129])
+def test_compute_code_challenge_invalid_code_verifier(code_verifier: str) -> None:
+    """Test compute_code_challenge with an invalid code_verifier."""
+    with pytest.raises(ValueError):
+        config_entry_oauth2_flow.LocalOAuth2ImplementationWithPkce.compute_code_challenge(
+            code_verifier
+        )

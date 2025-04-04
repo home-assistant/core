@@ -46,11 +46,14 @@ from homeassistant.helpers import (
     entity_platform,
 )
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.network import is_internal_request
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, VolDictType
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .browse_media import (
     build_item_response,
@@ -206,7 +209,7 @@ async def async_setup_platform(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Kodi media player platform."""
     platform = entity_platform.async_get_current_platform()

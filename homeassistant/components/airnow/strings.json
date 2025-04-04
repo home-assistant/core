@@ -7,7 +7,7 @@
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "latitude": "[%key:common::config_flow::data::latitude%]",
           "longitude": "[%key:common::config_flow::data::longitude%]",
-          "radius": "Station Radius (miles; optional)"
+          "radius": "Station radius (miles; optional)"
         }
       }
     },
@@ -25,7 +25,7 @@
     "step": {
       "init": {
         "data": {
-          "radius": "Station Radius (miles)"
+          "radius": "Station radius (miles)"
         }
       }
     }

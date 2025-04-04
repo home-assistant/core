@@ -10,8 +10,8 @@ from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_USER
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from tests.components.bluetooth import (generate_advertisement_data,
-                                        generate_ble_device)
+
+from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
 
 KULERSKY_SERVICE_INFO = BluetoothServiceInfoBleak(
     name="KulerLight",
@@ -109,9 +109,7 @@ async def test_connection_error(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    with patch(
-        "pykulersky.Light", Mock(side_effect=pykulersky.PykulerskyException)
-    ):
+    with patch("pykulersky.Light", Mock(side_effect=pykulersky.PykulerskyException)):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_ADDRESS: "AA:BB:CC:DD:EE:FF"},

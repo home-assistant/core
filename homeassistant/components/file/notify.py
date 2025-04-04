@@ -14,8 +14,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_FILE_PATH, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .const import CONF_TIMESTAMP, DEFAULT_NAME, DOMAIN, FILE_ICON
 
@@ -23,7 +23,7 @@ from .const import CONF_TIMESTAMP, DEFAULT_NAME, DOMAIN, FILE_ICON
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up notify entity."""
     unique_id = entry.entry_id

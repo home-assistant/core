@@ -4,16 +4,19 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from python_overseerr import OverseerrAuthenticationError, OverseerrConnectionError
 from python_overseerr.models import WebhookNotificationOptions
 from syrupy import SnapshotAssertion
 
 from homeassistant.components import cloud
+from homeassistant.components.cloud import CloudNotAvailable
 from homeassistant.components.overseerr import (
     CONF_CLOUDHOOK_URL,
     JSON_PAYLOAD,
     REGISTERED_NOTIFICATIONS,
 )
 from homeassistant.components.overseerr.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -21,6 +24,28 @@ from . import setup_integration
 
 from tests.common import MockConfigEntry
 from tests.components.cloud import mock_cloud
+
+
+@pytest.mark.parametrize(
+    ("exception", "config_entry_state"),
+    [
+        (OverseerrAuthenticationError, ConfigEntryState.SETUP_ERROR),
+        (OverseerrConnectionError, ConfigEntryState.SETUP_RETRY),
+    ],
+)
+async def test_initialization_errors(
+    hass: HomeAssistant,
+    mock_overseerr_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
+    config_entry_state: ConfigEntryState,
+) -> None:
+    """Test the Overseerr integration initialization errors."""
+    mock_overseerr_client.get_request_count.side_effect = exception
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state == config_entry_state
 
 
 async def test_device_info(
@@ -338,10 +363,50 @@ async def test_cloudhook_not_connecting(
             len(
                 mock_overseerr_client_needs_change.test_webhook_notification_config.mock_calls
             )
-            == 2
+            == 3
         )
 
         mock_overseerr_client_needs_change.set_webhook_notification_config.assert_not_called()
 
         assert hass.config_entries.async_entries(DOMAIN)
         fake_create_cloudhook.assert_not_called()
+
+
+async def test_removing_entry_with_cloud_unavailable(
+    hass: HomeAssistant,
+    mock_cloudhook_config_entry: MockConfigEntry,
+    mock_overseerr_client: AsyncMock,
+) -> None:
+    """Test handling cloud unavailable when deleting entry."""
+
+    await mock_cloud(hass)
+    await hass.async_block_till_done()
+
+    with (
+        patch("homeassistant.components.cloud.async_is_logged_in", return_value=True),
+        patch("homeassistant.components.cloud.async_is_connected", return_value=True),
+        patch.object(cloud, "async_active_subscription", return_value=True),
+        patch(
+            "homeassistant.components.cloud.async_create_cloudhook",
+            return_value="https://hooks.nabu.casa/ABCD",
+        ),
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+        ),
+        patch(
+            "homeassistant.components.cloud.async_delete_cloudhook",
+            side_effect=CloudNotAvailable(),
+        ),
+    ):
+        await setup_integration(hass, mock_cloudhook_config_entry)
+
+        assert cloud.async_active_subscription(hass) is True
+
+        await hass.async_block_till_done()
+        assert hass.config_entries.async_entries(DOMAIN)
+
+        for config_entry in hass.config_entries.async_entries(DOMAIN):
+            await hass.config_entries.async_remove(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+        assert not hass.config_entries.async_entries(DOMAIN)

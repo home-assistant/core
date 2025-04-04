@@ -8,7 +8,7 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
-from . import SlideConfigEntry
+from .coordinator import SlideConfigEntry
 
 TO_REDACT = [
     CONF_PASSWORD,

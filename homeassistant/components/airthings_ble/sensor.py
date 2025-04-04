@@ -25,7 +25,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.entity_registry import (
     RegistryEntry,
     async_entries_for_device,
@@ -153,7 +153,7 @@ def async_migrate(hass: HomeAssistant, address: str, sensor_name: str) -> None:
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AirthingsBLEConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Airthings BLE sensors."""
     is_metric = hass.config.units is METRIC_SYSTEM

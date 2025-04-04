@@ -15,7 +15,7 @@ import aiohttp
 from aiohttp import web
 from aiohttp.hdrs import CONTENT_TYPE, USER_AGENT
 from aiohttp.web_exceptions import HTTPBadGateway, HTTPGatewayTimeout
-from aiohttp_asyncmdnsresolver.api import AsyncMDNSResolver
+from aiohttp_asyncmdnsresolver.api import AsyncDualMDNSResolver
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
@@ -377,5 +377,5 @@ def _async_get_connector(
 
 
 @callback
-def _async_make_resolver(hass: HomeAssistant) -> AsyncMDNSResolver:
-    return AsyncMDNSResolver(async_zeroconf=zeroconf.async_get_async_zeroconf(hass))
+def _async_make_resolver(hass: HomeAssistant) -> AsyncDualMDNSResolver:
+    return AsyncDualMDNSResolver(async_zeroconf=zeroconf.async_get_async_zeroconf(hass))

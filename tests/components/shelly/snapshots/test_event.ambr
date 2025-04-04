@@ -1,0 +1,70 @@
+# serializer version: 1
+# name: test_rpc_script_1_event[event.test_name_test_script_js-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'input_event',
+        'script_start',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.test_name_test_script_js',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'test_script.js',
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'script',
+    'unique_id': '123456789ABC-script:1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_rpc_script_1_event[event.test_name_test_script_js-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event_type': None,
+      'event_types': list([
+        'input_event',
+        'script_start',
+      ]),
+      'friendly_name': 'Test name test_script.js',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.test_name_test_script_js',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_rpc_script_2_event[event.test_name_test_script_2_js-entry]
+  None
+# ---
+# name: test_rpc_script_2_event[event.test_name_test_script_2_js-state]
+  None
+# ---
+# name: test_rpc_script_ble_event[event.test_name_aioshelly_ble_integration-entry]
+  None
+# ---
+# name: test_rpc_script_ble_event[event.test_name_aioshelly_ble_integration-state]
+  None
+# ---

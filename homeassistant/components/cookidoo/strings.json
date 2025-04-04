@@ -6,7 +6,7 @@
         "data": {
           "email": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "country": "Country"
+          "country": "[%key:common::config_flow::data::country%]"
         },
         "data_description": {
           "email": "Email used to access your {cookidoo} account.",
@@ -49,6 +49,19 @@
     }
   },
   "entity": {
+    "sensor": {
+      "subscription": {
+        "name": "Subscription",
+        "state": {
+          "free": "Free",
+          "trial": "Trial",
+          "premium": "Premium"
+        }
+      },
+      "expires": {
+        "name": "Subscription expiration date"
+      }
+    },
     "button": {
       "todo_clear": {
         "name": "Clear shopping list and additional purchases"

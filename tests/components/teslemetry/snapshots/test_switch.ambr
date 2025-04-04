@@ -6,6 +6,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -53,6 +54,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -100,6 +102,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -147,6 +150,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -194,6 +198,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -241,6 +246,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -262,7 +268,7 @@
     'platform': 'teslemetry',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'charge_state_user_charge_enable_request',
+    'translation_key': 'charge_state_charging_state',
     'unique_id': 'LRW3F7EK4NC700000-charge_state_user_charge_enable_request',
     'unit_of_measurement': None,
   })
@@ -278,7 +284,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'on',
+    'state': 'off',
   })
 # ---
 # name: test_switch[switch.test_defrost-entry]
@@ -288,6 +294,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -335,6 +342,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -456,7 +464,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'on',
+    'state': 'off',
   })
 # ---
 # name: test_switch_alt[switch.test_defrost-statealt]
@@ -486,4 +494,22 @@
     'last_updated': <ANY>,
     'state': 'off',
   })
+# ---
+# name: test_switch_streaming[switch.test_auto_seat_climate_left]
+  'on'
+# ---
+# name: test_switch_streaming[switch.test_auto_seat_climate_right]
+  'off'
+# ---
+# name: test_switch_streaming[switch.test_auto_steering_wheel_heater]
+  'on'
+# ---
+# name: test_switch_streaming[switch.test_charge]
+  'on'
+# ---
+# name: test_switch_streaming[switch.test_defrost]
+  'off'
+# ---
+# name: test_switch_streaming[switch.test_sentry_mode]
+  'on'
 # ---

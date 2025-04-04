@@ -37,7 +37,6 @@ from .const import (
     CONF_CURRENCIES,
     CONF_EXCHANGE_BASE,
     CONF_EXCHANGE_RATES,
-    DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,33 +44,29 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.SENSOR]
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
+type CoinbaseConfigEntry = ConfigEntry[CoinbaseData]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(hass: HomeAssistant, entry: CoinbaseConfigEntry) -> bool:
     """Set up Coinbase from a config entry."""
 
     instance = await hass.async_add_executor_job(create_and_update_instance, entry)
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
-    hass.data.setdefault(DOMAIN, {})
-
-    hass.data[DOMAIN][entry.entry_id] = instance
+    entry.runtime_data = instance
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: CoinbaseConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-def create_and_update_instance(entry: ConfigEntry) -> CoinbaseData:
+def create_and_update_instance(entry: CoinbaseConfigEntry) -> CoinbaseData:
     """Create and update a Coinbase Data instance."""
     if "organizations" not in entry.data[CONF_API_KEY]:
         client = LegacyClient(entry.data[CONF_API_KEY], entry.data[CONF_API_TOKEN])
@@ -87,7 +82,9 @@ def create_and_update_instance(entry: ConfigEntry) -> CoinbaseData:
     return instance
 
 
-async def update_listener(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+async def update_listener(
+    hass: HomeAssistant, config_entry: CoinbaseConfigEntry
+) -> None:
     """Handle options update."""
 
     await hass.config_entries.async_reload(config_entry.entry_id)
@@ -143,8 +140,10 @@ def get_accounts(client, version):
             API_ACCOUNT_ID: account[API_V3_ACCOUNT_ID],
             API_ACCOUNT_NAME: account[API_ACCOUNT_NAME],
             API_ACCOUNT_CURRENCY: account[API_ACCOUNT_CURRENCY],
-            API_ACCOUNT_AMOUNT: account[API_ACCOUNT_AVALIABLE][API_ACCOUNT_VALUE]
-            + account[API_ACCOUNT_HOLD][API_ACCOUNT_VALUE],
+            API_ACCOUNT_AMOUNT: (
+                float(account[API_ACCOUNT_AVALIABLE][API_ACCOUNT_VALUE])
+                + float(account[API_ACCOUNT_HOLD][API_ACCOUNT_VALUE])
+            ),
             ACCOUNT_IS_VAULT: account[API_RESOURCE_TYPE] == API_V3_TYPE_VAULT,
         }
         for account in accounts

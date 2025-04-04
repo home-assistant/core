@@ -1,139 +1,233 @@
-"""Test for the SmartThings binary_sensor platform.
+"""Test for the SmartThings binary_sensor platform."""
 
-The only mocking required is of the underlying SmartThings API object so
-real HTTP calls are not initiated during testing.
-"""
+from unittest.mock import AsyncMock
 
-from pysmartthings import ATTRIBUTES, CAPABILITIES, Attribute, Capability
+from pysmartthings import Attribute, Capability
+import pytest
+from syrupy import SnapshotAssertion
 
-from homeassistant.components.binary_sensor import (
-    DEVICE_CLASSES,
-    DOMAIN as BINARY_SENSOR_DOMAIN,
-)
-from homeassistant.components.smartthings import binary_sensor
-from homeassistant.components.smartthings.const import DOMAIN, SIGNAL_SMARTTHINGS_UPDATE
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_UNAVAILABLE, EntityCategory
+from homeassistant.components import automation, script
+from homeassistant.components.automation import automations_with_entity
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.script import scripts_with_entity
+from homeassistant.components.smartthings import DOMAIN, MAIN
+from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.setup import async_setup_component
 
-from .conftest import setup_platform
+from . import setup_integration, snapshot_smartthings_entities, trigger_update
 
-
-async def test_mapping_integrity() -> None:
-    """Test ensures the map dicts have proper integrity."""
-    # Ensure every CAPABILITY_TO_ATTRIB key is in CAPABILITIES
-    # Ensure every CAPABILITY_TO_ATTRIB value is in ATTRIB_TO_CLASS keys
-    for capability, attrib in binary_sensor.CAPABILITY_TO_ATTRIB.items():
-        assert capability in CAPABILITIES, capability
-        assert attrib in ATTRIBUTES, attrib
-        assert attrib in binary_sensor.ATTRIB_TO_CLASS, attrib
-    # Ensure every ATTRIB_TO_CLASS value is in DEVICE_CLASSES
-    for attrib, device_class in binary_sensor.ATTRIB_TO_CLASS.items():
-        assert attrib in ATTRIBUTES, attrib
-        assert device_class in DEVICE_CLASSES, device_class
+from tests.common import MockConfigEntry
 
 
-async def test_entity_state(hass: HomeAssistant, device_factory) -> None:
-    """Tests the state attributes properly match the light types."""
-    device = device_factory(
-        "Motion Sensor 1", [Capability.motion_sensor], {Attribute.motion: "inactive"}
-    )
-    await setup_platform(hass, BINARY_SENSOR_DOMAIN, devices=[device])
-    state = hass.states.get("binary_sensor.motion_sensor_1_motion")
-    assert state.state == "off"
-    assert state.attributes[ATTR_FRIENDLY_NAME] == f"{device.label} {Attribute.motion}"
-
-
-async def test_entity_and_device_attributes(
+async def test_all_entities(
     hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    device_factory,
 ) -> None:
-    """Test the attributes of the entity are correct."""
-    # Arrange
-    device = device_factory(
-        "Motion Sensor 1",
-        [Capability.motion_sensor],
+    """Test all entities."""
+    await setup_integration(hass, mock_config_entry)
+
+    snapshot_smartthings_entities(
+        hass, entity_registry, snapshot, Platform.BINARY_SENSOR
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ref_normal_000001"])
+async def test_state_update(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test state update."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("binary_sensor.refrigerator_cooler_door").state == STATE_OFF
+
+    await trigger_update(
+        hass,
+        devices,
+        "7db87911-7dce-1cf2-7119-b953432a2f09",
+        Capability.CONTACT_SENSOR,
+        Attribute.CONTACT,
+        "open",
+        component="cooler",
+    )
+
+    assert hass.states.get("binary_sensor.refrigerator_cooler_door").state == STATE_ON
+
+
+@pytest.mark.parametrize(
+    ("device_fixture", "unique_id", "suggested_object_id", "issue_string", "entity_id"),
+    [
+        (
+            "virtual_valve",
+            f"612ab3c2-3bb0-48f7-b2c0-15b169cb2fc3_{MAIN}_{Capability.VALVE}_{Attribute.VALVE}_{Attribute.VALVE}",
+            "volvo_valve",
+            "valve",
+            "binary_sensor.volvo_valve",
+        ),
+        (
+            "da_ref_normal_000001",
+            f"7db87911-7dce-1cf2-7119-b953432a2f09_{MAIN}_{Capability.CONTACT_SENSOR}_{Attribute.CONTACT}_{Attribute.CONTACT}",
+            "refrigerator_door",
+            "fridge_door",
+            "binary_sensor.refrigerator_door",
+        ),
+    ],
+)
+async def test_create_issue_with_items(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    unique_id: str,
+    suggested_object_id: str,
+    issue_string: str,
+    entity_id: str,
+) -> None:
+    """Test we create an issue when an automation or script is using a deprecated entity."""
+    issue_id = f"deprecated_binary_{issue_string}_{entity_id}"
+
+    entity_entry = entity_registry.async_get_or_create(
+        BINARY_SENSOR_DOMAIN,
+        DOMAIN,
+        unique_id,
+        suggested_object_id=suggested_object_id,
+        original_name=suggested_object_id,
+    )
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
         {
-            Attribute.motion: "inactive",
-            Attribute.mnmo: "123",
-            Attribute.mnmn: "Generic manufacturer",
-            Attribute.mnhw: "v4.56",
-            Attribute.mnfv: "v7.89",
+            automation.DOMAIN: {
+                "id": "test",
+                "alias": "test",
+                "trigger": {"platform": "state", "entity_id": entity_id},
+                "action": {
+                    "action": "automation.turn_on",
+                    "target": {
+                        "entity_id": "automation.test",
+                    },
+                },
+            }
         },
     )
-    # Act
-    await setup_platform(hass, BINARY_SENSOR_DOMAIN, devices=[device])
-    # Assert
-    entry = entity_registry.async_get("binary_sensor.motion_sensor_1_motion")
-    assert entry
-    assert entry.unique_id == f"{device.device_id}.{Attribute.motion}"
-    entry = device_registry.async_get_device(identifiers={(DOMAIN, device.device_id)})
-    assert entry
-    assert entry.configuration_url == "https://account.smartthings.com"
-    assert entry.identifiers == {(DOMAIN, device.device_id)}
-    assert entry.name == device.label
-    assert entry.model == "123"
-    assert entry.manufacturer == "Generic manufacturer"
-    assert entry.hw_version == "v4.56"
-    assert entry.sw_version == "v7.89"
-
-
-async def test_update_from_signal(hass: HomeAssistant, device_factory) -> None:
-    """Test the binary_sensor updates when receiving a signal."""
-    # Arrange
-    device = device_factory(
-        "Motion Sensor 1", [Capability.motion_sensor], {Attribute.motion: "inactive"}
+    assert await async_setup_component(
+        hass,
+        script.DOMAIN,
+        {
+            script.DOMAIN: {
+                "test": {
+                    "sequence": [
+                        {
+                            "condition": "state",
+                            "entity_id": entity_id,
+                            "state": "on",
+                        },
+                    ],
+                }
+            }
+        },
     )
-    await setup_platform(hass, BINARY_SENSOR_DOMAIN, devices=[device])
-    device.status.apply_attribute_update(
-        "main", Capability.motion_sensor, Attribute.motion, "active"
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    assert automations_with_entity(hass, entity_id)[0] == "automation.test"
+    assert scripts_with_entity(hass, entity_id)[0] == "script.test"
+
+    assert len(issue_registry.issues) == 1
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.translation_key == f"deprecated_binary_{issue_string}_scripts"
+    assert issue.translation_placeholders == {
+        "entity_id": entity_id,
+        "entity_name": suggested_object_id,
+        "items": "- [test](/config/automation/edit/test)\n- [test](/config/script/edit/test)",
+    }
+
+    entity_registry.async_update_entity(
+        entity_entry.entity_id,
+        disabled_by=er.RegistryEntryDisabler.USER,
     )
-    # Act
-    async_dispatcher_send(hass, SIGNAL_SMARTTHINGS_UPDATE, [device.device_id])
-    # Assert
+
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    state = hass.states.get("binary_sensor.motion_sensor_1_motion")
-    assert state is not None
-    assert state.state == "on"
+
+    # Assert the issue is no longer present
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert len(issue_registry.issues) == 0
 
 
-async def test_unload_config_entry(hass: HomeAssistant, device_factory) -> None:
-    """Test the binary_sensor is removed when the config entry is unloaded."""
-    # Arrange
-    device = device_factory(
-        "Motion Sensor 1", [Capability.motion_sensor], {Attribute.motion: "inactive"}
-    )
-    config_entry = await setup_platform(hass, BINARY_SENSOR_DOMAIN, devices=[device])
-    config_entry.mock_state(hass, ConfigEntryState.LOADED)
-    # Act
-    await hass.config_entries.async_forward_entry_unload(config_entry, "binary_sensor")
-    # Assert
-    assert (
-        hass.states.get("binary_sensor.motion_sensor_1_motion").state
-        == STATE_UNAVAILABLE
-    )
-
-
-async def test_entity_category(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, device_factory
+@pytest.mark.parametrize(
+    ("device_fixture", "unique_id", "suggested_object_id", "issue_string", "entity_id"),
+    [
+        (
+            "virtual_valve",
+            f"612ab3c2-3bb0-48f7-b2c0-15b169cb2fc3_{MAIN}_{Capability.VALVE}_{Attribute.VALVE}_{Attribute.VALVE}",
+            "volvo_valve",
+            "valve",
+            "binary_sensor.volvo_valve",
+        ),
+        (
+            "da_ref_normal_000001",
+            f"7db87911-7dce-1cf2-7119-b953432a2f09_{MAIN}_{Capability.CONTACT_SENSOR}_{Attribute.CONTACT}_{Attribute.CONTACT}",
+            "refrigerator_door",
+            "fridge_door",
+            "binary_sensor.refrigerator_door",
+        ),
+    ],
+)
+async def test_create_issue(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    unique_id: str,
+    suggested_object_id: str,
+    issue_string: str,
+    entity_id: str,
 ) -> None:
-    """Tests the state attributes properly match the light types."""
-    device1 = device_factory(
-        "Motion Sensor 1", [Capability.motion_sensor], {Attribute.motion: "inactive"}
-    )
-    device2 = device_factory(
-        "Tamper Sensor 2", [Capability.tamper_alert], {Attribute.tamper: "inactive"}
-    )
-    await setup_platform(hass, BINARY_SENSOR_DOMAIN, devices=[device1, device2])
+    """Test we create an issue when an automation or script is using a deprecated entity."""
+    issue_id = f"deprecated_binary_{issue_string}_{entity_id}"
 
-    entry = entity_registry.async_get("binary_sensor.motion_sensor_1_motion")
-    assert entry
-    assert entry.entity_category is None
+    entity_entry = entity_registry.async_get_or_create(
+        BINARY_SENSOR_DOMAIN,
+        DOMAIN,
+        unique_id,
+        suggested_object_id=suggested_object_id,
+        original_name=suggested_object_id,
+    )
 
-    entry = entity_registry.async_get("binary_sensor.tamper_sensor_2_tamper")
-    assert entry
-    assert entry.entity_category is EntityCategory.DIAGNOSTIC
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    assert len(issue_registry.issues) == 1
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.translation_key == f"deprecated_binary_{issue_string}"
+    assert issue.translation_placeholders == {
+        "entity_id": entity_id,
+        "entity_name": suggested_object_id,
+    }
+
+    entity_registry.async_update_entity(
+        entity_entry.entity_id,
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Assert the issue is no longer present
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert len(issue_registry.issues) == 0

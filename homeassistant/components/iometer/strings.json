@@ -1,0 +1,73 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Setup your IOmeter device for local data",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the IOmeter device to connect to."
+        }
+      },
+      "zeroconf_confirm": {
+        "title": "Discovered IOmeter",
+        "description": "Do you want to set up IOmeter on the meter with meter number: {meter_number}?"
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "Unexpected error"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "battery_level": {
+        "name": "Battery level"
+      },
+      "meter_number": {
+        "name": "Meter number"
+      },
+      "pin_status": {
+        "name": "PIN status",
+        "state": {
+          "entered": "Entered",
+          "pending": "Pending",
+          "missing": "Missing",
+          "unknown": "Unknown"
+        }
+      },
+      "power_status": {
+        "name": "Power supply",
+        "state": {
+          "battery": "Battery",
+          "wired": "Wired"
+        }
+      },
+      "total_consumption": {
+        "name": "Total consumption"
+      },
+      "total_production": {
+        "name": "Total production"
+      },
+      "core_bridge_rssi": {
+        "name": "Signal strength Core/Bridge"
+      },
+      "wifi_rssi": {
+        "name": "Signal strength Wi-Fi"
+      }
+    },
+    "binary_sensor": {
+      "connection_status": {
+        "name": "Core/Bridge connection status"
+      },
+      "attachment_status": {
+        "name": "Core attachment status"
+      }
+    }
+  }
+}

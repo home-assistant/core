@@ -74,20 +74,25 @@ class FakeAuth:
         self.json = None
         self.headers = None
         self.captured_requests = []
+        self._project_id = project_id
+        self._aioclient_mock = aioclient_mock
+        self.register_mock_requests()
 
+    def register_mock_requests(self) -> None:
+        """Register the mocks."""
         # API makes a call to request structures to initiate pubsub feed, but the
         # integration does not use this.
-        aioclient_mock.get(
-            f"{API_URL}/enterprises/{project_id}/structures",
+        self._aioclient_mock.get(
+            f"{API_URL}/enterprises/{self._project_id}/structures",
             side_effect=self.request_structures,
         )
-        aioclient_mock.get(
-            f"{API_URL}/enterprises/{project_id}/devices",
+        self._aioclient_mock.get(
+            f"{API_URL}/enterprises/{self._project_id}/devices",
             side_effect=self.request_devices,
         )
-        aioclient_mock.post(DEVICE_URL_MATCH, side_effect=self.request)
-        aioclient_mock.get(TEST_IMAGE_URL, side_effect=self.request)
-        aioclient_mock.get(TEST_CLIP_URL, side_effect=self.request)
+        self._aioclient_mock.post(DEVICE_URL_MATCH, side_effect=self.request)
+        self._aioclient_mock.get(TEST_IMAGE_URL, side_effect=self.request)
+        self._aioclient_mock.get(TEST_CLIP_URL, side_effect=self.request)
 
     async def request_structures(
         self, method: str, url: str, data: dict[str, Any]
@@ -139,13 +144,14 @@ async def auth(
     return FakeAuth(aioclient_mock, create_device, device_access_project_id)
 
 
-@pytest.fixture(autouse=True)
-def cleanup_media_storage(hass: HomeAssistant) -> Generator[None]:
+@pytest.fixture(autouse=True, name="media_path")
+def cleanup_media_storage(hass: HomeAssistant) -> Generator[str]:
     """Test cleanup, remove any media storage persisted during the test."""
     tmp_path = str(uuid.uuid4())
     with patch("homeassistant.components.nest.media_source.MEDIA_PATH", new=tmp_path):
-        yield
-        shutil.rmtree(hass.config.path(tmp_path), ignore_errors=True)
+        full_path = hass.config.path(tmp_path)
+        yield full_path
+        shutil.rmtree(full_path, ignore_errors=True)
 
 
 @pytest.fixture

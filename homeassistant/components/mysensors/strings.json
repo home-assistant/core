@@ -21,16 +21,16 @@
           "device": "IP address of the gateway",
           "tcp_port": "[%key:common::config_flow::data::port%]",
           "version": "MySensors version",
-          "persistence_file": "persistence file (leave empty to auto-generate)"
+          "persistence_file": "Persistence file (leave empty to auto-generate)"
         }
       },
       "gw_serial": {
         "description": "Serial gateway setup",
         "data": {
           "device": "Serial port",
-          "baud_rate": "baud rate",
+          "baud_rate": "Baud rate",
           "version": "[%key:component::mysensors::config::step::gw_tcp::data::version%]",
-          "persistence_file": "Persistence file (leave empty to auto-generate)"
+          "persistence_file": "[%key:component::mysensors::config::step::gw_tcp::data::persistence_file%]"
         }
       },
       "gw_mqtt": {
@@ -40,7 +40,7 @@
           "topic_in_prefix": "Prefix for input topics (topic_in_prefix)",
           "topic_out_prefix": "Prefix for output topics (topic_out_prefix)",
           "version": "[%key:component::mysensors::config::step::gw_tcp::data::version%]",
-          "persistence_file": "[%key:component::mysensors::config::step::gw_serial::data::persistence_file%]"
+          "persistence_file": "[%key:component::mysensors::config::step::gw_tcp::data::persistence_file%]"
         }
       }
     },

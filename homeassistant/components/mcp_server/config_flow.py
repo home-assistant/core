@@ -33,7 +33,6 @@ class ModelContextServerProtocolConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         llm_apis = {api.id: api.name for api in llm.async_get_apis(self.hass)}
-
         if user_input is not None:
             return self.async_create_entry(
                 title=llm_apis[user_input[CONF_LLM_HASS_API]], data=user_input

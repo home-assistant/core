@@ -31,12 +31,12 @@ from homeassistant.const import (
     STATE_NOT_HOME,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.discovery_flow import DiscoveryKey
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import (
     MockConfigEntry,

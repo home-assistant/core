@@ -26,7 +26,7 @@
       }
     },
     "error": {
-      "discovery_error": "Failed to discover a Xiaomi Aqara Gateway, try using the IP of the device running HomeAssistant as interface",
+      "discovery_error": "Failed to discover a Xiaomi Aqara Gateway, try using the IP of the device running Home Assistant as interface",
       "invalid_interface": "Invalid network interface",
       "invalid_key": "Invalid Gateway key",
       "invalid_host": "Invalid hostname or IP address, see https://www.home-assistant.io/integrations/xiaomi_aqara/#connection-problem",
@@ -59,7 +59,7 @@
         },
         "ringtone_id": {
           "name": "Ringtone ID",
-          "description": "One of the allowed ringtone ids."
+          "description": "One of the allowed ringtone IDs."
         },
         "ringtone_vol": {
           "name": "Ringtone volume",

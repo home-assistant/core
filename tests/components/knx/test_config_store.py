@@ -25,7 +25,7 @@ async def test_create_entity(
     create_ui_entity: KnxEntityGenerator,
 ) -> None:
     """Test entity creation."""
-    await knx.setup_integration({})
+    await knx.setup_integration()
     client = await hass_ws_client(hass)
 
     test_name = "Test no device"
@@ -69,7 +69,7 @@ async def test_create_entity_error(
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test unsuccessful entity creation."""
-    await knx.setup_integration({})
+    await knx.setup_integration()
     client = await hass_ws_client(hass)
 
     # create entity with invalid platform
@@ -116,7 +116,7 @@ async def test_update_entity(
     create_ui_entity: KnxEntityGenerator,
 ) -> None:
     """Test entity update."""
-    await knx.setup_integration({})
+    await knx.setup_integration()
     client = await hass_ws_client(hass)
 
     test_entity = await create_ui_entity(
@@ -163,7 +163,7 @@ async def test_update_entity_error(
     create_ui_entity: KnxEntityGenerator,
 ) -> None:
     """Test entity update."""
-    await knx.setup_integration({})
+    await knx.setup_integration()
     client = await hass_ws_client(hass)
 
     test_entity = await create_ui_entity(
@@ -238,7 +238,7 @@ async def test_delete_entity(
     create_ui_entity: KnxEntityGenerator,
 ) -> None:
     """Test entity deletion."""
-    await knx.setup_integration({})
+    await knx.setup_integration()
     client = await hass_ws_client(hass)
 
     test_entity = await create_ui_entity(
@@ -270,7 +270,7 @@ async def test_delete_entity_error(
     hass_storage: dict[str, Any],
 ) -> None:
     """Test unsuccessful entity deletion."""
-    await knx.setup_integration({})
+    await knx.setup_integration()
     client = await hass_ws_client(hass)
 
     # delete unknown entity
@@ -307,7 +307,7 @@ async def test_get_entity_config(
     create_ui_entity: KnxEntityGenerator,
 ) -> None:
     """Test entity config retrieval."""
-    await knx.setup_integration({})
+    await knx.setup_integration()
     client = await hass_ws_client(hass)
 
     test_entity = await create_ui_entity(
@@ -355,7 +355,7 @@ async def test_get_entity_config_error(
     error_message_start: str,
 ) -> None:
     """Test entity config retrieval errors."""
-    await knx.setup_integration({})
+    await knx.setup_integration()
     client = await hass_ws_client(hass)
 
     await client.send_json_auto_id(
@@ -376,7 +376,7 @@ async def test_validate_entity(
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test entity validation."""
-    await knx.setup_integration({})
+    await knx.setup_integration()
     client = await hass_ws_client(hass)
 
     await client.send_json_auto_id(

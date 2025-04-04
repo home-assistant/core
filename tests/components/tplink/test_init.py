@@ -246,7 +246,6 @@ async def test_config_entry_with_stored_credentials(
     await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.LOADED
     config = DeviceConfig.from_dict(DEVICE_CONFIG_KLAP.to_dict())
-    config.uses_http = False
     config.http_client = "Foo"
     assert config.credentials != stored_credentials
     config.credentials = stored_credentials
@@ -762,7 +761,6 @@ async def test_credentials_hash_auth_error(
     expected_config = DeviceConfig.from_dict(
         {**DEVICE_CONFIG_DICT_KLAP, "credentials_hash": "theHash"}
     )
-    expected_config.uses_http = False
     expected_config.http_client = "Foo"
     connect_mock.assert_called_with(config=expected_config)
     assert entry.state is ConfigEntryState.SETUP_ERROR
@@ -794,13 +792,20 @@ async def test_migrate_remove_device_config(
     As async_setup_entry will succeed the hash on the parent is updated
     from the device.
     """
+    old_device_config = {
+        k: v for k, v in device_config.to_dict().items() if k != "credentials"
+    }
+    device_config_dict = {
+        **old_device_config,
+        "uses_http": device_config.connection_type.encryption_type
+        is not Device.EncryptionType.Xor,
+    }
+
     OLD_CREATE_ENTRY_DATA = {
         CONF_HOST: expected_entry_data[CONF_HOST],
         CONF_ALIAS: ALIAS,
         CONF_MODEL: MODEL,
-        CONF_DEVICE_CONFIG: {
-            k: v for k, v in device_config.to_dict().items() if k != "credentials"
-        },
+        CONF_DEVICE_CONFIG: device_config_dict,
     }
 
     entry = MockConfigEntry(
@@ -1007,8 +1012,8 @@ async def test_automatic_feature_device_addition_and_removal(
         ),
         pytest.param(
             "climate",
-            [],
-            ["state", "thermostat_mode", "temperature", "target_temperature"],
+            [Module.Thermostat],
+            ["temperature", "target_temperature"],
             None,
             DeviceType.Thermostat,
             id="climate",
@@ -1052,6 +1057,10 @@ async def test_automatic_module_device_addition_and_removal(
         ip_address=IP_ADDRESS3,
         mac=MAC_ADDRESS3,
     )
+    # Set the parent property for the dynamic children as mock_device only sets
+    # it on initialization
+    for child in children.values():
+        child.parent = mock_device
 
     with override_side_effect(mock_connect["connect"], lambda *_, **__: mock_device):
         mock_camera_config_entry.add_to_hass(hass)
@@ -1150,3 +1159,73 @@ async def test_automatic_module_device_addition_and_removal(
         )
         assert device_entry
         assert device_entry.via_device_id == parent_device.id
+
+
+async def test_automatic_device_addition_does_not_remove_disabled_default(
+    hass: HomeAssistant,
+    mock_camera_config_entry: MockConfigEntry,
+    mock_connect: AsyncMock,
+    mock_discovery: AsyncMock,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test for automatic device addition does not remove disabled default entities."""
+
+    features = ["ssid", "signal_level"]
+    children = {
+        f"child{index}": _mocked_device(
+            alias=f"child {index}",
+            features=features,
+            device_id=f"child{index}",
+        )
+        for index in range(1, 5)
+    }
+
+    mock_device = _mocked_device(
+        alias="hub",
+        children=[children["child1"], children["child2"]],
+        features=features,
+        device_type=DeviceType.Hub,
+        device_id="hub_parent",
+        ip_address=IP_ADDRESS3,
+        mac=MAC_ADDRESS3,
+    )
+    # Set the parent property for the dynamic children as mock_device only sets
+    # it on initialization
+    for child in children.values():
+        child.parent = mock_device
+
+    with override_side_effect(mock_connect["connect"], lambda *_, **__: mock_device):
+        mock_camera_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_camera_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    def check_entities(entity_id_device):
+        entity_id = f"sensor.{entity_id_device}_signal_level"
+        state = hass.states.get(entity_id)
+        assert state
+        reg_ent = entity_registry.async_get(entity_id)
+        assert reg_ent
+        assert reg_ent.disabled is False
+
+        entity_id = f"sensor.{entity_id_device}_ssid"
+        state = hass.states.get(entity_id)
+        assert state is None
+        reg_ent = entity_registry.async_get(entity_id)
+        assert reg_ent
+        assert reg_ent.disabled is True
+        assert reg_ent.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+    check_entities("hub")
+    for child_id in (1, 2):
+        check_entities(f"child_{child_id}")
+
+    # Add child devices
+    mock_device.children = [children["child1"], children["child2"], children["child3"]]
+    freezer.tick(5)
+    async_fire_time_changed(hass)
+
+    check_entities("hub")
+    for child_id in (1, 2, 3):
+        check_entities(f"child_{child_id}")

@@ -11,12 +11,15 @@ from homeassistant.const import (
     CONF_PLATFORM,
     Platform,
 )
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.entity import ENTITY_CATEGORIES_SCHEMA
 from homeassistant.helpers.typing import VolDictType, VolSchemaType
 
 from ..const import (
+    CONF_CONTEXT_TIMEOUT,
+    CONF_IGNORE_INTERNAL_STATE,
     CONF_INVERT,
+    CONF_RESET_AFTER,
     CONF_RESPOND_TO_READ,
     CONF_SYNC_STATE,
     DOMAIN,
@@ -42,6 +45,7 @@ from .const import (
     CONF_GA_RED_BRIGHTNESS,
     CONF_GA_RED_SWITCH,
     CONF_GA_SATURATION,
+    CONF_GA_SENSOR,
     CONF_GA_STATE,
     CONF_GA_SWITCH,
     CONF_GA_WHITE_BRIGHTNESS,
@@ -93,6 +97,29 @@ def optional_ga_schema(key: str, ga_selector: GASelector) -> VolDictType:
         ),
     }
 
+
+BINARY_SENSOR_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_ENTITY): BASE_ENTITY_SCHEMA,
+        vol.Required(DOMAIN): {
+            vol.Required(CONF_GA_SENSOR): GASelector(write=False, state_required=True),
+            vol.Required(CONF_RESPOND_TO_READ, default=False): bool,
+            vol.Required(CONF_SYNC_STATE, default=True): sync_state_validator,
+            vol.Optional(CONF_INVERT): selector.BooleanSelector(),
+            vol.Optional(CONF_IGNORE_INTERNAL_STATE): selector.BooleanSelector(),
+            vol.Optional(CONF_CONTEXT_TIMEOUT): selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    min=0, max=10, step=0.1, unit_of_measurement="s"
+                )
+            ),
+            vol.Optional(CONF_RESET_AFTER): selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    min=0, max=600, step=0.1, unit_of_measurement="s"
+                )
+            ),
+        },
+    }
+)
 
 SWITCH_SCHEMA = vol.Schema(
     {
@@ -213,6 +240,9 @@ ENTITY_STORE_DATA_SCHEMA: VolSchemaType = vol.All(
     cv.key_value_schemas(
         CONF_PLATFORM,
         {
+            Platform.BINARY_SENSOR: vol.Schema(
+                {vol.Required(CONF_DATA): BINARY_SENSOR_SCHEMA}, extra=vol.ALLOW_EXTRA
+            ),
             Platform.SWITCH: vol.Schema(
                 {vol.Required(CONF_DATA): SWITCH_SCHEMA}, extra=vol.ALLOW_EXTRA
             ),

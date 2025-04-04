@@ -5,7 +5,7 @@ from typing import Final
 from ohme import OhmeApiClient
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -16,10 +16,13 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import selector
 
 from .const import DOMAIN
+from .coordinator import OhmeConfigEntry
+
+ATTR_CONFIG_ENTRY: Final = "config_entry"
+ATTR_PRICE_CAP: Final = "price_cap"
 
 SERVICE_LIST_CHARGE_SLOTS = "list_charge_slots"
-ATTR_CONFIG_ENTRY: Final = "config_entry"
-SERVICE_SCHEMA: Final = vol.Schema(
+SERVICE_LIST_CHARGE_SLOTS_SCHEMA: Final = vol.Schema(
     {
         vol.Required(ATTR_CONFIG_ENTRY): selector.ConfigEntrySelector(
             {
@@ -29,11 +32,23 @@ SERVICE_SCHEMA: Final = vol.Schema(
     }
 )
 
+SERVICE_SET_PRICE_CAP = "set_price_cap"
+SERVICE_SET_PRICE_CAP_SCHEMA: Final = vol.Schema(
+    {
+        vol.Required(ATTR_CONFIG_ENTRY): selector.ConfigEntrySelector(
+            {
+                "integration": DOMAIN,
+            }
+        ),
+        vol.Required(ATTR_PRICE_CAP): vol.Coerce(float),
+    }
+)
+
 
 def __get_client(call: ServiceCall) -> OhmeApiClient:
     """Get the client from the config entry."""
     entry_id: str = call.data[ATTR_CONFIG_ENTRY]
-    entry: ConfigEntry | None = call.hass.config_entries.async_get_entry(entry_id)
+    entry: OhmeConfigEntry | None = call.hass.config_entries.async_get_entry(entry_id)
 
     if not entry:
         raise ServiceValidationError(
@@ -64,12 +79,28 @@ def async_setup_services(hass: HomeAssistant) -> None:
         """List of charge slots."""
         client = __get_client(service_call)
 
-        return {"slots": client.slots}
+        return {"slots": [slot.to_dict() for slot in client.slots]}
+
+    async def set_price_cap(
+        service_call: ServiceCall,
+    ) -> None:
+        """List of charge slots."""
+        client = __get_client(service_call)
+        price_cap = service_call.data[ATTR_PRICE_CAP]
+        await client.async_change_price_cap(cap=price_cap)
 
     hass.services.async_register(
         DOMAIN,
         SERVICE_LIST_CHARGE_SLOTS,
         list_charge_slots,
-        schema=SERVICE_SCHEMA,
+        schema=SERVICE_LIST_CHARGE_SLOTS_SCHEMA,
         supports_response=SupportsResponse.ONLY,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_PRICE_CAP,
+        set_price_cap,
+        schema=SERVICE_SET_PRICE_CAP_SCHEMA,
+        supports_response=SupportsResponse.NONE,
     )
