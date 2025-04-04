@@ -77,6 +77,15 @@
       },
       "battery_replacement_description": {
         "default": "mdi:battery-sync-outline"
+      },
+      "evse_state": {
+        "default": "mdi:ev-station"
+      },
+      "evse_supply_state": {
+        "default": "mdi:ev-station"
+      },
+      "evse_fault_state": {
+        "default": "mdi:ev-station"
       }
     },
     "switch": {
@@ -86,6 +95,9 @@
           "on": "mdi:lock",
           "off": "mdi:lock-off"
         }
+      },
+      "evse_charging_switch": {
+        "default": "mdi:ev-station"
       }
     }
   }
