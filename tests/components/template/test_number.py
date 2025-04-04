@@ -6,7 +6,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import setup
-from homeassistant.components import template
+from homeassistant.components import number, template
 from homeassistant.components.input_number import (
     ATTR_VALUE as INPUT_NUMBER_ATTR_VALUE,
     DOMAIN as INPUT_NUMBER_DOMAIN,
@@ -58,36 +58,12 @@ _VALUE_INPUT_NUMBER_CONFIG = {
     }
 }
 
-TEST_EVENT_TRIGGER = {
-    "trigger": {"platform": "event", "event_type": "test_event"},
-    "variables": {"type": "{{ trigger.event.data.type }}"},
-    "action": [{"event": "action_event", "event_data": {"type": "{{ type }}"}}],
-}
-
 
 async def async_setup_modern_format(
     hass: HomeAssistant, count: int, number_config: dict[str, Any]
 ) -> None:
-    """Do setup of light integration via new format."""
+    """Do setup of number integration via new format."""
     config = {"template": {"number": number_config}}
-
-    with assert_setup_component(count, template.DOMAIN):
-        assert await async_setup_component(
-            hass,
-            template.DOMAIN,
-            config,
-        )
-
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
-
-
-async def async_setup_trigger_format(
-    hass: HomeAssistant, count: int, number_config: dict[str, Any]
-) -> None:
-    """Do setup of light integration via new format."""
-    config = {"template": {**TEST_EVENT_TRIGGER, "number": number_config}}
 
     with assert_setup_component(count, template.DOMAIN):
         assert await async_setup_component(
@@ -108,13 +84,9 @@ async def setup_number(
     style: ConfigurationStyle,
     number_config: dict[str, Any],
 ) -> None:
-    """Do setup of light integration."""
+    """Do setup of number integration."""
     if style == ConfigurationStyle.MODERN:
         await async_setup_modern_format(
-            hass, count, {"name": _TEST_OBJECT_ID, **number_config}
-        )
-    elif style == ConfigurationStyle.TRIGGER:
-        await async_setup_trigger_format(
             hass, count, {"name": _TEST_OBJECT_ID, **number_config}
         )
 
@@ -659,8 +631,8 @@ async def test_device_id(
 async def test_empty_action_config(hass: HomeAssistant, setup_number) -> None:
     """Test configuration with empty script."""
     await hass.services.async_call(
-        "number",
-        "set_value",
+        number.DOMAIN,
+        number.SERVICE_SET_VALUE,
         {ATTR_ENTITY_ID: _TEST_NUMBER, "value": 4},
         blocking=True,
     )
