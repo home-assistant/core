@@ -8,7 +8,6 @@ from datetime import datetime, timedelta
 
 from propcache.api import cached_property
 from teslemetry_stream import TeslemetryStreamVehicle
-from teslemetry_stream.const import ShiftState
 
 from homeassistant.components.sensor import (
     RestoreSensor,
@@ -70,11 +69,13 @@ class TeslemetryVehicleSensorEntityDescription(SensorEntityDescription):
     polling: bool = False
     polling_value_fn: Callable[[StateType], StateType] = lambda x: x
     nullable: bool = False
-    streaming_listener: Callable[
-        [TeslemetryStreamVehicle, Callable[[str | int | float | None], None]],
-        Callable[[], None],
-    ] | None = None
-    streaming_value_fn: Callable[[str | int | float], StateType] = lambda x: x
+    streaming_listener: (
+        Callable[
+            [TeslemetryStreamVehicle, Callable[[StateType], None]],
+            Callable[[], None],
+        ]
+        | None
+    ) = None
     streaming_firmware: str = "2024.26"
 
 
@@ -215,10 +216,11 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
     TeslemetryVehicleSensorEntityDescription(
         key="drive_state_shift_state",
         polling=True,
-        nullable=True,
         polling_value_fn=lambda x: SHIFT_STATES.get(str(x), "p"),
-        streaming_listener=lambda x, y: x.listen_Gear(y),
-        streaming_value_fn=lambda x: str(ShiftState.get(x, "P")).lower(),
+        nullable=True,
+        streaming_listener=lambda x, y: x.listen_Gear(
+            lambda z: y("p" if z is None else z.lower())
+        ),
         options=list(SHIFT_STATES.values()),
         device_class=SensorDeviceClass.ENUM,
         entity_registry_enabled_default=False,
@@ -360,14 +362,14 @@ class TeslemetryTimeEntityDescription(SensorEntityDescription):
         Callable[[], None],
     ]
     streaming_firmware: str = "2024.26"
-    streaming_value_fn: Callable[[float], float] = lambda x: x
+    streaming_unit: str
 
 
 VEHICLE_TIME_DESCRIPTIONS: tuple[TeslemetryTimeEntityDescription, ...] = (
     TeslemetryTimeEntityDescription(
         key="charge_state_minutes_to_full_charge",
-        streaming_value_fn=lambda x: x * 60,
         streaming_listener=lambda x, y: x.listen_TimeToFullCharge(y),
+        streaming_unit="hours",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         variance=4,
@@ -375,6 +377,7 @@ VEHICLE_TIME_DESCRIPTIONS: tuple[TeslemetryTimeEntityDescription, ...] = (
     TeslemetryTimeEntityDescription(
         key="drive_state_active_route_minutes_to_arrival",
         streaming_listener=lambda x, y: x.listen_MinutesToArrival(y),
+        streaming_unit="minutes",
         device_class=SensorDeviceClass.TIMESTAMP,
         variance=1,
     ),
@@ -624,6 +627,7 @@ class TeslemetryStreamSensorEntity(TeslemetryVehicleStreamEntity, RestoreSensor)
         if (sensor_data := await self.async_get_last_sensor_data()) is not None:
             self._attr_native_value = sensor_data.native_value
 
+        assert self.entity_description.streaming_listener
         self.async_on_remove(
             self.entity_description.streaming_listener(
                 self.vehicle.stream_vehicle, self._async_value_from_stream
@@ -635,12 +639,9 @@ class TeslemetryStreamSensorEntity(TeslemetryVehicleStreamEntity, RestoreSensor)
         """Return True if entity is available."""
         return self.stream.connected
 
-    def _async_value_from_stream(self, value) -> None:
+    def _async_value_from_stream(self, value: StateType) -> None:
         """Update the value of the entity."""
-        if self.entity_description.nullable or value is not None:
-            self._attr_native_value = self.entity_description.streaming_value_fn(value)
-        else:
-            self._attr_native_value = None
+        self._attr_native_value = value
 
 
 class TeslemetryVehicleSensorEntity(TeslemetryVehicleEntity, SensorEntity):
@@ -683,7 +684,7 @@ class TeslemetryStreamTimeSensorEntity(TeslemetryVehicleStreamEntity, SensorEnti
         self.entity_description = description
         self._get_timestamp = ignore_variance(
             func=lambda value: dt_util.now()
-            + timedelta(minutes=description.streaming_value_fn(value)),
+            + timedelta(**{self.entity_description.streaming_unit: value}),
             ignored_variance=timedelta(minutes=description.variance),
         )
         super().__init__(data, description.key)
