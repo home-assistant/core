@@ -77,6 +77,26 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     return {"ups_list": nut_data.ups_list, "available_resources": status}
 
 
+def _check_host_port_alias_match(
+    first: Mapping[str, Any], second: Mapping[str, Any]
+) -> bool:
+    """Check if first and second have the same host, port and alias."""
+
+    if first[CONF_HOST] != second[CONF_HOST] or first[CONF_PORT] != second[CONF_PORT]:
+        return False
+
+    first_alias = first.get(CONF_ALIAS)
+    second_alias = second.get(CONF_ALIAS)
+    if (first_alias is None and second_alias is None) or (
+        first_alias is not None
+        and second_alias is not None
+        and first_alias == second_alias
+    ):
+        return True
+
+    return False
+
+
 def _format_host_port_alias(user_input: Mapping[str, Any]) -> str:
     """Format a host, port, and alias so it can be used for comparison or display."""
     host = user_input[CONF_HOST]
@@ -194,12 +214,10 @@ class NutConfigFlow(ConfigFlow, domain=DOMAIN):
                     self.ups_list = info["ups_list"]
                     return await self.async_step_reconfigure_ups()
 
-                old_title = _format_host_port_alias(reconfigure_entry.data)
-                new_title = _format_host_port_alias(nut_config)
-
-                if (old_title != new_title) and (
-                    self._host_port_alias_already_configured(nut_config)
-                ):
+                if not _check_host_port_alias_match(
+                    reconfigure_entry.data,
+                    nut_config,
+                ) and (self._host_port_alias_already_configured(nut_config)):
                     return self.async_abort(reason="already_configured")
 
                 if unique_id := _unique_id_from_status(info["available_resources"]):
@@ -208,6 +226,7 @@ class NutConfigFlow(ConfigFlow, domain=DOMAIN):
                 if nut_config[CONF_PASSWORD] == PASSWORD_NOT_CHANGED:
                     nut_config.pop(CONF_PASSWORD)
 
+                new_title = _format_host_port_alias(nut_config)
                 return self.async_update_reload_and_abort(
                     self._get_reconfigure_entry(),
                     unique_id=unique_id,
@@ -238,12 +257,10 @@ class NutConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self.nut_config.update(user_input)
 
-            old_title = _format_host_port_alias(reconfigure_entry.data)
-            new_title = _format_host_port_alias(nut_config)
-
-            if (old_title != new_title) and (
-                self._host_port_alias_already_configured(nut_config)
-            ):
+            if not _check_host_port_alias_match(
+                reconfigure_entry.data,
+                nut_config,
+            ) and (self._host_port_alias_already_configured(nut_config)):
                 return self.async_abort(reason="already_configured")
 
             info, errors, placeholders = await self._async_validate_or_error(nut_config)
@@ -255,6 +272,7 @@ class NutConfigFlow(ConfigFlow, domain=DOMAIN):
                 if nut_config[CONF_PASSWORD] == PASSWORD_NOT_CHANGED:
                     nut_config.pop(CONF_PASSWORD)
 
+                new_title = _format_host_port_alias(nut_config)
                 return self.async_update_reload_and_abort(
                     self._get_reconfigure_entry(),
                     unique_id=unique_id,
