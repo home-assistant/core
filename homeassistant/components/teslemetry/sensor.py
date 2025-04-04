@@ -642,6 +642,7 @@ class TeslemetryStreamSensorEntity(TeslemetryVehicleStreamEntity, RestoreSensor)
     def _async_value_from_stream(self, value: StateType) -> None:
         """Update the value of the entity."""
         self._attr_native_value = value
+        self.async_write_ha_state()
 
 
 class TeslemetryVehicleSensorEntity(TeslemetryVehicleEntity, SensorEntity):
@@ -704,6 +705,7 @@ class TeslemetryStreamTimeSensorEntity(TeslemetryVehicleStreamEntity, SensorEnti
             self._attr_native_value = None
         else:
             self._attr_native_value = self._get_timestamp(value)
+        self.async_write_ha_state()
 
 
 class TeslemetryVehicleTimeSensorEntity(TeslemetryVehicleEntity, SensorEntity):
