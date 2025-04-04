@@ -107,12 +107,12 @@
       "battery_charger_status": {
         "name": "Charging status",
         "state": {
-          "charging": "Charging",
-          "discharging": "Discharging",
+          "charging": "[%key:common::state::charging%]",
+          "discharging": "[%key:common::state::discharging%]",
           "floating": "Floating",
           "resting": "Resting",
           "unknown": "Unknown",
-          "disabled": "Disabled",
+          "disabled": "[%key:common::state::disabled%]",
           "off": "Off"
         }
       },
@@ -223,8 +223,8 @@
       "ups_beeper_status": {
         "name": "Beeper status",
         "state": {
-          "enabled": "Enabled",
-          "disabled": "Disabled",
+          "enabled": "[%key:common::state::enabled%]",
+          "disabled": "[%key:common::state::disabled%]",
           "muted": "Muted"
         }
       },
