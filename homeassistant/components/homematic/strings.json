@@ -2,7 +2,7 @@
   "services": {
     "virtualkey": {
       "name": "Virtual key",
-      "description": "Presses a virtual key from CCU/Homegear or simulate keypress.",
+      "description": "Simulates a keypress (or other valid action) on CCU/Homegear with virtual or device keys.",
       "fields": {
         "address": {
           "name": "Address",
@@ -24,7 +24,7 @@
     },
     "set_variable_value": {
       "name": "Set variable value",
-      "description": "Sets the name of a node.",
+      "description": "Sets the value of a system variable.",
       "fields": {
         "entity_id": {
           "name": "Entity",

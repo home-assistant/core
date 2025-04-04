@@ -9,6 +9,7 @@ from datetime import timedelta
 from decimal import Decimal
 from enum import Enum
 from functools import cache, partial
+from operator import attrgetter
 from typing import Any, cast
 
 import slugify as unicode_slug
@@ -316,7 +317,7 @@ class AssistAPI(API):
         """Return the instance of the API."""
         if llm_context.assistant:
             exposed_entities: dict | None = _get_exposed_entities(
-                self.hass, llm_context.assistant
+                self.hass, llm_context.assistant, include_state=False
             )
         else:
             exposed_entities = None
@@ -463,7 +464,9 @@ class AssistAPI(API):
 
 
 def _get_exposed_entities(
-    hass: HomeAssistant, assistant: str
+    hass: HomeAssistant,
+    assistant: str,
+    include_state: bool = True,
 ) -> dict[str, dict[str, dict[str, Any]]]:
     """Get exposed entities.
 
@@ -494,7 +497,7 @@ def _get_exposed_entities(
         CALENDAR_DOMAIN: {},
     }
 
-    for state in hass.states.async_all():
+    for state in sorted(hass.states.async_all(), key=attrgetter("name")):
         if not async_should_expose(hass, assistant, state.entity_id):
             continue
 
@@ -524,8 +527,10 @@ def _get_exposed_entities(
         info: dict[str, Any] = {
             "names": ", ".join(names),
             "domain": state.domain,
-            "state": state.state,
         }
+
+        if include_state:
+            info["state"] = state.state
 
         if description:
             info["description"] = description
@@ -533,15 +538,17 @@ def _get_exposed_entities(
         if area_names:
             info["areas"] = ", ".join(area_names)
 
-        if attributes := {
-            attr_name: (
-                str(attr_value)
-                if isinstance(attr_value, (Enum, Decimal, int))
-                else attr_value
-            )
-            for attr_name, attr_value in state.attributes.items()
-            if attr_name in interesting_attributes
-        }:
+        if include_state and (
+            attributes := {
+                attr_name: (
+                    str(attr_value)
+                    if isinstance(attr_value, (Enum, Decimal, int))
+                    else attr_value
+                )
+                for attr_name, attr_value in state.attributes.items()
+                if attr_name in interesting_attributes
+            }
+        ):
             info["attributes"] = attributes
 
         if state.domain in data:
