@@ -12,14 +12,9 @@ from . import TadoConfigEntry
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: TadoConfigEntry
 ) -> dict[str, Any]:
-    """Return diagnostics for a config entry."""
-    data = config_entry.runtime_data.coordinator.data
-    mobile_devices = config_entry.runtime_data.mobile_coordinator
+    """Return diagnostics for a Tado config entry."""
 
     return {
-        "device": data.get("device"),
-        "weather": data.get("weather"),
-        "geofence": data.get("geofence"),
-        "zone": data.get("zone"),
-        "mobile_devices": mobile_devices.data,
+        "data": config_entry.runtime_data.coordinator.data,
+        "mobile_devices": config_entry.runtime_data.mobile_coordinator,
     }
