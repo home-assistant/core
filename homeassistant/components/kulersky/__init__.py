@@ -3,15 +3,14 @@
 import logging
 from types import MappingProxyType
 
-from homeassistant.components.bluetooth import (
-    DOMAIN as BLUETOOTH_DOMAIN,
-    async_ble_device_from_address,
-)
+from homeassistant.components.bluetooth import DOMAIN as BLUETOOTH_DOMAIN
+from homeassistant.components.bluetooth import async_ble_device_from_address
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.discovery_flow import DiscoveryKey
 
 from .const import DOMAIN
@@ -99,6 +98,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                 source=config_entry.source,
                 title=device.name or address,
                 unique_id=address,
+                subentries_data=None,
                 version=2,
                 minor_version=1,
             )
