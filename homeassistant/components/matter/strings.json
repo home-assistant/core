@@ -80,6 +80,9 @@
       "evse_charging_status": {
         "name": "Charging status"
       },
+      "evse_plug": {
+        "name": "Plug state"
+      },
       "evse_supply_charging_state": {
         "name": "Supply charging state"
       }
