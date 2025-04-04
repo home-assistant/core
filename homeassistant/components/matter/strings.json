@@ -87,7 +87,7 @@
         "name": "Supply charging state"
       },
       "boost_state": {
-        "name": "Boost state"      
+        "name": "Boost state"
       }
     },
     "button": {
