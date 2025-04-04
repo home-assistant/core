@@ -22,6 +22,18 @@
           "installer_code": "The installer code from your panel",
           "user_code": "The user code from your panel"
         }
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "installer_code": "Installer code",
+          "user_code": "User code"
+        },
+        "data_description": {
+          "password": "The Mode 2 automation code from your panel",
+          "installer_code": "The installer code from your panel",
+          "user_code": "The user code from your panel"
+        }
       }
     },
     "error": {
@@ -30,7 +42,16 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Could not connect to panel."
+    },
+    "authentication_failed": {
+      "message": "Incorrect credentials for panel."
     }
   }
 }
