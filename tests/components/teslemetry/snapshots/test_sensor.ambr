@@ -5067,7 +5067,7 @@
   '2'
 # ---
 # name: test_sensors_streaming[sensor.test_charging-state]
-  'unavailable'
+  'charging'
 # ---
 # name: test_sensors_streaming[sensor.test_time_to_arrival-state]
   'unknown'
