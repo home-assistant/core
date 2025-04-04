@@ -188,8 +188,9 @@ class PanelOutputEntity(SwitchEntity):
         self._output = panel.outputs[output_id]
         self._output_id = output_id
         self._observer = self._output.status_observer
+        self._attr_unique_id = f"{unique_id}_output_{output_id}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, unique_id)},
+            identifiers={(DOMAIN, self._attr_unique_id)},
             name=self._output.name,
             manufacturer="Bosch Security Systems",
             model=panel.model,
@@ -199,7 +200,6 @@ class PanelOutputEntity(SwitchEntity):
                 unique_id,
             ),
         )
-        self._attr_unique_id = f"{unique_id}_output_{output_id}"
 
     async def async_added_to_hass(self) -> None:
         """Observe state changes."""
