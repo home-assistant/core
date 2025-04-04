@@ -59,8 +59,8 @@ class KulerskyConfigFlow(ConfigFlow, domain=DOMAIN):
                 discovery_info.address, raise_on_progress=False
             )
             self._abort_if_unique_id_configured()
-            kulersky_light = pykulersky.Light(discovery_info.address)
             try:
+                kulersky_light = pykulersky.Light(discovery_info.address)
                 await kulersky_light.connect()
             except pykulersky.PykulerskyException:
                 errors["base"] = "cannot_connect"
