@@ -75,7 +75,7 @@ class HomeConnectApplianceData:
         self.status.update(other.status)
 
     @classmethod
-    def Empty(cls, appliance: HomeAppliance) -> HomeConnectApplianceData:
+    def empty(cls, appliance: HomeAppliance) -> HomeConnectApplianceData:
         """Return empty data."""
         return cls(
             commands=set(),
@@ -375,7 +375,7 @@ class HomeConnectCoordinator(
                 model=appliance.vib,
             )
             if appliance.ha_id not in self.data:
-                self.data[appliance.ha_id] = HomeConnectApplianceData.Empty(appliance)
+                self.data[appliance.ha_id] = HomeConnectApplianceData.empty(appliance)
             else:
                 self.data[appliance.ha_id].info.connected = appliance.connected
                 old_appliances.remove(appliance.ha_id)
@@ -419,7 +419,7 @@ class HomeConnectCoordinator(
             if appliance_data_to_update:
                 appliance_data_to_update.info.connected = False
                 return appliance_data_to_update
-            return HomeConnectApplianceData.Empty(appliance)
+            return HomeConnectApplianceData.empty(appliance)
         try:
             settings = {
                 setting.key: setting
