@@ -588,7 +588,7 @@ async def test_paired_disconnected_devices_not_fetching(
     client: MagicMock,
     appliance: HomeAppliance,
 ) -> None:
-    """Test that Home Connect API is not fetch after pairing a disconnected device."""
+    """Test that Home Connect API is not fetched after pairing a disconnected device."""
     client.get_home_appliances = AsyncMock(return_value=ArrayOfHomeAppliances([]))
     assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
