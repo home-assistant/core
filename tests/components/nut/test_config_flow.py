@@ -14,14 +14,13 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_RESOURCES,
-    CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .util import _get_mock_nutclient
+from .util import _get_mock_nutclient, async_init_integration
 
 from tests.common import MockConfigEntry
 
@@ -525,6 +524,104 @@ async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
         assert result2["reason"] == "already_configured"
 
 
+async def test_abort_duplicate_unique_ids(hass: HomeAssistant) -> None:
+    """Test we abort if unique_id is already setup."""
+
+    list_vars = {
+        "device.mfr": "Some manufacturer",
+        "device.model": "Some model",
+        "device.serial": "0000-1",
+    }
+    await async_init_integration(
+        hass,
+        list_ups={"ups1": "UPS 1"},
+        list_vars=list_vars,
+    )
+
+    mock_pynut = _get_mock_nutclient(list_ups={"ups2": "UPS 2"}, list_vars=list_vars)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.nut.AIONUTClient",
+        return_value=mock_pynut,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "1.1.1.1",
+                CONF_PORT: 2222,
+            },
+        )
+        await hass.async_block_till_done()
+
+        assert result2["type"] is FlowResultType.ABORT
+        assert result2["reason"] == "already_configured"
+
+
+async def test_abort_multiple_ups_duplicate_unique_ids(hass: HomeAssistant) -> None:
+    """Test we abort on multiple devices if unique_id is already setup."""
+
+    list_vars = {
+        "device.mfr": "Some manufacturer",
+        "device.model": "Some model",
+        "device.serial": "0000-1",
+    }
+
+    mock_pynut = _get_mock_nutclient(
+        list_ups={"ups2": "UPS 2", "ups3": "UPS 3"}, list_vars=list_vars
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.nut.AIONUTClient",
+        return_value=mock_pynut,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "1.1.1.1",
+                CONF_PORT: 2222,
+            },
+        )
+        await hass.async_block_till_done()
+
+        assert result2["step_id"] == "ups"
+        assert result2["type"] is FlowResultType.FORM
+
+    await async_init_integration(
+        hass,
+        list_ups={"ups1": "UPS 1"},
+        list_vars=list_vars,
+    )
+
+    with (
+        patch(
+            "homeassistant.components.nut.AIONUTClient",
+            return_value=mock_pynut,
+        ),
+        patch(
+            "homeassistant.components.nut.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_ALIAS: "ups2"},
+        )
+        await hass.async_block_till_done()
+
+        assert result3["type"] is FlowResultType.ABORT
+        assert result3["reason"] == "already_configured"
+
+
 async def test_abort_if_already_setup_alias(hass: HomeAssistant) -> None:
     """Test we abort if component is already setup with same alias."""
     config_entry = MockConfigEntry(
@@ -573,45 +670,3 @@ async def test_abort_if_already_setup_alias(hass: HomeAssistant) -> None:
 
         assert result3["type"] is FlowResultType.ABORT
         assert result3["reason"] == "already_configured"
-
-
-async def test_options_flow(hass: HomeAssistant) -> None:
-    """Test config flow options."""
-
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="abcde12345",
-        data=VALID_CONFIG,
-    )
-    config_entry.add_to_hass(hass)
-
-    with patch("homeassistant.components.nut.async_setup_entry", return_value=True):
-        result = await hass.config_entries.options.async_init(config_entry.entry_id)
-
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "init"
-
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"], user_input={}
-        )
-
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert config_entry.options == {
-            CONF_SCAN_INTERVAL: 60,
-        }
-
-    with patch("homeassistant.components.nut.async_setup_entry", return_value=True):
-        result2 = await hass.config_entries.options.async_init(config_entry.entry_id)
-
-        assert result2["type"] is FlowResultType.FORM
-        assert result2["step_id"] == "init"
-
-        result2 = await hass.config_entries.options.async_configure(
-            result2["flow_id"],
-            user_input={CONF_SCAN_INTERVAL: 12},
-        )
-
-        assert result2["type"] is FlowResultType.CREATE_ENTRY
-        assert config_entry.options == {
-            CONF_SCAN_INTERVAL: 12,
-        }
