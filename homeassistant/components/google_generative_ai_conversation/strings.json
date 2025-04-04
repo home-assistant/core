@@ -43,6 +43,9 @@
           "prompt": "Instruct how the LLM should respond. This can be a template."
         }
       }
+    },
+    "error": {
+      "invalid_google_search_option": "Google Search cannot be enabled alongside any Assist capability, this can only be used when Assist is set to \"No control\"."
     }
   },
   "services": {

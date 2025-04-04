@@ -67,7 +67,7 @@ PyMetno==0.13.0
 PyMicroBot==0.0.17
 
 # homeassistant.components.nina
-PyNINA==0.3.4
+PyNINA==0.3.5
 
 # homeassistant.components.mobile_app
 # homeassistant.components.owntracks
@@ -249,7 +249,7 @@ aioharmony==0.5.2
 aiohasupervisor==0.3.0
 
 # homeassistant.components.home_connect
-aiohomeconnect==0.16.3
+aiohomeconnect==0.17.0
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.13
@@ -534,7 +534,7 @@ bimmer-connected[china]==0.17.2
 
 # homeassistant.components.eq3btsmart
 # homeassistant.components.esphome
-bleak-esphome==2.12.0
+bleak-esphome==2.13.1
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==3.9.0
@@ -564,7 +564,7 @@ bluetooth-auto-recovery==1.4.5
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
 # homeassistant.components.private_ble_device
-bluetooth-data-tools==1.26.5
+bluetooth-data-tools==1.27.0
 
 # homeassistant.components.bond
 bond-async==0.2.1
@@ -768,7 +768,7 @@ eternalegypt==0.0.16
 eufylife-ble-client==0.1.8
 
 # homeassistant.components.evohome
-evohome-async==1.0.4
+evohome-async==1.0.5
 
 # homeassistant.components.bryant_evolution
 evolutionhttp==0.0.18
@@ -1014,7 +1014,7 @@ ibeacon-ble==1.2.0
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
 # homeassistant.components.remote_calendar
-ical==9.0.3
+ical==9.1.0
 
 # homeassistant.components.caldav
 icalendar==6.1.0
@@ -2013,7 +2013,7 @@ python-snoo==0.6.5
 python-songpal==0.16.2
 
 # homeassistant.components.tado
-python-tado==0.18.9
+python-tado==0.18.11
 
 # homeassistant.components.technove
 python-technove==2.0.0
@@ -2325,7 +2325,7 @@ tesla-powerwall==0.5.2
 tesla-wall-connector==1.0.2
 
 # homeassistant.components.teslemetry
-teslemetry-stream==0.6.12
+teslemetry-stream==0.7.1
 
 # homeassistant.components.tessie
 tessie-api==0.1.1
