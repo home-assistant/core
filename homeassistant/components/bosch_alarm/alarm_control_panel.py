@@ -8,8 +8,11 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
     AlarmControlPanelState,
+    CodeFormat,
 )
+from homeassistant.const import CONF_CODE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -30,6 +33,7 @@ async def async_setup_entry(
             panel,
             area_id,
             config_entry.unique_id or config_entry.entry_id,
+            config_entry.options.get(CONF_CODE, None),
         )
         for area_id in panel.areas
     )
@@ -46,9 +50,13 @@ class AreaAlarmControlPanel(AlarmControlPanelEntity):
     _attr_code_arm_required = False
     _attr_name = None
 
-    def __init__(self, panel: Panel, area_id: int, unique_id: str) -> None:
+    def __init__(
+        self, panel: Panel, area_id: int, unique_id: str, arming_code: str | None
+    ) -> None:
         """Initialise a Bosch Alarm control panel entity."""
         self.panel = panel
+        self._arming_code = arming_code
+        self._attr_code_arm_required = self._arming_code is not None
         self._area = panel.areas[area_id]
         self._area_id = area_id
         self._attr_unique_id = f"{unique_id}_area_{area_id}"
@@ -61,6 +69,15 @@ class AreaAlarmControlPanel(AlarmControlPanelEntity):
                 unique_id,
             ),
         )
+
+    @property
+    def code_format(self) -> CodeFormat | None:
+        """Return the code format for the current arming code."""
+        if self._arming_code is None:
+            return None
+        if self._arming_code.isnumeric():
+            return CodeFormat.NUMBER
+        return CodeFormat.TEXT
 
     @property
     def alarm_state(self) -> AlarmControlPanelState | None:
@@ -79,16 +96,28 @@ class AreaAlarmControlPanel(AlarmControlPanelEntity):
             return AlarmControlPanelState.ARMED_AWAY
         return None
 
+    def _check_code_correct(self, code: str | None) -> None:
+        """Validate a given code is correct for this panel."""
+        if code != self._arming_code:
+            raise ServiceValidationError(
+                "Invalid alarm code provided",
+                translation_domain=DOMAIN,
+                translation_key="invalid_code",
+            )
+
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Disarm this panel."""
+        self._check_code_correct(code)
         await self.panel.area_disarm(self._area_id)
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
+        self._check_code_correct(code)
         await self.panel.area_arm_part(self._area_id)
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
+        self._check_code_correct(code)
         await self.panel.area_arm_all(self._area_id)
 
     @property

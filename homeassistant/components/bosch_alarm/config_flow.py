@@ -18,8 +18,14 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
 )
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.schema_config_entry_flow import (
+    SchemaFlowFormStep,
+    SchemaOptionsFlowHandler,
+)
 
+from . import BoschAlarmConfigEntry
 from .const import CONF_INSTALLER_CODE, CONF_USER_CODE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,6 +57,11 @@ STEP_AUTH_DATA_SCHEMA_BG = vol.Schema(
 )
 
 STEP_INIT_DATA_SCHEMA = vol.Schema({vol.Optional(CONF_CODE): str})
+OPTIONS_SCHEMA = vol.Schema({vol.Optional(CONF_CODE): str})
+
+OPTIONS_FLOW = {
+    "init": SchemaFlowFormStep(OPTIONS_SCHEMA),
+}
 
 
 async def try_connect(
@@ -82,6 +93,14 @@ class BoschAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
         """Init config flow."""
 
         self._data: dict[str, Any] = {}
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: BoschAlarmConfigEntry,
+    ) -> SchemaOptionsFlowHandler:
+        """Provide a handler for the options flow."""
+        return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
