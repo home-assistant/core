@@ -335,7 +335,7 @@ class LightTemplate(TemplateEntity, LightEntity):
             self._color_mode = next(iter(self._supported_color_modes))
 
         self._attr_supported_features = LightEntityFeature(0)
-        if self._action_scripts.get(CONF_EFFECT_ACTION):
+        if (self._action_scripts.get(CONF_EFFECT_ACTION)) is not None:
             self._attr_supported_features |= LightEntityFeature.EFFECT
         if self._supports_transition is True:
             self._attr_supported_features |= LightEntityFeature.TRANSITION
