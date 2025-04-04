@@ -954,7 +954,7 @@ fnv-hash-fast==1.4.0
 foobot_async==1.0.0
 
 # homeassistant.components.forecast_solar
-forecast-solar==4.0.0
+forecast-solar==4.1.0
 
 # homeassistant.components.fortios
 fortiosapi==1.0.5
@@ -1157,7 +1157,7 @@ hole==0.8.0
 holidays==0.69
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250401.0
+home-assistant-frontend==20250404.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.3.28
@@ -2319,7 +2319,7 @@ pysma==0.7.5
 pysmappee==0.2.29
 
 # homeassistant.components.smartthings
-pysmartthings==3.0.1
+pysmartthings==3.0.2
 
 # homeassistant.components.smarty
 pysmarty2==0.10.2
