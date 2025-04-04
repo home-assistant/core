@@ -6,16 +6,12 @@ from http import HTTPStatus
 from io import StringIO
 import os
 from typing import Any
-from unittest.mock import ANY, DEFAULT, AsyncMock, MagicMock, Mock, patch
+from unittest.mock import ANY, AsyncMock, Mock, patch
 
-from hass_nabucasa.auth import CognitoAuth
-from hass_nabucasa.const import STATE_CONNECTED
-from hass_nabucasa.iot import CloudIoT
 import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components import backup, onboarding
-from homeassistant.components.cloud import DOMAIN as CLOUD_DOMAIN, CloudClient
 from homeassistant.components.onboarding import const, views
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -29,6 +25,7 @@ from tests.common import (
     CLIENT_ID,
     CLIENT_REDIRECT_URI,
     MockUser,
+    mock_platform,
     register_auth_provider,
 )
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -1071,137 +1068,57 @@ async def test_onboarding_backup_upload(
     mock_receive.assert_called_once_with(agent_ids=["backup.local"], contents=ANY)
 
 
-@pytest.fixture(name="cloud")
-async def cloud_fixture() -> AsyncGenerator[MagicMock]:
-    """Mock the cloud object.
-
-    See the real hass_nabucasa.Cloud class for how to configure the mock.
-    """
-    with patch(
-        "homeassistant.components.cloud.Cloud", autospec=True
-    ) as mock_cloud_class:
-        mock_cloud = mock_cloud_class.return_value
-
-        mock_cloud.auth = MagicMock(spec=CognitoAuth)
-        mock_cloud.iot = MagicMock(
-            spec=CloudIoT, last_disconnect_reason=None, state=STATE_CONNECTED
-        )
-
-        def set_up_mock_cloud(
-            cloud_client: CloudClient, mode: str, **kwargs: Any
-        ) -> DEFAULT:
-            """Set up mock cloud with a mock constructor."""
-
-            # Attributes set in the constructor with parameters.
-            mock_cloud.client = cloud_client
-
-            return DEFAULT
-
-        mock_cloud_class.side_effect = set_up_mock_cloud
-
-        # Attributes that we mock with default values.
-        mock_cloud.id_token = None
-        mock_cloud.is_logged_in = False
-
-        yield mock_cloud
-
-
-@pytest.fixture(name="setup_cloud")
-async def setup_cloud_fixture(hass: HomeAssistant, cloud: MagicMock) -> None:
-    """Fixture that sets up cloud."""
-    assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, CLOUD_DOMAIN, {})
-    await hass.async_block_till_done()
-
-
-@pytest.mark.usefixtures("setup_cloud")
-async def test_onboarding_cloud_forgot_password(
-    hass: HomeAssistant,
-    hass_storage: dict[str, Any],
-    hass_client: ClientSessionGenerator,
-    cloud: MagicMock,
+async def test_not_setup_platform_if_onboarded(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
-    """Test cloud forgot password."""
-    mock_storage(hass_storage, {"done": []})
+    """Test if onboarding is done, we don't setup platforms."""
+    mock_storage(hass_storage, {"done": onboarding.STEPS})
+
+    platform_mock = Mock(async_setup_views=AsyncMock(), spec=["async_setup_views"])
+    mock_platform(hass, "test.onboarding", platform_mock)
+    assert await async_setup_component(hass, "test", {})
+    await hass.async_block_till_done()
 
     assert await async_setup_component(hass, "onboarding", {})
     await hass.async_block_till_done()
 
-    client = await hass_client()
-
-    mock_cognito = cloud.auth
-
-    req = await client.post(
-        "/api/onboarding/cloud/forgot_password", json={"email": "hello@bla.com"}
-    )
-
-    assert req.status == HTTPStatus.OK
-    assert mock_cognito.async_forgot_password.call_count == 1
+    assert len(platform_mock.async_setup_views.mock_calls) == 0
 
 
-@pytest.mark.usefixtures("setup_cloud")
-async def test_onboarding_cloud_login(
-    hass: HomeAssistant,
-    hass_storage: dict[str, Any],
-    hass_client: ClientSessionGenerator,
-    cloud: MagicMock,
+async def test_setup_platform_if_not_onboarded(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
-    """Test logging out from cloud."""
-    mock_storage(hass_storage, {"done": []})
+    """Test if onboarding is not done, we setup platforms."""
+    platform_mock = Mock(async_setup_views=AsyncMock(), spec=["async_setup_views"])
+    mock_platform(hass, "test.onboarding", platform_mock)
+    assert await async_setup_component(hass, "test", {})
+    await hass.async_block_till_done()
 
     assert await async_setup_component(hass, "onboarding", {})
     await hass.async_block_till_done()
 
-    client = await hass_client()
-    req = await client.post(
-        "/api/onboarding/cloud/login",
-        json={"email": "my_username", "password": "my_password"},
-    )
-
-    assert req.status == HTTPStatus.OK
-    data = await req.json()
-    assert data == {"cloud_pipeline": None, "success": True}
-    assert cloud.login.call_count == 1
+    platform_mock.async_setup_views.assert_awaited_once_with(hass, {"done": []})
 
 
-@pytest.mark.usefixtures("setup_cloud")
-async def test_onboarding_cloud_logout(
+@pytest.mark.parametrize(
+    "platform_mock",
+    [
+        Mock(some_method=AsyncMock(), spec=["some_method"]),
+        Mock(spec=[]),
+    ],
+)
+async def test_bad_platform(
     hass: HomeAssistant,
-    hass_storage: dict[str, Any],
-    hass_client: ClientSessionGenerator,
-    cloud: MagicMock,
+    platform_mock: Mock,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test logging out from cloud."""
-    mock_storage(hass_storage, {"done": []})
+    """Test loading onboarding platform which doesn't have the expected methods."""
+    mock_platform(hass, "test.onboarding", platform_mock)
+    assert await async_setup_component(hass, "test", {})
+    await hass.async_block_till_done()
 
     assert await async_setup_component(hass, "onboarding", {})
     await hass.async_block_till_done()
 
-    client = await hass_client()
-    req = await client.post("/api/onboarding/cloud/logout")
-
-    assert req.status == HTTPStatus.OK
-    data = await req.json()
-    assert data == {"message": "ok"}
-    assert cloud.logout.call_count == 1
-
-
-@pytest.mark.usefixtures("setup_cloud")
-async def test_onboarding_cloud_status(
-    hass: HomeAssistant,
-    hass_storage: dict[str, Any],
-    hass_client: ClientSessionGenerator,
-    cloud: MagicMock,
-) -> None:
-    """Test logging out from cloud."""
-    mock_storage(hass_storage, {"done": []})
-
-    assert await async_setup_component(hass, "onboarding", {})
-    await hass.async_block_till_done()
-
-    client = await hass_client()
-    req = await client.get("/api/onboarding/cloud/status")
-
-    assert req.status == HTTPStatus.OK
-    data = await req.json()
-    assert data == {"logged_in": False}
+    assert platform_mock.mock_calls == []
+    assert "'test.onboarding' is not a valid onboarding platform" in caplog.text
