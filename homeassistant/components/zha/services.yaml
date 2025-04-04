@@ -59,9 +59,7 @@ set_zigbee_cluster_attribute:
     cluster_id:
       required: true
       selector:
-        number:
-          min: 1
-          max: 65535
+        text:
     cluster_type:
       default: "in"
       selector:
@@ -102,9 +100,7 @@ issue_zigbee_cluster_command:
     cluster_id:
       required: true
       selector:
-        number:
-          min: 1
-          max: 65535
+        text:
     cluster_type:
       default: "in"
       selector:
@@ -115,9 +111,7 @@ issue_zigbee_cluster_command:
     command:
       required: true
       selector:
-        number:
-          min: 1
-          max: 65535
+        text:
     command_type:
       required: true
       selector:
@@ -147,9 +141,7 @@ issue_zigbee_group_command:
     cluster_id:
       required: true
       selector:
-        number:
-          min: 1
-          max: 65535
+        text:
     cluster_type:
       default: "in"
       selector:
@@ -160,9 +152,7 @@ issue_zigbee_group_command:
     command:
       required: true
       selector:
-        number:
-          min: 1
-          max: 65535
+        text:
     args:
       example: "[arg1, arg2, argN]"
       selector:
