@@ -84,37 +84,6 @@ class ImportCollector(ast.NodeVisitor):
             if name_node.name.startswith("homeassistant.components."):
                 self._add_reference(name_node.name.split(".")[2])
 
-    def visit_Attribute(self, node: ast.Attribute) -> None:
-        """Visit Attribute node."""
-        # hass.components.hue.async_create()
-        # Name(id=hass)
-        #   .Attribute(attr=hue)
-        #   .Attribute(attr=async_create)
-
-        # self.hass.components.hue.async_create()
-        # Name(id=self)
-        #   .Attribute(attr=hass) or .Attribute(attr=_hass)
-        #   .Attribute(attr=hue)
-        #   .Attribute(attr=async_create)
-        if (
-            isinstance(node.value, ast.Attribute)
-            and node.value.attr == "components"
-            and (
-                (
-                    isinstance(node.value.value, ast.Name)
-                    and node.value.value.id == "hass"
-                )
-                or (
-                    isinstance(node.value.value, ast.Attribute)
-                    and node.value.value.attr in ("hass", "_hass")
-                )
-            )
-        ):
-            self._add_reference(node.attr)
-        else:
-            # Have it visit other kids
-            self.generic_visit(node)
-
 
 ALLOWED_USED_COMPONENTS = {
     *{platform.value for platform in Platform},
