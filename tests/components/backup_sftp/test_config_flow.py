@@ -161,46 +161,6 @@ async def test_config_flow_exceptions(
     assert result["reason"] == "already_configured"
 
 
-@pytest.mark.parametrize(
-    ("new_password", "new_host", "reauth_reason"),
-    [
-        ("new1234new", USER_INPUT[CONF_HOST], "reauth_successful"),
-        (USER_INPUT[CONF_PASSWORD], "newhost", "reauth_key_changes"),
-    ],
-    ids=["successful_change", "key_change_made"],
-)
-@pytest.mark.usefixtures("current_request_with_host")
-async def test_reauth(
-    new_password: str,
-    new_host: str,
-    reauth_reason: str,
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    mock_connect: tuple[MagicMock, MagicMock, dict[str, Any]],
-) -> None:
-    """Test the reauthentication flow."""
-
-    _, _, user_input = mock_connect
-    config_entry.add_to_hass(hass)
-    result = await config_entry.start_reauth_flow(hass)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-
-    user_input[CONF_HOST] = new_host
-    user_input[CONF_PASSWORD] = new_password
-    user_input[CONF_PRIVATE_KEY_FILE] = ""
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == reauth_reason
-    assert result["description_placeholders"] is None
-
-
 @pytest.mark.usefixtures("current_request_with_host")
 async def test_config_entry_error(hass: HomeAssistant) -> None:
     """Test config flow with raised `ConfigEntryError`."""

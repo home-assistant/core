@@ -12,10 +12,11 @@ from homeassistant.components.backup import AgentBackup
 # Import the classes and functions under test.
 from homeassistant.components.backup_sftp.client import (
     AsyncFileIterator,
+    BackupAgentAuthError,
     BackupAgentClient,
     BackupMetadata,
 )
-from homeassistant.core import HomeAssistant, HomeAssistantError
+from homeassistant.core import HomeAssistant
 
 from . import setup_backup_integration  # noqa: F401
 
@@ -119,13 +120,15 @@ async def mock_connect(async_cm_mock_generator: Callable[..., MagicMock]) -> Moc
     mock_open_cm.write = AsyncMock()
 
     start_sftp_client = AsyncMock()
+    start_sftp_client.return_value.exit = MagicMock()  # Prevent `coroutine 'AsyncMockMixin._execute_mock_call' was never awaited`` warning
     start_sftp_client.return_value.exists = AsyncMock(return_value=True)
     start_sftp_client.return_value.listdir = AsyncMock(
-        return_value=["slug_hass_backup_metadata.json"]
+        return_value=["slug.metadata.json"]
     )
     start_sftp_client.return_value.open = mock_open_cm
 
     connect.return_value.__aenter__.return_value = connect
+    connect.return_value.close = MagicMock()  # Prevent `coroutine 'AsyncMockMixin._execute_mock_call' was never awaited`` warning
     connect.return_value.start_sftp_client = start_sftp_client
     return Mocks(connect=connect)
 
@@ -134,20 +137,20 @@ async def mock_connect(async_cm_mock_generator: Callable[..., MagicMock]) -> Moc
     "homeassistant.components.backup_sftp.client.SSHClientConnectionOptions",
     MagicMock(),
 )
-async def test_client_aenter_fail_oserror(
+async def test_client_aenter_fail_exceptions(
     config_entry: MockConfigEntry, hass: HomeAssistant, mock_connect: Mocks
 ) -> None:
     """Test exceptions in `__aenter__` method of `BackupAgentClient` class.
 
     Should raise:
-    - `HomeAssistantError` on any connection error attempts - that's when connection fails.
+    - `BackupAgentAuthError` on any connection error attempts - that's when connection fails.
     - `RuntimeError` on SFTP Connection error.
     """
 
     mock_connect.connect.side_effect = OSError("Error message")
     with (
         patch("homeassistant.components.backup_sftp.client.connect", mock_connect()),
-        pytest.raises(HomeAssistantError),
+        pytest.raises(BackupAgentAuthError),
     ):
         async with BackupAgentClient(config_entry, hass):
             pass
@@ -261,11 +264,11 @@ async def test_load_metadata(
         patch("homeassistant.components.backup_sftp.client.connect", mock_connect()),
     ):
         async with BackupAgentClient(config_entry, hass) as client:
-            with pytest.raises(AssertionError) as exc:
+            with pytest.raises(FileNotFoundError) as exc:
                 await client._load_metadata(AgentBackup(**BACKUP_METADATA["metadata"]))
     assert "Metadata file not found at remote location" in str(exc.value)
     mock_connect.exists.assert_called_with(
-        f"backup_location/.{backup.metadata['backup_id']}_hass_backup_metadata.json"
+        f"backup_location/.{backup.metadata['backup_id']}.metadata.json"
     )
 
 
@@ -297,7 +300,7 @@ async def test_async_delete_backup(
         ),
     ):
         async with BackupAgentClient(config_entry, hass) as client:
-            with pytest.raises(AssertionError) as exc:
+            with pytest.raises(FileNotFoundError) as exc:
                 await client.async_delete_backup(
                     AgentBackup(**BACKUP_METADATA["metadata"])
                 )

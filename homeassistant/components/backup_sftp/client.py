@@ -17,7 +17,6 @@ from asyncssh.sftp import SFTPNoSuchFile, SFTPPermissionDenied
 
 from homeassistant.components.backup import AgentBackup, suggested_filename
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 
 from .const import BUF_SIZE, LOGGER
 
@@ -52,7 +51,7 @@ class AsyncFileIterator:
 
     async def _initialize(self) -> None:
         """Load file object."""
-        self._client = await BackupAgentClient(self.cfg, self.hass).__aenter__()  # pylint: disable=unnecessary-dunder-call
+        self._client = await BackupAgentClient(self.cfg, self.hass).open()  # pylint: disable=unnecessary-dunder-call
         self._fileobj = await self._client.sftp.open(self.file_path, "rb")
         await self._fileobj.__aenter__()  # pylint: disable=unnecessary-dunder-call
 
@@ -71,7 +70,7 @@ class AsyncFileIterator:
         if not chunk:
             try:
                 await self._fileobj.close()
-                await self._client.__aexit__(None, None, None)
+                await self._client.close()
             finally:
                 raise StopAsyncIteration
         return chunk
@@ -84,6 +83,14 @@ class BackupMetadata:
     file_path: str
     metadata: dict[str, str | dict[str | list[str]]]
     metadata_file: str
+
+
+class BackupAgentError(Exception):
+    """Base exception for `BackupAgentClient` class."""
+
+
+class BackupAgentAuthError(BackupAgentError):
+    """Exception raised when authentication fails after being initially setup."""
 
 
 class BackupAgentClient:
@@ -115,12 +122,18 @@ class BackupAgentClient:
                 ),
             )
         except (OSError, PermissionDenied) as e:
-            LOGGER.exception(e)
             LOGGER.error(
-                "Failure while attempting to establish SSH connection. Re-auth might be required"
+                "Failure while attempting to establish SSH connection. Re-auth might be required."
+                " Please check SSH credentials and if changed, re-add the integration"
             )
-            self.cfg.async_start_reauth(self.hass)
-            raise HomeAssistantError(e) from e
+            raise BackupAgentAuthError(
+                "Failure while attempting to establish SSH connection. Re-auth might be required."
+            ) from e
+
+        # We are manually calling `__aenter__` on `self._ssh` and `self.sftp` because both
+        # are async context managers that require initialization. This ensures they're properly
+        # set up and managed within the BackupAgentClient context,
+        # allowing a single `async with BackupAgentClient` to handle both.
         await self._ssh.__aenter__()
 
         # Configure SFTP Client Connection
@@ -141,10 +154,13 @@ class BackupAgentClient:
     async def __aexit__(self, exc_type, exc, traceback) -> None:
         """Async Context Manager exit routine."""
         if self.sftp:
-            await self.sftp.__aexit__(exc_type, exc, traceback)
+            self.sftp.exit()
+            await self.sftp.wait_closed()
 
         if self._ssh:
-            await self._ssh.__aexit__(exc_type, exc, traceback)
+            self._ssh.close()
+
+            await self._ssh.wait_closed()
 
     def _initialized(self, file_path: str | None = None) -> None:
         """Check if SSH Connection is initialized.
@@ -173,10 +189,9 @@ class BackupAgentClient:
 
         """
 
-        metadata_file = f"{self.cfg.runtime_data.backup_location}/.{backup.backup_id}_hass_backup_metadata.json"
-        assert await self.sftp.exists(metadata_file), (
-            f"Metadata file not found at remote location: {metadata_file}"
-        )
+        metadata_file = f"{self.cfg.runtime_data.backup_location}/.{backup.backup_id}.metadata.json"
+        if not await self.sftp.exists(metadata_file):
+            raise FileNotFoundError(f"Metadata file not found at remote location: {metadata_file}")
 
         async with self.sftp.open(metadata_file, "r") as f:
             return BackupMetadata(
@@ -194,15 +209,11 @@ class BackupAgentClient:
 
         metadata: BackupMetadata = await self._load_metadata(backup)
 
-        try:
-            assert await self.sftp.exists(metadata.file_path), (
-                f"File at provided remote location: {metadata.file_path} does not exist."
-            )
-        except AssertionError:
-            # If for whatever reason, archive does not exist but metadata file does,
-            # remove the metadata file.
+        # If for whatever reason, archive does not exist but metadata file does,
+        # remove the metadata file.
+        if not await self.sftp.exists(metadata.file_path):
             await self.sftp.unlink(metadata.metadata_file)
-            raise
+            raise FileNotFoundError(f"File at provided remote location: {metadata.file_path} does not exist.")
 
         LOGGER.debug("Removing file at path: %s", metadata.file_path)
         await self.sftp.unlink(metadata.file_path)
@@ -257,10 +268,14 @@ class BackupAgentClient:
             "metadata": backup.as_dict(),
         }
         async with self.sftp.open(
-            f"{self.cfg.runtime_data.backup_location}/.{backup.backup_id}_hass_backup_metadata.json",
+            f"{self.cfg.runtime_data.backup_location}/.{backup.backup_id}.metadata.json",
             "w",
         ) as f:
             await f.write(json.dumps(metadata))
+
+    async def close(self) -> None:
+        """Close the `BackupAgentClient` context manager."""
+        await self.__aexit__(None, None, None)
 
     async def iter_file(self, backup: AgentBackup) -> AsyncFileIterator:
         """Return Async File Iterator object.
@@ -281,7 +296,7 @@ class BackupAgentClient:
         return AsyncFileIterator(self.cfg, self.hass, metadata.file_path, BUF_SIZE)
 
     async def list_backup_location(self) -> list[str]:
-        """Return a list of `*_hass_backup_metadata.json` files located in backup location."""
+        """Return a list of `*.metadata.json` files located in backup location."""
         self._initialized()
         files = []
         LOGGER.debug(
@@ -295,7 +310,14 @@ class BackupAgentClient:
                 self.cfg.runtime_data.backup_location,
                 file,
             )
-            if file.endswith("_hass_backup_metadata.json"):
+            if file.endswith(".metadata.json"):
                 LOGGER.debug("Found metadata file: `%s`", file)
                 files.append(f"{self.cfg.runtime_data.backup_location}/{file}")
         return files
+
+    async def open(self) -> "BackupAgentClient":
+        """Return initialized `BackupAgentClient`.
+
+        This is to avoid calling `__aenter__` dunder method.
+        """
+        return await self.__aenter__()
