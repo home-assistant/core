@@ -32,7 +32,7 @@ async def async_setup_entry(
         AreaReadyToArmSensor(
             panel,
             area_id,
-            f"{unique_id}_area_{area_id}",
+            unique_id,
         )
         for area_id in panel.areas
     )
@@ -40,7 +40,7 @@ async def async_setup_entry(
         FaultingPointsSensor(
             panel,
             area_id,
-            f"{unique_id}_area_{area_id}",
+            unique_id,
         )
         for area_id in panel.areas
     )
@@ -48,7 +48,7 @@ async def async_setup_entry(
         AreaAlarmsSensor(
             panel,
             area_id,
-            f"{unique_id}_area_{area_id}",
+            unique_id,
         )
         for area_id in panel.areas
     )
@@ -92,31 +92,30 @@ class PanelFaultsSensor(SensorEntity):
         self.panel.faults_observer.detach(self.schedule_update_ha_state)
 
 
-class FaultingPointsSensor(SensorEntity):
+class AreaSensor(SensorEntity):
     """A faults sensor entity for a bosch alarm panel."""
 
     _attr_has_entity_name = True
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_translation_key = "faulting_points"
 
-    def __init__(self, panel: Panel, area_id: int, unique_id: str) -> None:
+    def __init__(self, panel: Panel, area_id: int, unique_id: str, type: str) -> None:
         """Set up a faults sensor entity for a bosch alarm panel."""
         self.panel = panel
+        area_unique_id = f"{unique_id}_area_{area_id}"
         self._area = panel.areas[area_id]
-        self._attr_unique_id = f"{unique_id}_faults"
+        self._attr_unique_id = f"{area_unique_id}_{type}"
         self._attr_translation_placeholders = {"area": self._area.name}
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, unique_id)},
+            identifiers={(DOMAIN, area_unique_id)},
             name=self._area.name,
             manufacturer="Bosch Security Systems",
             model=panel.model,
             sw_version=panel.firmware_version,
+            via_device=(
+                DOMAIN,
+                unique_id,
+            ),
         )
-
-    @property
-    def native_value(self) -> str:
-        """The state of this faults entity."""
-        return f"{self._area.faults}"
 
     async def async_added_to_hass(self) -> None:
         """Observe state changes."""
@@ -128,27 +127,29 @@ class FaultingPointsSensor(SensorEntity):
         self.panel.faults_observer.detach(self.schedule_update_ha_state)
 
 
-class AreaReadyToArmSensor(SensorEntity):
+class FaultingPointsSensor(AreaSensor):
+    """A faults sensor entity for a bosch alarm panel."""
+
+    _attr_translation_key = "faulting_points"
+
+    def __init__(self, panel: Panel, area_id: int, unique_id: str) -> None:
+        """Set up a faults sensor entity for a bosch alarm panel."""
+        super().__init__(panel, area_id, unique_id, "faults")
+
+    @property
+    def native_value(self) -> str:
+        """The state of this faults entity."""
+        return f"{self._area.faults}"
+
+
+class AreaReadyToArmSensor(AreaSensor):
     """A sensor entity showing the ready state for an area for a bosch alarm panel."""
 
-    _attr_has_entity_name = True
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_translation_key = "ready_to_arm"
 
     def __init__(self, panel: Panel, area_id: int, unique_id: str) -> None:
         """Set up a faults sensor entity for a bosch alarm panel."""
-        self.panel = panel
-        self._area = panel.areas[area_id]
-        self._attr_unique_id = f"{unique_id}_ready_to_arm"
-        self._attr_should_poll = False
-        self._attr_translation_placeholders = {"area": self._area.name}
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, unique_id)},
-            name=self._area.name,
-            manufacturer="Bosch Security Systems",
-            model=panel.model,
-            sw_version=panel.firmware_version,
-        )
+        super().__init__(panel, area_id, unique_id, "ready_to_arm")
 
     @property
     def native_value(self) -> str:
@@ -169,27 +170,14 @@ class AreaReadyToArmSensor(SensorEntity):
         self._area.ready_observer.attach(self.schedule_update_ha_state)
 
 
-class AreaAlarmsSensor(SensorEntity):
+class AreaAlarmsSensor(AreaSensor):
     """A sensor entity showing the alarms for an area for a bosch alarm panel."""
 
-    _attr_has_entity_name = True
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_translation_key = "alarms"
 
     def __init__(self, panel: Panel, area_id: int, unique_id: str) -> None:
         """Set up a faults sensor entity for a bosch alarm panel."""
-        self.panel = panel
-        self._area = panel.areas[area_id]
-        self._attr_unique_id = f"{unique_id}_alarms"
-        self._attr_should_poll = False
-        self._attr_translation_placeholders = {"area": self._area.name}
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, unique_id)},
-            name=self._area.name,
-            manufacturer="Bosch Security Systems",
-            model=panel.model,
-            sw_version=panel.firmware_version,
-        )
+        super().__init__(panel, area_id, unique_id, "alarms")
 
     @property
     def icon(self) -> str:
