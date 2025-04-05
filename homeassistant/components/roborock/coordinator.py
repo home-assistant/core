@@ -153,6 +153,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             ImageConfig(scale=MAP_SCALE),
             [],
         )
+        self.last_update_state: str | None = None
 
     @cached_property
     def dock_device_info(self) -> DeviceInfo:
@@ -291,7 +292,6 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
 
     async def _async_update_data(self) -> DeviceProp:
         """Update data via library."""
-        previous_state = self.roborock_device_info.props.status.state_name
         try:
             # Update device props and standard api information
             await self._update_device_prop()
@@ -308,7 +308,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
                     and (dt_util.utcnow() - self.maps[self.current_map].last_updated)
                     > IMAGE_CACHE_INTERVAL
                 )
-                or previous_state != new_status.state_name
+                or self.last_update_state != new_status.state_name
             ):
                 try:
                     await self.update_map()
@@ -330,6 +330,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             self.update_interval = V1_CLOUD_NOT_CLEANING_INTERVAL
         else:
             self.update_interval = V1_LOCAL_NOT_CLEANING_INTERVAL
+        self.last_update_state = self.roborock_device_info.props.status.state_name
         return self.roborock_device_info.props
 
     def _set_current_map(self) -> None:
