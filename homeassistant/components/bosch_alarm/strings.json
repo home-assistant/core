@@ -26,13 +26,13 @@
       "reauth_confirm": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
-          "installer_code": "Installer code",
-          "user_code": "User code"
+          "installer_code": "[%key:component::bosch_alarm::config::step::auth::data::installer_code%]",
+          "user_code": "[%key:component::bosch_alarm::config::step::auth::data::user_code%]"
         },
         "data_description": {
-          "password": "The Mode 2 automation code from your panel",
-          "installer_code": "The installer code from your panel",
-          "user_code": "The user code from your panel"
+          "password": "[%key:component::bosch_alarm::config::step::auth::data_description::password%]",
+          "installer_code": "[%key:component::bosch_alarm::config::step::auth::data_description::installer_code%]",
+          "user_code": "[%key:component::bosch_alarm::config::step::auth::data_description::user_code%]"
         }
       }
     },
