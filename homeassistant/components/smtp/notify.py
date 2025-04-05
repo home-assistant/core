@@ -141,6 +141,7 @@ class MailNotificationService(BaseNotificationService):
         """Connect/authenticate to SMTP Server."""
         ssl_context = client_context() if self._verify_ssl else None
         if self.encryption == "tls":
+            ssl_context.set_alpn_protocols([])
             mail = smtplib.SMTP_SSL(
                 self._server,
                 self._port,
