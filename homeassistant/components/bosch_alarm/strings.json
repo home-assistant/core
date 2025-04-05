@@ -53,5 +53,18 @@
     "authentication_failed": {
       "message": "Incorrect credentials for panel."
     }
+  },
+  "entity": {
+    "switch": {
+      "secured": {
+        "name": "Secured"
+      },
+      "cycling": {
+        "name": "Cycling"
+      },
+      "locked": {
+        "name": "Locked"
+      }
+    }
   }
 }
