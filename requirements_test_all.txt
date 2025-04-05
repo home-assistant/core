@@ -949,6 +949,9 @@ ha-iotawattpy==0.1.2
 # homeassistant.components.philips_js
 ha-philipsjs==3.2.2
 
+# homeassistant.components.homeassistant_hardware
+ha-silabs-firmware-client==0.2.0
+
 # homeassistant.components.habitica
 habiticalib==0.3.7
 
@@ -2395,6 +2398,9 @@ ultraheat-api==0.5.7
 
 # homeassistant.components.unifiprotect
 unifi-discovery==1.2.0
+
+# homeassistant.components.homeassistant_hardware
+universal-silabs-flasher==0.0.30
 
 # homeassistant.components.upb
 upb-lib==0.6.1
