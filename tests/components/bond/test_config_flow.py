@@ -292,8 +292,34 @@ async def test_dhcp_discovery(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_dhcp_discovery_already_exists(hass: HomeAssistant) -> None:
+    """Test DHCP discovery for an already existing entry."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="KVPRBDJ45842",
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        patch_bond_version(return_value={"bondid": "KVPRBDJ45842"}),
+        patch_bond_token(),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=DhcpServiceInfo(
+                ip="127.0.0.1",
+                hostname="Bond-KVPRBDJ45842",
+                macaddress=format_mac("3c:6a:2c:1c:8c:80"),
+            ),
+        )
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "already_configured"
+
+
 async def test_dhcp_discovery_short_name(hass: HomeAssistant) -> None:
-    """Test DHCP discovery."""
+    """Test DHCP discovery with the name cut off."""
 
     with patch_bond_version(), patch_bond_token():
         result = await hass.config_entries.flow.async_init(

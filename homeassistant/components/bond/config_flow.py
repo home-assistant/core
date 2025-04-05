@@ -104,7 +104,7 @@ class BondConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a flow initialized by dhcp discovery."""
         host = discovery_info.ip
-        bond_id = discovery_info.hostname.partition("-")[0]
+        bond_id = discovery_info.hostname.partition("-")[2]
         await self.async_set_unique_id(bond_id)
         return await self.async_step_any_discovery(bond_id, host)
 
@@ -126,7 +126,7 @@ class BondConfigFlow(ConfigFlow, domain=DOMAIN):
             if entry.unique_id != bond_id:
                 continue
             updates = {CONF_HOST: host}
-            if entry.state == ConfigEntryState.SETUP_ERROR and (
+            if entry.state is ConfigEntryState.SETUP_ERROR and (
                 token := await async_get_token(self.hass, host)
             ):
                 updates[CONF_ACCESS_TOKEN] = token
@@ -208,7 +208,9 @@ class BondConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = error.base
             else:
                 await self.async_set_unique_id(bond_id)
-                self._abort_if_unique_id_configured(updates=user_input[CONF_HOST])
+                self._abort_if_unique_id_configured(
+                    updates={CONF_HOST: user_input[CONF_HOST]}
+                )
                 return self.async_create_entry(title=hub_name, data=user_input)
 
         return self.async_show_form(
