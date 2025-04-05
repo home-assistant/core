@@ -66,6 +66,7 @@ from .const import (
     ATTR_DEV_ID,
     ATTR_GPS,
     ATTR_HOST_NAME,
+    ATTR_LAST_SEEN,
     ATTR_LOCATION_NAME,
     ATTR_MAC,
     ATTR_SOURCE_TYPE,
@@ -853,6 +854,9 @@ class Device(RestoreEntity):
 
         if self.battery is not None:
             attributes[ATTR_BATTERY] = self.battery
+
+        if self.last_seen is not None:
+            attributes[ATTR_LAST_SEEN] = self.last_seen.isoformat()
 
         return attributes
 

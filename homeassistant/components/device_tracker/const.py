@@ -48,6 +48,7 @@ ATTR_MAC: Final = "mac"
 ATTR_SOURCE_TYPE: Final = "source_type"
 ATTR_CONSIDER_HOME: Final = "consider_home"
 ATTR_IP: Final = "ip"
+ATTR_LAST_SEEN: Final = "last_seen"
 
 CONNECTED_DEVICE_REGISTERED = SignalType[dict[str, str | None]](
     "device_tracker_connected_device_registered"

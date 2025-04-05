@@ -1,6 +1,7 @@
 """Typing Helpers for Home Assistant."""
 
 from collections.abc import Mapping
+from datetime import datetime
 from enum import Enum
 from functools import partial
 from typing import Any, Never
@@ -18,7 +19,7 @@ type GPSType = tuple[float, float]
 type ConfigType = dict[str, Any]
 type DiscoveryInfoType = dict[str, Any]
 type ServiceDataType = dict[str, Any]
-type StateType = str | int | float | None
+type StateType = str | int | float | datetime | None
 type TemplateVarsType = Mapping[str, Any] | None
 type NoEventData = Mapping[str, Never]
 type VolSchemaType = vol.Schema | vol.All | vol.Any
