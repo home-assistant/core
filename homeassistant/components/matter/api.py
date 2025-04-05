@@ -38,6 +38,8 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_open_commissioning_window)
     websocket_api.async_register_command(hass, websocket_remove_matter_fabric)
     websocket_api.async_register_command(hass, websocket_interview_node)
+    websocket_api.async_register_command(hass, websocket_get_node_binding)
+    websocket_api.async_register_command(hass, websocket_set_node_binding)
 
 
 def async_get_node(
@@ -236,6 +238,61 @@ async def websocket_node_diagnostics(
     """Gather diagnostics for the given node."""
     result = await matter.matter_client.node_diagnostics(node_id=node.node_id)
     connection.send_result(msg[ID], dataclass_to_dict(result))
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "matter/get_node_binding",
+        vol.Required(DEVICE_ID): str,
+    }
+)
+@websocket_api.async_response
+@async_handle_failed_command
+@async_get_matter_adapter
+@async_get_node
+async def websocket_get_node_binding(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+    matter: MatterAdapter,
+    node: MatterNode,
+) -> None:
+    """Get the bindings info in binding cluster at endpoints."""
+    ret = {
+        k: v.get_attribute_value(30, 0)
+        for k, v in node.endpoints.items()
+        if v.has_cluster(30)
+    }
+    connection.send_result(msg[ID], ret)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "matter/set_node_binding",
+        vol.Required(DEVICE_ID): str,
+        vol.Required("endpoint"): int,
+        vol.Required("bindings"): list,
+    }
+)
+@websocket_api.async_response
+@async_handle_failed_command
+@async_get_matter_adapter
+@async_get_node
+async def websocket_set_node_binding(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+    matter: MatterAdapter,
+    node: MatterNode,
+) -> None:
+    """Set node bindings info in binding cluster of endpoint."""
+    attribute_path = f"{msg['endpoint']}/30/0"
+    result = await matter.matter_client.write_attribute(
+        node_id=node.node_id,
+        attribute_path=attribute_path,
+        value=msg["bindings"],
+    )
+    connection.send_result(msg[ID], result)
 
 
 @websocket_api.websocket_command(
