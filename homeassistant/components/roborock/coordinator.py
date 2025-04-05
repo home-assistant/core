@@ -226,7 +226,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
         """Update the currently selected map."""
         # The current map was set in the props update, so these can be done without
         # worry of applying them to the wrong map.
-        if self.current_map is None:
+        if self.current_map is None or self.current_map not in self.maps:
             # This exists as a safeguard/ to keep mypy happy.
             return
         try:
@@ -302,13 +302,17 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             # If the vacuum is currently cleaning and it has been IMAGE_CACHE_INTERVAL
             # since the last map update, you can update the map.
             new_status = self.roborock_device_info.props.status
-            if self.current_map is not None and (
-                (
-                    new_status.in_cleaning
-                    and (dt_util.utcnow() - self.maps[self.current_map].last_updated)
-                    > IMAGE_CACHE_INTERVAL
+            if (
+                self.current_map is not None
+                and (current_map := self.maps.get(self.current_map))
+                and (
+                    (
+                        new_status.in_cleaning
+                        and (dt_util.utcnow() - current_map.last_updated)
+                        > IMAGE_CACHE_INTERVAL
+                    )
+                    or self.last_update_state != new_status.state_name
                 )
-                or self.last_update_state != new_status.state_name
             ):
                 try:
                     await self.update_map()
