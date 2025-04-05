@@ -41,7 +41,7 @@
         },
         "data_description": {
           "prompt": "Instruct how the LLM should respond. This can be a template.",
-          "enable_google_search_tool": "Only works with *No control* in the *Control Home Assistant* setting. See docs for a workaround using it with *Assist*."
+          "enable_google_search_tool": "Only works with \"No control\" in the \"Control Home Assistant\" setting. See docs for a workaround using it with \"Assist\"."
         }
       }
     },
