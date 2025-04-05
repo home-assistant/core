@@ -32,6 +32,9 @@
         "data": {
           "fallback": "Choose fallback mode."
         },
+        "data_description": {
+          "fallback": "Fallback mode lets you choose when to fallback to Smart Schedule from your manual zone overlay. (NEXT_TIME_BLOCK:= Change at next Smart Schedule change; MANUAL:= Don't change until you cancel; TADO_DEFAULT:= Change based on your setting in the Tado app)."
+        },
         "title": "Adjust Tado options."
       }
     }
