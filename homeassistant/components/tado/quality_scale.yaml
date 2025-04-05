@@ -38,7 +38,7 @@ rules:
     comment: |
       No parallel updates.
   reauthentication-flow: done
-  test-coverage: done
+  test-coverage: todo
   # Gold
   devices: done
   diagnostics: todo
