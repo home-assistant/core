@@ -62,7 +62,10 @@ async def test_user_setup(hass: HomeAssistant) -> None:
     """Test the user manually setting up the integration."""
     with patch(
         "homeassistant.components.kulersky.config_flow.async_discovered_service_info",
-        return_value=[KULERSKY_SERVICE_INFO],
+        return_value=[
+            KULERSKY_SERVICE_INFO,
+            KULERSKY_SERVICE_INFO,
+        ],  # Pass twice to test duplicate logic
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
