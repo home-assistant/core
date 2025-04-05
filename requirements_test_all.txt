@@ -1655,6 +1655,9 @@ pyicloud==1.0.0
 # homeassistant.components.insteon
 pyinsteon==1.6.3
 
+# homeassistant.components.daikin_br
+pyiotdevice==1.0.17
+
 # homeassistant.components.ipma
 pyipma==3.0.9
 
