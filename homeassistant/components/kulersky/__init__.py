@@ -58,7 +58,8 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             return False
 
         first_device = devices[0]
-        address = next(iter(first_device.identifiers))[1]
+        domain_identifiers = [i for i in first_device.identifiers if i[0] == DOMAIN]
+        address = next(iter(domain_identifiers))[1]
         hass.config_entries.async_update_entry(
             config_entry,
             title=first_device.name or address,
@@ -80,7 +81,8 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
         # Create new config entries for the remaining devices
         for device in devices[1:]:
-            address = next(iter(device.identifiers))[1]
+            domain_identifiers = [i for i in device.identifiers if i[0] == DOMAIN]
+            address = next(iter(domain_identifiers))[1]
             new_entry = ConfigEntry(
                 data={CONF_ADDRESS: address},
                 options=config_entry.options,
