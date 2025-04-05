@@ -17,7 +17,7 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
@@ -57,6 +57,7 @@ class KulerskyLight(LightEntity):
         self._attr_unique_id = address
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, address)},
+            connections={(CONNECTION_BLUETOOTH, address)},
             manufacturer="Brightech",
             name=name,
         )

@@ -59,6 +59,8 @@ class KulerskyConfigFlow(ConfigFlow, domain=DOMAIN):
                 discovery_info.address, raise_on_progress=False
             )
             self._abort_if_unique_id_configured()
+
+            kulersky_light = None
             try:
                 kulersky_light = pykulersky.Light(discovery_info.address)
                 await kulersky_light.connect()
@@ -68,13 +70,15 @@ class KulerskyConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected error")
                 errors["base"] = "unknown"
             else:
-                await kulersky_light.disconnect()
                 return self.async_create_entry(
                     title=local_name,
                     data={
                         CONF_ADDRESS: discovery_info.address,
                     },
                 )
+            finally:
+                if kulersky_light:
+                    await kulersky_light.disconnect()
 
         if discovery := self._discovery_info:
             self._discovered_devices[discovery.address] = discovery
