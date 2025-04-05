@@ -98,12 +98,6 @@ async def test_init(hass: HomeAssistant, mock_light: AsyncMock) -> None:
         ATTR_RGBW_COLOR: None,
     }
 
-    with patch.object(hass.loop, "stop"):
-        await hass.async_stop()
-        await hass.async_block_till_done()
-
-    assert mock_light.disconnect.called
-
 
 async def test_remove_entry(
     hass: HomeAssistant, mock_light: MagicMock, mock_entry: MockConfigEntry

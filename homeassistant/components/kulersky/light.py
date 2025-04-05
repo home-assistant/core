@@ -15,7 +15,7 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ADDRESS, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -61,15 +61,7 @@ class KulerskyLight(LightEntity):
             name=name,
         )
 
-    async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added to hass."""
-        self.async_on_remove(
-            self.hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_STOP, self.async_will_remove_from_hass
-            )
-        )
-
-    async def async_will_remove_from_hass(self, *args) -> None:
+    async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         try:
             await self._light.disconnect()
