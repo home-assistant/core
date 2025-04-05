@@ -5,12 +5,13 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Generic
+from typing import Any
 
 from ring_doorbell import RingCapability, RingEvent
 from ring_doorbell.const import KIND_DING, KIND_MOTION
 
 from homeassistant.components.binary_sensor import (
+    DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
@@ -22,13 +23,7 @@ from homeassistant.helpers.event import async_call_at
 
 from . import RingConfigEntry
 from .coordinator import RingListenCoordinator
-from .entity import (
-    DeprecatedInfo,
-    RingBaseEntity,
-    RingDeviceT,
-    RingEntityDescription,
-    async_check_create_deprecated,
-)
+from .entity import DeprecatedInfo, RingBaseEntity, RingDeviceT, RingEntityDescription
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -36,11 +31,9 @@ PARALLEL_UPDATES = 0
 
 @dataclass(frozen=True, kw_only=True)
 class RingBinarySensorEntityDescription(
-    BinarySensorEntityDescription, RingEntityDescription, Generic[RingDeviceT]
+    BinarySensorEntityDescription, RingEntityDescription[RingDeviceT]
 ):
     """Describes Ring binary sensor entity."""
-
-    capability: RingCapability
 
 
 BINARY_SENSOR_TYPES: tuple[RingBinarySensorEntityDescription, ...] = (
@@ -48,7 +41,7 @@ BINARY_SENSOR_TYPES: tuple[RingBinarySensorEntityDescription, ...] = (
         key=KIND_DING,
         translation_key=KIND_DING,
         device_class=BinarySensorDeviceClass.OCCUPANCY,
-        capability=RingCapability.DING,
+        exists_fn=lambda device: device.has_capability(RingCapability.DING),
         deprecated_info=DeprecatedInfo(
             new_platform=Platform.EVENT, breaks_in_ha_version="2025.4.0"
         ),
@@ -56,7 +49,7 @@ BINARY_SENSOR_TYPES: tuple[RingBinarySensorEntityDescription, ...] = (
     RingBinarySensorEntityDescription(
         key=KIND_MOTION,
         device_class=BinarySensorDeviceClass.MOTION,
-        capability=RingCapability.MOTION_DETECTION,
+        exists_fn=lambda device: device.has_capability(RingCapability.MOTION_DETECTION),
         deprecated_info=DeprecatedInfo(
             new_platform=Platform.EVENT, breaks_in_ha_version="2025.4.0"
         ),
@@ -71,19 +64,18 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Ring binary sensors from a config entry."""
     ring_data = entry.runtime_data
+    devices_coordinator = ring_data.devices_coordinator
     listen_coordinator = ring_data.listen_coordinator
 
-    async_add_entities(
-        RingBinarySensor(device, listen_coordinator, description)
-        for description in BINARY_SENSOR_TYPES
-        for device in ring_data.devices.all_devices
-        if device.has_capability(description.capability)
-        and async_check_create_deprecated(
-            hass,
-            Platform.BINARY_SENSOR,
-            f"{device.id}-{description.key}",
-            description,
-        )
+    RingBinarySensor.process_devices(
+        hass,
+        lambda device, description: RingBinarySensor(
+            device, listen_coordinator, description
+        ),
+        devices_coordinator,
+        async_add_entities=async_add_entities,
+        domain=BINARY_SENSOR_DOMAIN,
+        descriptions=BINARY_SENSOR_TYPES,
     )
 
 
@@ -105,9 +97,8 @@ class RingBinarySensor(
         super().__init__(
             device,
             coordinator,
+            description,
         )
-        self.entity_description = description
-        self._attr_unique_id = f"{device.id}-{description.key}"
         self._attr_is_on = False
         self._active_alert: RingEvent | None = None
         self._cancel_callback: CALLBACK_TYPE | None = None
