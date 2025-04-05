@@ -353,6 +353,46 @@ async def test_component_not_setup_missing_dependencies(hass: HomeAssistant) -> 
     assert await setup.async_setup_component(hass, "comp2", {})
 
 
+async def test_component_setup_dependencies_with_config_entry(
+    hass: HomeAssistant, mock_handlers
+) -> None:
+    """Test we wait for a dependency with config entry."""
+    calls = []
+
+    async def mock_async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+        await asyncio.sleep(0)
+        calls.append("entry")
+        return True
+
+    mock_integration(hass, MockModule("comp", async_setup_entry=mock_async_setup_entry))
+    mock_platform(hass, "comp.config_flow", None)
+    MockConfigEntry(domain="comp").add_to_hass(hass)
+
+    async def mock_async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+        calls.append("comp")
+        return True
+
+    mock_integration(
+        hass,
+        MockModule("comp2", dependencies=["comp"], async_setup=mock_async_setup),
+    )
+    mock_integration(
+        hass,
+        MockModule("comp3", dependencies=["comp"], async_setup=mock_async_setup),
+    )
+
+    await asyncio.gather(
+        setup.async_setup_component(hass, "comp2", {}),
+        setup.async_setup_component(hass, "comp3", {}),
+    )
+
+    assert "comp" in hass.config.components
+    assert "comp2" in hass.config.components
+    assert "comp3" in hass.config.components
+
+    assert calls == ["entry", "comp", "comp"]
+
+
 async def test_component_failing_setup(hass: HomeAssistant) -> None:
     """Test component that fails setup."""
     mock_integration(hass, MockModule("comp", setup=lambda hass, config: False))
