@@ -1,13 +1,32 @@
 """Test the INKBIRD config flow."""
 
+from unittest.mock import patch
+
+from inkbird_ble import (
+    DeviceKey,
+    SensorDescription,
+    SensorDeviceInfo,
+    SensorUpdate,
+    SensorValue,
+    Units,
+)
+from sensor_state_data import SensorDeviceClass
+
+from homeassistant.components.inkbird import FALLBACK_POLL_INTERVAL
 from homeassistant.components.inkbird.const import CONF_DEVICE_TYPE, DOMAIN
 from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
-from . import SPS_SERVICE_INFO, SPS_WITH_CORRUPT_NAME_SERVICE_INFO
+from . import (
+    SPS_PASSIVE_SERVICE_INFO,
+    SPS_PASSIVE_SERVICE_INFO_2,
+    SPS_SERVICE_INFO,
+    SPS_WITH_CORRUPT_NAME_SERVICE_INFO,
+)
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.bluetooth import inject_bluetooth_service_info
 
 
@@ -66,5 +85,148 @@ async def test_device_with_corrupt_name(hass: HomeAssistant) -> None:
     assert temp_sensor_attribtes[ATTR_STATE_CLASS] == "measurement"
 
     assert entry.data[CONF_DEVICE_TYPE] == "IBS-TH"
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_polling_sensor(hass: HomeAssistant) -> None:
+    """Test setting up a device that needs polling."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="AA:BB:CC:DD:EE:FF",
+        data={CONF_DEVICE_TYPE: "IBS-TH"},
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 0
+
+    with patch(
+        "homeassistant.components.inkbird.INKBIRDBluetoothDeviceData.async_poll",
+        return_value=SensorUpdate(
+            title=None,
+            devices={
+                None: SensorDeviceInfo(
+                    name="IBS-TH EEFF",
+                    model="IBS-TH",
+                    manufacturer="INKBIRD",
+                    sw_version=None,
+                    hw_version=None,
+                )
+            },
+            entity_descriptions={
+                DeviceKey(key="signal_strength", device_id=None): SensorDescription(
+                    device_key=DeviceKey(key="signal_strength", device_id=None),
+                    device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+                    native_unit_of_measurement=Units.SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+                ),
+                DeviceKey(key="temperature", device_id=None): SensorDescription(
+                    device_key=DeviceKey(key="temperature", device_id=None),
+                    device_class=SensorDeviceClass.TEMPERATURE,
+                    native_unit_of_measurement=Units.TEMP_CELSIUS,
+                ),
+                DeviceKey(key="humidity", device_id=None): SensorDescription(
+                    device_key=DeviceKey(key="humidity", device_id=None),
+                    device_class=SensorDeviceClass.HUMIDITY,
+                    native_unit_of_measurement=Units.PERCENTAGE,
+                ),
+            },
+            entity_values={
+                DeviceKey(key="signal_strength", device_id=None): SensorValue(
+                    device_key=DeviceKey(key="signal_strength", device_id=None),
+                    name="Signal Strength",
+                    native_value=-60,
+                ),
+                DeviceKey(key="temperature", device_id=None): SensorValue(
+                    device_key=DeviceKey(key="temperature", device_id=None),
+                    name="Temperature",
+                    native_value=23.13,
+                ),
+                DeviceKey(key="humidity", device_id=None): SensorValue(
+                    device_key=DeviceKey(key="humidity", device_id=None),
+                    name="Humidity",
+                    native_value=10.24,
+                ),
+            },
+            binary_entity_descriptions={},
+            binary_entity_values={},
+            events={},
+        ),
+    ):
+        inject_bluetooth_service_info(hass, SPS_PASSIVE_SERVICE_INFO)
+        await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 2
+
+    temp_sensor = hass.states.get("sensor.ibs_th_eeff_humidity")
+    temp_sensor_attribtes = temp_sensor.attributes
+    assert temp_sensor.state == "10.24"
+    assert temp_sensor_attribtes[ATTR_FRIENDLY_NAME] == "IBS-TH EEFF Humidity"
+    assert temp_sensor_attribtes[ATTR_UNIT_OF_MEASUREMENT] == "%"
+    assert temp_sensor_attribtes[ATTR_STATE_CLASS] == "measurement"
+
+    assert entry.data[CONF_DEVICE_TYPE] == "IBS-TH"
+
+    with patch(
+        "homeassistant.components.inkbird.INKBIRDBluetoothDeviceData.async_poll",
+        return_value=SensorUpdate(
+            title=None,
+            devices={
+                None: SensorDeviceInfo(
+                    name="IBS-TH EEFF",
+                    model="IBS-TH",
+                    manufacturer="INKBIRD",
+                    sw_version=None,
+                    hw_version=None,
+                )
+            },
+            entity_descriptions={
+                DeviceKey(key="signal_strength", device_id=None): SensorDescription(
+                    device_key=DeviceKey(key="signal_strength", device_id=None),
+                    device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+                    native_unit_of_measurement=Units.SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+                ),
+                DeviceKey(key="temperature", device_id=None): SensorDescription(
+                    device_key=DeviceKey(key="temperature", device_id=None),
+                    device_class=SensorDeviceClass.TEMPERATURE,
+                    native_unit_of_measurement=Units.TEMP_CELSIUS,
+                ),
+                DeviceKey(key="humidity", device_id=None): SensorDescription(
+                    device_key=DeviceKey(key="humidity", device_id=None),
+                    device_class=SensorDeviceClass.HUMIDITY,
+                    native_unit_of_measurement=Units.PERCENTAGE,
+                ),
+            },
+            entity_values={
+                DeviceKey(key="signal_strength", device_id=None): SensorValue(
+                    device_key=DeviceKey(key="signal_strength", device_id=None),
+                    name="Signal Strength",
+                    native_value=-60,
+                ),
+                DeviceKey(key="temperature", device_id=None): SensorValue(
+                    device_key=DeviceKey(key="temperature", device_id=None),
+                    name="Temperature",
+                    native_value=23.13,
+                ),
+                DeviceKey(key="humidity", device_id=None): SensorValue(
+                    device_key=DeviceKey(key="humidity", device_id=None),
+                    name="Humidity",
+                    native_value=20.24,
+                ),
+            },
+            binary_entity_descriptions={},
+            binary_entity_values={},
+            events={},
+        ),
+    ):
+        async_fire_time_changed(hass, dt_util.utcnow() + FALLBACK_POLL_INTERVAL)
+        inject_bluetooth_service_info(hass, SPS_PASSIVE_SERVICE_INFO_2)
+        await hass.async_block_till_done()
+
+    temp_sensor = hass.states.get("sensor.ibs_th_eeff_humidity")
+    temp_sensor_attribtes = temp_sensor.attributes
+    assert temp_sensor.state == "20.24"
+
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()

@@ -22,6 +22,29 @@ SPS_SERVICE_INFO = BluetoothServiceInfo(
     source="local",
 )
 
+
+SPS_PASSIVE_SERVICE_INFO = BluetoothServiceInfo(
+    name="sps",
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-63,
+    service_data={},
+    manufacturer_data={},
+    service_uuids=["0000fff0-0000-1000-8000-00805f9b34fb"],
+    source="local",
+)
+
+
+SPS_PASSIVE_SERVICE_INFO_2 = BluetoothServiceInfo(
+    name="sps",
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-66,
+    service_data={},
+    manufacturer_data={},
+    service_uuids=["0000fff0-0000-1000-8000-00805f9b34fb"],
+    source="local",
+)
+
+
 SPS_WITH_CORRUPT_NAME_SERVICE_INFO = BluetoothServiceInfo(
     name="XXXXcorruptXXXX",
     address="AA:BB:CC:DD:EE:FF",
