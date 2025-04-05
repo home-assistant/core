@@ -138,6 +138,12 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
+        if self.data.lock:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="change_settings_while_lock_enabled",
+            )
+
         if (hvac_mode := kwargs.get(ATTR_HVAC_MODE)) is HVACMode.OFF:
             await self.async_set_hvac_mode(hvac_mode)
         elif (target_temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
@@ -173,6 +179,11 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="change_hvac_while_active_mode",
+            )
+        if self.data.lock:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="change_settings_while_lock_enabled",
             )
         if self.hvac_mode is hvac_mode:
             LOGGER.debug(
