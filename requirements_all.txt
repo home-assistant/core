@@ -2077,7 +2077,7 @@ pykoplenti==1.3.0
 pykrakenapi==0.1.8
 
 # homeassistant.components.kulersky
-pykulersky==0.5.2
+pykulersky==0.5.8
 
 # homeassistant.components.kwb
 pykwb==0.0.8
