@@ -214,7 +214,7 @@ async def test_entry_already_configured_serial(
     assert result["reason"] == "already_configured"
 
 
-async def test_reauth_flow(
+async def test_reauth_flow_success(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
@@ -230,30 +230,6 @@ async def test_reauth_flow(
     config_flow_data = {k: f"{v}2" for k, v in config_flow_data.items()}
 
     assert result["step_id"] == "reauth_confirm"
-    # Check if reauth fails if the alarm returns a permission error
-    mock_panel.connect.side_effect = PermissionError()
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input=config_flow_data,
-    )
-    assert result["step_id"] == "reauth_confirm"
-    assert result["errors"]["base"] == "invalid_auth"
-    # Check if reauth fails if the alarm returns a connection error
-    mock_panel.connect.side_effect = OSError()
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input=config_flow_data,
-    )
-    assert result["step_id"] == "reauth_confirm"
-    assert result["errors"]["base"] == "cannot_connect"
-    # Check if reauth fails if the alarm returns a unknown error
-    mock_panel.connect.side_effect = Exception()
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input=config_flow_data,
-    )
-    assert result["step_id"] == "reauth_confirm"
-    assert result["errors"]["base"] == "unknown"
     # Now check it works when there are no errors
     mock_panel.connect.side_effect = None
     result = await hass.config_entries.flow.async_configure(
@@ -263,3 +239,38 @@ async def test_reauth_flow(
     assert result["reason"] == "reauth_successful"
     compare = {**mock_config_entry.data, **config_flow_data}
     assert compare == mock_config_entry.data
+
+
+@pytest.mark.parametrize(
+    ("exception", "message"),
+    [
+        (OSError(), "cannot_connect"),
+        (PermissionError(), "invalid_auth"),
+        (Exception(), "unknown"),
+    ],
+)
+async def test_reauth_flow_error(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_panel: AsyncMock,
+    model_name: str,
+    serial_number: str,
+    config_flow_data: dict[str, Any],
+    exception: Exception,
+    message: str,
+) -> None:
+    """Test reauth flow."""
+    await setup_integration(hass, mock_config_entry)
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    config_flow_data = {k: f"{v}2" for k, v in config_flow_data.items()}
+
+    assert result["step_id"] == "reauth_confirm"
+    mock_panel.connect.side_effect = exception
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=config_flow_data,
+    )
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"]["base"] == message
