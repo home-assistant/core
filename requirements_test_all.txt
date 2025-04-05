@@ -777,7 +777,7 @@ evolutionhttp==0.0.18
 faadelays==2023.9.1
 
 # homeassistant.components.fastdotcom
-fastdotcom==0.0.3
+fastdotcom2==0.0.19
 
 # homeassistant.components.feedreader
 feedparser==6.0.11
