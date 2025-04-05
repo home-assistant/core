@@ -38,6 +38,7 @@ from typing import (
     TypedDict,
     TypeVar,
     cast,
+    final,
     overload,
 )
 
@@ -324,6 +325,7 @@ class HassJobType(enum.Enum):
     Executor = 3
 
 
+@final  # Final to allow direct checking of the type instead of using isinstance
 class HassJob[**_P, _R_co]:
     """Represent a job to be run later.
 
@@ -1317,6 +1319,7 @@ class EventOrigin(enum.Enum):
         return next((idx for idx, origin in enumerate(EventOrigin) if origin is self))
 
 
+@final  # Final to allow direct checking of the type instead of using isinstance
 class Event(Generic[_DataT]):
     """Representation of an event within the bus."""
 
