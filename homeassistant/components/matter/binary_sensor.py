@@ -322,4 +322,16 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(clusters.EnergyEvse.Attributes.SupplyState,),
         allow_multi=True,  # also used for sensor entity
     ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="WaterHeaterManagementBoostStateSensor",
+            translation_key="boost_state",
+            measurement_to_ha=lambda x: (
+                x == clusters.WaterHeaterManagement.Enums.BoostStateEnum.kActive
+            ),
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(clusters.WaterHeaterManagement.Attributes.BoostState,),
+    ),
 ]
