@@ -115,7 +115,7 @@
       "sensitivity": {
         "name": "Pure sensitivity",
         "state": {
-          "n": "Normal",
+          "n": "[%key:common::state::normal%]",
           "s": "Sensitive"
         }
       },
@@ -524,7 +524,7 @@
   "selector": {
     "sensitivity": {
       "options": {
-        "normal": "[%key:component::sensibo::entity::sensor::sensitivity::state::n%]",
+        "normal": "[%key:common::state::normal%]",
         "sensitive": "[%key:component::sensibo::entity::sensor::sensitivity::state::s%]"
       }
     },
