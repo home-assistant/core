@@ -478,7 +478,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             )
         else:
             soco.clear_queue()
-            soco.add_to_queue(favorite.reference if hasattr(favorite, 'reference') else favorite.get_uri(), timeout=LONG_SERVICE_TIMEOUT)
+            soco.add_to_queue(favorite.reference if hasattr(favorite, 'reference') else favorite, timeout=LONG_SERVICE_TIMEOUT)
             soco.play_from_queue(0)
 
     @property
