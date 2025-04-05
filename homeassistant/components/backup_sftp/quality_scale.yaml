@@ -2,11 +2,10 @@ rules:
   # Bronze
   action-setup:
     status: exempt
-    comment: Integration does not register custom actions.
+    comment: No actions.
   appropriate-polling:
     status: exempt
-    comment: |
-      This integration does not poll.
+    comment: No polling.
   brands: done
   common-modules: done
   config-flow-test-coverage: done
@@ -14,23 +13,19 @@ rules:
   dependency-transparency: done
   docs-actions:
     status: exempt
-    comment: |
-      This integration does not have any custom actions.
+    comment: No actions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
   entity-event-setup:
     status: exempt
-    comment: |
-      Entities of this integration does not explicitly subscribe to events.
+    comment: No entities.
   entity-unique-id:
     status: exempt
-    comment: |
-      This integration does not have entities.
+    comment: No entities.
   has-entity-name:
     status: exempt
-    comment: |
-      This integration does not have entities.
+    comment: No entities.
   runtime-data: done
   test-before-configure: done
   test-before-setup: done
@@ -41,23 +36,19 @@ rules:
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
-    comment: |
-      This integration does not have any configuration parameters.
+    comment: No configuration options.
   docs-installation-parameters: done
   entity-unavailable:
     status: exempt
-    comment: |
-      This integration does not have entities.
+    comment: No entities.
   integration-owner: done
   log-when-unavailable:
     status: exempt
-    comment: |
-      This integration does not have entities.
+    comment: No entities.
   parallel-updates:
     status: exempt
-    comment: |
-      This integration does not have platforms.
-  reauthentication-flow: done
+    comment: No actions and no entities.
+  reauthentication-flow: todo
   test-coverage: done
 
   # Gold
@@ -122,7 +113,7 @@ rules:
     comment: |
       This integration does not have entities.
   reconfiguration-flow: todo
-  repair-issues: todo
+  repair-issues: done
   stale-devices:
     status: exempt
     comment: |
