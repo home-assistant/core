@@ -105,6 +105,9 @@ async def test_media_view(
     client = await hass_client()
 
     # Protects against non-existent files
+    resp = await client.head("/media/local/invalid.txt")
+    assert resp.status == HTTPStatus.NOT_FOUND
+
     resp = await client.get("/media/local/invalid.txt")
     assert resp.status == HTTPStatus.NOT_FOUND
 
@@ -112,14 +115,23 @@ async def test_media_view(
     assert resp.status == HTTPStatus.NOT_FOUND
 
     # Protects against non-media files
+    resp = await client.head("/media/local/not_media.txt")
+    assert resp.status == HTTPStatus.NOT_FOUND
+
     resp = await client.get("/media/local/not_media.txt")
     assert resp.status == HTTPStatus.NOT_FOUND
 
     # Protects against unknown local media sources
+    resp = await client.head("/media/unknown_source/not_media.txt")
+    assert resp.status == HTTPStatus.NOT_FOUND
+
     resp = await client.get("/media/unknown_source/not_media.txt")
     assert resp.status == HTTPStatus.NOT_FOUND
 
     # Fetch available media
+    resp = await client.head("/media/local/test.mp3")
+    assert resp.status == HTTPStatus.OK
+
     resp = await client.get("/media/local/test.mp3")
     assert resp.status == HTTPStatus.OK
 
