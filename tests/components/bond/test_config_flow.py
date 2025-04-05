@@ -310,7 +310,7 @@ async def test_dhcp_discovery_already_exists(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_DHCP},
             data=DhcpServiceInfo(
                 ip="127.0.0.1",
-                hostname="Bond-KVPRBDJ45842",
+                hostname="Bond-KVPRBDJ45842".lower(),
                 macaddress=format_mac("3c:6a:2c:1c:8c:80"),
             ),
         )

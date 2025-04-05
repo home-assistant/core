@@ -104,7 +104,7 @@ class BondConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a flow initialized by dhcp discovery."""
         host = discovery_info.ip
-        bond_id = discovery_info.hostname.partition("-")[2]
+        bond_id = discovery_info.hostname.partition("-")[2].upper()
         await self.async_set_unique_id(bond_id)
         return await self.async_step_any_discovery(bond_id, host)
 
