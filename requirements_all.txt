@@ -2964,6 +2964,9 @@ typedmonarchmoney==0.4.4
 # homeassistant.components.ukraine_alarm
 uasiren==0.0.1
 
+# homeassistant.components.unifi_access
+uiaccessclient==0.9.3
+
 # homeassistant.components.unifiprotect
 uiprotect==7.5.1
 
