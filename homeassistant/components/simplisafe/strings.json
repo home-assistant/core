@@ -115,6 +115,38 @@
           "description": "The volume level of the voice prompt."
         }
       }
+    },
+    "capture_motion_clip": {
+      "name": "Capture motion event clip",
+      "description": "Save a short mp4 file containing the motion event.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity ID",
+          "description": "The entity id of the camera."
+        },
+        "filename": {
+          "name": "File name",
+          "description": "File to store the media file."
+        }
+      }
+    },
+    "capture_motion_image": {
+      "name": "Capture motion event image",
+      "description": "Save a jpeg file containing the motion event.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity ID",
+          "description": "The entity id of the camera."
+        },
+        "width": {
+          "name": "Width",
+          "description": "Desired width in pixels for the image"
+        },
+        "filename": {
+          "name": "File name",
+          "description": "File to store the media file."
+        }
+      }
     }
   }
 }
