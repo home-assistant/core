@@ -157,6 +157,9 @@ def async_log_discovery_origin_info(
     message: str, discovery_payload: MQTTDiscoveryPayload
 ) -> None:
     """Log information about the discovery and origin."""
+    if not _LOGGER.isEnabledFor(logging.DEBUG):
+        # bail out early if debug logging is disabled
+        return
     _LOGGER.debug(
         "%s%s", message, get_origin_log_string(discovery_payload, include_url=True)
     )
