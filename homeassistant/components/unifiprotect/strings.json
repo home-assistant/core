@@ -235,6 +235,20 @@
           "description": "Any device from the UniFi Protect instance you want to retrieve keyring details. This is useful for systems with multiple Protect instances."
         }
       }
+    },
+    "ptz_goto_preset": {
+      "name": "Move PTZ Camera to preset",
+      "description": "Pans, Tilts, and Zooms the given camera to the specified preset.",
+      "fields": {
+        "device_id": {
+          "description": "The camera to move.",
+          "name": "Camera"
+        },
+        "slot": {
+          "description": "The slot name or index to move the camera to",
+          "name": "Slot"
+        }
+      }
     }
   }
 }

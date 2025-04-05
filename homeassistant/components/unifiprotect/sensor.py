@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import datetime
@@ -16,6 +17,8 @@ from uiprotect.data import (
     ModelType,
     ProtectAdoptableDeviceModel,
     ProtectDeviceModel,
+    PTZPosition,
+    PTZPreset,
     Sensor,
     SmartDetectObjectType,
 )
@@ -38,8 +41,20 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import (
+    ATTR_PTZ_PAN,
+    ATTR_PTZ_PAN_RAW,
+    ATTR_PTZ_SLOT,
+    ATTR_PTZ_TILT,
+    ATTR_PTZ_TILT_RAW,
+    ATTR_PTZ_ZOOM,
+    ATTR_PTZ_ZOOM_RAW,
+    PTZ_SLOT_HOME,
+    PTZ_SLOT_NAME_HOME,
+)
 from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
 from .entity import (
     BaseProtectEntity,
@@ -275,6 +290,15 @@ CAMERA_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         ufp_required_field="feature_flags.has_chime",
         ufp_value="chime_type",
     ),
+)
+
+PTZ_CAMERA_PRESET_SENSOR: ProtectSensorEntityDescription = (
+    ProtectSensorEntityDescription(
+        key="ptz_preset",
+        name="PTZ Preset",
+        icon="mdi:camera-control",
+        device_class=SensorDeviceClass.ENUM,
+    )
 )
 
 CAMERA_DISABLED_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
@@ -654,8 +678,11 @@ async def async_setup_entry(
             model_descriptions=_MODEL_DESCRIPTIONS,
             ufp_device=device,
         )
-        if device.is_adopted_by_us and isinstance(device, Camera):
-            entities += _async_event_entities(data, ufp_device=device)
+        if isinstance(device, Camera):
+            if device.is_adopted_by_us:
+                entities += _async_event_entities(data, ufp_device=device)
+
+            entities += _async_ptz_camera_entities(hass, data, ufp_device=device)
         async_add_entities(entities)
 
     data.async_subscribe_adopt(_add_new_device)
@@ -667,6 +694,7 @@ async def async_setup_entry(
     )
     entities += _async_event_entities(data)
     entities += _async_nvr_entities(data)
+    entities += _async_ptz_camera_entities(hass, data)
 
     async_add_entities(entities)
 
@@ -713,6 +741,24 @@ def _async_nvr_entities(
     for description in NVR_SENSORS + NVR_DISABLED_SENSORS:
         entities.append(ProtectNVRSensor(data, device, description))
         _LOGGER.debug("Adding NVR sensor entity %s", description.name)
+
+    return entities
+
+
+@callback
+def _async_ptz_camera_entities(
+    hass: HomeAssistant,
+    data: ProtectData,
+    ufp_device: Camera | None = None,
+) -> Sequence[ProtectDeviceEntity]:
+    entities: list[ProtectDeviceEntity] = []
+    cameras = data.get_cameras() if ufp_device is None else [ufp_device]
+    for camera in cameras:
+        if not camera.feature_flags.is_ptz:
+            continue
+
+        _LOGGER.debug("Adding PTZ Preset Sensor to %s", camera.display_name)
+        entities.append(ProtectPTZSensor(hass, data, camera, PTZ_CAMERA_PRESET_SENSOR))
 
     return entities
 
@@ -782,3 +828,72 @@ class ProtectLicensePlateEventSensor(ProtectEventSensor):
         self._set_event_attrs(event)
         if event.end:
             self._async_event_with_immediate_end()
+
+
+class ProtectPTZSensor(ProtectDeviceEntity, SensorEntity):
+    """A sensor for Unifi PTZ Cameras.
+
+    It exposes the current preset as the state value and pan/tilt/zoom as state attributes.
+    """
+
+    device: Camera
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        data: ProtectData,
+        device: ProtectDeviceType,
+        description: EntityDescription,
+    ) -> None:
+        """Override the constructor to include the device name."""
+        super().__init__(data, device, description)
+
+        self._hass = hass
+
+        self._attr_unique_id = f"{device.name}_{description.key}"
+
+    @staticmethod
+    def is_at_preset(position: PTZPosition, preset: PTZPreset) -> bool:
+        """Check if the specified PTZPosition is at the pan, tilt, and zoom specified by the preset."""
+        return (
+            position.steps.pan == preset.ptz.pan
+            and position.steps.tilt == preset.ptz.tilt
+            and position.steps.zoom == preset.ptz.zoom
+        )
+
+    @callback
+    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
+        assert isinstance(device, Camera)
+
+        async def work() -> None:
+            position = await device.get_ptz_position()
+            home = await device.get_ptz_home()
+            presets = await device.get_ptz_presets()
+
+            preset_name = None
+            preset_slot = None
+
+            if ProtectPTZSensor.is_at_preset(position, home):
+                preset_name = PTZ_SLOT_NAME_HOME
+                preset_slot = PTZ_SLOT_HOME
+            else:
+                for preset in presets:
+                    if ProtectPTZSensor.is_at_preset(position, preset):
+                        preset_name = preset.name
+                        preset_slot = preset.slot
+                        break
+
+            self._attr_native_value = preset_name
+            self._attr_extra_state_attributes = {
+                ATTR_PTZ_SLOT: preset_slot,
+                ATTR_PTZ_PAN: position.degree.pan,
+                ATTR_PTZ_TILT: position.degree.tilt,
+                ATTR_PTZ_ZOOM: position.degree.zoom,
+                ATTR_PTZ_PAN_RAW: position.steps.pan,
+                ATTR_PTZ_TILT_RAW: position.steps.tilt,
+                ATTR_PTZ_ZOOM_RAW: position.steps.zoom,
+            }
+
+            self.async_write_ha_state()
+
+        asyncio.run_coroutine_threadsafe(work(), self._hass.loop)

@@ -60,3 +60,17 @@ get_user_keyring_info:
       selector:
         device:
           integration: unifiprotect
+ptz_goto_preset:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: unifiprotect
+          entity:
+            domain: camera
+    slot:
+      required: true
+      example: "Home"
+      selector:
+        text:
