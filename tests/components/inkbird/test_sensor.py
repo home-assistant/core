@@ -55,9 +55,6 @@ def _make_sensor_update(humidity: float) -> SensorUpdate:
                 native_value=humidity,
             ),
         },
-        binary_entity_descriptions={},
-        binary_entity_values={},
-        events={},
     )
 
 
