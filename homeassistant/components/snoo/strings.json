@@ -55,7 +55,8 @@
               "activity": "Activity press",
               "power": "Power button pressed",
               "status_requested": "Status requested",
-              "sticky_white_noise_updated": "Sleepytime sounds updated"
+              "sticky_white_noise_updated": "Sleepytime sounds updated",
+              "config_change": "Config changed"
             }
           }
         }
@@ -70,7 +71,7 @@
           "level2": "Level 2",
           "level3": "Level 3",
           "level4": "Level 4",
-          "stop": "Stopped",
+          "stop": "[%key:common::state::stopped%]",
           "pretimeout": "Pre-timeout",
           "timeout": "Timeout"
         }
@@ -88,7 +89,7 @@
           "level2": "[%key:component::snoo::entity::sensor::state::state::level2%]",
           "level3": "[%key:component::snoo::entity::sensor::state::state::level3%]",
           "level4": "[%key:component::snoo::entity::sensor::state::state::level4%]",
-          "stop": "[%key:component::snoo::entity::sensor::state::state::stop%]"
+          "stop": "[%key:common::state::stopped%]"
         }
       }
     },

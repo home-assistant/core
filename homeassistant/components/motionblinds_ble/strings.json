@@ -62,9 +62,9 @@
       "speed": {
         "name": "Speed",
         "state": {
-          "1": "Low",
-          "2": "Medium",
-          "3": "High"
+          "1": "[%key:common::state::low%]",
+          "2": "[%key:common::state::medium%]",
+          "3": "[%key:common::state::high%]"
         }
       }
     },
@@ -72,8 +72,8 @@
       "connection": {
         "name": "Connection status",
         "state": {
-          "connected": "Connected",
-          "disconnected": "Disconnected",
+          "connected": "[%key:common::state::connected%]",
+          "disconnected": "[%key:common::state::disconnected%]",
           "connecting": "Connecting",
           "disconnecting": "Disconnecting"
         }

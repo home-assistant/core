@@ -100,6 +100,10 @@
           "ble_scanner_mode": "The scanner mode to use for Bluetooth scanning."
         }
       }
+    },
+    "abort": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_scripts_support": "Device does not support scripts and cannot be used as a Bluetooth scanner."
     }
   },
   "selector": {
@@ -206,10 +210,10 @@
         "state": {
           "checking": "Checking",
           "closed": "[%key:common::state::closed%]",
-          "closing": "Closing",
+          "closing": "[%key:common::state::closing%]",
           "failure": "Failure",
           "opened": "Opened",
-          "opening": "Opening"
+          "opening": "[%key:common::state::opening%]"
         }
       }
     }
