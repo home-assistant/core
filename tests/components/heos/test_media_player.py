@@ -1791,7 +1791,7 @@ async def test_remove_from_queue(
 async def test_move_queue_item_queue(
     hass: HomeAssistant, config_entry: MockConfigEntry, controller: MockHeos
 ) -> None:
-    """Test the get queue service."""
+    """Test the move queue service."""
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.services.async_call(
@@ -1810,7 +1810,7 @@ async def test_move_queue_item_queue(
 async def test_move_queue_item_queue_error_raises(
     hass: HomeAssistant, config_entry: MockConfigEntry, controller: MockHeos
 ) -> None:
-    """Test the get queue service."""
+    """Test move queue raises error when failed."""
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     controller.player_move_queue_item.side_effect = HeosError("error")
