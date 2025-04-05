@@ -1,0 +1,15 @@
+{
+  "entity": {
+    "sensor": {
+      "panel_faults": {
+        "default": "mdi:alert-circle-outline"
+      },
+      "faulting_points": {
+        "default": "mdi:alert-circle-outline"
+      },
+      "ready_to_arm": {
+        "default": "mdi:information-outline"
+      }
+    }
+  }
+}

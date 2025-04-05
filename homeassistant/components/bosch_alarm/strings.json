@@ -53,5 +53,26 @@
     "authentication_failed": {
       "message": "Incorrect credentials for panel."
     }
+  },
+  "entity": {
+    "sensor": {
+      "alarms": {
+        "name": "Alarms"
+      },
+      "faulting_points": {
+        "name": "Faulting points"
+      },
+      "panel_faults": {
+        "name": "Panel faults"
+      },
+      "ready_to_arm": {
+        "name": "Ready to arm",
+        "state": {
+          "not_ready": "Not ready to arm",
+          "home_ready": "Ready to arm home, but not away",
+          "home_and_away_ready": "Ready to arm for both home and away"
+        }
+      }
+    }
   }
 }
