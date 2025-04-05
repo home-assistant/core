@@ -304,12 +304,12 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             new_status = self.roborock_device_info.props.status
             if (
                 self.current_map is not None
-                and self.current_map in self.maps
+                and current_map := self.maps.get(self.current_map)
                 and (
                     (
                         new_status.in_cleaning
                         and (
-                            dt_util.utcnow() - self.maps[self.current_map].last_updated
+                            dt_util.utcnow() - current_map.last_updated
                         )
                         > IMAGE_CACHE_INTERVAL
                     )
