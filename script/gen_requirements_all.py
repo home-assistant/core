@@ -178,7 +178,7 @@ pyOpenSSL>=24.0.0
 
 # protobuf must be in package constraints for the wheel
 # builder to build binary wheels
-protobuf==5.29.2
+protobuf==6.30.2
 
 # faust-cchardet: Ensure we have a version we can build wheels
 # 2.1.18 is the first version that works with our wheel builder
