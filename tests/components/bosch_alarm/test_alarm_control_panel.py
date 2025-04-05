@@ -11,6 +11,7 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelState,
 )
 from homeassistant.const import (
+    ATTR_CODE,
     ATTR_ENTITY_ID,
     SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_HOME,
@@ -19,6 +20,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import call_observable, setup_integration
@@ -110,6 +112,47 @@ async def test_update_alarm_device(
 
     await call_observable(hass, area.status_observer)
     assert hass.states.get(entity_id).state == AlarmControlPanelState.DISARMED
+
+
+@pytest.mark.parametrize("arming_code", ["12345678"])
+async def test_update_alarm_device_with_incorrect_code(
+    hass: HomeAssistant,
+    mock_panel: AsyncMock,
+    area: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that alarm panel service call raises an exception if the incorrect code is provided."""
+
+    await setup_integration(hass, mock_config_entry)
+    entity_id = "alarm_control_panel.area1"
+    assert hass.states.get(entity_id).state == AlarmControlPanelState.DISARMED
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            ALARM_CONTROL_PANEL_DOMAIN,
+            SERVICE_ALARM_ARM_AWAY,
+            {ATTR_ENTITY_ID: entity_id, ATTR_CODE: "12345"},
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize("arming_code", ["12345"])
+async def test_update_alarm_device_with_correct_code(
+    hass: HomeAssistant,
+    mock_panel: AsyncMock,
+    area: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that alarm panel service call does not throw an exception if the arming code is correct."""
+
+    await setup_integration(hass, mock_config_entry)
+    entity_id = "alarm_control_panel.area1"
+    assert hass.states.get(entity_id).state == AlarmControlPanelState.DISARMED
+    await hass.services.async_call(
+        ALARM_CONTROL_PANEL_DOMAIN,
+        SERVICE_ALARM_ARM_AWAY,
+        {ATTR_ENTITY_ID: entity_id, ATTR_CODE: "12345"},
+        blocking=True,
+    )
 
 
 async def test_alarm_control_panel(
