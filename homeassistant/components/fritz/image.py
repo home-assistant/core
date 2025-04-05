@@ -64,10 +64,15 @@ class FritzGuestWifiQRImage(FritzBoxBaseEntity, ImageEntity):
 
     async def _fetch_image(self) -> bytes:
         """Fetch the QR code from the Fritz!Box."""
-        qr_stream: BytesIO = await self.hass.async_add_executor_job(
-            self._avm_wrapper.fritz_guest_wifi.get_wifi_qr_code, "png"
-        )
-        qr_bytes = qr_stream.getvalue()
+        if hasattr(self._avm_wrapper.fritz_guest_wifi,'get_wifi_qr_code'):
+            qr_stream: BytesIO = await self.hass.async_add_executor_job(
+                self._avm_wrapper.fritz_guest_wifi.get_wifi_qr_code, "png"
+            )
+            qr_bytes = qr_stream.getvalue()
+        else:
+            _LOGGER.debug("fritz_guest_wifi.get_wifi_qr_code not available")
+            qr_bytes = b''
+
         _LOGGER.debug("fetched %s bytes", len(qr_bytes))
 
         return qr_bytes
