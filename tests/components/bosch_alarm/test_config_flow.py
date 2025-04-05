@@ -274,3 +274,12 @@ async def test_reauth_flow_error(
     )
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"]["base"] == message
+
+    mock_panel.connect.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=config_flow_data,
+    )
+    assert result["reason"] == "reauth_successful"
+    compare = {**mock_config_entry.data, **config_flow_data}
+    assert compare == mock_config_entry.data
