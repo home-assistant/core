@@ -121,7 +121,6 @@ async def test_reauth_full_flow(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_API_KEY: TEST_API_KEY}
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
@@ -157,7 +156,6 @@ async def test_reauth_recovery_after_error(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_API_KEY: TEST_API_KEY}
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": expected_error}
@@ -167,7 +165,6 @@ async def test_reauth_recovery_after_error(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_API_KEY: TEST_API_KEY}
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
