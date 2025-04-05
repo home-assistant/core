@@ -1,0 +1,10 @@
+{
+  "domain": "govee",
+  "name": "Govee Space Heater",
+  "codeowners": ["@salouani20"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/goveeappliances",
+  "iot_class": "assumed_state",
+  "quality_scale": "bronze",
+  "requirements": ["requests==2.32.3"]
+}

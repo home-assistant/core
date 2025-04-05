@@ -1,0 +1,27 @@
+rules:
+  action-setup: done
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow:
+    status: done
+    comment: "Config flow is implemented and tested"
+  config-flow-test-coverage: done
+  dependency-transparency: done
+  docs-actions: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data:
+    status: done
+    comment: "Runtime data is collected and used"
+  test-before-configure: done
+  test-before-setup:
+    status: done
+    comment: "Tests are implemented before setup"
+  unique-config-entry:
+    status: done
+    comment: "Unique config entry is ensured"

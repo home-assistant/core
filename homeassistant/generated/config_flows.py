@@ -241,6 +241,7 @@ FLOWS = {
         "google_tasks",
         "google_translate",
         "google_travel_time",
+        "govee",
         "govee_ble",
         "govee_light_local",
         "gpsd",
