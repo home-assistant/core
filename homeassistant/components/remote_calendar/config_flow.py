@@ -39,7 +39,6 @@ class RemoteCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
         errors: dict = {}
-        description_placeholders: dict[str, str] = {}
         _LOGGER.debug("User input: %s", user_input)
         self._async_abort_entries_match(
             {CONF_CALENDAR_NAME: user_input[CONF_CALENDAR_NAME]}
@@ -83,5 +82,4 @@ class RemoteCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
-            description_placeholders=description_placeholders,
         )
