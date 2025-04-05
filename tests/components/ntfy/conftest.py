@@ -1,12 +1,15 @@
 """Common fixtures for the ntfy tests."""
 
 from collections.abc import Generator
+from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from aiontfy import AccountTokenResponse
 import pytest
 
-from homeassistant.components.ntfy.const import CONF_TOPIC, DEFAULT_URL, DOMAIN
-from homeassistant.const import CONF_URL
+from homeassistant.components.ntfy.const import CONF_TOPIC, DOMAIN
+from homeassistant.config_entries import ConfigSubentryData
+from homeassistant.const import CONF_TOKEN, CONF_URL
 
 from tests.common import MockConfigEntry
 
@@ -31,7 +34,9 @@ def mock_aiontfy() -> Generator[AsyncMock]:
         client = mock_client.return_value
 
         client.publish.return_value = {}
-
+        client.generate_token.return_value = AccountTokenResponse(
+            token="token", last_access=datetime.now()
+        )
         yield client
 
 
@@ -51,10 +56,19 @@ def mock_config_entry() -> MockConfigEntry:
     """Mock ntfy configuration entry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        title="mytopic",
+        title="ntfy.sh",
         data={
-            CONF_URL: DEFAULT_URL,
-            CONF_TOPIC: "mytopic",
+            CONF_URL: "https://ntfy.sh/",
+            CONF_TOKEN: "token",
         },
         entry_id="123456789",
+        subentries_data=[
+            ConfigSubentryData(
+                data={CONF_TOPIC: "mytopic"},
+                subentry_id="ABCDEF",
+                subentry_type="topic",
+                title="mytopic",
+                unique_id="mytopic",
+            )
+        ],
     )

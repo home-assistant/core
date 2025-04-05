@@ -4,12 +4,14 @@ from __future__ import annotations
 
 from aiontfy import Message
 from aiontfy.exceptions import NtfyException, NtfyHTTPError
+from yarl import URL
 
 from homeassistant.components.notify import (
     NotifyEntity,
     NotifyEntityDescription,
     NotifyEntityFeature,
 )
+from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -17,7 +19,7 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import NtfyConfigEntry
-from .const import CONF_TOPIC, DEFAULT_URL, DOMAIN
+from .const import CONF_TOPIC, DOMAIN
 
 PARALLEL_UPDATES = 0
 
@@ -29,7 +31,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up the ntfy notification entity platform."""
 
-    async_add_entities([NtfyNotifyEntity(config_entry, config_entry.data[CONF_TOPIC])])
+    for subentry_id, subentry in config_entry.subentries.items():
+        async_add_entities(
+            [NtfyNotifyEntity(config_entry, subentry)], config_subentry_id=subentry_id
+        )
 
 
 class NtfyNotifyEntity(NotifyEntity):
@@ -42,22 +47,27 @@ class NtfyNotifyEntity(NotifyEntity):
         has_entity_name=True,
     )
 
-    def __init__(self, config_entry: NtfyConfigEntry, topic: str) -> None:
+    def __init__(
+        self,
+        config_entry: NtfyConfigEntry,
+        subentry: ConfigSubentry,
+    ) -> None:
         """Initialize a notification entity."""
 
-        self._attr_unique_id = f"{config_entry.entry_id}_{self.entity_description.key}"
+        self._attr_unique_id = f"{config_entry.entry_id}_{subentry.subentry_id}_{self.entity_description.key}"
+        self.topic = subentry.data[CONF_TOPIC]
+
         self._attr_supported_features = NotifyEntityFeature.TITLE
         self.device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             manufacturer="ntfy LLC",
             model="ntfy",
             model_id=config_entry.data[CONF_URL],
-            name=topic,
-            configuration_url=f"{DEFAULT_URL}/{topic}",
-            identifiers={(DOMAIN, config_entry.entry_id)},
+            name=self.topic,
+            configuration_url=URL(config_entry.data[CONF_URL]) / self.topic,
+            identifiers={(DOMAIN, f"{config_entry.entry_id}_{subentry.subentry_id}")},
         )
         self.ntfy = config_entry.runtime_data
-        self.topic = topic
 
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Publish a message to a topic."""

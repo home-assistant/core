@@ -2,26 +2,65 @@
   "config": {
     "step": {
       "user": {
-        "description": "Set up a topic for publishing notifications",
+        "description": "Set up **ntfy** push notification service",
         "data": {
-          "url": "Service URL",
-          "topic": "Topic"
+          "url": "Service URL"
         },
-
         "data_description": {
-          "url": "Address of the ntfy service. Modify this if you want to use a different server",
-          "topic": "Enter the name of the topic you want to publish to. Topics may not be password-protected, so choose a name that's not easy to guess. If left empty, a random topic name will be generated."
+          "url": "Address of the ntfy service. Modify this if you want to use a different server"
+        },
+        "sections": {
+          "auth": {
+            "name": "Authentication",
+            "description": "Depending on whether the server is configured to support access control, some topics may be read/write protected so that only users with the correct credentials can subscribe or publish to them. To publish/subscribe to protected topics, you can provide a username and password.",
+            "data": {
+              "username": "[%key:common::config_flow::data::username%]",
+              "password": "[%key:common::config_flow::data::password%]"
+            },
+            "data_description": {
+              "username": "Enter the username required to authenticate with protected ntfy topics",
+              "password": "Enter the password corresponding to the provided username for authentication"
+            }
+          }
         }
       }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "forbidden_topic": "Protected topics are not supported",
-      "unknown": "[%key:common::config_flow::error::unknown%]",
-      "invalid_url": "Invalid service URL"
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "config_subentries": {
+    "topic": {
+      "step": {
+        "user": {
+          "title": "Topic",
+          "description": "Set up a topic for notifications.",
+          "data": {
+            "topic": "Topic"
+          },
+          "data_description": {
+            "topic": "Enter the name of the topic you want to use for notifications. Topics may not be password-protected, so choose a name that's not easy to guess. If left empty, a random topic name will be generated."
+          }
+        }
+      },
+      "initiate_flow": {
+        "user": "Add topic"
+      },
+      "entry_type": "Topic",
+      "error": {
+        "publish_forbidden": "Publishing to this topic is forbidden",
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "unknown": "[%key:common::config_flow::error::unknown%]"
+      },
+      "abort": {
+        "already_configured": "Topic is already configured",
+        "invalid_topic": "Invalid topic. Only letters, numbers, underscores, or dashes allowed."
+      }
     }
   },
   "exceptions": {
