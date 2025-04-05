@@ -353,11 +353,12 @@ async def test_component_not_setup_missing_dependencies(hass: HomeAssistant) -> 
     assert await setup.async_setup_component(hass, "comp2", {})
 
 
+@pytest.mark.usefixtures("mock_handlers")
 async def test_component_setup_dependencies_with_config_entry(
-    hass: HomeAssistant, mock_handlers
+    hass: HomeAssistant,
 ) -> None:
     """Test we wait for a dependency with config entry."""
-    calls = []
+    calls: list[str] = []
 
     async def mock_async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await asyncio.sleep(0)
