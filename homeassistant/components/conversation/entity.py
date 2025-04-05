@@ -4,9 +4,11 @@ from abc import abstractmethod
 from typing import Literal, final
 
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.helpers.chat_session import async_get_chat_session
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import dt as dt_util
 
+from .chat_log import ChatLog, async_get_chat_log
 from .const import ConversationEntityFeature
 from .models import ConversationInput, ConversationResult
 
@@ -51,9 +53,21 @@ class ConversationEntity(RestoreEntity):
     def supported_languages(self) -> list[str] | Literal["*"]:
         """Return a list of supported languages."""
 
-    @abstractmethod
     async def async_process(self, user_input: ConversationInput) -> ConversationResult:
         """Process a sentence."""
+        with (
+            async_get_chat_session(self.hass, user_input.conversation_id) as session,
+            async_get_chat_log(self.hass, session, user_input) as chat_log,
+        ):
+            return await self._async_handle_message(user_input, chat_log)
+
+    async def _async_handle_message(
+        self,
+        user_input: ConversationInput,
+        chat_log: ChatLog,
+    ) -> ConversationResult:
+        """Call the API."""
+        raise NotImplementedError
 
     async def async_prepare(self, language: str | None = None) -> None:
         """Load intents for a language."""

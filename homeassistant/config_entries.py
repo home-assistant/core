@@ -30,7 +30,6 @@ from propcache.api import cached_property
 import voluptuous as vol
 
 from . import data_entry_flow, loader
-from .components import persistent_notification
 from .const import (
     CONF_NAME,
     EVENT_HOMEASSISTANT_STARTED,
@@ -178,7 +177,6 @@ class ConfigEntryState(Enum):
 
 
 DEFAULT_DISCOVERY_UNIQUE_ID = "default_discovery_unique_id"
-DISCOVERY_NOTIFICATION_ID = "config_entry_discovery"
 DISCOVERY_SOURCES = {
     SOURCE_BLUETOOTH,
     SOURCE_DHCP,
@@ -194,8 +192,6 @@ DISCOVERY_SOURCES = {
     SOURCE_USB,
     SOURCE_ZEROCONF,
 }
-
-RECONFIGURE_NOTIFICATION_ID = "config_entry_reconfigure"
 
 EVENT_FLOW_DISCOVERED = "config_entry_discovered"
 
@@ -1387,14 +1383,6 @@ class ConfigEntriesFlowManager(
 
         await asyncio.wait(current.values())
 
-    @callback
-    def _async_has_other_discovery_flows(self, flow_id: str) -> bool:
-        """Check if there are any other discovery flows in progress."""
-        for flow in self._progress.values():
-            if flow.flow_id != flow_id and flow.context["source"] in DISCOVERY_SOURCES:
-                return True
-        return False
-
     async def async_init(
         self,
         handler: str,
@@ -1529,10 +1517,6 @@ class ConfigEntriesFlowManager(
         # init to be done.
         self._set_pending_import_done(flow)
 
-        # Remove notification if no other discovery config entries in progress
-        if not self._async_has_other_discovery_flows(flow.flow_id):
-            persistent_notification.async_dismiss(self.hass, DISCOVERY_NOTIFICATION_ID)
-
         # Clean up issue if this is a reauth flow
         if flow.context["source"] == SOURCE_REAUTH:
             if (entry_id := flow.context.get("entry_id")) is not None and (
@@ -1542,7 +1526,7 @@ class ConfigEntriesFlowManager(
                 ir.async_delete_issue(self.hass, HOMEASSISTANT_DOMAIN, issue_id)
 
         if result["type"] != data_entry_flow.FlowResultType.CREATE_ENTRY:
-            # If there's an ignored config entry with a matching unique ID,
+            # If there's a config entry with a matching unique ID,
             # update the discovery key.
             if (
                 (discovery_key := flow.context.get("discovery_key"))
@@ -1628,7 +1612,11 @@ class ConfigEntriesFlowManager(
                 result["handler"], flow.unique_id
             )
 
-        if existing_entry is not None and flow.handler != "mobile_app":
+        if (
+            existing_entry is not None
+            and flow.handler != "mobile_app"
+            and existing_entry.source != SOURCE_IGNORE
+        ):
             # This causes the old entry to be removed and replaced, when the flow
             # should instead be aborted.
             # In case of manual flows, integrations should implement options, reauth,
@@ -1714,16 +1702,6 @@ class ConfigEntriesFlowManager(
         # Create notification.
         if source in DISCOVERY_SOURCES:
             await self._discovery_debouncer.async_call()
-        elif source == SOURCE_REAUTH:
-            persistent_notification.async_create(
-                self.hass,
-                title="Integration requires reconfiguration",
-                message=(
-                    "At least one of your integrations requires reconfiguration to "
-                    "continue functioning. [Check it out](/config/integrations)."
-                ),
-                notification_id=RECONFIGURE_NOTIFICATION_ID,
-            )
 
     @callback
     def _async_discovery(self) -> None:
@@ -1731,15 +1709,6 @@ class ConfigEntriesFlowManager(
         # async_fire_internal is used here because this is only
         # called from the Debouncer so we know the usage is safe
         self.hass.bus.async_fire_internal(EVENT_FLOW_DISCOVERED)
-        persistent_notification.async_create(
-            self.hass,
-            title="New devices discovered",
-            message=(
-                "We have discovered new devices on your network. "
-                "[Check it out](/config/integrations)."
-            ),
-            notification_id=DISCOVERY_NOTIFICATION_ID,
-        )
 
     @callback
     def async_has_matching_discovery_flow(
@@ -2986,8 +2955,11 @@ class ConfigFlow(ConfigEntryBaseFlow):
             return None
 
         if raise_on_progress:
-            if self._async_in_progress(
-                include_uninitialized=True, match_context={"unique_id": unique_id}
+            if any(
+                flow["context"]["source"] != SOURCE_REAUTH
+                for flow in self._async_in_progress(
+                    include_uninitialized=True, match_context={"unique_id": unique_id}
+                )
             ):
                 raise data_entry_flow.AbortFlow("already_in_progress")
 
@@ -3115,29 +3087,6 @@ class ConfigFlow(ConfigEntryBaseFlow):
     ) -> ConfigFlowResult:
         """Handle a flow initialized by discovery."""
         return await self._async_step_discovery_without_unique_id()
-
-    @callback
-    def async_abort(
-        self,
-        *,
-        reason: str,
-        description_placeholders: Mapping[str, str] | None = None,
-    ) -> ConfigFlowResult:
-        """Abort the config flow."""
-        # Remove reauth notification if no reauth flows are in progress
-        if self.source == SOURCE_REAUTH and not any(
-            ent["flow_id"] != self.flow_id
-            for ent in self.hass.config_entries.flow.async_progress_by_handler(
-                self.handler, match_context={"source": SOURCE_REAUTH}
-            )
-        ):
-            persistent_notification.async_dismiss(
-                self.hass, RECONFIGURE_NOTIFICATION_ID
-            )
-
-        return super().async_abort(
-            reason=reason, description_placeholders=description_placeholders
-        )
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
@@ -3488,18 +3437,14 @@ class ConfigSubentryFlow(
         return self.async_abort(reason="reconfigure_successful")
 
     @property
-    def _reconfigure_entry_id(self) -> str:
-        """Return reconfigure entry id."""
-        if self.source != SOURCE_RECONFIGURE:
-            raise ValueError(f"Source is {self.source}, expected {SOURCE_RECONFIGURE}")
+    def _entry_id(self) -> str:
+        """Return config entry id."""
         return self.handler[0]
 
     @callback
-    def _get_reconfigure_entry(self) -> ConfigEntry:
-        """Return the reconfigure config entry linked to the current context."""
-        return self.hass.config_entries.async_get_known_entry(
-            self._reconfigure_entry_id
-        )
+    def _get_entry(self) -> ConfigEntry:
+        """Return the config entry linked to the current context."""
+        return self.hass.config_entries.async_get_known_entry(self._entry_id)
 
     @property
     def _reconfigure_subentry_id(self) -> str:
@@ -3511,9 +3456,7 @@ class ConfigSubentryFlow(
     @callback
     def _get_reconfigure_subentry(self) -> ConfigSubentry:
         """Return the reconfigure config subentry linked to the current context."""
-        entry = self.hass.config_entries.async_get_known_entry(
-            self._reconfigure_entry_id
-        )
+        entry = self.hass.config_entries.async_get_known_entry(self._entry_id)
         subentry_id = self._reconfigure_subentry_id
         if subentry_id not in entry.subentries:
             raise UnknownSubEntry(subentry_id)
