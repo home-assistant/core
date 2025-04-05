@@ -479,6 +479,13 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         """Remove items from the queue."""
         await self._player.remove_from_queue(queue_ids)
 
+    @catch_action_error("move queue item")
+    async def async_move_queue_item(
+        self, queue_ids: list[int], destination_position: int
+    ) -> None:
+        """Move items in the queue."""
+        await self._player.move_queue_item(queue_ids, destination_position)
+
     @property
     def available(self) -> bool:
         """Return True if the device is available."""
