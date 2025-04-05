@@ -1,0 +1,25 @@
+{
+  "entity": {
+    "fan": {
+      "ventilation_speed": {
+        "state_attributes": {
+          "preset_mode": {
+            "default": "mdi:fan",
+            "state": {
+              "off": "mdi:fan-off",
+              "away": "mdi:walk",
+              "low": "mdi:fan-speed-1",
+              "medium": "mdi:fan-speed-2",
+              "high": "mdi:fan-speed-3",
+              "low_override": "mdi:fan-speed-1",
+              "medium_override": "mdi:fan-speed-2",
+              "high_override": "mdi:fan-speed-3",
+              "boost": "mdi:fan-plus",
+              "auto": "mdi:fan-auto"
+            }
+          }
+        }
+      }
+    }
+  }
+}
