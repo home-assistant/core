@@ -7,11 +7,11 @@ from homeassistant.components.bluetooth import (
     DOMAIN as BLUETOOTH_DOMAIN,
     async_ble_device_from_address,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY, ConfigEntry
 from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.discovery_flow import DiscoveryKey
 
 from .const import DOMAIN
@@ -50,7 +50,6 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
     # supports core bluetooth discovery
     if config_entry.version == 1:
         dev_reg = dr.async_get(hass)
-        entity_reg = er.async_get(hass)
         devices = dev_reg.devices.get_devices_for_config_entry_id(config_entry.entry_id)
 
         if len(devices) == 0:
@@ -79,46 +78,17 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             version=2,
         )
 
-        # Create new config entries for the remaining devices
+        # Create new config flows for the remaining devices
         for device in devices[1:]:
             domain_identifiers = [i for i in device.identifiers if i[0] == DOMAIN]
             address = next(iter(domain_identifiers))[1]
-            new_entry = ConfigEntry(
-                data={CONF_ADDRESS: address},
-                options=config_entry.options,
-                discovery_keys=MappingProxyType(
-                    {
-                        BLUETOOTH_DOMAIN: (
-                            DiscoveryKey(
-                                domain=BLUETOOTH_DOMAIN,
-                                key=address,
-                                version=1,
-                            ),
-                        )
-                    }
-                ),
-                domain=DOMAIN,
-                source=config_entry.source,
-                title=device.name or address,
-                unique_id=address,
-                subentries_data=None,
-                version=2,
-                minor_version=1,
-            )
-            await hass.config_entries.async_add(new_entry)
 
-            entities = er.async_entries_for_device(
-                entity_reg, device.id, include_disabled_entities=True
-            )
-            for entity in entities:
-                entity_reg.async_update_entity(
-                    entity.entity_id, config_entry_id=new_entry.entry_id
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN,
+                    context={"source": SOURCE_INTEGRATION_DISCOVERY},
+                    data={CONF_ADDRESS: address},
                 )
-
-            dev_reg.async_update_device(
-                device.id,
-                add_config_entry_id=new_entry.entry_id,
-                remove_config_entry_id=config_entry.entry_id,
             )
 
     _LOGGER.debug("Migration to version %s successful", config_entry.version)
