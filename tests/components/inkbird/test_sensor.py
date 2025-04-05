@@ -21,7 +21,6 @@ from homeassistant.util import dt as dt_util
 
 from . import (
     SPS_PASSIVE_SERVICE_INFO,
-    SPS_PASSIVE_SERVICE_INFO_2,
     SPS_SERVICE_INFO,
     SPS_WITH_CORRUPT_NAME_SERVICE_INFO,
 )
@@ -157,7 +156,7 @@ async def test_polling_sensor(hass: HomeAssistant) -> None:
         return_value=_make_sensor_update(20.24),
     ):
         async_fire_time_changed(hass, dt_util.utcnow() + FALLBACK_POLL_INTERVAL)
-        inject_bluetooth_service_info(hass, SPS_PASSIVE_SERVICE_INFO_2)
+        inject_bluetooth_service_info(hass, SPS_PASSIVE_SERVICE_INFO)
         await hass.async_block_till_done()
 
     temp_sensor = hass.states.get("sensor.ibs_th_eeff_humidity")
