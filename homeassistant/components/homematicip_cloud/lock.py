@@ -5,8 +5,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from homematicip.aio.device import AsyncDoorLockDrive
 from homematicip.base.enums import LockState, MotorState
+from homematicip.device import DoorLockDrive
 
 from homeassistant.components.lock import LockEntity, LockEntityFeature
 from homeassistant.config_entries import ConfigEntry
@@ -45,7 +45,7 @@ async def async_setup_entry(
     async_add_entities(
         HomematicipDoorLockDrive(hap, device)
         for device in hap.home.devices
-        if isinstance(device, AsyncDoorLockDrive)
+        if isinstance(device, DoorLockDrive)
     )
 
 
@@ -75,17 +75,17 @@ class HomematicipDoorLockDrive(HomematicipGenericEntity, LockEntity):
     @handle_errors
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device."""
-        return await self._device.set_lock_state(LockState.LOCKED)
+        return await self._device.set_lock_state_async(LockState.LOCKED)
 
     @handle_errors
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
-        return await self._device.set_lock_state(LockState.UNLOCKED)
+        return await self._device.set_lock_state_async(LockState.UNLOCKED)
 
     @handle_errors
     async def async_open(self, **kwargs: Any) -> None:
         """Open the door latch."""
-        return await self._device.set_lock_state(LockState.OPEN)
+        return await self._device.set_lock_state_async(LockState.OPEN)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
