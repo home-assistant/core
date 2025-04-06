@@ -1193,7 +1193,7 @@ async def test_subentry_reconfigure_flow(hass: HomeAssistant, client) -> None:
             async def async_step_reconfigure(self, user_input=None):
                 if user_input is not None:
                     return self.async_update_and_abort(
-                        self._get_reconfigure_entry(),
+                        self._get_entry(),
                         self._get_reconfigure_subentry(),
                         title="Test Entry",
                         data={"test": "blah"},
