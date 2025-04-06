@@ -15,7 +15,7 @@ from homeassistant.components.media_source import (
     async_resolve_media,
 )
 from homeassistant.components.reolink.config_flow import DEFAULT_PROTOCOL
-from homeassistant.components.reolink.const import CONF_USE_HTTPS, DOMAIN
+from homeassistant.components.reolink.const import CONF_BC_PORT, CONF_USE_HTTPS, DOMAIN
 from homeassistant.components.stream import DOMAIN as MEDIA_STREAM_DOMAIN
 from homeassistant.const import (
     CONF_HOST,
@@ -31,6 +31,7 @@ from homeassistant.helpers.device_registry import format_mac
 from homeassistant.setup import async_setup_component
 
 from .conftest import (
+    TEST_BC_PORT,
     TEST_HOST2,
     TEST_HOST_MODEL,
     TEST_MAC2,
@@ -348,6 +349,7 @@ async def test_browsing_not_loaded(
             CONF_PASSWORD: TEST_PASSWORD2,
             CONF_PORT: TEST_PORT,
             CONF_USE_HTTPS: TEST_USE_HTTPS,
+            CONF_BC_PORT: TEST_BC_PORT,
         },
         options={
             CONF_PROTOCOL: DEFAULT_PROTOCOL,

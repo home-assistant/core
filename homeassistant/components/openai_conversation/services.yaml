@@ -38,3 +38,23 @@ generate_image:
           options:
             - "vivid"
             - "natural"
+generate_content:
+  fields:
+    config_entry:
+      required: true
+      selector:
+        config_entry:
+          integration: openai_conversation
+    prompt:
+      required: true
+      selector:
+        text:
+          multiline: true
+      example: "Hello, how can I help you?"
+    filenames:
+      selector:
+        text:
+          multiline: true
+      example: |
+        - /path/to/file1.txt
+        - /path/to/file2.txt

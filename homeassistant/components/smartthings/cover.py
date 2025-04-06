@@ -55,7 +55,10 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
     _state: CoverState | None = None
 
     def __init__(
-        self, client: SmartThings, device: FullDevice, capability: Capability
+        self,
+        client: SmartThings,
+        device: FullDevice,
+        capability: Capability,
     ) -> None:
         """Initialize the cover class."""
         super().__init__(
@@ -118,7 +121,12 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
             self._attr_current_cover_position = self.get_attribute_value(
                 Capability.SWITCH_LEVEL, Attribute.LEVEL
             )
+        elif self.supports_capability(Capability.WINDOW_SHADE_LEVEL):
+            self._attr_current_cover_position = self.get_attribute_value(
+                Capability.WINDOW_SHADE_LEVEL, Attribute.SHADE_LEVEL
+            )
 
+        # Deprecated, remove in 2025.10
         self._attr_extra_state_attributes = {}
         if self.supports_capability(Capability.BATTERY):
             self._attr_extra_state_attributes[ATTR_BATTERY_LEVEL] = (
