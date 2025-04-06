@@ -414,7 +414,10 @@ def favorites_payload(favorites: SonosFavorites) -> BrowseMedia:
     """
     children: list[BrowseMedia] = []
 
-    group_types: set[str] = {fav.reference.item_class if hasattr(fav, 'reference') else fav.item_class for fav in favorites}
+    group_types: set[str] = {
+        fav.reference.item_class if hasattr(fav, 'reference') else fav.item_class
+        for fav in favorites
+    }
     for group_type in sorted(group_types):
         try:
             media_content_type = SONOS_TYPES_MAPPING[group_type]
@@ -458,7 +461,11 @@ def favorites_folder_payload(
     content_type = SONOS_TYPES_MAPPING[media_content_id]
 
     for favorite in favorites:
-        item_class = favorite.reference.item_class if hasattr(favorite, 'reference') else favorite.item_class
+        item_class = (
+            favorite.reference.item_class
+            if hasattr(favorite, 'reference')
+            else favorite.item_class
+        )
         if item_class != media_content_id:
             continue
         children.append(
