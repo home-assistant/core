@@ -14,7 +14,7 @@ from homeassistant.const import CONF_API_KEY, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import TEST_API_KEY, TEST_URL, TEST_USER_INPUT
+from .const import TEST_API_KEY, TEST_URL, TEST_USER_INPUT
 
 from tests.common import MockConfigEntry
 
