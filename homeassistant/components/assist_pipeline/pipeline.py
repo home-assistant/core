@@ -125,7 +125,7 @@ SAVE_DELAY = 10
 @callback
 def _async_local_fallback_intent_filter(result: RecognizeResult) -> bool:
     """Filter out intents that are not local fallback."""
-    return result.intent.name in (intent.INTENT_GET_STATE, intent.INTENT_NEVERMIND)
+    return result.intent.name in (intent.INTENT_GET_STATE)
 
 
 @callback
