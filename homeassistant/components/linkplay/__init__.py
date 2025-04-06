@@ -13,16 +13,8 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DOMAIN, PLATFORMS, SHARED_DATA, SHARED_DATA_KEY
+from .const import DOMAIN, PLATFORMS, SHARED_DATA, SHARED_DATA_KEY, LinkPlaySharedData
 from .utils import async_get_client_session
-
-
-@dataclass
-class LinkPlaySharedData:
-    """Shared data for LinkPlay."""
-
-    controller: LinkPlayController
-    entity_to_bridge: dict[str, str]
 
 
 @dataclass
