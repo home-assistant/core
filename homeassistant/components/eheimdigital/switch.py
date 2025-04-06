@@ -21,13 +21,13 @@ async def async_setup_entry(
     entry: EheimDigitalConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the callbacks for the coordinator so lights can be added as devices are found."""
+    """Set up the callbacks for the coordinator so switches can be added as devices are found."""
     coordinator = entry.runtime_data
 
     def async_setup_device_entities(
         device_address: dict[str, EheimDigitalDevice],
     ) -> None:
-        """Set up the light entities for one or multiple devices."""
+        """Set up the switch entities for one or multiple devices."""
         entities: list[SwitchEntity] = []
         for device in device_address.values():
             if isinstance(device, EheimDigitalClassicVario):

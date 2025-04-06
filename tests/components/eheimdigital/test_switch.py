@@ -84,7 +84,7 @@ async def test_state_update(
     mock_config_entry: MockConfigEntry,
     classic_vario_mock: MagicMock,
 ) -> None:
-    """Test the sensor state update."""
+    """Test the switch state update."""
     await init_integration(hass, mock_config_entry)
 
     await eheimdigital_hub_mock.call_args.kwargs["device_found_callback"](
