@@ -242,9 +242,9 @@ async def test_options_flow(
 
     await hass.async_block_till_done()
     assert len(mock_setup_entry.mock_calls) == 1
-  
- 
- async def test_reauth_flow_success(
+
+
+async def test_reauth_flow_success(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
