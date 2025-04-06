@@ -47,5 +47,13 @@
     "trigger_type": {
       "samsungtv.turn_on": "Device is requested to turn on"
     }
+  },
+  "exceptions": {
+    "unhandled_trigger_type": {
+      "message": "Unhandled trigger type {trigger_type}."
+    },
+    "service_unsupported": {
+      "message": "Entity {entity} does not support this service."
+    }
   }
 }
