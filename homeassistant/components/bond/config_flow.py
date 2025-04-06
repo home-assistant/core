@@ -207,7 +207,7 @@ class BondConfigFlow(ConfigFlow, domain=DOMAIN):
             except InputValidationError as error:
                 errors["base"] = error.base
             else:
-                await self.async_set_unique_id(bond_id)
+                await self.async_set_unique_id(bond_id, raise_on_progress=False)
                 self._abort_if_unique_id_configured(
                     updates={CONF_HOST: user_input[CONF_HOST]}
                 )
