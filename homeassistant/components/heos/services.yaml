@@ -1,3 +1,42 @@
+get_queue:
+  target:
+    entity:
+      integration: heos
+      domain: media_player
+
+remove_from_queue:
+  target:
+    entity:
+      integration: heos
+      domain: media_player
+  fields:
+    queue_ids:
+      required: true
+      selector:
+        text:
+          multiple: true
+          type: number
+
+move_queue_item:
+  target:
+    entity:
+      integration: heos
+      domain: media_player
+  fields:
+    queue_ids:
+      required: true
+      selector:
+        text:
+          multiple: true
+          type: number
+    destination_position:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 1000
+          step: 1
+
 group_volume_set:
   target:
     entity:

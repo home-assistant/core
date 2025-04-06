@@ -4,19 +4,19 @@
     "step": {
       "user": {
         "title": "Connect to Cloudflare",
-        "description": "This integration requires an API Token created with Zone:Zone:Read and Zone:DNS:Edit permissions for all zones in your account.",
+        "description": "This integration requires an API token created with Zone:Zone:Read and Zone:DNS:Edit permissions for all zones in your account.",
         "data": {
           "api_token": "[%key:common::config_flow::data::api_token%]"
         }
       },
       "zone": {
-        "title": "Choose the Zone to Update",
+        "title": "Choose the zone to update",
         "data": {
           "zone": "Zone"
         }
       },
       "records": {
-        "title": "Choose the Records to Update",
+        "title": "Choose the records to update",
         "data": {
           "records": "Records"
         }
@@ -40,7 +40,7 @@
   "services": {
     "update_records": {
       "name": "Update records",
-      "description": "Manually trigger update to Cloudflare records."
+      "description": "Manually triggers an update of Cloudflare records."
     }
   }
 }
