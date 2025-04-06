@@ -61,11 +61,6 @@ class ZimiConfigFlow(ConfigFlow, domain=DOMAIN):
     api_descriptions: list[ControlPointDescription]
     data: dict[str, Any]
 
-    def __del__(self):
-        """Disconnect from ZCC."""
-        if self.api:
-            self.api.disconnect()
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
