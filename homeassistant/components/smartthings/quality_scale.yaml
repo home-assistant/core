@@ -73,7 +73,7 @@ rules:
     status: exempt
     comment: |
       This integration doesn't have any cases where raising an issue is needed.
-  stale-devices: todo
+  stale-devices: done
   # Platinum
   async-dependency: done
   inject-websession: done
