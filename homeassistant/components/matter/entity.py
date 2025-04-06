@@ -18,6 +18,7 @@ from matter_server.common.helpers.util import (
 from matter_server.common.models import EventType, ServerInfoMessage
 from propcache.api import cached_property
 
+from homeassistant.const import EntityCategory
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -114,7 +115,7 @@ class MatterEntity(Entity):
 
         # prefer the label attribute for the entity name
         # Matter has a way for users and/or vendors to specify a name for an endpoint
-        # which is always preferred over a standard HA (generated) name
+        # which is preferred over a standard HA (generated) name for control and event entities
         for attr in (
             clusters.FixedLabel.Attributes.LabelList,
             clusters.UserLabel.Attributes.LabelList,
@@ -129,7 +130,12 @@ class MatterEntity(Entity):
                 # in the case the label is only the label id, use it as postfix only
                 if label_value.isnumeric():
                     self._name_postfix = label_value
-                else:
+                elif self.entity_category not in [
+                    EntityCategory.CONFIG,
+                    EntityCategory.DIAGNOSTIC,
+                ]:
+                    # Cluster attributes can result in multiple CONFIG and DIAGNOSTIC entities for an endpoint,
+                    # to maintian unique names, use standard HA name and don't overwrite the attribute names if they are in the CONFIG or DIAGNOSTIC category
                     self._attr_name = label_value
                 break
 
