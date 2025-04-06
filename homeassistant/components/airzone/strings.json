@@ -78,7 +78,7 @@
         "name": "RSSI"
       },
       "thermostat_signal": {
-        "name": "Signal percentage"
+        "name": "Signal strength"
       }
     }
   }

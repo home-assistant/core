@@ -363,7 +363,7 @@
     'state': '36',
   })
 # ---
-# name: test_airzone_create_sensors[sensor.despacho_signal_percentage-entry]
+# name: test_airzone_create_sensors[sensor.despacho_signal_strength-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -378,7 +378,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.despacho_signal_percentage',
+    'entity_id': 'sensor.despacho_signal_strength',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -390,7 +390,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Signal percentage',
+    'original_name': 'Signal strength',
     'platform': 'airzone',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -399,15 +399,15 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_airzone_create_sensors[sensor.despacho_signal_percentage-state]
+# name: test_airzone_create_sensors[sensor.despacho_signal_strength-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Despacho Signal percentage',
+      'friendly_name': 'Despacho Signal strength',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.despacho_signal_percentage',
+    'entity_id': 'sensor.despacho_signal_strength',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -622,7 +622,7 @@
     'state': '35',
   })
 # ---
-# name: test_airzone_create_sensors[sensor.dorm_1_signal_percentage-entry]
+# name: test_airzone_create_sensors[sensor.dorm_1_signal_strength-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -637,7 +637,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.dorm_1_signal_percentage',
+    'entity_id': 'sensor.dorm_1_signal_strength',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -649,7 +649,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Signal percentage',
+    'original_name': 'Signal strength',
     'platform': 'airzone',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -658,15 +658,15 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_airzone_create_sensors[sensor.dorm_1_signal_percentage-state]
+# name: test_airzone_create_sensors[sensor.dorm_1_signal_strength-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dorm #1 Signal percentage',
+      'friendly_name': 'Dorm #1 Signal strength',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.dorm_1_signal_percentage',
+    'entity_id': 'sensor.dorm_1_signal_strength',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -829,7 +829,7 @@
     'state': '40',
   })
 # ---
-# name: test_airzone_create_sensors[sensor.dorm_2_signal_percentage-entry]
+# name: test_airzone_create_sensors[sensor.dorm_2_signal_strength-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -844,7 +844,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.dorm_2_signal_percentage',
+    'entity_id': 'sensor.dorm_2_signal_strength',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -856,7 +856,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Signal percentage',
+    'original_name': 'Signal strength',
     'platform': 'airzone',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -865,15 +865,15 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_airzone_create_sensors[sensor.dorm_2_signal_percentage-state]
+# name: test_airzone_create_sensors[sensor.dorm_2_signal_strength-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dorm #2 Signal percentage',
+      'friendly_name': 'Dorm #2 Signal strength',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.dorm_2_signal_percentage',
+    'entity_id': 'sensor.dorm_2_signal_strength',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1036,7 +1036,7 @@
     'state': '39',
   })
 # ---
-# name: test_airzone_create_sensors[sensor.dorm_ppal_signal_percentage-entry]
+# name: test_airzone_create_sensors[sensor.dorm_ppal_signal_strength-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1051,7 +1051,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.dorm_ppal_signal_percentage',
+    'entity_id': 'sensor.dorm_ppal_signal_strength',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1063,7 +1063,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Signal percentage',
+    'original_name': 'Signal strength',
     'platform': 'airzone',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1072,15 +1072,15 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_airzone_create_sensors[sensor.dorm_ppal_signal_percentage-state]
+# name: test_airzone_create_sensors[sensor.dorm_ppal_signal_strength-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dorm Ppal Signal percentage',
+      'friendly_name': 'Dorm Ppal Signal strength',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.dorm_ppal_signal_percentage',
+    'entity_id': 'sensor.dorm_ppal_signal_strength',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
