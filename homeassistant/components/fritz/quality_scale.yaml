@@ -14,9 +14,7 @@ rules:
   docs-actions: done
   docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions:
-    status: todo
-    comment: include the proper docs snippet
+  docs-removal-instructions: done
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name:
@@ -31,9 +29,7 @@ rules:
   action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters: done
-  docs-installation-parameters:
-    status: todo
-    comment: add the proper configuration_basic block
+  docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
@@ -50,7 +46,7 @@ rules:
   diagnostics: done
   discovery-update-info: todo
   discovery: done
-  docs-data-update: todo
+  docs-data-update: done
   docs-examples: done
   docs-known-limitations:
     status: exempt
