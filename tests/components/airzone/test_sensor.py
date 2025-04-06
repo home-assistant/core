@@ -44,11 +44,23 @@ async def test_airzone_create_sensors(hass: HomeAssistant) -> None:
     state = hass.states.get("sensor.despacho_humidity")
     assert state.state == "36"
 
+    state = hass.states.get("sensor.despacho_battery")
+    assert state.state == "25"
+
+    state = hass.states.get("sensor.despacho_signal_percentage")
+    assert state.state == "88"
+
     state = hass.states.get("sensor.dorm_1_temperature")
     assert state.state == "20.8"
 
     state = hass.states.get("sensor.dorm_1_humidity")
     assert state.state == "35"
+
+    state = hass.states.get("sensor.dorm_1_battery")
+    assert state.state == "35"
+
+    state = hass.states.get("sensor.dorm_1_signal_percentage")
+    assert state.state == "60"
 
     state = hass.states.get("sensor.dorm_2_temperature")
     assert state.state == "20.5"
@@ -56,11 +68,23 @@ async def test_airzone_create_sensors(hass: HomeAssistant) -> None:
     state = hass.states.get("sensor.dorm_2_humidity")
     assert state.state == "40"
 
+    state = hass.states.get("sensor.dorm_2_battery")
+    assert state.state == "80"
+
+    state = hass.states.get("sensor.dorm_2_signal_percentage")
+    assert state.state == "66"
+
     state = hass.states.get("sensor.dorm_ppal_temperature")
     assert state.state == "21.1"
 
     state = hass.states.get("sensor.dorm_ppal_humidity")
     assert state.state == "39"
+
+    state = hass.states.get("sensor.dorm_ppal_battery")
+    assert state.state == "99"
+
+    state = hass.states.get("sensor.dorm_ppal_signal_percentage")
+    assert state.state == "72"
 
     state = hass.states.get("sensor.salon_temperature")
     assert state.state == "19.6"
