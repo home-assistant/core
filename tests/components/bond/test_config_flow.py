@@ -333,7 +333,6 @@ async def test_dhcp_discovery(hass: HomeAssistant) -> None:
             result["flow_id"],
             {CONF_ACCESS_TOKEN: "test-token"},
         )
-        await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "bond-name"
