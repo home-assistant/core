@@ -13,6 +13,14 @@
           "no_error": "mdi:check-circle"
         }
       }
+    },
+    "switch": {
+      "filter_active": {
+        "default": "mdi:pump",
+        "state": {
+          "off": "mdi:pump-off"
+        }
+      }
     }
   }
 }
