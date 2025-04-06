@@ -27,7 +27,7 @@ from homeassistant.components.home_connect.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -302,7 +302,7 @@ ENTITY_ID_STATES = {
         )
     ),
 )
-async def test_event_sensors(
+async def test_program_sensors(
     client: MagicMock,
     appliance_ha_id: str,
     states: tuple,
@@ -313,7 +313,7 @@ async def test_event_sensors(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     setup_credentials: None,
 ) -> None:
-    """Test sequence for sensors that are only available after an event happens."""
+    """Test sequence for sensors that expose information about a program."""
     entity_ids = ENTITY_ID_STATES.keys()
 
     time_to_freeze = "2021-01-09 12:00:00+00:00"
@@ -355,6 +355,82 @@ async def test_event_sensors(
     )
     await hass.async_block_till_done()
     for entity_id, state in zip(entity_ids, states, strict=False):
+        assert hass.states.is_state(entity_id, state)
+
+
+@pytest.mark.parametrize("appliance_ha_id", [TEST_HC_APP], indirect=True)
+@pytest.mark.parametrize(
+    ("initial_operation_state", "initial_state", "event_order", "entity_states"),
+    [
+        (
+            "BSH.Common.EnumType.OperationState.Ready",
+            STATE_UNAVAILABLE,
+            (EventType.STATUS, EventType.EVENT),
+            (STATE_UNKNOWN, "60"),
+        ),
+        (
+            "BSH.Common.EnumType.OperationState.Run",
+            STATE_UNKNOWN,
+            (EventType.EVENT, EventType.STATUS),
+            ("60", "60"),
+        ),
+    ],
+)
+async def test_program_sensor_edge_case(
+    initial_operation_state: str,
+    initial_state: str,
+    event_order: tuple[EventType, EventType],
+    entity_states: tuple[str, str],
+    appliance_ha_id: str,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    setup_credentials: None,
+    client: MagicMock,
+) -> None:
+    """Test edge case for the program related entities."""
+    entity_id = "sensor.dishwasher_program_progress"
+    client.get_status = AsyncMock(
+        return_value=ArrayOfStatus(
+            [
+                Status(
+                    StatusKey.BSH_COMMON_OPERATION_STATE,
+                    StatusKey.BSH_COMMON_OPERATION_STATE.value,
+                    initial_operation_state,
+                )
+            ]
+        )
+    )
+
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert await integration_setup(client)
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    assert hass.states.is_state(entity_id, initial_state)
+
+    for event_type, state in zip(event_order, entity_states, strict=True):
+        await client.add_events(
+            [
+                EventMessage(
+                    appliance_ha_id,
+                    event_type,
+                    ArrayOfEvents(
+                        [
+                            Event(
+                                key=event_key,
+                                raw_key=event_key.value,
+                                timestamp=0,
+                                level="",
+                                handling="",
+                                value=value,
+                            )
+                        ],
+                    ),
+                )
+                for event_key, value in EVENT_PROG_RUN[event_type].items()
+            ]
+        )
+        await hass.async_block_till_done()
         assert hass.states.is_state(entity_id, state)
 
 

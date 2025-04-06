@@ -26,6 +26,76 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "blackout_alarm": {
+        "name": "Blackout"
+      },
+      "carbon_dioxide": {
+        "name": "Carbon dioxide"
+      },
+      "flood": {
+        "name": "Flood"
+      },
+      "high_temperature": {
+        "name": "High temperature"
+      },
+      "leak_alarm": {
+        "name": "Leak"
+      },
+      "load_alarm": {
+        "name": "Load",
+        "state": {
+          "off": "Normal",
+          "on": "Overload"
+        }
+      },
+      "low_temperature": {
+        "name": "Low temperature"
+      },
+      "malfunction": {
+        "name": "Malfunction"
+      },
+      "maximum": {
+        "name": "Maximum level"
+      },
+      "minimum": {
+        "name": "Minimum level"
+      },
+      "motor_blocked": {
+        "name": "Motor blocked"
+      },
+      "overcurrent": {
+        "name": "Overcurrent"
+      },
+      "overload": {
+        "name": "Overload"
+      },
+      "rain": {
+        "name": "Rain"
+      },
+      "replace_filter": {
+        "name": "Replace filter",
+        "state": {
+          "on": "Replace"
+        }
+      },
+      "storage": {
+        "name": "Storage",
+        "state": {
+          "off": "Space available",
+          "on": "Storage full"
+        }
+      },
+      "surge": {
+        "name": "Surge"
+      },
+      "voltage_drop": {
+        "name": "Voltage drop"
+      },
+      "water": {
+        "name": "Water"
+      }
+    },
     "button": {
       "automatic_mode": {
         "name": "Automatic mode"
@@ -110,7 +180,20 @@
         "name": "Wake-up interval"
       }
     },
+    "select": {
+      "repeater_mode": {
+        "name": "Repeater mode",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "level1": "Level 1",
+          "level2": "Level 2"
+        }
+      }
+    },
     "sensor": {
+      "brightness": {
+        "name": "Illuminance"
+      },
       "brightness_instance": {
         "name": "Illuminance {instance}"
       },

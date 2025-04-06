@@ -559,7 +559,9 @@ set_program_and_options:
                 - laundry_care_washer_enum_type_spin_speed_off
                 - laundry_care_washer_enum_type_spin_speed_r_p_m400
                 - laundry_care_washer_enum_type_spin_speed_r_p_m600
+                - laundry_care_washer_enum_type_spin_speed_r_p_m700
                 - laundry_care_washer_enum_type_spin_speed_r_p_m800
+                - laundry_care_washer_enum_type_spin_speed_r_p_m900
                 - laundry_care_washer_enum_type_spin_speed_r_p_m1000
                 - laundry_care_washer_enum_type_spin_speed_r_p_m1200
                 - laundry_care_washer_enum_type_spin_speed_r_p_m1400

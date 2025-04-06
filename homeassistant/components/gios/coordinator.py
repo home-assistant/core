@@ -6,7 +6,6 @@ import asyncio
 from dataclasses import dataclass
 import logging
 
-from aiohttp import ClientSession
 from aiohttp.client_exceptions import ClientConnectorError
 from gios import Gios
 from gios.exceptions import GiosError
@@ -39,11 +38,10 @@ class GiosDataUpdateCoordinator(DataUpdateCoordinator[GiosSensors]):
         self,
         hass: HomeAssistant,
         config_entry: GiosConfigEntry,
-        session: ClientSession,
-        station_id: int,
+        gios: Gios,
     ) -> None:
         """Class to manage fetching GIOS data API."""
-        self.gios = Gios(station_id, session)
+        self.gios = gios
 
         super().__init__(
             hass,

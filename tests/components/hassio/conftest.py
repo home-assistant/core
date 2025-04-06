@@ -11,7 +11,7 @@ import pytest
 
 from homeassistant.auth.models import RefreshToken
 from homeassistant.components.hassio.handler import HassIO, HassioAPIError
-from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.setup import async_setup_component
 
@@ -75,7 +75,6 @@ def hassio_stubs(
             "homeassistant.components.hassio.issues.SupervisorIssues.setup",
         ),
     ):
-        hass.set_state(CoreState.starting)
         hass.loop.run_until_complete(async_setup_component(hass, "hassio", {}))
 
     return hass_api.call_args[0][1]

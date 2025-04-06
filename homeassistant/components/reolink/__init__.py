@@ -28,7 +28,7 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_SUPPORTS_PRIVACY_MODE, CONF_USE_HTTPS, DOMAIN
+from .const import CONF_BC_PORT, CONF_SUPPORTS_PRIVACY_MODE, CONF_USE_HTTPS, DOMAIN
 from .exceptions import PasswordIncompatible, ReolinkException, UserNotAdmin
 from .host import ReolinkHost
 from .services import async_setup_services
@@ -100,6 +100,7 @@ async def async_setup_entry(
         or host.api.use_https != config_entry.data[CONF_USE_HTTPS]
         or host.api.supported(None, "privacy_mode")
         != config_entry.data.get(CONF_SUPPORTS_PRIVACY_MODE)
+        or host.api.baichuan.port != config_entry.data.get(CONF_BC_PORT)
     ):
         if host.api.port != config_entry.data[CONF_PORT]:
             _LOGGER.warning(
@@ -108,10 +109,21 @@ async def async_setup_entry(
                 config_entry.data[CONF_PORT],
                 host.api.port,
             )
+        if (
+            config_entry.data.get(CONF_BC_PORT, host.api.baichuan.port)
+            != host.api.baichuan.port
+        ):
+            _LOGGER.warning(
+                "Baichuan port of Reolink %s, changed from %s to %s",
+                host.api.nvr_name,
+                config_entry.data.get(CONF_BC_PORT),
+                host.api.baichuan.port,
+            )
         data = {
             **config_entry.data,
             CONF_PORT: host.api.port,
             CONF_USE_HTTPS: host.api.use_https,
+            CONF_BC_PORT: host.api.baichuan.port,
             CONF_SUPPORTS_PRIVACY_MODE: host.api.supported(None, "privacy_mode"),
         }
         hass.config_entries.async_update_entry(config_entry, data=data)

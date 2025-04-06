@@ -54,6 +54,9 @@
   },
   "entity": {
     "sensor": {
+      "bh1750_illuminance": {
+        "name": "BH1750 illuminance"
+      },
       "bme280_humidity": {
         "name": "BME280 humidity"
       },
@@ -98,6 +101,17 @@
           "medium": "Medium",
           "high": "High",
           "very_high": "Very high"
+        },
+        "state_attributes": {
+          "options": {
+            "state": {
+              "very_low": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::very_low%]",
+              "low": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::low%]",
+              "medium": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::medium%]",
+              "high": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::high%]",
+              "very_high": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::very_high%]"
+            }
+          }
         }
       },
       "pmsx003_pm1": {
@@ -120,6 +134,17 @@
           "medium": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::medium%]",
           "high": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::high%]",
           "very_high": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::very_high%]"
+        },
+        "state_attributes": {
+          "options": {
+            "state": {
+              "very_low": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::very_low%]",
+              "low": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::low%]",
+              "medium": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::medium%]",
+              "high": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::high%]",
+              "very_high": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::very_high%]"
+            }
+          }
         }
       },
       "sds011_pm10": {
@@ -145,6 +170,17 @@
           "medium": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::medium%]",
           "high": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::high%]",
           "very_high": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::very_high%]"
+        },
+        "state_attributes": {
+          "options": {
+            "state": {
+              "very_low": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::very_low%]",
+              "low": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::low%]",
+              "medium": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::medium%]",
+              "high": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::high%]",
+              "very_high": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::very_high%]"
+            }
+          }
         }
       },
       "sps30_pm1": {

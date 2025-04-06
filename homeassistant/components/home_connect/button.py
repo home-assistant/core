@@ -102,7 +102,7 @@ class HomeConnectButtonEntity(HomeConnectEntity, ButtonEntity):
         )
         self.entity_description = desc
         self.appliance = appliance
-        self.unique_id = f"{appliance.info.ha_id}-{desc.key}"
+        self._attr_unique_id = f"{appliance.info.ha_id}-{desc.key}"
 
     def update_native_value(self) -> None:
         """Set the value of the entity."""

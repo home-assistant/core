@@ -136,31 +136,28 @@ QUERY_STATISTICS_SUMMARY_SUM = (
 
 
 STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
-    **{unit: AreaConverter for unit in AreaConverter.VALID_UNITS},
-    **{
-        unit: BloodGlucoseConcentrationConverter
-        for unit in BloodGlucoseConcentrationConverter.VALID_UNITS
-    },
-    **{unit: ConductivityConverter for unit in ConductivityConverter.VALID_UNITS},
-    **{unit: DataRateConverter for unit in DataRateConverter.VALID_UNITS},
-    **{unit: DistanceConverter for unit in DistanceConverter.VALID_UNITS},
-    **{unit: DurationConverter for unit in DurationConverter.VALID_UNITS},
-    **{unit: ElectricCurrentConverter for unit in ElectricCurrentConverter.VALID_UNITS},
-    **{
-        unit: ElectricPotentialConverter
-        for unit in ElectricPotentialConverter.VALID_UNITS
-    },
-    **{unit: EnergyConverter for unit in EnergyConverter.VALID_UNITS},
-    **{unit: EnergyDistanceConverter for unit in EnergyDistanceConverter.VALID_UNITS},
-    **{unit: InformationConverter for unit in InformationConverter.VALID_UNITS},
-    **{unit: MassConverter for unit in MassConverter.VALID_UNITS},
-    **{unit: PowerConverter for unit in PowerConverter.VALID_UNITS},
-    **{unit: PressureConverter for unit in PressureConverter.VALID_UNITS},
-    **{unit: SpeedConverter for unit in SpeedConverter.VALID_UNITS},
-    **{unit: TemperatureConverter for unit in TemperatureConverter.VALID_UNITS},
-    **{unit: UnitlessRatioConverter for unit in UnitlessRatioConverter.VALID_UNITS},
-    **{unit: VolumeConverter for unit in VolumeConverter.VALID_UNITS},
-    **{unit: VolumeFlowRateConverter for unit in VolumeFlowRateConverter.VALID_UNITS},
+    **dict.fromkeys(AreaConverter.VALID_UNITS, AreaConverter),
+    **dict.fromkeys(
+        BloodGlucoseConcentrationConverter.VALID_UNITS,
+        BloodGlucoseConcentrationConverter,
+    ),
+    **dict.fromkeys(ConductivityConverter.VALID_UNITS, ConductivityConverter),
+    **dict.fromkeys(DataRateConverter.VALID_UNITS, DataRateConverter),
+    **dict.fromkeys(DistanceConverter.VALID_UNITS, DistanceConverter),
+    **dict.fromkeys(DurationConverter.VALID_UNITS, DurationConverter),
+    **dict.fromkeys(ElectricCurrentConverter.VALID_UNITS, ElectricCurrentConverter),
+    **dict.fromkeys(ElectricPotentialConverter.VALID_UNITS, ElectricPotentialConverter),
+    **dict.fromkeys(EnergyConverter.VALID_UNITS, EnergyConverter),
+    **dict.fromkeys(EnergyDistanceConverter.VALID_UNITS, EnergyDistanceConverter),
+    **dict.fromkeys(InformationConverter.VALID_UNITS, InformationConverter),
+    **dict.fromkeys(MassConverter.VALID_UNITS, MassConverter),
+    **dict.fromkeys(PowerConverter.VALID_UNITS, PowerConverter),
+    **dict.fromkeys(PressureConverter.VALID_UNITS, PressureConverter),
+    **dict.fromkeys(SpeedConverter.VALID_UNITS, SpeedConverter),
+    **dict.fromkeys(TemperatureConverter.VALID_UNITS, TemperatureConverter),
+    **dict.fromkeys(UnitlessRatioConverter.VALID_UNITS, UnitlessRatioConverter),
+    **dict.fromkeys(VolumeConverter.VALID_UNITS, VolumeConverter),
+    **dict.fromkeys(VolumeFlowRateConverter.VALID_UNITS, VolumeFlowRateConverter),
 }
 
 

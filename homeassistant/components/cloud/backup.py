@@ -18,7 +18,12 @@ from hass_nabucasa.cloud_api import (
 )
 from hass_nabucasa.files import FilesError, StorageType, calculate_b64md5
 
-from homeassistant.components.backup import AgentBackup, BackupAgent, BackupAgentError
+from homeassistant.components.backup import (
+    AgentBackup,
+    BackupAgent,
+    BackupAgentError,
+    BackupNotFound,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import ChunkAsyncStreamIterator
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -90,9 +95,7 @@ class CloudBackupAgent(BackupAgent):
         :param backup_id: The ID of the backup that was returned in async_list_backups.
         :return: An async iterator that yields bytes.
         """
-        if not (backup := await self._async_get_backup(backup_id)):
-            raise BackupAgentError("Backup not found")
-
+        backup = await self._async_get_backup(backup_id)
         try:
             content = await self._cloud.files.download(
                 storage_type=StorageType.BACKUP,
@@ -171,9 +174,7 @@ class CloudBackupAgent(BackupAgent):
 
         :param backup_id: The ID of the backup that was returned in async_list_backups.
         """
-        if not (backup := await self._async_get_backup(backup_id)):
-            return
-
+        backup = await self._async_get_backup(backup_id)
         try:
             await async_files_delete_file(
                 self._cloud,
@@ -204,16 +205,12 @@ class CloudBackupAgent(BackupAgent):
         self,
         backup_id: str,
         **kwargs: Any,
-    ) -> AgentBackup | None:
+    ) -> AgentBackup:
         """Return a backup."""
-        if not (backup := await self._async_get_backup(backup_id)):
-            return None
+        backup = await self._async_get_backup(backup_id)
         return AgentBackup.from_dict(backup["Metadata"])
 
-    async def _async_get_backup(
-        self,
-        backup_id: str,
-    ) -> FilesHandlerListEntry | None:
+    async def _async_get_backup(self, backup_id: str) -> FilesHandlerListEntry:
         """Return a backup."""
         backups = await self._async_list_backups()
 
@@ -221,4 +218,4 @@ class CloudBackupAgent(BackupAgent):
             if backup["Metadata"]["backup_id"] == backup_id:
                 return backup
 
-        return None
+        raise BackupNotFound(f"Backup {backup_id} not found")

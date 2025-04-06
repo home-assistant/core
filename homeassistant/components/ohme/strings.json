@@ -42,6 +42,20 @@
           "description": "The Ohme config entry for which to return charge slots."
         }
       }
+    },
+    "set_price_cap": {
+      "name": "Set price cap",
+      "description": "Prevents charging when the electricity price exceeds a defined threshold.",
+      "fields": {
+        "config_entry": {
+          "name": "Ohme account",
+          "description": "The Ohme config entry for which to return charge slots."
+        },
+        "price_cap": {
+          "name": "Price cap",
+          "description": "Threshold in 1/100ths of your local currency."
+        }
+      }
     }
   },
   "entity": {
@@ -66,6 +80,9 @@
           "max_charge": "Max charge",
           "paused": "Paused"
         }
+      },
+      "vehicle": {
+        "name": "Vehicle"
       }
     },
     "sensor": {
@@ -99,6 +116,9 @@
       },
       "sleep_when_inactive": {
         "name": "Sleep when inactive"
+      },
+      "price_cap": {
+        "name": "Price cap"
       }
     },
     "time": {

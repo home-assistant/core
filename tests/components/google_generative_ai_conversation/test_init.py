@@ -224,3 +224,52 @@ async def test_config_entry_error(
         await hass.async_block_till_done()
         assert mock_config_entry.state == state
         assert any(mock_config_entry.async_get_active_flows(hass, {"reauth"})) == reauth
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_load_entry_with_unloaded_entries(
+    hass: HomeAssistant, snapshot: SnapshotAssertion
+) -> None:
+    """Test loading an entry with unloaded entries."""
+    config_entries = hass.config_entries.async_entries(
+        "google_generative_ai_conversation"
+    )
+    runtime_data = config_entries[0].runtime_data
+    await hass.config_entries.async_unload(config_entries[0].entry_id)
+
+    entry = MockConfigEntry(
+        domain="google_generative_ai_conversation",
+        title="Google Generative AI Conversation",
+        data={
+            "api_key": "bla",
+        },
+        state=ConfigEntryState.LOADED,
+    )
+    entry.runtime_data = runtime_data
+    entry.add_to_hass(hass)
+
+    stubbed_generated_content = (
+        "I'm thrilled to welcome you all to the release "
+        "party for the latest version of Home Assistant!"
+    )
+
+    with patch(
+        "google.genai.models.AsyncModels.generate_content",
+        return_value=Mock(
+            text=stubbed_generated_content,
+            prompt_feedback=None,
+            candidates=[Mock()],
+        ),
+    ) as mock_generate:
+        response = await hass.services.async_call(
+            "google_generative_ai_conversation",
+            "generate_content",
+            {"prompt": "Write an opening speech for a Home Assistant release party"},
+            blocking=True,
+            return_response=True,
+        )
+
+    assert response == {
+        "text": stubbed_generated_content,
+    }
+    assert [tuple(mock_call) for mock_call in mock_generate.mock_calls] == snapshot

@@ -17,15 +17,29 @@ from homeassistant.helpers import selector
 
 from .const import DOMAIN
 
-SERVICE_LIST_CHARGE_SLOTS = "list_charge_slots"
 ATTR_CONFIG_ENTRY: Final = "config_entry"
-SERVICE_SCHEMA: Final = vol.Schema(
+ATTR_PRICE_CAP: Final = "price_cap"
+
+SERVICE_LIST_CHARGE_SLOTS = "list_charge_slots"
+SERVICE_LIST_CHARGE_SLOTS_SCHEMA: Final = vol.Schema(
     {
         vol.Required(ATTR_CONFIG_ENTRY): selector.ConfigEntrySelector(
             {
                 "integration": DOMAIN,
             }
         ),
+    }
+)
+
+SERVICE_SET_PRICE_CAP = "set_price_cap"
+SERVICE_SET_PRICE_CAP_SCHEMA: Final = vol.Schema(
+    {
+        vol.Required(ATTR_CONFIG_ENTRY): selector.ConfigEntrySelector(
+            {
+                "integration": DOMAIN,
+            }
+        ),
+        vol.Required(ATTR_PRICE_CAP): vol.Coerce(float),
     }
 )
 
@@ -66,10 +80,26 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
         return {"slots": client.slots}
 
+    async def set_price_cap(
+        service_call: ServiceCall,
+    ) -> None:
+        """List of charge slots."""
+        client = __get_client(service_call)
+        price_cap = service_call.data[ATTR_PRICE_CAP]
+        await client.async_change_price_cap(cap=price_cap)
+
     hass.services.async_register(
         DOMAIN,
         SERVICE_LIST_CHARGE_SLOTS,
         list_charge_slots,
-        schema=SERVICE_SCHEMA,
+        schema=SERVICE_LIST_CHARGE_SLOTS_SCHEMA,
         supports_response=SupportsResponse.ONLY,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_PRICE_CAP,
+        set_price_cap,
+        schema=SERVICE_SET_PRICE_CAP_SCHEMA,
+        supports_response=SupportsResponse.NONE,
     )

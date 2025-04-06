@@ -494,6 +494,26 @@ async def test_escape_decode() -> None:
             {"type": "STRING", "enum": ["a", "b", "c"]},
         ),
         (
+            {"type": "string", "default": "default"},
+            {"type": "STRING"},
+        ),
+        (
+            {"type": "string", "pattern": "default"},
+            {"type": "STRING"},
+        ),
+        (
+            {"type": "string", "maxLength": 10},
+            {"type": "STRING"},
+        ),
+        (
+            {"type": "string", "minLength": 10},
+            {"type": "STRING"},
+        ),
+        (
+            {"type": "string", "title": "title"},
+            {"type": "STRING"},
+        ),
+        (
             {"type": "string", "format": "enum", "enum": ["a", "b", "c"]},
             {"type": "STRING", "format": "enum", "enum": ["a", "b", "c"]},
         ),
@@ -518,6 +538,10 @@ async def test_escape_decode() -> None:
             {"type": "NUMBER"},
         ),
         (
+            {"type": "number", "minimum": 1},
+            {"type": "NUMBER"},
+        ),
+        (
             {"type": "integer", "format": "int32"},
             {"type": "INTEGER", "format": "int32"},
         ),
@@ -535,21 +559,7 @@ async def test_escape_decode() -> None:
         ),
         (
             {"anyOf": [{"type": "integer"}, {"type": "number"}]},
-            {"any_of": [{"type": "INTEGER"}, {"type": "NUMBER"}]},
-        ),
-        (
-            {
-                "any_of": [
-                    {"any_of": [{"type": "integer"}, {"type": "number"}]},
-                    {"any_of": [{"type": "integer"}, {"type": "number"}]},
-                ]
-            },
-            {
-                "any_of": [
-                    {"any_of": [{"type": "INTEGER"}, {"type": "NUMBER"}]},
-                    {"any_of": [{"type": "INTEGER"}, {"type": "NUMBER"}]},
-                ]
-            },
+            {},
         ),
         ({"type": "string", "format": "lower"}, {"type": "STRING"}),
         ({"type": "boolean", "format": "bool"}, {"type": "BOOLEAN"}),
@@ -570,7 +580,15 @@ async def test_escape_decode() -> None:
             },
         ),
         (
-            {"type": "object", "additionalProperties": True},
+            {"type": "object", "additionalProperties": True, "minProperties": 1},
+            {
+                "type": "OBJECT",
+                "properties": {"json": {"type": "STRING"}},
+                "required": [],
+            },
+        ),
+        (
+            {"type": "object", "additionalProperties": True, "maxProperties": 1},
             {
                 "type": "OBJECT",
                 "properties": {"json": {"type": "STRING"}},
@@ -580,6 +598,20 @@ async def test_escape_decode() -> None:
         (
             {"type": "array", "items": {"type": "string"}},
             {"type": "ARRAY", "items": {"type": "STRING"}},
+        ),
+        (
+            {
+                "type": "array",
+                "items": {"type": "string"},
+                "minItems": 1,
+                "maxItems": 2,
+            },
+            {
+                "type": "ARRAY",
+                "items": {"type": "STRING"},
+                "min_items": 1,
+                "max_items": 2,
+            },
         ),
     ],
 )

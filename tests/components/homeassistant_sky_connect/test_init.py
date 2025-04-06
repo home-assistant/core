@@ -44,7 +44,7 @@ async def test_config_entry_migration_v2(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(config_entry.entry_id)
 
     assert config_entry.version == 1
-    assert config_entry.minor_version == 2
+    assert config_entry.minor_version == 3
     assert config_entry.data == {
         "description": "SkyConnect v1.0",
         "device": "/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_9e2adbd75b8beb119fe564a0f320645d-if00-port0",
@@ -54,6 +54,7 @@ async def test_config_entry_migration_v2(hass: HomeAssistant) -> None:
         "manufacturer": "Nabu Casa",
         "product": "SkyConnect v1.0",  # `description` has been copied to `product`
         "firmware": "spinel",  # new key
+        "firmware_version": None,  # new key
     }
 
     await hass.config_entries.async_unload(config_entry.entry_id)

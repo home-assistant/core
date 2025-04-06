@@ -186,7 +186,7 @@ class SensorDeviceClass(StrEnum):
     DURATION = "duration"
     """Fixed duration.
 
-    Unit of measurement: `d`, `h`, `min`, `s`, `ms`
+    Unit of measurement: `d`, `h`, `min`, `s`, `ms`, `µs`
     """
 
     ENERGY = "energy"
@@ -558,6 +558,7 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
         UnitOfTime.MINUTES,
         UnitOfTime.SECONDS,
         UnitOfTime.MILLISECONDS,
+        UnitOfTime.MICROSECONDS,
     },
     SensorDeviceClass.ENERGY: set(UnitOfEnergy),
     SensorDeviceClass.ENERGY_DISTANCE: set(UnitOfEnergyDistance),
@@ -582,6 +583,7 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.PM25: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     SensorDeviceClass.POWER_FACTOR: {PERCENTAGE, None},
     SensorDeviceClass.POWER: {
+        UnitOfPower.MILLIWATT,
         UnitOfPower.WATT,
         UnitOfPower.KILO_WATT,
         UnitOfPower.MEGA_WATT,

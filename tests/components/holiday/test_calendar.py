@@ -49,7 +49,7 @@ async def test_holiday_calendar_entity(
         SERVICE_GET_EVENTS,
         {
             "entity_id": "calendar.united_states_ak",
-            "end_date_time": dt_util.now(),
+            "end_date_time": dt_util.now() + timedelta(hours=1),
         },
         blocking=True,
         return_response=True,
@@ -135,7 +135,7 @@ async def test_default_language(
         SERVICE_GET_EVENTS,
         {
             "entity_id": "calendar.france_bl",
-            "end_date_time": dt_util.now(),
+            "end_date_time": dt_util.now() + timedelta(hours=1),
         },
         blocking=True,
         return_response=True,
@@ -164,7 +164,7 @@ async def test_default_language(
         SERVICE_GET_EVENTS,
         {
             "entity_id": "calendar.france_bl",
-            "end_date_time": dt_util.now(),
+            "end_date_time": dt_util.now() + timedelta(hours=1),
         },
         blocking=True,
         return_response=True,
@@ -211,7 +211,7 @@ async def test_no_language(
         SERVICE_GET_EVENTS,
         {
             "entity_id": "calendar.albania",
-            "end_date_time": dt_util.now(),
+            "end_date_time": dt_util.now() + timedelta(hours=1),
         },
         blocking=True,
         return_response=True,
@@ -308,7 +308,7 @@ async def test_language_not_exist(
         SERVICE_GET_EVENTS,
         {
             "entity_id": "calendar.norge",
-            "end_date_time": dt_util.now(),
+            "end_date_time": dt_util.now() + timedelta(hours=1),
         },
         blocking=True,
         return_response=True,
@@ -336,7 +336,7 @@ async def test_language_not_exist(
         SERVICE_GET_EVENTS,
         {
             "entity_id": "calendar.norge",
-            "end_date_time": dt_util.now(),
+            "end_date_time": dt_util.now() + timedelta(hours=1),
         },
         blocking=True,
         return_response=True,

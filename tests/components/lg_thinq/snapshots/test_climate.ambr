@@ -15,8 +15,8 @@
         <HVACMode.COOL: 'cool'>,
         <HVACMode.DRY: 'dry'>,
       ]),
-      'max_temp': 30,
-      'min_temp': 18,
+      'max_temp': 86,
+      'min_temp': 64,
       'preset_modes': list([
         'air_clean',
       ]),
@@ -28,7 +28,7 @@
         'on',
         'off',
       ]),
-      'target_temp_step': 1,
+      'target_temp_step': 2,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -62,7 +62,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_humidity': 40,
-      'current_temperature': 25,
+      'current_temperature': 77,
       'fan_mode': 'mid',
       'fan_modes': list([
         'low',
@@ -75,8 +75,8 @@
         <HVACMode.COOL: 'cool'>,
         <HVACMode.DRY: 'dry'>,
       ]),
-      'max_temp': 30,
-      'min_temp': 18,
+      'max_temp': 86,
+      'min_temp': 64,
       'preset_mode': None,
       'preset_modes': list([
         'air_clean',
@@ -94,8 +94,8 @@
       ]),
       'target_temp_high': None,
       'target_temp_low': None,
-      'target_temp_step': 1,
-      'temperature': 19,
+      'target_temp_step': 2,
+      'temperature': 66,
     }),
     'context': <ANY>,
     'entity_id': 'climate.test_air_conditioner',

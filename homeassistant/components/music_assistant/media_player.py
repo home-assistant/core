@@ -276,22 +276,26 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
             self._attr_state = MediaPlayerState(player.state.value)
         else:
             self._attr_state = MediaPlayerState(STATE_OFF)
-        group_members_entity_ids: list[str] = []
+
+        group_members: list[str] = []
         if player.group_childs:
-            # translate MA group_childs to HA group_members as entity id's
-            entity_registry = er.async_get(self.hass)
-            group_members_entity_ids = [
-                entity_id
-                for child_id in player.group_childs
-                if (
-                    entity_id := entity_registry.async_get_entity_id(
-                        self.platform.domain, DOMAIN, child_id
-                    )
+            group_members = player.group_childs
+        elif player.synced_to and (parent := self.mass.players.get(player.synced_to)):
+            group_members = parent.group_childs
+
+        # translate MA group_childs to HA group_members as entity id's
+        entity_registry = er.async_get(self.hass)
+        group_members_entity_ids: list[str] = [
+            entity_id
+            for child_id in group_members
+            if (
+                entity_id := entity_registry.async_get_entity_id(
+                    self.platform.domain, DOMAIN, child_id
                 )
-            ]
-        # NOTE: we sort the group_members for now,
-        # until the MA API returns them sorted (group_childs is now a set)
-        self._attr_group_members = sorted(group_members_entity_ids)
+            )
+        ]
+
+        self._attr_group_members = group_members_entity_ids
         self._attr_volume_level = (
             player.volume_level / 100 if player.volume_level is not None else None
         )
