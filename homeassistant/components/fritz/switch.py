@@ -38,8 +38,8 @@ from .entity import FritzBoxBaseEntity, FritzDeviceBase
 
 _LOGGER = logging.getLogger(__name__)
 
-# Coordinator is used to centralize the data updates
-PARALLEL_UPDATES = 0
+# Set a sane value to avoid too many updates
+PARALLEL_UPDATES = 5
 
 
 async def _async_deflection_entities_list(
