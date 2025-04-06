@@ -137,7 +137,7 @@ class SonosFavorites(SonosHouseholdCoordinator):
         for fav in new_playlists:
             try:
                 self._favorites.append(fav)
-            except Exception as ex:
+            except SoCoException as ex:
                 _LOGGER.error("Unhandled favorite: '%s': %s", fav.title, ex)
 
         _LOGGER.debug(
