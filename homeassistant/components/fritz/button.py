@@ -31,6 +31,9 @@ from .entity import FritzDeviceBase
 
 _LOGGER = logging.getLogger(__name__)
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class FritzButtonDescription(ButtonEntityDescription):
