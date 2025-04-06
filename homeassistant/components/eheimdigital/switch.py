@@ -54,7 +54,7 @@ class EheimDigitalClassicVarioSwitch(
     ) -> None:
         """Initialize an EHEIM Digital classicVARIO switch entity."""
         super().__init__(coordinator, device)
-        self._attr_unique_id = f"{self._device_address}"
+        self._attr_unique_id = self._device_address
         self._async_update_attrs()
 
     @override
