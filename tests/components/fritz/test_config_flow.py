@@ -1,5 +1,6 @@
 """Tests for Fritz!Tools config flow."""
 
+from copy import deepcopy
 import dataclasses
 from unittest.mock import patch
 
@@ -20,6 +21,7 @@ from homeassistant.components.fritz.const import (
     ERROR_AUTH_INVALID,
     ERROR_CANNOT_CONNECT,
     ERROR_UNKNOWN,
+    ERROR_UPNP_NOT_CONFIGURED,
     FRITZ_AUTH_EXCEPTIONS,
 )
 from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
@@ -38,7 +40,9 @@ from homeassistant.helpers.service_info.ssdp import (
     SsdpServiceInfo,
 )
 
+from .conftest import FritzConnectionMock
 from .const import (
+    MOCK_FB_SERVICES,
     MOCK_FIRMWARE_INFO,
     MOCK_IPS,
     MOCK_REQUEST,
@@ -761,3 +765,29 @@ async def test_ssdp_ipv6_link_local(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "ignore_ip6_link_local"
+
+
+async def test_upnp_not_enabled(hass: HomeAssistant) -> None:
+    """Test if UPNP service is enabled on the router."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER, "show_advanced_options": False},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    services = deepcopy(MOCK_FB_SERVICES)
+    services["X_AVM-DE_UPnP1"]["GetInfo"]["NewEnable"] = False
+
+    with patch(
+        "homeassistant.components.fritz.config_flow.FritzConnection",
+        return_value=FritzConnectionMock(services),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_USER_INPUT_SIMPLE
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+        assert result["errors"]["base"] == ERROR_UPNP_NOT_CONFIGURED
