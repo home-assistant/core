@@ -182,7 +182,7 @@ aioairq==0.4.4
 aioairzone-cloud==0.6.11
 
 # homeassistant.components.airzone
-aioairzone==0.9.9
+aioairzone==1.0.0
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -243,7 +243,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==29.8.0
+aioesphomeapi==29.9.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -947,7 +947,7 @@ flexit_bacnet==2.2.3
 flipr-api==1.6.1
 
 # homeassistant.components.flux_led
-flux-led==1.1.3
+flux-led==1.2.0
 
 # homeassistant.components.homekit
 # homeassistant.components.recorder
@@ -1235,7 +1235,7 @@ influxdb-client==1.24.0
 influxdb==5.3.1
 
 # homeassistant.components.inkbird
-inkbird-ble==0.9.0
+inkbird-ble==0.10.1
 
 # homeassistant.components.insteon
 insteon-frontend-home-assistant==0.5.0
@@ -1610,7 +1610,7 @@ openwrt-luci-rpc==1.1.17
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.9.0
+opower==0.10.0
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -2080,7 +2080,7 @@ pykoplenti==1.3.0
 pykrakenapi==0.1.8
 
 # homeassistant.components.kulersky
-pykulersky==0.5.2
+pykulersky==0.5.8
 
 # homeassistant.components.kwb
 pykwb==0.0.8
@@ -2994,7 +2994,7 @@ upcloud-api==2.6.0
 # homeassistant.components.huawei_lte
 # homeassistant.components.syncthru
 # homeassistant.components.zwave_me
-url-normalize==1.4.3
+url-normalize==2.2.0
 
 # homeassistant.components.uvc
 uvcclient==0.12.1
@@ -3094,7 +3094,7 @@ wyoming==1.5.4
 xbox-webapi==2.1.0
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==0.33.0
+xiaomi-ble==0.35.0
 
 # homeassistant.components.knx
 xknx==3.6.0
