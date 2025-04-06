@@ -101,7 +101,9 @@ class AndroidTVRemoteEntity(AndroidTVRemoteBaseEntity, RemoteEntity):
 
         for _ in range(num_repeats):
             for single_command in command:
-                if hold_secs:
+                if single_command.startswith("text: "):
+                    self._api.send_text(single_command[len("text: ") :])
+                elif hold_secs:
                     self._send_key_command(single_command, "START_LONG")
                     await asyncio.sleep(hold_secs)
                     self._send_key_command(single_command, "END_LONG")

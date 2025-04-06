@@ -174,6 +174,26 @@ async def test_remote_send_command_with_hold_secs(
     ]
 
 
+async def test_remote_send_command_with_text(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: MagicMock
+) -> None:
+    """Test remote.send_command service with text."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    await hass.services.async_call(
+        "remote",
+        "send_command",
+        {
+            "entity_id": REMOTE_ENTITY,
+            "command": "text: Hello World",
+        },
+        blocking=True,
+    )
+    assert mock_api.send_text.mock_calls == [call("Hello World")]
+
+
 async def test_remote_connection_closed(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: MagicMock
 ) -> None:
