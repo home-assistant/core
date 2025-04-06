@@ -45,7 +45,6 @@ rules:
   discovery: done
   docs-data-update: done
   docs-examples: done
-    comment: add some automation example
   docs-known-limitations: done
   docs-supported-devices: done
   docs-supported-functions: done
@@ -60,7 +59,9 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: done
+  reconfiguration-flow:
+    status: todo
+    comment: handle at least host change
   repair-issues: done
   stale-devices: done
 
