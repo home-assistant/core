@@ -107,49 +107,7 @@ class BackupAgentClient:
     async def __aenter__(self) -> "BackupAgentClient":
         """Async context manager entrypoint."""
 
-        # Configure SSH Client Connection
-        try:
-            self._ssh = await connect(
-                host=self.cfg.runtime_data.host,
-                port=self.cfg.runtime_data.port,
-                options=SSHClientConnectionOptions(
-                    known_hosts=None,
-                    username=self.cfg.runtime_data.username,
-                    password=self.cfg.runtime_data.password,
-                    client_keys=[self.cfg.runtime_data.private_key_file]
-                    if self.cfg.runtime_data.private_key_file
-                    else None,
-                ),
-            )
-        except (OSError, PermissionDenied) as e:
-            LOGGER.error(
-                "Failure while attempting to establish SSH connection. Re-auth might be required."
-                " Please check SSH credentials and if changed, re-add the integration"
-            )
-            raise BackupAgentAuthError(
-                "Failure while attempting to establish SSH connection. Re-auth might be required."
-            ) from e
-
-        # We are manually calling `__aenter__` on `self._ssh` and `self.sftp` because both
-        # are async context managers that require initialization. This ensures they're properly
-        # set up and managed within the BackupAgentClient context,
-        # allowing a single `async with BackupAgentClient` to handle both.
-        await self._ssh.__aenter__()
-
-        # Configure SFTP Client Connection
-        try:
-            self.sftp = await self._ssh.start_sftp_client()
-            await self.sftp.__aenter__()
-        except (SFTPNoSuchFile, SFTPPermissionDenied) as e:
-            LOGGER.exception(e)
-            LOGGER.error(
-                "Failed to create SFTP client. Re-configuring integration might be required"
-            )
-            raise RuntimeError(
-                "Failed to create SFTP client. Re-configuring integration might be required"
-            ) from e
-
-        return self
+        return await self.open()
 
     async def __aexit__(self, exc_type, exc, traceback) -> None:
         """Async Context Manager exit routine."""
@@ -326,4 +284,42 @@ class BackupAgentClient:
 
         This is to avoid calling `__aenter__` dunder method.
         """
-        return await self.__aenter__()
+
+        """Async context manager entrypoint."""
+
+        # Configure SSH Client Connection
+        try:
+            self._ssh = await connect(
+                host=self.cfg.runtime_data.host,
+                port=self.cfg.runtime_data.port,
+                options=SSHClientConnectionOptions(
+                    known_hosts=None,
+                    username=self.cfg.runtime_data.username,
+                    password=self.cfg.runtime_data.password,
+                    client_keys=[self.cfg.runtime_data.private_key_file]
+                    if self.cfg.runtime_data.private_key_file
+                    else None,
+                ),
+            )
+        except (OSError, PermissionDenied) as e:
+            LOGGER.error(
+                "Failure while attempting to establish SSH connection. Re-auth might be required."
+                " Please check SSH credentials and if changed, re-add the integration"
+            )
+            raise BackupAgentAuthError(
+                "Failure while attempting to establish SSH connection. Re-auth might be required."
+            ) from e
+
+        # Configure SFTP Client Connection
+        try:
+            self.sftp = await self._ssh.start_sftp_client()
+        except (SFTPNoSuchFile, SFTPPermissionDenied) as e:
+            LOGGER.exception(e)
+            LOGGER.error(
+                "Failed to create SFTP client. Re-configuring integration might be required"
+            )
+            raise RuntimeError(
+                "Failed to create SFTP client. Re-configuring integration might be required"
+            ) from e
+
+        return self
