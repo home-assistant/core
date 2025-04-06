@@ -47,14 +47,6 @@
     }
   },
   "exceptions": {
-    "cannot_connect": {
-      "message": "Could not connect to panel."
-    },
-    "authentication_failed": {
-      "message": "Incorrect credentials for panel."
-    }
-  },
-  "exceptions": {
     "integration_not_found": {
       "message": "Integration \"{target}\" not found in registry."
     },
@@ -69,6 +61,12 @@
     },
     "unknown_error": {
       "message": "An unknown error occurred while setting the date and time on \"{target}\"."
+    },
+    "cannot_connect": {
+      "message": "Could not connect to panel."
+    },
+    "authentication_failed": {
+      "message": "Incorrect credentials for panel."
     }
   },
   "services": {
