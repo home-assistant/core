@@ -4,7 +4,7 @@ import logging
 from typing import Any
 
 from aiohttp import ClientError
-from smart_meter_texas import Account, Client, ClientSSLContext
+from smart_meter_texas import Account, Client
 from smart_meter_texas.exceptions import (
     SmartMeterTexasAPIError,
     SmartMeterTexasAuthError,
@@ -16,6 +16,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import aiohttp_client
+from homeassistant.util.ssl import get_default_context
 
 from .const import DOMAIN
 
@@ -31,8 +32,7 @@ async def validate_input(hass: HomeAssistant, data):
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
-    client_ssl_context = ClientSSLContext()
-    ssl_context = await client_ssl_context.get_ssl_context()
+    ssl_context = get_default_context()
     client_session = aiohttp_client.async_get_clientsession(hass)
     account = Account(data["username"], data["password"])
     client = Client(client_session, account, ssl_context)

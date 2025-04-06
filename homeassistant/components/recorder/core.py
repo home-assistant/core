@@ -79,7 +79,13 @@ from .db_schema import (
     StatisticsShortTerm,
 )
 from .executor import DBInterruptibleThreadPoolExecutor
-from .models import DatabaseEngine, StatisticData, StatisticMetaData, UnsupportedDialect
+from .models import (
+    DatabaseEngine,
+    StatisticData,
+    StatisticMeanType,
+    StatisticMetaData,
+    UnsupportedDialect,
+)
 from .pool import POOL_SIZE, MutexPool, RecorderPool
 from .table_managers.event_data import EventDataManager
 from .table_managers.event_types import EventTypeManager
@@ -122,8 +128,6 @@ from .util import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-DEFAULT_URL = "sqlite:///{hass_config_path}"
 
 # Controls how often we clean up
 # States and Events objects
@@ -613,6 +617,17 @@ class Recorder(threading.Thread):
         table: type[Statistics | StatisticsShortTerm],
     ) -> None:
         """Schedule import of statistics."""
+        if "mean_type" not in metadata:
+            # Backwards compatibility for old metadata format
+            # Can be removed after 2026.4
+            metadata["mean_type"] = (  # type: ignore[unreachable]
+                StatisticMeanType.ARITHMETIC
+                if metadata.get("has_mean")
+                else StatisticMeanType.NONE
+            )
+        # Remove deprecated has_mean as it's not needed anymore in core
+        metadata.pop("has_mean", None)
+
         self.queue_task(ImportStatisticsTask(metadata, stats, table))
 
     @callback
