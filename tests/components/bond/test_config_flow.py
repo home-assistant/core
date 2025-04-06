@@ -114,6 +114,7 @@ async def test_user_form_can_create_when_already_discovered(
         CONF_HOST: "some host",
         CONF_ACCESS_TOKEN: "test-token",
     }
+    assert result2["result"].unique_id == "ZXXX12345"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -151,6 +152,7 @@ async def test_user_form_with_non_bridge(hass: HomeAssistant) -> None:
         CONF_HOST: "some host",
         CONF_ACCESS_TOKEN: "test-token",
     }
+    assert result2["result"].unique_id == "KXXX12345"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -340,6 +342,7 @@ async def test_dhcp_discovery(hass: HomeAssistant) -> None:
         CONF_HOST: "127.0.0.1",
         CONF_ACCESS_TOKEN: "test-token",
     }
+    assert result2["result"].unique_id == "KVPRBDJ45842"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -403,6 +406,7 @@ async def test_dhcp_discovery_short_name(hass: HomeAssistant) -> None:
         CONF_HOST: "127.0.0.1",
         CONF_ACCESS_TOKEN: "test-token",
     }
+    assert result2["result"].unique_id == "KVPRBDJ45842"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
