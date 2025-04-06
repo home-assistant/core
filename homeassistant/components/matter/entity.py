@@ -135,7 +135,7 @@ class MatterEntity(Entity):
                     EntityCategory.DIAGNOSTIC,
                 ]:
                     # Cluster attributes can result in multiple CONFIG and DIAGNOSTIC entities for an endpoint,
-                    # to maintian unique names, use standard HA name and don't overwrite the attribute names if they are in the CONFIG or DIAGNOSTIC category
+                    # to maintain unique names, use standard HA name and don't overwrite the attribute names if they are in the CONFIG or DIAGNOSTIC category
                     self._attr_name = label_value
                 break
 
