@@ -25,6 +25,7 @@ from .const import CONF_APP_NAME
 from .entity import AndroidTVRemoteBaseEntity
 
 PARALLEL_UPDATES = 0
+_INPUT_TEXT_PREFIX = "input text: "
 
 
 async def async_setup_entry(
@@ -101,8 +102,8 @@ class AndroidTVRemoteEntity(AndroidTVRemoteBaseEntity, RemoteEntity):
 
         for _ in range(num_repeats):
             for single_command in command:
-                if single_command.startswith("text: "):
-                    self._api.send_text(single_command[len("text: ") :])
+                if single_command.startswith(_INPUT_TEXT_PREFIX):
+                    self._api.send_text(single_command[len(_INPUT_TEXT_PREFIX) :])
                 elif hold_secs:
                     self._send_key_command(single_command, "START_LONG")
                     await asyncio.sleep(hold_secs)

@@ -187,7 +187,7 @@ async def test_remote_send_command_with_text(
         "send_command",
         {
             "entity_id": REMOTE_ENTITY,
-            "command": "text: Hello World",
+            "command": "input text: Hello World",
         },
         blocking=True,
     )
