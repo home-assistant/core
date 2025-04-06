@@ -25,6 +25,57 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
+    ("speed", "expected"),
+    [
+        (1, 12),
+        (2, 25),
+        (3, 37),
+        (4, 50),
+        (5, 62),
+        (6, 75),
+        (7, 87),
+        (8, 100),
+    ],
+)
+async def test_percentage(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_homee: MagicMock,
+    speed: int,
+    expected: int,
+) -> None:
+    """Test percentage."""
+    mock_homee.nodes = [build_mock_node("fan.json")]
+    mock_homee.nodes[0].attributes[0].current_value = speed
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("fan.test_fan").attributes["percentage"] == expected
+
+
+@pytest.mark.parametrize(
+    ("mode_value", "expected"),
+    [
+        (0, "manual"),
+        (1, "auto"),
+        (2, "summer"),
+    ],
+)
+async def test_preset_mode(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_homee: MagicMock,
+    mode_value: int,
+    expected: str,
+) -> None:
+    """Test preset mode."""
+    mock_homee.nodes = [build_mock_node("fan.json")]
+    mock_homee.nodes[0].attributes[1].current_value = mode_value
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("fan.test_fan").attributes["preset_mode"] == expected
+
+
+@pytest.mark.parametrize(
     ("service", "options", "expected"),
     [
         (SERVICE_TURN_ON, {ATTR_PERCENTAGE: 100}, (77, 1, 8)),
@@ -35,6 +86,7 @@ from tests.common import MockConfigEntry
         (SERVICE_TURN_ON, {ATTR_PERCENTAGE: 34}, (77, 1, 3)),
         (SERVICE_TURN_ON, {ATTR_PERCENTAGE: 17}, (77, 1, 2)),
         (SERVICE_TURN_ON, {ATTR_PERCENTAGE: 8}, (77, 1, 1)),
+        (SERVICE_TURN_ON, {}, (77, 1, 6)),
         (SERVICE_TURN_OFF, {}, (77, 1, 0)),
         (SERVICE_INCREASE_SPEED, {}, (77, 1, 4)),
         (SERVICE_DECREASE_SPEED, {}, (77, 1, 2)),
@@ -70,5 +122,5 @@ async def test_fan_services(
     mock_homee.set_value.assert_called_once_with(
         expected[0],
         expected[1],
-        expected[2],  # type: ignore[arg-type]
+        expected[2],
     )

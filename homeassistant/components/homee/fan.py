@@ -110,6 +110,14 @@ class HomeeFan(HomeeNodeEntity, FanEntity):
 
         return None
 
+    @property
+    def preset_mode(self) -> str | None:
+        """Return the mode from the float state."""
+        if self._mode_attribute is not None and self.preset_modes is not None:
+            return self.preset_modes[int(self._mode_attribute.current_value)]
+
+        return None
+
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
         if self._speed_attribute is not None and self._speed_attribute.editable:
@@ -121,14 +129,6 @@ class HomeeFan(HomeeNodeEntity, FanEntity):
                     )
                 ),
             )
-
-    @property
-    def preset_mode(self) -> str | None:
-        """Return the mode from the float state."""
-        if self._mode_attribute is not None and self.preset_modes is not None:
-            return self.preset_modes[int(self._mode_attribute.current_value)]
-
-        return None
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
