@@ -23,7 +23,7 @@ async def test_setup_classic_vario(
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test fan platform setup for filter."""
+    """Test sensor platform setup for the filter."""
     mock_config_entry.add_to_hass(hass)
 
     with (
@@ -49,7 +49,7 @@ async def test_state_update(
     mock_config_entry: MockConfigEntry,
     classic_vario_mock: MagicMock,
 ) -> None:
-    """Test the light state update."""
+    """Test the sensor state update."""
     await init_integration(hass, mock_config_entry)
 
     await eheimdigital_hub_mock.call_args.kwargs["device_found_callback"](
