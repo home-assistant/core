@@ -2,7 +2,7 @@
 
 from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import Any, cast
 
 from opower import (
     Account,
@@ -30,7 +30,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, UnitOfEnergy, UnitOfVolume
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers import aiohttp_client, issue_registry as ir
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -134,6 +134,48 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                 return_statistic_id,
             )
 
+            name_prefix = (
+                f"Opower {self.api.utility.subdomain()} "
+                f"{account.meter_type.name.lower()} {account.utility_account_id}"
+            )
+            cost_metadata = StatisticMetaData(
+                mean_type=StatisticMeanType.NONE,
+                has_sum=True,
+                name=f"{name_prefix} cost",
+                source=DOMAIN,
+                statistic_id=cost_statistic_id,
+                unit_of_measurement=None,
+            )
+            compensation_metadata = StatisticMetaData(
+                mean_type=StatisticMeanType.NONE,
+                has_sum=True,
+                name=f"{name_prefix} compensation",
+                source=DOMAIN,
+                statistic_id=compensation_statistic_id,
+                unit_of_measurement=None,
+            )
+            consumption_unit = (
+                UnitOfEnergy.KILO_WATT_HOUR
+                if account.meter_type == MeterType.ELEC
+                else UnitOfVolume.CENTUM_CUBIC_FEET
+            )
+            consumption_metadata = StatisticMetaData(
+                mean_type=StatisticMeanType.NONE,
+                has_sum=True,
+                name=f"{name_prefix} consumption",
+                source=DOMAIN,
+                statistic_id=consumption_statistic_id,
+                unit_of_measurement=consumption_unit,
+            )
+            return_metadata = StatisticMetaData(
+                mean_type=StatisticMeanType.NONE,
+                has_sum=True,
+                name=f"{name_prefix} return",
+                source=DOMAIN,
+                statistic_id=return_statistic_id,
+                unit_of_measurement=consumption_unit,
+            )
+
             last_stat = await get_instance(self.hass).async_add_executor_job(
                 get_last_statistics, self.hass, 1, consumption_statistic_id, True, set()
             )
@@ -148,6 +190,19 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                 return_sum = 0.0
                 last_stats_time = None
             else:
+                await self._async_maybe_migrate_statistics(
+                    account.utility_account_id,
+                    {
+                        cost_statistic_id: compensation_statistic_id,
+                        consumption_statistic_id: return_statistic_id,
+                    },
+                    {
+                        cost_statistic_id: cost_metadata,
+                        compensation_statistic_id: compensation_metadata,
+                        consumption_statistic_id: consumption_metadata,
+                        return_statistic_id: return_metadata,
+                    },
+                )
                 cost_reads = await self._async_get_cost_reads(
                     account,
                     self.api.utility.timezone(),
@@ -209,74 +264,33 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                 start = cost_read.start_time
                 if last_stats_time is not None and start.timestamp() <= last_stats_time:
                     continue
-                cost_sum += max(cost_read.provided_cost, 0)
-                compensation_sum += max(-cost_read.provided_cost, 0)
-                consumption_sum += max(cost_read.consumption, 0)
-                return_sum += max(-cost_read.consumption, 0)
+
+                cost_state = max(0, cost_read.provided_cost)
+                compensation_state = max(0, -cost_read.provided_cost)
+                consumption_state = max(0, cost_read.consumption)
+                return_state = max(0, -cost_read.consumption)
+
+                cost_sum += cost_state
+                compensation_sum += compensation_state
+                consumption_sum += consumption_state
+                return_sum += return_state
 
                 cost_statistics.append(
-                    StatisticData(
-                        start=start, state=cost_read.provided_cost, sum=cost_sum
-                    )
+                    StatisticData(start=start, state=cost_state, sum=cost_sum)
                 )
                 compensation_statistics.append(
                     StatisticData(
-                        start=start,
-                        state=-cost_read.provided_cost,
-                        sum=compensation_sum,
+                        start=start, state=compensation_state, sum=compensation_sum
                     )
                 )
                 consumption_statistics.append(
                     StatisticData(
-                        start=start, state=cost_read.consumption, sum=consumption_sum
+                        start=start, state=consumption_state, sum=consumption_sum
                     )
                 )
                 return_statistics.append(
-                    StatisticData(
-                        start=start, state=-cost_read.consumption, sum=return_sum
-                    )
+                    StatisticData(start=start, state=return_state, sum=return_sum)
                 )
-
-            name_prefix = (
-                f"Opower {self.api.utility.subdomain()} "
-                f"{account.meter_type.name.lower()} {account.utility_account_id}"
-            )
-            cost_metadata = StatisticMetaData(
-                mean_type=StatisticMeanType.NONE,
-                has_sum=True,
-                name=f"{name_prefix} cost",
-                source=DOMAIN,
-                statistic_id=cost_statistic_id,
-                unit_of_measurement=None,
-            )
-            compensation_metadata = StatisticMetaData(
-                has_mean=False,
-                has_sum=True,
-                name=f"{name_prefix} compensation",
-                source=DOMAIN,
-                statistic_id=compensation_statistic_id,
-                unit_of_measurement=None,
-            )
-            consumption_metadata = StatisticMetaData(
-                mean_type=StatisticMeanType.NONE,
-                has_sum=True,
-                name=f"{name_prefix} consumption",
-                source=DOMAIN,
-                statistic_id=consumption_statistic_id,
-                unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR
-                if account.meter_type == MeterType.ELEC
-                else UnitOfVolume.CENTUM_CUBIC_FEET,
-            )
-            return_metadata = StatisticMetaData(
-                has_mean=False,
-                has_sum=True,
-                name=f"{name_prefix} return",
-                source=DOMAIN,
-                statistic_id=return_statistic_id,
-                unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR
-                if account.meter_type == MeterType.ELEC
-                else UnitOfVolume.CENTUM_CUBIC_FEET,
-            )
 
             _LOGGER.debug(
                 "Adding %s statistics for %s",
@@ -306,6 +320,127 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                 return_statistic_id,
             )
             async_add_external_statistics(self.hass, return_metadata, return_statistics)
+
+    async def _async_maybe_migrate_statistics(
+        self,
+        utility_account_id: str,
+        migration_map: dict[str, str],
+        metadata_map: dict[str, StatisticMetaData],
+    ) -> None:
+        """Perform one-time statistics migration based on the provided map.
+
+        Splits negative values from source IDs into target IDs.
+
+        Args:
+            utility_account_id: The account ID (for issue_id).
+            migration_map: Map from source statistic ID to target statistic ID
+                           (e.g., {cost_id: compensation_id}).
+            metadata_map: Map of all statistic IDs (source and target) to their metadata.
+
+        """
+        if not migration_map:
+            return
+
+        need_migration_source_ids = set()
+        for source_id, target_id in migration_map.items():
+            last_target_stat = await get_instance(self.hass).async_add_executor_job(
+                get_last_statistics,
+                self.hass,
+                1,
+                target_id,
+                True,
+                {},
+            )
+            if not last_target_stat:
+                need_migration_source_ids.add(source_id)
+        if not need_migration_source_ids:
+            return
+
+        _LOGGER.info("Starting one-time migration for: %s", need_migration_source_ids)
+
+        processed_stats: dict[str, list[StatisticData]] = {}
+
+        existing_stats = await get_instance(self.hass).async_add_executor_job(
+            statistics_during_period,
+            self.hass,
+            dt_util.utc_from_timestamp(0),
+            None,
+            need_migration_source_ids,
+            "hour",
+            None,
+            {"start", "state", "sum"},
+        )
+        for source_id, source_stats in existing_stats.items():
+            _LOGGER.debug("Found %d statistics for %s", len(source_stats), source_id)
+            if not source_stats:
+                continue
+            target_id = migration_map[source_id]
+
+            updated_source_stats: list[StatisticData] = []
+            new_target_stats: list[StatisticData] = []
+            updated_source_sum = 0.0
+            new_target_sum = 0.0
+            need_migration = False
+
+            prev_sum = 0.0
+            for stat in source_stats:
+                start = dt_util.utc_from_timestamp(stat["start"])
+                curr_sum = cast(float, stat["sum"])
+                state = curr_sum - prev_sum
+                prev_sum = curr_sum
+                if state < 0:
+                    need_migration = True
+
+                updated_source_state = max(0, state)
+                new_target_state = max(0, -state)
+
+                updated_source_sum += updated_source_state
+                new_target_sum += new_target_state
+
+                updated_source_stats.append(
+                    StatisticData(
+                        start=start, state=updated_source_state, sum=updated_source_sum
+                    )
+                )
+                new_target_stats.append(
+                    StatisticData(
+                        start=start, state=new_target_state, sum=new_target_sum
+                    )
+                )
+
+            if need_migration:
+                processed_stats[source_id] = updated_source_stats
+                processed_stats[target_id] = new_target_stats
+            else:
+                need_migration_source_ids.remove(source_id)
+
+        if not need_migration_source_ids:
+            _LOGGER.debug("No migration needed")
+            return
+
+        for stat_id, stats in processed_stats.items():
+            _LOGGER.debug("Applying %d migrated stats for %s", len(stats), stat_id)
+            async_add_external_statistics(self.hass, metadata_map[stat_id], stats)
+
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            issue_id=f"return_to_grid_migration_{utility_account_id}",
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="return_to_grid_migration",
+            translation_placeholders={
+                "utility_account_id": utility_account_id,
+                "energy_settings": "/config/energy",
+                "target_ids": "\n".join(
+                    {
+                        v
+                        for k, v in migration_map.items()
+                        if k in need_migration_source_ids
+                    }
+                ),
+            },
+        )
 
     async def _async_get_cost_reads(
         self, account: Account, time_zone_str: str, start_time: float | None = None
