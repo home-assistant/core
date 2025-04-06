@@ -353,6 +353,35 @@ async def test_component_not_setup_missing_dependencies(hass: HomeAssistant) -> 
     assert await setup.async_setup_component(hass, "comp2", {})
 
 
+async def test_component_not_setup_already_setup_dependencies(
+    hass: HomeAssistant,
+) -> None:
+    """Test we do not set up component dependencies if they are already set up."""
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            dependencies=["dep1"],
+            partial_manifest={"after_dependencies": ["dep2"]},
+        ),
+    )
+    mock_integration(hass, MockModule("dep1"))
+    mock_integration(hass, MockModule("dep2"))
+
+    setup.async_set_domains_to_be_loaded(hass, {"comp", "dep2"})
+
+    hass.config.components.add("dep1")
+    hass.config.components.add("dep2")
+
+    with patch(
+        "homeassistant.setup.async_setup_component",
+        side_effect=setup.async_setup_component,
+    ) as mock_setup:
+        await mock_setup(hass, "comp", {})
+
+    assert mock_setup.call_count == 1
+
+
 @pytest.mark.usefixtures("mock_handlers")
 async def test_component_setup_dependencies_with_config_entry(
     hass: HomeAssistant,
