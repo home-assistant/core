@@ -31,8 +31,8 @@ from .entity import FritzDeviceBase
 
 _LOGGER = logging.getLogger(__name__)
 
-# Coordinator is used to centralize the data updates
-PARALLEL_UPDATES = 0
+# Set a sane value to avoid too many updates
+PARALLEL_UPDATES = 5
 
 
 @dataclass(frozen=True, kw_only=True)
