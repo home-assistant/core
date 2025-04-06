@@ -28,6 +28,27 @@
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
+      },
+      "reconfigure": {
+        "description": "[%key:component::nut::config::step::user::description%]",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "host": "[%key:component::nut::config::step::user::data_description::host%]",
+          "port": "[%key:component::nut::config::step::user::data_description::port%]",
+          "username": "[%key:component::nut::config::step::user::data_description::username%]",
+          "password": "[%key:component::nut::config::step::user::data_description::password%]"
+        }
+      },
+      "reconfigure_ups": {
+        "title": "[%key:component::nut::config::step::ups::title%]",
+        "data": {
+          "alias": "[%key:component::nut::config::step::ups::data::alias%]"
+        }
       }
     },
     "error": {
@@ -38,7 +59,9 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_ups_found": "There are no UPS devices available on the NUT server.",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "The device's manufacturer, model and serial number identifier does not match the previous identifier."
     }
   },
   "device_automation": {
@@ -107,12 +130,12 @@
       "battery_charger_status": {
         "name": "Charging status",
         "state": {
-          "charging": "Charging",
-          "discharging": "Discharging",
+          "charging": "[%key:common::state::charging%]",
+          "discharging": "[%key:common::state::discharging%]",
           "floating": "Floating",
           "resting": "Resting",
           "unknown": "Unknown",
-          "disabled": "Disabled",
+          "disabled": "[%key:common::state::disabled%]",
           "off": "Off"
         }
       },
@@ -223,8 +246,8 @@
       "ups_beeper_status": {
         "name": "Beeper status",
         "state": {
-          "enabled": "Enabled",
-          "disabled": "Disabled",
+          "enabled": "[%key:common::state::enabled%]",
+          "disabled": "[%key:common::state::disabled%]",
           "muted": "Muted"
         }
       },
