@@ -1,4 +1,4 @@
-"""Tests for Minecraft Server binary sensor."""
+"""Tests for the binary sensor platform of the Pterodactyl integration."""
 
 from collections.abc import Generator
 from datetime import timedelta
