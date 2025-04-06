@@ -56,11 +56,7 @@ async def test_binary_sensor_update_failure(
 
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    # Waiting two more times required for state changes to update
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert len(hass.states.async_all(Platform.BINARY_SENSOR)) == 2
     assert hass.states.get(f"{Platform.BINARY_SENSOR}.test_server_1_status") == snapshot
