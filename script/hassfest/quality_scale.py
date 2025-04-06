@@ -945,7 +945,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "splunk",
     "spotify",
     "sql",
-    "squeezebox",
     "srp_energy",
     "ssdp",
     "starline",
