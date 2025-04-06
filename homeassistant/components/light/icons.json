@@ -1,7 +1,15 @@
 {
   "entity_component": {
     "_": {
-      "default": "mdi:lightbulb"
+      "default": "mdi:lightbulb",
+      "state_attributes": {
+        "effect": {
+          "default": "mdi:circle-medium",
+          "state": {
+            "off": "mdi:star-off"
+          }
+        }
+      }
     }
   },
   "services": {
