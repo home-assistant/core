@@ -100,6 +100,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
         access_token,
         server=f"{region.lower()}.teslemetry.com",
         parse_timestamp=True,
+        manual=True,
     )
 
     for product in products:
@@ -235,6 +236,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
     # Setup Platforms
     entry.runtime_data = TeslemetryData(vehicles, energysites, scopes)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    entry.async_create_background_task(hass, stream.listen(), "Teslemetry Stream")
 
     return True
 
