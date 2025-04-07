@@ -173,10 +173,6 @@ class BoschAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 if serial_number:
                     await self.async_set_unique_id(str(serial_number))
-                if self.source == SOURCE_RECONFIGURE:
-                    if serial_number:
-                        self._abort_if_unique_id_mismatch(reason="device_mismatch")
-
                 if self.source == SOURCE_USER:
                     if serial_number:
                         self._abort_if_unique_id_configured()
@@ -187,6 +183,8 @@ class BoschAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
                     return self.async_create_entry(
                         title=f"Bosch {model}", data=self._data
                     )
+                if serial_number:
+                    self._abort_if_unique_id_mismatch(reason="device_mismatch")
                 return self.async_update_reload_and_abort(
                     self._get_reconfigure_entry(),
                     data=self._data,
