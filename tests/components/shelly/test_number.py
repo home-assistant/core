@@ -3,7 +3,7 @@
 from copy import deepcopy
 from unittest.mock import AsyncMock, Mock
 
-from aioshelly.const import BLU_TRV_TIMEOUT, MODEL_BLU_GATEWAY_G3
+from aioshelly.const import MODEL_BLU_GATEWAY_G3
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
 import pytest
 from syrupy import SnapshotAssertion
@@ -334,6 +334,8 @@ async def test_rpc_device_virtual_number(
         blocking=True,
     )
     mock_rpc_device.mock_update()
+    mock_rpc_device.number_set.assert_called_once_with(203, 56.7)
+
     assert (state := hass.states.get(entity_id))
     assert state.state == "56.7"
 
@@ -446,15 +448,7 @@ async def test_blu_trv_ext_temp_set_value(
         blocking=True,
     )
     mock_blu_trv.mock_update()
-    mock_blu_trv.call_rpc.assert_called_once_with(
-        "BluTRV.Call",
-        {
-            "id": 200,
-            "method": "Trv.SetExternalTemperature",
-            "params": {"id": 0, "t_C": 22.2},
-        },
-        BLU_TRV_TIMEOUT,
-    )
+    mock_blu_trv.blu_trv_set_external_temperature.assert_called_once_with(200, 22.2)
 
     assert (state := hass.states.get(entity_id))
     assert state.state == "22.2"
@@ -487,17 +481,7 @@ async def test_blu_trv_valve_pos_set_value(
         blocking=True,
     )
     mock_blu_trv.mock_update()
-    mock_blu_trv.call_rpc.assert_called_once_with(
-        "BluTRV.Call",
-        {
-            "id": 200,
-            "method": "Trv.SetPosition",
-            "params": {"id": 0, "pos": 20},
-        },
-        BLU_TRV_TIMEOUT,
-    )
-    # device only accepts int for 'pos' value
-    assert isinstance(mock_blu_trv.call_rpc.call_args[0][1]["params"]["pos"], int)
+    mock_blu_trv.blu_trv_set_valve_position.assert_called_once_with(200, 20.0)
 
     assert (state := hass.states.get(entity_id))
     assert state.state == "20"
