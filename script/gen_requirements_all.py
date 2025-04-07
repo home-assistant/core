@@ -159,7 +159,7 @@ multidict>=6.0.2
 backoff>=2.0
 
 # ensure pydantic version does not float since it might have breaking changes
-pydantic==2.11.1
+pydantic==2.11.2
 
 # Required for Python 3.12.4 compatibility (#119223).
 mashumaro>=3.13.1
@@ -266,7 +266,8 @@ def has_tests(module: str) -> bool:
     Test if exists: tests/components/hue/__init__.py
     """
     path = (
-        Path(module.replace(".", "/").replace("homeassistant", "tests")) / "__init__.py"
+        Path(module.replace(".", "/").replace("homeassistant", "tests", 1))
+        / "__init__.py"
     )
     return path.exists()
 
