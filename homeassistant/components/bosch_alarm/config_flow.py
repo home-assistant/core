@@ -139,7 +139,7 @@ class BoschAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
             ssl.SSLError,
             asyncio.exceptions.TimeoutError,
         ) as err:
-            raise AbortFlow("cannot_connect") from err
+            return self.async_abort(reason="cannot_connect")
         except Exception as err:
             raise AbortFlow("unknown") from err
         self.context["title_placeholders"] = {
