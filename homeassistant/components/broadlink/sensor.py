@@ -16,6 +16,7 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfPower,
     UnitOfTemperature,
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -36,15 +37,21 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="pm10",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM10,
+        state_class=SensorStateClass.MEASUREMENT,       
     ),
     SensorEntityDescription(
         key="pm2_5",
-        device_class=SensorDeviceClass.PM25
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        device_class=SensorDeviceClass.PM25,
+        state_class=SensorStateClass.MEASUREMENT, 
     ),
     SensorEntityDescription(                         
-        key="pm1",                                   
-        device_class=SensorDeviceClass.PM1,                  
+        key="pm1",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        device_class=SensorDeviceClass.PM1,
+        state_class=SensorStateClass.MEASUREMENT, 
     ), 
     SensorEntityDescription(
         key="humidity",
