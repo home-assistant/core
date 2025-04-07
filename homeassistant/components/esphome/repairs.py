@@ -77,6 +77,7 @@ class DeviceConflictRepair(ESPHomeRepair):
         assert isinstance(entry_id, str)
         assert isinstance(mac, str)
         async_replace_device(self.hass, entry_id, mac)
+        self.hass.config_entries.async_schedule_reload(entry_id)
         return self.async_create_entry(data={})
 
     async def async_step_ignored(
