@@ -9,7 +9,7 @@ import pytest
 
 from homeassistant.components.ntfy.const import CONF_TOPIC, DOMAIN
 from homeassistant.config_entries import ConfigSubentryData
-from homeassistant.const import CONF_TOKEN, CONF_URL
+from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_USERNAME
 
 from tests.common import MockConfigEntry
 
@@ -59,6 +59,7 @@ def mock_config_entry() -> MockConfigEntry:
         title="ntfy.sh",
         data={
             CONF_URL: "https://ntfy.sh/",
+            CONF_USERNAME: None,
             CONF_TOKEN: "token",
         },
         entry_id="123456789",

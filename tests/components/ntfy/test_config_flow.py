@@ -27,11 +27,15 @@ from tests.common import MockConfigEntry
                 CONF_URL: "https://ntfy.sh",
                 SECTION_AUTH: {CONF_USERNAME: "username", CONF_PASSWORD: "password"},
             },
-            {CONF_URL: "https://ntfy.sh/", CONF_TOKEN: "token"},
+            {
+                CONF_URL: "https://ntfy.sh/",
+                CONF_USERNAME: "username",
+                CONF_TOKEN: "token",
+            },
         ),
         (
             {CONF_URL: "https://ntfy.sh", SECTION_AUTH: {}},
-            {CONF_URL: "https://ntfy.sh/", CONF_TOKEN: "token"},
+            {CONF_URL: "https://ntfy.sh/", CONF_USERNAME: None, CONF_TOKEN: "token"},
         ),
     ],
 )
@@ -166,7 +170,11 @@ async def test_form_errors(
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "ntfy.sh"
-    assert result["data"] == {CONF_URL: "https://ntfy.sh/", CONF_TOKEN: "token"}
+    assert result["data"] == {
+        CONF_URL: "https://ntfy.sh/",
+        CONF_USERNAME: "username",
+        CONF_TOKEN: "token",
+    }
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -196,7 +204,7 @@ async def test_add_topic_flow(hass: HomeAssistant) -> None:
     """Test add topic subentry flow."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_URL: "https://ntfy.sh/"},
+        data={CONF_URL: "https://ntfy.sh/", CONF_USERNAME: None},
     )
     config_entry.add_to_hass(hass)
 
@@ -207,8 +215,18 @@ async def test_add_topic_flow(hass: HomeAssistant) -> None:
         (config_entry.entry_id, "topic"),
         context={"source": SOURCE_USER},
     )
-    assert result["type"] is FlowResultType.FORM
+
+    assert result["type"] is FlowResultType.MENU
+    assert "add_topic" in result["menu_options"]
     assert result["step_id"] == "user"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {"next_step_id": "add_topic"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "add_topic"
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
@@ -244,8 +262,18 @@ async def test_generated_topic(hass: HomeAssistant, mock_random: AsyncMock) -> N
         (config_entry.entry_id, "topic"),
         context={"source": SOURCE_USER},
     )
-    assert result["type"] is FlowResultType.FORM
+
+    assert result["type"] is FlowResultType.MENU
+    assert "generate_topic" in result["menu_options"]
     assert result["step_id"] == "user"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {"next_step_id": "generate_topic"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "add_topic"
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
@@ -287,8 +315,18 @@ async def test_invalid_topic(hass: HomeAssistant, mock_random: AsyncMock) -> Non
         (config_entry.entry_id, "topic"),
         context={"source": SOURCE_USER},
     )
-    assert result["type"] is FlowResultType.FORM
+
+    assert result["type"] is FlowResultType.MENU
+    assert "add_topic" in result["menu_options"]
     assert result["step_id"] == "user"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {"next_step_id": "add_topic"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "add_topic"
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
@@ -332,8 +370,17 @@ async def test_topic_already_configured(
         (config_entry.entry_id, "topic"),
         context={"source": SOURCE_USER},
     )
-    assert result["type"] is FlowResultType.FORM
+    assert result["type"] is FlowResultType.MENU
+    assert "add_topic" in result["menu_options"]
     assert result["step_id"] == "user"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {"next_step_id": "add_topic"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "add_topic"
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],

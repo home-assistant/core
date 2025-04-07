@@ -68,7 +68,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
-STEP_USER_TOPIC_SCHEMA = vol.Schema({vol.Optional(CONF_TOPIC): str})
+STEP_USER_TOPIC_SCHEMA = vol.Schema({vol.Required(CONF_TOPIC): str})
 
 RE_TOPIC = re.compile("^[-_a-zA-Z0-9]{1,64}$")
 
@@ -91,7 +91,12 @@ class NtfyConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             url = URL(user_input[CONF_URL])
-            self._async_abort_entries_match({CONF_URL: url.human_repr()})
+            self._async_abort_entries_match(
+                {
+                    CONF_URL: url.human_repr(),
+                    CONF_USERNAME: user_input[SECTION_AUTH].get(CONF_USERNAME),
+                }
+            )
             session = async_get_clientsession(self.hass)
             if user_input[SECTION_AUTH].get(CONF_USERNAME):
                 ntfy = Ntfy(
@@ -123,7 +128,11 @@ class NtfyConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 return self.async_create_entry(
                     title=url.host or "",
-                    data={CONF_URL: url.human_repr(), CONF_TOKEN: token},
+                    data={
+                        CONF_URL: url.human_repr(),
+                        CONF_USERNAME: user_input[SECTION_AUTH].get(CONF_USERNAME),
+                        CONF_TOKEN: token,
+                    },
                 )
 
         return self.async_show_form(
@@ -142,18 +151,39 @@ class TopicSubentryFlowHandler(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """User flow to add a new topic."""
+
+        return self.async_show_menu(
+            step_id="user",
+            menu_options=["add_topic", "generate_topic"],
+        )
+
+    async def async_step_generate_topic(  # pylint: disable=hass-return-type
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """User flow to add a new topic."""
+        topic = "".join(
+            random.choices(
+                string.ascii_lowercase + string.ascii_uppercase + string.digits,
+                k=16,
+            )
+        )
+        return self.async_show_form(
+            step_id="add_topic",
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=STEP_USER_TOPIC_SCHEMA,
+                suggested_values={CONF_TOPIC: topic},
+            ),
+        )
+
+    async def async_step_add_topic(  # pylint: disable=hass-return-type
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """User flow to add a new topic."""
         config_entry = self._get_entry()
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            if not user_input.get(CONF_TOPIC):
-                user_input[CONF_TOPIC] = "".join(
-                    random.choices(
-                        string.ascii_lowercase + string.ascii_uppercase + string.digits,
-                        k=16,
-                    )
-                )
-            elif not RE_TOPIC.match(user_input[CONF_TOPIC]):
+            if not RE_TOPIC.match(user_input[CONF_TOPIC]):
                 errors["base"] = "invalid_topic"
             else:
                 for existing_subentry in config_entry.subentries.values():
@@ -166,7 +196,7 @@ class TopicSubentryFlowHandler(ConfigSubentryFlow):
                     unique_id=user_input[CONF_TOPIC],
                 )
         return self.async_show_form(
-            step_id="user",
+            step_id="add_topic",
             data_schema=self.add_suggested_values_to_schema(
                 data_schema=STEP_USER_TOPIC_SCHEMA, suggested_values=user_input
             ),

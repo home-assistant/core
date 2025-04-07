@@ -1,4 +1,8 @@
 {
+  "common": {
+    "topic": "Topic",
+    "add_topic_description": "Set up a topic for notifications."
+  },
   "config": {
     "step": {
       "user": {
@@ -38,10 +42,18 @@
     "topic": {
       "step": {
         "user": {
-          "title": "Topic",
-          "description": "Set up a topic for notifications.",
+          "title": "[%key:component::ntfy::common::topic%]",
+          "description": "[%key:component::ntfy::common::add_topic_description%]",
+          "menu_options": {
+            "add_topic": "Enter topic",
+            "generate_topic": "Generate name"
+          }
+        },
+        "add_topic": {
+          "title": "[%key:component::ntfy::common::topic%]",
+          "description": "[%key:component::ntfy::common::add_topic_description%]",
           "data": {
-            "topic": "Topic"
+            "topic": "[%key:component::ntfy::common::topic%]"
           },
           "data_description": {
             "topic": "Enter the name of the topic you want to use for notifications. Topics may not be password-protected, so choose a name that's not easy to guess. If left empty, a random topic name will be generated."
@@ -51,7 +63,7 @@
       "initiate_flow": {
         "user": "Add topic"
       },
-      "entry_type": "Topic",
+      "entry_type": "[%key:component::ntfy::common::topic%]",
       "error": {
         "publish_forbidden": "Publishing to this topic is forbidden",
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
