@@ -258,9 +258,7 @@ class TriggerBaseEntity(Entity):
                 continue
 
             if (
-                result := self._render_single_template(
-                    key, variables, strict=key in self._to_render_complex
-                )
+                result := self._render_single_template(key, variables)
             ) is not _SENTINEL:
                 rendered[key] = result
 
