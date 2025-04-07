@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "Homee {name} ({host})",
+    "flow_title": "homee {name} ({host})",
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
@@ -11,16 +11,16 @@
     },
     "step": {
       "user": {
-        "title": "Configure Homee",
+        "title": "Configure homee",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-          "host": "The IP address of your Homee.",
-          "username": "The username for your Homee.",
-          "password": "The password for your Homee."
+          "host": "The IP address of your homee.",
+          "username": "The username for your homee.",
+          "password": "The password for your homee."
         }
       }
     }
@@ -352,7 +352,7 @@
   },
   "exceptions": {
     "connection_closed": {
-      "message": "Could not connect to Homee while setting attribute."
+      "message": "Could not connect to homee while setting attribute."
     }
   }
 }
