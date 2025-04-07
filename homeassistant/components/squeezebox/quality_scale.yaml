@@ -23,14 +23,16 @@ rules:
 
   # Silver
   action-exceptions: done
-  config-entry-unloading: todo
+  config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
-  entity-unavailable: todo
+  entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
-  reauthentication-flow: todo
+  reauthentication-flow:
+    status: exempt
+    comment: Integration doesn't have an auth flow.
   test-coverage: done
 
   # Gold
