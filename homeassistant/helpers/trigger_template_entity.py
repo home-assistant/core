@@ -226,6 +226,10 @@ class TriggerBaseEntity(Entity):
         # availability should only be able to render True, False, or None.
         available = True
         if CONF_AVAILABILITY in self._to_render_simple:
+            # Render availability with strict=True to catch template errors.
+            # This is to ensure feature parity between template entities and trigger
+            # based template entities.  Template entities do not go unavailable when
+            # the availability template renders an error.
             if (
                 result := self._render_single_template(
                     CONF_AVAILABILITY, variables, strict=True
