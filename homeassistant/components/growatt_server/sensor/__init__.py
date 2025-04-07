@@ -27,6 +27,7 @@ from ..const import (
 )
 from .inverter import INVERTER_SENSOR_TYPES
 from .mix import MIX_SENSOR_TYPES
+from .noah import NOAH_SENSOR_TYPES
 from .sensor_entity_description import GrowattSensorEntityDescription
 from .storage import STORAGE_SENSOR_TYPES
 from .tlx import TLX_SENSOR_TYPES
@@ -55,6 +56,20 @@ def get_device_list(api, config):
 
     # Get a list of devices for specified plant to add sensors for.
     devices = api.device_list(plant_id)
+
+    is_noah = api.is_plant_noah_system(plant_id)
+    if is_noah["result"] == 1 and (
+        is_noah["obj"]["isPlantNoahSystem"] or is_noah["obj"]["isPlantHaveNoah"]
+    ):
+        noah_device_sn = is_noah["obj"]["deviceSn"]
+        noah_system = api.noah_system_status(noah_device_sn)
+        # Transform the noah system data to match the device list format
+        noah_system["obj"]["deviceType"] = "noah"
+        noah_system["obj"]["deviceSn"] = noah_device_sn
+        noah_system["obj"]["deviceAilas"] = noah_system["obj"]["alias"]
+        # Add the noah system to the list of devices
+        devices.append(noah_system["obj"])
+
     return [devices, plant_id]
 
 
@@ -115,6 +130,10 @@ async def async_setup_entry(
         elif device["deviceType"] == "mix":
             probe.plant_id = plant_id
             sensor_descriptions = MIX_SENSOR_TYPES
+        elif device["deviceType"] == "noah":
+            probe.plant_id = plant_id
+            sensor_descriptions = NOAH_SENSOR_TYPES
+
         else:
             _LOGGER.debug(
                 "Device type %s was found but is not supported right now",
@@ -262,6 +281,16 @@ class GrowattData:
                     **mix_detail,
                     **dashboard_values_for_mix,
                 }
+            elif self.growatt_type == "noah":
+                is_noah = self.api.is_plant_noah_system(self.plant_id)
+                if is_noah["result"] == 1 and (
+                    is_noah["obj"]["isPlantNoahSystem"]
+                    or is_noah["obj"]["isPlantHaveNoah"]
+                ):
+                    noah_device_sn = is_noah["obj"]["deviceSn"]
+                    noah_system = self.api.noah_system_status(noah_device_sn)
+                    noah_system["obj"]["deviceType"] = "noah"
+                    self.data = noah_system["obj"]
             _LOGGER.debug(
                 "Finished updating data for %s (%s)",
                 self.device_id,
