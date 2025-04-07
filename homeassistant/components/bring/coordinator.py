@@ -8,12 +8,14 @@ import logging
 
 from bring_api import (
     Bring,
+    BringActivityResponse,
     BringAuthException,
     BringItemsResponse,
     BringList,
     BringParseException,
     BringRequestException,
     BringUserSettingsResponse,
+    BringUsersResponse,
 )
 from mashumaro.mixins.orjson import DataClassORJSONMixin
 
@@ -37,6 +39,8 @@ class BringData(DataClassORJSONMixin):
 
     lst: BringList
     content: BringItemsResponse
+    activity: BringActivityResponse
+    users: BringUsersResponse
 
 
 class BringDataUpdateCoordinator(DataUpdateCoordinator[dict[str, BringData]]):
@@ -66,9 +70,15 @@ class BringDataUpdateCoordinator(DataUpdateCoordinator[dict[str, BringData]]):
         try:
             self.lists = (await self.bring.load_lists()).lists
         except BringRequestException as e:
-            raise UpdateFailed("Unable to connect and retrieve data from bring") from e
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="setup_request_exception",
+            ) from e
         except BringParseException as e:
-            raise UpdateFailed("Unable to parse response from bring") from e
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="setup_parse_exception",
+            ) from e
         except BringAuthException as e:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
@@ -88,14 +98,20 @@ class BringDataUpdateCoordinator(DataUpdateCoordinator[dict[str, BringData]]):
                 continue
             try:
                 items = await self.bring.get_list(lst.listUuid)
+                activity = await self.bring.get_activity(lst.listUuid)
+                users = await self.bring.get_list_users(lst.listUuid)
             except BringRequestException as e:
                 raise UpdateFailed(
-                    "Unable to connect and retrieve data from bring"
+                    translation_domain=DOMAIN,
+                    translation_key="setup_request_exception",
                 ) from e
             except BringParseException as e:
-                raise UpdateFailed("Unable to parse response from bring") from e
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="setup_parse_exception",
+                ) from e
             else:
-                list_dict[lst.listUuid] = BringData(lst, items)
+                list_dict[lst.listUuid] = BringData(lst, items, activity, users)
 
         return list_dict
 

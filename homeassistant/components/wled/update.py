@@ -10,7 +10,7 @@ from homeassistant.components.update import (
     UpdateEntityFeature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import WLED_KEY, WLEDConfigEntry
 from .coordinator import WLEDDataUpdateCoordinator, WLEDReleasesDataUpdateCoordinator
@@ -21,7 +21,7 @@ from .helpers import wled_exception_handler
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: WLEDConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up WLED update based on a config entry."""
     async_add_entities([WLEDUpdateEntity(entry.runtime_data, hass.data[WLED_KEY])])

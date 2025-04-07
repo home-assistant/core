@@ -25,7 +25,7 @@ async def setup_config_entry(
     device: Mock | None = None,
     fritz: Mock | None = None,
     template: Mock | None = None,
-) -> bool:
+) -> MockConfigEntry:
     """Do setup of a MockConfigEntry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -39,10 +39,10 @@ async def setup_config_entry(
     if template is not None and fritz is not None:
         fritz().get_templates.return_value = [template]
 
-    result = await hass.config_entries.async_setup(entry.entry_id)
+    await hass.config_entries.async_setup(entry.entry_id)
     if device is not None:
         await hass.async_block_till_done()
-    return result
+    return entry
 
 
 def set_devices(

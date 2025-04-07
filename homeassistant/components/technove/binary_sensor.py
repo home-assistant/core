@@ -14,10 +14,9 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import TechnoVEConfigEntry
-from .coordinator import TechnoVEDataUpdateCoordinator
+from .coordinator import TechnoVEConfigEntry, TechnoVEDataUpdateCoordinator
 from .entity import TechnoVEEntity
 
 
@@ -66,7 +65,7 @@ BINARY_SENSORS = [
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TechnoVEConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the binary sensor platform."""
     async_add_entities(

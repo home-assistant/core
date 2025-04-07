@@ -12,7 +12,7 @@ from devolo_plc_api.device_api import WifiGuestAccessGet
 from homeassistant.components.image import ImageEntity, ImageEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import DevoloHomeNetworkConfigEntry
@@ -42,7 +42,7 @@ IMAGE_TYPES: dict[str, DevoloImageEntityDescription] = {
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: DevoloHomeNetworkConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Get all devices and sensors and setup them via config entry."""
     coordinators = entry.runtime_data.coordinators

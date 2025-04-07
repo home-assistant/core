@@ -23,7 +23,7 @@ from homeassistant.const import (
     CONF_STATE,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import AirVisualConfigEntry
@@ -108,7 +108,7 @@ POLLUTANT_UNITS = {
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AirVisualConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up AirVisual sensors based on a config entry."""
     coordinator = entry.runtime_data

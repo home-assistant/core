@@ -11,7 +11,7 @@ from fullykiosk import FullyKiosk, FullyKioskError
 from homeassistant.components.image import ImageEntity, ImageEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import FullyKioskConfigEntry
@@ -38,7 +38,7 @@ IMAGES: tuple[FullyImageEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: FullyKioskConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Fully Kiosk Browser image entities."""
     coordinator = entry.runtime_data

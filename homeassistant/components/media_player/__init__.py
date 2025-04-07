@@ -52,7 +52,7 @@ from homeassistant.const import (  # noqa: F401
     STATE_PLAYING,
     STATE_STANDBY,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, SupportsResponse
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.deprecation import (
@@ -124,6 +124,7 @@ from .const import (  # noqa: F401
     CONTENT_AUTH_EXPIRY_TIME,
     DOMAIN,
     REPEAT_MODES,
+    SERVICE_BROWSE_MEDIA,
     SERVICE_CLEAR_PLAYLIST,
     SERVICE_JOIN,
     SERVICE_PLAY_MEDIA,
@@ -200,6 +201,12 @@ MEDIA_PLAYER_PLAY_MEDIA_SCHEMA = {
     vol.Exclusive(ATTR_MEDIA_ANNOUNCE, "enqueue_announce"): cv.boolean,
     vol.Optional(ATTR_MEDIA_EXTRA, default={}): dict,
 }
+
+MEDIA_PLAYER_BROWSE_MEDIA_SCHEMA = {
+    vol.Optional(ATTR_MEDIA_CONTENT_TYPE): cv.string,
+    vol.Optional(ATTR_MEDIA_CONTENT_ID): cv.string,
+}
+
 
 ATTR_TO_PROPERTY = [
     ATTR_MEDIA_VOLUME_LEVEL,
@@ -430,6 +437,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         ),
         "async_play_media",
         [MediaPlayerEntityFeature.PLAY_MEDIA],
+    )
+    component.async_register_entity_service(
+        SERVICE_BROWSE_MEDIA,
+        {
+            vol.Optional(ATTR_MEDIA_CONTENT_TYPE): cv.string,
+            vol.Optional(ATTR_MEDIA_CONTENT_ID): cv.string,
+        },
+        "async_browse_media",
+        supports_response=SupportsResponse.ONLY,
     )
     component.async_register_entity_service(
         SERVICE_SHUFFLE_SET,
@@ -1015,7 +1031,6 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         if self.state in {
             MediaPlayerState.OFF,
-            MediaPlayerState.IDLE,
             MediaPlayerState.STANDBY,
         }:
             await self.async_turn_on()

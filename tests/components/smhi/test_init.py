@@ -1,6 +1,6 @@
 """Test SMHI component setup process."""
 
-from smhi.smhi_lib import APIURL_TEMPLATE
+from pysmhi.const import API_POINT_FORECAST
 
 from homeassistant.components.smhi.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -17,7 +17,7 @@ async def test_setup_entry(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, api_response: str
 ) -> None:
     """Test setup entry."""
-    uri = APIURL_TEMPLATE.format(
+    uri = API_POINT_FORECAST.format(
         TEST_CONFIG["location"]["longitude"], TEST_CONFIG["location"]["latitude"]
     )
     aioclient_mock.get(uri, text=api_response)
@@ -35,7 +35,7 @@ async def test_remove_entry(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, api_response: str
 ) -> None:
     """Test remove entry."""
-    uri = APIURL_TEMPLATE.format(
+    uri = API_POINT_FORECAST.format(
         TEST_CONFIG["location"]["longitude"], TEST_CONFIG["location"]["latitude"]
     )
     aioclient_mock.get(uri, text=api_response)
@@ -62,7 +62,7 @@ async def test_migrate_entry(
     api_response: str,
 ) -> None:
     """Test migrate entry data."""
-    uri = APIURL_TEMPLATE.format(
+    uri = API_POINT_FORECAST.format(
         TEST_CONFIG_MIGRATE["longitude"], TEST_CONFIG_MIGRATE["latitude"]
     )
     aioclient_mock.get(uri, text=api_response)
@@ -97,7 +97,7 @@ async def test_migrate_from_future_version(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, api_response: str
 ) -> None:
     """Test migrate entry not possible from future version."""
-    uri = APIURL_TEMPLATE.format(
+    uri = API_POINT_FORECAST.format(
         TEST_CONFIG_MIGRATE["longitude"], TEST_CONFIG_MIGRATE["latitude"]
     )
     aioclient_mock.get(uri, text=api_response)

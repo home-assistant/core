@@ -3,6 +3,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://home.netatmo.com/control',
     'connections': set({
     }),
@@ -35,6 +36,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://home.netatmo.com/control',
     'connections': set({
     }),
@@ -67,6 +69,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://home.netatmo.com/control',
     'connections': set({
     }),
@@ -99,6 +102,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': 'corridor',
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/energy',
     'connections': set({
     }),
@@ -131,6 +135,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/energy',
     'connections': set({
     }),
@@ -163,6 +168,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://home.netatmo.com/control',
     'connections': set({
     }),
@@ -195,6 +201,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/energy',
     'connections': set({
     }),
@@ -227,6 +234,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/energy',
     'connections': set({
     }),
@@ -259,6 +267,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/energy',
     'connections': set({
     }),
@@ -291,6 +300,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/energy',
     'connections': set({
     }),
@@ -323,6 +333,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/energy',
     'connections': set({
     }),
@@ -355,6 +366,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/energy',
     'connections': set({
     }),
@@ -387,6 +399,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/energy',
     'connections': set({
     }),
@@ -419,6 +432,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/energy',
     'connections': set({
     }),
@@ -451,6 +465,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/energy',
     'connections': set({
     }),
@@ -483,6 +498,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/energy',
     'connections': set({
     }),
@@ -515,6 +531,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://home.netatmo.com/security',
     'connections': set({
     }),
@@ -547,6 +564,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/weather',
     'connections': set({
     }),
@@ -579,6 +597,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://home.netatmo.com/security',
     'connections': set({
     }),
@@ -611,6 +630,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://home.netatmo.com/security',
     'connections': set({
     }),
@@ -643,6 +663,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/weather',
     'connections': set({
     }),
@@ -675,6 +696,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/weather',
     'connections': set({
     }),
@@ -707,6 +729,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/weather',
     'connections': set({
     }),
@@ -739,6 +762,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/weather',
     'connections': set({
     }),
@@ -771,6 +795,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/weather',
     'connections': set({
     }),
@@ -803,6 +828,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/energy',
     'connections': set({
     }),
@@ -835,6 +861,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/weather',
     'connections': set({
     }),
@@ -867,6 +894,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/weather',
     'connections': set({
     }),
@@ -899,6 +927,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/weather',
     'connections': set({
     }),
@@ -931,6 +960,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/weather',
     'connections': set({
     }),
@@ -963,6 +993,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/weather',
     'connections': set({
     }),
@@ -995,6 +1026,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': 'bureau',
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/energy',
     'connections': set({
     }),
@@ -1027,6 +1059,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': 'livingroom',
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/energy',
     'connections': set({
     }),
@@ -1059,6 +1092,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': 'entrada',
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/energy',
     'connections': set({
     }),
@@ -1091,6 +1125,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': 'cocina',
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/energy',
     'connections': set({
     }),
@@ -1123,6 +1158,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://my.netatmo.com/app/energy',
     'connections': set({
     }),
@@ -1155,6 +1191,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://weathermap.netatmo.com/',
     'connections': set({
     }),
@@ -1187,6 +1224,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://weathermap.netatmo.com/',
     'connections': set({
     }),
@@ -1219,6 +1257,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://weathermap.netatmo.com/',
     'connections': set({
     }),

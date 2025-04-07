@@ -9,6 +9,7 @@ import logging
 import aiohttp
 from microBeesPy import Actuator, Bee, MicroBees, MicroBeesException, Sensor
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -28,11 +29,16 @@ class MicroBeesCoordinatorData:
 class MicroBeesUpdateCoordinator(DataUpdateCoordinator[MicroBeesCoordinatorData]):
     """MicroBees coordinator."""
 
-    def __init__(self, hass: HomeAssistant, microbees: MicroBees) -> None:
+    config_entry: ConfigEntry
+
+    def __init__(
+        self, hass: HomeAssistant, config_entry: ConfigEntry, microbees: MicroBees
+    ) -> None:
         """Initialize microBees coordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name="microBees Coordinator",
             update_interval=timedelta(seconds=30),
         )

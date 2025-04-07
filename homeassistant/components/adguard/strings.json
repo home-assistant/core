@@ -79,7 +79,7 @@
   "services": {
     "add_url": {
       "name": "Add URL",
-      "description": "Add a new filter subscription to AdGuard Home.",
+      "description": "Adds a new filter subscription to AdGuard Home.",
       "fields": {
         "name": {
           "name": "[%key:common::config_flow::data::name%]",
@@ -123,11 +123,11 @@
     },
     "refresh": {
       "name": "Refresh",
-      "description": "Refresh all filter subscriptions in AdGuard Home.",
+      "description": "Refreshes all filter subscriptions in AdGuard Home.",
       "fields": {
         "force": {
           "name": "Force",
-          "description": "Force update (bypasses AdGuard Home throttling). \"true\" to force, or \"false\" to omit for a regular refresh."
+          "description": "Force update (bypasses AdGuard Home throttling), omit for a regular refresh."
         }
       }
     }

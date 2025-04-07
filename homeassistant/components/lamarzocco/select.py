@@ -19,7 +19,7 @@ from homeassistant.components.select import SelectEntity, SelectEntityDescriptio
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import LaMarzoccoConfigEntry
@@ -38,6 +38,7 @@ STEAM_LEVEL_LM_TO_HA = {value: key for key, value in STEAM_LEVEL_HA_TO_LM.items(
 PREBREW_MODE_HA_TO_LM = {
     "disabled": PrebrewMode.DISABLED,
     "prebrew": PrebrewMode.PREBREW,
+    "prebrew_enabled": PrebrewMode.PREBREW_ENABLED,
     "preinfusion": PrebrewMode.PREINFUSION,
 }
 
@@ -88,6 +89,7 @@ ENTITIES: tuple[LaMarzoccoSelectEntityDescription, ...] = (
             MachineModel.GS3_AV,
             MachineModel.LINEA_MICRA,
             MachineModel.LINEA_MINI,
+            MachineModel.LINEA_MINI_R,
         ),
     ),
     LaMarzoccoSelectEntityDescription(
@@ -126,7 +128,7 @@ SCALE_ENTITIES: tuple[LaMarzoccoSelectEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: LaMarzoccoConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up select entities."""
     coordinator = entry.runtime_data.config_coordinator
@@ -138,7 +140,7 @@ async def async_setup_entry(
     ]
 
     if (
-        coordinator.device.model == MachineModel.LINEA_MINI
+        coordinator.device.model in (MachineModel.LINEA_MINI, MachineModel.LINEA_MINI_R)
         and coordinator.device.config.scale
     ):
         entities.extend(

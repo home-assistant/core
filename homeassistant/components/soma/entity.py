@@ -71,7 +71,7 @@ class SomaEntity(Entity):
         self.api_is_available = True
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return true if the last API commands returned successfully."""
         return self.is_available
 

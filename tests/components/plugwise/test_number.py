@@ -17,6 +17,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize("chosen_env", ["anna_heatpump_heating"], indirect=True)
+@pytest.mark.parametrize("cooling_present", [True], indirect=True)
 async def test_anna_number_entities(
     hass: HomeAssistant, mock_smile_anna: MagicMock, init_integration: MockConfigEntry
 ) -> None:
@@ -27,6 +28,7 @@ async def test_anna_number_entities(
 
 
 @pytest.mark.parametrize("chosen_env", ["anna_heatpump_heating"], indirect=True)
+@pytest.mark.parametrize("cooling_present", [True], indirect=True)
 async def test_anna_max_boiler_temp_change(
     hass: HomeAssistant, mock_smile_anna: MagicMock, init_integration: MockConfigEntry
 ) -> None:
@@ -48,6 +50,7 @@ async def test_anna_max_boiler_temp_change(
 
 
 @pytest.mark.parametrize("chosen_env", ["m_adam_heating"], indirect=True)
+@pytest.mark.parametrize("cooling_present", [False], indirect=True)
 async def test_adam_dhw_setpoint_change(
     hass: HomeAssistant,
     mock_smile_adam_heat_cool: MagicMock,
