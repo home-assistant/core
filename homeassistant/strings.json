@@ -126,10 +126,14 @@
       "discharging": "Discharging",
       "disconnected": "Disconnected",
       "enabled": "Enabled",
+      "high": "High",
       "home": "Home",
       "idle": "Idle",
       "locked": "Locked",
+      "low": "Low",
+      "medium": "Medium",
       "no": "No",
+      "normal": "Normal",
       "not_home": "Away",
       "off": "Off",
       "on": "On",
@@ -139,6 +143,8 @@
       "standby": "Standby",
       "stopped": "Stopped",
       "unlocked": "Unlocked",
+      "very_high": "Very high",
+      "very_low": "Very low",
       "yes": "Yes"
     },
     "time": {

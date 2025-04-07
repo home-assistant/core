@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "Please enter the credentials used to log into mytotalconnectcomfort.com.",
+        "description": "Please enter the credentials used to log in to mytotalconnectcomfort.com.",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
