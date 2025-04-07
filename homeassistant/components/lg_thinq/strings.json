@@ -626,7 +626,7 @@
           "auto": "Low power",
           "high": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::high%]",
           "mop": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::mop%]",
-          "normal": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::normal%]",
+          "normal": "[%key:common::state::normal%]",
           "off": "[%key:common::state::off%]",
           "turbo": "[%key:component::lg_thinq::entity::select::wind_strength::state::power%]"
         }
