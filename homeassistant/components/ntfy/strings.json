@@ -79,8 +79,21 @@
     "publish_failed_request_error": {
       "message": "Failed to publish notification: {error_msg}"
     },
+
     "publish_failed_exception": {
       "message": "Failed to publish notification due to a connection error"
+    },
+    "authentication_error": {
+      "message": "Failed to authenticate with ntfy service. Please verify your credentials"
+    },
+    "server_error": {
+      "message": "Failed to connect to ntfy service due to a server error: {error_msg}"
+    },
+    "connection_error": {
+      "message": "Failed to connect to ntfy service due to a connection error"
+    },
+    "timeout_error": {
+      "message": "Failed to connect to ntfy service due to a connection timeout"
     }
   }
 }

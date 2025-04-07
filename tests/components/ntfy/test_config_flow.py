@@ -200,6 +200,7 @@ async def test_form_already_configured(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_aiontfy")
 async def test_add_topic_flow(hass: HomeAssistant) -> None:
     """Test add topic subentry flow."""
     config_entry = MockConfigEntry(
@@ -247,6 +248,7 @@ async def test_add_topic_flow(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
 
+@pytest.mark.usefixtures("mock_aiontfy")
 async def test_generated_topic(hass: HomeAssistant, mock_random: AsyncMock) -> None:
     """Test add topic subentry flow with generated topic name."""
     config_entry = MockConfigEntry(
@@ -300,6 +302,7 @@ async def test_generated_topic(hass: HomeAssistant, mock_random: AsyncMock) -> N
     }
 
 
+@pytest.mark.usefixtures("mock_aiontfy")
 async def test_invalid_topic(hass: HomeAssistant, mock_random: AsyncMock) -> None:
     """Test add topic subentry flow with invalid topic name."""
     config_entry = MockConfigEntry(
