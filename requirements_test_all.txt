@@ -1409,6 +1409,9 @@ prayer-times-calculator-offline==1.0.3
 # homeassistant.components.prometheus
 prometheus-client==0.21.0
 
+# homeassistant.components.proxmoxve
+proxmoxer==2.0.1
+
 # homeassistant.components.hardware
 # homeassistant.components.recorder
 # homeassistant.components.systemmonitor
