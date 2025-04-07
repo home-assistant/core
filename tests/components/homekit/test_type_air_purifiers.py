@@ -5,7 +5,7 @@ from pyhap.const import HAP_REPR_AID, HAP_REPR_CHARS, HAP_REPR_IID, HAP_REPR_VAL
 from homeassistant.components.fan import (
     ATTR_PRESET_MODE,
     ATTR_PRESET_MODES,
-    DOMAIN,
+    DOMAIN as FAN_DOMAIN,
     FanEntityFeature,
 )
 from homeassistant.components.homekit import (
@@ -33,11 +33,14 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.core import Event, HomeAssistant
 
 from tests.common import async_mock_service
 
 
-async def test_fan_auto_manual(hass, hk_driver, events):
+async def test_fan_auto_manual(
+    hass: HomeAssistant, hk_driver, events: list[Event]
+) -> None:
     """Test switching between Auto and Manual."""
     entity_id = "fan.demo"
 
@@ -82,8 +85,8 @@ async def test_fan_auto_manual(hass, hk_driver, events):
     assert acc.char_target_air_purifier_state.value == TARGET_STATE_MANUAL
 
     # Set from HomeKit
-    call_set_preset_mode = async_mock_service(hass, DOMAIN, "set_preset_mode")
-    call_set_percentage = async_mock_service(hass, DOMAIN, "set_percentage")
+    call_set_preset_mode = async_mock_service(hass, FAN_DOMAIN, "set_preset_mode")
+    call_set_percentage = async_mock_service(hass, FAN_DOMAIN, "set_percentage")
 
     char_auto_iid = acc.char_target_air_purifier_state.to_HAP()[HAP_REPR_IID]
 
@@ -128,7 +131,9 @@ async def test_fan_auto_manual(hass, hk_driver, events):
     assert len(events) == 2
 
 
-async def test_expose_linked_sensors(hass, hk_driver, events):
+async def test_expose_linked_sensors(
+    hass: HomeAssistant, hk_driver, events: list[Event]
+) -> None:
     """Test that linked sensors are exposed."""
     entity_id = "fan.demo"
 
@@ -212,7 +217,9 @@ async def test_expose_linked_sensors(hass, hk_driver, events):
     assert acc.char_current_temperature.value == 30
 
 
-async def test_filter_maintenance_linked_sensors(hass, hk_driver, events):
+async def test_filter_maintenance_linked_sensors(
+    hass: HomeAssistant, hk_driver, events: list[Event]
+) -> None:
     """Test that a linked filter level and filter change indicator are exposed."""
     entity_id = "fan.demo"
     hass.states.async_set(
@@ -263,7 +270,9 @@ async def test_filter_maintenance_linked_sensors(hass, hk_driver, events):
     assert acc.char_filter_life_level.value == 25
 
 
-async def test_filter_maintenance_only_change_indicator_sensor(hass, hk_driver, events):
+async def test_filter_maintenance_only_change_indicator_sensor(
+    hass: HomeAssistant, hk_driver, events: list[Event]
+) -> None:
     """Test that a linked filter change indicator is exposed."""
     entity_id = "fan.demo"
     hass.states.async_set(
@@ -304,7 +313,9 @@ async def test_filter_maintenance_only_change_indicator_sensor(hass, hk_driver, 
     assert acc.char_filter_change_indication.value == FILTER_CHANGE_FILTER
 
 
-async def test_filter_life_level_linked_sensors(hass, hk_driver, events):
+async def test_filter_life_level_linked_sensors(
+    hass: HomeAssistant, hk_driver, events: list[Event]
+) -> None:
     """Test that a linked filter life level sensor exposed."""
     entity_id = "fan.demo"
     hass.states.async_set(
