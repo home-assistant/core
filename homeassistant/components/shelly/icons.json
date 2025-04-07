@@ -12,6 +12,9 @@
       }
     },
     "number": {
+      "external_temperature": {
+        "default": "mdi:thermometer-check"
+      },
       "valve_position": {
         "default": "mdi:pipe-valve"
       }
@@ -20,14 +23,23 @@
       "gas_concentration": {
         "default": "mdi:gauge"
       },
+      "gas_detected": {
+        "default": "mdi:gas-burner"
+      },
       "lamp_life": {
         "default": "mdi:progress-wrench"
       },
       "operation": {
         "default": "mdi:cog-transfer"
       },
+      "self_test": {
+        "default": "mdi:progress-wrench"
+      },
       "tilt": {
         "default": "mdi:angle-acute"
+      },
+      "valve_position": {
+        "default": "mdi:pipe-valve"
       },
       "valve_status": {
         "default": "mdi:valve"

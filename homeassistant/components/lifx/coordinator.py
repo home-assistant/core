@@ -21,8 +21,9 @@ from aiolifx.aiolifx import (
 from aiolifx.connection import LIFXConnection
 from aiolifx_themes.themes import ThemeLibrary, ThemePainter
 from awesomeversion import AwesomeVersion
-from propcache import cached_property
+from propcache.api import cached_property
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
@@ -83,14 +84,16 @@ class SkyType(IntEnum):
     CLOUDS = 2
 
 
-class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):  # noqa: PLR0904
+class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
     """DataUpdateCoordinator to gather data for a specific lifx device."""
+
+    config_entry: ConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: ConfigEntry,
         connection: LIFXConnection,
-        title: str,
     ) -> None:
         """Initialize DataUpdateCoordinator."""
         assert connection.device is not None
@@ -105,7 +108,8 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):  # noqa: PLR0904
         super().__init__(
             hass,
             _LOGGER,
-            name=f"{title} ({self.device.ip_addr})",
+            config_entry=config_entry,
+            name=f"{config_entry.title} ({self.device.ip_addr})",
             update_interval=timedelta(seconds=LIGHT_UPDATE_INTERVAL),
             # We don't want an immediate refresh since the device
             # takes a moment to reflect the state change
@@ -456,7 +460,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):  # noqa: PLR0904
             )
             self.active_effect = FirmwareEffect[effect.upper()]
 
-    async def async_set_matrix_effect(  # noqa: PLR0917
+    async def async_set_matrix_effect(
         self,
         effect: str,
         palette: list[tuple[int, int, int, int]] | None = None,

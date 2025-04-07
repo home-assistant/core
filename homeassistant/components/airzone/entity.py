@@ -31,9 +31,8 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import AirzoneConfigEntry
 from .const import DOMAIN, MANUFACTURER
-from .coordinator import AirzoneUpdateCoordinator
+from .coordinator import AirzoneConfigEntry, AirzoneUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,8 +67,9 @@ class AirzoneSystemEntity(AirzoneEntity):
             model=self.get_airzone_value(AZD_MODEL),
             name=f"System {self.system_id}",
             sw_version=self.get_airzone_value(AZD_FIRMWARE),
-            via_device=(DOMAIN, f"{entry.entry_id}_ws"),
         )
+        if AZD_WEBSERVER in self.coordinator.data:
+            self._attr_device_info["via_device"] = (DOMAIN, f"{entry.entry_id}_ws")
         self._attr_unique_id = entry.unique_id or entry.entry_id
 
     @property
@@ -102,8 +102,9 @@ class AirzoneHotWaterEntity(AirzoneEntity):
             manufacturer=MANUFACTURER,
             model="DHW",
             name=self.get_airzone_value(AZD_NAME),
-            via_device=(DOMAIN, f"{entry.entry_id}_ws"),
         )
+        if AZD_WEBSERVER in self.coordinator.data:
+            self._attr_device_info["via_device"] = (DOMAIN, f"{entry.entry_id}_ws")
         self._attr_unique_id = entry.unique_id or entry.entry_id
 
     def get_airzone_value(self, key: str) -> Any:

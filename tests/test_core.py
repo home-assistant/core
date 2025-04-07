@@ -20,6 +20,7 @@ import pytest
 from pytest_unordered import unordered
 import voluptuous as vol
 
+from homeassistant import core as ha
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     EVENT_CALL_SERVICE,
@@ -35,7 +36,6 @@ from homeassistant.const import (
     EVENT_STATE_REPORTED,
     MATCH_ALL,
 )
-import homeassistant.core as ha
 from homeassistant.core import (
     CoreState,
     HassJob,
@@ -59,8 +59,8 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers.json import json_dumps
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import create_eager_task
-import homeassistant.util.dt as dt_util
 from homeassistant.util.read_only_dict import ReadOnlyDict
 
 from .common import (

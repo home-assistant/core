@@ -6,7 +6,7 @@ import logging
 
 from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import as_utc
 
 from .coordinator import TileConfigEntry, TileCoordinator
@@ -26,7 +26,9 @@ ATTR_VOIP_STATE = "voip_state"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: TileConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TileConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tile device trackers."""
 

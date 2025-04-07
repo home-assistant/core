@@ -36,12 +36,13 @@ from typing import (
     NotRequired,
     Self,
     TypedDict,
+    TypeVar,
     cast,
+    final,
     overload,
 )
 
-from propcache import cached_property, under_cached_property
-from typing_extensions import TypeVar
+from propcache.api import cached_property, under_cached_property
 import voluptuous as vol
 
 from . import util
@@ -324,6 +325,7 @@ class HassJobType(enum.Enum):
     Executor = 3
 
 
+@final  # Final to allow direct checking of the type instead of using isinstance
 class HassJob[**_P, _R_co]:
     """Represent a job to be run later.
 
@@ -332,7 +334,7 @@ class HassJob[**_P, _R_co]:
     we run the job.
     """
 
-    __slots__ = ("target", "name", "_cancel_on_shutdown", "_cache")
+    __slots__ = ("_cache", "_cancel_on_shutdown", "name", "target")
 
     def __init__(
         self,
@@ -1153,8 +1155,7 @@ class HomeAssistant:
                 await self.async_block_till_done()
         except TimeoutError:
             _LOGGER.warning(
-                "Timed out waiting for integrations to stop, the shutdown will"
-                " continue"
+                "Timed out waiting for integrations to stop, the shutdown will continue"
             )
             self._async_log_running_tasks("stop integrations")
 
@@ -1247,7 +1248,7 @@ class HomeAssistant:
 class Context:
     """The context that triggered something."""
 
-    __slots__ = ("id", "user_id", "parent_id", "origin_event", "_cache")
+    __slots__ = ("_cache", "id", "origin_event", "parent_id", "user_id")
 
     def __init__(
         self,
@@ -1318,16 +1319,17 @@ class EventOrigin(enum.Enum):
         return next((idx for idx, origin in enumerate(EventOrigin) if origin is self))
 
 
+@final  # Final to allow direct checking of the type instead of using isinstance
 class Event(Generic[_DataT]):
     """Representation of an event within the bus."""
 
     __slots__ = (
-        "event_type",
+        "_cache",
+        "context",
         "data",
+        "event_type",
         "origin",
         "time_fired_timestamp",
-        "context",
-        "_cache",
     )
 
     def __init__(
@@ -1768,18 +1770,18 @@ class State:
     """
 
     __slots__ = (
-        "entity_id",
-        "state",
+        "_cache",
         "attributes",
+        "context",
+        "domain",
+        "entity_id",
         "last_changed",
         "last_reported",
         "last_updated",
-        "context",
-        "state_info",
-        "domain",
-        "object_id",
         "last_updated_timestamp",
-        "_cache",
+        "object_id",
+        "state",
+        "state_info",
     )
 
     def __init__(
@@ -1936,13 +1938,14 @@ class State:
             # to avoid callers outside of this module
             # from misusing it by mistake.
             context = state_context._as_dict  # noqa: SLF001
+        last_changed_timestamp = self.last_changed_timestamp
         compressed_state: CompressedState = {
             COMPRESSED_STATE_STATE: self.state,
             COMPRESSED_STATE_ATTRIBUTES: self.attributes,
             COMPRESSED_STATE_CONTEXT: context,
-            COMPRESSED_STATE_LAST_CHANGED: self.last_changed_timestamp,
+            COMPRESSED_STATE_LAST_CHANGED: last_changed_timestamp,
         }
-        if self.last_changed != self.last_updated:
+        if last_changed_timestamp != self.last_updated_timestamp:
             compressed_state[COMPRESSED_STATE_LAST_UPDATED] = (
                 self.last_updated_timestamp
             )
@@ -2067,7 +2070,7 @@ class States(UserDict[str, State]):
 class StateMachine:
     """Helper class that tracks the state of different entities."""
 
-    __slots__ = ("_states", "_states_data", "_reservations", "_bus", "_loop")
+    __slots__ = ("_bus", "_loop", "_reservations", "_states", "_states_data")
 
     def __init__(self, bus: EventBus, loop: asyncio.events.AbstractEventLoop) -> None:
         """Initialize state machine."""
@@ -2405,7 +2408,7 @@ class SupportsResponse(enum.StrEnum):
 class Service:
     """Representation of a callable service."""
 
-    __slots__ = ["job", "schema", "domain", "service", "supports_response"]
+    __slots__ = ["domain", "job", "schema", "service", "supports_response"]
 
     def __init__(
         self,
@@ -2432,7 +2435,7 @@ class Service:
 class ServiceCall:
     """Representation of a call to a service."""
 
-    __slots__ = ("hass", "domain", "service", "data", "context", "return_response")
+    __slots__ = ("context", "data", "domain", "hass", "return_response", "service")
 
     def __init__(
         self,
@@ -2465,7 +2468,7 @@ class ServiceCall:
 class ServiceRegistry:
     """Offer the services over the eventbus."""
 
-    __slots__ = ("_services", "_hass")
+    __slots__ = ("_hass", "_services")
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize a service registry."""

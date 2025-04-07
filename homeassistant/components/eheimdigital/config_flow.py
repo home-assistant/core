@@ -10,11 +10,11 @@ from eheimdigital.device import EheimDigitalDevice
 from eheimdigital.hub import EheimDigitalHub
 import voluptuous as vol
 
-from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN, LOGGER
 
@@ -62,6 +62,7 @@ class EheimDigitalConfigFlow(ConfigFlow, domain=DOMAIN):
         except (ClientError, TimeoutError):
             return self.async_abort(reason="cannot_connect")
         except Exception:  # noqa: BLE001
+            LOGGER.exception("Unknown exception occurred")
             return self.async_abort(reason="unknown")
         await self.async_set_unique_id(hub.main.mac_address)
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})

@@ -28,6 +28,11 @@ class FGLairEntity(CoordinatorEntity[FGLairCoordinator]):
         )
 
     @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and self.coordinator_context in self.coordinator.data
+
+    @property
     def device(self) -> FujitsuHVAC:
         """Return the device object from the coordinator data."""
         return self.coordinator.data[self.coordinator_context]

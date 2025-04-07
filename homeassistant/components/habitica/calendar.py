@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+from dataclasses import asdict
 from datetime import date, datetime, timedelta
 from enum import StrEnum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 from uuid import UUID
 
 from dateutil.rrule import rrule
-from habiticalib import TaskType
+from habiticalib import Frequency, TaskType
 
 from homeassistant.components.calendar import (
     CalendarEntity,
@@ -17,13 +18,14 @@ from homeassistant.components.calendar import (
     CalendarEvent,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from . import HabiticaConfigEntry
-from .coordinator import HabiticaDataUpdateCoordinator
+from .coordinator import HabiticaConfigEntry, HabiticaDataUpdateCoordinator
 from .entity import HabiticaBase
 from .util import build_rrule, get_recurrence_rule
+
+PARALLEL_UPDATES = 1
 
 
 class HabiticaCalendar(StrEnum):
@@ -38,7 +40,7 @@ class HabiticaCalendar(StrEnum):
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: HabiticaConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the calendar platform."""
     coordinator = config_entry.runtime_data
@@ -92,9 +94,11 @@ class HabiticaCalendarEntity(HabiticaBase, CalendarEntity):
     ) -> list[datetime]:
         """Calculate recurrence dates based on start_date and end_date."""
         if end_date:
-            return recurrences.between(
+            recurrence_dates = recurrences.between(
                 start_date, end_date - timedelta(days=1), inc=True
             )
+
+            return cast(list[datetime], recurrence_dates)
         # if no end_date is given, return only the next recurrence
         return [recurrences.after(start_date, inc=True)]
 
@@ -192,6 +196,10 @@ class HabiticaDailiesCalendarEntity(HabiticaCalendarEntity):
         for task in self.coordinator.data.tasks:
             #  only dailies that that are not 'grey dailies'
             if not (task.Type is TaskType.DAILY and task.everyX):
+                continue
+            if task.frequency is Frequency.WEEKLY and not any(
+                asdict(task.repeat).values()
+            ):
                 continue
 
             recurrences = build_rrule(task)
@@ -332,6 +340,11 @@ class HabiticaDailyRemindersCalendarEntity(HabiticaCalendarEntity):
 
         for task in self.coordinator.data.tasks:
             if not (task.Type is TaskType.DAILY and task.everyX):
+                continue
+
+            if task.frequency is Frequency.WEEKLY and not any(
+                asdict(task.repeat).values()
+            ):
                 continue
 
             recurrences = build_rrule(task)

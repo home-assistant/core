@@ -51,7 +51,7 @@ from homeassistant.const import (
 from homeassistant.core import Context, Event, EventOrigin, State, split_entity_id
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.json import JSON_DUMP, json_bytes
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
 ALL_DOMAIN_EXCLUDE_ATTRS = {ATTR_ATTRIBUTION, ATTR_RESTORED, ATTR_SUPPORTED_FEATURES}
@@ -583,6 +583,8 @@ class StatisticsBase:
     last_reset_ts = Column(TIMESTAMP_TYPE)
     state = Column(DOUBLE_TYPE)
     sum = Column(DOUBLE_TYPE)
+    # *** Not originally in v32, only added for tests. Added in v49
+    mean_weight = Column(DOUBLE_TYPE)
 
     @classmethod
     def from_stats(cls, metadata_id: int, stats: StatisticData) -> Self:

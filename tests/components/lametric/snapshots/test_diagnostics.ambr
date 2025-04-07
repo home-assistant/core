@@ -24,7 +24,15 @@
     'device_id': '**REDACTED**',
     'display': dict({
       'brightness': 100,
+      'brightness_limit': dict({
+        'range_max': 100,
+        'range_min': 2,
+      }),
       'brightness_mode': 'auto',
+      'brightness_range': dict({
+        'range_max': 100,
+        'range_min': 0,
+      }),
       'display_type': 'mixed',
       'height': 8,
       'on': None,

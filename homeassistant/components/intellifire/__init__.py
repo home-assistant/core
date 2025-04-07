@@ -128,9 +128,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ) from err
 
     # Construct coordinator
-    data_update_coordinator = IntellifireDataUpdateCoordinator(
-        hass=hass, fireplace=fireplace
-    )
+    data_update_coordinator = IntellifireDataUpdateCoordinator(hass, entry, fireplace)
 
     LOGGER.debug("Fireplace to Initialized - Awaiting first refresh")
     await data_update_coordinator.async_config_entry_first_refresh()
@@ -149,7 +147,7 @@ async def _async_wait_for_initialization(
     while (
         fireplace.data.ipv4_address == "127.0.0.1" and fireplace.data.serial == "unset"
     ):
-        LOGGER.debug(f"Waiting for fireplace to initialize [{fireplace.read_mode}]")
+        LOGGER.debug("Waiting for fireplace to initialize [%s]", fireplace.read_mode)
         await asyncio.sleep(INIT_WAIT_TIME_SECONDS)
 
 

@@ -7,8 +7,11 @@
       "express_mode": {
         "default": "mdi:snowflake-variant"
       },
+      "express_fridge": {
+        "default": "mdi:snowflake"
+      },
       "hot_water_mode": {
-        "default": "mdi:list-status"
+        "default": "mdi:heat-wave"
       },
       "humidity_warm_mode": {
         "default": "mdi:heat-wave"
@@ -39,6 +42,9 @@
       },
       "warm_mode": {
         "default": "mdi:heat-wave"
+      },
+      "display_light": {
+        "default": "mdi:lightbulb-on-outline"
       }
     },
     "binary_sensor": {
@@ -74,6 +80,9 @@
       },
       "one_touch_filter": {
         "default": "mdi:air-filter"
+      },
+      "water_heater_operation_mode": {
+        "default": "mdi:power"
       }
     },
     "climate": {
@@ -158,6 +167,9 @@
         "default": "mdi:monitor-eye"
       },
       "current_job_mode": {
+        "default": "mdi:format-list-bulleted"
+      },
+      "current_job_mode_dehumidifier": {
         "default": "mdi:format-list-bulleted"
       },
       "operation_mode": {
@@ -401,6 +413,12 @@
       },
       "power_level_for_location": {
         "default": "mdi:radiator"
+      },
+      "cycle_count": {
+        "default": "mdi:counter"
+      },
+      "cycle_count_for_location": {
+        "default": "mdi:counter"
       }
     }
   }

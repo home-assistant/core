@@ -25,7 +25,7 @@ async def test_diagnostic_entities(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test diagnostic entities."""
-    await knx.setup_integration({})
+    await knx.setup_integration()
 
     for entity_id in (
         "sensor.knx_interface_individual_address",
@@ -103,7 +103,7 @@ async def test_removed_entity(
     with patch(
         "xknx.core.connection_manager.ConnectionManager.unregister_connection_state_changed_cb"
     ) as unregister_mock:
-        await knx.setup_integration({})
+        await knx.setup_integration()
 
         entity_registry.async_update_entity(
             "sensor.knx_interface_connection_established",
@@ -120,7 +120,7 @@ async def test_remove_interface_device(
 ) -> None:
     """Test device removal."""
     assert await async_setup_component(hass, "config", {})
-    await knx.setup_integration({})
+    await knx.setup_integration()
     client = await hass_ws_client(hass)
     knx_devices = device_registry.devices.get_devices_for_config_entry_id(
         knx.mock_config_entry.entry_id

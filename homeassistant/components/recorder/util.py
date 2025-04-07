@@ -34,16 +34,9 @@ from homeassistant.helpers.recorder import (  # noqa: F401
     get_instance,
     session_scope,
 )
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
-from .const import (
-    DEFAULT_MAX_BIND_VARS,
-    DOMAIN,
-    SQLITE_MAX_BIND_VARS,
-    SQLITE_MODERN_MAX_BIND_VARS,
-    SQLITE_URL_PREFIX,
-    SupportedDialect,
-)
+from .const import DEFAULT_MAX_BIND_VARS, DOMAIN, SQLITE_URL_PREFIX, SupportedDialect
 from .db_schema import (
     TABLE_RECORDER_RUNS,
     TABLE_SCHEMA_CHANGES,
@@ -96,7 +89,6 @@ MARIADB_WITH_FIXED_IN_QUERIES_108 = _simple_version("10.8.4")
 MIN_VERSION_MYSQL = _simple_version("8.0.0")
 MIN_VERSION_PGSQL = _simple_version("12.0")
 MIN_VERSION_SQLITE = _simple_version("3.40.1")
-MIN_VERSION_SQLITE_MODERN_BIND_VARS = _simple_version("3.40.1")
 
 
 # This is the maximum time after the recorder ends the session
@@ -472,8 +464,8 @@ def setup_connection_for_dialect(
     """Execute statements needed for dialect connection."""
     version: AwesomeVersion | None = None
     slow_range_in_select = False
+    slow_dependent_subquery = False
     if dialect_name == SupportedDialect.SQLITE:
-        max_bind_vars = SQLITE_MAX_BIND_VARS
         if first_connection:
             old_isolation = dbapi_connection.isolation_level  # type: ignore[attr-defined]
             dbapi_connection.isolation_level = None  # type: ignore[attr-defined]
@@ -490,9 +482,6 @@ def setup_connection_for_dialect(
                 _raise_if_version_unsupported(
                     version or version_string, "SQLite", MIN_VERSION_SQLITE
                 )
-
-            if version and version > MIN_VERSION_SQLITE_MODERN_BIND_VARS:
-                max_bind_vars = SQLITE_MODERN_MAX_BIND_VARS
 
         # The upper bound on the cache size is approximately 16MiB of memory
         execute_on_connection(dbapi_connection, "PRAGMA cache_size = -16384")
@@ -512,15 +501,13 @@ def setup_connection_for_dialect(
         execute_on_connection(dbapi_connection, "PRAGMA foreign_keys=ON")
 
     elif dialect_name == SupportedDialect.MYSQL:
-        max_bind_vars = DEFAULT_MAX_BIND_VARS
         execute_on_connection(dbapi_connection, "SET session wait_timeout=28800")
         if first_connection:
             result = query_on_connection(dbapi_connection, "SELECT VERSION()")
             version_string = result[0][0]
             version = _extract_version_from_server_response(version_string)
-            is_maria_db = "mariadb" in version_string.lower()
 
-            if is_maria_db:
+            if "mariadb" in version_string.lower():
                 if not version or version < MIN_VERSION_MARIA_DB:
                     _raise_if_version_unsupported(
                         version or version_string, "MariaDB", MIN_VERSION_MARIA_DB
@@ -536,24 +523,25 @@ def setup_connection_for_dialect(
                         instance.hass,
                         version,
                     )
-
+                slow_range_in_select = bool(
+                    not version
+                    or version < MARIADB_WITH_FIXED_IN_QUERIES_105
+                    or MARIA_DB_106 <= version < MARIADB_WITH_FIXED_IN_QUERIES_106
+                    or MARIA_DB_107 <= version < MARIADB_WITH_FIXED_IN_QUERIES_107
+                    or MARIA_DB_108 <= version < MARIADB_WITH_FIXED_IN_QUERIES_108
+                )
             elif not version or version < MIN_VERSION_MYSQL:
                 _raise_if_version_unsupported(
                     version or version_string, "MySQL", MIN_VERSION_MYSQL
                 )
-
-            slow_range_in_select = bool(
-                not version
-                or version < MARIADB_WITH_FIXED_IN_QUERIES_105
-                or MARIA_DB_106 <= version < MARIADB_WITH_FIXED_IN_QUERIES_106
-                or MARIA_DB_107 <= version < MARIADB_WITH_FIXED_IN_QUERIES_107
-                or MARIA_DB_108 <= version < MARIADB_WITH_FIXED_IN_QUERIES_108
-            )
+            else:
+                # MySQL
+                # https://github.com/home-assistant/core/issues/137178
+                slow_dependent_subquery = True
 
         # Ensure all times are using UTC to avoid issues with daylight savings
         execute_on_connection(dbapi_connection, "SET time_zone = '+00:00'")
     elif dialect_name == SupportedDialect.POSTGRESQL:
-        max_bind_vars = DEFAULT_MAX_BIND_VARS
         # PostgreSQL does not support a skip/loose index scan so its
         # also slow for large distinct queries:
         # https://wiki.postgresql.org/wiki/Loose_indexscan
@@ -579,8 +567,11 @@ def setup_connection_for_dialect(
     return DatabaseEngine(
         dialect=SupportedDialect(dialect_name),
         version=version,
-        optimizer=DatabaseOptimizer(slow_range_in_select=slow_range_in_select),
-        max_bind_vars=max_bind_vars,
+        optimizer=DatabaseOptimizer(
+            slow_range_in_select=slow_range_in_select,
+            slow_dependent_subquery=slow_dependent_subquery,
+        ),
+        max_bind_vars=DEFAULT_MAX_BIND_VARS,
     )
 
 
@@ -941,10 +932,7 @@ def filter_unique_constraint_integrity_error(
 
         if ignore:
             _LOGGER.warning(
-                (
-                    "Blocked attempt to insert duplicated %s rows, please report"
-                    " at %s"
-                ),
+                "Blocked attempt to insert duplicated %s rows, please report at %s",
                 row_type,
                 "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+recorder%22",
                 exc_info=err,

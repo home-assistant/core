@@ -221,6 +221,9 @@
       "cutting_blade_usage_time": {
         "name": "Cutting blade usage time"
       },
+      "downtime": {
+        "name": "Downtime"
+      },
       "restricted_reason": {
         "name": "Restricted reason",
         "state": {
@@ -262,6 +265,9 @@
           "home": "Home",
           "demo": "Demo"
         }
+      },
+      "uptime": {
+        "name": "Uptime"
       },
       "work_area": {
         "name": "Work area",
@@ -322,7 +328,7 @@
   "services": {
     "override_schedule": {
       "name": "Override schedule",
-      "description": "Override the schedule to either mow or park for a duration of time.",
+      "description": "Lets the mower either mow or park for a given duration, overriding all schedules.",
       "fields": {
         "duration": {
           "name": "Duration",
@@ -336,7 +342,7 @@
     },
     "override_schedule_work_area": {
       "name": "Override schedule work area",
-      "description": "Override the schedule of the mower for a duration of time in the selected work area.",
+      "description": "Lets the mower mow for a given duration in a specified work area, overriding all schedules.",
       "fields": {
         "duration": {
           "name": "[%key:component::husqvarna_automower::services::override_schedule::fields::duration::name%]",

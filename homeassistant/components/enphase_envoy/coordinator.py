@@ -16,7 +16,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, INVALID_AUTH_ERRORS
 
@@ -25,6 +25,7 @@ SCAN_INTERVAL = timedelta(seconds=60)
 TOKEN_REFRESH_CHECK_INTERVAL = timedelta(days=1)
 STALE_TOKEN_THRESHOLD = timedelta(days=30).total_seconds()
 NOTIFICATION_ID = "enphase_envoy_notification"
+FIRMWARE_REFRESH_INTERVAL = timedelta(hours=4)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,9 +51,11 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._setup_complete = False
         self.envoy_firmware = ""
         self._cancel_token_refresh: CALLBACK_TYPE | None = None
+        self._cancel_firmware_refresh: CALLBACK_TYPE | None = None
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=entry_data[CONF_NAME],
             update_interval=SCAN_INTERVAL,
             always_update=False,
@@ -88,9 +91,47 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._async_update_saved_token()
 
     @callback
+    def _async_refresh_firmware(self, now: datetime.datetime) -> None:
+        """Proactively check for firmware changes in Envoy."""
+        self.hass.async_create_background_task(
+            self._async_try_refresh_firmware(), "{name} firmware refresh"
+        )
+
+    async def _async_try_refresh_firmware(self) -> None:
+        """Check firmware in Envoy and reload config entry if changed."""
+        # envoy.setup just reads firmware, serial and partnumber from /info
+        try:
+            await self.envoy.setup()
+        except EnvoyError as err:
+            # just try again next time
+            _LOGGER.debug("%s: Error reading firmware: %s", err, self.name)
+            return
+        if (current_firmware := self.envoy_firmware) and current_firmware != (
+            new_firmware := self.envoy.firmware
+        ):
+            self.envoy_firmware = new_firmware
+            _LOGGER.warning(
+                "Envoy firmware changed from: %s to: %s, reloading config entry %s",
+                current_firmware,
+                new_firmware,
+                self.name,
+            )
+            # reload the integration to get all established again
+            self.hass.async_create_task(
+                self.hass.config_entries.async_reload(self.config_entry.entry_id)
+            )
+
+    @callback
     def _async_mark_setup_complete(self) -> None:
-        """Mark setup as complete and setup token refresh if needed."""
+        """Mark setup as complete and setup firmware checks and token refresh if needed."""
         self._setup_complete = True
+        self.async_cancel_firmware_refresh()
+        self._cancel_firmware_refresh = async_track_time_interval(
+            self.hass,
+            self._async_refresh_firmware,
+            FIRMWARE_REFRESH_INTERVAL,
+            cancel_on_shutdown=True,
+        )
         self.async_cancel_token_refresh()
         if not isinstance(self.envoy.auth, EnvoyTokenAuth):
             return
@@ -204,3 +245,10 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if self._cancel_token_refresh:
             self._cancel_token_refresh()
             self._cancel_token_refresh = None
+
+    @callback
+    def async_cancel_firmware_refresh(self) -> None:
+        """Cancel firmware refresh."""
+        if self._cancel_firmware_refresh:
+            self._cancel_firmware_refresh()
+            self._cancel_firmware_refresh = None

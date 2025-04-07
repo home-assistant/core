@@ -15,7 +15,7 @@
     },
     "error": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "id_exists": "Gateway id already exists",
+      "id_exists": "Gateway ID already exists",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]"
     }
@@ -172,8 +172,8 @@
           "vcc": "Vcc (5V)",
           "led_e": "LED E",
           "led_f": "LED F",
-          "home": "Home",
-          "away": "Away",
+          "home": "[%key:common::state::home%]",
+          "away": "[%key:common::state::not_home%]",
           "ds1820": "DS1820",
           "dhw_block": "Block hot water"
         }
@@ -354,12 +354,6 @@
       }
     }
   },
-  "issues": {
-    "deprecated_import_from_configuration_yaml": {
-      "title": "Deprecated configuration",
-      "description": "Configuration of the OpenTherm Gateway integration through configuration.yaml is deprecated. Your configuration has been migrated to config entries. Please remove any OpenTherm Gateway configuration from your configuration.yaml."
-    }
-  },
   "options": {
     "step": {
       "init": {
@@ -379,13 +373,13 @@
       "fields": {
         "gateway_id": {
           "name": "Gateway ID",
-          "description": "The gateway_id of the OpenTherm Gateway."
+          "description": "The ID of the OpenTherm Gateway."
         }
       }
     },
     "set_central_heating_ovrd": {
       "name": "Set central heating override",
-      "description": "Sets the central heating override option on the gateway. When overriding the control setpoint (via a set_control_setpoint action with a value other than 0), the gateway automatically enables the central heating override to start heating. This action can then be used to control the central heating override status. To return control of the central heating to the thermostat, use the set_control_setpoint action with temperature value 0. You will only need this if you are writing your own software thermostat.",
+      "description": "Sets the central heating override option on the gateway. When overriding the control setpoint (via a 'Set control set point' action with a value other than 0), the gateway automatically enables the central heating override to start heating. This action can then be used to control the central heating override status. To return control of the central heating to the thermostat, use the 'Set control set point' action with temperature value 0. You will only need this if you are writing your own software thermostat.",
       "fields": {
         "gateway_id": {
           "name": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::name%]",
@@ -393,7 +387,7 @@
         },
         "ch_override": {
           "name": "Central heating override",
-          "description": "The desired boolean value for the central heating override."
+          "description": "Whether to enable or disable the override."
         }
       }
     },

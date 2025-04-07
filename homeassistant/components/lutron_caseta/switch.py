@@ -5,7 +5,7 @@ from typing import Any
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import LutronCasetaUpdatableEntity
 
@@ -13,7 +13,7 @@ from .entity import LutronCasetaUpdatableEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Lutron Caseta switch platform.
 
@@ -44,7 +44,7 @@ class LutronCasetaLight(LutronCasetaUpdatableEntity, SwitchEntity):
         parent_keypad = keypads[device["parent_device"]]
         parent_device_info = parent_keypad["device_info"]
         # Append the child device name to the end of the parent keypad name to create the entity name
-        self._attr_name = f'{parent_device_info["name"]} {device["device_name"]}'
+        self._attr_name = f"{parent_device_info['name']} {device['device_name']}"
         # Set the device_info to the same as the Parent Keypad
         # The entities will be nested inside the keypad device
         self._attr_device_info = parent_device_info

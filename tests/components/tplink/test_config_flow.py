@@ -7,7 +7,7 @@ from kasa import Module, TimeoutError
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import dhcp, stream
+from homeassistant.components import stream
 from homeassistant.components.tplink import (
     DOMAIN,
     AuthenticationError,
@@ -36,8 +36,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from . import (
+from . import _mocked_device, _patch_connect, _patch_discovery, _patch_single_discovery
+from .conftest import override_side_effect
+from .const import (
     AES_KEYS,
     ALIAS,
     ALIAS_CAMERA,
@@ -67,12 +70,7 @@ from . import (
     MODEL_CAMERA,
     MODULE,
     SMALLEST_VALID_JPEG_BYTES,
-    _mocked_device,
-    _patch_connect,
-    _patch_discovery,
-    _patch_single_discovery,
 )
-from .conftest import override_side_effect
 
 from tests.common import MockConfigEntry
 
@@ -168,8 +166,11 @@ async def test_discovery(
     assert result2["reason"] == "no_devices_found"
 
 
+@pytest.mark.usefixtures("mock_init")
 async def test_discovery_camera(
-    hass: HomeAssistant, mock_discovery: AsyncMock, mock_connect: AsyncMock, mock_init
+    hass: HomeAssistant,
+    mock_discovery: AsyncMock,
+    mock_connect: AsyncMock,
 ) -> None:
     """Test authenticated discovery for camera with stream."""
     mock_device = _mocked_device(
@@ -228,8 +229,11 @@ async def test_discovery_camera(
     assert result["context"]["unique_id"] == MAC_ADDRESS3
 
 
+@pytest.mark.usefixtures("mock_init")
 async def test_discovery_pick_device_camera(
-    hass: HomeAssistant, mock_discovery: AsyncMock, mock_connect: AsyncMock, mock_init
+    hass: HomeAssistant,
+    mock_discovery: AsyncMock,
+    mock_connect: AsyncMock,
 ) -> None:
     """Test authenticated discovery for camera with stream."""
     mock_device = _mocked_device(
@@ -293,8 +297,11 @@ async def test_discovery_pick_device_camera(
     assert result["context"]["unique_id"] == MAC_ADDRESS3
 
 
+@pytest.mark.usefixtures("mock_init")
 async def test_discovery_auth(
-    hass: HomeAssistant, mock_discovery: AsyncMock, mock_connect: AsyncMock, mock_init
+    hass: HomeAssistant,
+    mock_discovery: AsyncMock,
+    mock_connect: AsyncMock,
 ) -> None:
     """Test authenticated discovery."""
     mock_device = _mocked_device(
@@ -336,8 +343,11 @@ async def test_discovery_auth(
     assert result2["context"]["unique_id"] == MAC_ADDRESS
 
 
+@pytest.mark.usefixtures("mock_init")
 async def test_discovery_auth_camera(
-    hass: HomeAssistant, mock_discovery: AsyncMock, mock_connect: AsyncMock, mock_init
+    hass: HomeAssistant,
+    mock_discovery: AsyncMock,
+    mock_connect: AsyncMock,
 ) -> None:
     """Test authenticated discovery for camera with stream."""
     mock_device = _mocked_device(
@@ -407,13 +417,13 @@ async def test_discovery_auth_camera(
     ],
     ids=["invalid-auth", "unknown-error"],
 )
+@pytest.mark.usefixtures("mock_init")
 async def test_discovery_auth_errors(
     hass: HomeAssistant,
     mock_connect: AsyncMock,
-    mock_init,
-    error_type,
-    errors_msg,
-    error_placement,
+    error_type: Exception,
+    errors_msg: str,
+    error_placement: str,
 ) -> None:
     """Test handling of discovery authentication errors.
 
@@ -465,10 +475,10 @@ async def test_discovery_auth_errors(
     assert result3["context"]["unique_id"] == MAC_ADDRESS
 
 
+@pytest.mark.usefixtures("mock_init")
 async def test_discovery_new_credentials(
     hass: HomeAssistant,
     mock_connect: AsyncMock,
-    mock_init,
 ) -> None:
     """Test setting up discovery with new credentials."""
     mock_device = mock_connect["mock_devices"][IP_ADDRESS]
@@ -514,10 +524,10 @@ async def test_discovery_new_credentials(
     assert result3["context"]["unique_id"] == MAC_ADDRESS
 
 
+@pytest.mark.usefixtures("mock_init")
 async def test_discovery_new_credentials_invalid(
     hass: HomeAssistant,
     mock_connect: AsyncMock,
-    mock_init,
 ) -> None:
     """Test setting up discovery with new invalid credentials."""
     mock_device = mock_connect["mock_devices"][IP_ADDRESS]
@@ -977,11 +987,11 @@ async def test_manual_no_capabilities(hass: HomeAssistant) -> None:
     assert result["context"]["unique_id"] == MAC_ADDRESS
 
 
+@pytest.mark.usefixtures("mock_init")
 async def test_manual_auth(
     hass: HomeAssistant,
     mock_discovery: AsyncMock,
     mock_connect: AsyncMock,
-    mock_init,
 ) -> None:
     """Test manually setup."""
     result = await hass.config_entries.flow.async_init(
@@ -1083,14 +1093,14 @@ async def test_manual_auth_camera(
     ],
     ids=["invalid-auth", "unknown-error"],
 )
+@pytest.mark.usefixtures("mock_init")
 async def test_manual_auth_errors(
     hass: HomeAssistant,
     mock_discovery: AsyncMock,
     mock_connect: AsyncMock,
-    mock_init,
-    error_type,
-    errors_msg,
-    error_placement,
+    error_type: Exception,
+    errors_msg: str,
+    error_placement: str,
 ) -> None:
     """Test manually setup auth errors."""
     result = await hass.config_entries.flow.async_init(
@@ -1150,16 +1160,15 @@ async def test_manual_port_override(
     hass: HomeAssistant,
     mock_connect: AsyncMock,
     mock_discovery: AsyncMock,
-    host_str,
-    host,
-    port,
+    host_str: str,
+    host: str,
+    port: int,
 ) -> None:
     """Test manually setup."""
     config = DeviceConfig(
         host,
         credentials=None,
         port_override=port,
-        uses_http=True,
         connection_type=CONN_PARAMS_KLAP,
     )
     mock_device = _mocked_device(
@@ -1282,7 +1291,7 @@ async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 ip=IP_ADDRESS, macaddress=DHCP_FORMATTED_MAC_ADDRESS, hostname=ALIAS
             ),
         )
@@ -1296,7 +1305,7 @@ async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
         result3 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 ip=IP_ADDRESS, macaddress="000000000000", hostname="mock_hostname"
             ),
         )
@@ -1312,7 +1321,7 @@ async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
         result3 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 ip="1.2.3.5", macaddress="000000000001", hostname="mock_hostname"
             ),
         )
@@ -1326,7 +1335,7 @@ async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
     [
         (
             config_entries.SOURCE_DHCP,
-            dhcp.DhcpServiceInfo(
+            DhcpServiceInfo(
                 ip=IP_ADDRESS, macaddress=DHCP_FORMATTED_MAC_ADDRESS, hostname=ALIAS
             ),
         ),
@@ -1342,7 +1351,7 @@ async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
     ],
 )
 async def test_discovered_by_dhcp_or_discovery(
-    hass: HomeAssistant, source, data
+    hass: HomeAssistant, source: str, data: dict
 ) -> None:
     """Test we can setup when discovered from dhcp or discovery."""
 
@@ -1380,7 +1389,7 @@ async def test_discovered_by_dhcp_or_discovery(
     [
         (
             config_entries.SOURCE_DHCP,
-            dhcp.DhcpServiceInfo(
+            DhcpServiceInfo(
                 ip=IP_ADDRESS, macaddress=DHCP_FORMATTED_MAC_ADDRESS, hostname=ALIAS
             ),
         ),
@@ -1396,7 +1405,7 @@ async def test_discovered_by_dhcp_or_discovery(
     ],
 )
 async def test_discovered_by_dhcp_or_discovery_failed_to_get_device(
-    hass: HomeAssistant, source, data
+    hass: HomeAssistant, source: str, data: dict
 ) -> None:
     """Test we abort if we cannot get the unique id when discovered from dhcp."""
 
@@ -1419,7 +1428,7 @@ async def test_integration_discovery_with_ip_change(
     mock_discovery: AsyncMock,
     mock_connect: AsyncMock,
 ) -> None:
-    """Test reauth flow."""
+    """Test integration updates ip address from discovery."""
     mock_config_entry.add_to_hass(hass)
     with (
         patch("homeassistant.components.tplink.Discover.discover", return_value={}),
@@ -1481,7 +1490,6 @@ async def test_integration_discovery_with_ip_change(
     # Check that init set the new host correctly before calling connect
     assert config.host == IP_ADDRESS
     config.host = IP_ADDRESS2
-    config.uses_http = False  # Not passed in to new config class
     config.http_client = "Foo"
     mock_connect["connect"].assert_awaited_once_with(config=config)
 
@@ -1568,7 +1576,6 @@ async def test_integration_discovery_with_connection_change(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     config.host = IP_ADDRESS2
-    config.uses_http = False  # Not passed in to new config class
     config.http_client = "Foo"
     config.aes_keys = AES_KEYS
     mock_connect["connect"].assert_awaited_once_with(config=config)
@@ -1597,7 +1604,7 @@ async def test_dhcp_discovery_with_ip_change(
     discovery_result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
-        data=dhcp.DhcpServiceInfo(
+        data=DhcpServiceInfo(
             ip=IP_ADDRESS2, macaddress=DHCP_FORMATTED_MAC_ADDRESS, hostname=ALIAS
         ),
     )
@@ -1622,7 +1629,7 @@ async def test_dhcp_discovery_discover_fail(
         discovery_result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 ip=IP_ADDRESS2, macaddress=DHCP_FORMATTED_MAC_ADDRESS, hostname=ALIAS
             ),
         )
@@ -1670,7 +1677,7 @@ async def test_reauth_camera(
     mock_discovery: AsyncMock,
     mock_connect: AsyncMock,
 ) -> None:
-    """Test async_get_image."""
+    """Test reauth flow on invalid camera credentials."""
     mock_device = mock_connect["mock_devices"][IP_ADDRESS3]
     mock_camera_config_entry.add_to_hass(hass)
     mock_camera_config_entry.async_start_reauth(
@@ -1762,7 +1769,7 @@ async def test_reauth_try_connect_all_fail(
         override_side_effect(mock_discovery["discover_single"], TimeoutError),
         override_side_effect(mock_discovery["try_connect_all"], lambda *_, **__: None),
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
                 CONF_USERNAME: "fake_username",
@@ -1774,7 +1781,23 @@ async def test_reauth_try_connect_all_fail(
         IP_ADDRESS, credentials=credentials, port=None
     )
     mock_discovery["try_connect_all"].assert_called_once()
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_discovery["try_connect_all"].reset_mock()
+    with (
+        override_side_effect(mock_discovery["discover_single"], TimeoutError),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_USERNAME: "fake_username",
+                CONF_PASSWORD: "fake_password",
+            },
+        )
+
+    mock_discovery["try_connect_all"].assert_called_once()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
 
 
 async def test_reauth_update_with_encryption_change(
@@ -1821,7 +1844,6 @@ async def test_reauth_update_with_encryption_change(
         connection_type=Device.ConnectionParameters(
             Device.Family.SmartTapoPlug, Device.EncryptionType.Klap
         ),
-        uses_http=True,
     )
     mock_device = _mocked_device(
         alias="my_device",
@@ -2025,9 +2047,9 @@ async def test_reauth_errors(
     mock_added_config_entry: MockConfigEntry,
     mock_discovery: AsyncMock,
     mock_connect: AsyncMock,
-    error_type,
-    errors_msg,
-    error_placement,
+    error_type: Exception,
+    errors_msg: str,
+    error_placement: str,
 ) -> None:
     """Test reauth errors."""
     mock_added_config_entry.async_start_reauth(hass)
@@ -2089,8 +2111,8 @@ async def test_pick_device_errors(
     hass: HomeAssistant,
     mock_discovery: AsyncMock,
     mock_connect: AsyncMock,
-    error_type,
-    expected_flow,
+    error_type: type[Exception],
+    expected_flow: FlowResultType,
 ) -> None:
     """Test errors on pick_device."""
     result = await hass.config_entries.flow.async_init(
@@ -2127,11 +2149,11 @@ async def test_pick_device_errors(
         assert result4["context"]["unique_id"] == MAC_ADDRESS
 
 
+@pytest.mark.usefixtures("mock_init")
 async def test_discovery_timeout_try_connect_all(
     hass: HomeAssistant,
     mock_discovery: AsyncMock,
     mock_connect: AsyncMock,
-    mock_init,
 ) -> None:
     """Test discovery tries legacy connect on timeout."""
     result = await hass.config_entries.flow.async_init(
@@ -2153,11 +2175,11 @@ async def test_discovery_timeout_try_connect_all(
     assert mock_connect["connect"].call_count == 1
 
 
+@pytest.mark.usefixtures("mock_init")
 async def test_discovery_timeout_try_connect_all_needs_creds(
     hass: HomeAssistant,
     mock_discovery: AsyncMock,
     mock_connect: AsyncMock,
-    mock_init,
 ) -> None:
     """Test discovery tries legacy connect on timeout."""
     result = await hass.config_entries.flow.async_init(
@@ -2191,11 +2213,11 @@ async def test_discovery_timeout_try_connect_all_needs_creds(
     assert mock_connect["connect"].call_count == 1
 
 
+@pytest.mark.usefixtures("mock_init")
 async def test_discovery_timeout_try_connect_all_fail(
     hass: HomeAssistant,
     mock_discovery: AsyncMock,
     mock_connect: AsyncMock,
-    mock_init,
 ) -> None:
     """Test discovery tries legacy connect on timeout."""
     result = await hass.config_entries.flow.async_init(

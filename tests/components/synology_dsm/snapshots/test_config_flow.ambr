@@ -84,3 +84,17 @@
     'verify_ssl': False,
   })
 # ---
+# name: test_user_with_filestation
+  dict({
+    'host': 'nas.meontheinternet.com',
+    'mac': list([
+      '00-11-32-XX-XX-59',
+      '00-11-32-XX-XX-5A',
+    ]),
+    'password': 'password',
+    'port': 1234,
+    'ssl': True,
+    'username': 'Home_Assistant',
+    'verify_ssl': False,
+  })
+# ---

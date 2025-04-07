@@ -261,7 +261,7 @@ async def test_protect_path_read_bytes(caplog: pytest.LogCaptureFixture) -> None
         block_async_io.enable()
     with (
         contextlib.suppress(FileNotFoundError),
-        Path("/config/data_not_exist").read_bytes(),  # noqa: ASYNC230
+        Path("/config/data_not_exist").read_bytes(),
     ):
         pass
 
@@ -274,7 +274,7 @@ async def test_protect_path_read_text(caplog: pytest.LogCaptureFixture) -> None:
         block_async_io.enable()
     with (
         contextlib.suppress(FileNotFoundError),
-        Path("/config/data_not_exist").read_text(encoding="utf8"),  # noqa: ASYNC230
+        Path("/config/data_not_exist").read_text(encoding="utf8"),
     ):
         pass
 
@@ -287,7 +287,7 @@ async def test_protect_path_write_bytes(caplog: pytest.LogCaptureFixture) -> Non
         block_async_io.enable()
     with (
         contextlib.suppress(FileNotFoundError),
-        Path("/config/data/not/exist").write_bytes(b"xxx"),  # noqa: ASYNC230
+        Path("/config/data/not/exist").write_bytes(b"xxx"),
     ):
         pass
 
@@ -300,7 +300,7 @@ async def test_protect_path_write_text(caplog: pytest.LogCaptureFixture) -> None
         block_async_io.enable()
     with (
         contextlib.suppress(FileNotFoundError),
-        Path("/config/data/not/exist").write_text("xxx", encoding="utf8"),  # noqa: ASYNC230
+        Path("/config/data/not/exist").write_text("xxx", encoding="utf8"),
     ):
         pass
 
@@ -459,3 +459,14 @@ async def test_open_calls_ignored_in_tests(caplog: pytest.LogCaptureFixture) -> 
         pass
 
     assert "Detected blocking call to open with args" not in caplog.text
+
+
+async def test_protect_loop_set_default_verify_paths(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test SSLContext.set_default_verify_paths calls in the loop are logged."""
+    with patch.object(block_async_io, "_IN_TESTS", False):
+        block_async_io.enable()
+    context = ssl.create_default_context()
+    context.set_default_verify_paths()
+    assert "Detected blocking call to set_default_verify_paths" in caplog.text

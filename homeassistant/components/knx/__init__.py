@@ -10,6 +10,7 @@ from typing import Final
 import voluptuous as vol
 from xknx import XKNX
 from xknx.core import XknxConnectionState
+from xknx.core.state_updater import StateTrackerType, TrackerOptions
 from xknx.core.telegram_queue import TelegramQueue
 from xknx.dpt import DPTBase
 from xknx.exceptions import ConversionError, CouldNotParseTelegram, XKNXException
@@ -273,11 +274,18 @@ class KNXModule:
         self.project = KNXProject(hass=hass, entry=entry)
         self.config_store = KNXConfigStore(hass=hass, config_entry=entry)
 
+        default_state_updater = (
+            TrackerOptions(tracker_type=StateTrackerType.EXPIRE, update_interval_min=60)
+            if self.entry.data[CONF_KNX_STATE_UPDATER]
+            else TrackerOptions(
+                tracker_type=StateTrackerType.INIT, update_interval_min=60
+            )
+        )
         self.xknx = XKNX(
             address_format=self.project.get_address_format(),
             connection_config=self.connection_config(),
             rate_limit=self.entry.data[CONF_KNX_RATE_LIMIT],
-            state_updater=self.entry.data[CONF_KNX_STATE_UPDATER],
+            state_updater=default_state_updater,
         )
         self.xknx.connection_manager.register_connection_state_changed_cb(
             self.connection_state_changed_cb
@@ -478,7 +486,7 @@ class KNXModule:
                 transcoder := DPTBase.parse_transcoder(dpt)
             ):
                 self._address_filter_transcoder.update(
-                    {_filter: transcoder for _filter in _filters}
+                    dict.fromkeys(_filters, transcoder)
                 )
 
         return self.xknx.telegram_queue.register_telegram_received_cb(

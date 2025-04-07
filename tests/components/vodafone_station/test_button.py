@@ -1,56 +1,93 @@
 """Tests for Vodafone Station button platform."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
+
+from aiovodafone.exceptions import (
+    AlreadyLogged,
+    CannotAuthenticate,
+    CannotConnect,
+    GenericLoginError,
+)
+import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.vodafone_station.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_registry import EntityRegistry
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 
-from .const import DEVICE_DATA_QUERY, MOCK_USER_DATA, SENSOR_DATA_QUERY, SERIAL
+from . import setup_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 
-async def test_button(hass: HomeAssistant, entity_registry: EntityRegistry) -> None:
+async def test_all_entities(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    mock_vodafone_station_router: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test all entities."""
+    with patch(
+        "homeassistant.components.vodafone_station.PLATFORMS", [Platform.BUTTON]
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+async def test_pressing_button(
+    hass: HomeAssistant,
+    mock_vodafone_station_router: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
     """Test device restart button."""
 
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
-    entry.add_to_hass(hass)
+    await setup_integration(hass, mock_config_entry)
 
-    with (
-        patch("aiovodafone.api.VodafoneStationSercommApi.login"),
-        patch(
-            "aiovodafone.api.VodafoneStationSercommApi.get_devices_data",
-            return_value=DEVICE_DATA_QUERY,
-        ),
-        patch(
-            "aiovodafone.api.VodafoneStationSercommApi.get_sensor_data",
-            return_value=SENSOR_DATA_QUERY,
-        ),
-        patch(
-            "aiovodafone.api.VodafoneStationSercommApi.restart_router",
-        ) as mock_router_restart,
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: "button.vodafone_station_m123456789_restart"},
+        blocking=True,
+    )
+    mock_vodafone_station_router.restart_router.assert_called_once()
 
-        entity_id = f"button.vodafone_station_{SERIAL}_restart"
 
-        # restart button
-        state = hass.states.get(entity_id)
-        assert state
-        assert state.state == STATE_UNKNOWN
+@pytest.mark.parametrize(
+    ("side_effect", "key", "error"),
+    [
+        (CannotConnect, "cannot_execute_action", "CannotConnect()"),
+        (AlreadyLogged, "cannot_execute_action", "AlreadyLogged()"),
+        (GenericLoginError, "cannot_execute_action", "GenericLoginError()"),
+        (CannotAuthenticate, "cannot_authenticate", "CannotAuthenticate()"),
+    ],
+)
+async def test_button_fails(
+    hass: HomeAssistant,
+    mock_vodafone_station_router: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    side_effect: Exception,
+    key: str,
+    error: str,
+) -> None:
+    """Test button action fails."""
 
-        entry = entity_registry.async_get(entity_id)
-        assert entry
-        assert entry.unique_id == f"{SERIAL}_reboot"
+    await setup_integration(hass, mock_config_entry)
 
+    mock_vodafone_station_router.restart_router.side_effect = side_effect
+
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
-            {ATTR_ENTITY_ID: entity_id},
+            {ATTR_ENTITY_ID: "button.vodafone_station_m123456789_restart"},
             blocking=True,
         )
-        assert mock_router_restart.call_count == 1
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == key
+    assert exc_info.value.translation_placeholders == {"error": error}

@@ -4,6 +4,7 @@ from collections.abc import Generator
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
+from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 from habiticalib import HabiticaUserResponse, Skill
 import pytest
@@ -215,18 +216,23 @@ async def test_button_press(
     [
         (
             ERROR_TOO_MANY_REQUESTS,
-            "Rate limit exceeded, try again later",
+            "Rate limit exceeded, try again in 5 seconds",
             HomeAssistantError,
         ),
         (
             ERROR_BAD_REQUEST,
-            "Unable to connect to Habitica, try again later",
+            "Unable to connect to Habitica: reason",
             HomeAssistantError,
         ),
         (
             ERROR_NOT_AUTHORIZED,
             "Unable to complete action, the required conditions are not met",
             ServiceValidationError,
+        ),
+        (
+            ClientError,
+            "Unable to connect to Habitica: ",
+            HomeAssistantError,
         ),
     ],
 )

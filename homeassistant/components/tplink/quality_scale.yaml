@@ -3,12 +3,8 @@ rules:
   config-flow: done
   test-before-configure: done
   unique-config-entry: done
-  config-flow-test-coverage:
-    status: todo
-    comment: Clean up stale docstrings
-  runtime-data:
-    status: todo
-    comment: Use typed config entry in coordinator
+  config-flow-test-coverage: done
+  runtime-data: done
   test-before-setup: done
   appropriate-polling: done
   entity-unique-id: done
@@ -16,7 +12,7 @@ rules:
   entity-event-setup:
     status: exempt
     comment: The integration does not use events.
-  dependency-transparency: todo
+  dependency-transparency: done
   action-setup:
     status: exempt
     comment: The integration only uses platform services.
@@ -34,43 +30,35 @@ rules:
   action-exceptions: done
   reauthentication-flow: done
   parallel-updates: done
-  test-coverage:
-    status: todo
-    comment: Move test constants to const.py, mock_init \
-      docstrings, entity_registry fixture, unused freezers \
-      match exceptions, use freezer in test_fan, use async_setup \
-      remove if statements from light tests, use constants in service calls
+  test-coverage: done
   integration-owner: done
-  docs-installation-parameters: todo
+  docs-installation-parameters: done
   docs-configuration-parameters:
     status: exempt
     comment: The integration does not have any options configuration parameters.
 
   # Gold
-  entity-translations:
-    status: todo
-    comment: Use device class translations, remove unused translations \
-      translate Unnamed, setup exceptions, mac mismatch, async_set_hvac_mode
+  entity-translations: done
   entity-device-class: done
   devices: done
   entity-category: done
   entity-disabled-by-default: done
   discovery: done
-  stale-devices: todo
+  stale-devices: done
   diagnostics: done
   exception-translations: done
   icon-translations: done
   reconfiguration-flow: done
-  dynamic-devices: todo
+  dynamic-devices: done
   discovery-update-info: done
   repair-issues: done
-  docs-use-cases: todo
+  docs-use-cases: done
   docs-supported-devices: done
-  docs-supported-functions: todo
-  docs-data-update: todo
-  docs-known-limitations: todo
-  docs-troubleshooting: todo
-  docs-examples: todo
+  docs-supported-functions: done
+  docs-data-update: done
+  docs-known-limitations: done
+  docs-troubleshooting: done
+  docs-examples: done
 
   # Platinum
   async-dependency: done

@@ -12,7 +12,6 @@ from async_upnp_client.exceptions import UpnpError
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import ssdp
 from homeassistant.components.dlna_dmr.const import (
     CONF_BROWSE_UNFILTERED,
     CONF_CALLBACK_URL_OVERRIDE,
@@ -23,6 +22,15 @@ from homeassistant.components.dlna_dmr.const import (
 from homeassistant.const import CONF_DEVICE_ID, CONF_HOST, CONF_MAC, CONF_TYPE, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_DEVICE_TYPE,
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_MANUFACTURER,
+    ATTR_UPNP_MODEL_NAME,
+    ATTR_UPNP_SERVICE_LIST,
+    ATTR_UPNP_UDN,
+    SsdpServiceInfo,
+)
 
 from .conftest import (
     MOCK_DEVICE_HOST_ADDR,
@@ -48,17 +56,17 @@ CHANGED_DEVICE_UDN = "uuid:7cc6da13-7f5d-4ace-9729-badbadbadbad"
 
 MOCK_ROOT_DEVICE_UDN = "ROOT_DEVICE"
 
-MOCK_DISCOVERY = ssdp.SsdpServiceInfo(
+MOCK_DISCOVERY = SsdpServiceInfo(
     ssdp_usn="mock_usn",
     ssdp_location=MOCK_DEVICE_LOCATION,
     ssdp_udn=MOCK_DEVICE_UDN,
     ssdp_st=MOCK_DEVICE_TYPE,
     ssdp_headers={"_host": MOCK_DEVICE_HOST_ADDR},
     upnp={
-        ssdp.ATTR_UPNP_UDN: MOCK_ROOT_DEVICE_UDN,
-        ssdp.ATTR_UPNP_DEVICE_TYPE: MOCK_DEVICE_TYPE,
-        ssdp.ATTR_UPNP_FRIENDLY_NAME: MOCK_DEVICE_NAME,
-        ssdp.ATTR_UPNP_SERVICE_LIST: {
+        ATTR_UPNP_UDN: MOCK_ROOT_DEVICE_UDN,
+        ATTR_UPNP_DEVICE_TYPE: MOCK_DEVICE_TYPE,
+        ATTR_UPNP_FRIENDLY_NAME: MOCK_DEVICE_NAME,
+        ATTR_UPNP_SERVICE_LIST: {
             "service": [
                 {
                     "SCPDURL": "/AVTransport/scpd.xml",
@@ -358,15 +366,15 @@ async def test_ssdp_flow_existing(
     result = await hass.config_entries.flow.async_init(
         DLNA_DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
-        data=ssdp.SsdpServiceInfo(
+        data=SsdpServiceInfo(
             ssdp_usn="mock_usn",
             ssdp_st="mock_st",
             ssdp_location=NEW_DEVICE_LOCATION,
             ssdp_udn=MOCK_DEVICE_UDN,
             upnp={
-                ssdp.ATTR_UPNP_UDN: MOCK_ROOT_DEVICE_UDN,
-                ssdp.ATTR_UPNP_DEVICE_TYPE: MOCK_DEVICE_TYPE,
-                ssdp.ATTR_UPNP_FRIENDLY_NAME: MOCK_DEVICE_NAME,
+                ATTR_UPNP_UDN: MOCK_ROOT_DEVICE_UDN,
+                ATTR_UPNP_DEVICE_TYPE: MOCK_DEVICE_TYPE,
+                ATTR_UPNP_FRIENDLY_NAME: MOCK_DEVICE_NAME,
             },
         ),
     )
@@ -492,15 +500,15 @@ async def test_ssdp_flow_upnp_udn(
     result = await hass.config_entries.flow.async_init(
         DLNA_DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
-        data=ssdp.SsdpServiceInfo(
+        data=SsdpServiceInfo(
             ssdp_usn="mock_usn",
             ssdp_location=NEW_DEVICE_LOCATION,
             ssdp_udn=MOCK_DEVICE_UDN,
             ssdp_st=MOCK_DEVICE_TYPE,
             upnp={
-                ssdp.ATTR_UPNP_UDN: "DIFFERENT_ROOT_DEVICE",
-                ssdp.ATTR_UPNP_DEVICE_TYPE: MOCK_DEVICE_TYPE,
-                ssdp.ATTR_UPNP_FRIENDLY_NAME: MOCK_DEVICE_NAME,
+                ATTR_UPNP_UDN: "DIFFERENT_ROOT_DEVICE",
+                ATTR_UPNP_DEVICE_TYPE: MOCK_DEVICE_TYPE,
+                ATTR_UPNP_FRIENDLY_NAME: MOCK_DEVICE_NAME,
             },
         ),
     )
@@ -514,7 +522,7 @@ async def test_ssdp_missing_services(hass: HomeAssistant) -> None:
     # No service list at all
     discovery = dataclasses.replace(MOCK_DISCOVERY)
     discovery.upnp = dict(discovery.upnp)
-    del discovery.upnp[ssdp.ATTR_UPNP_SERVICE_LIST]
+    del discovery.upnp[ATTR_UPNP_SERVICE_LIST]
     result = await hass.config_entries.flow.async_init(
         DLNA_DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
@@ -526,7 +534,7 @@ async def test_ssdp_missing_services(hass: HomeAssistant) -> None:
     # Service list does not contain services
     discovery = dataclasses.replace(MOCK_DISCOVERY)
     discovery.upnp = discovery.upnp.copy()
-    discovery.upnp[ssdp.ATTR_UPNP_SERVICE_LIST] = {"bad_key": "bad_value"}
+    discovery.upnp[ATTR_UPNP_SERVICE_LIST] = {"bad_key": "bad_value"}
     result = await hass.config_entries.flow.async_init(
         DLNA_DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
@@ -538,10 +546,10 @@ async def test_ssdp_missing_services(hass: HomeAssistant) -> None:
     # AVTransport service is missing
     discovery = dataclasses.replace(MOCK_DISCOVERY)
     discovery.upnp = dict(discovery.upnp)
-    discovery.upnp[ssdp.ATTR_UPNP_SERVICE_LIST] = {
+    discovery.upnp[ATTR_UPNP_SERVICE_LIST] = {
         "service": [
             service
-            for service in discovery.upnp[ssdp.ATTR_UPNP_SERVICE_LIST]["service"]
+            for service in discovery.upnp[ATTR_UPNP_SERVICE_LIST]["service"]
             if service.get("serviceId") != "urn:upnp-org:serviceId:AVTransport"
         ]
     }
@@ -560,10 +568,10 @@ async def test_ssdp_single_service(hass: HomeAssistant) -> None:
     """
     discovery = dataclasses.replace(MOCK_DISCOVERY)
     discovery.upnp = discovery.upnp.copy()
-    service_list = discovery.upnp[ssdp.ATTR_UPNP_SERVICE_LIST].copy()
+    service_list = discovery.upnp[ATTR_UPNP_SERVICE_LIST].copy()
     # Turn mock's list of service dicts into a single dict
     service_list["service"] = service_list["service"][0]
-    discovery.upnp[ssdp.ATTR_UPNP_SERVICE_LIST] = service_list
+    discovery.upnp[ATTR_UPNP_SERVICE_LIST] = service_list
 
     result = await hass.config_entries.flow.async_init(
         DLNA_DOMAIN,
@@ -589,9 +597,7 @@ async def test_ssdp_ignore_device(hass: HomeAssistant) -> None:
 
     discovery = dataclasses.replace(MOCK_DISCOVERY)
     discovery.upnp = dict(discovery.upnp)
-    discovery.upnp[ssdp.ATTR_UPNP_DEVICE_TYPE] = (
-        "urn:schemas-upnp-org:device:ZonePlayer:1"
-    )
+    discovery.upnp[ATTR_UPNP_DEVICE_TYPE] = "urn:schemas-upnp-org:device:ZonePlayer:1"
     result = await hass.config_entries.flow.async_init(
         DLNA_DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
@@ -608,8 +614,8 @@ async def test_ssdp_ignore_device(hass: HomeAssistant) -> None:
     ):
         discovery = dataclasses.replace(MOCK_DISCOVERY)
         discovery.upnp = dict(discovery.upnp)
-        discovery.upnp[ssdp.ATTR_UPNP_MANUFACTURER] = manufacturer
-        discovery.upnp[ssdp.ATTR_UPNP_MODEL_NAME] = model
+        discovery.upnp[ATTR_UPNP_MANUFACTURER] = manufacturer
+        discovery.upnp[ATTR_UPNP_MODEL_NAME] = model
         result = await hass.config_entries.flow.async_init(
             DLNA_DOMAIN,
             context={"source": config_entries.SOURCE_SSDP},

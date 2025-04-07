@@ -6,6 +6,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -56,6 +57,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -132,4 +134,22 @@
     'last_updated': <ANY>,
     'state': 'not_home',
   })
+# ---
+# name: test_device_tracker_streaming[device_tracker.test_location-restore]
+  'not_home'
+# ---
+# name: test_device_tracker_streaming[device_tracker.test_location-state]
+  'not_home'
+# ---
+# name: test_device_tracker_streaming[device_tracker.test_origin-restore]
+  'unknown'
+# ---
+# name: test_device_tracker_streaming[device_tracker.test_origin-state]
+  'unknown'
+# ---
+# name: test_device_tracker_streaming[device_tracker.test_route-restore]
+  'not_home'
+# ---
+# name: test_device_tracker_streaming[device_tracker.test_route-state]
+  'home'
 # ---

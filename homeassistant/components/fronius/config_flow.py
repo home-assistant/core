@@ -9,12 +9,12 @@ from typing import Any, Final
 from pyfronius import Fronius, FroniusError
 import voluptuous as vol
 
-from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import DOMAIN, FroniusConfigEntryData
 
@@ -149,7 +149,7 @@ class FroniusConfigFlow(ConfigFlow, domain=DOMAIN):
                 unique_id, info = await validate_host(self.hass, user_input[CONF_HOST])
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:

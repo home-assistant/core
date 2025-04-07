@@ -28,12 +28,13 @@ _LOGGER = logging.getLogger(__name__)
 class ToonDataUpdateCoordinator(DataUpdateCoordinator[Status]):
     """Class to manage fetching Toon data from single endpoint."""
 
+    config_entry: ConfigEntry
+
     def __init__(
-        self, hass: HomeAssistant, *, entry: ConfigEntry, session: OAuth2Session
+        self, hass: HomeAssistant, entry: ConfigEntry, session: OAuth2Session
     ) -> None:
         """Initialize global Toon data updater."""
         self.session = session
-        self.entry = entry
 
         async def async_token_refresh() -> str:
             await session.async_ensure_token_valid()
@@ -46,49 +47,55 @@ class ToonDataUpdateCoordinator(DataUpdateCoordinator[Status]):
         )
 
         super().__init__(
-            hass, _LOGGER, name=DOMAIN, update_interval=DEFAULT_SCAN_INTERVAL
+            hass,
+            _LOGGER,
+            config_entry=entry,
+            name=DOMAIN,
+            update_interval=DEFAULT_SCAN_INTERVAL,
         )
 
     async def register_webhook(self, event: Event | None = None) -> None:
         """Register a webhook with Toon to get live updates."""
-        if CONF_WEBHOOK_ID not in self.entry.data:
-            data = {**self.entry.data, CONF_WEBHOOK_ID: secrets.token_hex()}
-            self.hass.config_entries.async_update_entry(self.entry, data=data)
+        if CONF_WEBHOOK_ID not in self.config_entry.data:
+            data = {**self.config_entry.data, CONF_WEBHOOK_ID: secrets.token_hex()}
+            self.hass.config_entries.async_update_entry(self.config_entry, data=data)
 
         if cloud.async_active_subscription(self.hass):
-            if CONF_CLOUDHOOK_URL not in self.entry.data:
+            if CONF_CLOUDHOOK_URL not in self.config_entry.data:
                 try:
                     webhook_url = await cloud.async_create_cloudhook(
-                        self.hass, self.entry.data[CONF_WEBHOOK_ID]
+                        self.hass, self.config_entry.data[CONF_WEBHOOK_ID]
                     )
                 except cloud.CloudNotConnected:
                     webhook_url = webhook.async_generate_url(
-                        self.hass, self.entry.data[CONF_WEBHOOK_ID]
+                        self.hass, self.config_entry.data[CONF_WEBHOOK_ID]
                     )
                 else:
-                    data = {**self.entry.data, CONF_CLOUDHOOK_URL: webhook_url}
-                    self.hass.config_entries.async_update_entry(self.entry, data=data)
+                    data = {**self.config_entry.data, CONF_CLOUDHOOK_URL: webhook_url}
+                    self.hass.config_entries.async_update_entry(
+                        self.config_entry, data=data
+                    )
             else:
-                webhook_url = self.entry.data[CONF_CLOUDHOOK_URL]
+                webhook_url = self.config_entry.data[CONF_CLOUDHOOK_URL]
         else:
             webhook_url = webhook.async_generate_url(
-                self.hass, self.entry.data[CONF_WEBHOOK_ID]
+                self.hass, self.config_entry.data[CONF_WEBHOOK_ID]
             )
 
         # Ensure the webhook is not registered already
-        webhook_unregister(self.hass, self.entry.data[CONF_WEBHOOK_ID])
+        webhook_unregister(self.hass, self.config_entry.data[CONF_WEBHOOK_ID])
 
         webhook_register(
             self.hass,
             DOMAIN,
             "Toon",
-            self.entry.data[CONF_WEBHOOK_ID],
+            self.config_entry.data[CONF_WEBHOOK_ID],
             self.handle_webhook,
         )
 
         try:
             await self.toon.subscribe_webhook(
-                application_id=self.entry.entry_id, url=webhook_url
+                application_id=self.config_entry.entry_id, url=webhook_url
             )
             _LOGGER.debug("Registered Toon webhook: %s", webhook_url)
         except ToonError as err:
@@ -131,14 +138,14 @@ class ToonDataUpdateCoordinator(DataUpdateCoordinator[Status]):
     async def unregister_webhook(self, event: Event | None = None) -> None:
         """Remove / Unregister webhook for toon."""
         _LOGGER.debug(
-            "Unregistering Toon webhook (%s)", self.entry.data[CONF_WEBHOOK_ID]
+            "Unregistering Toon webhook (%s)", self.config_entry.data[CONF_WEBHOOK_ID]
         )
         try:
-            await self.toon.unsubscribe_webhook(self.entry.entry_id)
+            await self.toon.unsubscribe_webhook(self.config_entry.entry_id)
         except ToonError as err:
             _LOGGER.error("Failed unregistering Toon webhook - %s", err)
 
-        webhook_unregister(self.hass, self.entry.data[CONF_WEBHOOK_ID])
+        webhook_unregister(self.hass, self.config_entry.data[CONF_WEBHOOK_ID])
 
     async def _async_update_data(self) -> Status:
         """Fetch data from Toon."""

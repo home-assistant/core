@@ -1,4 +1,4 @@
-"""webOS Smart TV device turn on trigger."""
+"""LG webOS TV device turn on trigger."""
 
 from __future__ import annotations
 

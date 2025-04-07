@@ -13,6 +13,11 @@
         }
       }
     },
+    "button": {
+      "preferred_position": {
+        "default": "mdi:window-shutter-auto"
+      }
+    },
     "sensor": {
       "temp_trend": {
         "default": "mdi:trending-up"

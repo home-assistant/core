@@ -26,8 +26,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import collection, config_entry_oauth2_flow
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import (
+    collection,
+    config_entry_oauth2_flow,
+    config_validation as cv,
+)
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.loader import (
@@ -38,7 +41,7 @@ from homeassistant.loader import (
 from homeassistant.util import slugify
 from homeassistant.util.hass_dict import HassKey
 
-__all__ = ["ClientCredential", "AuthorizationServer", "async_import_client_credential"]
+__all__ = ["AuthorizationServer", "ClientCredential", "async_import_client_credential"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -143,8 +146,6 @@ class ApplicationCredentialsStorageCollection(collection.DictStorageCollection):
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Application Credentials."""
-    hass.data[DOMAIN] = {}
-
     id_manager = collection.IDManager()
     storage_collection = ApplicationCredentialsStorageCollection(
         Store(hass, STORAGE_VERSION, STORAGE_KEY),

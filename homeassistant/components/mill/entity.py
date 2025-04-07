@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from abc import abstractmethod
 
-from mill import Heater, MillDevice
+from mill import MillDevice
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -45,7 +45,7 @@ class MillBaseEntity(CoordinatorEntity[MillDataUpdateCoordinator]):
 
     @abstractmethod
     @callback
-    def _update_attr(self, device: MillDevice | Heater) -> None:
+    def _update_attr(self, device: MillDevice) -> None:
         """Update the attribute of the entity."""
 
     @property

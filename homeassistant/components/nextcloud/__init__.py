@@ -9,7 +9,6 @@ from nextcloudmonitor import (
     NextcloudMonitorRequestError,
 )
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_PASSWORD,
     CONF_URL,
@@ -21,14 +20,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
 
-from .coordinator import NextcloudDataUpdateCoordinator
+from .coordinator import NextcloudConfigEntry, NextcloudDataUpdateCoordinator
 
 PLATFORMS = (Platform.SENSOR, Platform.BINARY_SENSOR, Platform.UPDATE)
 
 
 _LOGGER = logging.getLogger(__name__)
-
-type NextcloudConfigEntry = ConfigEntry[NextcloudDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: NextcloudConfigEntry) -> bool:
