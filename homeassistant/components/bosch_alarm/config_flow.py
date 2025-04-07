@@ -24,7 +24,6 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
 )
-from homeassistant.data_entry_flow import AbortFlow
 import homeassistant.helpers.config_validation as cv
 
 from .const import CONF_INSTALLER_CODE, CONF_USER_CODE, DOMAIN
