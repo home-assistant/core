@@ -411,6 +411,7 @@ def config_entries_flow_subscribe(
                 msg["id"],
                 {
                     "type": change_type,
+                    "flow_id": flow_id,
                     "flow": hass.config_entries.flow.async_get(flow_id),
                 },
             )
@@ -428,7 +429,7 @@ def config_entries_flow_subscribe(
         connection.send_message(
             websocket_api.event_message(
                 msg["id"],
-                {"type": "init", "flow": flw},
+                {"type": "init", "flow_id": flw["flow_id"], "flow": flw},
             )
         )
     connection.send_result(msg["id"])
