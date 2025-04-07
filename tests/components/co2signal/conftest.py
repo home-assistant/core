@@ -5,17 +5,18 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from homeassistant.components.co2signal import DOMAIN
+from homeassistant.components.co2signal.const import DOMAIN
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from . import VALID_RESPONSE
+
 from tests.common import MockConfigEntry
-from tests.components.co2signal import VALID_RESPONSE
 
 
 @pytest.fixture(name="electricity_maps")
-def mock_electricity_maps() -> Generator[None, MagicMock, None]:
+def mock_electricity_maps() -> Generator[MagicMock]:
     """Mock the ElectricityMaps client."""
 
     with (

@@ -64,7 +64,7 @@ class IdasenDeskConfigFlow(ConfigFlow, domain=DOMAIN):
 
             desk = Desk(None, monitor_height=False)
             try:
-                await desk.connect(discovery_info.device, auto_reconnect=False)
+                await desk.connect(discovery_info.device, retry=False)
             except AuthFailedError:
                 errors["base"] = "auth_failed"
             except TimeoutError:
@@ -72,7 +72,7 @@ class IdasenDeskConfigFlow(ConfigFlow, domain=DOMAIN):
             except BleakError:
                 _LOGGER.exception("Unexpected Bluetooth error")
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected error")
                 errors["base"] = "unknown"
             else:
@@ -87,7 +87,7 @@ class IdasenDeskConfigFlow(ConfigFlow, domain=DOMAIN):
         if discovery := self._discovery_info:
             self._discovered_devices[discovery.address] = discovery
         else:
-            current_addresses = self._async_current_ids()
+            current_addresses = self._async_current_ids(include_ignore=False)
             for discovery in async_discovered_service_info(self.hass):
                 if (
                     discovery.address in current_addresses

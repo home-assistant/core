@@ -8,10 +8,12 @@ from simplipy.errors import InvalidCredentialsError, SimplipyError
 
 from homeassistant.components.simplisafe import DOMAIN
 from homeassistant.components.simplisafe.config_flow import CONF_AUTH_CODE
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_CODE, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
+from tests.common import MockConfigEntry
 
 VALID_AUTH_CODE = "code12345123451234512345123451234512345123451"
 
@@ -90,13 +92,11 @@ async def test_options_flow(config_entry, hass: HomeAssistant) -> None:
         assert config_entry.options == {CONF_CODE: "4321"}
 
 
-async def test_step_reauth(config_entry, hass: HomeAssistant, setup_simplisafe) -> None:
+async def test_step_reauth(
+    config_entry: MockConfigEntry, hass: HomeAssistant, setup_simplisafe
+) -> None:
     """Test the re-auth step."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_REAUTH},
-        data={CONF_USERNAME: "12345", CONF_TOKEN: "token123"},
-    )
+    result = await config_entry.start_reauth_flow(hass)
     assert result["step_id"] == "user"
 
     with (
@@ -118,14 +118,10 @@ async def test_step_reauth(config_entry, hass: HomeAssistant, setup_simplisafe) 
 
 @pytest.mark.parametrize("unique_id", ["some_other_id"])
 async def test_step_reauth_wrong_account(
-    config_entry, hass: HomeAssistant, setup_simplisafe
+    config_entry: MockConfigEntry, hass: HomeAssistant, setup_simplisafe
 ) -> None:
     """Test the re-auth step where the wrong account is used during login."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_REAUTH},
-        data={CONF_USERNAME: "12345", CONF_TOKEN: "token123"},
-    )
+    result = await config_entry.start_reauth_flow(hass)
     assert result["step_id"] == "user"
 
     with (

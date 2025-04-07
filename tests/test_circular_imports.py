@@ -7,11 +7,8 @@ import pytest
 
 from homeassistant.bootstrap import (
     CORE_INTEGRATIONS,
-    DEBUGGER_INTEGRATIONS,
     DEFAULT_INTEGRATIONS,
-    FRONTEND_INTEGRATIONS,
-    LOGGING_INTEGRATIONS,
-    RECORDER_INTEGRATIONS,
+    STAGE_0_INTEGRATIONS,
     STAGE_1_INTEGRATIONS,
 )
 
@@ -21,11 +18,12 @@ from homeassistant.bootstrap import (
     "component",
     sorted(
         {
-            *DEBUGGER_INTEGRATIONS,
             *CORE_INTEGRATIONS,
-            *LOGGING_INTEGRATIONS,
-            *FRONTEND_INTEGRATIONS,
-            *RECORDER_INTEGRATIONS,
+            *(
+                domain
+                for name, domains, timeout in STAGE_0_INTEGRATIONS
+                for domain in domains
+            ),
             *STAGE_1_INTEGRATIONS,
             *DEFAULT_INTEGRATIONS,
         }

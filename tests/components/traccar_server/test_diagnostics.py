@@ -21,7 +21,7 @@ from tests.typing import ClientSessionGenerator
 async def test_entry_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    mock_traccar_api_client: Generator[AsyncMock, None, None],
+    mock_traccar_api_client: Generator[AsyncMock],
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -44,7 +44,7 @@ async def test_entry_diagnostics(
 async def test_device_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    mock_traccar_api_client: Generator[AsyncMock, None, None],
+    mock_traccar_api_client: Generator[AsyncMock],
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     device_registry: dr.DeviceRegistry,
@@ -86,7 +86,7 @@ async def test_device_diagnostics(
 async def test_device_diagnostics_with_disabled_entity(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    mock_traccar_api_client: Generator[AsyncMock, None, None],
+    mock_traccar_api_client: Generator[AsyncMock],
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     device_registry: dr.DeviceRegistry,

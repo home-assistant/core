@@ -71,6 +71,7 @@ async def test_number_values(
 
 async def test_set_value(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     aioclient_mock: AiohttpClientMocker,
     responses: list[str],
 ) -> None:
@@ -79,7 +80,6 @@ async def test_set_value(
     raindelay = hass.states.get("number.rain_bird_controller_rain_delay")
     assert raindelay is not None
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(
         identifiers={(DOMAIN, MAC_ADDRESS.lower())}
     )

@@ -14,6 +14,12 @@ def api_response():
 
 
 @pytest.fixture(scope="package")
+def api_response_night():
+    """Return an API response for night only."""
+    return load_fixture("smhi_night.json", DOMAIN)
+
+
+@pytest.fixture(scope="package")
 def api_response_lack_data():
     """Return an API response."""
     return load_fixture("smhi_short.json", DOMAIN)

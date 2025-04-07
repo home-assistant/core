@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/amberelectric",
   "iot_class": "cloud_polling",
   "loggers": ["amberelectric"],
-  "requirements": ["amberelectric==1.1.0"]
+  "requirements": ["amberelectric==2.0.12"]
 }

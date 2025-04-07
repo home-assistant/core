@@ -11,7 +11,7 @@ from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
-    DOMAIN,
+    DOMAIN as MEDIA_PLAYER_DOMAIN,
     SERVICE_SELECT_SOURCE,
     MediaPlayerEntityFeature,
 )
@@ -151,7 +151,7 @@ class MediaPlayer(HomeAccessory):
         _LOGGER.debug('%s: Set switch state for "on_off" to %s', self.entity_id, value)
         service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
         params = {ATTR_ENTITY_ID: self.entity_id}
-        self.async_call_service(DOMAIN, service, params)
+        self.async_call_service(MEDIA_PLAYER_DOMAIN, service, params)
 
     def set_play_pause(self, value: bool) -> None:
         """Move switch state to value if call came from HomeKit."""
@@ -160,7 +160,7 @@ class MediaPlayer(HomeAccessory):
         )
         service = SERVICE_MEDIA_PLAY if value else SERVICE_MEDIA_PAUSE
         params = {ATTR_ENTITY_ID: self.entity_id}
-        self.async_call_service(DOMAIN, service, params)
+        self.async_call_service(MEDIA_PLAYER_DOMAIN, service, params)
 
     def set_play_stop(self, value: bool) -> None:
         """Move switch state to value if call came from HomeKit."""
@@ -169,7 +169,7 @@ class MediaPlayer(HomeAccessory):
         )
         service = SERVICE_MEDIA_PLAY if value else SERVICE_MEDIA_STOP
         params = {ATTR_ENTITY_ID: self.entity_id}
-        self.async_call_service(DOMAIN, service, params)
+        self.async_call_service(MEDIA_PLAYER_DOMAIN, service, params)
 
     def set_toggle_mute(self, value: bool) -> None:
         """Move switch state to value if call came from HomeKit."""
@@ -177,7 +177,7 @@ class MediaPlayer(HomeAccessory):
             '%s: Set switch state for "toggle_mute" to %s', self.entity_id, value
         )
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_MEDIA_VOLUME_MUTED: value}
-        self.async_call_service(DOMAIN, SERVICE_VOLUME_MUTE, params)
+        self.async_call_service(MEDIA_PLAYER_DOMAIN, SERVICE_VOLUME_MUTE, params)
 
     @callback
     def async_update_state(self, new_state: State) -> None:
@@ -286,7 +286,7 @@ class TelevisionMediaPlayer(RemoteInputSelectAccessory):
         _LOGGER.debug('%s: Set switch state for "on_off" to %s', self.entity_id, value)
         service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
         params = {ATTR_ENTITY_ID: self.entity_id}
-        self.async_call_service(DOMAIN, service, params)
+        self.async_call_service(MEDIA_PLAYER_DOMAIN, service, params)
 
     def set_mute(self, value: bool) -> None:
         """Move switch state to value if call came from HomeKit."""
@@ -294,27 +294,27 @@ class TelevisionMediaPlayer(RemoteInputSelectAccessory):
             '%s: Set switch state for "toggle_mute" to %s', self.entity_id, value
         )
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_MEDIA_VOLUME_MUTED: value}
-        self.async_call_service(DOMAIN, SERVICE_VOLUME_MUTE, params)
+        self.async_call_service(MEDIA_PLAYER_DOMAIN, SERVICE_VOLUME_MUTE, params)
 
     def set_volume(self, value: bool) -> None:
         """Send volume step value if call came from HomeKit."""
         _LOGGER.debug("%s: Set volume to %s", self.entity_id, value)
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_MEDIA_VOLUME_LEVEL: value}
-        self.async_call_service(DOMAIN, SERVICE_VOLUME_SET, params)
+        self.async_call_service(MEDIA_PLAYER_DOMAIN, SERVICE_VOLUME_SET, params)
 
     def set_volume_step(self, value: bool) -> None:
         """Send volume step value if call came from HomeKit."""
         _LOGGER.debug("%s: Step volume by %s", self.entity_id, value)
         service = SERVICE_VOLUME_DOWN if value else SERVICE_VOLUME_UP
         params = {ATTR_ENTITY_ID: self.entity_id}
-        self.async_call_service(DOMAIN, service, params)
+        self.async_call_service(MEDIA_PLAYER_DOMAIN, service, params)
 
     def set_input_source(self, value: int) -> None:
         """Send input set value if call came from HomeKit."""
         _LOGGER.debug("%s: Set current input to %s", self.entity_id, value)
         source_name = self._mapped_sources[self.sources[value]]
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_INPUT_SOURCE: source_name}
-        self.async_call_service(DOMAIN, SERVICE_SELECT_SOURCE, params)
+        self.async_call_service(MEDIA_PLAYER_DOMAIN, SERVICE_SELECT_SOURCE, params)
 
     def set_remote_key(self, value: int) -> None:
         """Send remote key value if call came from HomeKit."""
@@ -335,7 +335,7 @@ class TelevisionMediaPlayer(RemoteInputSelectAccessory):
             else:
                 service = SERVICE_MEDIA_PLAY_PAUSE
             params = {ATTR_ENTITY_ID: self.entity_id}
-            self.async_call_service(DOMAIN, service, params)
+            self.async_call_service(MEDIA_PLAYER_DOMAIN, service, params)
             return
 
         # Unhandled keys can be handled by listening to the event bus

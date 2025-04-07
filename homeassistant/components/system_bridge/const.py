@@ -1,15 +1,23 @@
 """Constants for the System Bridge integration."""
 
+from typing import Final
+
+from systembridgemodels.modules import Module
+
 DOMAIN = "system_bridge"
 
-MODULES = [
-    "battery",
-    "cpu",
-    "disks",
-    "displays",
-    "gpus",
-    "media",
-    "memory",
-    "processes",
-    "system",
+MODULES: Final[list[Module]] = [
+    Module.BATTERY,
+    Module.CPU,
+    Module.DISKS,
+    Module.DISPLAYS,
+    Module.GPUS,
+    Module.MEDIA,
+    Module.MEMORY,
+    Module.PROCESSES,
+    Module.SYSTEM,
 ]
+
+DATA_WAIT_TIMEOUT: Final[int] = 20
+
+GET_DATA_WAIT_TIMEOUT: Final[int] = 15

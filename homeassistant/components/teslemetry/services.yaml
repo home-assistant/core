@@ -1,0 +1,132 @@
+navigation_gps_request:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          filter:
+            - integration: teslemetry
+    gps:
+      required: true
+      example: '{"latitude": -27.9699373, "longitude": 153.4081865}'
+      selector:
+        location:
+          radius: false
+    order:
+      required: false
+      default: 1
+      selector:
+        number:
+
+time_of_use:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          filter:
+            - integration: teslemetry
+    tou_settings:
+      required: true
+      selector:
+        object:
+
+set_scheduled_charging:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          filter:
+            integration: teslemetry
+    enable:
+      required: true
+      default: true
+      selector:
+        boolean:
+    time:
+      required: false
+      selector:
+        time:
+
+set_scheduled_departure:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          filter:
+            integration: teslemetry
+    enable:
+      required: false
+      default: true
+      selector:
+        boolean:
+    preconditioning_enabled:
+      required: false
+      default: false
+      selector:
+        boolean:
+    preconditioning_weekdays_only:
+      required: false
+      default: false
+      selector:
+        boolean:
+    departure_time:
+      required: false
+      selector:
+        time:
+    off_peak_charging_enabled:
+      required: false
+      default: false
+      selector:
+        boolean:
+    off_peak_charging_weekdays_only:
+      required: false
+      default: false
+      selector:
+        boolean:
+    end_off_peak_time:
+      required: false
+      selector:
+        time:
+
+valet_mode:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          filter:
+            integration: teslemetry
+    enable:
+      required: true
+      selector:
+        boolean:
+    pin:
+      required: true
+      selector:
+        number:
+          min: 1000
+          max: 9999
+          mode: box
+
+speed_limit:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          filter:
+            integration: teslemetry
+    enable:
+      required: true
+      selector:
+        boolean:
+    pin:
+      required: true
+      selector:
+        number:
+          min: 1000
+          max: 9999
+          mode: box

@@ -14,7 +14,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, CONF_MODEL, EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import VacuumCoordinatorDataAttributes
 from .const import (
@@ -32,7 +32,7 @@ from .const import (
     MODELS_VACUUM_WITH_MOP,
     MODELS_VACUUM_WITH_SEPARATE_MOP,
 )
-from .device import XiaomiCoordinatedMiioEntity
+from .entity import XiaomiCoordinatedMiioEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,13 +56,13 @@ class XiaomiMiioBinarySensorDescription(BinarySensorEntityDescription):
 BINARY_SENSOR_TYPES = (
     XiaomiMiioBinarySensorDescription(
         key=ATTR_NO_WATER,
-        name="Water tank empty",
+        translation_key=ATTR_NO_WATER,
         icon="mdi:water-off-outline",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     XiaomiMiioBinarySensorDescription(
         key=ATTR_WATER_TANK_DETACHED,
-        name="Water tank",
+        translation_key=ATTR_WATER_TANK_DETACHED,
         icon="mdi:car-coolant-level",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         value=lambda value: not value,
@@ -70,13 +70,13 @@ BINARY_SENSOR_TYPES = (
     ),
     XiaomiMiioBinarySensorDescription(
         key=ATTR_PTC_STATUS,
-        name="Auxiliary heat status",
+        translation_key=ATTR_PTC_STATUS,
         device_class=BinarySensorDeviceClass.POWER,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     XiaomiMiioBinarySensorDescription(
         key=ATTR_POWERSUPPLY_ATTACHED,
-        name="Power supply",
+        translation_key=ATTR_POWERSUPPLY_ATTACHED,
         device_class=BinarySensorDeviceClass.PLUG,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -88,7 +88,7 @@ FAN_ZA5_BINARY_SENSORS = (ATTR_POWERSUPPLY_ATTACHED,)
 VACUUM_SENSORS = {
     ATTR_MOP_ATTACHED: XiaomiMiioBinarySensorDescription(
         key=ATTR_WATER_BOX_ATTACHED,
-        name="Mop attached",
+        translation_key=ATTR_WATER_BOX_ATTACHED,
         icon="mdi:square-rounded",
         parent_key=VacuumCoordinatorDataAttributes.status,
         entity_registry_enabled_default=True,
@@ -97,7 +97,7 @@ VACUUM_SENSORS = {
     ),
     ATTR_WATER_BOX_ATTACHED: XiaomiMiioBinarySensorDescription(
         key=ATTR_WATER_BOX_ATTACHED,
-        name="Water box attached",
+        translation_key=ATTR_WATER_BOX_ATTACHED,
         icon="mdi:water",
         parent_key=VacuumCoordinatorDataAttributes.status,
         entity_registry_enabled_default=True,
@@ -106,7 +106,7 @@ VACUUM_SENSORS = {
     ),
     ATTR_WATER_SHORTAGE: XiaomiMiioBinarySensorDescription(
         key=ATTR_WATER_SHORTAGE,
-        name="Water shortage",
+        translation_key=ATTR_WATER_SHORTAGE,
         icon="mdi:water",
         parent_key=VacuumCoordinatorDataAttributes.status,
         entity_registry_enabled_default=True,
@@ -119,7 +119,7 @@ VACUUM_SENSORS_SEPARATE_MOP = {
     **VACUUM_SENSORS,
     ATTR_MOP_ATTACHED: XiaomiMiioBinarySensorDescription(
         key=ATTR_MOP_ATTACHED,
-        name="Mop attached",
+        translation_key=ATTR_MOP_ATTACHED,
         icon="mdi:square-rounded",
         parent_key=VacuumCoordinatorDataAttributes.status,
         entity_registry_enabled_default=True,
@@ -171,7 +171,7 @@ def _setup_vacuum_sensors(hass, config_entry, async_add_entities):
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Xiaomi sensor from a config entry."""
     entities = []
@@ -190,7 +190,8 @@ async def async_setup_entry(
         elif model in MODELS_HUMIDIFIER_MJJSQ:
             sensors = HUMIDIFIER_MJJSQ_BINARY_SENSORS
         elif model in MODELS_VACUUM:
-            return _setup_vacuum_sensors(hass, config_entry, async_add_entities)
+            _setup_vacuum_sensors(hass, config_entry, async_add_entities)
+            return
 
         for description in BINARY_SENSOR_TYPES:
             if description.key not in sensors:

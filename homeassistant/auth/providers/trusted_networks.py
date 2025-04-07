@@ -21,15 +21,21 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.network import is_cloud_connection
 
 from .. import InvalidAuthError
-from ..models import AuthFlowResult, Credentials, RefreshToken, UserMeta
+from ..models import (
+    AuthFlowContext,
+    AuthFlowResult,
+    Credentials,
+    RefreshToken,
+    UserMeta,
+)
 from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 
-IPAddress = IPv4Address | IPv6Address
-IPNetwork = IPv4Network | IPv6Network
+type IPAddress = IPv4Address | IPv6Address
+type IPNetwork = IPv4Network | IPv6Network
 
 CONF_TRUSTED_NETWORKS = "trusted_networks"
 CONF_TRUSTED_USERS = "trusted_users"
@@ -98,7 +104,9 @@ class TrustedNetworksAuthProvider(AuthProvider):
         """Trusted Networks auth provider does not support MFA."""
         return False
 
-    async def async_login_flow(self, context: dict[str, Any] | None) -> LoginFlow:
+    async def async_login_flow(
+        self, context: AuthFlowContext | None
+    ) -> TrustedNetworksLoginFlow:
         """Return a flow to login."""
         assert context is not None
         ip_addr = cast(IPAddress, context.get("ip_address"))
@@ -208,7 +216,7 @@ class TrustedNetworksAuthProvider(AuthProvider):
         self.async_validate_access(ip_address(remote_ip))
 
 
-class TrustedNetworksLoginFlow(LoginFlow):
+class TrustedNetworksLoginFlow(LoginFlow[TrustedNetworksAuthProvider]):
     """Handler for the login flow."""
 
     def __init__(
@@ -229,9 +237,7 @@ class TrustedNetworksLoginFlow(LoginFlow):
     ) -> AuthFlowResult:
         """Handle the step of the form."""
         try:
-            cast(
-                TrustedNetworksAuthProvider, self._auth_provider
-            ).async_validate_access(self._ip_address)
+            self._auth_provider.async_validate_access(self._ip_address)
 
         except InvalidAuthError:
             return self.async_abort(reason="not_allowed")

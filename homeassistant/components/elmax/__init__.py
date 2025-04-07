@@ -2,23 +2,15 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
-import logging
-
 from elmax_api.exceptions import ElmaxBadLoginError
 from elmax_api.http import Elmax, ElmaxLocal, GenericElmax
 from elmax_api.model.panel import PanelEntry
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 
-from .common import (
-    DirectPanel,
-    ElmaxCoordinator,
-    build_direct_ssl_context,
-    get_direct_api_url,
-)
+from .common import DirectPanel, build_direct_ssl_context, get_direct_api_url
 from .const import (
     CONF_ELMAX_MODE,
     CONF_ELMAX_MODE_CLOUD,
@@ -31,16 +23,13 @@ from .const import (
     CONF_ELMAX_PANEL_PIN,
     CONF_ELMAX_PASSWORD,
     CONF_ELMAX_USERNAME,
-    DOMAIN,
     ELMAX_PLATFORMS,
-    POLLING_SECONDS,
 )
-
-_LOGGER = logging.getLogger(__name__)
+from .coordinator import ElmaxConfigEntry, ElmaxCoordinator
 
 
 async def _load_elmax_panel_client(
-    entry: ConfigEntry,
+    entry: ElmaxConfigEntry,
 ) -> tuple[GenericElmax, PanelEntry]:
     # Connection mode was not present in initial version, default to cloud if not set
     mode = entry.data.get(CONF_ELMAX_MODE, CONF_ELMAX_MODE_CLOUD)
@@ -90,7 +79,7 @@ async def _check_cloud_panel_status(client: Elmax, panel_id: str) -> PanelEntry:
     return panel
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ElmaxConfigEntry) -> bool:
     """Set up elmax-cloud from a config entry."""
     try:
         client, panel = await _load_elmax_panel_client(entry)
@@ -101,18 +90,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # if there is something wrong with user credentials
     coordinator = ElmaxCoordinator(
         hass=hass,
-        logger=_LOGGER,
+        entry=entry,
         elmax_api_client=client,
         panel=panel,
-        name=f"Elmax Cloud {entry.entry_id}",
-        update_interval=timedelta(seconds=POLLING_SECONDS),
+    )
+
+    async def _async_on_hass_stop(_: Event) -> None:
+        """Close connection when hass stops."""
+        await coordinator.async_shutdown()
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_on_hass_stop)
     )
 
     # Issue a first refresh, so that we trigger a re-auth flow if necessary
     await coordinator.async_config_entry_first_refresh()
 
     # Store a global reference to the coordinator for later use
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
@@ -121,15 +116,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_reload_entry(hass: HomeAssistant, entry: ElmaxConfigEntry) -> None:
     """Handle an options update."""
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ElmaxConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, ELMAX_PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, ELMAX_PLATFORMS)

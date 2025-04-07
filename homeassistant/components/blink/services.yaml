@@ -1,12 +1,10 @@
 # Describes the format for available Blink services
 
-blink_update:
-  fields:
-    device_id:
-      required: true
-      selector:
-        device:
-          integration: blink
+record:
+  target:
+    entity:
+      integration: blink
+      domain: camera
 
 trigger_camera:
   target:

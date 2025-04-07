@@ -5,12 +5,12 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Coroutine, Sequence
 from datetime import datetime, timedelta
-from functools import cached_property
 import hashlib
 from types import ModuleType
 from typing import Any, Final, Protocol, final
 
 import attr
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant import util
@@ -350,7 +350,7 @@ class DeviceTrackerPlatform:
                         discovery_info,
                     )
                 else:
-                    raise HomeAssistantError("Invalid legacy device_tracker platform.")
+                    raise HomeAssistantError("Invalid legacy device_tracker platform.")  # noqa: TRY301
 
                 if scanner is not None:
                     async_setup_scanner_platform(
@@ -365,7 +365,7 @@ class DeviceTrackerPlatform:
 
                 hass.config.components.add(full_name)
 
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 LOGGER.exception(
                     "Error setting up platform %s %s", self.type, self.name
                 )
@@ -978,9 +978,9 @@ class DeviceScanner:
 
     async def async_scan_devices(self) -> list[str]:
         """Scan for devices."""
-        assert (
-            self.hass is not None
-        ), "hass should be set by async_setup_scanner_platform"
+        assert self.hass is not None, (
+            "hass should be set by async_setup_scanner_platform"
+        )
         return await self.hass.async_add_executor_job(self.scan_devices)
 
     def get_device_name(self, device: str) -> str | None:
@@ -989,9 +989,9 @@ class DeviceScanner:
 
     async def async_get_device_name(self, device: str) -> str | None:
         """Get the name of a device."""
-        assert (
-            self.hass is not None
-        ), "hass should be set by async_setup_scanner_platform"
+        assert self.hass is not None, (
+            "hass should be set by async_setup_scanner_platform"
+        )
         return await self.hass.async_add_executor_job(self.get_device_name, device)
 
     def get_extra_attributes(self, device: str) -> dict:
@@ -1000,9 +1000,9 @@ class DeviceScanner:
 
     async def async_get_extra_attributes(self, device: str) -> dict:
         """Get the extra attributes of a device."""
-        assert (
-            self.hass is not None
-        ), "hass should be set by async_setup_scanner_platform"
+        assert self.hass is not None, (
+            "hass should be set by async_setup_scanner_platform"
+        )
         return await self.hass.async_add_executor_job(self.get_extra_attributes, device)
 
 

@@ -1,0 +1,117 @@
+# serializer version: 1
+# name: test_all_entities[select.cambridge_audio_cxnv2_audio_output-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Speaker A',
+        'Speaker B',
+        'Headphones',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.cambridge_audio_cxnv2_audio_output',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Audio output',
+    'platform': 'cambridge_audio',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'audio_output',
+    'unique_id': '0020c2d8-audio_output',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[select.cambridge_audio_cxnv2_audio_output-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Cambridge Audio CXNv2 Audio output',
+      'options': list([
+        'Speaker A',
+        'Speaker B',
+        'Headphones',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.cambridge_audio_cxnv2_audio_output',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[select.cambridge_audio_cxnv2_display_brightness-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'bright',
+        'dim',
+        'off',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.cambridge_audio_cxnv2_display_brightness',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Display brightness',
+    'platform': 'cambridge_audio',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'display_brightness',
+    'unique_id': '0020c2d8-display_brightness',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[select.cambridge_audio_cxnv2_display_brightness-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Cambridge Audio CXNv2 Display brightness',
+      'options': list([
+        'bright',
+        'dim',
+        'off',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.cambridge_audio_cxnv2_display_brightness',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'bright',
+  })
+# ---

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import timedelta
-import logging
 
 from mill import Mill
 from mill_local import Mill as MillLocal
@@ -13,35 +12,11 @@ from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_USERNAME, P
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CLOUD, CONNECTION_TYPE, DOMAIN, LOCAL
+from .coordinator import MillDataUpdateCoordinator
 
-_LOGGER = logging.getLogger(__name__)
-
-PLATFORMS = [Platform.CLIMATE, Platform.SENSOR]
-
-
-class MillDataUpdateCoordinator(DataUpdateCoordinator):  # pylint: disable=hass-enforce-coordinator-module
-    """Class to manage fetching Mill data."""
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        update_interval: timedelta | None = None,
-        *,
-        mill_data_connection: Mill | MillLocal,
-    ) -> None:
-        """Initialize global Mill data updater."""
-        self.mill_data_connection = mill_data_connection
-
-        super().__init__(
-            hass,
-            _LOGGER,
-            name=DOMAIN,
-            update_method=mill_data_connection.fetch_heater_and_sensor_data,
-            update_interval=update_interval,
-        )
+PLATFORMS = [Platform.CLIMATE, Platform.NUMBER, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -72,9 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except TimeoutError as error:
         raise ConfigEntryNotReady from error
     data_coordinator = MillDataUpdateCoordinator(
-        hass,
-        mill_data_connection=mill_data_connection,
-        update_interval=update_interval,
+        hass, entry, mill_data_connection, update_interval
     )
 
     await data_coordinator.async_config_entry_first_refresh()

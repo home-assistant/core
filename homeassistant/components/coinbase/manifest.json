@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/coinbase",
   "iot_class": "cloud_polling",
   "loggers": ["coinbase"],
-  "requirements": ["coinbase==2.1.0"]
+  "requirements": ["coinbase==2.1.0", "coinbase-advanced-py==1.2.2"]
 }

@@ -10,7 +10,6 @@ from mysensors import BaseAsyncGateway
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntry
 
 from .const import (
@@ -18,21 +17,17 @@ from .const import (
     DOMAIN,
     MYSENSORS_DISCOVERED_NODES,
     MYSENSORS_GATEWAYS,
-    MYSENSORS_ON_UNLOAD,
     PLATFORMS,
     DevId,
     DiscoveryInfo,
     SensorType,
 )
-from .device import MySensorsChildEntity, get_mysensors_devices
+from .entity import MySensorsChildEntity, get_mysensors_devices
 from .gateway import finish_setup, gw_stop, setup_gateway
 
 _LOGGER = logging.getLogger(__name__)
 
 DATA_HASS_CONFIG = "hass_config"
-
-
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -65,13 +60,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if not unload_ok:
         return False
-
-    key = MYSENSORS_ON_UNLOAD.format(entry.entry_id)
-    if key in hass.data[DOMAIN]:
-        for fnct in hass.data[DOMAIN][key]:
-            fnct()
-
-        hass.data[DOMAIN].pop(key)
 
     del hass.data[DOMAIN][MYSENSORS_GATEWAYS][entry.entry_id]
     hass.data[DOMAIN].pop(MYSENSORS_DISCOVERED_NODES.format(entry.entry_id), None)
@@ -110,7 +98,7 @@ def setup_mysensors_platform(
     device_class: type[MySensorsChildEntity]
     | Mapping[SensorType, type[MySensorsChildEntity]],
     device_args: (
-        None | tuple
+        tuple | None
     ) = None,  # extra arguments that will be given to the entity constructor
     async_add_entities: Callable | None = None,
 ) -> list[MySensorsChildEntity] | None:
@@ -152,7 +140,7 @@ def setup_mysensors_platform(
         devices[dev_id] = device_class_copy(*args_copy)
         new_devices.append(devices[dev_id])
     if new_devices:
-        _LOGGER.info("Adding new devices: %s", new_devices)
+        _LOGGER.debug("Adding new devices: %s", new_devices)
         if async_add_entities is not None:
             async_add_entities(new_devices)
     return new_devices

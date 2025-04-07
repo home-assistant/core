@@ -1,5 +1,7 @@
 """Test the NZBGet switches."""
 
+from unittest.mock import MagicMock
+
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -15,16 +17,17 @@ from homeassistant.helpers.entity_component import async_update_entity
 from . import init_integration
 
 
-async def test_download_switch(hass: HomeAssistant, nzbget_api) -> None:
+async def test_download_switch(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, nzbget_api: MagicMock
+) -> None:
     """Test the creation and values of the download switch."""
     instance = nzbget_api.return_value
 
     entry = await init_integration(hass)
     assert entry
 
-    registry = er.async_get(hass)
     entity_id = "switch.nzbgettest_download"
-    entity_entry = registry.async_get(entity_id)
+    entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry
     assert entity_entry.unique_id == f"{entry.entry_id}_download"
 
@@ -43,7 +46,9 @@ async def test_download_switch(hass: HomeAssistant, nzbget_api) -> None:
     assert state.state == STATE_OFF
 
 
-async def test_download_switch_services(hass: HomeAssistant, nzbget_api) -> None:
+async def test_download_switch_services(
+    hass: HomeAssistant, nzbget_api: MagicMock
+) -> None:
     """Test download switch services."""
     instance = nzbget_api.return_value
 

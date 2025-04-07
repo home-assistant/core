@@ -16,17 +16,17 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_registry import async_get
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture
-def mock_plenticore_client() -> Generator[ApiClient, None, None]:
+def mock_plenticore_client() -> Generator[ApiClient]:
     """Return a patched ExtendedApiClient."""
     with patch(
-        "homeassistant.components.kostal_plenticore.helper.ExtendedApiClient",
+        "homeassistant.components.kostal_plenticore.coordinator.ExtendedApiClient",
         autospec=True,
     ) as plenticore_client_class:
         yield plenticore_client_class.return_value
@@ -92,12 +92,13 @@ def mock_get_setting_values(mock_plenticore_client: ApiClient) -> list:
     return setting_values
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_setup_all_entries(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
     mock_plenticore_client: ApiClient,
     mock_get_setting_values: list,
-    entity_registry_enabled_by_default: None,
 ) -> None:
     """Test if all available entries are setup."""
 
@@ -106,17 +107,19 @@ async def test_setup_all_entries(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    ent_reg = async_get(hass)
-    assert ent_reg.async_get("number.scb_battery_min_soc") is not None
-    assert ent_reg.async_get("number.scb_battery_min_home_consumption") is not None
+    assert entity_registry.async_get("number.scb_battery_min_soc") is not None
+    assert (
+        entity_registry.async_get("number.scb_battery_min_home_consumption") is not None
+    )
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_setup_no_entries(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
     mock_plenticore_client: ApiClient,
     mock_get_setting_values: list,
-    entity_registry_enabled_by_default: None,
 ) -> None:
     """Test that no entries are setup if Plenticore does not provide data."""
 
@@ -140,17 +143,16 @@ async def test_setup_no_entries(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    ent_reg = async_get(hass)
-    assert ent_reg.async_get("number.scb_battery_min_soc") is None
-    assert ent_reg.async_get("number.scb_battery_min_home_consumption") is None
+    assert entity_registry.async_get("number.scb_battery_min_soc") is None
+    assert entity_registry.async_get("number.scb_battery_min_home_consumption") is None
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_number_has_value(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_plenticore_client: ApiClient,
     mock_get_setting_values: list,
-    entity_registry_enabled_by_default: None,
 ) -> None:
     """Test if number has a value if data is provided on update."""
 
@@ -170,12 +172,12 @@ async def test_number_has_value(
     assert state.attributes[ATTR_MAX] == 100
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_number_is_unavailable(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_plenticore_client: ApiClient,
     mock_get_setting_values: list,
-    entity_registry_enabled_by_default: None,
 ) -> None:
     """Test if number is unavailable if no data is provided on update."""
 
@@ -191,12 +193,12 @@ async def test_number_is_unavailable(
     assert state.state == STATE_UNAVAILABLE
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_set_value(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_plenticore_client: ApiClient,
     mock_get_setting_values: list,
-    entity_registry_enabled_by_default: None,
 ) -> None:
     """Test if a new value could be set."""
 

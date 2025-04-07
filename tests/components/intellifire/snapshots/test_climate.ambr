@@ -1,0 +1,67 @@
+# serializer version: 1
+# name: test_all_sensor_entities[climate.intellifire_thermostat-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 37,
+      'min_temp': 0,
+      'target_temp_step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.intellifire_thermostat',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thermostat',
+    'platform': 'intellifire',
+    'previous_unique_id': None,
+    'supported_features': <ClimateEntityFeature: 385>,
+    'translation_key': None,
+    'unique_id': 'climate_mock_serial',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_sensor_entities[climate.intellifire_thermostat-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by unpublished Intellifire API',
+      'current_temperature': 17.0,
+      'friendly_name': 'IntelliFire Thermostat',
+      'hvac_modes': list([
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 37,
+      'min_temp': 0,
+      'supported_features': <ClimateEntityFeature: 385>,
+      'target_temp_step': 1.0,
+      'temperature': 0.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.intellifire_thermostat',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

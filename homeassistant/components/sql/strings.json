@@ -5,7 +5,7 @@
     },
     "error": {
       "db_url_invalid": "Database URL invalid",
-      "query_invalid": "SQL Query invalid",
+      "query_invalid": "SQL query invalid",
       "query_no_read_only": "SQL query must be read-only",
       "multiple_queries": "Multiple SQL queries are not supported",
       "column_invalid": "The column `{column}` is not returned by the query"
@@ -15,22 +15,22 @@
         "data": {
           "db_url": "Database URL",
           "name": "[%key:common::config_flow::data::name%]",
-          "query": "Select Query",
+          "query": "Select query",
           "column": "Column",
-          "unit_of_measurement": "Unit of Measure",
-          "value_template": "Value Template",
-          "device_class": "Device Class",
-          "state_class": "State Class"
+          "unit_of_measurement": "Unit of measurement",
+          "value_template": "Value template",
+          "device_class": "Device class",
+          "state_class": "State class"
         },
         "data_description": {
-          "db_url": "Database URL, leave empty to use HA recorder database",
-          "name": "Name that will be used for Config Entry and also the Sensor",
+          "db_url": "Leave empty to use Home Assistant Recorder database",
+          "name": "Name that will be used for config entry and also the sensor",
           "query": "Query to run, needs to start with 'SELECT'",
           "column": "Column for returned query to present as state",
-          "unit_of_measurement": "Unit of Measure (optional)",
-          "value_template": "Value Template (optional)",
+          "unit_of_measurement": "The unit of measurement for the sensor (optional)",
+          "value_template": "Template to extract a value from the payload (optional)",
           "device_class": "The type/class of the sensor to set the icon in the frontend",
-          "state_class": "The state_class of the sensor"
+          "state_class": "The state class of the sensor"
         }
       }
     }
@@ -71,18 +71,19 @@
   "selector": {
     "device_class": {
       "options": {
-        "date": "[%key:component::sensor::entity_component::date::name%]",
-        "duration": "[%key:component::sensor::entity_component::duration::name%]",
         "apparent_power": "[%key:component::sensor::entity_component::apparent_power::name%]",
         "aqi": "[%key:component::sensor::entity_component::aqi::name%]",
         "atmospheric_pressure": "[%key:component::sensor::entity_component::atmospheric_pressure::name%]",
         "battery": "[%key:component::sensor::entity_component::battery::name%]",
-        "carbon_monoxide": "[%key:component::sensor::entity_component::carbon_monoxide::name%]",
         "carbon_dioxide": "[%key:component::sensor::entity_component::carbon_dioxide::name%]",
+        "carbon_monoxide": "[%key:component::sensor::entity_component::carbon_monoxide::name%]",
+        "conductivity": "[%key:component::sensor::entity_component::conductivity::name%]",
         "current": "[%key:component::sensor::entity_component::current::name%]",
         "data_rate": "[%key:component::sensor::entity_component::data_rate::name%]",
         "data_size": "[%key:component::sensor::entity_component::data_size::name%]",
+        "date": "[%key:component::sensor::entity_component::date::name%]",
         "distance": "[%key:component::sensor::entity_component::distance::name%]",
+        "duration": "[%key:component::sensor::entity_component::duration::name%]",
         "energy": "[%key:component::sensor::entity_component::energy::name%]",
         "energy_storage": "[%key:component::sensor::entity_component::energy_storage::name%]",
         "frequency": "[%key:component::sensor::entity_component::frequency::name%]",
@@ -100,8 +101,8 @@
         "pm1": "[%key:component::sensor::entity_component::pm1::name%]",
         "pm10": "[%key:component::sensor::entity_component::pm10::name%]",
         "pm25": "[%key:component::sensor::entity_component::pm25::name%]",
-        "power_factor": "[%key:component::sensor::entity_component::power_factor::name%]",
         "power": "[%key:component::sensor::entity_component::power::name%]",
+        "power_factor": "[%key:component::sensor::entity_component::power_factor::name%]",
         "precipitation": "[%key:component::sensor::entity_component::precipitation::name%]",
         "precipitation_intensity": "[%key:component::sensor::entity_component::precipitation_intensity::name%]",
         "pressure": "[%key:component::sensor::entity_component::pressure::name%]",
@@ -116,6 +117,7 @@
         "volatile_organic_compounds_parts": "[%key:component::sensor::entity_component::volatile_organic_compounds::name%]",
         "voltage": "[%key:component::sensor::entity_component::voltage::name%]",
         "volume": "[%key:component::sensor::entity_component::volume::name%]",
+        "volume_flow_rate": "[%key:component::sensor::entity_component::volume_flow_rate::name%]",
         "volume_storage": "[%key:component::sensor::entity_component::volume_storage::name%]",
         "water": "[%key:component::sensor::entity_component::water::name%]",
         "weight": "[%key:component::sensor::entity_component::weight::name%]",

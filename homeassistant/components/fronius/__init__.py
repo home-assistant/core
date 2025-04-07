@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from datetime import datetime, timedelta
 import logging
-from typing import Final, TypeVar
+from typing import Final
 
 from pyfronius import Fronius, FroniusError
 
@@ -39,9 +39,7 @@ from .coordinator import (
 _LOGGER: Final = logging.getLogger(__name__)
 PLATFORMS: Final = [Platform.SENSOR]
 
-_FroniusCoordinatorT = TypeVar("_FroniusCoordinatorT", bound=FroniusCoordinatorBase)
-
-FroniusConfigEntry = ConfigEntry["FroniusSolarNet"]
+type FroniusConfigEntry = ConfigEntry[FroniusSolarNet]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: FroniusConfigEntry) -> bool:
@@ -62,7 +60,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: FroniusConfigEntry) -> 
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, config_entry: FroniusConfigEntry, device_entry: dr.DeviceEntry
 ) -> bool:
     """Remove a config entry from a device."""
     return True
@@ -201,7 +199,10 @@ class FroniusSolarNet:
                 name=_inverter_name,
                 inverter_info=_inverter_info,
             )
-            await _coordinator.async_config_entry_first_refresh()
+            if self.config_entry.state == ConfigEntryState.LOADED:
+                await _coordinator.async_refresh()
+            else:
+                await _coordinator.async_config_entry_first_refresh()
             self.inverter_coordinators.append(_coordinator)
 
             # Only for re-scans. Initial setup adds entities through sensor.async_setup_entry
@@ -225,7 +226,14 @@ class FroniusSolarNet:
                 _LOGGER.debug("Re-scan failed for %s", self.host)
                 return inverter_infos
 
-            raise ConfigEntryNotReady from err
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="entry_cannot_connect",
+                translation_placeholders={
+                    "host": self.host,
+                    "fronius_error": str(err),
+                },
+            ) from err
 
         for inverter in _inverter_info["inverters"]:
             solar_net_id = inverter["device_id"]["value"]
@@ -255,7 +263,7 @@ class FroniusSolarNet:
         return inverter_infos
 
     @staticmethod
-    async def _init_optional_coordinator(
+    async def _init_optional_coordinator[_FroniusCoordinatorT: FroniusCoordinatorBase](
         coordinator: _FroniusCoordinatorT,
     ) -> _FroniusCoordinatorT | None:
         """Initialize an update coordinator and return it if devices are found."""

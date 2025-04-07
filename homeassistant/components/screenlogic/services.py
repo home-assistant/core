@@ -1,20 +1,16 @@
 """Services for ScreenLogic integration."""
 
 import logging
+from typing import cast
 
 from screenlogicpy import ScreenLogicError
 from screenlogicpy.device_const.system import EQUIPMENT_FLAG
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import (
-    config_validation as cv,
-    issue_registry as ir,
-    selector,
-)
-from homeassistant.helpers.service import async_extract_config_entry_ids
+from homeassistant.helpers import selector
 
 from .const import (
     ATTR_COLOR_MODE,
@@ -29,6 +25,7 @@ from .const import (
     SUPPORTED_COLOR_MODES,
 )
 from .coordinator import ScreenlogicDataUpdateCoordinator
+from .types import ScreenLogicConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,19 +39,10 @@ BASE_SERVICE_SCHEMA = vol.Schema(
     }
 )
 
-SET_COLOR_MODE_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            vol.Optional(ATTR_CONFIG_ENTRY): selector.ConfigEntrySelector(
-                {
-                    "integration": DOMAIN,
-                }
-            ),
-            **cv.ENTITY_SERVICE_FIELDS,
-            vol.Required(ATTR_COLOR_MODE): vol.In(SUPPORTED_COLOR_MODES),
-        }
-    ),
-    cv.has_at_least_one_key(ATTR_CONFIG_ENTRY, *cv.ENTITY_SERVICE_FIELDS),
+SET_COLOR_MODE_SCHEMA = BASE_SERVICE_SCHEMA.extend(
+    {
+        vol.Required(ATTR_COLOR_MODE): vol.In(SUPPORTED_COLOR_MODES),
+    }
 )
 
 TURN_ON_SUPER_CHLOR_SCHEMA = BASE_SERVICE_SCHEMA.extend(
@@ -70,41 +58,15 @@ TURN_ON_SUPER_CHLOR_SCHEMA = BASE_SERVICE_SCHEMA.extend(
 def async_load_screenlogic_services(hass: HomeAssistant):
     """Set up services for the ScreenLogic integration."""
 
-    async def extract_screenlogic_config_entry_ids(service_call: ServiceCall):
-        if not (
-            screenlogic_entry_ids := await async_extract_config_entry_ids(
-                hass, service_call
-            )
-        ):
-            raise ServiceValidationError(
-                f"Failed to call service '{service_call.service}'. Config entry for "
-                "target not found"
-            )
-        return screenlogic_entry_ids
-
     async def get_coordinators(
         service_call: ServiceCall,
     ) -> list[ScreenlogicDataUpdateCoordinator]:
-        entry_ids: set[str]
-        if entry_id := service_call.data.get(ATTR_CONFIG_ENTRY):
-            entry_ids = {entry_id}
-        else:
-            ir.async_create_issue(
-                hass,
-                DOMAIN,
-                "service_target_deprecation",
-                breaks_in_ha_version="2024.8.0",
-                is_fixable=True,
-                is_persistent=True,
-                severity=ir.IssueSeverity.WARNING,
-                translation_key="service_target_deprecation",
-            )
-            entry_ids = await extract_screenlogic_config_entry_ids(service_call)
-
+        entry_ids = {service_call.data[ATTR_CONFIG_ENTRY]}
         coordinators: list[ScreenlogicDataUpdateCoordinator] = []
         for entry_id in entry_ids:
-            config_entry: ConfigEntry | None = hass.config_entries.async_get_entry(
-                entry_id
+            config_entry = cast(
+                ScreenLogicConfigEntry | None,
+                hass.config_entries.async_get_entry(entry_id),
             )
             if not config_entry:
                 raise ServiceValidationError(
@@ -121,7 +83,7 @@ def async_load_screenlogic_services(hass: HomeAssistant):
                     f"Failed to call service '{service_call.service}'. Config entry "
                     f"'{entry_id}' not loaded"
                 )
-            coordinators.append(hass.data[DOMAIN][entry_id])
+            coordinators.append(config_entry.runtime_data)
 
         return coordinators
 

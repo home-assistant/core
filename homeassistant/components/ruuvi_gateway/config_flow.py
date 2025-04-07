@@ -8,11 +8,11 @@ from typing import Any
 import aioruuvigateway.api as gw_api
 from aioruuvigateway.excs import CannotConnect, InvalidAuth
 
-from homeassistant.components import dhcp
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from . import DOMAIN
 from .schemata import CONFIG_SCHEMA, get_config_schema_with_default_host
@@ -59,7 +59,7 @@ class RuuviConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         except InvalidAuth:
             errors["base"] = "invalid_auth"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         return (None, errors)
@@ -82,7 +82,7 @@ class RuuviConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Prepare configuration for a DHCP discovered Ruuvi Gateway."""
         await self.async_set_unique_id(format_mac(discovery_info.macaddress))

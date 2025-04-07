@@ -7,12 +7,12 @@ from aiohttp import ClientError, web_exceptions
 from pydaikin.exceptions import DaikinException
 import pytest
 
-from homeassistant.components import zeroconf
 from homeassistant.components.daikin.const import KEY_MAC
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from tests.common import MockConfigEntry
 
@@ -28,9 +28,11 @@ def mock_daikin():
         """Mock the init function in pydaikin."""
         return Appliance
 
-    with patch("homeassistant.components.daikin.config_flow.Appliance") as Appliance:
+    with patch(
+        "homeassistant.components.daikin.config_flow.DaikinFactory"
+    ) as Appliance:
         type(Appliance).mac = PropertyMock(return_value="AABBCCDDEEFF")
-        Appliance.factory.side_effect = mock_daikin_factory
+        Appliance.side_effect = mock_daikin_factory
         yield Appliance
 
 
@@ -90,7 +92,7 @@ async def test_abort_if_already_setup(hass: HomeAssistant, mock_daikin) -> None:
 )
 async def test_device_abort(hass: HomeAssistant, mock_daikin, s_effect, reason) -> None:
     """Test device abort."""
-    mock_daikin.factory.side_effect = s_effect
+    mock_daikin.side_effect = s_effect
 
     result = await hass.config_entries.flow.async_init(
         "daikin",
@@ -119,7 +121,7 @@ async def test_api_password_abort(hass: HomeAssistant) -> None:
     [
         (
             SOURCE_ZEROCONF,
-            zeroconf.ZeroconfServiceInfo(
+            ZeroconfServiceInfo(
                 ip_address=ip_address(HOST),
                 ip_addresses=[ip_address(HOST)],
                 hostname="mock_hostname",

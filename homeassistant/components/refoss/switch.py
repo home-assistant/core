@@ -10,16 +10,17 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import COORDINATORS, DISPATCH_DEVICE_DISCOVERED, DOMAIN
+from .bridge import RefossDataUpdateCoordinator
+from .const import _LOGGER, COORDINATORS, DISPATCH_DEVICE_DISCOVERED, DOMAIN
 from .entity import RefossEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Refoss device from a config entry."""
 
@@ -36,6 +37,7 @@ async def async_setup_entry(
             new_entities.append(entity)
 
         async_add_entities(new_entities)
+        _LOGGER.debug("Device %s add switch entity success", device.dev_name)
 
     for coordinator in hass.data[DOMAIN][COORDINATORS]:
         init_device(coordinator)
@@ -47,6 +49,15 @@ async def async_setup_entry(
 
 class RefossSwitch(RefossEntity, SwitchEntity):
     """Refoss Switch Device."""
+
+    def __init__(
+        self,
+        coordinator: RefossDataUpdateCoordinator,
+        channel: int,
+    ) -> None:
+        """Init Refoss switch."""
+        super().__init__(coordinator, channel)
+        self._attr_name = str(channel)
 
     @property
     def is_on(self) -> bool | None:

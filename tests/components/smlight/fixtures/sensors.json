@@ -1,0 +1,16 @@
+{
+  "esp32_temp": 35.0,
+  "zb_temp": 32.7,
+  "uptime": 508125,
+  "socket_uptime": 127,
+  "ram_usage": 99,
+  "fs_used": 188,
+  "ethernet": true,
+  "wifi_connected": false,
+  "wifi_status": 255,
+  "disable_leds": false,
+  "night_mode": true,
+  "auto_zigbee": false,
+  "vpn_enabled": false,
+  "vpn_status": true
+}

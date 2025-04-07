@@ -3,14 +3,14 @@
   "name": "ecobee",
   "codeowners": [],
   "config_flow": true,
-  "dependencies": ["http", "repairs"],
   "documentation": "https://www.home-assistant.io/integrations/ecobee",
   "homekit": {
     "models": ["EB", "ecobee*"]
   },
   "iot_class": "cloud_polling",
   "loggers": ["pyecobee"],
-  "requirements": ["python-ecobee-api==0.2.18"],
+  "requirements": ["python-ecobee-api==0.2.20"],
+  "single_config_entry": true,
   "zeroconf": [
     {
       "type": "_ecobee._tcp.local."

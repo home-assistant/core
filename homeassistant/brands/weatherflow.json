@@ -1,0 +1,5 @@
+{
+  "domain": "weatherflow",
+  "name": "WeatherFlow",
+  "integrations": ["weatherflow", "weatherflow_cloud"]
+}

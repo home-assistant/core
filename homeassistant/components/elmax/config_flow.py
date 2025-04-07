@@ -12,9 +12,9 @@ from elmax_api.model.panel import PanelEntry, PanelStatus
 import httpx
 import voluptuous as vol
 
-from homeassistant.components.zeroconf import ZeroconfServiceInfo
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .common import (
     build_direct_ssl_context,
@@ -114,7 +114,6 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
     # Panel selection variables
     _panels_schema: vol.Schema
     _panel_names: dict
-    _entry: ConfigEntry | None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -152,7 +151,9 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
                     port=self._panel_direct_port,
                 )
             )
-            ssl_context = build_direct_ssl_context(cadata=self._panel_direct_ssl_cert)
+            ssl_context = await self.hass.async_add_executor_job(
+                build_direct_ssl_context, self._panel_direct_ssl_cert
+            )
 
         # Attempt the connection to make sure the pin works. Also, take the chance to retrieve the panel ID via APIs.
         client_api_url = get_direct_api_url(
@@ -204,7 +205,7 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_direct(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Handle the direct setup step."""
-        self._selected_mode = CONF_ELMAX_MODE_CLOUD
+        self._selected_mode = CONF_ELMAX_MODE_DIRECT
         if user_input is None:
             return self.async_show_form(
                 step_id=CONF_ELMAX_MODE_DIRECT,
@@ -370,7 +371,7 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         except ElmaxBadPinError:
             errors["base"] = "invalid_pin"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Error occurred")
             errors["base"] = "unknown"
 
@@ -395,7 +396,6 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
-        self._entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         self._reauth_cloud_username = entry_data.get(CONF_ELMAX_USERNAME)
         self._reauth_cloud_panelid = entry_data.get(CONF_ELMAX_PANEL_ID)
         return await self.async_step_reauth_confirm()
@@ -413,7 +413,7 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
 
             # Handle authentication, make sure the panel we are re-authenticating against is listed among results
             # and verify its pin is correct.
-            assert self._entry is not None
+            reauth_entry = self._get_reauth_entry()
             try:
                 # Test login.
                 client = await self._async_login(username=username, password=password)
@@ -421,14 +421,14 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
                 panels = [
                     p
                     for p in await client.list_control_panels()
-                    if p.hash == self._entry.data[CONF_ELMAX_PANEL_ID]
+                    if p.hash == reauth_entry.data[CONF_ELMAX_PANEL_ID]
                 ]
                 if len(panels) < 1:
-                    raise NoOnlinePanelsError
+                    raise NoOnlinePanelsError  # noqa: TRY301
 
                 # Verify the pin is still valid.
                 await client.get_panel_status(
-                    control_panel_id=self._entry.data[CONF_ELMAX_PANEL_ID],
+                    control_panel_id=reauth_entry.data[CONF_ELMAX_PANEL_ID],
                     pin=panel_pin,
                 )
 
@@ -440,18 +440,16 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_pin"
 
             # If all went right, update the config entry
-            if not errors:
-                self.hass.config_entries.async_update_entry(
-                    self._entry,
+            else:
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
                     data={
-                        CONF_ELMAX_PANEL_ID: self._entry.data[CONF_ELMAX_PANEL_ID],
+                        CONF_ELMAX_PANEL_ID: reauth_entry.data[CONF_ELMAX_PANEL_ID],
                         CONF_ELMAX_PANEL_PIN: panel_pin,
                         CONF_ELMAX_USERNAME: username,
                         CONF_ELMAX_PASSWORD: password,
                     },
                 )
-                await self.hass.config_entries.async_reload(self._entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
 
         # Otherwise start over and show the relative error message
         return self.async_show_form(
@@ -500,7 +498,11 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle device found via zeroconf."""
-        host = discovery_info.host
+        host = (
+            f"[{discovery_info.ip_address}]"
+            if discovery_info.ip_address.version == 6
+            else str(discovery_info.ip_address)
+        )
         https_port = (
             int(discovery_info.port)
             if discovery_info.port is not None

@@ -396,7 +396,6 @@ async def test_set_speed_belief_speed_api_error(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: "fan.name_1", "speed": 100},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
 
 async def test_set_speed_belief_speed_100(hass: HomeAssistant) -> None:

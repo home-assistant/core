@@ -32,23 +32,23 @@ def config_entry(hass: HomeAssistant) -> MockConfigEntry:
 @pytest.fixture
 def connection() -> None:
     """Mock Dremel 3D Printer connection."""
-    mock = requests_mock.Mocker()
-    mock.post(
-        f"http://{HOST}:80/command",
-        response_list=[
-            {"text": load_fixture("dremel_3d_printer/command_1.json")},
-            {"text": load_fixture("dremel_3d_printer/command_2.json")},
-            {"text": load_fixture("dremel_3d_printer/command_1.json")},
-            {"text": load_fixture("dremel_3d_printer/command_2.json")},
-        ],
-    )
+    with requests_mock.Mocker() as mock:
+        mock.post(
+            f"http://{HOST}/command",
+            response_list=[
+                {"text": load_fixture("dremel_3d_printer/command_1.json")},
+                {"text": load_fixture("dremel_3d_printer/command_2.json")},
+                {"text": load_fixture("dremel_3d_printer/command_1.json")},
+                {"text": load_fixture("dremel_3d_printer/command_2.json")},
+            ],
+        )
 
-    mock.post(
-        f"https://{HOST}:11134/getHomeMessage",
-        text=load_fixture("dremel_3d_printer/get_home_message.json"),
-        status_code=HTTPStatus.OK,
-    )
-    mock.start()
+        mock.post(
+            f"https://{HOST}:11134/getHomeMessage",
+            text=load_fixture("dremel_3d_printer/get_home_message.json"),
+            status_code=HTTPStatus.OK,
+        )
+        yield
 
 
 def patch_async_setup_entry():

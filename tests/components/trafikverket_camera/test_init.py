@@ -6,8 +6,7 @@ from datetime import datetime
 from unittest.mock import patch
 
 import pytest
-from pytrafikverket.exceptions import UnknownError
-from pytrafikverket.trafikverket_camera import CameraInfo
+from pytrafikverket import CameraInfoModel, UnknownError
 
 from homeassistant.components.trafikverket_camera import async_migrate_entry
 from homeassistant.components.trafikverket_camera.const import DOMAIN
@@ -23,7 +22,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 async def test_setup_entry(
     hass: HomeAssistant,
-    get_camera: CameraInfo,
+    get_camera: CameraInfoModel,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test setup entry."""
@@ -55,7 +54,7 @@ async def test_setup_entry(
 
 async def test_unload_entry(
     hass: HomeAssistant,
-    get_camera: CameraInfo,
+    get_camera: CameraInfoModel,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test unload an entry."""
@@ -89,7 +88,7 @@ async def test_unload_entry(
 
 async def test_migrate_entry(
     hass: HomeAssistant,
-    get_camera: CameraInfo,
+    get_camera: CameraInfoModel,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test migrate entry to version 2."""
@@ -136,7 +135,7 @@ async def test_migrate_entry(
 )
 async def test_migrate_entry_fails_with_error(
     hass: HomeAssistant,
-    get_camera: CameraInfo,
+    get_camera: CameraInfoModel,
     aioclient_mock: AiohttpClientMocker,
     version: int,
     unique_id: str,
@@ -205,7 +204,7 @@ async def test_migrate_entry_fails_no_id(
     )
     entry.add_to_hass(hass)
 
-    _camera = CameraInfo(
+    _camera = CameraInfoModel(
         camera_name="Test_camera",
         camera_id=None,
         active=True,
@@ -236,7 +235,7 @@ async def test_migrate_entry_fails_no_id(
 
 async def test_no_migration_needed(
     hass: HomeAssistant,
-    get_camera: CameraInfo,
+    get_camera: CameraInfoModel,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test migrate entry fails, camera returns no id."""

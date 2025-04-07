@@ -30,12 +30,16 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
     EVENT_HOMEASSISTANT_STOP,
+    MATCH_ALL,
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.trigger_template_entity import (
     CONF_AVAILABILITY,
@@ -80,9 +84,6 @@ async def async_setup_platform(
     unique_id: str | None = conf.get(CONF_UNIQUE_ID)
     db_url: str = resolve_db_url(hass, conf.get(CONF_DB_URL))
 
-    if value_template is not None:
-        value_template.hass = hass
-
     trigger_entity_config = {CONF_NAME: name}
     for key in TRIGGER_ENTITY_OPTIONS:
         if key not in conf:
@@ -103,7 +104,9 @@ async def async_setup_platform(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the SQL sensor from config entry."""
 
@@ -116,12 +119,10 @@ async def async_setup_entry(
     value_template: Template | None = None
     if template is not None:
         try:
-            value_template = Template(template)
+            value_template = Template(template, hass)
             value_template.ensure_valid()
         except TemplateError:
             value_template = None
-        if value_template is not None:
-            value_template.hass = hass
 
     name_template = Template(name, hass)
     trigger_entity_config = {CONF_NAME: name_template, CONF_UNIQUE_ID: entry.entry_id}
@@ -182,7 +183,7 @@ async def async_setup_sensor(
     unique_id: str | None,
     db_url: str,
     yaml: bool,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback | AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the SQL sensor."""
     try:
@@ -307,6 +308,8 @@ def _generate_lambda_stmt(query: str) -> StatementLambdaElement:
 class SQLSensor(ManualTriggerSensorEntity):
     """Representation of an SQL sensor."""
 
+    _unrecorded_attributes = frozenset({MATCH_ALL})
+
     def __init__(
         self,
         trigger_entity_config: ConfigType,
@@ -333,8 +336,15 @@ class SQLSensor(ManualTriggerSensorEntity):
                 entry_type=DeviceEntryType.SERVICE,
                 identifiers={(DOMAIN, unique_id)},
                 manufacturer="SQL",
-                name=self.name,
+                name=self._rendered.get(CONF_NAME),
             )
+
+    @property
+    def name(self) -> str | None:
+        """Name of the entity."""
+        if self.has_entity_name:
+            return self._attr_name
+        return self._rendered.get(CONF_NAME)
 
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
@@ -369,7 +379,7 @@ class SQLSensor(ManualTriggerSensorEntity):
             )
             sess.rollback()
             sess.close()
-            return
+            return None
 
         for res in result.mappings():
             _LOGGER.debug("Query %s result in %s", self._query, res.items())

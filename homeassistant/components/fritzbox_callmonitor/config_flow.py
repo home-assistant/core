@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from enum import StrEnum
 from typing import Any, cast
 
@@ -11,19 +12,12 @@ from requests.exceptions import ConnectionError as RequestsConnectionError
 import voluptuous as vol
 
 from homeassistant.config_entries import (
-    SOURCE_IMPORT,
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import callback
 
 from .base import FritzBoxPhonebook
@@ -65,6 +59,7 @@ class FritzBoxCallMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    _entry: ConfigEntry
     _host: str
     _port: int
     _username: str
@@ -139,7 +134,7 @@ class FritzBoxCallMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> FritzBoxCallMonitorOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return FritzBoxCallMonitorOptionsFlowHandler(config_entry)
+        return FritzBoxCallMonitorOptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -168,16 +163,11 @@ class FritzBoxCallMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
         if result != ConnectResult.SUCCESS:
             return self.async_abort(reason=result)
 
-        if self.context["source"] == SOURCE_IMPORT:
-            self._phonebook_id = user_input[CONF_PHONEBOOK]
-            self._phonebook_name = user_input[CONF_NAME]
-
-        elif len(self._phonebook_ids) > 1:
+        if len(self._phonebook_ids) > 1:
             return await self.async_step_phonebook()
 
-        else:
-            self._phonebook_id = DEFAULT_PHONEBOOK
-            self._phonebook_name = await self._get_name_of_phonebook(self._phonebook_id)
+        self._phonebook_id = DEFAULT_PHONEBOOK
+        self._phonebook_name = await self._get_name_of_phonebook(self._phonebook_id)
 
         await self.async_set_unique_id(f"{self._serial_number}-{self._phonebook_id}")
         self._abort_if_unique_id_configured()
@@ -209,13 +199,72 @@ class FritzBoxCallMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self._get_config_entry()
 
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle flow upon an API authentication error."""
+        self._entry = self._get_reauth_entry()
+        self._host = entry_data[CONF_HOST]
+        self._port = entry_data[CONF_PORT]
+        self._username = entry_data[CONF_USERNAME]
+        self._password = entry_data[CONF_PASSWORD]
+        self._phonebook_id = entry_data[CONF_PHONEBOOK]
+
+        return await self.async_step_reauth_confirm()
+
+    def _show_setup_form_reauth_confirm(
+        self, user_input: dict[str, Any], errors: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
+        """Show the reauth form to the user."""
+        default_username = user_input.get(CONF_USERNAME)
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_USERNAME, default=default_username): str,
+                    vol.Required(CONF_PASSWORD): str,
+                }
+            ),
+            description_placeholders={"host": self._host},
+            errors=errors or {},
+        )
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Dialog that informs the user that reauth is required."""
+        if user_input is None:
+            return self._show_setup_form_reauth_confirm(
+                user_input={CONF_USERNAME: self._username}
+            )
+
+        self._username = user_input[CONF_USERNAME]
+        self._password = user_input[CONF_PASSWORD]
+
+        if (
+            error := await self.hass.async_add_executor_job(self._try_connect)
+        ) is not ConnectResult.SUCCESS:
+            return self._show_setup_form_reauth_confirm(
+                user_input=user_input, errors={"base": error}
+            )
+
+        self.hass.config_entries.async_update_entry(
+            self._entry,
+            data={
+                CONF_HOST: self._host,
+                CONF_PORT: self._port,
+                CONF_USERNAME: self._username,
+                CONF_PASSWORD: self._password,
+                CONF_PHONEBOOK: self._phonebook_id,
+                SERIAL_NUMBER: self._serial_number,
+            },
+        )
+        await self.hass.config_entries.async_reload(self._entry.entry_id)
+        return self.async_abort(reason="reauth_successful")
+
 
 class FritzBoxCallMonitorOptionsFlowHandler(OptionsFlow):
     """Handle a fritzbox_callmonitor options flow."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize."""
-        self.config_entry = config_entry
 
     @classmethod
     def _are_prefixes_valid(cls, prefixes: str | None) -> bool:

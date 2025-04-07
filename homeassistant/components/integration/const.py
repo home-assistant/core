@@ -7,6 +7,7 @@ CONF_SOURCE_SENSOR = "source"
 CONF_UNIT_OF_MEASUREMENT = "unit"
 CONF_UNIT_PREFIX = "unit_prefix"
 CONF_UNIT_TIME = "unit_time"
+CONF_MAX_SUB_INTERVAL = "max_sub_interval"
 
 METHOD_TRAPEZOIDAL = "trapezoidal"
 METHOD_LEFT = "left"

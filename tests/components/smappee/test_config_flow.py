@@ -4,8 +4,9 @@ from http import HTTPStatus
 from ipaddress import ip_address
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant import setup
-from homeassistant.components import zeroconf
 from homeassistant.components.smappee.const import (
     CONF_SERIALNUMBER,
     DOMAIN,
@@ -18,6 +19,7 @@ from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -61,7 +63,7 @@ async def test_show_zeroconf_connection_error_form(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
-            data=zeroconf.ZeroconfServiceInfo(
+            data=ZeroconfServiceInfo(
                 ip_address=ip_address("1.2.3.4"),
                 ip_addresses=[ip_address("1.2.3.4")],
                 port=22,
@@ -93,7 +95,7 @@ async def test_show_zeroconf_connection_error_form_next_generation(
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
-            data=zeroconf.ZeroconfServiceInfo(
+            data=ZeroconfServiceInfo(
                 ip_address=ip_address("1.2.3.4"),
                 ip_addresses=[ip_address("1.2.3.4")],
                 port=22,
@@ -177,7 +179,7 @@ async def test_zeroconf_wrong_mdns(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("1.2.3.4"),
             ip_addresses=[ip_address("1.2.3.4")],
             port=22,
@@ -303,7 +305,7 @@ async def test_zeroconf_device_exists_abort(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
-            data=zeroconf.ZeroconfServiceInfo(
+            data=ZeroconfServiceInfo(
                 ip_address=ip_address("1.2.3.4"),
                 ip_addresses=[ip_address("1.2.3.4")],
                 port=22,
@@ -353,7 +355,7 @@ async def test_zeroconf_abort_if_cloud_device_exists(hass: HomeAssistant) -> Non
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("1.2.3.4"),
             ip_addresses=[ip_address("1.2.3.4")],
             port=22,
@@ -375,7 +377,7 @@ async def test_zeroconf_confirm_abort_if_cloud_device_exists(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("1.2.3.4"),
             ip_addresses=[ip_address("1.2.3.4")],
             port=22,
@@ -427,11 +429,11 @@ async def test_abort_cloud_flow_if_local_device_exists(hass: HomeAssistant) -> N
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_full_user_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
 ) -> None:
     """Check full flow."""
     assert await setup.async_setup_component(
@@ -502,7 +504,7 @@ async def test_full_zeroconf_flow(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
-            data=zeroconf.ZeroconfServiceInfo(
+            data=ZeroconfServiceInfo(
                 ip_address=ip_address("1.2.3.4"),
                 ip_addresses=[ip_address("1.2.3.4")],
                 port=22,
@@ -587,7 +589,7 @@ async def test_full_zeroconf_flow_next_generation(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
-            data=zeroconf.ZeroconfServiceInfo(
+            data=ZeroconfServiceInfo(
                 ip_address=ip_address("1.2.3.4"),
                 ip_addresses=[ip_address("1.2.3.4")],
                 port=22,

@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
+from collections import defaultdict
 from collections.abc import Callable, Coroutine
 from functools import partial, wraps
 import inspect
 import logging
 import logging.handlers
-import queue
+from queue import SimpleQueue
+import time
 import traceback
-from typing import Any, TypeVar, TypeVarTuple, cast, overload
+from typing import Any, cast, overload, override
 
 from homeassistant.core import (
     HassJobType,
@@ -18,8 +20,75 @@ from homeassistant.core import (
     get_hassjob_callable_job_type,
 )
 
-_T = TypeVar("_T")
-_Ts = TypeVarTuple("_Ts")
+_LOGGER = logging.getLogger(__name__)
+
+
+class HomeAssistantQueueListener(logging.handlers.QueueListener):
+    """Custom QueueListener to watch for noisy loggers."""
+
+    LOG_COUNTS_RESET_INTERVAL = 300
+    MAX_LOGS_COUNT = 200
+
+    EXCLUDED_LOG_COUNT_MODULES = [
+        "homeassistant.components.automation",
+        "homeassistant.components.script",
+        "homeassistant.setup",
+        "homeassistant.util.logging",
+    ]
+
+    _last_reset: float
+    _log_counts: dict[str, int]
+
+    def __init__(
+        self, queue: SimpleQueue[logging.Handler], *handlers: logging.Handler
+    ) -> None:
+        """Initialize the handler."""
+        super().__init__(queue, *handlers)
+        self._module_log_count_skip_flags: dict[str, bool] = {}
+        self._reset_counters(time.time())
+
+    @override
+    def handle(self, record: logging.LogRecord) -> None:
+        """Handle the record."""
+        super().handle(record)
+
+        if record.levelno < logging.INFO:
+            return
+
+        if (record.created - self._last_reset) > self.LOG_COUNTS_RESET_INTERVAL:
+            self._reset_counters(record.created)
+
+        module_name = record.name
+
+        if skip_flag := self._module_log_count_skip_flags.get(module_name):
+            return
+
+        if skip_flag is None and self._update_skip_flags(module_name):
+            return
+
+        self._log_counts[module_name] += 1
+        module_count = self._log_counts[module_name]
+        if module_count < self.MAX_LOGS_COUNT:
+            return
+
+        _LOGGER.warning(
+            "Module %s is logging too frequently. %d messages since last count",
+            module_name,
+            module_count,
+        )
+        self._module_log_count_skip_flags[module_name] = True
+
+    def _reset_counters(self, time_sec: float) -> None:
+        _LOGGER.debug("Resetting log counters")
+        self._last_reset = time_sec
+        self._log_counts = defaultdict(int)
+
+    def _update_skip_flags(self, module_name: str) -> bool:
+        excluded = any(
+            module_name.startswith(prefix) for prefix in self.EXCLUDED_LOG_COUNT_MODULES
+        )
+        self._module_log_count_skip_flags[module_name] = excluded
+        return excluded
 
 
 class HomeAssistantQueueHandler(logging.handlers.QueueHandler):
@@ -63,7 +132,7 @@ def async_activate_log_queue_handler(hass: HomeAssistant) -> None:
     This allows us to avoid blocking I/O and formatting messages
     in the event loop as log messages are written in another thread.
     """
-    simple_queue: queue.SimpleQueue[logging.Handler] = queue.SimpleQueue()
+    simple_queue: SimpleQueue[logging.Handler] = SimpleQueue()
     queue_handler = HomeAssistantQueueHandler(simple_queue)
     logging.root.addHandler(queue_handler)
 
@@ -74,13 +143,13 @@ def async_activate_log_queue_handler(hass: HomeAssistant) -> None:
         logging.root.removeHandler(handler)
         migrated_handlers.append(handler)
 
-    listener = logging.handlers.QueueListener(simple_queue, *migrated_handlers)
+    listener = HomeAssistantQueueListener(simple_queue, *migrated_handlers)
     queue_handler.listener = listener
 
     listener.start()
 
 
-def log_exception(format_err: Callable[[*_Ts], Any], *args: *_Ts) -> None:
+def log_exception[*_Ts](format_err: Callable[[*_Ts], Any], *args: *_Ts) -> None:
     """Log an exception with additional context."""
     module = inspect.getmodule(inspect.stack(context=0)[1].frame)
     if module is not None:
@@ -98,7 +167,7 @@ def log_exception(format_err: Callable[[*_Ts], Any], *args: *_Ts) -> None:
     logging.getLogger(module_name).error("%s\n%s", friendly_msg, exc_msg)
 
 
-async def _async_wrapper(
+async def _async_wrapper[*_Ts](
     async_func: Callable[[*_Ts], Coroutine[Any, Any, None]],
     format_err: Callable[[*_Ts], Any],
     *args: *_Ts,
@@ -106,33 +175,33 @@ async def _async_wrapper(
     """Catch and log exception."""
     try:
         await async_func(*args)
-    except Exception:  # pylint: disable=broad-except
+    except Exception:  # noqa: BLE001
         log_exception(format_err, *args)
 
 
-def _sync_wrapper(
+def _sync_wrapper[*_Ts](
     func: Callable[[*_Ts], Any], format_err: Callable[[*_Ts], Any], *args: *_Ts
 ) -> None:
     """Catch and log exception."""
     try:
         func(*args)
-    except Exception:  # pylint: disable=broad-except
+    except Exception:  # noqa: BLE001
         log_exception(format_err, *args)
 
 
 @callback
-def _callback_wrapper(
+def _callback_wrapper[*_Ts](
     func: Callable[[*_Ts], Any], format_err: Callable[[*_Ts], Any], *args: *_Ts
 ) -> None:
     """Catch and log exception."""
     try:
         func(*args)
-    except Exception:  # pylint: disable=broad-except
+    except Exception:  # noqa: BLE001
         log_exception(format_err, *args)
 
 
 @overload
-def catch_log_exception(
+def catch_log_exception[*_Ts](
     func: Callable[[*_Ts], Coroutine[Any, Any, Any]],
     format_err: Callable[[*_Ts], Any],
     job_type: HassJobType | None = None,
@@ -140,14 +209,14 @@ def catch_log_exception(
 
 
 @overload
-def catch_log_exception(
+def catch_log_exception[*_Ts](
     func: Callable[[*_Ts], Any],
     format_err: Callable[[*_Ts], Any],
     job_type: HassJobType | None = None,
 ) -> Callable[[*_Ts], None] | Callable[[*_Ts], Coroutine[Any, Any, None]]: ...
 
 
-def catch_log_exception(
+def catch_log_exception[*_Ts](
     func: Callable[[*_Ts], Any],
     format_err: Callable[[*_Ts], Any],
     job_type: HassJobType | None = None,
@@ -170,7 +239,7 @@ def catch_log_exception(
     return wraps(func)(partial(_sync_wrapper, func, format_err))  # type: ignore[return-value]
 
 
-def catch_log_coro_exception(
+def catch_log_coro_exception[_T, *_Ts](
     target: Coroutine[Any, Any, _T], format_err: Callable[[*_Ts], Any], *args: *_Ts
 ) -> Coroutine[Any, Any, _T | None]:
     """Decorate a coroutine to catch and log exceptions."""
@@ -179,14 +248,14 @@ def catch_log_coro_exception(
         """Catch and log exception."""
         try:
             return await target
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # noqa: BLE001
             log_exception(format_err, *args)
             return None
 
     return coro_wrapper(*args)
 
 
-def async_create_catching_coro(
+def async_create_catching_coro[_T](
     target: Coroutine[Any, Any, _T],
 ) -> Coroutine[Any, Any, _T | None]:
     """Wrap a coroutine to catch and log exceptions.
@@ -199,8 +268,8 @@ def async_create_catching_coro(
     trace = traceback.extract_stack()
     return catch_log_coro_exception(
         target,
-        lambda: "Exception in {} called from\n {}".format(
-            target.__name__,
-            "".join(traceback.format_list(trace[:-1])),
+        lambda: (
+            f"Exception in {target.__name__} called from\n"
+            + "".join(traceback.format_list(trace[:-1]))
         ),
     )

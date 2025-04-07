@@ -24,5 +24,12 @@
     "snapshot_url": "",
     "state": "ringing",
     "video_jitter_buffer_ms": 0
+  },
+  {
+    "kind": "motion",
+    "doorbot_id": 987654,
+    "state": "ringing",
+    "now": 1490949469.5498993,
+    "expires_in": 180
   }
 ]

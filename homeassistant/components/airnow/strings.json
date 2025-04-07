@@ -7,7 +7,7 @@
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "latitude": "[%key:common::config_flow::data::latitude%]",
           "longitude": "[%key:common::config_flow::data::longitude%]",
-          "radius": "Station Radius (miles; optional)"
+          "radius": "Station radius (miles; optional)"
         }
       }
     },
@@ -25,7 +25,7 @@
     "step": {
       "init": {
         "data": {
-          "radius": "Station Radius (miles)"
+          "radius": "Station radius (miles)"
         }
       }
     }
@@ -36,7 +36,7 @@
         "name": "[%key:component::sensor::entity_component::ozone::name%]"
       },
       "station": {
-        "name": "PM2.5 reporting station",
+        "name": "Reporting station",
         "state_attributes": {
           "lat": { "name": "[%key:common::config_flow::data::latitude%]" },
           "long": { "name": "[%key:common::config_flow::data::longitude%]" }

@@ -7,7 +7,7 @@ from datetime import timedelta
 from functools import wraps
 import logging
 import re
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import Any, Concatenate
 
 from jsonrpc_base.jsonrpc import ProtocolError, TransportError
 from pykodi import CannotConnectError
@@ -15,7 +15,7 @@ import voluptuous as vol
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
     BrowseError,
     BrowseMedia,
     MediaPlayerEntity,
@@ -46,11 +46,14 @@ from homeassistant.helpers import (
     entity_platform,
 )
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.network import is_internal_request
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, VolDictType
+from homeassistant.util import dt as dt_util
 
 from .browse_media import (
     build_item_response,
@@ -70,9 +73,6 @@ from .const import (
     EVENT_TURN_OFF,
     EVENT_TURN_ON,
 )
-
-_KodiEntityT = TypeVar("_KodiEntityT", bound="KodiEntity")
-_P = ParamSpec("_P")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -121,7 +121,7 @@ MAP_KODI_MEDIA_TYPES: dict[MediaType | str, str] = {
 }
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME): cv.string,
@@ -150,7 +150,7 @@ ATTR_MEDIA_ID = "media_id"
 ATTR_METHOD = "method"
 
 
-KODI_ADD_MEDIA_SCHEMA = {
+KODI_ADD_MEDIA_SCHEMA: VolDictType = {
     vol.Required(ATTR_MEDIA_TYPE): cv.string,
     vol.Optional(ATTR_MEDIA_ID): cv.string,
     vol.Optional(ATTR_MEDIA_NAME): cv.string,
@@ -209,7 +209,7 @@ async def async_setup_platform(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Kodi media player platform."""
     platform = entity_platform.async_get_current_platform()
@@ -231,7 +231,7 @@ async def async_setup_entry(
     async_add_entities([entity])
 
 
-def cmd(
+def cmd[_KodiEntityT: KodiEntity, **_P](
     func: Callable[Concatenate[_KodiEntityT, _P], Awaitable[Any]],
 ) -> Callable[Concatenate[_KodiEntityT, _P], Coroutine[Any, Any, None]]:
     """Catch command exceptions."""
@@ -262,6 +262,7 @@ class KodiEntity(MediaPlayerEntity):
 
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_translation_key = "media_player"
     _attr_supported_features = (
         MediaPlayerEntityFeature.BROWSE_MEDIA
         | MediaPlayerEntityFeature.NEXT_TRACK
@@ -480,7 +481,13 @@ class KodiEntity(MediaPlayerEntity):
             self._reset_state()
             return
 
-        self._players = await self._kodi.get_players()
+        try:
+            self._players = await self._kodi.get_players()
+        except (TransportError, ProtocolError):
+            if not self._connection.can_subscribe:
+                self._reset_state()
+                return
+            raise
 
         if self._kodi_is_off:
             self._reset_state()
@@ -513,6 +520,7 @@ class KodiEntity(MediaPlayerEntity):
                     "album",
                     "season",
                     "episode",
+                    "streamdetails",
                 ],
             )
         else:
@@ -524,10 +532,11 @@ class KodiEntity(MediaPlayerEntity):
         return not self._connection.can_subscribe
 
     @property
-    def volume_level(self):
+    def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
         if "volume" in self._app_properties:
             return int(self._app_properties["volume"]) / 100.0
+        return None
 
     @property
     def is_volume_muted(self):
@@ -628,6 +637,21 @@ class KodiEntity(MediaPlayerEntity):
             return artists[0]
 
         return None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, str | None]:
+        """Return the state attributes."""
+        state_attr: dict[str, str | None] = {}
+        if self.state == MediaPlayerState.OFF:
+            return state_attr
+
+        state_attr["dynamic_range"] = "sdr"
+        if (video_details := self._item.get("streamdetails", {}).get("video")) and (
+            hdr_type := video_details[0].get("hdrtype")
+        ):
+            state_attr["dynamic_range"] = hdr_type
+
+        return state_attr
 
     async def async_turn_on(self) -> None:
         """Turn the media player on."""

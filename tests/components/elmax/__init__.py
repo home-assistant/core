@@ -1,6 +1,19 @@
 """Tests for the Elmax component."""
 
-from tests.common import load_fixture
+from homeassistant.components.elmax.const import (
+    CONF_ELMAX_MODE,
+    CONF_ELMAX_MODE_DIRECT,
+    CONF_ELMAX_MODE_DIRECT_HOST,
+    CONF_ELMAX_MODE_DIRECT_PORT,
+    CONF_ELMAX_MODE_DIRECT_SSL,
+    CONF_ELMAX_MODE_DIRECT_SSL_CERT,
+    CONF_ELMAX_PANEL_ID,
+    CONF_ELMAX_PANEL_PIN,
+    DOMAIN,
+)
+from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry, load_fixture
 
 MOCK_USER_JWT = (
     "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
@@ -17,8 +30,29 @@ MOCK_PANEL_PIN = "000000"
 MOCK_WRONG_PANEL_PIN = "000000"
 MOCK_PASSWORD = "password"
 MOCK_DIRECT_HOST = "1.1.1.1"
+MOCK_DIRECT_HOST_V6 = "fd00::be2:54:34:2"
 MOCK_DIRECT_HOST_CHANGED = "2.2.2.2"
 MOCK_DIRECT_PORT = 443
 MOCK_DIRECT_SSL = True
 MOCK_DIRECT_CERT = load_fixture("direct/cert.pem", "elmax")
 MOCK_DIRECT_FOLLOW_MDNS = True
+
+
+async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
+    """Mock integration setup."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_ELMAX_MODE: CONF_ELMAX_MODE_DIRECT,
+            CONF_ELMAX_MODE_DIRECT_HOST: MOCK_DIRECT_HOST,
+            CONF_ELMAX_MODE_DIRECT_PORT: MOCK_DIRECT_PORT,
+            CONF_ELMAX_MODE_DIRECT_SSL: MOCK_DIRECT_SSL,
+            CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
+            CONF_ELMAX_PANEL_ID: None,
+            CONF_ELMAX_MODE_DIRECT_SSL_CERT: MOCK_DIRECT_CERT,
+        },
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    return entry

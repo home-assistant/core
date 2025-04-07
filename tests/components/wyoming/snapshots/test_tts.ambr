@@ -32,28 +32,6 @@
     }),
   ])
 # ---
-# name: test_get_tts_audio_mp3
-  list([
-    dict({
-      'data': dict({
-        'text': 'Hello world',
-      }),
-      'payload': None,
-      'type': 'synthesize',
-    }),
-  ])
-# ---
-# name: test_get_tts_audio_raw
-  list([
-    dict({
-      'data': dict({
-        'text': 'Hello world',
-      }),
-      'payload': None,
-      'type': 'synthesize',
-    }),
-  ])
-# ---
 # name: test_voice_speaker
   list([
     dict({

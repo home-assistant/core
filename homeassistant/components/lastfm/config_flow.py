@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from pylast import LastFMNetwork, PyLastError, User, WSError
@@ -11,7 +12,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlowWithConfigEntry,
+    OptionsFlow,
 )
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import callback
@@ -32,6 +33,8 @@ CONFIG_SCHEMA: vol.Schema = vol.Schema(
     }
 )
 
+_LOGGER = logging.getLogger(__name__)
+
 
 def get_lastfm_user(api_key: str, username: str) -> tuple[User, dict[str, str]]:
     """Get and validate lastFM User."""
@@ -49,7 +52,8 @@ def get_lastfm_user(api_key: str, username: str) -> tuple[User, dict[str, str]]:
             errors["base"] = "invalid_auth"
         else:
             errors["base"] = "unknown"
-    except Exception:  # pylint:disable=broad-except
+    except Exception:
+        _LOGGER.exception("Unexpected exception")
         errors["base"] = "unknown"
     return user, errors
 
@@ -80,7 +84,7 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> LastFmOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return LastFmOptionsFlowHandler(config_entry)
+        return LastFmOptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -155,7 +159,7 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
 
-class LastFmOptionsFlowHandler(OptionsFlowWithConfigEntry):
+class LastFmOptionsFlowHandler(OptionsFlow):
     """LastFm Options flow handler."""
 
     async def async_step_init(
@@ -163,24 +167,25 @@ class LastFmOptionsFlowHandler(OptionsFlowWithConfigEntry):
     ) -> ConfigFlowResult:
         """Initialize form."""
         errors: dict[str, str] = {}
+        options = self.config_entry.options
         if user_input is not None:
             users, errors = validate_lastfm_users(
-                self.options[CONF_API_KEY], user_input[CONF_USERS]
+                options[CONF_API_KEY], user_input[CONF_USERS]
             )
             user_input[CONF_USERS] = users
             if not errors:
                 return self.async_create_entry(
                     title="LastFM",
                     data={
-                        **self.options,
+                        **options,
                         CONF_USERS: user_input[CONF_USERS],
                     },
                 )
-        if self.options[CONF_MAIN_USER]:
+        if options[CONF_MAIN_USER]:
             try:
                 main_user, _ = get_lastfm_user(
-                    self.options[CONF_API_KEY],
-                    self.options[CONF_MAIN_USER],
+                    options[CONF_API_KEY],
+                    options[CONF_MAIN_USER],
                 )
                 friends_response = await self.hass.async_add_executor_job(
                     main_user.get_friends
@@ -206,6 +211,6 @@ class LastFmOptionsFlowHandler(OptionsFlowWithConfigEntry):
                         ),
                     }
                 ),
-                user_input or self.options,
+                user_input or options,
             ),
         )

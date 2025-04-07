@@ -28,10 +28,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import config_validation as cv, template as template_helper
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.template import Template
 
 from . import DOMAIN
 from .const import (
@@ -47,7 +47,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a generic IP Camera."""
 
@@ -91,22 +93,14 @@ class GenericCamera(Camera):
         self._password = device_info.get(CONF_PASSWORD)
         self._name = device_info.get(CONF_NAME, title)
         self._still_image_url = device_info.get(CONF_STILL_IMAGE_URL)
-        if (
-            not isinstance(self._still_image_url, template_helper.Template)
-            and self._still_image_url
-        ):
-            self._still_image_url = cv.template(self._still_image_url)
         if self._still_image_url:
-            self._still_image_url.hass = hass
+            self._still_image_url = Template(self._still_image_url, hass)
         self._stream_source = device_info.get(CONF_STREAM_SOURCE)
         if self._stream_source:
-            if not isinstance(self._stream_source, template_helper.Template):
-                self._stream_source = cv.template(self._stream_source)
-            self._stream_source.hass = hass
-        self._limit_refetch = device_info[CONF_LIMIT_REFETCH_TO_URL_CHANGE]
-        self._attr_frame_interval = 1 / device_info[CONF_FRAMERATE]
-        if self._stream_source:
+            self._stream_source = Template(self._stream_source, hass)
             self._attr_supported_features = CameraEntityFeature.STREAM
+        self._limit_refetch = device_info.get(CONF_LIMIT_REFETCH_TO_URL_CHANGE, False)
+        self._attr_frame_interval = 1 / device_info[CONF_FRAMERATE]
         self.content_type = device_info[CONF_CONTENT_TYPE]
         self.verify_ssl = device_info[CONF_VERIFY_SSL]
         if device_info.get(CONF_RTSP_TRANSPORT):

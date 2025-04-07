@@ -1,27 +1,34 @@
 """Creates the device tracker entity for the mower."""
 
-from typing import TYPE_CHECKING
-
-from homeassistant.components.device_tracker import SourceType, TrackerEntity
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from . import AutomowerConfigEntry
 from .coordinator import AutomowerDataUpdateCoordinator
 from .entity import AutomowerBaseEntity
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: AutomowerConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up device tracker platform."""
-    coordinator: AutomowerDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(
-        AutomowerDeviceTrackerEntity(mower_id, coordinator)
-        for mower_id in coordinator.data
-        if coordinator.data[mower_id].capabilities.position
-    )
+    coordinator = entry.runtime_data
+
+    def _async_add_new_devices(mower_ids: set[str]) -> None:
+        async_add_entities(
+            AutomowerDeviceTrackerEntity(mower_id, coordinator)
+            for mower_id in mower_ids
+            if coordinator.data[mower_id].capabilities.position
+        )
+
+    coordinator.new_devices_callbacks.append(_async_add_new_devices)
+    _async_add_new_devices(set(coordinator.data))
 
 
 class AutomowerDeviceTrackerEntity(AutomowerBaseEntity, TrackerEntity):
@@ -39,20 +46,11 @@ class AutomowerDeviceTrackerEntity(AutomowerBaseEntity, TrackerEntity):
         self._attr_unique_id = mower_id
 
     @property
-    def source_type(self) -> SourceType:
-        """Return the source type of the device."""
-        return SourceType.GPS
-
-    @property
     def latitude(self) -> float:
         """Return latitude value of the device."""
-        if TYPE_CHECKING:
-            assert self.mower_attributes.positions is not None
         return self.mower_attributes.positions[0].latitude
 
     @property
     def longitude(self) -> float:
         """Return longitude value of the device."""
-        if TYPE_CHECKING:
-            assert self.mower_attributes.positions is not None
         return self.mower_attributes.positions[0].longitude

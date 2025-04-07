@@ -23,9 +23,8 @@ from flux_led.const import (
 from flux_led.models_db import get_model_description
 from flux_led.scanner import FluxLEDDiscovery
 
-from homeassistant import config_entries
 from homeassistant.components import network
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, discovery_flow
@@ -44,6 +43,7 @@ from .const import (
     DOMAIN,
     FLUX_LED_DISCOVERY,
 )
+from .coordinator import FluxLedConfigEntry
 from .util import format_as_flux_mac, mac_matches_by_one
 
 _LOGGER = logging.getLogger(__name__)
@@ -63,7 +63,7 @@ CONF_TO_DISCOVERY: Final = {
 
 
 @callback
-def async_build_cached_discovery(entry: ConfigEntry) -> FluxLEDDiscovery:
+def async_build_cached_discovery(entry: FluxLedConfigEntry) -> FluxLEDDiscovery:
     """When discovery is unavailable, load it from the config entry."""
     data = entry.data
     return FluxLEDDiscovery(
@@ -116,7 +116,7 @@ def async_populate_data_from_discovery(
 @callback
 def async_update_entry_from_discovery(
     hass: HomeAssistant,
-    entry: config_entries.ConfigEntry,
+    entry: FluxLedConfigEntry,
     device: FluxLEDDiscovery,
     model_num: int | None,
     allow_update_mac: bool,
@@ -178,16 +178,20 @@ async def async_discover_devices(
         targets = [address]
     else:
         targets = [
-            str(address)
-            for address in await network.async_get_ipv4_broadcast_addresses(hass)
+            str(broadcast_address)
+            for broadcast_address in await network.async_get_ipv4_broadcast_addresses(
+                hass
+            )
         ]
 
     scanner = AIOBulbScanner()
     for idx, discovered in enumerate(
         await asyncio.gather(
             *[
-                create_eager_task(scanner.async_scan(timeout=timeout, address=address))
-                for address in targets
+                create_eager_task(
+                    scanner.async_scan(timeout=timeout, address=target_address)
+                )
+                for target_address in targets
             ],
             return_exceptions=True,
         )
@@ -226,6 +230,6 @@ def async_trigger_discovery(
         discovery_flow.async_create_flow(
             hass,
             DOMAIN,
-            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+            context={"source": SOURCE_INTEGRATION_DISCOVERY},
             data={**device},
         )

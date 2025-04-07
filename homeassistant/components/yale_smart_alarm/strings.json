@@ -2,11 +2,13 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unique_id_exists": "Another config entry with this username already exist"
     },
     "step": {
       "user": {
@@ -19,9 +21,13 @@
       },
       "reauth_confirm": {
         "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "reconfigure": {
+        "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "name": "[%key:common::config_flow::data::name%]",
           "area_id": "[%key:component::yale_smart_alarm::config::step::user::data::area_id%]"
         }
       }
@@ -55,6 +61,21 @@
       "panic": {
         "name": "Panic button"
       }
+    },
+    "switch": {
+      "autolock": {
+        "name": "Autolock"
+      }
+    },
+    "select": {
+      "volume": {
+        "name": "Volume",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "off": "[%key:common::state::off%]"
+        }
+      }
     }
   },
   "exceptions": {
@@ -69,6 +90,9 @@
     },
     "could_not_change_lock": {
       "message": "Could not set lock, check system ready for lock"
+    },
+    "could_not_trigger_panic": {
+      "message": "Could not trigger panic button for entity ID {entity_id}: {error}"
     }
   }
 }

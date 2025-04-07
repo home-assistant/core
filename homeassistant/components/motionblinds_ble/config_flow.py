@@ -7,13 +7,19 @@ import re
 from typing import TYPE_CHECKING, Any
 
 from bleak.backends.device import BLEDevice
-from motionblindsble.const import DISPLAY_NAME, MotionBlindType
+from motionblindsble.const import DISPLAY_NAME, SETTING_DISCONNECT_TIME, MotionBlindType
 import voluptuous as vol
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_ADDRESS
+from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import (
     SelectSelector,
@@ -30,6 +36,8 @@ from .const import (
     ERROR_INVALID_MAC_CODE,
     ERROR_NO_BLUETOOTH_ADAPTER,
     ERROR_NO_DEVICES_FOUND,
+    OPTION_DISCONNECT_TIME,
+    OPTION_PERMANENT_CONNECTION,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,11 +48,12 @@ CONFIG_SCHEMA = vol.Schema({vol.Required(CONF_MAC_CODE): str})
 class FlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Motionblinds Bluetooth."""
 
+    _display_name: str
+
     def __init__(self) -> None:
         """Initialize a ConfigFlow."""
         self._discovery_info: BluetoothServiceInfoBleak | BLEDevice | None = None
         self._mac_code: str | None = None
-        self._display_name: str | None = None
         self._blind_type: MotionBlindType | None = None
 
     async def async_step_bluetooth(
@@ -60,7 +69,6 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         self._discovery_info = discovery_info
         self._mac_code = get_mac_from_local_name(discovery_info.name)
         self._display_name = DISPLAY_NAME.format(mac_code=self._mac_code)
-        self.context["local_name"] = discovery_info.name
         self.context["title_placeholders"] = {"name": self._display_name}
 
         return await self.async_step_confirm()
@@ -106,7 +114,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 assert self._discovery_info is not None
 
             return self.async_create_entry(
-                title=str(self._display_name),
+                title=self._display_name,
                 data={
                     CONF_ADDRESS: self._discovery_info.address,
                     CONF_LOCAL_NAME: self._discovery_info.name,
@@ -173,6 +181,49 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         self._discovery_info = motion_device
         self._mac_code = mac_code.upper()
         self._display_name = DISPLAY_NAME.format(mac_code=self._mac_code)
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> OptionsFlow:
+        """Create the options flow."""
+        return OptionsFlowHandler()
+
+
+class OptionsFlowHandler(OptionsFlow):
+    """Handle an options flow for Motionblinds BLE."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        OPTION_PERMANENT_CONNECTION,
+                        default=(
+                            self.config_entry.options.get(
+                                OPTION_PERMANENT_CONNECTION, False
+                            )
+                        ),
+                    ): bool,
+                    vol.Optional(
+                        OPTION_DISCONNECT_TIME,
+                        default=(
+                            self.config_entry.options.get(
+                                OPTION_DISCONNECT_TIME, SETTING_DISCONNECT_TIME
+                            )
+                        ),
+                    ): vol.All(vol.Coerce(int), vol.Range(min=0)),
+                }
+            ),
+        )
 
 
 def is_valid_mac(data: str) -> bool:

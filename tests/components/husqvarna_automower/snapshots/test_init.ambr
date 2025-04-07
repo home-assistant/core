@@ -3,6 +3,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': 'garden',
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -20,10 +21,12 @@
     'labels': set({
     }),
     'manufacturer': 'Husqvarna',
-    'model': '450XH-TEST',
+    'model': 'AUTOMOWER® 450XH',
+    'model_id': None,
     'name': 'Test Mower 1',
     'name_by_user': None,
-    'serial_number': 123,
+    'primary_config_entry': <ANY>,
+    'serial_number': '123',
     'suggested_area': 'Garden',
     'sw_version': None,
     'via_device_id': None,

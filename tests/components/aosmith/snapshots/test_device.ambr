@@ -3,6 +3,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': 'basement',
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -21,8 +22,10 @@
     }),
     'manufacturer': 'A. O. Smith',
     'model': 'HPTS-50 200 202172000',
+    'model_id': None,
     'name': 'My water heater',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': 'serial',
     'suggested_area': 'Basement',
     'sw_version': '2.14',

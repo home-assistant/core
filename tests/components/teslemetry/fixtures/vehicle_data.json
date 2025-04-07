@@ -3,7 +3,7 @@
     "id": 1234,
     "user_id": 1234,
     "vehicle_id": 1234,
-    "vin": "VINVINVIN",
+    "vin": "LRW3F7EK4NC700000",
     "color": null,
     "access_type": "OWNER",
     "granular_access": {
@@ -73,14 +73,14 @@
     },
     "climate_state": {
       "allow_cabin_overheat_protection": true,
-      "auto_seat_climate_left": false,
+      "auto_seat_climate_left": true,
       "auto_seat_climate_right": true,
       "auto_steering_wheel_heat": false,
       "battery_heater": false,
       "battery_heater_no_power": null,
       "cabin_overheat_protection": "On",
       "cabin_overheat_protection_actively_cooling": false,
-      "climate_keeper_mode": "off",
+      "climate_keeper_mode": "keep",
       "cop_activation_temperature": "High",
       "defrost_mode": 0,
       "driver_temp_setting": 22,
@@ -88,7 +88,7 @@
       "hvac_auto_request": "On",
       "inside_temp": 29.8,
       "is_auto_conditioning_on": false,
-      "is_climate_on": false,
+      "is_climate_on": true,
       "is_front_defroster_on": false,
       "is_preconditioning": false,
       "is_rear_defroster_on": false,
@@ -112,6 +112,7 @@
       "wiper_blade_heater": false
     },
     "drive_state": {
+      "active_route_destination": "Home",
       "active_route_latitude": 30.2226265,
       "active_route_longitude": -97.6236871,
       "active_route_miles_to_arrival": 0.039491,
@@ -148,7 +149,7 @@
       "car_special_type": "base",
       "car_type": "model3",
       "charge_port_type": "CCS",
-      "cop_user_set_temp_supported": false,
+      "cop_user_set_temp_supported": true,
       "dashcam_clip_save_supported": true,
       "default_charge_to_max": false,
       "driver_assist": "TeslaAP3",
@@ -176,7 +177,7 @@
       "roof_color": "RoofColorGlass",
       "seat_type": null,
       "spoiler_type": "None",
-      "sun_roof_installed": null,
+      "sun_roof_installed": true,
       "supports_qr_pairing": false,
       "third_row_seats": "None",
       "timestamp": 1705707520649,
@@ -191,7 +192,7 @@
       "api_version": 71,
       "autopark_state_v2": "unavailable",
       "calendar_supported": true,
-      "car_version": "2023.44.30.8 06f534d46010",
+      "car_version": "2026.0.0 06f534d46010",
       "center_display_state": 0,
       "dashcam_clip_save_available": true,
       "dashcam_state": "Recording",
@@ -204,17 +205,18 @@
       "is_user_present": false,
       "locked": false,
       "media_info": {
-        "audio_volume": 2.6667,
+        "a2dp_source_name": "Pixel 8 Pro",
+        "audio_volume": 1.6667,
         "audio_volume_increment": 0.333333,
         "audio_volume_max": 10.333333,
-        "media_playback_status": "Stopped",
-        "now_playing_album": "",
-        "now_playing_artist": "",
-        "now_playing_duration": 0,
-        "now_playing_elapsed": 0,
-        "now_playing_source": "Spotify",
-        "now_playing_station": "",
-        "now_playing_title": ""
+        "media_playback_status": "Playing",
+        "now_playing_album": "Elon Musk",
+        "now_playing_artist": "Walter Isaacson",
+        "now_playing_duration": 651000,
+        "now_playing_elapsed": 1000,
+        "now_playing_source": "Audible",
+        "now_playing_station": "Elon Musk",
+        "now_playing_title": "Chapter 51: Cybertruck: Tesla, 2018–2019"
       },
       "media_state": {
         "remote_control_enabled": true
@@ -236,11 +238,11 @@
       "service_mode": false,
       "service_mode_plus": false,
       "software_update": {
-        "download_perc": 0,
+        "download_perc": 100,
         "expected_duration_sec": 2700,
         "install_perc": 1,
-        "status": "",
-        "version": " "
+        "status": "available",
+        "version": "2024.12.0.0"
       },
       "speed_limit_mode": {
         "active": false,
@@ -249,6 +251,8 @@
         "min_limit_mph": 50,
         "pin_code_set": true
       },
+      "sun_roof_state": "open",
+      "vehicle_state_sun_roof_percent_open": 20,
       "timestamp": 1705707520649,
       "tpms_hard_warning_fl": false,
       "tpms_hard_warning_fr": false,

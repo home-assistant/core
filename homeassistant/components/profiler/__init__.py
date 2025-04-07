@@ -22,7 +22,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL, CONF_TYPE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.service import async_register_admin_service
 
@@ -233,7 +233,7 @@ async def async_setup_entry(  # noqa: C901
 
     async def _async_dump_thread_frames(call: ServiceCall) -> None:
         """Log all thread frames."""
-        frames = sys._current_frames()  # pylint: disable=protected-access
+        frames = sys._current_frames()  # noqa: SLF001
         main_thread = threading.main_thread()
         for thread in threading.enumerate():
             if thread == main_thread:
@@ -505,7 +505,7 @@ def _safe_repr(obj: Any) -> str:
     """
     try:
         return repr(obj)
-    except Exception:  # pylint: disable=broad-except
+    except Exception:  # noqa: BLE001
         return f"Failed to serialize {type(obj)}"
 
 
@@ -586,7 +586,7 @@ def _log_object_sources(
 
 
 @contextlib.contextmanager
-def _increase_repr_limit() -> Generator[None, None, None]:
+def _increase_repr_limit() -> Generator[None]:
     """Increase the repr limit."""
     arepr = reprlib.aRepr
     original_maxstring = arepr.maxstring

@@ -1,9 +1,44 @@
 {
   "entity": {
     "sensor": {
+      "daily_active_water_use": {
+        "default": "mdi:water"
+      },
+      "daily_active_water_time": {
+        "default": "mdi:timelapse"
+      },
+      "daily_inactive_water_use": {
+        "default": "mdi:water"
+      },
+      "daily_total_water_use": {
+        "default": "mdi:water"
+      },
+      "next_cycle": {
+        "default": "mdi:clock-outline"
+      },
       "watering_time": {
-        "default": "mdi:water-pump"
+        "default": "mdi:timer-outline"
       }
+    },
+    "binary_sensor": {
+      "rain_sensor": {
+        "default": "mdi:weather-sunny",
+        "state": {
+          "off": "mdi:weather-sunny",
+          "on": "mdi:weather-pouring"
+        }
+      }
+    }
+  },
+  "services": {
+    "start_watering": {
+      "service": "mdi:sprinkler-variant"
+    },
+    "suspend": {
+      "service": "mdi:pause-circle-outline"
+    },
+    "resume": {
+      "service": "mdi:play"
     }
   }
 }

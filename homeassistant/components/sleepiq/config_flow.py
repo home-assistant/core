@@ -9,7 +9,7 @@ from typing import Any
 from asyncsleepiq import AsyncSleepIQ, SleepIQLoginException, SleepIQTimeoutException
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -24,26 +24,20 @@ class SleepIQFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self) -> None:
-        """Initialize the config flow."""
-        self._reauth_entry: ConfigEntry | None = None
-
-    async def async_step_import(
-        self, import_config: dict[str, Any]
-    ) -> ConfigFlowResult:
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import a SleepIQ account as a config entry.
 
         This flow is triggered by 'async_setup' for configured accounts.
         """
-        await self.async_set_unique_id(import_config[CONF_USERNAME].lower())
+        await self.async_set_unique_id(import_data[CONF_USERNAME].lower())
         self._abort_if_unique_id_configured()
 
-        if error := await try_connection(self.hass, import_config):
+        if error := await try_connection(self.hass, import_data):
             _LOGGER.error("Could not authenticate with SleepIQ server: %s", error)
             return self.async_abort(reason=error)
 
         return self.async_create_entry(
-            title=import_config[CONF_USERNAME], data=import_config
+            title=import_data[CONF_USERNAME], data=import_data
         )
 
     async def async_step_user(
@@ -86,9 +80,6 @@ class SleepIQFlowHandler(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
-        self._reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -96,19 +87,16 @@ class SleepIQFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm reauth."""
         errors: dict[str, str] = {}
-        assert self._reauth_entry is not None
+
+        reauth_entry = self._get_reauth_entry()
         if user_input is not None:
             data = {
-                CONF_USERNAME: self._reauth_entry.data[CONF_USERNAME],
+                CONF_USERNAME: reauth_entry.data[CONF_USERNAME],
                 CONF_PASSWORD: user_input[CONF_PASSWORD],
             }
 
             if not (error := await try_connection(self.hass, data)):
-                self.hass.config_entries.async_update_entry(
-                    self._reauth_entry, data=data
-                )
-                await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
+                return self.async_update_reload_and_abort(reauth_entry, data=data)
             errors["base"] = error
 
         return self.async_show_form(
@@ -116,7 +104,7 @@ class SleepIQFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema({vol.Required(CONF_PASSWORD): str}),
             errors=errors,
             description_placeholders={
-                CONF_USERNAME: self._reauth_entry.data[CONF_USERNAME],
+                CONF_USERNAME: reauth_entry.data[CONF_USERNAME],
             },
         )
 

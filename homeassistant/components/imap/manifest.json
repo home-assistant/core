@@ -7,5 +7,5 @@
   "documentation": "https://www.home-assistant.io/integrations/imap",
   "iot_class": "cloud_push",
   "loggers": ["aioimaplib"],
-  "requirements": ["aioimaplib==1.0.1"]
+  "requirements": ["aioimaplib==2.0.1"]
 }

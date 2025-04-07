@@ -47,7 +47,7 @@ async def test_device_test_data(rfxtrx, device: DeviceTestData) -> None:
     }
 
 
-async def setup_entry(hass, devices):
+async def setup_entry(hass: HomeAssistant, devices: dict[str, Any]) -> None:
     """Construct a config setup."""
     entry_data = create_rfx_test_cfg(devices=devices)
     mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
@@ -79,7 +79,10 @@ def _get_expected_actions(data):
     ],
 )
 async def test_get_actions(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry, device, expected
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    device: DeviceTestData,
+    expected,
 ) -> None:
     """Test we get the expected actions from a rfxtrx."""
     await setup_entry(hass, {device.code: {}})
@@ -136,7 +139,7 @@ async def test_action(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     rfxtrx: RFXtrx.Connect,
-    device,
+    device: DeviceTestData,
     config,
     expected,
 ) -> None:

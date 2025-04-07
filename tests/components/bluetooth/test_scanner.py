@@ -3,6 +3,7 @@
 import asyncio
 from datetime import timedelta
 import time
+from typing import Any
 from unittest.mock import ANY, MagicMock, patch
 
 from bleak import BleakError
@@ -39,11 +40,9 @@ NEED_RESET_ERRORS = [
 ]
 
 
+@pytest.mark.usefixtures("enable_bluetooth", "macos_adapter")
 async def test_config_entry_can_be_reloaded_when_stop_raises(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    enable_bluetooth: None,
-    macos_adapter: None,
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test we can reload if stopping the scanner raises."""
     entry = hass.config_entries.async_entries(bluetooth.DOMAIN)[0]
@@ -60,8 +59,9 @@ async def test_config_entry_can_be_reloaded_when_stop_raises(
     assert "Error stopping scanner" in caplog.text
 
 
+@pytest.mark.usefixtures("one_adapter")
 async def test_dbus_socket_missing_in_container(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, one_adapter: None
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test we handle dbus being missing in the container."""
 
@@ -83,8 +83,9 @@ async def test_dbus_socket_missing_in_container(
     assert "docker" in caplog.text
 
 
+@pytest.mark.usefixtures("one_adapter")
 async def test_dbus_socket_missing(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, one_adapter: None
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test we handle dbus being missing."""
 
@@ -106,8 +107,9 @@ async def test_dbus_socket_missing(
     assert "docker" not in caplog.text
 
 
+@pytest.mark.usefixtures("one_adapter")
 async def test_dbus_broken_pipe_in_container(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, one_adapter: None
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test we handle dbus broken pipe in the container."""
 
@@ -130,8 +132,9 @@ async def test_dbus_broken_pipe_in_container(
     assert "container" in caplog.text
 
 
+@pytest.mark.usefixtures("one_adapter")
 async def test_dbus_broken_pipe(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, one_adapter: None
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test we handle dbus broken pipe."""
 
@@ -154,8 +157,9 @@ async def test_dbus_broken_pipe(
     assert "container" not in caplog.text
 
 
+@pytest.mark.usefixtures("one_adapter")
 async def test_invalid_dbus_message(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, one_adapter: None
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test we handle invalid dbus message."""
 
@@ -174,9 +178,8 @@ async def test_invalid_dbus_message(
 
 
 @pytest.mark.parametrize("error", NEED_RESET_ERRORS)
-async def test_adapter_needs_reset_at_start(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, one_adapter: None, error: str
-) -> None:
+@pytest.mark.usefixtures("one_adapter")
+async def test_adapter_needs_reset_at_start(hass: HomeAssistant, error: str) -> None:
     """Test we cycle the adapter when it needs a restart."""
 
     with (
@@ -199,9 +202,8 @@ async def test_adapter_needs_reset_at_start(
     await hass.async_block_till_done()
 
 
-async def test_recovery_from_dbus_restart(
-    hass: HomeAssistant, one_adapter: None
-) -> None:
+@pytest.mark.usefixtures("one_adapter")
+async def test_recovery_from_dbus_restart(hass: HomeAssistant) -> None:
     """Test we can recover when DBus gets restarted out from under us."""
 
     called_start = 0
@@ -210,7 +212,7 @@ async def test_recovery_from_dbus_restart(
     mock_discovered = []
 
     class MockBleakScanner:
-        def __init__(self, detection_callback, *args, **kwargs):
+        def __init__(self, detection_callback, *args: Any, **kwargs: Any) -> None:
             nonlocal _callback
             _callback = detection_callback
 
@@ -281,7 +283,8 @@ async def test_recovery_from_dbus_restart(
         assert called_start == 2
 
 
-async def test_adapter_recovery(hass: HomeAssistant, one_adapter: None) -> None:
+@pytest.mark.usefixtures("one_adapter")
+async def test_adapter_recovery(hass: HomeAssistant) -> None:
     """Test we can recover when the adapter stops responding."""
 
     called_start = 0
@@ -365,9 +368,8 @@ async def test_adapter_recovery(hass: HomeAssistant, one_adapter: None) -> None:
         assert called_start == 2
 
 
-async def test_adapter_scanner_fails_to_start_first_time(
-    hass: HomeAssistant, one_adapter: None
-) -> None:
+@pytest.mark.usefixtures("one_adapter")
+async def test_adapter_scanner_fails_to_start_first_time(hass: HomeAssistant) -> None:
     """Test we can recover when the adapter stops responding and the first recovery fails."""
 
     called_start = 0
@@ -474,8 +476,9 @@ async def test_adapter_scanner_fails_to_start_first_time(
         assert called_start == 5
 
 
+@pytest.mark.usefixtures("one_adapter")
 async def test_adapter_fails_to_start_and_takes_a_bit_to_init(
-    hass: HomeAssistant, one_adapter: None, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test we can recover the adapter at startup and we wait for Dbus to init."""
     assert await async_setup_component(hass, "logger", {})
@@ -545,8 +548,9 @@ async def test_adapter_fails_to_start_and_takes_a_bit_to_init(
     assert "Waiting for adapter to initialize" in caplog.text
 
 
+@pytest.mark.usefixtures("one_adapter")
 async def test_restart_takes_longer_than_watchdog_time(
-    hass: HomeAssistant, one_adapter: None, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test we do not try to recover the adapter again if the restart is still in progress."""
 
@@ -614,8 +618,9 @@ async def test_restart_takes_longer_than_watchdog_time(
 
 
 @pytest.mark.skipif("platform.system() != 'Darwin'")
+@pytest.mark.usefixtures("macos_adapter")
 async def test_setup_and_stop_macos(
-    hass: HomeAssistant, mock_bleak_scanner_start: MagicMock, macos_adapter: None
+    hass: HomeAssistant, mock_bleak_scanner_start: MagicMock
 ) -> None:
     """Test we enable use_bdaddr on MacOS."""
     entry = MockConfigEntry(
@@ -627,7 +632,7 @@ async def test_setup_and_stop_macos(
     init_kwargs = None
 
     class MockBleakScanner:
-        def __init__(self, *args, **kwargs):
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
             """Init the scanner."""
             nonlocal init_kwargs
             init_kwargs = kwargs

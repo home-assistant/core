@@ -1,0 +1,79 @@
+{
+  "items": [
+    {
+      "deviceId": "69a271f6-6537-4982-8cd9-979866872692",
+      "name": "heatit-ztrm3-thermostat",
+      "label": "Hall thermostat",
+      "manufacturerName": "SmartThingsCommunity",
+      "presentationId": "8c5c0adc-73d6-33db-a1bd-67d746ab0e00",
+      "deviceManufacturerCode": "019B-0003-0203",
+      "locationId": "6cf6637b-9bc5-4e52-bc99-7497e322fb0d",
+      "ownerId": "7b68139b-d068-45d8-bf27-961320350024",
+      "roomId": "746b4d54-8026-44f1-b50f-8833dafdeea3",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "temperatureMeasurement",
+              "version": 1
+            },
+            {
+              "id": "thermostatHeatingSetpoint",
+              "version": 1
+            },
+            {
+              "id": "thermostatOperatingState",
+              "version": 1
+            },
+            {
+              "id": "thermostatMode",
+              "version": 1
+            },
+            {
+              "id": "powerMeter",
+              "version": 1
+            },
+            {
+              "id": "energyMeter",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Thermostat",
+              "categoryType": "manufacturer"
+            }
+          ]
+        }
+      ],
+      "createTime": "2023-09-22T15:40:58.942Z",
+      "parentDeviceId": "d04f5ba0-1430-4826-9aa4-fba4efb57c24",
+      "profile": {
+        "id": "2677e0e8-9241-3163-815e-6b1d6743f280"
+      },
+      "zwave": {
+        "networkId": "28",
+        "driverId": "28198799-de20-4cfd-a9f3-67860a0877d5",
+        "executingLocally": true,
+        "hubId": "d04f5ba0-1430-4826-9aa4-fba4efb57c24",
+        "networkSecurityLevel": "ZWAVE_S2_AUTHENTICATED",
+        "provisioningState": "PROVISIONED",
+        "manufacturerId": 411,
+        "productType": 3,
+        "productId": 515
+      },
+      "type": "ZWAVE",
+      "restrictionTier": 0,
+      "allowed": null,
+      "executionContext": "LOCAL",
+      "relationships": []
+    }
+  ],
+  "_links": {}
+}

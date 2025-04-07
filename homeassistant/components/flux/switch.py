@@ -13,7 +13,7 @@ import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_RGB_COLOR,
     ATTR_TRANSITION,
     ATTR_XY_COLOR,
@@ -21,7 +21,7 @@ from homeassistant.components.light import (
     VALID_TRANSITION,
     is_on,
 )
-from homeassistant.components.switch import DOMAIN, SwitchEntity
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchEntity
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_BRIGHTNESS,
@@ -43,12 +43,13 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
 from homeassistant.util.color import (
     color_RGB_to_xy_brightness,
-    color_temperature_kelvin_to_mired,
     color_temperature_to_rgb,
 )
 from homeassistant.util.dt import as_local, utcnow as dt_utcnow
 
 _LOGGER = logging.getLogger(__name__)
+
+ATTR_UNIQUE_ID = "unique_id"
 
 CONF_START_TIME = "start_time"
 CONF_STOP_TIME = "stop_time"
@@ -88,6 +89,7 @@ PLATFORM_SCHEMA = vol.Schema(
         ),
         vol.Optional(CONF_INTERVAL, default=30): cv.positive_int,
         vol.Optional(ATTR_TRANSITION, default=30): VALID_TRANSITION,
+        vol.Optional(ATTR_UNIQUE_ID): cv.string,
     }
 )
 
@@ -106,13 +108,13 @@ async def async_set_lights_xy(hass, lights, x_val, y_val, brightness, transition
             await hass.services.async_call(LIGHT_DOMAIN, SERVICE_TURN_ON, service_data)
 
 
-async def async_set_lights_temp(hass, lights, mired, brightness, transition):
+async def async_set_lights_temp(hass, lights, kelvin, brightness, transition):
     """Set color of array of lights."""
     for light in lights:
         if is_on(hass, light):
             service_data = {ATTR_ENTITY_ID: light}
-            if mired is not None:
-                service_data[ATTR_COLOR_TEMP] = int(mired)
+            if kelvin is not None:
+                service_data[ATTR_COLOR_TEMP_KELVIN] = kelvin
             if brightness is not None:
                 service_data[ATTR_BRIGHTNESS] = brightness
             if transition is not None:
@@ -151,6 +153,7 @@ async def async_setup_platform(
     mode = config.get(CONF_MODE)
     interval = config.get(CONF_INTERVAL)
     transition = config.get(ATTR_TRANSITION)
+    unique_id = config.get(ATTR_UNIQUE_ID)
     flux = FluxSwitch(
         name,
         hass,
@@ -165,6 +168,7 @@ async def async_setup_platform(
         mode,
         interval,
         transition,
+        unique_id,
     )
     async_add_entities([flux])
 
@@ -173,7 +177,7 @@ async def async_setup_platform(
         await flux.async_flux_update()
 
     service_name = slugify(f"{name} update")
-    hass.services.async_register(DOMAIN, service_name, async_update)
+    hass.services.async_register(SWITCH_DOMAIN, service_name, async_update)
 
 
 class FluxSwitch(SwitchEntity, RestoreEntity):
@@ -194,6 +198,7 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
         mode,
         interval,
         transition,
+        unique_id,
     ):
         """Initialize the Flux switch."""
         self._name = name
@@ -209,6 +214,7 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
         self._mode = mode
         self._interval = interval
         self._transition = transition
+        self._attr_unique_id = unique_id
         self.unsub_tracker = None
 
     @property
@@ -343,17 +349,15 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
                 now,
             )
         else:
-            # Convert to mired and clamp to allowed values
-            mired = color_temperature_kelvin_to_mired(temp)
             await async_set_lights_temp(
-                self.hass, self._lights, mired, brightness, self._transition
+                self.hass, self._lights, int(temp), brightness, self._transition
             )
             _LOGGER.debug(
                 (
-                    "Lights updated to mired:%s brightness:%s, %s%% "
+                    "Lights updated to kelvin:%s brightness:%s, %s%% "
                     "of %s cycle complete at %s"
                 ),
-                mired,
+                temp,
                 brightness,
                 round(percentage_complete * 100),
                 time_state,

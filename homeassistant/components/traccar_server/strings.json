@@ -47,7 +47,7 @@
       "motion": {
         "name": "Motion",
         "state": {
-          "off": "Stopped",
+          "off": "[%key:common::state::stopped%]",
           "on": "Moving"
         }
       },

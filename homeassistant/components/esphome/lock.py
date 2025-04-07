@@ -2,15 +2,14 @@
 
 from __future__ import annotations
 
+from functools import partial
 from typing import Any
 
 from aioesphomeapi import EntityInfo, LockCommand, LockEntityState, LockInfo, LockState
 
 from homeassistant.components.lock import LockEntity, LockEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_CODE
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import callback
 
 from .entity import (
     EsphomeEntity,
@@ -18,20 +17,6 @@ from .entity import (
     esphome_state_property,
     platform_async_setup_entry,
 )
-
-
-async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
-) -> None:
-    """Set up ESPHome switches based on a config entry."""
-    await platform_async_setup_entry(
-        hass,
-        entry,
-        async_add_entities,
-        info_type=LockInfo,
-        entity_type=EsphomeLock,
-        state_type=LockEntityState,
-    )
 
 
 class EsphomeLock(EsphomeEntity[LockInfo, LockEntityState], LockEntity):
@@ -55,25 +40,25 @@ class EsphomeLock(EsphomeEntity[LockInfo, LockEntityState], LockEntity):
     @esphome_state_property
     def is_locked(self) -> bool | None:
         """Return true if the lock is locked."""
-        return self._state.state == LockState.LOCKED
+        return self._state.state is LockState.LOCKED
 
     @property
     @esphome_state_property
     def is_locking(self) -> bool | None:
         """Return true if the lock is locking."""
-        return self._state.state == LockState.LOCKING
+        return self._state.state is LockState.LOCKING
 
     @property
     @esphome_state_property
     def is_unlocking(self) -> bool | None:
         """Return true if the lock is unlocking."""
-        return self._state.state == LockState.UNLOCKING
+        return self._state.state is LockState.UNLOCKING
 
     @property
     @esphome_state_property
     def is_jammed(self) -> bool | None:
         """Return true if the lock is jammed (incomplete locking)."""
-        return self._state.state == LockState.JAMMED
+        return self._state.state is LockState.JAMMED
 
     @convert_api_error_ha_error
     async def async_lock(self, **kwargs: Any) -> None:
@@ -83,10 +68,18 @@ class EsphomeLock(EsphomeEntity[LockInfo, LockEntityState], LockEntity):
     @convert_api_error_ha_error
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
-        code = kwargs.get(ATTR_CODE, None)
+        code = kwargs.get(ATTR_CODE)
         self._client.lock_command(self._key, LockCommand.UNLOCK, code)
 
     @convert_api_error_ha_error
     async def async_open(self, **kwargs: Any) -> None:
         """Open the door latch."""
         self._client.lock_command(self._key, LockCommand.OPEN)
+
+
+async_setup_entry = partial(
+    platform_async_setup_entry,
+    info_type=LockInfo,
+    entity_type=EsphomeLock,
+    state_type=LockEntityState,
+)

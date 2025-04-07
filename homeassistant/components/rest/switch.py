@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components.switch import (
     DEVICE_CLASSES_SCHEMA,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
     SwitchEntity,
 )
 from homeassistant.const import (
@@ -64,7 +64,7 @@ DEFAULT_VERIFY_SSL = True
 
 SUPPORT_REST_METHODS = ["post", "put", "patch"]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
         **TEMPLATE_ENTITY_BASE_SCHEMA.schema,
         vol.Required(CONF_RESOURCE): cv.url,
@@ -150,14 +150,6 @@ class RestSwitch(ManualTriggerEntity, SwitchEntity):
         self._is_on_template: template.Template | None = config.get(CONF_IS_ON_TEMPLATE)
         self._timeout: int = config[CONF_TIMEOUT]
         self._verify_ssl: bool = config[CONF_VERIFY_SSL]
-
-        self._body_on.hass = hass
-        self._body_off.hass = hass
-        if (is_on_template := self._is_on_template) is not None:
-            is_on_template.hass = hass
-
-        template.attach(hass, self._headers)
-        template.attach(hass, self._params)
 
     async def async_added_to_hass(self) -> None:
         """Handle adding to Home Assistant."""

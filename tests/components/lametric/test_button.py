@@ -49,9 +49,10 @@ async def test_button_app_next(
     assert device_entry.entry_type is None
     assert device_entry.identifiers == {(DOMAIN, "SA110405124500W00BS9")}
     assert device_entry.manufacturer == "LaMetric Inc."
-    assert device_entry.model == "LM 37X8"
+    assert device_entry.model_id == "LM 37X8"
     assert device_entry.name == "Frenck's LaMetric"
     assert device_entry.sw_version == "2.2.2"
+    assert device_entry.serial_number == "SA110405124500W00BS9"
     assert device_entry.hw_version is None
 
     await hass.services.async_call(
@@ -95,7 +96,7 @@ async def test_button_app_previous(
     assert device_entry.entry_type is None
     assert device_entry.identifiers == {(DOMAIN, "SA110405124500W00BS9")}
     assert device_entry.manufacturer == "LaMetric Inc."
-    assert device_entry.model == "LM 37X8"
+    assert device_entry.model_id == "LM 37X8"
     assert device_entry.name == "Frenck's LaMetric"
     assert device_entry.sw_version == "2.2.2"
     assert device_entry.hw_version is None
@@ -143,7 +144,7 @@ async def test_button_dismiss_current_notification(
     assert device_entry.entry_type is None
     assert device_entry.identifiers == {(DOMAIN, "SA110405124500W00BS9")}
     assert device_entry.manufacturer == "LaMetric Inc."
-    assert device_entry.model == "LM 37X8"
+    assert device_entry.model_id == "LM 37X8"
     assert device_entry.name == "Frenck's LaMetric"
     assert device_entry.sw_version == "2.2.2"
     assert device_entry.hw_version is None
@@ -191,7 +192,7 @@ async def test_button_dismiss_all_notifications(
     assert device_entry.entry_type is None
     assert device_entry.identifiers == {(DOMAIN, "SA110405124500W00BS9")}
     assert device_entry.manufacturer == "LaMetric Inc."
-    assert device_entry.model == "LM 37X8"
+    assert device_entry.model_id == "LM 37X8"
     assert device_entry.name == "Frenck's LaMetric"
     assert device_entry.sw_version == "2.2.2"
     assert device_entry.hw_version is None
@@ -227,7 +228,6 @@ async def test_button_error(
             {ATTR_ENTITY_ID: "button.frenck_s_lametric_next_app"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     state = hass.states.get("button.frenck_s_lametric_next_app")
     assert state
@@ -250,7 +250,6 @@ async def test_button_connection_error(
             {ATTR_ENTITY_ID: "button.frenck_s_lametric_next_app"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     state = hass.states.get("button.frenck_s_lametric_next_app")
     assert state

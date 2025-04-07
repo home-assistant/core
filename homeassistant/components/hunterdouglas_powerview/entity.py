@@ -4,7 +4,7 @@ import logging
 
 from aiopvapi.resources.shade import BaseShade, ShadePosition
 
-import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -26,12 +26,12 @@ class HDEntity(CoordinatorEntity[PowerviewShadeUpdateCoordinator]):
         coordinator: PowerviewShadeUpdateCoordinator,
         device_info: PowerviewDeviceInfo,
         room_name: str,
-        unique_id: str,
+        powerview_id: str,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
         self._room_name = room_name
-        self._attr_unique_id = unique_id
+        self._attr_unique_id = f"{device_info.serial_number}_{powerview_id}"
         self._device_info = device_info
         self._configuration_url = self.coordinator.hub.url
 

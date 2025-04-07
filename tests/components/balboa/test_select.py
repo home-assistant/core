@@ -2,26 +2,30 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, call
+from unittest.mock import MagicMock, call, patch
 
 from pybalboa import SpaControl
 from pybalboa.enums import LowHighRange
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.select import (
     ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from . import client_update, init_integration
+
+from tests.common import snapshot_platform
 
 ENTITY_SELECT = "select.fakespa_temperature_range"
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def mock_select(client: MagicMock):
     """Return a mock switch."""
     select = MagicMock(SpaControl)
@@ -34,6 +38,19 @@ def mock_select(client: MagicMock):
     select.set_state = set_state
     client.temperature_range = select
     return select
+
+
+async def test_selects(
+    hass: HomeAssistant,
+    client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test spa climate."""
+    with patch("homeassistant.components.balboa.PLATFORMS", [Platform.SELECT]):
+        entry = await init_integration(hass)
+
+    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
 
 async def test_select(hass: HomeAssistant, client: MagicMock, mock_select) -> None:

@@ -5,11 +5,14 @@ from unittest.mock import Mock, patch
 
 from aiohttp import ClientError
 from aiohttp.client_exceptions import ClientConnectorError
-from nextdns import ApiError
+from nextdns import ApiError, InvalidApiKeyError
 import pytest
 from syrupy import SnapshotAssertion
+from tenacity import RetryError
 
+from homeassistant.components.nextdns.const import DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -29,9 +32,9 @@ from . import init_integration, mock_nextdns
 from tests.common import async_fire_time_changed, snapshot_platform
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_switch(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -94,7 +97,15 @@ async def test_switch_off(hass: HomeAssistant) -> None:
         mock_switch_on.assert_called_once()
 
 
-async def test_availability(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "exc",
+    [
+        ApiError("API Error"),
+        RetryError("Retry Error"),
+        TimeoutError,
+    ],
+)
+async def test_availability(hass: HomeAssistant, exc: Exception) -> None:
     """Ensure that we mark the entities unavailable correctly when service causes an error."""
     await init_integration(hass)
 
@@ -106,7 +117,7 @@ async def test_availability(hass: HomeAssistant) -> None:
     future = utcnow() + timedelta(minutes=10)
     with patch(
         "homeassistant.components.nextdns.NextDns.get_settings",
-        side_effect=ApiError("API Error"),
+        side_effect=exc,
     ):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done(wait_background_tasks=True)
@@ -149,3 +160,32 @@ async def test_switch_failure(hass: HomeAssistant, exc: Exception) -> None:
             {ATTR_ENTITY_ID: "switch.fake_profile_block_page"},
             blocking=True,
         )
+
+
+async def test_switch_auth_error(hass: HomeAssistant) -> None:
+    """Tests that the turn on/off action starts re-auth flow."""
+    entry = await init_integration(hass)
+
+    with patch(
+        "homeassistant.components.nextdns.NextDns.set_setting",
+        side_effect=InvalidApiKeyError,
+    ):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.fake_profile_block_page"},
+            blocking=True,
+        )
+
+    assert entry.state is ConfigEntryState.LOADED
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+
+    flow = flows[0]
+    assert flow.get("step_id") == "reauth_confirm"
+    assert flow.get("handler") == DOMAIN
+
+    assert "context" in flow
+    assert flow["context"].get("source") == SOURCE_REAUTH
+    assert flow["context"].get("entry_id") == entry.entry_id

@@ -8,10 +8,13 @@ from typing import Any, Final
 from aioairzone_cloud.const import (
     AZD_ACTIVE,
     AZD_AIDOOS,
+    AZD_AIR_DEMAND,
     AZD_AQ_ACTIVE,
     AZD_ERRORS,
+    AZD_FLOOR_DEMAND,
     AZD_PROBLEMS,
     AZD_SYSTEMS,
+    AZD_THERMOSTAT_BATTERY_LOW,
     AZD_WARNINGS,
     AZD_ZONES,
 )
@@ -21,13 +24,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import AirzoneUpdateCoordinator
+from .coordinator import AirzoneCloudConfigEntry, AirzoneUpdateCoordinator
 from .entity import (
     AirzoneAidooEntity,
     AirzoneEntity,
@@ -79,8 +80,22 @@ ZONE_BINARY_SENSOR_TYPES: Final[tuple[AirzoneBinarySensorEntityDescription, ...]
         key=AZD_ACTIVE,
     ),
     AirzoneBinarySensorEntityDescription(
+        device_class=BinarySensorDeviceClass.RUNNING,
+        key=AZD_AIR_DEMAND,
+        translation_key="air_demand",
+    ),
+    AirzoneBinarySensorEntityDescription(
         key=AZD_AQ_ACTIVE,
         translation_key="air_quality_active",
+    ),
+    AirzoneBinarySensorEntityDescription(
+        device_class=BinarySensorDeviceClass.BATTERY,
+        key=AZD_THERMOSTAT_BATTERY_LOW,
+    ),
+    AirzoneBinarySensorEntityDescription(
+        device_class=BinarySensorDeviceClass.RUNNING,
+        key=AZD_FLOOR_DEMAND,
+        translation_key="floor_demand",
     ),
     AirzoneBinarySensorEntityDescription(
         attributes={
@@ -94,10 +109,12 @@ ZONE_BINARY_SENSOR_TYPES: Final[tuple[AirzoneBinarySensorEntityDescription, ...]
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: AirzoneCloudConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add Airzone Cloud binary sensors from a config_entry."""
-    coordinator: AirzoneUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     binary_sensors: list[AirzoneBinarySensor] = [
         AirzoneAidooBinarySensor(
@@ -142,6 +159,11 @@ class AirzoneBinarySensor(AirzoneEntity, BinarySensorEntity):
     """Define an Airzone Cloud binary sensor."""
 
     entity_description: AirzoneBinarySensorEntityDescription
+
+    @property
+    def available(self) -> bool:
+        """Return Airzone Cloud binary sensor availability."""
+        return super().available and self.is_on is not None
 
     @callback
     def _handle_coordinator_update(self) -> None:

@@ -24,7 +24,7 @@ from homeassistant.core import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.significant_change import create_checker
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
 from .const import (
@@ -317,9 +317,8 @@ async def async_enable_proactive_mode(
 
         if should_doorbell:
             old_state = data["old_state"]
-            if (
-                new_state.domain == event.DOMAIN
-                or new_state.state == STATE_ON
+            if new_state.domain == event.DOMAIN or (
+                new_state.state == STATE_ON
                 and (old_state is None or old_state.state != STATE_ON)
             ):
                 await async_send_doorbell_event_message(
@@ -415,13 +414,14 @@ async def async_send_changereport_message(
         if invalidate_access_token:
             # Invalidate the access token and try again
             config.async_invalidate_access_token()
-            return await async_send_changereport_message(
+            await async_send_changereport_message(
                 hass,
                 config,
                 alexa_entity,
                 alexa_properties,
                 invalidate_access_token=False,
             )
+            return
         await config.set_authorized(False)
 
     _LOGGER.error(

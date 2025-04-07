@@ -4,12 +4,16 @@ from unittest.mock import patch
 
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, SERVICE_SET_VALUE
+from homeassistant.components.number import (
+    ATTR_VALUE,
+    DOMAIN as NUMBER_DOMAIN,
+    SERVICE_SET_VALUE,
+)
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .common import assert_entities, setup_platform
+from .common import TEST_RESPONSE, assert_entities, setup_platform
 
 
 async def test_numbers(
@@ -29,7 +33,7 @@ async def test_numbers(
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: [entity_id], "value": 16},
+            {ATTR_ENTITY_ID: [entity_id], ATTR_VALUE: 16},
             blocking=True,
         )
         mock_set_charging_amps.assert_called_once()
@@ -42,7 +46,7 @@ async def test_numbers(
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: [entity_id], "value": 80},
+            {ATTR_ENTITY_ID: [entity_id], ATTR_VALUE: 80},
             blocking=True,
         )
         mock_set_charge_limit.assert_called_once()
@@ -55,8 +59,41 @@ async def test_numbers(
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: [entity_id], "value": 60},
+            {ATTR_ENTITY_ID: [entity_id], ATTR_VALUE: 60},
             blocking=True,
         )
         mock_set_speed_limit.assert_called_once()
     assert hass.states.get(entity_id).state == "60.0"
+
+    entity_id = "number.energy_site_backup_reserve"
+    with patch(
+        "tesla_fleet_api.tessie.EnergySite.backup",
+        return_value=TEST_RESPONSE,
+    ) as call:
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                ATTR_VALUE: 80,
+            },
+            blocking=True,
+        )
+        state = hass.states.get(entity_id)
+        assert state.state == "80"
+        call.assert_called_once()
+
+    entity_id = "number.energy_site_off_grid_reserve"
+    with patch(
+        "tesla_fleet_api.tessie.EnergySite.off_grid_vehicle_charging_reserve",
+        return_value=TEST_RESPONSE,
+    ) as call:
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 88},
+            blocking=True,
+        )
+        state = hass.states.get(entity_id)
+        assert state.state == "88"
+        call.assert_called_once()

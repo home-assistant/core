@@ -1,7 +1,7 @@
 """Test the thread websocket API."""
 
 import dataclasses
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -182,7 +182,7 @@ def ndb() -> Mock:
 
 async def test_diagnostics(
     hass: HomeAssistant,
-    mock_async_zeroconf: None,
+    mock_async_zeroconf: MagicMock,
     ndb: Mock,
     hass_client: ClientSessionGenerator,
     snapshot: SnapshotAssertion,

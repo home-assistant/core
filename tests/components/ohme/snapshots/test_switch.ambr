@@ -1,0 +1,189 @@
+# serializer version: 1
+# name: test_switches[switch.ohme_home_pro_lock_buttons-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.ohme_home_pro_lock_buttons',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Lock buttons',
+    'platform': 'ohme',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'lock_buttons',
+    'unique_id': 'chargerid_lock_buttons',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[switch.ohme_home_pro_lock_buttons-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Ohme Home Pro Lock buttons',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.ohme_home_pro_lock_buttons',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switches[switch.ohme_home_pro_price_cap-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.ohme_home_pro_price_cap',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Price cap',
+    'platform': 'ohme',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'price_cap',
+    'unique_id': 'chargerid_price_cap',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[switch.ohme_home_pro_price_cap-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Ohme Home Pro Price cap',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.ohme_home_pro_price_cap',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switches[switch.ohme_home_pro_require_approval-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.ohme_home_pro_require_approval',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Require approval',
+    'platform': 'ohme',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'require_approval',
+    'unique_id': 'chargerid_require_approval',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[switch.ohme_home_pro_require_approval-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Ohme Home Pro Require approval',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.ohme_home_pro_require_approval',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switches[switch.ohme_home_pro_sleep_when_inactive-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.ohme_home_pro_sleep_when_inactive',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sleep when inactive',
+    'platform': 'ohme',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'sleep_when_inactive',
+    'unique_id': 'chargerid_sleep_when_inactive',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[switch.ohme_home_pro_sleep_when_inactive-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Ohme Home Pro Sleep when inactive',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.ohme_home_pro_sleep_when_inactive',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

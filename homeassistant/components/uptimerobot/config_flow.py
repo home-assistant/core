@@ -50,7 +50,7 @@ class UptimeRobotConfigFlow(ConfigFlow, domain=DOMAIN):
         except UptimeRobotException as exception:
             LOGGER.error(exception)
             errors["base"] = "cannot_connect"
-        except Exception as exception:  # pylint: disable=broad-except
+        except Exception as exception:  # noqa: BLE001
             LOGGER.exception(exception)
             errors["base"] = "unknown"
         else:

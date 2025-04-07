@@ -1,4 +1,13 @@
 {
+  "common": {
+    "jid_options_description": "Advanced grouping options, where devices' unique Beolink IDs (Called JIDs) are used directly. JIDs can be found in the state attributes of the media player entity.",
+    "jid_options_name": "JID options",
+    "long_press_release": "Release of long press",
+    "long_press_timeout": "Long press",
+    "short_press_release": "Release of short press",
+    "very_long_press_release": "Release of very long press",
+    "very_long_press_timeout": "Very long press"
+  },
   "config": {
     "error": {
       "api_exception": "[%key:common::config_flow::error::cannot_connect%]",
@@ -7,7 +16,7 @@
       "invalid_ip": "Invalid IPv4 address"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]"
     },
     "flow_title": "{name}",
@@ -20,9 +29,255 @@
         "description": "Manually configure your Bang & Olufsen device."
       },
       "zeroconf_confirm": {
-        "title": "Setup Bang & Olufsen device",
+        "title": "Set up Bang & Olufsen device",
         "description": "Confirm the configuration of the {model}-{serial_number} @ {host}."
       }
+    }
+  },
+  "entity": {
+    "event": {
+      "bluetooth": {
+        "name": "Bluetooth",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "short_press_release": "[%key:component::bang_olufsen::common::short_press_release%]",
+              "long_press_timeout": "[%key:component::bang_olufsen::common::long_press_timeout%]",
+              "long_press_release": "[%key:component::bang_olufsen::common::long_press_release%]",
+              "very_long_press_timeout": "[%key:component::bang_olufsen::common::very_long_press_timeout%]",
+              "very_long_press_release": "[%key:component::bang_olufsen::common::very_long_press_release%]"
+            }
+          }
+        }
+      },
+      "microphone": {
+        "name": "Microphone",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "short_press_release": "[%key:component::bang_olufsen::common::short_press_release%]",
+              "long_press_timeout": "[%key:component::bang_olufsen::common::long_press_timeout%]",
+              "long_press_release": "[%key:component::bang_olufsen::common::long_press_release%]",
+              "very_long_press_timeout": "[%key:component::bang_olufsen::common::very_long_press_timeout%]",
+              "very_long_press_release": "[%key:component::bang_olufsen::common::very_long_press_release%]"
+            }
+          }
+        }
+      },
+      "next": {
+        "name": "Next",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "short_press_release": "[%key:component::bang_olufsen::common::short_press_release%]",
+              "long_press_timeout": "[%key:component::bang_olufsen::common::long_press_timeout%]",
+              "long_press_release": "[%key:component::bang_olufsen::common::long_press_release%]",
+              "very_long_press_timeout": "[%key:component::bang_olufsen::common::very_long_press_timeout%]",
+              "very_long_press_release": "[%key:component::bang_olufsen::common::very_long_press_release%]"
+            }
+          }
+        }
+      },
+      "playpause": {
+        "name": "Play / Pause",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "short_press_release": "[%key:component::bang_olufsen::common::short_press_release%]",
+              "long_press_timeout": "[%key:component::bang_olufsen::common::long_press_timeout%]",
+              "long_press_release": "[%key:component::bang_olufsen::common::long_press_release%]",
+              "very_long_press_timeout": "[%key:component::bang_olufsen::common::very_long_press_timeout%]",
+              "very_long_press_release": "[%key:component::bang_olufsen::common::very_long_press_release%]"
+            }
+          }
+        }
+      },
+      "preset1": {
+        "name": "Favourite 1",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "short_press_release": "[%key:component::bang_olufsen::common::short_press_release%]",
+              "long_press_timeout": "[%key:component::bang_olufsen::common::long_press_timeout%]",
+              "long_press_release": "[%key:component::bang_olufsen::common::long_press_release%]",
+              "very_long_press_timeout": "[%key:component::bang_olufsen::common::very_long_press_timeout%]",
+              "very_long_press_release": "[%key:component::bang_olufsen::common::very_long_press_release%]"
+            }
+          }
+        }
+      },
+      "preset2": {
+        "name": "Favourite 2",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "short_press_release": "[%key:component::bang_olufsen::common::short_press_release%]",
+              "long_press_timeout": "[%key:component::bang_olufsen::common::long_press_timeout%]",
+              "long_press_release": "[%key:component::bang_olufsen::common::long_press_release%]",
+              "very_long_press_timeout": "[%key:component::bang_olufsen::common::very_long_press_timeout%]",
+              "very_long_press_release": "[%key:component::bang_olufsen::common::very_long_press_release%]"
+            }
+          }
+        }
+      },
+      "preset3": {
+        "name": "Favourite 3",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "short_press_release": "[%key:component::bang_olufsen::common::short_press_release%]",
+              "long_press_timeout": "[%key:component::bang_olufsen::common::long_press_timeout%]",
+              "long_press_release": "[%key:component::bang_olufsen::common::long_press_release%]",
+              "very_long_press_timeout": "[%key:component::bang_olufsen::common::very_long_press_timeout%]",
+              "very_long_press_release": "[%key:component::bang_olufsen::common::very_long_press_release%]"
+            }
+          }
+        }
+      },
+      "preset4": {
+        "name": "Favourite 4",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "short_press_release": "[%key:component::bang_olufsen::common::short_press_release%]",
+              "long_press_timeout": "[%key:component::bang_olufsen::common::long_press_timeout%]",
+              "long_press_release": "[%key:component::bang_olufsen::common::long_press_release%]",
+              "very_long_press_timeout": "[%key:component::bang_olufsen::common::very_long_press_timeout%]",
+              "very_long_press_release": "[%key:component::bang_olufsen::common::very_long_press_release%]"
+            }
+          }
+        }
+      },
+      "previous": {
+        "name": "Previous",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "short_press_release": "[%key:component::bang_olufsen::common::short_press_release%]",
+              "long_press_timeout": "[%key:component::bang_olufsen::common::long_press_timeout%]",
+              "long_press_release": "[%key:component::bang_olufsen::common::long_press_release%]",
+              "very_long_press_timeout": "[%key:component::bang_olufsen::common::very_long_press_timeout%]",
+              "very_long_press_release": "[%key:component::bang_olufsen::common::very_long_press_release%]"
+            }
+          }
+        }
+      },
+      "volume": {
+        "name": "Volume",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "short_press_release": "[%key:component::bang_olufsen::common::short_press_release%]",
+              "long_press_timeout": "[%key:component::bang_olufsen::common::long_press_timeout%]",
+              "long_press_release": "[%key:component::bang_olufsen::common::long_press_release%]",
+              "very_long_press_timeout": "[%key:component::bang_olufsen::common::very_long_press_timeout%]",
+              "very_long_press_release": "[%key:component::bang_olufsen::common::very_long_press_release%]"
+            }
+          }
+        }
+      }
+    }
+  },
+  "selector": {
+    "source_ids": {
+      "options": {
+        "beoradio": "ASE Beoradio",
+        "deezer": "ASE / Mozart Deezer",
+        "spotify": "ASE / Mozart Spotify",
+        "tidal": "Mozart Tidal",
+        "aux_a": "Beolink Converter NL/ML AUX_A",
+        "cd": "Beolink Converter NL/ML CD",
+        "ph": "Beolink Converter NL/ML PH",
+        "radio": "Beolink Converter NL/ML RADIO",
+        "tp1": "Beolink Converter NL/ML TP1",
+        "tp2": "Beolink Converter NL/ML TP2"
+      }
+    }
+  },
+  "services": {
+    "beolink_allstandby": {
+      "name": "Beolink all standby",
+      "description": "Sets all connected Beolink devices to standby."
+    },
+    "beolink_expand": {
+      "name": "Beolink expand",
+      "description": "Adds devices to the current Beolink experience.",
+      "fields": {
+        "all_discovered": {
+          "name": "All discovered",
+          "description": "Expand Beolink experience to all discovered devices."
+        },
+        "beolink_jids": {
+          "name": "Beolink JIDs",
+          "description": "Specify which Beolink JIDs will join current Beolink experience."
+        }
+      },
+      "sections": {
+        "jid_options": {
+          "name": "[%key:component::bang_olufsen::common::jid_options_name%]",
+          "description": "[%key:component::bang_olufsen::common::jid_options_description%]"
+        }
+      }
+    },
+    "beolink_join": {
+      "name": "Beolink join",
+      "description": "Joins a Beolink experience.",
+      "fields": {
+        "beolink_jid": {
+          "name": "Beolink JID",
+          "description": "Manually specify Beolink JID to join."
+        },
+        "source_id": {
+          "name": "Source",
+          "description": "Specify which source to join, behavior varies between hardware platforms. Source names prefaced by a platform name can only be used when connecting to that platform. For example \"ASE Beoradio\" can only be used when joining an ASE device, while ”ASE / Mozart Deezer” can be used with ASE or Mozart devices. A defined Beolink JID is required."
+        }
+      },
+      "sections": {
+        "jid_options": {
+          "name": "[%key:component::bang_olufsen::common::jid_options_name%]",
+          "description": "[%key:component::bang_olufsen::common::jid_options_description%]"
+        }
+      }
+    },
+    "beolink_leave": {
+      "name": "Beolink leave",
+      "description": "Leaves a Beolink experience."
+    },
+    "beolink_unexpand": {
+      "name": "Beolink unexpand",
+      "description": "Removes devices from the current Beolink experience.",
+      "fields": {
+        "beolink_jids": {
+          "name": "Beolink JIDs",
+          "description": "Specify which Beolink JIDs will leave from current Beolink experience."
+        }
+      },
+      "sections": {
+        "jid_options": {
+          "name": "[%key:component::bang_olufsen::common::jid_options_name%]",
+          "description": "[%key:component::bang_olufsen::common::jid_options_description%]"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "m3u_invalid_format": {
+      "message": "Media sources with the .m3u extension are not supported."
+    },
+    "invalid_source": {
+      "message": "Invalid source: {invalid_source}. Valid sources are: {valid_sources}"
+    },
+    "invalid_media_type": {
+      "message": "{invalid_media_type} is an invalid type. Valid values are: {valid_media_types}."
+    },
+    "play_media_error": {
+      "message": "An error occurred while attempting to play {media_type}: {error_message}."
+    },
+    "invalid_grouping_entity": {
+      "message": "Entity with ID {entity_id} can't be added to the Beolink session. Is the entity a Bang & Olufsen media_player?"
+    },
+    "invalid_sound_mode": {
+      "message": "{invalid_sound_mode} is an invalid sound mode. Valid values are: {valid_sound_modes}."
     }
   }
 }

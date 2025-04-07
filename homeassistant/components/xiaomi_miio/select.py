@@ -32,7 +32,7 @@ from homeassistant.components.select import SelectEntity, SelectEntityDescriptio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, CONF_MODEL, EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     CONF_FLOW_TYPE,
@@ -54,6 +54,7 @@ from .const import (
     MODEL_AIRPURIFIER_M2,
     MODEL_AIRPURIFIER_MA2,
     MODEL_AIRPURIFIER_PROH,
+    MODEL_AIRPURIFIER_PROH_EU,
     MODEL_AIRPURIFIER_ZA1,
     MODEL_FAN_SA1,
     MODEL_FAN_V2,
@@ -62,7 +63,7 @@ from .const import (
     MODEL_FAN_ZA3,
     MODEL_FAN_ZA4,
 )
-from .device import XiaomiCoordinatedMiioEntity
+from .entity import XiaomiCoordinatedMiioEntity
 
 ATTR_DISPLAY_ORIENTATION = "display_orientation"
 ATTR_LED_BRIGHTNESS = "led_brightness"
@@ -137,6 +138,9 @@ MODEL_TO_ATTR_MAP: dict[str, list] = {
     MODEL_AIRPURIFIER_PROH: [
         AttributeEnumMapping(ATTR_LED_BRIGHTNESS, AirpurifierMiotLedBrightness)
     ],
+    MODEL_AIRPURIFIER_PROH_EU: [
+        AttributeEnumMapping(ATTR_LED_BRIGHTNESS, AirpurifierMiotLedBrightness)
+    ],
     MODEL_FAN_SA1: [AttributeEnumMapping(ATTR_LED_BRIGHTNESS, FanLedBrightness)],
     MODEL_FAN_V2: [AttributeEnumMapping(ATTR_LED_BRIGHTNESS, FanLedBrightness)],
     MODEL_FAN_V3: [AttributeEnumMapping(ATTR_LED_BRIGHTNESS, FanLedBrightness)],
@@ -201,7 +205,7 @@ SELECTOR_TYPES = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Selectors from a config entry."""
     if config_entry.data[CONF_FLOW_TYPE] != CONF_DEVICE:

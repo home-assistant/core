@@ -1,8 +1,8 @@
 {
   "config": {
     "abort": {
-      "no_bluetooth_adapter": "No bluetooth adapter found",
-      "no_devices_found": "Could not find any bluetooth devices"
+      "no_bluetooth_adapter": "No Bluetooth adapter found",
+      "no_devices_found": "Could not find any Bluetooth devices"
     },
     "error": {
       "could_not_find_motor": "Could not find a motor with that MAC code",
@@ -17,6 +17,18 @@
       },
       "confirm": {
         "description": "What kind of blind is {display_name}?"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Connection options",
+        "description": "The default disconnect time is 15 seconds, adjustable using the slider below. You may want to adjust this if you have larger blinds or other specific needs. You can also enable a permanent connection to the motor, which disables the disconnect time and automatically reconnects when the motor is disconnected for any reason.\n**WARNING**: Changing any of the below options may significantly reduce battery life of your motor!",
+        "data": {
+          "permanent_connection": "Permanent connection",
+          "disconnect_time": "Disconnect time (seconds)"
+        }
       }
     }
   },
@@ -50,9 +62,28 @@
       "speed": {
         "name": "Speed",
         "state": {
-          "1": "Low",
-          "2": "Medium",
-          "3": "High"
+          "1": "[%key:common::state::low%]",
+          "2": "[%key:common::state::medium%]",
+          "3": "[%key:common::state::high%]"
+        }
+      }
+    },
+    "sensor": {
+      "connection": {
+        "name": "Connection status",
+        "state": {
+          "connected": "[%key:common::state::connected%]",
+          "disconnected": "[%key:common::state::disconnected%]",
+          "connecting": "Connecting",
+          "disconnecting": "Disconnecting"
+        }
+      },
+      "calibration": {
+        "name": "Calibration status",
+        "state": {
+          "calibrated": "Calibrated",
+          "uncalibrated": "Uncalibrated",
+          "calibrating": "Calibration in progress"
         }
       }
     }

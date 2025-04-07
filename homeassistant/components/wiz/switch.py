@@ -8,24 +8,22 @@ from pywizlight import PilotBuilder
 from pywizlight.bulblibrary import BulbClass
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from . import WizConfigEntry
 from .entity import WizToggleEntity
 from .models import WizData
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: WizConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the WiZ switch platform."""
-    wiz_data: WizData = hass.data[DOMAIN][entry.entry_id]
-    if wiz_data.bulb.bulbtype.bulb_type == BulbClass.SOCKET:
-        async_add_entities([WizSocketEntity(wiz_data, entry.title)])
+    if entry.runtime_data.bulb.bulbtype.bulb_type == BulbClass.SOCKET:
+        async_add_entities([WizSocketEntity(entry.runtime_data, entry.title)])
 
 
 class WizSocketEntity(WizToggleEntity, SwitchEntity):

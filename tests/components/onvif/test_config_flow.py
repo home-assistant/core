@@ -6,13 +6,13 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import dhcp
 from homeassistant.components.onvif import DOMAIN, config_flow
 from homeassistant.config_entries import SOURCE_DHCP
-from homeassistant.const import CONF_HOST, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from . import (
     HOST,
@@ -44,10 +44,10 @@ DISCOVERY = [
         "MAC": "ff:ee:dd:cc:bb:aa",
     },
 ]
-DHCP_DISCOVERY = dhcp.DhcpServiceInfo(
+DHCP_DISCOVERY = DhcpServiceInfo(
     hostname="any", ip="5.6.7.8", macaddress=MAC.lower().replace(":", "")
 )
-DHCP_DISCOVERY_SAME_IP = dhcp.DhcpServiceInfo(
+DHCP_DISCOVERY_SAME_IP = DhcpServiceInfo(
     hostname="any", ip="1.2.3.4", macaddress=MAC.lower().replace(":", "")
 )
 
@@ -673,12 +673,13 @@ async def test_option_flow(hass: HomeAssistant, option_value: bool) -> None:
     }
 
 
-async def test_discovered_by_dhcp_updates_host(hass: HomeAssistant) -> None:
+async def test_discovered_by_dhcp_updates_host(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test dhcp updates existing host."""
     config_entry, _camera, device = await setup_onvif_integration(hass)
     device.profiles = device.async_get_profiles()
-    registry = dr.async_get(hass)
-    devices = dr.async_entries_for_config_entry(registry, config_entry.entry_id)
+    devices = dr.async_entries_for_config_entry(device_registry, config_entry.entry_id)
     assert len(devices) == 1
     device = devices[0]
     assert device.model == "TestModel"
@@ -697,13 +698,12 @@ async def test_discovered_by_dhcp_updates_host(hass: HomeAssistant) -> None:
 
 
 async def test_discovered_by_dhcp_does_nothing_if_host_is_the_same(
-    hass: HomeAssistant,
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
     """Test dhcp update does nothing if host is the same."""
     config_entry, _camera, device = await setup_onvif_integration(hass)
     device.profiles = device.async_get_profiles()
-    registry = dr.async_get(hass)
-    devices = dr.async_entries_for_config_entry(registry, config_entry.entry_id)
+    devices = dr.async_entries_for_config_entry(device_registry, config_entry.entry_id)
     assert len(devices) == 1
     device = devices[0]
     assert device.model == "TestModel"
@@ -722,13 +722,12 @@ async def test_discovered_by_dhcp_does_nothing_if_host_is_the_same(
 
 
 async def test_discovered_by_dhcp_does_not_update_if_already_loaded(
-    hass: HomeAssistant,
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
     """Test dhcp does not update existing host if its already loaded."""
     config_entry, _camera, device = await setup_onvif_integration(hass)
     device.profiles = device.async_get_profiles()
-    registry = dr.async_get(hass)
-    devices = dr.async_entries_for_config_entry(registry, config_entry.entry_id)
+    devices = dr.async_entries_for_config_entry(device_registry, config_entry.entry_id)
     assert len(devices) == 1
     device = devices[0]
     assert device.model == "TestModel"
@@ -770,11 +769,7 @@ async def test_form_reauth(hass: HomeAssistant) -> None:
     """Test reauthenticate."""
     entry, _, _ = await setup_onvif_integration(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_REAUTH, "entry_id": entry.entry_id},
-        data=entry.data,
-    )
+    result = await entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert (
@@ -808,7 +803,8 @@ async def test_form_reauth(hass: HomeAssistant) -> None:
     assert result2["step_id"] == "reauth_confirm"
     assert result2["errors"] == {config_flow.CONF_PASSWORD: "auth_failed"}
     assert result2["description_placeholders"] == {
-        "error": "not authorized (subcodes:NotAuthorized)"
+        CONF_NAME: "Mock Title",
+        "error": "not authorized (subcodes:NotAuthorized)",
     }
 
     with (

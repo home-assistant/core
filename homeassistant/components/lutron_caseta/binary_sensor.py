@@ -6,28 +6,29 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_SUGGESTED_AREA
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN as CASETA_DOMAIN, LutronCasetaDevice, _area_name_from_id
+from . import DOMAIN as CASETA_DOMAIN
 from .const import CONFIG_URL, MANUFACTURER, UNASSIGNED_AREA
-from .models import LutronCasetaData
+from .entity import LutronCasetaEntity
+from .models import LutronCasetaConfigEntry
+from .util import area_name_from_id
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: LutronCasetaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Lutron Caseta binary_sensor platform.
 
     Adds occupancy groups from the Caseta bridge associated with the
     config_entry as binary_sensor entities.
     """
-    data: LutronCasetaData = hass.data[CASETA_DOMAIN][config_entry.entry_id]
+    data = config_entry.runtime_data
     bridge = data.bridge
     occupancy_groups = bridge.occupancy_groups
     async_add_entities(
@@ -36,7 +37,7 @@ async def async_setup_entry(
     )
 
 
-class LutronOccupancySensor(LutronCasetaDevice, BinarySensorEntity):
+class LutronOccupancySensor(LutronCasetaEntity, BinarySensorEntity):
     """Representation of a Lutron occupancy group."""
 
     _attr_device_class = BinarySensorDeviceClass.OCCUPANCY
@@ -44,7 +45,7 @@ class LutronOccupancySensor(LutronCasetaDevice, BinarySensorEntity):
     def __init__(self, device, data):
         """Init an occupancy sensor."""
         super().__init__(device, data)
-        area = _area_name_from_id(self._smartbridge.areas, device["area"])
+        area = area_name_from_id(self._smartbridge.areas, device["area"])
         name = f"{area} {device['device_name']}"
         self._attr_name = name
         self._attr_device_info = DeviceInfo(

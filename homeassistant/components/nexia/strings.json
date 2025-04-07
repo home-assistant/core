@@ -53,18 +53,27 @@
       },
       "zone_setpoint_status": {
         "name": "Zone setpoint status"
+      },
+      "get_humidify_setpoint": {
+        "name": "Heating humidify setpoint"
+      },
+      "get_dehumidify_setpoint": {
+        "name": "Cooling dehumidify setpoint"
       }
     },
     "switch": {
       "hold": {
         "name": "Hold"
+      },
+      "emergency_heat": {
+        "name": "Emergency heat"
       }
     }
   },
   "services": {
     "set_aircleaner_mode": {
       "name": "Set air cleaner mode",
-      "description": "The air cleaner mode.",
+      "description": "Sets the air cleaner mode.",
       "fields": {
         "aircleaner_mode": {
           "name": "Air cleaner mode",
@@ -73,18 +82,28 @@
       }
     },
     "set_humidify_setpoint": {
-      "name": "Set humidify set point",
-      "description": "The humidification set point.",
+      "name": "Set humidify setpoint",
+      "description": "Sets the target humidity for heating.",
       "fields": {
         "humidity": {
-          "name": "Humidify",
-          "description": "The humidification setpoint."
+          "name": "Humidity",
+          "description": "The setpoint for humidification when heating."
+        }
+      }
+    },
+    "set_dehumidify_setpoint": {
+      "name": "Set dehumidify setpoint",
+      "description": "Sets the target humidity for cooling.",
+      "fields": {
+        "humidity": {
+          "name": "Humidity",
+          "description": "The setpoint for dehumidification when cooling."
         }
       }
     },
     "set_hvac_run_mode": {
-      "name": "Set hvac run mode",
-      "description": "The HVAC run mode.",
+      "name": "Set HVAC run mode",
+      "description": "Sets the run and/or operation mode of the HVAC system.",
       "fields": {
         "run_mode": {
           "name": "Run mode",
@@ -93,6 +112,19 @@
         "hvac_mode": {
           "name": "HVAC mode",
           "description": "The HVAC mode to use for the schedule or hold. If not specified, the current HVAC mode will be used."
+        }
+      }
+    }
+  },
+  "issues": {
+    "migrate_aux_heat": {
+      "title": "Migration of Nexia set_aux_heat action",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "The Nexia `set_aux_heat` action has been migrated. A new `aux_heat_only` switch entity is available for each thermostat.\n\nUpdate any automations to use the new Emergency heat switch entity. When this is done, select **Submit** to fix this issue.",
+            "title": "[%key:component::nexia::issues::migrate_aux_heat::title%]"
+          }
         }
       }
     }

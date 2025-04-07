@@ -1,5 +1,7 @@
 """Basic checks for HomeKit select entities."""
 
+from collections.abc import Callable
+
 from aiohomekit.model import Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.characteristics.const import TemperatureDisplayUnits
@@ -8,7 +10,7 @@ from aiohomekit.model.services import ServicesTypes
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .common import Helper, get_next_aid, setup_test_component
+from .common import Helper, setup_test_component
 
 
 def create_service_with_ecobee_mode(accessory: Accessory):
@@ -35,7 +37,9 @@ def create_service_with_temperature_units(accessory: Accessory):
 
 
 async def test_migrate_unique_id(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    get_next_aid: Callable[[], int],
 ) -> None:
     """Test we can migrate a select unique id."""
     aid = get_next_aid()
@@ -46,7 +50,7 @@ async def test_migrate_unique_id(
         suggested_object_id="testdevice_current_mode",
     )
 
-    await setup_test_component(hass, create_service_with_ecobee_mode)
+    await setup_test_component(hass, aid, create_service_with_ecobee_mode)
 
     assert (
         entity_registry.async_get(select.entity_id).unique_id
@@ -54,9 +58,13 @@ async def test_migrate_unique_id(
     )
 
 
-async def test_read_current_mode(hass: HomeAssistant) -> None:
+async def test_read_current_mode(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
     """Test that Ecobee mode can be correctly read and show as human readable text."""
-    helper = await setup_test_component(hass, create_service_with_ecobee_mode)
+    helper = await setup_test_component(
+        hass, get_next_aid(), create_service_with_ecobee_mode
+    )
 
     # Helper will be for the primary entity, which is the service. Make a helper for the sensor.
     ecobee_mode = Helper(
@@ -92,9 +100,13 @@ async def test_read_current_mode(hass: HomeAssistant) -> None:
     assert state.state == "away"
 
 
-async def test_write_current_mode(hass: HomeAssistant) -> None:
+async def test_write_current_mode(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
     """Test can set a specific mode."""
-    helper = await setup_test_component(hass, create_service_with_ecobee_mode)
+    helper = await setup_test_component(
+        hass, get_next_aid(), create_service_with_ecobee_mode
+    )
     helper.accessory.services.first(service_type=ServicesTypes.THERMOSTAT)
 
     # Helper will be for the primary entity, which is the service. Make a helper for the sensor.
@@ -140,9 +152,13 @@ async def test_write_current_mode(hass: HomeAssistant) -> None:
     )
 
 
-async def test_read_select(hass: HomeAssistant) -> None:
+async def test_read_select(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
     """Test the generic select can read the current value."""
-    helper = await setup_test_component(hass, create_service_with_temperature_units)
+    helper = await setup_test_component(
+        hass, get_next_aid(), create_service_with_temperature_units
+    )
 
     # Helper will be for the primary entity, which is the service. Make a helper for the sensor.
     select_entity = Helper(
@@ -170,9 +186,13 @@ async def test_read_select(hass: HomeAssistant) -> None:
     assert state.state == "fahrenheit"
 
 
-async def test_write_select(hass: HomeAssistant) -> None:
+async def test_write_select(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
     """Test can set a value."""
-    helper = await setup_test_component(hass, create_service_with_temperature_units)
+    helper = await setup_test_component(
+        hass, get_next_aid(), create_service_with_temperature_units
+    )
     helper.accessory.services.first(service_type=ServicesTypes.THERMOSTAT)
 
     # Helper will be for the primary entity, which is the service. Make a helper for the sensor.

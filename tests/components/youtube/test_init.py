@@ -118,11 +118,12 @@ async def test_expired_token_refresh_client_error(
 
 
 async def test_device_info(
-    hass: HomeAssistant, setup_integration: ComponentSetup
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    setup_integration: ComponentSetup,
 ) -> None:
     """Test device info."""
     await setup_integration()
-    device_registry = dr.async_get(hass)
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     channel_id = entry.options[CONF_CHANNELS][0]

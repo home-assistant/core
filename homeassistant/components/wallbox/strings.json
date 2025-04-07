@@ -38,6 +38,9 @@
       },
       "energy_price": {
         "name": "Energy price"
+      },
+      "maximum_icp_current": {
+        "name": "Maximum ICP current"
       }
     },
     "sensor": {
@@ -79,6 +82,9 @@
       },
       "max_charging_current": {
         "name": "Max charging current"
+      },
+      "icp_max_current": {
+        "name": "Max ICP current"
       }
     },
     "switch": {

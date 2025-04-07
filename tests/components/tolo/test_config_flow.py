@@ -5,14 +5,14 @@ from unittest.mock import Mock, patch
 import pytest
 from tololib import ToloCommunicationError
 
-from homeassistant.components import dhcp
 from homeassistant.components.tolo.const import DOMAIN
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-MOCK_DHCP_DATA = dhcp.DhcpServiceInfo(
+MOCK_DHCP_DATA = DhcpServiceInfo(
     ip="127.0.0.2", macaddress="001122334455", hostname="mock_hostname"
 )
 
@@ -31,7 +31,7 @@ def coordinator_toloclient() -> Mock:
     Throw exception to abort entry setup and prevent socket IO. Only testing config flow.
     """
     with patch(
-        "homeassistant.components.tolo.ToloClient", side_effect=Exception
+        "homeassistant.components.tolo.coordinator.ToloClient", side_effect=Exception
     ) as toloclient:
         yield toloclient
 

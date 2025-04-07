@@ -1,11 +1,15 @@
 """Test the owntracks_http platform."""
 
+from aiohttp.test_utils import TestClient
 import pytest
 
 from homeassistant.components import owntracks
+from homeassistant.components.device_tracker.legacy import Device
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, mock_component
+from tests.typing import ClientSessionGenerator
 
 MINIMAL_LOCATION_MESSAGE = {
     "_type": "location",
@@ -34,12 +38,14 @@ LOCATION_MESSAGE = {
 
 
 @pytest.fixture(autouse=True)
-def mock_dev_track(mock_device_tracker_conf):
+def mock_dev_track(mock_device_tracker_conf: list[Device]) -> None:
     """Mock device tracker config loading."""
 
 
 @pytest.fixture
-def mock_client(hass, hass_client_no_auth):
+async def mock_client(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> TestClient:
     """Start the Home Assistant HTTP component."""
     mock_component(hass, "group")
     mock_component(hass, "zone")
@@ -48,9 +54,9 @@ def mock_client(hass, hass_client_no_auth):
     MockConfigEntry(
         domain="owntracks", data={"webhook_id": "owntracks_test", "secret": "abcd"}
     ).add_to_hass(hass)
-    hass.loop.run_until_complete(async_setup_component(hass, "owntracks", {}))
+    await async_setup_component(hass, "owntracks", {})
 
-    return hass.loop.run_until_complete(hass_client_no_auth())
+    return await hass_client_no_auth()
 
 
 async def test_handle_valid_message(mock_client) -> None:

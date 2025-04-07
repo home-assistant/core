@@ -13,7 +13,7 @@ from aioopenexchangerates import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_BASE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import AbortFlow
@@ -54,7 +54,6 @@ class OpenExchangeRatesConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self.currencies: dict[str, str] = {}
-        self._reauth_entry: ConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -63,9 +62,9 @@ class OpenExchangeRatesConfigFlow(ConfigFlow, domain=DOMAIN):
         currencies = await self.async_get_currencies()
 
         if user_input is None:
-            existing_data: Mapping[str, str] | dict[str, str] = (
-                self._reauth_entry.data if self._reauth_entry else {}
-            )
+            existing_data: Mapping[str, Any] = {}
+            if self.source == SOURCE_REAUTH:
+                existing_data = self._get_reauth_entry().data
             return self.async_show_form(
                 step_id="user",
                 data_schema=get_data_schema(currencies, existing_data),
@@ -84,7 +83,7 @@ class OpenExchangeRatesConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         except TimeoutError:
             errors["base"] = "timeout_connect"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # noqa: BLE001
             LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
@@ -95,12 +94,10 @@ class OpenExchangeRatesConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             )
 
-            if self._reauth_entry is not None:
-                self.hass.config_entries.async_update_entry(
-                    self._reauth_entry, data=self._reauth_entry.data | user_input
+            if self.source == SOURCE_REAUTH:
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(), data_updates=user_input
                 )
-                await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
 
             return self.async_create_entry(title=info["title"], data=user_input)
 
@@ -115,9 +112,6 @@ class OpenExchangeRatesConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reauth."""
-        self._reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         return await self.async_step_user()
 
     async def async_get_currencies(self) -> dict[str, str]:

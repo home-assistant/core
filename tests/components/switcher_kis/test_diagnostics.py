@@ -1,17 +1,23 @@
 """Tests for the diagnostics data provided by Switcher."""
 
+import pytest
+
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.core import HomeAssistant
 
 from . import init_integration
 from .consts import DUMMY_WATER_HEATER_DEVICE
 
+from tests.common import ANY
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
 async def test_diagnostics(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator, mock_bridge, monkeypatch
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_bridge,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test diagnostics."""
     entry = await init_integration(hass)
@@ -34,7 +40,7 @@ async def test_diagnostics(
                     "__type": "<enum 'DeviceType'>",
                     "repr": (
                         "<DeviceType.V4: ('Switcher V4', '0317', "
-                        "1, <DeviceCategory.WATER_HEATER: 1>)>"
+                        "1, <DeviceCategory.WATER_HEATER: 1>, False)>"
                     ),
                 },
                 "electric_current": 12.8,
@@ -44,6 +50,7 @@ async def test_diagnostics(
                 "name": "Heater FE12",
                 "power_consumption": 2780,
                 "remaining_time": "01:29:32",
+                "token_needed": False,
             }
         ],
         "entry": {
@@ -59,5 +66,9 @@ async def test_diagnostics(
             "source": "user",
             "unique_id": "switcher_kis",
             "disabled_by": None,
+            "created_at": ANY,
+            "modified_at": ANY,
+            "discovery_keys": {},
+            "subentries": [],
         },
     }

@@ -16,15 +16,17 @@ from homeassistant.components.update import (
     UpdateEntityDescription,
     UpdateEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import DevoloHomeNetworkConfigEntry
 from .const import DOMAIN, REGULAR_FIRMWARE
+from .coordinator import DevoloDataUpdateCoordinator
 from .entity import DevoloCoordinatorEntity
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -47,13 +49,12 @@ UPDATE_TYPES: dict[str, DevoloUpdateEntityDescription] = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: DevoloHomeNetworkConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Get all devices and sensors and setup them via config entry."""
-    device: Device = hass.data[DOMAIN][entry.entry_id]["device"]
-    coordinators: dict[str, DataUpdateCoordinator[Any]] = hass.data[DOMAIN][
-        entry.entry_id
-    ]["coordinators"]
+    coordinators = entry.runtime_data.coordinators
 
     async_add_entities(
         [
@@ -61,7 +62,6 @@ async def async_setup_entry(
                 entry,
                 coordinators[REGULAR_FIRMWARE],
                 UPDATE_TYPES[REGULAR_FIRMWARE],
-                device,
             )
         ]
     )
@@ -78,14 +78,13 @@ class DevoloUpdateEntity(DevoloCoordinatorEntity, UpdateEntity):
 
     def __init__(
         self,
-        entry: ConfigEntry,
-        coordinator: DataUpdateCoordinator,
+        entry: DevoloHomeNetworkConfigEntry,
+        coordinator: DevoloDataUpdateCoordinator,
         description: DevoloUpdateEntityDescription,
-        device: Device,
     ) -> None:
         """Initialize entity."""
         self.entity_description = description
-        super().__init__(entry, coordinator, device)
+        super().__init__(entry, coordinator)
         self._in_progress_old_version: str | None = None
 
     @property

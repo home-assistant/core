@@ -5,10 +5,9 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
+from . import TeslemetryConfigEntry
 
 VEHICLE_REDACT = [
     "id",
@@ -25,22 +24,37 @@ VEHICLE_REDACT = [
     "drive_state_native_longitude",
 ]
 
-ENERGY_REDACT = ["vin"]
+ENERGY_LIVE_REDACT = ["vin"]
+ENERGY_INFO_REDACT = ["installation_date"]
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, entry: TeslemetryConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     vehicles = [
-        x.coordinator.data for x in hass.data[DOMAIN][config_entry.entry_id].vehicles
+        {
+            "data": async_redact_data(x.coordinator.data, VEHICLE_REDACT),
+            "stream": {
+                "config": x.stream_vehicle.config,
+            },
+        }
+        for x in entry.runtime_data.vehicles
     ]
     energysites = [
-        x.coordinator.data for x in hass.data[DOMAIN][config_entry.entry_id].energysites
+        {
+            "live": async_redact_data(x.live_coordinator.data, ENERGY_LIVE_REDACT)
+            if x.live_coordinator
+            else None,
+            "info": async_redact_data(x.info_coordinator.data, ENERGY_INFO_REDACT),
+            "history": x.history_coordinator.data if x.history_coordinator else None,
+        }
+        for x in entry.runtime_data.energysites
     ]
 
     # Return only the relevant children
     return {
-        "vehicles": async_redact_data(vehicles, VEHICLE_REDACT),
-        "energysites": async_redact_data(energysites, ENERGY_REDACT),
+        "vehicles": vehicles,
+        "energysites": energysites,
+        "scopes": entry.runtime_data.scopes,
     }

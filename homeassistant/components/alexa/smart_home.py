@@ -194,7 +194,7 @@ async def async_handle_message(
 
     try:
         if not enabled:
-            raise AlexaBridgeUnreachableError(
+            raise AlexaBridgeUnreachableError(  # noqa: TRY301
                 "Alexa API not enabled in Home Assistant configuration"
             )
 
@@ -219,7 +219,7 @@ async def async_handle_message(
             error_message=err.error_message,
             payload=err.payload,
         )
-    except Exception:  # pylint: disable=broad-except
+    except Exception:
         _LOGGER.exception(
             "Uncaught exception processing Alexa %s/%s request (%s)",
             directive.namespace,

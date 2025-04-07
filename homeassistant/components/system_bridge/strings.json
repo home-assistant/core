@@ -3,6 +3,7 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unique_id_mismatch": "The identifier does not match the previous identifier",
       "unsupported_version": "Your version of System Bridge is not supported. Please upgrade to the latest version.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
@@ -95,13 +96,31 @@
     }
   },
   "exceptions": {
+    "authentication_failed": {
+      "message": "Authentication failed for {title} ({host})"
+    },
+    "connection_failed": {
+      "message": "A connection error occurred for {title} ({host})"
+    },
+    "device_not_found": {
+      "message": "Could not find device {device}"
+    },
+    "no_data_received": {
+      "message": "No data received from {host}"
+    },
     "process_not_found": {
-      "message": "Could not find process with id {id}."
+      "message": "Could not find process with ID {id}."
+    },
+    "timeout": {
+      "message": "A timeout occurred for {title} ({host})"
+    },
+    "unsupported_version": {
+      "message": "You are not running a supported version of System Bridge for {title} ({host}). Please upgrade to the latest version"
     }
   },
   "issues": {
     "unsupported_version": {
-      "title": "System Bridge Upgrade Required",
+      "title": "System Bridge upgrade required",
       "description": "Your version of System Bridge for host {host} is not supported.\n\nPlease upgrade to the latest version."
     }
   },

@@ -12,7 +12,7 @@ from aiohue.v2.models.feature import DynamicStatus
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_FLASH,
     ATTR_TRANSITION,
     ATTR_XY_COLOR,
@@ -24,8 +24,10 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import color as color_util
 
 from ..bridge import HueBridge
 from ..const import DOMAIN
@@ -40,7 +42,7 @@ from .helpers import (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Hue groups on light platform."""
     bridge: HueBridge = hass.data[DOMAIN][config_entry.entry_id]
@@ -75,6 +77,7 @@ async def async_setup_entry(
     )
 
 
+# pylint: disable-next=hass-enforce-class-module
 class GroupedHueLight(HueBaseEntity, LightEntity):
     """Representation of a Grouped Hue light."""
 
@@ -136,15 +139,18 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
         scenes = {
             x.metadata.name for x in self.api.scenes if x.group.rid == self.group.id
         }
-        lights = {
-            self.controller.get_device(x.id).metadata.name
-            for x in self.controller.get_lights(self.resource.id)
-        }
+        light_resource_ids = tuple(
+            x.id for x in self.controller.get_lights(self.resource.id)
+        )
+        light_names, light_entities = self._get_names_and_entity_ids_for_resource_ids(
+            light_resource_ids
+        )
         return {
             "is_hue_group": True,
             "hue_scenes": scenes,
             "hue_type": self.group.type.value,
-            "lights": lights,
+            "lights": light_names,
+            "entity_id": light_entities,
             "dynamics": self._dynamic_mode_active,
         }
 
@@ -152,7 +158,7 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
         """Turn the grouped_light on."""
         transition = normalize_hue_transition(kwargs.get(ATTR_TRANSITION))
         xy_color = kwargs.get(ATTR_XY_COLOR)
-        color_temp = normalize_hue_colortemp(kwargs.get(ATTR_COLOR_TEMP))
+        color_temp = normalize_hue_colortemp(kwargs.get(ATTR_COLOR_TEMP_KELVIN))
         brightness = normalize_hue_brightness(kwargs.get(ATTR_BRIGHTNESS))
         flash = kwargs.get(ATTR_FLASH)
 
@@ -230,9 +236,21 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
             if color_temp := light.color_temperature:
                 lights_with_color_temp_support += 1
                 # we assume mired values from the first capable light
-                self._attr_color_temp = color_temp.mirek
-                self._attr_max_mireds = color_temp.mirek_schema.mirek_maximum
-                self._attr_min_mireds = color_temp.mirek_schema.mirek_minimum
+                self._attr_color_temp_kelvin = (
+                    color_util.color_temperature_mired_to_kelvin(color_temp.mirek)
+                    if color_temp.mirek
+                    else None
+                )
+                self._attr_min_color_temp_kelvin = (
+                    color_util.color_temperature_mired_to_kelvin(
+                        color_temp.mirek_schema.mirek_maximum
+                    )
+                )
+                self._attr_max_color_temp_kelvin = (
+                    color_util.color_temperature_mired_to_kelvin(
+                        color_temp.mirek_schema.mirek_minimum
+                    )
+                )
                 if color_temp.mirek is not None and color_temp.mirek_valid:
                     lights_in_colortemp_mode += 1
             if color := light.color:
@@ -278,3 +296,19 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
             self._attr_color_mode = ColorMode.BRIGHTNESS
         else:
             self._attr_color_mode = ColorMode.ONOFF
+
+    @callback
+    def _get_names_and_entity_ids_for_resource_ids(
+        self, resource_ids: tuple[str]
+    ) -> tuple[set[str], set[str]]:
+        """Return the names and entity ids for the given Hue (light) resource IDs."""
+        ent_reg = er.async_get(self.hass)
+        light_names: set[str] = set()
+        light_entities: set[str] = set()
+        for resource_id in resource_ids:
+            light_names.add(self.controller.get_device(resource_id).metadata.name)
+            if entity_id := ent_reg.async_get_entity_id(
+                self.platform.domain, DOMAIN, resource_id
+            ):
+                light_entities.add(entity_id)
+        return light_names, light_entities

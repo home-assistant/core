@@ -5,7 +5,7 @@ from __future__ import annotations
 from contextlib import suppress
 from dataclasses import dataclass
 
-from pydantic.error_wrappers import ValidationError  # pylint: disable=no-name-in-module
+from pydantic import ValidationError
 from xbox.webapi.api.client import XboxLiveClient
 from xbox.webapi.api.provider.catalog.models import FieldsTemplate, Image
 from xbox.webapi.api.provider.gameclips.models import GameclipsResponse
@@ -13,7 +13,7 @@ from xbox.webapi.api.provider.screenshots.models import ScreenshotResponse
 from xbox.webapi.api.provider.smartglass.models import InstalledPackage
 
 from homeassistant.components.media_player import MediaClass
-from homeassistant.components.media_source.models import (
+from homeassistant.components.media_source import (
     BrowseMediaSource,
     MediaSource,
     MediaSourceItem,

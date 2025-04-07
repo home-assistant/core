@@ -1,4 +1,8 @@
 {
+  "common": {
+    "state_not_supported": "Not supported",
+    "state_supported": "Supported"
+  },
   "config": {
     "step": {
       "init": {
@@ -11,9 +15,343 @@
     },
     "error": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "id_exists": "Gateway id already exists",
+      "id_exists": "Gateway ID already exists",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]"
+    }
+  },
+  "device": {
+    "boiler_device": {
+      "name": "OpenTherm Boiler"
+    },
+    "gateway_device": {
+      "name": "OpenTherm Gateway"
+    },
+    "thermostat_device": {
+      "name": "OpenTherm Thermostat"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "fault_indication": {
+        "name": "Fault indication"
+      },
+      "central_heating_n": {
+        "name": "Central heating {circuit_number}"
+      },
+      "cooling": {
+        "name": "Cooling"
+      },
+      "flame": {
+        "name": "Flame"
+      },
+      "hot_water": {
+        "name": "Hot water"
+      },
+      "diagnostic_indication": {
+        "name": "Diagnostic indication"
+      },
+      "supports_hot_water": {
+        "name": "Hot water support",
+        "state": {
+          "off": "[%key:component::opentherm_gw::common::state_not_supported%]",
+          "on": "[%key:component::opentherm_gw::common::state_supported%]"
+        }
+      },
+      "control_type": {
+        "name": "Control type"
+      },
+      "supports_cooling": {
+        "name": "Cooling support",
+        "state": {
+          "off": "[%key:component::opentherm_gw::common::state_not_supported%]",
+          "on": "[%key:component::opentherm_gw::common::state_supported%]"
+        }
+      },
+      "hot_water_config": {
+        "name": "Hot water system type",
+        "state": {
+          "off": "Instantaneous or unspecified",
+          "on": "Storage tank"
+        }
+      },
+      "supports_pump_control": {
+        "name": "Pump control support",
+        "state": {
+          "off": "[%key:component::opentherm_gw::common::state_not_supported%]",
+          "on": "[%key:component::opentherm_gw::common::state_supported%]"
+        }
+      },
+      "supports_ch_2": {
+        "name": "Central heating 2 support",
+        "state": {
+          "off": "[%key:component::opentherm_gw::common::state_not_supported%]",
+          "on": "[%key:component::opentherm_gw::common::state_supported%]"
+        }
+      },
+      "service_required": {
+        "name": "Service required"
+      },
+      "supports_remote_reset": {
+        "name": "Remote reset support",
+        "state": {
+          "off": "[%key:component::opentherm_gw::common::state_not_supported%]",
+          "on": "[%key:component::opentherm_gw::common::state_supported%]"
+        }
+      },
+      "low_water_pressure": {
+        "name": "Low water pressure"
+      },
+      "gas_fault": {
+        "name": "Gas fault"
+      },
+      "air_pressure_fault": {
+        "name": "Air pressure fault"
+      },
+      "water_overtemperature": {
+        "name": "Water overtemperature"
+      },
+      "supports_central_heating_setpoint_transfer": {
+        "name": "Central heating setpoint transfer support",
+        "state": {
+          "off": "[%key:component::opentherm_gw::common::state_not_supported%]",
+          "on": "[%key:component::opentherm_gw::common::state_supported%]"
+        }
+      },
+      "supports_central_heating_setpoint_writing": {
+        "name": "Central heating setpoint write support",
+        "state": {
+          "off": "[%key:component::opentherm_gw::common::state_not_supported%]",
+          "on": "[%key:component::opentherm_gw::common::state_supported%]"
+        }
+      },
+      "supports_hot_water_setpoint_transfer": {
+        "name": "Hot water setpoint transfer support",
+        "state": {
+          "off": "[%key:component::opentherm_gw::common::state_not_supported%]",
+          "on": "[%key:component::opentherm_gw::common::state_supported%]"
+        }
+      },
+      "supports_hot_water_setpoint_writing": {
+        "name": "Hot water setpoint write support",
+        "state": {
+          "off": "[%key:component::opentherm_gw::common::state_not_supported%]",
+          "on": "[%key:component::opentherm_gw::common::state_supported%]"
+        }
+      },
+      "gpio_state_n": {
+        "name": "GPIO {gpio_id} state"
+      },
+      "ignore_transitions": {
+        "name": "Ignore transitions"
+      },
+      "override_high_byte": {
+        "name": "Override high byte"
+      },
+      "outside_temp_correction": {
+        "name": "Outside temperature correction"
+      },
+      "override_manual_change_prio": {
+        "name": "Manual change has priority over override"
+      },
+      "override_program_change_prio": {
+        "name": "Programmed change has priority over override"
+      }
+    },
+    "button": {
+      "cancel_room_setpoint_override": {
+        "name": "Cancel room setpoint override"
+      }
+    },
+    "select": {
+      "gpio_mode_n": {
+        "name": "GPIO {gpio_id} mode",
+        "state": {
+          "input": "Input",
+          "ground": "Ground",
+          "vcc": "Vcc (5V)",
+          "led_e": "LED E",
+          "led_f": "LED F",
+          "home": "[%key:common::state::home%]",
+          "away": "[%key:common::state::not_home%]",
+          "ds1820": "DS1820",
+          "dhw_block": "Block hot water"
+        }
+      },
+      "led_mode_n": {
+        "name": "LED {led_id} mode",
+        "state": {
+          "receive_any": "Receiving on any interface",
+          "transmit_any": "Transmitting on any interface",
+          "thermostat_traffic": "Traffic on the thermostat interface",
+          "boiler_traffic": "Traffic on the boiler interface",
+          "setpoint_override_active": "Setpoint override is active",
+          "flame_on": "Boiler flame is on",
+          "central_heating_on": "Central heating is on",
+          "hot_water_on": "Hot water is on",
+          "comfort_mode_on": "Comfort mode is on",
+          "transmit_error_detected": "Transmit error detected",
+          "boiler_maintenance_required": "Boiler maintenance required",
+          "raised_power_mode_active": "Raised power mode active"
+        }
+      }
+    },
+    "sensor": {
+      "control_setpoint_n": {
+        "name": "Control setpoint {circuit_number}"
+      },
+      "manufacturer_id": {
+        "name": "Manufacturer ID"
+      },
+      "oem_fault_code": {
+        "name": "Manufacturer-specific fault code"
+      },
+      "cooling_control": {
+        "name": "Cooling control signal"
+      },
+      "max_relative_mod_level": {
+        "name": "Maximum relative modulation level"
+      },
+      "max_capacity": {
+        "name": "Maximum capacity"
+      },
+      "min_mod_level": {
+        "name": "Minimum modulation level"
+      },
+      "relative_mod_level": {
+        "name": "Relative modulation level"
+      },
+      "central_heating_pressure": {
+        "name": "Central heating water pressure"
+      },
+      "hot_water_flow_rate": {
+        "name": "Hot water flow rate"
+      },
+      "central_heating_temperature_n": {
+        "name": "Central heating {circuit_number} water temperature"
+      },
+      "hot_water_temperature_n": {
+        "name": "Hot water {circuit_number} temperature"
+      },
+      "return_water_temperature": {
+        "name": "Return water temperature"
+      },
+      "solar_storage_temperature": {
+        "name": "Solar storage temperature"
+      },
+      "solar_collector_temperature": {
+        "name": "Solar collector temperature"
+      },
+      "exhaust_temperature": {
+        "name": "Exhaust temperature"
+      },
+      "max_hot_water_setpoint_upper": {
+        "name": "Maximum hot water setpoint upper bound"
+      },
+      "max_hot_water_setpoint_lower": {
+        "name": "Maximum hot water setpoint lower bound"
+      },
+      "max_central_heating_setpoint_upper": {
+        "name": "Maximum central heating setpoint upper bound"
+      },
+      "max_central_heating_setpoint_lower": {
+        "name": "Maximum central heating setpoint lower bound"
+      },
+      "hot_water_setpoint": {
+        "name": "Hot water setpoint"
+      },
+      "max_central_heating_setpoint": {
+        "name": "Maximum central heating setpoint"
+      },
+      "oem_diagnostic_code": {
+        "name": "Manufacturer-specific diagnostic code"
+      },
+      "total_burner_starts": {
+        "name": "Burner start count"
+      },
+      "central_heating_pump_starts": {
+        "name": "Central heating pump start count"
+      },
+      "hot_water_pump_starts": {
+        "name": "Hot water pump start count"
+      },
+      "hot_water_burner_starts": {
+        "name": "Hot water burner start count"
+      },
+      "total_burner_hours": {
+        "name": "Burner running time"
+      },
+      "central_heating_pump_hours": {
+        "name": "Central heating pump running time"
+      },
+      "hot_water_pump_hours": {
+        "name": "Hot water pump running time"
+      },
+      "hot_water_burner_hours": {
+        "name": "Hot water burner running time"
+      },
+      "opentherm_version": {
+        "name": "OpenTherm protocol version"
+      },
+      "product_type": {
+        "name": "Product type"
+      },
+      "product_version": {
+        "name": "Product version"
+      },
+      "operating_mode": {
+        "name": "Operating mode"
+      },
+      "hot_water_override_mode": {
+        "name": "Hot water override mode"
+      },
+      "firmware_version": {
+        "name": "Firmware version"
+      },
+      "firmware_build": {
+        "name": "Firmware build"
+      },
+      "clock_speed": {
+        "name": "Clock speed"
+      },
+      "led_mode_n": {
+        "name": "LED {led_id} mode"
+      },
+      "gpio_mode_n": {
+        "name": "GPIO {gpio_id} mode"
+      },
+      "setback_temperature": {
+        "name": "Setback temperature"
+      },
+      "room_setpoint_override_mode": {
+        "name": "Room setpoint override mode"
+      },
+      "smart_power_mode": {
+        "name": "Smart power mode"
+      },
+      "thermostat_detection_mode": {
+        "name": "Thermostat detection mode"
+      },
+      "reference_voltage": {
+        "name": "Reference voltage setting"
+      },
+      "room_setpoint_override": {
+        "name": "Room setpoint override"
+      },
+      "room_setpoint_n": {
+        "name": "Room setpoint {setpoint_id}"
+      },
+      "room_temperature": {
+        "name": "Room temperature"
+      },
+      "outside_temperature": {
+        "name": "Outside temperature"
+      }
+    },
+    "switch": {
+      "central_heating_override_n": {
+        "name": "Force central heating {circuit_number} on"
+      }
     }
   },
   "options": {
@@ -35,13 +373,13 @@
       "fields": {
         "gateway_id": {
           "name": "Gateway ID",
-          "description": "The gateway_id of the OpenTherm Gateway."
+          "description": "The ID of the OpenTherm Gateway."
         }
       }
     },
     "set_central_heating_ovrd": {
       "name": "Set central heating override",
-      "description": "Sets the central heating override option on the gateway. When overriding the control setpoint (via a set_control_setpoint service call with a value other than 0), the gateway automatically enables the central heating override to start heating. This service can then be used to control the central heating override status. To return control of the central heating to the thermostat, call the set_control_setpoint service with temperature value 0. You will only need this if you are writing your own software thermostat.\n.",
+      "description": "Sets the central heating override option on the gateway. When overriding the control setpoint (via a 'Set control set point' action with a value other than 0), the gateway automatically enables the central heating override to start heating. This action can then be used to control the central heating override status. To return control of the central heating to the thermostat, use the 'Set control set point' action with temperature value 0. You will only need this if you are writing your own software thermostat.",
       "fields": {
         "gateway_id": {
           "name": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::name%]",
@@ -49,7 +387,7 @@
         },
         "ch_override": {
           "name": "Central heating override",
-          "description": "The desired boolean value for the central heating override."
+          "description": "Whether to enable or disable the override."
         }
       }
     },
@@ -73,7 +411,7 @@
     },
     "set_control_setpoint": {
       "name": "Set control set point",
-      "description": "Sets the central heating control setpoint override on the gateway. You will only need this if you are writing your own software thermostat.\n.",
+      "description": "Sets the central heating control setpoint override on the gateway. You will only need this if you are writing your own software thermostat.",
       "fields": {
         "gateway_id": {
           "name": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::name%]",
@@ -81,7 +419,7 @@
         },
         "temperature": {
           "name": "Temperature",
-          "description": "The central heating setpoint to set on the gateway. Values between 0 and 90 are accepted, but not all boilers support this range. A value of 0 disables the central heating setpoint override.\n."
+          "description": "The central heating setpoint to set on the gateway. Values between 0 and 90 are accepted, but not all boilers support this range. A value of 0 disables the central heating setpoint override."
         }
       }
     },
@@ -95,7 +433,7 @@
         },
         "dhw_override": {
           "name": "Domestic hot water override",
-          "description": "Control the domestic hot water enable option. If the boiler has been configured to let the room unit control when to keep a small amount of water preheated, this command can influence that. Value should be 0 or 1 to enable the override in off or on state, or \"A\" to disable the override.\n."
+          "description": "Control the domestic hot water enable option. If the boiler has been configured to let the room unit control when to keep a small amount of water preheated, this command can influence that. Value should be 0 or 1 to enable the override in off or on state, or \"A\" to disable the override."
         }
       }
     },
@@ -109,7 +447,7 @@
         },
         "temperature": {
           "name": "Temperature",
-          "description": "The domestic hot water setpoint to set on the gateway. Not all boilers support this feature. Values between 0 and 90 are accepted, but not all boilers support this range. Check the values of the slave_dhw_min_setp and slave_dhw_max_setp sensors to see the supported range on your boiler.\n."
+          "description": "The domestic hot water setpoint to set on the gateway. Not all boilers support this feature. Values between 0 and 90 are accepted, but not all boilers support this range. Check the values of the slave_dhw_min_setp and slave_dhw_max_setp sensors to see the supported range on your boiler."
         }
       }
     },
@@ -127,7 +465,7 @@
         },
         "mode": {
           "name": "[%key:common::config_flow::data::mode%]",
-          "description": "Mode to set on the GPIO pin. Values 0 through 6 are accepted for both GPIOs, 7 is only accepted for GPIO \"B\". See https://www.home-assistant.io/integrations/opentherm_gw/#gpio-modes for an explanation of the values.\n."
+          "description": "Mode to set on the GPIO pin. Values 0 through 6 are accepted for both GPIOs, 7 is only accepted for GPIO \"B\". See https://www.home-assistant.io/integrations/opentherm_gw/#gpio-modes for an explanation of the values."
         }
       }
     },
@@ -145,13 +483,13 @@
         },
         "mode": {
           "name": "[%key:common::config_flow::data::mode%]",
-          "description": "The function to assign to the LED. See https://www.home-assistant.io/integrations/opentherm_gw/#led-modes for an explanation of the values.\n."
+          "description": "The function to assign to the LED. See https://www.home-assistant.io/integrations/opentherm_gw/#led-modes for an explanation of the values."
         }
       }
     },
     "set_max_modulation": {
       "name": "Set max modulation",
-      "description": "Overrides the maximum relative modulation level. You will only need this if you are writing your own software thermostat.\n.",
+      "description": "Overrides the maximum relative modulation level. You will only need this if you are writing your own software thermostat.",
       "fields": {
         "gateway_id": {
           "name": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::name%]",
@@ -159,13 +497,13 @@
         },
         "level": {
           "name": "Level",
-          "description": "The modulation level to provide to the gateway. Provide a value of -1 to clear the override and forward the value from the thermostat again.\n."
+          "description": "The modulation level to provide to the gateway. Provide a value of -1 to clear the override and forward the value from the thermostat again."
         }
       }
     },
     "set_outside_temperature": {
       "name": "Set outside temperature",
-      "description": "Provides an outside temperature to the thermostat. If your thermostat is unable to display an outside temperature and does not support OTC (Outside Temperature Correction), this has no effect.\n.",
+      "description": "Provides an outside temperature to the thermostat. If your thermostat is unable to display an outside temperature and does not support OTC (Outside Temperature Correction), this has no effect.",
       "fields": {
         "gateway_id": {
           "name": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::name%]",
@@ -173,7 +511,7 @@
         },
         "temperature": {
           "name": "Temperature",
-          "description": "The temperature to provide to the thermostat. Values between -40.0 and 64.0 will be accepted, but not all thermostats can display the full range. Any value above 64.0 will clear a previously configured value (suggestion: 99)\n."
+          "description": "The temperature to provide to the thermostat. Values between -40.0 and 64.0 will be accepted, but not all thermostats can display the full range. Any value above 64.0 will clear a previously configured value (suggestion: 99)."
         }
       }
     },
@@ -188,6 +526,24 @@
         "temperature": {
           "name": "Temperature",
           "description": "The setback temperature to configure on the gateway."
+        }
+      }
+    },
+    "send_transparent_command": {
+      "name": "Send transparent command",
+      "description": "Sends custom otgw commands (https://otgw.tclcode.com/firmware.html) through a transparent interface.",
+      "fields": {
+        "gateway_id": {
+          "name": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::name%]",
+          "description": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::description%]"
+        },
+        "transp_cmd": {
+          "name": "Command",
+          "description": "The command to be sent to the OpenTherm Gateway."
+        },
+        "transp_arg": {
+          "name": "Argument",
+          "description": "The argument of the command to be sent to the OpenTherm Gateway."
         }
       }
     }

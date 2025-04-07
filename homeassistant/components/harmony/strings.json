@@ -28,7 +28,7 @@
   "options": {
     "step": {
       "init": {
-        "description": "Adjust Harmony Hub Options",
+        "description": "Adjust Harmony Hub options",
         "data": {
           "activity": "The default activity to execute when none is specified.",
           "delay_secs": "The delay between sending commands."
@@ -46,16 +46,6 @@
       }
     }
   },
-  "issues": {
-    "deprecated_switches": {
-      "title": "The Logitech Harmony switch platform is being removed",
-      "description": "Using the switch platform to change the current activity is now deprecated and will be removed in a future version of Home Assistant.\n\nPlease adjust any automations or scripts that use switch entities to instead use the select entity."
-    },
-    "deprecated_switches_entity": {
-      "title": "Deprecated Harmony entity detected in {info}",
-      "description": "Your Harmony entity `{entity}` is being used in `{info}`. A select entity is available and should be used going forward.\n\nPlease adjust `{info}` to fix this issue."
-    }
-  },
   "services": {
     "sync": {
       "name": "Sync",
@@ -63,7 +53,7 @@
     },
     "change_channel": {
       "name": "Change channel",
-      "description": "Sends change channel command to the Harmony HUB.",
+      "description": "Sends a change channel command to the Harmony Hub.",
       "fields": {
         "channel": {
           "name": "Channel",

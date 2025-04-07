@@ -2,36 +2,31 @@
 
 from __future__ import annotations
 
-from typing import TypeVar
-
-from devolo_plc_api.device import Device
 from devolo_plc_api.device_api import (
     ConnectedStationInfo,
     NeighborAPInfo,
     WifiGuestAccessGet,
 )
 from devolo_plc_api.plcnet_api import DataRate, LogicalNetwork
+from yarl import URL
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_CONNECTIONS
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import DevoloHomeNetworkConfigEntry
 from .const import DOMAIN
+from .coordinator import DevoloDataUpdateCoordinator
 
-_DataT = TypeVar(
-    "_DataT",
-    bound=(
-        LogicalNetwork
-        | DataRate
-        | list[ConnectedStationInfo]
-        | list[NeighborAPInfo]
-        | WifiGuestAccessGet
-        | bool
-    ),
+type _DataType = (
+    LogicalNetwork
+    | DataRate
+    | list[ConnectedStationInfo]
+    | list[NeighborAPInfo]
+    | WifiGuestAccessGet
+    | bool
+    | int
 )
 
 
@@ -42,37 +37,41 @@ class DevoloEntity(Entity):
 
     def __init__(
         self,
-        entry: ConfigEntry,
-        device: Device,
+        entry: DevoloHomeNetworkConfigEntry,
     ) -> None:
         """Initialize a devolo home network device."""
-        self.device = device
+        self.device = entry.runtime_data.device
         self.entry = entry
 
         self._attr_device_info = DeviceInfo(
-            configuration_url=f"http://{device.ip}",
-            connections={(CONNECTION_NETWORK_MAC, device.mac)},
-            identifiers={(DOMAIN, str(device.serial_number))},
+            configuration_url=URL.build(scheme="http", host=self.device.ip),
+            identifiers={(DOMAIN, str(self.device.serial_number))},
             manufacturer="devolo",
-            model=device.product,
-            serial_number=device.serial_number,
-            sw_version=device.firmware_version,
+            model=self.device.product,
+            model_id=self.device.mt_number,
+            serial_number=self.device.serial_number,
+            sw_version=self.device.firmware_version,
         )
+        if self.device.mac:
+            self._attr_device_info[ATTR_CONNECTIONS] = {
+                (CONNECTION_NETWORK_MAC, self.device.mac)
+            }
         self._attr_translation_key = self.entity_description.key
-        self._attr_unique_id = f"{device.serial_number}_{self.entity_description.key}"
+        self._attr_unique_id = (
+            f"{self.device.serial_number}_{self.entity_description.key}"
+        )
 
 
-class DevoloCoordinatorEntity(
-    CoordinatorEntity[DataUpdateCoordinator[_DataT]], DevoloEntity
+class DevoloCoordinatorEntity[_DataT: _DataType](
+    CoordinatorEntity[DevoloDataUpdateCoordinator[_DataT]], DevoloEntity
 ):
     """Representation of a coordinated devolo home network device."""
 
     def __init__(
         self,
-        entry: ConfigEntry,
-        coordinator: DataUpdateCoordinator[_DataT],
-        device: Device,
+        entry: DevoloHomeNetworkConfigEntry,
+        coordinator: DevoloDataUpdateCoordinator[_DataT],
     ) -> None:
         """Initialize a devolo home network device."""
         super().__init__(coordinator)
-        DevoloEntity.__init__(self, entry, device)
+        DevoloEntity.__init__(self, entry)

@@ -18,6 +18,12 @@
       "is_position": "Current {entity_name} position is",
       "is_tilt_position": "Current {entity_name} tilt position is"
     },
+    "extra_fields": {
+      "above": "[%key:common::device_automation::extra_fields::above%]",
+      "below": "[%key:common::device_automation::extra_fields::below%]",
+      "for": "[%key:common::device_automation::extra_fields::for%]",
+      "position": "Position"
+    },
     "trigger_type": {
       "opened": "{entity_name} opened",
       "closed": "{entity_name} closed",
@@ -32,10 +38,10 @@
       "name": "[%key:component::cover::title%]",
       "state": {
         "open": "[%key:common::state::open%]",
-        "opening": "Opening",
+        "opening": "[%key:common::state::opening%]",
         "closed": "[%key:common::state::closed%]",
-        "closing": "Closing",
-        "stopped": "Stopped"
+        "closing": "[%key:common::state::closing%]",
+        "stopped": "[%key:common::state::stopped%]"
       },
       "state_attributes": {
         "current_position": {

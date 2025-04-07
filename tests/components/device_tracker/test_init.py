@@ -1,10 +1,10 @@
 """The tests for the device tracker component."""
 
+from collections.abc import Generator
 from datetime import datetime, timedelta
 import json
 import logging
 import os
-from types import ModuleType
 from unittest.mock import call, patch
 
 import pytest
@@ -28,7 +28,7 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from . import common
 from .common import MockScanner, mock_legacy_device_tracker_setup
@@ -36,8 +36,6 @@ from .common import MockScanner, mock_legacy_device_tracker_setup
 from tests.common import (
     assert_setup_component,
     async_fire_time_changed,
-    help_test_all,
-    import_and_test_deprecated_constant_enum,
     mock_registry,
     mock_restore_cache,
     patch_yaml_files,
@@ -49,7 +47,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @pytest.fixture(name="yaml_devices")
-def mock_yaml_devices(hass):
+def mock_yaml_devices(hass: HomeAssistant) -> Generator[str]:
     """Get a path for storing yaml devices."""
     yaml_devices = hass.config.path(legacy.YAML_DEVICES)
     if os.path.isfile(yaml_devices):
@@ -108,7 +106,7 @@ async def test_reading_broken_yaml_config(hass: HomeAssistant) -> None:
         assert res[0].dev_id == "my_device"
 
 
-async def test_reading_yaml_config(hass: HomeAssistant, yaml_devices) -> None:
+async def test_reading_yaml_config(hass: HomeAssistant, yaml_devices: str) -> None:
     """Test the rendering of the YAML configuration."""
     dev_id = "test"
     device = legacy.Device(
@@ -161,9 +159,9 @@ async def test_duplicate_mac_dev_id(mock_warning, hass: HomeAssistant) -> None:
     ]
     legacy.DeviceTracker(hass, False, True, {}, devices)
     _LOGGER.debug(mock_warning.call_args_list)
-    assert (
-        mock_warning.call_count == 1
-    ), "The only warning call should be duplicates (check DEBUG)"
+    assert mock_warning.call_count == 1, (
+        "The only warning call should be duplicates (check DEBUG)"
+    )
     args, _ = mock_warning.call_args
     assert "Duplicate device MAC" in args[0], "Duplicate MAC warning expected"
 
@@ -179,14 +177,14 @@ async def test_duplicate_mac_dev_id(mock_warning, hass: HomeAssistant) -> None:
     legacy.DeviceTracker(hass, False, True, {}, devices)
 
     _LOGGER.debug(mock_warning.call_args_list)
-    assert (
-        mock_warning.call_count == 1
-    ), "The only warning call should be duplicates (check DEBUG)"
+    assert mock_warning.call_count == 1, (
+        "The only warning call should be duplicates (check DEBUG)"
+    )
     args, _ = mock_warning.call_args
     assert "Duplicate device IDs" in args[0], "Duplicate device IDs warning expected"
 
 
-async def test_setup_without_yaml_file(hass: HomeAssistant, yaml_devices) -> None:
+async def test_setup_without_yaml_file(hass: HomeAssistant, yaml_devices: str) -> None:
     """Test with no YAML file."""
     with assert_setup_component(1, device_tracker.DOMAIN):
         assert await async_setup_component(hass, device_tracker.DOMAIN, TEST_PLATFORM)
@@ -487,7 +485,7 @@ async def test_invalid_dev_id(
     assert not devices
 
 
-async def test_see_state(hass: HomeAssistant, yaml_devices) -> None:
+async def test_see_state(hass: HomeAssistant, yaml_devices: str) -> None:
     """Test device tracker see records state correctly."""
     assert await async_setup_component(hass, device_tracker.DOMAIN, TEST_PLATFORM)
     await hass.async_block_till_done()
@@ -737,29 +735,4 @@ def test_see_schema_allowing_ios_calls() -> None:
             "gps_accuracy": 300,
             "hostname": "beer",
         }
-    )
-
-
-@pytest.mark.parametrize(
-    "module",
-    [device_tracker, device_tracker.const],
-)
-def test_all(module: ModuleType) -> None:
-    """Test module.__all__ is correctly set."""
-    help_test_all(module)
-
-
-@pytest.mark.parametrize(("enum"), list(SourceType))
-@pytest.mark.parametrize(
-    "module",
-    [device_tracker, device_tracker.const],
-)
-def test_deprecated_constants(
-    caplog: pytest.LogCaptureFixture,
-    enum: SourceType,
-    module: ModuleType,
-) -> None:
-    """Test deprecated constants."""
-    import_and_test_deprecated_constant_enum(
-        caplog, module, enum, "SOURCE_TYPE_", "2025.1"
     )

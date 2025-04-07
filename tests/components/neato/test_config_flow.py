@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from pybotvac.neato import Neato
+import pytest
 
 from homeassistant import config_entries, setup
 from homeassistant.components.application_credentials import (
@@ -27,11 +28,11 @@ OAUTH2_AUTHORIZE = VENDOR.auth_endpoint
 OAUTH2_TOKEN = VENDOR.token_endpoint
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
 ) -> None:
     """Check full flow."""
     assert await setup.async_setup_component(hass, "neato", {})
@@ -98,11 +99,11 @@ async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_reauth(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
 ) -> None:
     """Test initialization of the reauth flow."""
     assert await setup.async_setup_component(hass, "neato", {})
@@ -110,16 +111,15 @@ async def test_reauth(
         hass, NEATO_DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET)
     )
 
-    MockConfigEntry(
+    entry = MockConfigEntry(
         entry_id="my_entry",
         domain=NEATO_DOMAIN,
         data={"username": "abcdef", "password": "123456", "vendor": "neato"},
-    ).add_to_hass(hass)
+    )
+    entry.add_to_hass(hass)
 
     # Should show form
-    result = await hass.config_entries.flow.async_init(
-        "neato", context={"source": config_entries.SOURCE_REAUTH}
-    )
+    result = await entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 

@@ -18,8 +18,9 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from .conftest import FIXTURE_USER_INPUT
+
 from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.aosmith.conftest import FIXTURE_USER_INPUT
 
 
 async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:

@@ -15,17 +15,24 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import DOMAIN, SIGNAL_THERMOSTAT_CONNECTED, SIGNAL_THERMOSTAT_DISCONNECTED
+from .const import SIGNAL_THERMOSTAT_CONNECTED, SIGNAL_THERMOSTAT_DISCONNECTED
 from .models import Eq3Config, Eq3ConfigEntryData
 
 PLATFORMS = [
+    Platform.BINARY_SENSOR,
     Platform.CLIMATE,
+    Platform.NUMBER,
+    Platform.SENSOR,
+    Platform.SWITCH,
 ]
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+type Eq3ConfigEntry = ConfigEntry[Eq3ConfigEntryData]
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: Eq3ConfigEntry) -> bool:
     """Handle config entry setup."""
 
     mac_address: str | None = entry.unique_id
@@ -53,12 +60,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ble_device=device,
     )
 
-    eq3_config_entry = Eq3ConfigEntryData(eq3_config=eq3_config, thermostat=thermostat)
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = eq3_config_entry
-
+    entry.runtime_data = Eq3ConfigEntryData(
+        eq3_config=eq3_config, thermostat=thermostat
+    )
     entry.async_on_unload(entry.add_update_listener(update_listener))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
     entry.async_create_background_task(
         hass, _async_run_thermostat(hass, entry), entry.entry_id
     )
@@ -66,29 +72,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: Eq3ConfigEntry) -> bool:
     """Handle config entry unload."""
 
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        eq3_config_entry: Eq3ConfigEntryData = hass.data[DOMAIN].pop(entry.entry_id)
-        await eq3_config_entry.thermostat.async_disconnect()
+        await entry.runtime_data.thermostat.async_disconnect()
 
     return unload_ok
 
 
-async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def update_listener(hass: HomeAssistant, entry: Eq3ConfigEntry) -> None:
     """Handle config entry update."""
 
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def _async_run_thermostat(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def _async_run_thermostat(hass: HomeAssistant, entry: Eq3ConfigEntry) -> None:
     """Run the thermostat."""
 
-    eq3_config_entry: Eq3ConfigEntryData = hass.data[DOMAIN][entry.entry_id]
-    thermostat = eq3_config_entry.thermostat
-    mac_address = eq3_config_entry.eq3_config.mac_address
-    scan_interval = eq3_config_entry.eq3_config.scan_interval
+    thermostat = entry.runtime_data.thermostat
+    mac_address = entry.runtime_data.eq3_config.mac_address
+    scan_interval = entry.runtime_data.eq3_config.scan_interval
 
     await _async_reconnect_thermostat(hass, entry)
 
@@ -117,13 +121,14 @@ async def _async_run_thermostat(hass: HomeAssistant, entry: ConfigEntry) -> None
         await asyncio.sleep(scan_interval)
 
 
-async def _async_reconnect_thermostat(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def _async_reconnect_thermostat(
+    hass: HomeAssistant, entry: Eq3ConfigEntry
+) -> None:
     """Reconnect the thermostat."""
 
-    eq3_config_entry: Eq3ConfigEntryData = hass.data[DOMAIN][entry.entry_id]
-    thermostat = eq3_config_entry.thermostat
-    mac_address = eq3_config_entry.eq3_config.mac_address
-    scan_interval = eq3_config_entry.eq3_config.scan_interval
+    thermostat = entry.runtime_data.thermostat
+    mac_address = entry.runtime_data.eq3_config.mac_address
+    scan_interval = entry.runtime_data.eq3_config.scan_interval
 
     while True:
         try:

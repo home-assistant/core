@@ -81,7 +81,7 @@ def lock_fixture() -> loqed.Lock:
 @pytest.fixture(name="integration")
 async def integration_fixture(
     hass: HomeAssistant, config_entry: MockConfigEntry, lock: loqed.Lock
-) -> AsyncGenerator[MockConfigEntry, None]:
+) -> AsyncGenerator[MockConfigEntry]:
     """Set up the loqed integration with a config entry."""
     config: dict[str, Any] = {DOMAIN: {CONF_API_TOKEN: ""}}
     config_entry.add_to_hass(hass)

@@ -9,7 +9,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
-from .helper import Plenticore
+from .coordinator import Plenticore
 
 _LOGGER = logging.getLogger(__name__)
 

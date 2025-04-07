@@ -1,5 +1,7 @@
 {
   "services": {
-    "send_message": "mdi:matrix"
+    "send_message": {
+      "service": "mdi:matrix"
+    }
   }
 }

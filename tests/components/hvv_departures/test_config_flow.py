@@ -144,7 +144,7 @@ async def test_user_flow_invalid_auth(hass: HomeAssistant) -> None:
         "homeassistant.components.hvv_departures.hub.GTI.init",
         side_effect=InvalidAuth(
             "ERROR_TEXT",
-            "Bei der Verarbeitung der Anfrage ist ein technisches Problem aufgetreten.",
+            "Bei der Verarbeitung der Anfrage ist ein technisches Problem aufgetreten.",  # codespell:ignore ist
             "Authentication failed!",
         ),
     ):
@@ -343,7 +343,7 @@ async def test_options_flow_invalid_auth(hass: HomeAssistant) -> None:
         "homeassistant.components.hvv_departures.hub.GTI.departureList",
         side_effect=InvalidAuth(
             "ERROR_TEXT",
-            "Bei der Verarbeitung der Anfrage ist ein technisches Problem aufgetreten.",
+            "Bei der Verarbeitung der Anfrage ist ein technisches Problem aufgetreten.",  # codespell:ignore ist
             "Authentication failed!",
         ),
     ):

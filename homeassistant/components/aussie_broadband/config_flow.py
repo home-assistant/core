@@ -22,13 +22,14 @@ class AussieBroadbandConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    _reauth_username: str
+
+    def __init__(self) -> None:
         """Initialize the config flow."""
         self.data: dict = {}
         self.options: dict = {CONF_SERVICES: []}
-        self.services: list[dict[str]] = []
+        self.services: list[dict[str, Any]] = []
         self.client: AussieBB | None = None
-        self._reauth_username: str | None = None
 
     async def async_auth(self, user_input: dict[str, str]) -> dict[str, str] | None:
         """Reusable Auth Helper."""
@@ -92,22 +93,16 @@ class AussieBroadbandConfigFlow(ConfigFlow, domain=DOMAIN):
 
         errors: dict[str, str] | None = None
 
-        if user_input and self._reauth_username:
+        if user_input:
             data = {
                 CONF_USERNAME: self._reauth_username,
                 CONF_PASSWORD: user_input[CONF_PASSWORD],
             }
 
             if not (errors := await self.async_auth(data)):
-                entry = await self.async_set_unique_id(self._reauth_username.lower())
-                if entry:
-                    self.hass.config_entries.async_update_entry(
-                        entry,
-                        data=data,
-                    )
-                    await self.hass.config_entries.async_reload(entry.entry_id)
-                    return self.async_abort(reason="reauth_successful")
-                return self.async_create_entry(title=self._reauth_username, data=data)
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(), data=data
+                )
 
         return self.async_show_form(
             step_id="reauth_confirm",

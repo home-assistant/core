@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "event": {
+      "vibration": {
+        "default": "mdi:vibrate"
+      }
+    }
+  }
+}

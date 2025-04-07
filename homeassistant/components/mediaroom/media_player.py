@@ -15,7 +15,7 @@ from pymediaroom import (
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -29,7 +29,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -46,7 +46,7 @@ MEDIA_TYPE_MEDIAROOM = "mediaroom"
 SIGNAL_STB_NOTIFY = "mediaroom_stb_discovered"
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -149,7 +149,7 @@ class MediaroomDevice(MediaPlayerEntity):
 
         self.host = host
         self.stb = Remote(host)
-        _LOGGER.info(
+        _LOGGER.debug(
             "Found STB at %s%s", host, " - I'm optimistic" if optimistic else ""
         )
         self._channel = None

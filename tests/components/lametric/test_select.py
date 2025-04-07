@@ -55,6 +55,7 @@ async def test_brightness_mode(
     assert device.identifiers == {(DOMAIN, "SA110405124500W00BS9")}
     assert device.manufacturer == "LaMetric Inc."
     assert device.name == "Frenck's LaMetric"
+    assert device.serial_number == "SA110405124500W00BS9"
     assert device.sw_version == "2.2.2"
 
     await hass.services.async_call(
@@ -94,7 +95,6 @@ async def test_select_error(
             },
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     state = hass.states.get("select.frenck_s_lametric_brightness_mode")
     assert state
@@ -124,7 +124,6 @@ async def test_select_connection_error(
             },
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     state = hass.states.get("select.frenck_s_lametric_brightness_mode")
     assert state

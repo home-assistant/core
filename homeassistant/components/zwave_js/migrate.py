@@ -6,20 +6,16 @@ from dataclasses import dataclass
 import logging
 
 from zwave_js_server.model.driver import Driver
+from zwave_js_server.model.node import Node
 from zwave_js_server.model.value import Value as ZwaveValue
 
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceEntry
-from homeassistant.helpers.entity_registry import (
-    EntityRegistry,
-    RegistryEntry,
-    async_entries_for_device,
-)
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import DOMAIN
 from .discovery import ZwaveDiscoveryInfo
-from .helpers import get_unique_id
+from .helpers import get_unique_id, get_valueless_base_unique_id
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,10 +58,10 @@ class ValueID:
 @callback
 def async_migrate_old_entity(
     hass: HomeAssistant,
-    ent_reg: EntityRegistry,
+    ent_reg: er.EntityRegistry,
     registered_unique_ids: set[str],
-    platform: str,
-    device: DeviceEntry,
+    platform: Platform,
+    device: dr.DeviceEntry,
     unique_id: str,
 ) -> None:
     """Migrate existing entity if current one can't be found and an old one exists."""
@@ -77,8 +73,8 @@ def async_migrate_old_entity(
 
     # Look for existing entities in the registry that could be the same value but on
     # a different endpoint
-    existing_entity_entries: list[RegistryEntry] = []
-    for entry in async_entries_for_device(ent_reg, device.id):
+    existing_entity_entries: list[er.RegistryEntry] = []
+    for entry in er.async_entries_for_device(ent_reg, device.id):
         # If entity is not in the domain for this discovery info or entity has already
         # been processed, skip it
         if entry.domain != platform or entry.unique_id in registered_unique_ids:
@@ -109,35 +105,40 @@ def async_migrate_old_entity(
 
 @callback
 def async_migrate_unique_id(
-    ent_reg: EntityRegistry, platform: str, old_unique_id: str, new_unique_id: str
+    ent_reg: er.EntityRegistry,
+    platform: Platform,
+    old_unique_id: str,
+    new_unique_id: str,
 ) -> None:
     """Check if entity with old unique ID exists, and if so migrate it to new ID."""
-    if entity_id := ent_reg.async_get_entity_id(platform, DOMAIN, old_unique_id):
+    if not (entity_id := ent_reg.async_get_entity_id(platform, DOMAIN, old_unique_id)):
+        return
+
+    _LOGGER.debug(
+        "Migrating entity %s from old unique ID '%s' to new unique ID '%s'",
+        entity_id,
+        old_unique_id,
+        new_unique_id,
+    )
+    try:
+        ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
+    except ValueError:
         _LOGGER.debug(
-            "Migrating entity %s from old unique ID '%s' to new unique ID '%s'",
+            (
+                "Entity %s can't be migrated because the unique ID is taken; "
+                "Cleaning it up since it is likely no longer valid"
+            ),
             entity_id,
-            old_unique_id,
-            new_unique_id,
         )
-        try:
-            ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
-        except ValueError:
-            _LOGGER.debug(
-                (
-                    "Entity %s can't be migrated because the unique ID is taken; "
-                    "Cleaning it up since it is likely no longer valid"
-                ),
-                entity_id,
-            )
-            ent_reg.async_remove(entity_id)
+        ent_reg.async_remove(entity_id)
 
 
 @callback
 def async_migrate_discovered_value(
     hass: HomeAssistant,
-    ent_reg: EntityRegistry,
+    ent_reg: er.EntityRegistry,
     registered_unique_ids: set[str],
-    device: DeviceEntry,
+    device: dr.DeviceEntry,
     driver: Driver,
     disc_info: ZwaveDiscoveryInfo,
 ) -> None:
@@ -160,7 +161,7 @@ def async_migrate_discovered_value(
     ]
 
     if (
-        disc_info.platform == "binary_sensor"
+        disc_info.platform == Platform.BINARY_SENSOR
         and disc_info.platform_hint == "notification"
     ):
         for state_key in disc_info.primary_value.metadata.states:
@@ -209,6 +210,24 @@ def async_migrate_discovered_value(
         hass, ent_reg, registered_unique_ids, disc_info.platform, device, new_unique_id
     )
     registered_unique_ids.add(new_unique_id)
+
+
+@callback
+def async_migrate_statistics_sensors(
+    hass: HomeAssistant, driver: Driver, node: Node, key_map: dict[str, str]
+) -> None:
+    """Migrate statistics sensors to new unique IDs.
+
+    - Migrate camel case keys in unique IDs to snake keys.
+    """
+    ent_reg = er.async_get(hass)
+    base_unique_id = f"{get_valueless_base_unique_id(driver, node)}.statistics"
+    for new_key, old_key in key_map.items():
+        if new_key == old_key:
+            continue
+        old_unique_id = f"{base_unique_id}_{old_key}"
+        new_unique_id = f"{base_unique_id}_{new_key}"
+        async_migrate_unique_id(ent_reg, Platform.SENSOR, old_unique_id, new_unique_id)
 
 
 @callback

@@ -6,5 +6,5 @@
   "integration_type": "service",
   "iot_class": "local_push",
   "quality_scale": "internal",
-  "requirements": ["debugpy==1.8.1"]
+  "requirements": ["debugpy==1.8.13"]
 }

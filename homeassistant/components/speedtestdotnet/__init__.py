@@ -6,17 +6,15 @@ from functools import partial
 
 import speedtest
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.start import async_at_started
 
-from .coordinator import SpeedTestDataCoordinator
+from .coordinator import SpeedTestConfigEntry, SpeedTestDataCoordinator
 
 PLATFORMS = [Platform.SENSOR]
-
-SpeedTestConfigEntry = ConfigEntry[SpeedTestDataCoordinator]
 
 
 async def async_setup_entry(
@@ -35,7 +33,10 @@ async def async_setup_entry(
 
     async def _async_finish_startup(hass: HomeAssistant) -> None:
         """Run this only when HA has finished its startup."""
-        await coordinator.async_config_entry_first_refresh()
+        if config_entry.state is ConfigEntryState.LOADED:
+            await coordinator.async_refresh()
+        else:
+            await coordinator.async_config_entry_first_refresh()
 
     # Don't start a speedtest during startup
     async_at_started(hass, _async_finish_startup)
@@ -46,11 +47,15 @@ async def async_setup_entry(
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: SpeedTestConfigEntry
+) -> bool:
     """Unload SpeedTest Entry from config_entry."""
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
 
-async def update_listener(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+async def update_listener(
+    hass: HomeAssistant, config_entry: SpeedTestConfigEntry
+) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(config_entry.entry_id)

@@ -1,0 +1,43 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'data': dict({
+      'additional_items': list([
+        dict({
+          'id': 'unique_id_tomaten',
+          'is_owned': False,
+          'name': 'Tomaten',
+        }),
+      ]),
+      'ingredient_items': list([
+        dict({
+          'description': '200 g',
+          'id': 'unique_id_mehl',
+          'is_owned': False,
+          'name': 'Mehl',
+        }),
+      ]),
+      'subscription': dict({
+        'active': True,
+        'expires': '2025-12-16T23:59:00Z',
+        'extended_type': 'REGULAR',
+        'start_date': '2024-12-16T00:00:00Z',
+        'status': 'ACTIVE',
+        'subscription_level': 'FULL',
+        'subscription_source': 'COMMERCE',
+        'type': 'REGULAR',
+      }),
+    }),
+    'entry_data': dict({
+      'country': 'CH',
+      'email': 'test-email',
+      'language': 'de-CH',
+      'password': '**REDACTED**',
+    }),
+    'user': dict({
+      'description': None,
+      'picture': None,
+      'username': 'username_1234',
+    }),
+  })
+# ---

@@ -11,7 +11,7 @@ import simplehound.core as hound
 import voluptuous as vol
 
 from homeassistant.components.image_processing import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as IMAGE_PROCESSING_PLATFORM_SCHEMA,
     ImageProcessingEntity,
 )
 from homeassistant.const import (
@@ -22,10 +22,10 @@ from homeassistant.const import (
     CONF_SOURCE,
 )
 from homeassistant.core import HomeAssistant, split_entity_id
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 from homeassistant.util.pil import draw_box
 
 _LOGGER = logging.getLogger(__name__)
@@ -41,7 +41,7 @@ DATETIME_FORMAT = "%Y-%m-%d_%H:%M:%S"
 DEV = "dev"
 PROD = "prod"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = IMAGE_PROCESSING_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
         vol.Optional(CONF_ACCOUNT_TYPE, default=DEV): vol.In([DEV, PROD]),
@@ -157,7 +157,7 @@ class SighthoundEntity(ImageProcessingEntity):
         if self._save_timestamped_file:
             timestamp_save_path = directory / f"{self._name}_{self._last_detection}.jpg"
             img.save(timestamp_save_path)
-            _LOGGER.info("Sighthound saved file %s", timestamp_save_path)
+            _LOGGER.debug("Sighthound saved file %s", timestamp_save_path)
 
     @property
     def camera_entity(self):

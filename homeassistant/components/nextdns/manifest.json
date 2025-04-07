@@ -7,6 +7,5 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["nextdns"],
-  "quality_scale": "platinum",
-  "requirements": ["nextdns==3.0.0"]
+  "requirements": ["nextdns==4.0.0"]
 }

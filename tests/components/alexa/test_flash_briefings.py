@@ -3,12 +3,15 @@
 import datetime
 from http import HTTPStatus
 
+from aiohttp.test_utils import TestClient
 import pytest
 
 from homeassistant.components import alexa
 from homeassistant.components.alexa import const
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
+
+from tests.typing import ClientSessionGenerator
 
 SESSION_ID = "amzn1.echo-api.session.0000000-0000-0000-0000-00000000000"
 APPLICATION_ID = "amzn1.echo-sdk-ams.app.000000-d0ed-0000-ad00-000000d00ebe"
@@ -20,9 +23,11 @@ NPR_NEWS_MP3_URL = "https://pd.npr.org/anon.npr-mp3/npr/news/newscast.mp3"
 
 
 @pytest.fixture
-def alexa_client(event_loop, hass, hass_client):
+async def alexa_client(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+) -> TestClient:
     """Initialize a Home Assistant server for testing this module."""
-    loop = event_loop
 
     @callback
     def mock_service(call):
@@ -30,38 +35,36 @@ def alexa_client(event_loop, hass, hass_client):
 
     hass.services.async_register("test", "alexa", mock_service)
 
-    assert loop.run_until_complete(
-        async_setup_component(
-            hass,
-            alexa.DOMAIN,
-            {
-                # Key is here to verify we allow other keys in config too
-                "homeassistant": {},
-                "alexa": {
-                    "flash_briefings": {
-                        "password": "pass/abc",
-                        "weather": [
-                            {
-                                "title": "Weekly forecast",
-                                "text": "This week it will be sunny.",
-                            },
-                            {
-                                "title": "Current conditions",
-                                "text": "Currently it is 80 degrees fahrenheit.",
-                            },
-                        ],
-                        "news_audio": {
-                            "title": "NPR",
-                            "audio": NPR_NEWS_MP3_URL,
-                            "display_url": "https://npr.org",
-                            "uid": "uuid",
+    assert await async_setup_component(
+        hass,
+        alexa.DOMAIN,
+        {
+            # Key is here to verify we allow other keys in config too
+            "homeassistant": {},
+            "alexa": {
+                "flash_briefings": {
+                    "password": "pass/abc",
+                    "weather": [
+                        {
+                            "title": "Weekly forecast",
+                            "text": "This week it will be sunny.",
                         },
-                    }
-                },
+                        {
+                            "title": "Current conditions",
+                            "text": "Currently it is 80 degrees fahrenheit.",
+                        },
+                    ],
+                    "news_audio": {
+                        "title": "NPR",
+                        "audio": NPR_NEWS_MP3_URL,
+                        "display_url": "https://npr.org",
+                        "uid": "uuid",
+                    },
+                }
             },
-        )
+        },
     )
-    return loop.run_until_complete(hass_client())
+    return await hass_client()
 
 
 def _flash_briefing_req(client, briefing_id, password="pass%2Fabc"):

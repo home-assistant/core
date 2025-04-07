@@ -3,8 +3,16 @@
   "name": "Balboa Spa Client",
   "codeowners": ["@garbled1", "@natekspencer"],
   "config_flow": true,
+  "dhcp": [
+    {
+      "registered_devices": true
+    },
+    {
+      "macaddress": "001527*"
+    }
+  ],
   "documentation": "https://www.home-assistant.io/integrations/balboa",
   "iot_class": "local_push",
   "loggers": ["pybalboa"],
-  "requirements": ["pybalboa==1.0.1"]
+  "requirements": ["pybalboa==1.1.3"]
 }

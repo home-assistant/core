@@ -6,13 +6,14 @@ import asyncio
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from contextlib import suppress
 from copy import deepcopy
-from functools import cached_property
 import inspect
 from json import JSONDecodeError, JSONEncoder
 import logging
 import os
 from pathlib import Path
-from typing import Any, Generic, TypeVar
+from typing import Any
+
+from propcache.api import cached_property
 
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_FINAL_WRITE,
@@ -29,9 +30,9 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
-from homeassistant.util import json as json_util
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util, json as json_util
 from homeassistant.util.file import WriteError
+from homeassistant.util.hass_dict import HassKey
 
 from . import json as json_helper
 
@@ -42,16 +43,14 @@ MAX_LOAD_CONCURRENTLY = 6
 STORAGE_DIR = ".storage"
 _LOGGER = logging.getLogger(__name__)
 
-STORAGE_SEMAPHORE = "storage_semaphore"
-STORAGE_MANAGER = "storage_manager"
+STORAGE_SEMAPHORE: HassKey[asyncio.Semaphore] = HassKey("storage_semaphore")
+STORAGE_MANAGER: HassKey[_StoreManager] = HassKey("storage_manager")
 
 MANAGER_CLEANUP_DELAY = 60
 
-_T = TypeVar("_T", bound=Mapping[str, Any] | Sequence[Any])
-
 
 @bind_hass
-async def async_migrator(
+async def async_migrator[_T: Mapping[str, Any] | Sequence[Any]](
     hass: HomeAssistant,
     old_path: str,
     store: Store[_T],
@@ -218,7 +217,7 @@ class _StoreManager:
             try:
                 if storage_file.is_file():
                     data_preload[key] = json_util.load_json(storage_file)
-            except Exception as ex:  # pylint: disable=broad-except
+            except Exception as ex:  # noqa: BLE001
                 _LOGGER.debug("Error loading %s: %s", key, ex)
 
     def _initialize_files(self) -> None:
@@ -228,7 +227,7 @@ class _StoreManager:
 
 
 @bind_hass
-class Store(Generic[_T]):
+class Store[_T: Mapping[str, Any] | Sequence[Any]]:
     """Class to help storing data."""
 
     def __init__(
@@ -253,7 +252,7 @@ class Store(Generic[_T]):
         self._delay_handle: asyncio.TimerHandle | None = None
         self._unsub_final_write_listener: CALLBACK_TYPE | None = None
         self._write_lock = asyncio.Lock()
-        self._load_task: asyncio.Future[_T | None] | None = None
+        self._load_future: asyncio.Future[_T | None] | None = None
         self._encoder = encoder
         self._atomic_writes = atomic_writes
         self._read_only = read_only
@@ -265,6 +264,13 @@ class Store(Generic[_T]):
         """Return the config path."""
         return self.hass.config.path(STORAGE_DIR, self.key)
 
+    def make_read_only(self) -> None:
+        """Make the store read-only.
+
+        This method is irreversible.
+        """
+        self._read_only = True
+
     async def async_load(self) -> _T | None:
         """Load data.
 
@@ -275,27 +281,32 @@ class Store(Generic[_T]):
         Will ensure that when a call comes in while another one is in progress,
         the second call will wait and return the result of the first call.
         """
-        if self._load_task:
-            return await self._load_task
+        if self._load_future:
+            return await self._load_future
 
-        load_task = self.hass.async_create_background_task(
-            self._async_load(), f"Storage load {self.key}", eager_start=True
-        )
-        if not load_task.done():
-            # Only set the load task if it didn't complete immediately
-            self._load_task = load_task
-        return await load_task
+        self._load_future = self.hass.loop.create_future()
+        try:
+            result = await self._async_load()
+        except BaseException as ex:
+            self._load_future.set_exception(ex)
+            # Ensure the future is marked as retrieved
+            # since if there is no concurrent call it
+            # will otherwise never be retrieved.
+            self._load_future.exception()
+            raise
+        else:
+            self._load_future.set_result(result)
+        finally:
+            self._load_future = None
+
+        return result
 
     async def _async_load(self) -> _T | None:
         """Load the data and ensure the task is removed."""
         if STORAGE_SEMAPHORE not in self.hass.data:
             self.hass.data[STORAGE_SEMAPHORE] = asyncio.Semaphore(MAX_LOAD_CONCURRENTLY)
-
-        try:
-            async with self.hass.data[STORAGE_SEMAPHORE]:
-                return await self._async_load_data()
-        finally:
-            self._load_task = None
+        async with self.hass.data[STORAGE_SEMAPHORE]:
+            return await self._async_load_data()
 
     async def _async_load_data(self):
         """Load the data."""

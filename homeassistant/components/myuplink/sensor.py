@@ -8,8 +8,8 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    REVOLUTIONS_PER_MINUTE,
     Platform,
     UnitOfElectricCurrent,
     UnitOfEnergy,
@@ -21,13 +21,13 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import MyUplinkDataCoordinator
-from .const import DOMAIN
+from .const import F_SERIES
+from .coordinator import MyUplinkConfigEntry, MyUplinkDataCoordinator
 from .entity import MyUplinkEntity
-from .helpers import find_matching_platform, skip_entity
+from .helpers import find_matching_platform, skip_entity, transform_model_series
 
 DEVICE_POINT_UNIT_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     "°C": SensorEntityDescription(
@@ -54,8 +54,22 @@ DEVICE_POINT_UNIT_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPressure.BAR,
     ),
+    "days": SensorEntityDescription(
+        key="days",
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTime.DAYS,
+        suggested_display_precision=0,
+    ),
     "h": SensorEntityDescription(
         key="hours",
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        suggested_display_precision=1,
+    ),
+    "hrs": SensorEntityDescription(
+        key="hours_hrs",
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTime.HOURS,
@@ -86,8 +100,36 @@ DEVICE_POINT_UNIT_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
     ),
+    "min": SensorEntityDescription(
+        key="minutes",
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
+    ),
+    "Pa": SensorEntityDescription(
+        key="pressure_pa",
+        device_class=SensorDeviceClass.PRESSURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPressure.PA,
+        suggested_display_precision=0,
+    ),
+    "rpm": SensorEntityDescription(
+        key="rpm",
+        translation_key="rpm",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
+        suggested_display_precision=0,
+    ),
     "s": SensorEntityDescription(
         key="seconds",
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_display_precision=0,
+    ),
+    "sec": SensorEntityDescription(
+        key="seconds_sec",
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -98,6 +140,32 @@ DEVICE_POINT_UNIT_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
 MARKER_FOR_UNKNOWN_VALUE = -32768
 
 CATEGORY_BASED_DESCRIPTIONS: dict[str, dict[str, SensorEntityDescription]] = {
+    F_SERIES: {
+        "43108": SensorEntityDescription(
+            key="fan_mode",
+            translation_key="fan_mode",
+        ),
+        "43427": SensorEntityDescription(
+            key="status_compressor",
+            translation_key="status_compressor",
+            device_class=SensorDeviceClass.ENUM,
+        ),
+        "49993": SensorEntityDescription(
+            key="elect_add",
+            translation_key="elect_add",
+            device_class=SensorDeviceClass.ENUM,
+        ),
+        "49994": SensorEntityDescription(
+            key="priority",
+            translation_key="priority",
+            device_class=SensorDeviceClass.ENUM,
+        ),
+        "50095": SensorEntityDescription(
+            key="status",
+            translation_key="status",
+            device_class=SensorDeviceClass.ENUM,
+        ),
+    },
     "NIBEF": {
         "43108": SensorEntityDescription(
             key="fan_mode",
@@ -133,6 +201,7 @@ def get_description(device_point: DevicePoint) -> SensorEntityDescription | None
     """
     description = None
     prefix, _, _ = device_point.category.partition(" ")
+    prefix = transform_model_series(prefix)
     description = CATEGORY_BASED_DESCRIPTIONS.get(prefix, {}).get(
         device_point.parameter_id
     )
@@ -144,13 +213,13 @@ def get_description(device_point: DevicePoint) -> SensorEntityDescription | None
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: MyUplinkConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up myUplink sensor."""
 
     entities: list[SensorEntity] = []
-    coordinator: MyUplinkDataCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     # Setup device point sensors
     for device_id, point_data in coordinator.data.points.items():
@@ -160,6 +229,11 @@ async def async_setup_entry(
             if find_matching_platform(device_point) == Platform.SENSOR:
                 description = get_description(device_point)
                 entity_class = MyUplinkDevicePointSensor
+                # Ignore sensors without a description that provide non-numeric values
+                if description is None and not isinstance(
+                    device_point.value, (int, float)
+                ):
+                    continue
                 if (
                     description is not None
                     and description.device_class == SensorDeviceClass.ENUM
@@ -251,10 +325,10 @@ class MyUplinkEnumSensor(MyUplinkDevicePointSensor):
         }
 
     @property
-    def native_value(self) -> str:
+    def native_value(self) -> str | None:
         """Sensor state value for enum sensor."""
         device_point = self.coordinator.data.points[self.device_id][self.point_id]
-        return self.options_map[str(int(device_point.value))]  # type: ignore[no-any-return]
+        return self.options_map.get(str(int(device_point.value)))
 
 
 class MyUplinkEnumRawSensor(MyUplinkDevicePointSensor):

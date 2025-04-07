@@ -6,17 +6,19 @@ from unittest.mock import AsyncMock
 import pytest
 from python_homeassistant_analytics import HomeassistantAnalyticsConnectionError
 
-from homeassistant import config_entries
 from homeassistant.components.analytics_insights.const import (
+    CONF_TRACKED_ADDONS,
     CONF_TRACKED_CUSTOM_INTEGRATIONS,
     CONF_TRACKED_INTEGRATIONS,
     DOMAIN,
 )
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from . import setup_integration
+
 from tests.common import MockConfigEntry
-from tests.components.analytics_insights import setup_integration
 
 
 @pytest.mark.parametrize(
@@ -24,10 +26,12 @@ from tests.components.analytics_insights import setup_integration
     [
         (
             {
+                CONF_TRACKED_ADDONS: ["core_samba"],
                 CONF_TRACKED_INTEGRATIONS: ["youtube"],
                 CONF_TRACKED_CUSTOM_INTEGRATIONS: ["hacs"],
             },
             {
+                CONF_TRACKED_ADDONS: ["core_samba"],
                 CONF_TRACKED_INTEGRATIONS: ["youtube"],
                 CONF_TRACKED_CUSTOM_INTEGRATIONS: ["hacs"],
             },
@@ -37,6 +41,7 @@ from tests.components.analytics_insights import setup_integration
                 CONF_TRACKED_INTEGRATIONS: ["youtube"],
             },
             {
+                CONF_TRACKED_ADDONS: [],
                 CONF_TRACKED_INTEGRATIONS: ["youtube"],
                 CONF_TRACKED_CUSTOM_INTEGRATIONS: [],
             },
@@ -46,6 +51,7 @@ from tests.components.analytics_insights import setup_integration
                 CONF_TRACKED_CUSTOM_INTEGRATIONS: ["hacs"],
             },
             {
+                CONF_TRACKED_ADDONS: [],
                 CONF_TRACKED_INTEGRATIONS: [],
                 CONF_TRACKED_CUSTOM_INTEGRATIONS: ["hacs"],
             },
@@ -61,7 +67,7 @@ async def test_form(
 ) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
 
@@ -82,6 +88,7 @@ async def test_form(
     "user_input",
     [
         {
+            CONF_TRACKED_ADDONS: [],
             CONF_TRACKED_INTEGRATIONS: [],
             CONF_TRACKED_CUSTOM_INTEGRATIONS: [],
         },
@@ -96,7 +103,7 @@ async def test_submitting_empty_form(
 ) -> None:
     """Test we can't submit an empty form."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
 
@@ -112,6 +119,7 @@ async def test_submitting_empty_form(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
+            CONF_TRACKED_ADDONS: ["core_samba"],
             CONF_TRACKED_INTEGRATIONS: ["youtube"],
             CONF_TRACKED_CUSTOM_INTEGRATIONS: ["hacs"],
         },
@@ -122,26 +130,35 @@ async def test_submitting_empty_form(
     assert result["title"] == "Home Assistant Analytics Insights"
     assert result["data"] == {}
     assert result["options"] == {
+        CONF_TRACKED_ADDONS: ["core_samba"],
         CONF_TRACKED_INTEGRATIONS: ["youtube"],
         CONF_TRACKED_CUSTOM_INTEGRATIONS: ["hacs"],
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.parametrize(
+    ("exception", "reason"),
+    [
+        (HomeassistantAnalyticsConnectionError, "cannot_connect"),
+        (Exception, "unknown"),
+    ],
+)
 async def test_form_cannot_connect(
-    hass: HomeAssistant, mock_analytics_client: AsyncMock
+    hass: HomeAssistant,
+    mock_analytics_client: AsyncMock,
+    exception: Exception,
+    reason: str,
 ) -> None:
     """Test we handle cannot connect error."""
 
-    mock_analytics_client.get_integrations.side_effect = (
-        HomeassistantAnalyticsConnectionError
-    )
+    mock_analytics_client.get_integrations.side_effect = exception
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
+    assert result["reason"] == reason
 
 
 async def test_form_already_configured(
@@ -152,6 +169,7 @@ async def test_form_already_configured(
         domain=DOMAIN,
         data={},
         options={
+            CONF_TRACKED_ADDONS: [],
             CONF_TRACKED_INTEGRATIONS: ["youtube", "spotify"],
             CONF_TRACKED_CUSTOM_INTEGRATIONS: [],
         },
@@ -159,7 +177,7 @@ async def test_form_already_configured(
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
@@ -170,12 +188,24 @@ async def test_form_already_configured(
     [
         (
             {
+                CONF_TRACKED_ADDONS: ["core_samba"],
                 CONF_TRACKED_INTEGRATIONS: ["youtube"],
                 CONF_TRACKED_CUSTOM_INTEGRATIONS: ["hacs"],
             },
             {
+                CONF_TRACKED_ADDONS: ["core_samba"],
                 CONF_TRACKED_INTEGRATIONS: ["youtube"],
                 CONF_TRACKED_CUSTOM_INTEGRATIONS: ["hacs"],
+            },
+        ),
+        (
+            {
+                CONF_TRACKED_ADDONS: ["core_samba"],
+            },
+            {
+                CONF_TRACKED_ADDONS: ["core_samba"],
+                CONF_TRACKED_INTEGRATIONS: [],
+                CONF_TRACKED_CUSTOM_INTEGRATIONS: [],
             },
         ),
         (
@@ -183,6 +213,7 @@ async def test_form_already_configured(
                 CONF_TRACKED_INTEGRATIONS: ["youtube"],
             },
             {
+                CONF_TRACKED_ADDONS: [],
                 CONF_TRACKED_INTEGRATIONS: ["youtube"],
                 CONF_TRACKED_CUSTOM_INTEGRATIONS: [],
             },
@@ -192,6 +223,7 @@ async def test_form_already_configured(
                 CONF_TRACKED_CUSTOM_INTEGRATIONS: ["hacs"],
             },
             {
+                CONF_TRACKED_ADDONS: [],
                 CONF_TRACKED_INTEGRATIONS: [],
                 CONF_TRACKED_CUSTOM_INTEGRATIONS: ["hacs"],
             },
@@ -228,6 +260,7 @@ async def test_options_flow(
     "user_input",
     [
         {
+            CONF_TRACKED_ADDONS: [],
             CONF_TRACKED_INTEGRATIONS: [],
             CONF_TRACKED_CUSTOM_INTEGRATIONS: [],
         },
@@ -258,6 +291,7 @@ async def test_submitting_empty_options_flow(
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         {
+            CONF_TRACKED_ADDONS: ["core_samba"],
             CONF_TRACKED_INTEGRATIONS: ["youtube", "hue"],
             CONF_TRACKED_CUSTOM_INTEGRATIONS: ["hacs"],
         },
@@ -266,6 +300,7 @@ async def test_submitting_empty_options_flow(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
+        CONF_TRACKED_ADDONS: ["core_samba"],
         CONF_TRACKED_INTEGRATIONS: ["youtube", "hue"],
         CONF_TRACKED_CUSTOM_INTEGRATIONS: ["hacs"],
     }

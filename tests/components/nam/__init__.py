@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, Mock, patch
 
 from homeassistant.components.nam.const import DOMAIN
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
@@ -12,7 +13,9 @@ INCOMPLETE_NAM_DATA = {
 }
 
 
-async def init_integration(hass, co2_sensor=True) -> MockConfigEntry:
+async def init_integration(
+    hass: HomeAssistant, co2_sensor: bool = True
+) -> MockConfigEntry:
     """Set up the Nettigo Air Monitor integration in Home Assistant."""
     entry = MockConfigEntry(
         domain=DOMAIN,

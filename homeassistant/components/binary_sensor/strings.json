@@ -55,6 +55,9 @@
       "is_on": "[%key:common::device_automation::condition_type::is_on%]",
       "is_off": "[%key:common::device_automation::condition_type::is_off%]"
     },
+    "extra_fields": {
+      "for": "[%key:common::device_automation::extra_fields::for%]"
+    },
     "trigger_type": {
       "bat_low": "{entity_name} battery low",
       "not_bat_low": "{entity_name} battery normal",
@@ -121,15 +124,15 @@
     "battery": {
       "name": "Battery",
       "state": {
-        "off": "Normal",
-        "on": "Low"
+        "off": "[%key:common::state::normal%]",
+        "on": "[%key:common::state::low%]"
       }
     },
     "battery_charging": {
       "name": "Charging",
       "state": {
         "off": "Not charging",
-        "on": "Charging"
+        "on": "[%key:common::state::charging%]"
       }
     },
     "carbon_monoxide": {
@@ -142,7 +145,7 @@
     "cold": {
       "name": "Cold",
       "state": {
-        "off": "[%key:component::binary_sensor::entity_component::battery::state::off%]",
+        "off": "[%key:common::state::normal%]",
         "on": "Cold"
       }
     },
@@ -177,7 +180,7 @@
     "heat": {
       "name": "Heat",
       "state": {
-        "off": "[%key:component::binary_sensor::entity_component::battery::state::off%]",
+        "off": "[%key:common::state::normal%]",
         "on": "Hot"
       }
     },
@@ -240,8 +243,8 @@
     "power": {
       "name": "Power",
       "state": {
-        "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-        "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        "off": "[%key:common::state::off%]",
+        "on": "[%key:common::state::on%]"
       }
     },
     "presence": {

@@ -6,7 +6,6 @@ from unittest.mock import patch
 import pydeconz
 import pytest
 
-from homeassistant.components import ssdp
 from homeassistant.components.deconz.config_flow import (
     CONF_MANUAL_INPUT,
     CONF_SERIAL,
@@ -20,20 +19,20 @@ from homeassistant.components.deconz.const import (
     DOMAIN as DECONZ_DOMAIN,
     HASSIO_CONFIGURATION_URL,
 )
-from homeassistant.components.hassio import HassioServiceInfo
-from homeassistant.components.ssdp import ATTR_UPNP_MANUFACTURER_URL, ATTR_UPNP_SERIAL
-from homeassistant.config_entries import (
-    SOURCE_HASSIO,
-    SOURCE_REAUTH,
-    SOURCE_SSDP,
-    SOURCE_USER,
-)
+from homeassistant.config_entries import SOURCE_HASSIO, SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_MANUFACTURER_URL,
+    ATTR_UPNP_SERIAL,
+    SsdpServiceInfo,
+)
 
-from .test_gateway import API_KEY, BRIDGEID, setup_deconz_integration
+from .conftest import API_KEY, BRIDGE_ID
 
+from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 BAD_BRIDGEID = "0000000000000000"
@@ -47,7 +46,7 @@ async def test_flow_discovered_bridges(
     aioclient_mock.get(
         pydeconz.utils.URL_DISCOVER,
         json=[
-            {"id": BRIDGEID, "internalipaddress": "1.2.3.4", "internalport": 80},
+            {"id": BRIDGE_ID, "internalipaddress": "1.2.3.4", "internalport": 80},
             {"id": "1234E567890A", "internalipaddress": "5.6.7.8", "internalport": 80},
         ],
         headers={"content-type": CONTENT_TYPE_JSON},
@@ -78,7 +77,7 @@ async def test_flow_discovered_bridges(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == BRIDGEID
+    assert result["title"] == BRIDGE_ID
     assert result["data"] == {
         CONF_HOST: "1.2.3.4",
         CONF_PORT: 80,
@@ -92,7 +91,7 @@ async def test_flow_manual_configuration_decision(
     """Test that config flow for one discovered bridge works."""
     aioclient_mock.get(
         pydeconz.utils.URL_DISCOVER,
-        json=[{"id": BRIDGEID, "internalipaddress": "1.2.3.4", "internalport": 80}],
+        json=[{"id": BRIDGE_ID, "internalipaddress": "1.2.3.4", "internalport": 80}],
         headers={"content-type": CONTENT_TYPE_JSON},
     )
 
@@ -123,7 +122,7 @@ async def test_flow_manual_configuration_decision(
 
     aioclient_mock.get(
         f"http://1.2.3.4:80/api/{API_KEY}/config",
-        json={"bridgeid": BRIDGEID},
+        json={"bridgeid": BRIDGE_ID},
         headers={"content-type": CONTENT_TYPE_JSON},
     )
 
@@ -132,7 +131,7 @@ async def test_flow_manual_configuration_decision(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == BRIDGEID
+    assert result["title"] == BRIDGE_ID
     assert result["data"] == {
         CONF_HOST: "1.2.3.4",
         CONF_PORT: 80,
@@ -174,7 +173,7 @@ async def test_flow_manual_configuration(
 
     aioclient_mock.get(
         f"http://1.2.3.4:80/api/{API_KEY}/config",
-        json={"bridgeid": BRIDGEID},
+        json={"bridgeid": BRIDGE_ID},
         headers={"content-type": CONTENT_TYPE_JSON},
     )
 
@@ -183,7 +182,7 @@ async def test_flow_manual_configuration(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == BRIDGEID
+    assert result["title"] == BRIDGE_ID
     assert result["data"] == {
         CONF_HOST: "1.2.3.4",
         CONF_PORT: 80,
@@ -222,11 +221,11 @@ async def test_manual_configuration_after_discovery_ResponseError(
 
 
 async def test_manual_configuration_update_configuration(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    config_entry_setup: MockConfigEntry,
 ) -> None:
     """Test that manual configuration can update existing config entry."""
-    config_entry = await setup_deconz_integration(hass, aioclient_mock)
-
     aioclient_mock.get(
         pydeconz.utils.URL_DISCOVER,
         json=[],
@@ -256,7 +255,7 @@ async def test_manual_configuration_update_configuration(
 
     aioclient_mock.get(
         f"http://2.3.4.5:80/api/{API_KEY}/config",
-        json={"bridgeid": BRIDGEID},
+        json={"bridgeid": BRIDGE_ID},
         headers={"content-type": CONTENT_TYPE_JSON},
     )
 
@@ -266,15 +265,14 @@ async def test_manual_configuration_update_configuration(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert config_entry.data[CONF_HOST] == "2.3.4.5"
+    assert config_entry_setup.data[CONF_HOST] == "2.3.4.5"
 
 
+@pytest.mark.usefixtures("config_entry_setup")
 async def test_manual_configuration_dont_update_configuration(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test that _create_entry work and that bridgeid can be requested."""
-    await setup_deconz_integration(hass, aioclient_mock)
-
     aioclient_mock.get(
         pydeconz.utils.URL_DISCOVER,
         json=[],
@@ -304,7 +302,7 @@ async def test_manual_configuration_dont_update_configuration(
 
     aioclient_mock.get(
         f"http://1.2.3.4:80/api/{API_KEY}/config",
-        json={"bridgeid": BRIDGEID},
+        json={"bridgeid": BRIDGE_ID},
         headers={"content-type": CONTENT_TYPE_JSON},
     )
 
@@ -367,12 +365,15 @@ async def test_manual_configuration_timeout_get_bridge(
     ],
 )
 async def test_link_step_fails(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, raised_error, error_string
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    raised_error: Exception,
+    error_string: str,
 ) -> None:
     """Test config flow should abort if no API key was possible to retrieve."""
     aioclient_mock.get(
         pydeconz.utils.URL_DISCOVER,
-        json=[{"id": BRIDGEID, "internalipaddress": "1.2.3.4", "internalport": 80}],
+        json=[{"id": BRIDGE_ID, "internalipaddress": "1.2.3.4", "internalport": 80}],
         headers={"content-type": CONTENT_TYPE_JSON},
     )
 
@@ -399,17 +400,12 @@ async def test_link_step_fails(
 
 
 async def test_reauth_flow_update_configuration(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    config_entry_setup: MockConfigEntry,
 ) -> None:
     """Verify reauth flow can update gateway API key."""
-    config_entry = await setup_deconz_integration(hass, aioclient_mock)
-
-    result = await hass.config_entries.flow.async_init(
-        DECONZ_DOMAIN,
-        data=config_entry.data,
-        context={"source": SOURCE_REAUTH},
-    )
-
+    result = await config_entry_setup.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "link"
 
@@ -423,7 +419,7 @@ async def test_reauth_flow_update_configuration(
 
     aioclient_mock.get(
         f"http://1.2.3.4:80/api/{new_api_key}/config",
-        json={"bridgeid": BRIDGEID},
+        json={"bridgeid": BRIDGE_ID},
         headers={"content-type": CONTENT_TYPE_JSON},
     )
 
@@ -433,7 +429,7 @@ async def test_reauth_flow_update_configuration(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert config_entry.data[CONF_API_KEY] == new_api_key
+    assert config_entry_setup.data[CONF_API_KEY] == new_api_key
 
 
 async def test_flow_ssdp_discovery(
@@ -442,13 +438,13 @@ async def test_flow_ssdp_discovery(
     """Test that config flow for one discovered bridge works."""
     result = await hass.config_entries.flow.async_init(
         DECONZ_DOMAIN,
-        data=ssdp.SsdpServiceInfo(
+        data=SsdpServiceInfo(
             ssdp_usn="mock_usn",
             ssdp_st="mock_st",
             ssdp_location="http://1.2.3.4:80/",
             upnp={
                 ATTR_UPNP_MANUFACTURER_URL: DECONZ_MANUFACTURERURL,
-                ATTR_UPNP_SERIAL: BRIDGEID,
+                ATTR_UPNP_SERIAL: BRIDGE_ID,
             },
         ),
         context={"source": SOURCE_SSDP},
@@ -472,7 +468,7 @@ async def test_flow_ssdp_discovery(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == BRIDGEID
+    assert result["title"] == BRIDGE_ID
     assert result["data"] == {
         CONF_HOST: "1.2.3.4",
         CONF_PORT: 80,
@@ -481,24 +477,22 @@ async def test_flow_ssdp_discovery(
 
 
 async def test_ssdp_discovery_update_configuration(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, config_entry_setup: MockConfigEntry
 ) -> None:
     """Test if a discovered bridge is configured but updates with new attributes."""
-    config_entry = await setup_deconz_integration(hass, aioclient_mock)
-
     with patch(
         "homeassistant.components.deconz.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DECONZ_DOMAIN,
-            data=ssdp.SsdpServiceInfo(
+            data=SsdpServiceInfo(
                 ssdp_usn="mock_usn",
                 ssdp_st="mock_st",
                 ssdp_location="http://2.3.4.5:80/",
                 upnp={
                     ATTR_UPNP_MANUFACTURER_URL: DECONZ_MANUFACTURERURL,
-                    ATTR_UPNP_SERIAL: BRIDGEID,
+                    ATTR_UPNP_SERIAL: BRIDGE_ID,
                 },
             ),
             context={"source": SOURCE_SSDP},
@@ -507,25 +501,24 @@ async def test_ssdp_discovery_update_configuration(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert config_entry.data[CONF_HOST] == "2.3.4.5"
+    assert config_entry_setup.data[CONF_HOST] == "2.3.4.5"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_ssdp_discovery_dont_update_configuration(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, config_entry_setup: MockConfigEntry
 ) -> None:
     """Test if a discovered bridge has already been configured."""
-    config_entry = await setup_deconz_integration(hass, aioclient_mock)
 
     result = await hass.config_entries.flow.async_init(
         DECONZ_DOMAIN,
-        data=ssdp.SsdpServiceInfo(
+        data=SsdpServiceInfo(
             ssdp_usn="mock_usn",
             ssdp_st="mock_st",
             ssdp_location="http://1.2.3.4:80/",
             upnp={
                 ATTR_UPNP_MANUFACTURER_URL: DECONZ_MANUFACTURERURL,
-                ATTR_UPNP_SERIAL: BRIDGEID,
+                ATTR_UPNP_SERIAL: BRIDGE_ID,
             },
         ),
         context={"source": SOURCE_SSDP},
@@ -533,26 +526,23 @@ async def test_ssdp_discovery_dont_update_configuration(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert config_entry.data[CONF_HOST] == "1.2.3.4"
+    assert config_entry_setup.data[CONF_HOST] == "1.2.3.4"
 
 
+@pytest.mark.parametrize("config_entry_source", [SOURCE_HASSIO])
 async def test_ssdp_discovery_dont_update_existing_hassio_configuration(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, config_entry_setup: MockConfigEntry
 ) -> None:
     """Test to ensure the SSDP discovery does not update an Hass.io entry."""
-    config_entry = await setup_deconz_integration(
-        hass, aioclient_mock, source=SOURCE_HASSIO
-    )
-
     result = await hass.config_entries.flow.async_init(
         DECONZ_DOMAIN,
-        data=ssdp.SsdpServiceInfo(
+        data=SsdpServiceInfo(
             ssdp_usn="mock_usn",
             ssdp_st="mock_st",
             ssdp_location="http://1.2.3.4:80/",
             upnp={
                 ATTR_UPNP_MANUFACTURER_URL: DECONZ_MANUFACTURERURL,
-                ATTR_UPNP_SERIAL: BRIDGEID,
+                ATTR_UPNP_SERIAL: BRIDGE_ID,
             },
         ),
         context={"source": SOURCE_SSDP},
@@ -560,7 +550,7 @@ async def test_ssdp_discovery_dont_update_existing_hassio_configuration(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert config_entry.data[CONF_HOST] == "1.2.3.4"
+    assert config_entry_setup.data[CONF_HOST] == "1.2.3.4"
 
 
 async def test_flow_hassio_discovery(hass: HomeAssistant) -> None:
@@ -572,7 +562,7 @@ async def test_flow_hassio_discovery(hass: HomeAssistant) -> None:
                 "addon": "Mock Addon",
                 CONF_HOST: "mock-deconz",
                 CONF_PORT: 80,
-                CONF_SERIAL: BRIDGEID,
+                CONF_SERIAL: BRIDGE_ID,
                 CONF_API_KEY: API_KEY,
             },
             name="Mock Addon",
@@ -610,11 +600,10 @@ async def test_flow_hassio_discovery(hass: HomeAssistant) -> None:
 
 
 async def test_hassio_discovery_update_configuration(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
 ) -> None:
     """Test we can update an existing config entry."""
-    config_entry = await setup_deconz_integration(hass, aioclient_mock)
-
     with patch(
         "homeassistant.components.deconz.async_setup_entry",
         return_value=True,
@@ -626,7 +615,7 @@ async def test_hassio_discovery_update_configuration(
                     CONF_HOST: "2.3.4.5",
                     CONF_PORT: 8080,
                     CONF_API_KEY: "updated",
-                    CONF_SERIAL: BRIDGEID,
+                    CONF_SERIAL: BRIDGE_ID,
                 },
                 name="Mock Addon",
                 slug="deconz",
@@ -638,18 +627,15 @@ async def test_hassio_discovery_update_configuration(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert config_entry.data[CONF_HOST] == "2.3.4.5"
-    assert config_entry.data[CONF_PORT] == 8080
-    assert config_entry.data[CONF_API_KEY] == "updated"
+    assert config_entry_setup.data[CONF_HOST] == "2.3.4.5"
+    assert config_entry_setup.data[CONF_PORT] == 8080
+    assert config_entry_setup.data[CONF_API_KEY] == "updated"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_hassio_discovery_dont_update_configuration(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_hassio_discovery_dont_update_configuration(hass: HomeAssistant) -> None:
     """Test we can update an existing config entry."""
-    await setup_deconz_integration(hass, aioclient_mock)
-
     result = await hass.config_entries.flow.async_init(
         DECONZ_DOMAIN,
         data=HassioServiceInfo(
@@ -657,7 +643,7 @@ async def test_hassio_discovery_dont_update_configuration(
                 CONF_HOST: "1.2.3.4",
                 CONF_PORT: 80,
                 CONF_API_KEY: API_KEY,
-                CONF_SERIAL: BRIDGEID,
+                CONF_SERIAL: BRIDGE_ID,
             },
             name="Mock Addon",
             slug="deconz",
@@ -671,12 +657,10 @@ async def test_hassio_discovery_dont_update_configuration(
 
 
 async def test_option_flow(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, config_entry_setup: MockConfigEntry
 ) -> None:
     """Test config flow options."""
-    config_entry = await setup_deconz_integration(hass, aioclient_mock)
-
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_init(config_entry_setup.entry_id)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "deconz_devices"

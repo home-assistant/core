@@ -27,6 +27,33 @@ ac_cancel:
         device:
           integration: renault
 
+ac_set_schedules:
+  fields:
+    vehicle:
+      required: true
+      selector:
+        device:
+          integration: renault
+    schedules:
+      example:
+        - id: 1
+          activated: false
+        - id: 2
+          activated: true
+          monday:
+            readyAtTime: "T20:45Z"
+          sunday:
+            readyAtTime: "T20:45Z"
+        - id: 3
+          activated: false
+        - id: 4
+          activated: false
+        - id: 5
+          activated: false
+      required: true
+      selector:
+        object:
+
 charge_set_schedules:
   fields:
     vehicle:
@@ -35,31 +62,53 @@ charge_set_schedules:
         device:
           integration: renault
     schedules:
-      example: >-
-        [
-          {
-            'id':1,
-            'activated':true,
-            'monday':{'startTime':'T12:00Z','duration':15},
-            'tuesday':{'startTime':'T12:00Z','duration':15},
-            'wednesday':{'startTime':'T12:00Z','duration':15},
-            'thursday':{'startTime':'T12:00Z','duration':15},
-            'friday':{'startTime':'T12:00Z','duration':15},
-            'saturday':{'startTime':'T12:00Z','duration':15},
-            'sunday':{'startTime':'T12:00Z','duration':15}
-          },
-          {
-            'id':2,
-            'activated':false,
-            'monday':{'startTime':'T12:00Z','duration':240},
-            'tuesday':{'startTime':'T12:00Z','duration':240},
-            'wednesday':{'startTime':'T12:00Z','duration':240},
-            'thursday':{'startTime':'T12:00Z','duration':240},
-            'friday':{'startTime':'T12:00Z','duration':240},
-            'saturday':{'startTime':'T12:00Z','duration':240},
-            'sunday':{'startTime':'T12:00Z','duration':240}
-          },
-        ]
+      example:
+        - id: 1
+          activated: true
+          monday:
+            startTime: "T12:00Z"
+            duration: 15
+          tuesday:
+            startTime: "T12:00Z"
+            duration: 15
+          wednesday:
+            startTime: "T12:00Z"
+            duration: 15
+          thursday:
+            startTime: "T12:00Z"
+            duration: 15
+          friday:
+            startTime: "T12:00Z"
+            duration: 15
+          saturday:
+            startTime: "T12:00Z"
+            duration: 15
+          sunday:
+            startTime: "T12:00Z"
+            duration: 15
+        - id: 2
+          activated: true
+          monday:
+            startTime: "T12:00Z"
+            duration: 240
+          tuesday:
+            startTime: "T12:00Z"
+            duration: 240
+          wednesday:
+            startTime: "T12:00Z"
+            duration: 240
+          thursday:
+            startTime: "T12:00Z"
+            duration: 240
+          friday:
+            startTime: "T12:00Z"
+            duration: 240
+          saturday:
+            startTime: "T12:00Z"
+            duration: 240
+          sunday:
+            startTime: "T12:00Z"
+            duration: 240
       required: true
       selector:
         object:

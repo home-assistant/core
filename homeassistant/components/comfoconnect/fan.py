@@ -62,7 +62,13 @@ class ComfoConnectFan(FanEntity):
 
     _attr_icon = "mdi:air-conditioner"
     _attr_should_poll = False
-    _attr_supported_features = FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
+    _attr_supported_features = (
+        FanEntityFeature.SET_SPEED
+        | FanEntityFeature.PRESET_MODE
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
+    )
+
     _attr_preset_modes = PRESET_MODES
     current_speed: float | None = None
 

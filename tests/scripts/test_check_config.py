@@ -5,7 +5,6 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.http.const import StrictConnectionMode
 from homeassistant.config import YAML_CONFIG_FILE
 from homeassistant.scripts import check_config
 
@@ -56,7 +55,8 @@ def normalize_yaml_files(check_dict):
 
 
 @pytest.mark.parametrize("hass_config_yaml", [BAD_CORE_CONFIG])
-def test_bad_core_config(mock_is_file, event_loop, mock_hass_config_yaml: None) -> None:
+@pytest.mark.usefixtures("mock_is_file", "event_loop", "mock_hass_config_yaml")
+def test_bad_core_config() -> None:
     """Test a bad core config setup."""
     res = check_config.check(get_test_config_dir())
     assert res["except"].keys() == {"homeassistant"}
@@ -65,9 +65,8 @@ def test_bad_core_config(mock_is_file, event_loop, mock_hass_config_yaml: None) 
 
 
 @pytest.mark.parametrize("hass_config_yaml", [BASE_CONFIG + "light:\n  platform: demo"])
-def test_config_platform_valid(
-    mock_is_file, event_loop, mock_hass_config_yaml: None
-) -> None:
+@pytest.mark.usefixtures("mock_is_file", "event_loop", "mock_hass_config_yaml")
+def test_config_platform_valid() -> None:
     """Test a valid platform setup."""
     res = check_config.check(get_test_config_dir())
     assert res["components"].keys() == {"homeassistant", "light"}
@@ -97,9 +96,8 @@ def test_config_platform_valid(
         ),
     ],
 )
-def test_component_platform_not_found(
-    mock_is_file, event_loop, mock_hass_config_yaml: None, platforms, error
-) -> None:
+@pytest.mark.usefixtures("mock_is_file", "event_loop", "mock_hass_config_yaml")
+def test_component_platform_not_found(platforms: set[str], error: str) -> None:
     """Test errors if component or platform not found."""
     # Make sure they don't exist
     res = check_config.check(get_test_config_dir())
@@ -123,7 +121,8 @@ def test_component_platform_not_found(
         }
     ],
 )
-def test_secrets(mock_is_file, event_loop, mock_hass_config_yaml: None) -> None:
+@pytest.mark.usefixtures("mock_is_file", "event_loop", "mock_hass_config_yaml")
+def test_secrets() -> None:
     """Test secrets config checking method."""
     res = check_config.check(get_test_config_dir(), True)
 
@@ -135,7 +134,6 @@ def test_secrets(mock_is_file, event_loop, mock_hass_config_yaml: None) -> None:
         "login_attempts_threshold": -1,
         "server_port": 8123,
         "ssl_profile": "modern",
-        "strict_connection": StrictConnectionMode.DISABLED,
         "use_x_frame_options": True,
         "server_host": ["0.0.0.0", "::"],
     }
@@ -153,7 +151,8 @@ def test_secrets(mock_is_file, event_loop, mock_hass_config_yaml: None) -> None:
 @pytest.mark.parametrize(
     "hass_config_yaml", [BASE_CONFIG + '  packages:\n    p1:\n      group: ["a"]']
 )
-def test_package_invalid(mock_is_file, event_loop, mock_hass_config_yaml: None) -> None:
+@pytest.mark.usefixtures("mock_is_file", "event_loop", "mock_hass_config_yaml")
+def test_package_invalid() -> None:
     """Test an invalid package."""
     res = check_config.check(get_test_config_dir())
 
@@ -169,7 +168,8 @@ def test_package_invalid(mock_is_file, event_loop, mock_hass_config_yaml: None) 
 @pytest.mark.parametrize(
     "hass_config_yaml", [BASE_CONFIG + "automation: !include no.yaml"]
 )
-def test_bootstrap_error(event_loop, mock_hass_config_yaml: None) -> None:
+@pytest.mark.usefixtures("event_loop", "mock_hass_config_yaml")
+def test_bootstrap_error() -> None:
     """Test a valid platform setup."""
     res = check_config.check(get_test_config_dir(YAML_CONFIG_FILE))
     err = res["except"].pop(check_config.ERROR_STR)

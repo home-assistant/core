@@ -113,8 +113,8 @@ class FakeConfigFlow(config_entry_oauth2_flow.AbstractOAuth2FlowHandler):
 
 @pytest.fixture(autouse=True)
 def config_flow_handler(
-    hass: HomeAssistant, current_request_with_host: Any
-) -> Generator[FakeConfigFlow, None, None]:
+    hass: HomeAssistant, current_request_with_host: None
+) -> Generator[None]:
     """Fixture for a test config flow."""
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
     with mock_config_flow(TEST_DOMAIN, FakeConfigFlow):
@@ -124,7 +124,12 @@ def config_flow_handler(
 class OAuthFixture:
     """Fixture to facilitate testing an OAuth flow."""
 
-    def __init__(self, hass, hass_client, aioclient_mock):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        hass_client: ClientSessionGenerator,
+        aioclient_mock: AiohttpClientMocker,
+    ) -> None:
         """Initialize OAuthFixture."""
         self.hass = hass
         self.hass_client = hass_client
@@ -175,7 +180,7 @@ class OAuthFixture:
 async def oauth_fixture(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
-    aioclient_mock: Any,
+    aioclient_mock: AiohttpClientMocker,
 ) -> OAuthFixture:
     """Fixture for testing the OAuth flow."""
     return OAuthFixture(hass, hass_client_no_auth, aioclient_mock)
@@ -184,7 +189,7 @@ async def oauth_fixture(
 class Client:
     """Test client with helper methods for application credentials websocket."""
 
-    def __init__(self, client):
+    def __init__(self, client) -> None:
         """Initialize Client."""
         self.client = client
         self.id = 0
@@ -213,7 +218,7 @@ class Client:
         return resp.get("result")
 
 
-ClientFixture = Callable[[], Client]
+type ClientFixture = Callable[[], Client]
 
 
 @pytest.fixture
@@ -418,6 +423,7 @@ async def test_import_named_credential(
     ]
 
 
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["fake_integration"])
 async def test_config_flow_no_credentials(hass: HomeAssistant) -> None:
     """Test config flow base case with no credentials registered."""
     result = await hass.config_entries.flow.async_init(
@@ -427,6 +433,7 @@ async def test_config_flow_no_credentials(hass: HomeAssistant) -> None:
     assert result.get("reason") == "missing_credentials"
 
 
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["fake_integration"])
 async def test_config_flow_other_domain(
     hass: HomeAssistant,
     ws_client: ClientFixture,
@@ -554,6 +561,7 @@ async def test_config_flow_multiple_entries(
     )
 
 
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["fake_integration"])
 async def test_config_flow_create_delete_credential(
     hass: HomeAssistant,
     ws_client: ClientFixture,
@@ -599,6 +607,7 @@ async def test_config_flow_with_config_credential(
     assert result["data"].get("auth_implementation") == TEST_DOMAIN
 
 
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["fake_integration"])
 @pytest.mark.parametrize("mock_application_credentials_integration", [None])
 async def test_import_without_setup(hass: HomeAssistant, config_credential) -> None:
     """Test import of credentials without setting up the integration."""
@@ -614,6 +623,7 @@ async def test_import_without_setup(hass: HomeAssistant, config_credential) -> N
     assert result.get("reason") == "missing_configuration"
 
 
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["fake_integration"])
 @pytest.mark.parametrize("mock_application_credentials_integration", [None])
 async def test_websocket_without_platform(
     hass: HomeAssistant, ws_client: ClientFixture

@@ -20,10 +20,13 @@ from homeassistant.loader import (
     bind_hass,
 )
 from homeassistant.setup import ATTR_COMPONENT, EventComponentLoaded
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.logging import catch_log_exception
 
 _LOGGER = logging.getLogger(__name__)
-DATA_INTEGRATION_PLATFORMS = "integration_platforms"
+DATA_INTEGRATION_PLATFORMS: HassKey[list[IntegrationPlatform]] = HassKey(
+    "integration_platforms"
+)
 
 
 @dataclass(slots=True, frozen=True)
@@ -160,8 +163,7 @@ async def async_process_integration_platforms(
 ) -> None:
     """Process a specific platform for all current and future loaded integrations."""
     if DATA_INTEGRATION_PLATFORMS not in hass.data:
-        integration_platforms: list[IntegrationPlatform] = []
-        hass.data[DATA_INTEGRATION_PLATFORMS] = integration_platforms
+        integration_platforms = hass.data[DATA_INTEGRATION_PLATFORMS] = []
         hass.bus.async_listen(
             EVENT_COMPONENT_LOADED,
             partial(
@@ -173,6 +175,9 @@ async def async_process_integration_platforms(
     else:
         integration_platforms = hass.data[DATA_INTEGRATION_PLATFORMS]
 
+    # Tell the loader that it should try to pre-load the integration
+    # for any future components that are loaded so we can reduce the
+    # amount of import executor usage.
     async_register_preload_platform(hass, platform_name)
     top_level_components = hass.config.top_level_components.copy()
     process_job = HassJob(
@@ -185,10 +190,6 @@ async def async_process_integration_platforms(
     integration_platform = IntegrationPlatform(
         platform_name, process_job, top_level_components
     )
-    # Tell the loader that it should try to pre-load the integration
-    # for any future components that are loaded so we can reduce the
-    # amount of import executor usage.
-    async_register_preload_platform(hass, platform_name)
     integration_platforms.append(integration_platform)
     if not top_level_components:
         return

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+import logging
 from typing import Any
 
 from pytrafikverket.exceptions import (
@@ -13,20 +14,25 @@ from pytrafikverket.exceptions import (
 from pytrafikverket.trafikverket_weather import TrafikverketWeather
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 
 from .const import CONF_STATION, DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class TVWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Trafikverket Weatherstation integration."""
 
     VERSION = 1
-
-    entry: ConfigEntry | None = None
 
     async def validate_input(self, sensor_api: str, station: str) -> None:
         """Validate input from user input."""
@@ -53,7 +59,8 @@ class TVWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_station"
             except MultipleWeatherStationsFound:
                 errors["base"] = "more_stations"
-            except Exception:  # pylint: disable=broad-exception-caught
+            except Exception:
+                _LOGGER.exception("Unexpected error")
                 errors["base"] = "cannot_connect"
             else:
                 return self.async_create_entry(
@@ -79,8 +86,6 @@ class TVWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle re-authentication with Trafikverket."""
-
-        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -88,35 +93,74 @@ class TVWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm re-authentication with Trafikverket."""
         errors: dict[str, str] = {}
+        reauth_entry = self._get_reauth_entry()
 
         if user_input:
             api_key = user_input[CONF_API_KEY]
 
-            assert self.entry is not None
-
             try:
-                await self.validate_input(api_key, self.entry.data[CONF_STATION])
+                await self.validate_input(api_key, reauth_entry.data[CONF_STATION])
             except InvalidAuthentication:
                 errors["base"] = "invalid_auth"
             except NoWeatherStationFound:
                 errors["base"] = "invalid_station"
             except MultipleWeatherStationsFound:
                 errors["base"] = "more_stations"
-            except Exception:  # pylint: disable=broad-exception-caught
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
                 errors["base"] = "cannot_connect"
             else:
-                self.hass.config_entries.async_update_entry(
-                    self.entry,
-                    data={
-                        **self.entry.data,
-                        CONF_API_KEY: api_key,
-                    },
+                return self.async_update_reload_and_abort(
+                    reauth_entry, data_updates={CONF_API_KEY: api_key}
                 )
-                await self.hass.config_entries.async_reload(self.entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=vol.Schema({vol.Required(CONF_API_KEY): cv.string}),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle re-configuration with Trafikverket."""
+        errors: dict[str, str] = {}
+
+        if user_input:
+            try:
+                await self.validate_input(
+                    user_input[CONF_API_KEY], user_input[CONF_STATION]
+                )
+            except InvalidAuthentication:
+                errors["base"] = "invalid_auth"
+            except NoWeatherStationFound:
+                errors["base"] = "invalid_station"
+            except MultipleWeatherStationsFound:
+                errors["base"] = "more_stations"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "cannot_connect"
+            else:
+                return self.async_update_reload_and_abort(
+                    self._get_reconfigure_entry(),
+                    title=user_input[CONF_STATION],
+                    data=user_input,
+                )
+
+        schema = self.add_suggested_values_to_schema(
+            vol.Schema(
+                {
+                    vol.Required(CONF_API_KEY): TextSelector(
+                        TextSelectorConfig(type=TextSelectorType.PASSWORD)
+                    ),
+                    vol.Required(CONF_STATION): TextSelector(),
+                }
+            ),
+            {**self._get_reconfigure_entry().data, **(user_input or {})},
+        )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=schema,
             errors=errors,
         )

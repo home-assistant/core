@@ -9,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components import mqtt
 from homeassistant.components.device_tracker import (
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     AsyncSeeCallback,
 )
 from homeassistant.components.mqtt import CONF_QOS
@@ -21,7 +21,7 @@ from homeassistant.const import (
     CONF_DEVICES,
 )
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,7 +36,7 @@ GPS_JSON_PAYLOAD_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(mqtt.config.SCHEMA_BASE).extend(
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(mqtt.config.SCHEMA_BASE).extend(
     {vol.Required(CONF_DEVICES): {cv.string: mqtt.valid_subscribe_topic}}
 )
 

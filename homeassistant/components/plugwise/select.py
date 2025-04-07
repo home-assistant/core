@@ -2,27 +2,25 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
-from plugwise import Smile
-
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON, EntityCategory
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, SelectOptionsType, SelectType
-from .coordinator import PlugwiseDataUpdateCoordinator
+from .const import SelectOptionsType, SelectType
+from .coordinator import PlugwiseConfigEntry, PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
+from .util import plugwise_command
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
 class PlugwiseSelectEntityDescription(SelectEntityDescription):
     """Class describing Plugwise Select entities."""
 
-    command: Callable[[Smile, str, str], Awaitable[None]]
     key: SelectType
     options_key: SelectOptionsType
 
@@ -31,28 +29,24 @@ SELECT_TYPES = (
     PlugwiseSelectEntityDescription(
         key="select_schedule",
         translation_key="select_schedule",
-        command=lambda api, loc, opt: api.set_schedule_state(loc, STATE_ON, opt),
         options_key="available_schedules",
     ),
     PlugwiseSelectEntityDescription(
         key="select_regulation_mode",
         translation_key="regulation_mode",
         entity_category=EntityCategory.CONFIG,
-        command=lambda api, loc, opt: api.set_regulation_mode(opt),
         options_key="regulation_modes",
     ),
     PlugwiseSelectEntityDescription(
         key="select_dhw_mode",
         translation_key="dhw_mode",
         entity_category=EntityCategory.CONFIG,
-        command=lambda api, loc, opt: api.set_dhw_mode(opt),
         options_key="dhw_modes",
     ),
     PlugwiseSelectEntityDescription(
         key="select_gateway_mode",
         translation_key="gateway_mode",
         entity_category=EntityCategory.CONFIG,
-        command=lambda api, loc, opt: api.set_gateway_mode(opt),
         options_key="gateway_modes",
     ),
 )
@@ -60,20 +54,27 @@ SELECT_TYPES = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: PlugwiseConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Smile selector from a config entry."""
-    coordinator: PlugwiseDataUpdateCoordinator = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
+    coordinator = entry.runtime_data
 
-    async_add_entities(
-        PlugwiseSelectEntity(coordinator, device_id, description)
-        for device_id, device in coordinator.data.devices.items()
-        for description in SELECT_TYPES
-        if description.options_key in device
-    )
+    @callback
+    def _add_entities() -> None:
+        """Add Entities."""
+        if not coordinator.new_devices:
+            return
+
+        async_add_entities(
+            PlugwiseSelectEntity(coordinator, device_id, description)
+            for device_id in coordinator.new_devices
+            for description in SELECT_TYPES
+            if description.options_key in coordinator.data[device_id]
+        )
+
+    _add_entities()
+    entry.async_on_unload(coordinator.async_add_listener(_add_entities))
 
 
 class PlugwiseSelectEntity(PlugwiseEntity, SelectEntity):
@@ -89,19 +90,29 @@ class PlugwiseSelectEntity(PlugwiseEntity, SelectEntity):
     ) -> None:
         """Initialise the selector."""
         super().__init__(coordinator, device_id)
-        self.entity_description = entity_description
         self._attr_unique_id = f"{device_id}-{entity_description.key}"
-        self._attr_options = self.device[entity_description.options_key]
+        self.entity_description = entity_description
+
+        self._location = device_id
+        if (location := self.device.get("location")) is not None:
+            self._location = location
 
     @property
     def current_option(self) -> str:
         """Return the selected entity option to represent the entity state."""
         return self.device[self.entity_description.key]
 
-    async def async_select_option(self, option: str) -> None:
-        """Change to the selected entity option."""
-        await self.entity_description.command(
-            self.coordinator.api, self.device["location"], option
-        )
+    @property
+    def options(self) -> list[str]:
+        """Return the available select-options."""
+        return self.device[self.entity_description.options_key]
 
-        await self.coordinator.async_request_refresh()
+    @plugwise_command
+    async def async_select_option(self, option: str) -> None:
+        """Change to the selected entity option.
+
+        self._location and STATE_ON are required for the thermostat-schedule select.
+        """
+        await self.coordinator.api.set_select(
+            self.entity_description.key, self._location, option, STATE_ON
+        )

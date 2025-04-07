@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Coroutine
-from typing import Any, TypeVar
+from typing import Any
 from urllib.error import URLError
 
 from radiotherm.validate import RadiothermTstatError
@@ -20,10 +20,8 @@ from .util import async_set_time
 
 PLATFORMS: list[Platform] = [Platform.CLIMATE, Platform.SWITCH]
 
-_T = TypeVar("_T")
 
-
-async def _async_call_or_raise_not_ready(
+async def _async_call_or_raise_not_ready[_T](
     coro: Coroutine[Any, Any, _T], host: str
 ) -> _T:
     """Call a coro or raise ConfigEntryNotReady."""
@@ -45,7 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     host = entry.data[CONF_HOST]
     init_coro = async_get_init_data(hass, host)
     init_data = await _async_call_or_raise_not_ready(init_coro, host)
-    coordinator = RadioThermUpdateCoordinator(hass, init_data)
+    coordinator = RadioThermUpdateCoordinator(hass, entry, init_data)
     await coordinator.async_config_entry_first_refresh()
 
     # Only set the time if the thermostat is

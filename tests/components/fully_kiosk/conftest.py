@@ -39,7 +39,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.fully_kiosk.async_setup_entry", return_value=True
@@ -48,7 +48,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_fully_kiosk_config_flow() -> Generator[MagicMock, None, None]:
+def mock_fully_kiosk_config_flow() -> Generator[MagicMock]:
     """Return a mocked Fully Kiosk client for the config flow."""
     with patch(
         "homeassistant.components.fully_kiosk.config_flow.FullyKiosk",
@@ -64,7 +64,7 @@ def mock_fully_kiosk_config_flow() -> Generator[MagicMock, None, None]:
 
 
 @pytest.fixture
-def mock_fully_kiosk() -> Generator[MagicMock, None, None]:
+def mock_fully_kiosk() -> Generator[MagicMock]:
     """Return a mocked Fully Kiosk client."""
     with patch(
         "homeassistant.components.fully_kiosk.coordinator.FullyKiosk",

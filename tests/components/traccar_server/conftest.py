@@ -30,7 +30,7 @@ from tests.common import (
 
 
 @pytest.fixture
-def mock_traccar_api_client() -> Generator[AsyncMock, None, None]:
+def mock_traccar_api_client() -> Generator[AsyncMock]:
     """Mock a Traccar ApiClient client."""
     with (
         patch(

@@ -20,22 +20,6 @@ from .const import DEFAULT_HOST, DOMAIN, LOGGER, MANUFACTURER
 class NetgearLTEFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Netgear LTE."""
 
-    async def async_step_import(self, config: dict[str, Any]) -> ConfigFlowResult:
-        """Import a configuration from config.yaml."""
-        host = config[CONF_HOST]
-        password = config[CONF_PASSWORD]
-        self._async_abort_entries_match({CONF_HOST: host})
-        try:
-            info = await self._async_validate_input(host, password)
-        except InputValidationError:
-            return self.async_abort(reason="cannot_connect")
-        await self.async_set_unique_id(info.serial_number)
-        self._abort_if_unique_id_configured()
-        return self.async_create_entry(
-            title=f"{MANUFACTURER} {info.items['general.devicename']}",
-            data={CONF_HOST: host, CONF_PASSWORD: password},
-        )
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

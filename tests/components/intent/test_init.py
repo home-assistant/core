@@ -29,15 +29,16 @@ async def test_http_handle_intent(
 
         intent_type = "OrderBeer"
 
-        async def async_handle(self, intent):
+        async def async_handle(self, intent_obj):
             """Handle the intent."""
-            assert intent.context.user_id == hass_admin_user.id
-            response = intent.create_response()
+            assert intent_obj.context.user_id == hass_admin_user.id
+            response = intent_obj.create_response()
             response.async_set_speech(
-                "I've ordered a {}!".format(intent.slots["type"]["value"])
+                f"I've ordered a {intent_obj.slots['type']['value']}!"
             )
             response.async_set_card(
-                "Beer ordered", "You chose a {}.".format(intent.slots["type"]["value"])
+                "Beer ordered",
+                f"You chose a {intent_obj.slots['type']['value']}.",
             )
             return response
 
@@ -90,7 +91,7 @@ async def test_cover_intents_loading(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert response.speech["plain"]["speech"] == "Opened garage door"
+    assert response.speech["plain"]["speech"] == "Opening garage door"
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == "cover"
@@ -236,7 +237,12 @@ async def test_turn_on_all(hass: HomeAssistant) -> None:
     hass.states.async_set("light.test_light_2", "off")
     calls = async_mock_service(hass, "light", SERVICE_TURN_ON)
 
-    await intent.async_handle(hass, "test", "HassTurnOn", {"name": {"value": "all"}})
+    await intent.async_handle(
+        hass,
+        "test",
+        "HassTurnOn",
+        {"name": {"value": "all"}, "domain": {"value": "light"}},
+    )
     await hass.async_block_till_done()
 
     # All lights should be on now
@@ -422,7 +428,7 @@ async def test_get_state_intent(
     assert not result.matched_states and not result.unmatched_states
 
     # Test unknown area failure
-    with pytest.raises(intent.IntentHandleError):
+    with pytest.raises(intent.MatchFailedError):
         await intent.async_handle(
             hass,
             "test",
@@ -449,3 +455,25 @@ async def test_set_position_intent_unsupported_domain(hass: HomeAssistant) -> No
             "HassSetPosition",
             {"name": {"value": "test light"}, "position": {"value": 100}},
         )
+
+
+async def test_intents_with_no_responses(hass: HomeAssistant) -> None:
+    """Test intents that should not return a response during handling."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "intent", {})
+
+    # The "respond" intent gets its response text from home-assistant-intents
+    for intent_name in (intent.INTENT_NEVERMIND, intent.INTENT_RESPOND):
+        response = await intent.async_handle(hass, "test", intent_name, {})
+        assert not response.speech
+
+
+async def test_intents_respond_intent(hass: HomeAssistant) -> None:
+    """Test HassRespond intent with a response slot value."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "intent", {})
+
+    response = await intent.async_handle(
+        hass, "test", intent.INTENT_RESPOND, {"response": {"value": "Hello World"}}
+    )
+    assert response.speech["plain"]["speech"] == "Hello World"

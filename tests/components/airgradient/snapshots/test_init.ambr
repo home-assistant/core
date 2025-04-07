@@ -1,0 +1,67 @@
+# serializer version: 1
+# name: test_device_info[indoor]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'airgradient',
+        '84fce612f5b8',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'AirGradient',
+    'model': 'AirGradient ONE',
+    'model_id': 'I-9PSL',
+    'name': 'Airgradient',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': '84fce612f5b8',
+    'suggested_area': None,
+    'sw_version': '3.1.1',
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_info[outdoor]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'airgradient',
+        '84fce612f5b8',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'AirGradient',
+    'model': 'AirGradient Open Air',
+    'model_id': 'O-1PPT',
+    'name': 'Airgradient',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': '84fce612f5b8',
+    'suggested_area': None,
+    'sw_version': '3.1.1',
+    'via_device_id': None,
+  })
+# ---

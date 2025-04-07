@@ -1,0 +1,145 @@
+# serializer version: 1
+# name: test_entities[todo.mealie_freezer-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'todo',
+    'entity_category': None,
+    'entity_id': 'todo.mealie_freezer',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Freezer',
+    'platform': 'mealie',
+    'previous_unique_id': None,
+    'supported_features': <TodoListEntityFeature: 15>,
+    'translation_key': 'shopping_list',
+    'unique_id': 'bf1c62fe-4941-4332-9886-e54e88dbdba0_e9d78ff2-4b23-4b77-a3a8-464827100b46',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[todo.mealie_freezer-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mealie Freezer',
+      'supported_features': <TodoListEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'todo.mealie_freezer',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---
+# name: test_entities[todo.mealie_special_groceries-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'todo',
+    'entity_category': None,
+    'entity_id': 'todo.mealie_special_groceries',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Special groceries',
+    'platform': 'mealie',
+    'previous_unique_id': None,
+    'supported_features': <TodoListEntityFeature: 15>,
+    'translation_key': 'shopping_list',
+    'unique_id': 'bf1c62fe-4941-4332-9886-e54e88dbdba0_f8438635-8211-4be8-80d0-0aa42e37a5f2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[todo.mealie_special_groceries-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mealie Special groceries',
+      'supported_features': <TodoListEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'todo.mealie_special_groceries',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---
+# name: test_entities[todo.mealie_supermarket-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'todo',
+    'entity_category': None,
+    'entity_id': 'todo.mealie_supermarket',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Supermarket',
+    'platform': 'mealie',
+    'previous_unique_id': None,
+    'supported_features': <TodoListEntityFeature: 15>,
+    'translation_key': 'shopping_list',
+    'unique_id': 'bf1c62fe-4941-4332-9886-e54e88dbdba0_27edbaab-2ec6-441f-8490-0283ea77585f',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[todo.mealie_supermarket-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mealie Supermarket',
+      'supported_features': <TodoListEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'todo.mealie_supermarket',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---

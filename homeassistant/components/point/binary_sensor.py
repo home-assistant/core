@@ -3,26 +3,27 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from pypoint import EVENTS
 
 from homeassistant.components.binary_sensor import (
-    DOMAIN,
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import MinutPointEntity
-from .const import DOMAIN as POINT_DOMAIN, POINT_DISCOVERY_NEW, SIGNAL_WEBHOOK
+from . import PointConfigEntry
+from .const import SIGNAL_WEBHOOK
+from .coordinator import PointDataUpdateCoordinator
+from .entity import MinutPointEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
-DEVICES = {
+DEVICES: dict[str, Any] = {
     "alarm": {"icon": "mdi:alarm-bell"},
     "battery": {"device_class": BinarySensorDeviceClass.BATTERY},
     "button_press": {"icon": "mdi:gesture-tap-button"},
@@ -42,68 +43,60 @@ DEVICES = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: PointConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Point's binary sensors based on a config entry."""
 
-    async def async_discover_sensor(device_id):
+    coordinator = config_entry.runtime_data
+
+    def async_discover_sensor(device_id: str) -> None:
         """Discover and add a discovered sensor."""
-        client = hass.data[POINT_DOMAIN][config_entry.entry_id]
         async_add_entities(
-            (
-                MinutPointBinarySensor(client, device_id, device_name)
-                for device_name in DEVICES
-                if device_name in EVENTS
-            ),
-            True,
+            MinutPointBinarySensor(coordinator, device_id, device_name)
+            for device_name in DEVICES
+            if device_name in EVENTS
         )
 
-    async_dispatcher_connect(
-        hass, POINT_DISCOVERY_NEW.format(DOMAIN, POINT_DOMAIN), async_discover_sensor
+    coordinator.new_device_callbacks.append(async_discover_sensor)
+
+    async_add_entities(
+        MinutPointBinarySensor(coordinator, device_id, device_name)
+        for device_name in DEVICES
+        if device_name in EVENTS
+        for device_id in coordinator.point.device_ids
     )
 
 
 class MinutPointBinarySensor(MinutPointEntity, BinarySensorEntity):
     """The platform class required by Home Assistant."""
 
-    def __init__(self, point_client, device_id, device_name):
+    def __init__(
+        self, coordinator: PointDataUpdateCoordinator, device_id: str, key: str
+    ) -> None:
         """Initialize the binary sensor."""
-        super().__init__(
-            point_client,
-            device_id,
-            DEVICES[device_name].get("device_class"),
-        )
-        self._device_name = device_name
-        self._async_unsub_hook_dispatcher_connect = None
-        self._events = EVENTS[device_name]
-        self._attr_unique_id = f"point.{device_id}-{device_name}"
-        self._attr_icon = DEVICES[self._device_name].get("icon")
-        self._attr_name = f"{self._name} {device_name.capitalize()}"
+        self._attr_device_class = DEVICES[key].get("device_class", key)
+        super().__init__(coordinator, device_id)
+        self._device_name = key
+        self._events = EVENTS[key]
+        self._attr_unique_id = f"point.{device_id}-{key}"
+        self._attr_icon = DEVICES[key].get("icon")
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to HOme Assistant."""
         await super().async_added_to_hass()
-        self._async_unsub_hook_dispatcher_connect = async_dispatcher_connect(
-            self.hass, SIGNAL_WEBHOOK, self._webhook_event
+        self.async_on_remove(
+            async_dispatcher_connect(self.hass, SIGNAL_WEBHOOK, self._webhook_event)
         )
 
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect dispatcher listener when removed."""
-        await super().async_will_remove_from_hass()
-        if self._async_unsub_hook_dispatcher_connect:
-            self._async_unsub_hook_dispatcher_connect()
-
-    async def _update_callback(self):
+    def _handle_coordinator_update(self) -> None:
         """Update the value of the sensor."""
-        if not self.is_updated:
-            return
         if self.device_class == BinarySensorDeviceClass.CONNECTIVITY:
             # connectivity is the other way around.
             self._attr_is_on = self._events[0] not in self.device.ongoing_events
         else:
             self._attr_is_on = self._events[0] in self.device.ongoing_events
-        self.async_write_ha_state()
+        super()._handle_coordinator_update()
 
     @callback
     def _webhook_event(self, data, webhook):

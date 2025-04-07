@@ -6,18 +6,21 @@ from datetime import datetime, timedelta
 from http import HTTPStatus
 import logging
 import re
+from typing import Any
 
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import CONF_MODE, UnitOfTime
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import Throttle
-import homeassistant.util.dt as dt_util
+from homeassistant.util import Throttle, dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,6 +32,7 @@ ATTR_NEXT_BUSES = "next_buses"
 ATTR_STATION_CODE = "station_code"
 ATTR_CALLING_AT = "calling_at"
 ATTR_NEXT_TRAINS = "next_trains"
+ATTR_LAST_UPDATED = "last_updated"
 
 CONF_API_APP_KEY = "app_key"
 CONF_API_APP_ID = "app_id"
@@ -44,7 +48,7 @@ _QUERY_SCHEME = vol.Schema(
     }
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_APP_ID): cv.string,
         vol.Required(CONF_API_APP_KEY): cv.string,
@@ -193,10 +197,12 @@ class UkTransportLiveBusTimeSensor(UkTransportSensor):
                 self._state = None
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return other details about the sensor state."""
-        attrs = {}
         if self._data is not None:
+            attrs = {
+                ATTR_NEXT_BUSES: self._next_buses,
+            }
             for key in (
                 ATTR_ATCOCODE,
                 ATTR_LOCALITY,
@@ -204,8 +210,8 @@ class UkTransportLiveBusTimeSensor(UkTransportSensor):
                 ATTR_REQUEST_TIME,
             ):
                 attrs[key] = self._data.get(key)
-            attrs[ATTR_NEXT_BUSES] = self._next_buses
             return attrs
+        return None
 
 
 class UkTransportLiveTrainTimeSensor(UkTransportSensor):
@@ -263,15 +269,18 @@ class UkTransportLiveTrainTimeSensor(UkTransportSensor):
                     self._state = None
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return other details about the sensor state."""
-        attrs = {}
         if self._data is not None:
-            attrs[ATTR_STATION_CODE] = self._station_code
-            attrs[ATTR_CALLING_AT] = self._calling_at
+            attrs = {
+                ATTR_STATION_CODE: self._station_code,
+                ATTR_CALLING_AT: self._calling_at,
+                ATTR_LAST_UPDATED: self._data[ATTR_REQUEST_TIME],
+            }
             if self._next_trains:
                 attrs[ATTR_NEXT_TRAINS] = self._next_trains
             return attrs
+        return None
 
 
 def _delta_mins(hhmm_time_str):

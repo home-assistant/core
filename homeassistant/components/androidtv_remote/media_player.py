@@ -8,6 +8,8 @@ from typing import Any
 from androidtvremote2 import AndroidTVRemote, ConnectionClosed
 
 from homeassistant.components.media_player import (
+    BrowseMedia,
+    MediaClass,
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
@@ -16,9 +18,10 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AndroidTVRemoteConfigEntry
+from .const import CONF_APP_ICON, CONF_APP_NAME
 from .entity import AndroidTVRemoteBaseEntity
 
 PARALLEL_UPDATES = 0
@@ -27,7 +30,7 @@ PARALLEL_UPDATES = 0
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: AndroidTVRemoteConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Android TV media player entity based on a config entry."""
     api = config_entry.runtime_data
@@ -50,6 +53,7 @@ class AndroidTVRemoteMediaPlayerEntity(AndroidTVRemoteBaseEntity, MediaPlayerEnt
         | MediaPlayerEntityFeature.PLAY
         | MediaPlayerEntityFeature.STOP
         | MediaPlayerEntityFeature.PLAY_MEDIA
+        | MediaPlayerEntityFeature.BROWSE_MEDIA
     )
 
     def __init__(
@@ -65,7 +69,11 @@ class AndroidTVRemoteMediaPlayerEntity(AndroidTVRemoteBaseEntity, MediaPlayerEnt
     def _update_current_app(self, current_app: str) -> None:
         """Update current app info."""
         self._attr_app_id = current_app
-        self._attr_app_name = current_app
+        self._attr_app_name = (
+            self._apps[current_app].get(CONF_APP_NAME, current_app)
+            if current_app in self._apps
+            else current_app
+        )
 
     def _update_volume_info(self, volume_info: dict[str, str | bool]) -> None:
         """Update volume info."""
@@ -176,11 +184,40 @@ class AndroidTVRemoteMediaPlayerEntity(AndroidTVRemoteBaseEntity, MediaPlayerEnt
             await self._channel_set_task
             return
 
-        if media_type == MediaType.URL:
+        if media_type in [MediaType.URL, MediaType.APP]:
             self._send_launch_app_command(media_id)
             return
 
         raise ValueError(f"Invalid media type: {media_type}")
+
+    async def async_browse_media(
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
+    ) -> BrowseMedia:
+        """Browse apps."""
+        children = [
+            BrowseMedia(
+                media_class=MediaClass.APP,
+                media_content_type=MediaType.APP,
+                media_content_id=app_id,
+                title=app.get(CONF_APP_NAME, ""),
+                thumbnail=app.get(CONF_APP_ICON, ""),
+                can_play=False,
+                can_expand=False,
+            )
+            for app_id, app in self._apps.items()
+        ]
+        return BrowseMedia(
+            title="Applications",
+            media_class=MediaClass.DIRECTORY,
+            media_content_id="apps",
+            media_content_type=MediaType.APPS,
+            children_media_class=MediaClass.APP,
+            can_play=False,
+            can_expand=True,
+            children=children,
+        )
 
     async def _send_key_commands(
         self, key_codes: list[str], delay_secs: float = 0.1

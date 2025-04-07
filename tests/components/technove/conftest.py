@@ -24,7 +24,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.technove.async_setup_entry", return_value=True
@@ -33,7 +33,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_onboarding() -> Generator[MagicMock, None, None]:
+def mock_onboarding() -> Generator[MagicMock]:
     """Mock that Home Assistant is currently onboarding."""
     with patch(
         "homeassistant.components.onboarding.async_is_onboarded",
@@ -49,7 +49,7 @@ def device_fixture() -> TechnoVEStation:
 
 
 @pytest.fixture
-def mock_technove(device_fixture: TechnoVEStation) -> Generator[MagicMock, None, None]:
+def mock_technove(device_fixture: TechnoVEStation) -> Generator[MagicMock]:
     """Return a mocked TechnoVE client."""
     with (
         patch(

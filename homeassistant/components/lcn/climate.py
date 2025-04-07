@@ -1,7 +1,7 @@
 """Support for LCN climate control."""
 
-from __future__ import annotations
-
+from collections.abc import Iterable
+from functools import partial
 from typing import Any, cast
 
 import pypck
@@ -15,7 +15,6 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
-    CONF_ADDRESS,
     CONF_DOMAIN,
     CONF_ENTITIES,
     CONF_SOURCE,
@@ -23,57 +22,69 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
-from . import LcnEntity
 from .const import (
+    ADD_ENTITIES_CALLBACKS,
     CONF_DOMAIN_DATA,
     CONF_LOCKABLE,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
     CONF_SETPOINT,
+    CONF_TARGET_VALUE_LOCKED,
+    DOMAIN,
 )
-from .helpers import DeviceConnectionType, InputType, get_device_connection
+from .entity import LcnEntity
+from .helpers import InputType
 
 PARALLEL_UPDATES = 0
 
 
-def create_lcn_climate_entity(
-    hass: HomeAssistant, entity_config: ConfigType, config_entry: ConfigEntry
-) -> LcnEntity:
-    """Set up an entity for this domain."""
-    device_connection = get_device_connection(
-        hass, entity_config[CONF_ADDRESS], config_entry
-    )
+def add_lcn_entities(
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+    entity_configs: Iterable[ConfigType],
+) -> None:
+    """Add entities for this domain."""
+    entities = [
+        LcnClimate(entity_config, config_entry) for entity_config in entity_configs
+    ]
 
-    return LcnClimate(entity_config, config_entry.entry_id, device_connection)
+    async_add_entities(entities)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up LCN switch entities from a config entry."""
+    add_entities = partial(
+        add_lcn_entities,
+        config_entry,
+        async_add_entities,
+    )
 
-    async_add_entities(
-        create_lcn_climate_entity(hass, entity_config, config_entry)
-        for entity_config in config_entry.data[CONF_ENTITIES]
-        if entity_config[CONF_DOMAIN] == DOMAIN_CLIMATE
+    hass.data[DOMAIN][config_entry.entry_id][ADD_ENTITIES_CALLBACKS].update(
+        {DOMAIN_CLIMATE: add_entities}
+    )
+
+    add_entities(
+        (
+            entity_config
+            for entity_config in config_entry.data[CONF_ENTITIES]
+            if entity_config[CONF_DOMAIN] == DOMAIN_CLIMATE
+        ),
     )
 
 
 class LcnClimate(LcnEntity, ClimateEntity):
     """Representation of a LCN climate device."""
 
-    _enable_turn_on_off_backwards_compatibility = False
-
-    def __init__(
-        self, config: ConfigType, entry_id: str, device_connection: DeviceConnectionType
-    ) -> None:
+    def __init__(self, config: ConfigType, config_entry: ConfigEntry) -> None:
         """Initialize of a LCN climate device."""
-        super().__init__(config, entry_id, device_connection)
+        super().__init__(config, config_entry)
 
         self.variable = pypck.lcn_defs.Var[config[CONF_DOMAIN_DATA][CONF_SOURCE]]
         self.setpoint = pypck.lcn_defs.Var[config[CONF_DOMAIN_DATA][CONF_SETPOINT]]
@@ -83,6 +94,9 @@ class LcnClimate(LcnEntity, ClimateEntity):
 
         self.regulator_id = pypck.lcn_defs.Var.to_set_point_id(self.setpoint)
         self.is_lockable = config[CONF_DOMAIN_DATA][CONF_LOCKABLE]
+        self.target_value_locked = config[CONF_DOMAIN_DATA].get(
+            CONF_TARGET_VALUE_LOCKED, -1
+        )
         self._max_temp = config[CONF_DOMAIN_DATA][CONF_MAX_TEMP]
         self._min_temp = config[CONF_DOMAIN_DATA][CONF_MIN_TEMP]
 
@@ -161,7 +175,9 @@ class LcnClimate(LcnEntity, ClimateEntity):
             self._is_on = True
             self.async_write_ha_state()
         elif hvac_mode == HVACMode.OFF:
-            if not await self.device_connection.lock_regulator(self.regulator_id, True):
+            if not await self.device_connection.lock_regulator(
+                self.regulator_id, True, self.target_value_locked
+            ):
                 return
             self._is_on = False
             self._target_temperature = None

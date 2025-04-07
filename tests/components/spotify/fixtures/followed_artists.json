@@ -1,0 +1,87 @@
+{
+  "artists": {
+    "items": [
+      {
+        "external_urls": {
+          "spotify": "https://open.spotify.com/artist/0lLY20XpZ9yDobkbHI7u1y"
+        },
+        "followers": {
+          "href": null,
+          "total": 349437
+        },
+        "genres": [
+          "brostep",
+          "complextro",
+          "danish electronic",
+          "edm",
+          "electro house",
+          "glitch",
+          "speedrun"
+        ],
+        "href": "https://api.spotify.com/v1/artists/0lLY20XpZ9yDobkbHI7u1y",
+        "id": "0lLY20XpZ9yDobkbHI7u1y",
+        "images": [
+          {
+            "height": 640,
+            "url": "https://i.scdn.co/image/ab6761610000e5eb0fb1220e7e3ace47ebad023e",
+            "width": 640
+          },
+          {
+            "height": 320,
+            "url": "https://i.scdn.co/image/ab676161000051740fb1220e7e3ace47ebad023e",
+            "width": 320
+          },
+          {
+            "height": 160,
+            "url": "https://i.scdn.co/image/ab6761610000f1780fb1220e7e3ace47ebad023e",
+            "width": 160
+          }
+        ],
+        "name": "Pegboard Nerds",
+        "popularity": 52,
+        "type": "artist",
+        "uri": "spotify:artist:0lLY20XpZ9yDobkbHI7u1y"
+      },
+      {
+        "external_urls": {
+          "spotify": "https://open.spotify.com/artist/0p4nmQO2msCgU4IF37Wi3j"
+        },
+        "followers": {
+          "href": null,
+          "total": 11296082
+        },
+        "genres": ["canadian pop", "candy pop", "dance pop", "pop"],
+        "href": "https://api.spotify.com/v1/artists/0p4nmQO2msCgU4IF37Wi3j",
+        "id": "0p4nmQO2msCgU4IF37Wi3j",
+        "images": [
+          {
+            "height": 640,
+            "url": "https://i.scdn.co/image/ab6761610000e5eb5c3349ddba6b8e064c1bab16",
+            "width": 640
+          },
+          {
+            "height": 320,
+            "url": "https://i.scdn.co/image/ab676161000051745c3349ddba6b8e064c1bab16",
+            "width": 320
+          },
+          {
+            "height": 160,
+            "url": "https://i.scdn.co/image/ab6761610000f1785c3349ddba6b8e064c1bab16",
+            "width": 160
+          }
+        ],
+        "name": "Avril Lavigne",
+        "popularity": 78,
+        "type": "artist",
+        "uri": "spotify:artist:0p4nmQO2msCgU4IF37Wi3j"
+      }
+    ],
+    "next": "https://api.spotify.com/v1/me/following?type=artist&limit=20&locale=en-US,en;q=0.5&after=2NZMqINcyfepvLxQJdzcZk",
+    "total": 74,
+    "cursors": {
+      "after": "2NZMqINcyfepvLxQJdzcZk"
+    },
+    "limit": 20,
+    "href": "https://api.spotify.com/v1/me/following?type=artist&limit=20&locale=en-US,en;q=0.5"
+  }
+}

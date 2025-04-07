@@ -3,25 +3,29 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
-from anova_wifi import AnovaApi, AnovaPrecisionCooker, InvalidLogin, NoDevicesFound
+from anova_wifi import (
+    AnovaApi,
+    APCWifiDevice,
+    InvalidLogin,
+    NoDevicesFound,
+    WebsocketFailure,
+)
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICES, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 
-from .const import DOMAIN
-from .coordinator import AnovaCoordinator
-from .models import AnovaData
-from .util import serialize_device_list
+from .coordinator import AnovaConfigEntry, AnovaCoordinator, AnovaData
 
 PLATFORMS = [Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AnovaConfigEntry) -> bool:
     """Set up Anova from a config entry."""
     api = AnovaApi(
         aiohttp_client.async_get_clientsession(hass),
@@ -36,44 +40,55 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         return False
     assert api.jwt
-    api.existing_devices = [
-        AnovaPrecisionCooker(
-            aiohttp_client.async_get_clientsession(hass),
-            device[0],
-            device[1],
-            api.jwt,
-        )
-        for device in entry.data[CONF_DEVICES]
-    ]
     try:
-        new_devices = await api.get_devices()
-    except NoDevicesFound:
-        # get_devices raises an exception if no devices are online
-        new_devices = []
-    devices = api.existing_devices
-    if new_devices:
-        hass.config_entries.async_update_entry(
-            entry,
-            data={
-                **entry.data,
-                CONF_DEVICES: serialize_device_list(devices),
-            },
-        )
-    coordinators = [AnovaCoordinator(hass, device) for device in devices]
-    for coordinator in coordinators:
-        await coordinator.async_config_entry_first_refresh()
-        firmware_version = coordinator.data.sensor.firmware_version
-        coordinator.async_setup(str(firmware_version))
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = AnovaData(
-        api_jwt=api.jwt, precision_cookers=devices, coordinators=coordinators
-    )
+        await api.create_websocket()
+    except NoDevicesFound as err:
+        # Can later setup successfully and spawn a repair.
+        raise ConfigEntryNotReady(
+            "No devices were found on the websocket, perhaps you don't have any devices on this account?"
+        ) from err
+    except WebsocketFailure as err:
+        raise ConfigEntryNotReady("Failed connecting to the websocket.") from err
+    # Create a coordinator per device, if the device is offline, no data will be on the
+    # websocket, and the coordinator should auto mark as unavailable. But as long as
+    # the websocket successfully connected, config entry should setup.
+    devices: list[APCWifiDevice] = []
+    if TYPE_CHECKING:
+        # api.websocket_handler can't be None after successfully creating the
+        # websocket client
+        assert api.websocket_handler is not None
+    devices = list(api.websocket_handler.devices.values())
+    coordinators = [AnovaCoordinator(hass, entry, device) for device in devices]
+    entry.runtime_data = AnovaData(api_jwt=api.jwt, coordinators=coordinators, api=api)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AnovaConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-
+        # Disconnect from WS
+        await entry.runtime_data.api.disconnect_websocket()
     return unload_ok
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: AnovaConfigEntry) -> bool:
+    """Migrate entry."""
+    _LOGGER.debug("Migrating from version %s:%s", entry.version, entry.minor_version)
+
+    if entry.version > 1:
+        # This means the user has downgraded from a future version
+        return False
+
+    if entry.version == 1 and entry.minor_version == 1:
+        new_data = {**entry.data}
+        if CONF_DEVICES in new_data:
+            new_data.pop(CONF_DEVICES)
+
+        hass.config_entries.async_update_entry(entry, data=new_data, minor_version=2)
+
+    _LOGGER.debug(
+        "Migration to version %s:%s successful", entry.version, entry.minor_version
+    )
+
+    return True

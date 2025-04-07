@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from typing import Any
 
 from reolink_aio.api import Host
-from reolink_aio.exceptions import InvalidParameterError, ReolinkError
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -15,15 +14,19 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import ReolinkData
-from .const import DOMAIN
-from .entity import ReolinkChannelCoordinatorEntity, ReolinkChannelEntityDescription
+from .entity import (
+    ReolinkChannelCoordinatorEntity,
+    ReolinkChannelEntityDescription,
+    ReolinkHostCoordinatorEntity,
+    ReolinkHostEntityDescription,
+)
+from .util import ReolinkConfigEntry, ReolinkData, raise_translated_error
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -39,10 +42,22 @@ class ReolinkLightEntityDescription(
     turn_on_off_fn: Callable[[Host, int, bool], Any]
 
 
+@dataclass(frozen=True, kw_only=True)
+class ReolinkHostLightEntityDescription(
+    LightEntityDescription,
+    ReolinkHostEntityDescription,
+):
+    """A class that describes host light entities."""
+
+    is_on_fn: Callable[[Host], bool]
+    turn_on_off_fn: Callable[[Host, bool], Any]
+
+
 LIGHT_ENTITIES = (
     ReolinkLightEntityDescription(
         key="floodlight",
         cmd_key="GetWhiteLed",
+        cmd_id=291,
         translation_key="floodlight",
         supported=lambda api, ch: api.supported(ch, "floodLight"),
         is_on_fn=lambda api, ch: api.whiteled_state(ch),
@@ -61,21 +76,40 @@ LIGHT_ENTITIES = (
     ),
 )
 
+HOST_LIGHT_ENTITIES = (
+    ReolinkHostLightEntityDescription(
+        key="hub_status_led",
+        cmd_key="GetStateLight",
+        translation_key="status_led",
+        entity_category=EntityCategory.CONFIG,
+        supported=lambda api: api.supported(None, "state_light"),
+        is_on_fn=lambda api: api.state_light,
+        turn_on_off_fn=lambda api, value: api.set_state_light(value),
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: ReolinkConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Reolink light entities."""
-    reolink_data: ReolinkData = hass.data[DOMAIN][config_entry.entry_id]
+    reolink_data: ReolinkData = config_entry.runtime_data
 
-    async_add_entities(
+    entities: list[ReolinkLightEntity | ReolinkHostLightEntity] = [
         ReolinkLightEntity(reolink_data, channel, entity_description)
         for entity_description in LIGHT_ENTITIES
         for channel in reolink_data.host.api.channels
         if entity_description.supported(reolink_data.host.api, channel)
+    ]
+    entities.extend(
+        ReolinkHostLightEntity(reolink_data, entity_description)
+        for entity_description in HOST_LIGHT_ENTITIES
+        if entity_description.supported(reolink_data.host.api)
     )
+
+    async_add_entities(entities)
 
 
 class ReolinkLightEntity(ReolinkChannelCoordinatorEntity, LightEntity):
@@ -108,8 +142,7 @@ class ReolinkLightEntity(ReolinkChannelCoordinatorEntity, LightEntity):
     @property
     def brightness(self) -> int | None:
         """Return the brightness of this light between 0.255."""
-        if self.entity_description.get_brightness_fn is None:
-            return None
+        assert self.entity_description.get_brightness_fn is not None
 
         bright_pct = self.entity_description.get_brightness_fn(
             self._host.api, self._channel
@@ -119,35 +152,60 @@ class ReolinkLightEntity(ReolinkChannelCoordinatorEntity, LightEntity):
 
         return round(255 * bright_pct / 100.0)
 
+    @raise_translated_error
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn light off."""
-        try:
-            await self.entity_description.turn_on_off_fn(
-                self._host.api, self._channel, False
-            )
-        except ReolinkError as err:
-            raise HomeAssistantError(err) from err
+        await self.entity_description.turn_on_off_fn(
+            self._host.api, self._channel, False
+        )
         self.async_write_ha_state()
 
+    @raise_translated_error
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn light on."""
         if (
             brightness := kwargs.get(ATTR_BRIGHTNESS)
         ) is not None and self.entity_description.set_brightness_fn is not None:
             brightness_pct = int(brightness / 255.0 * 100)
-            try:
-                await self.entity_description.set_brightness_fn(
-                    self._host.api, self._channel, brightness_pct
-                )
-            except InvalidParameterError as err:
-                raise ServiceValidationError(err) from err
-            except ReolinkError as err:
-                raise HomeAssistantError(err) from err
-
-        try:
-            await self.entity_description.turn_on_off_fn(
-                self._host.api, self._channel, True
+            await self.entity_description.set_brightness_fn(
+                self._host.api, self._channel, brightness_pct
             )
-        except ReolinkError as err:
-            raise HomeAssistantError(err) from err
+
+        await self.entity_description.turn_on_off_fn(
+            self._host.api, self._channel, True
+        )
+        self.async_write_ha_state()
+
+
+class ReolinkHostLightEntity(ReolinkHostCoordinatorEntity, LightEntity):
+    """Base host light entity class for Reolink IP cameras."""
+
+    entity_description: ReolinkHostLightEntityDescription
+    _attr_supported_color_modes = {ColorMode.ONOFF}
+    _attr_color_mode = ColorMode.ONOFF
+
+    def __init__(
+        self,
+        reolink_data: ReolinkData,
+        entity_description: ReolinkHostLightEntityDescription,
+    ) -> None:
+        """Initialize Reolink host light entity."""
+        self.entity_description = entity_description
+        super().__init__(reolink_data)
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if light is on."""
+        return self.entity_description.is_on_fn(self._host.api)
+
+    @raise_translated_error
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn light off."""
+        await self.entity_description.turn_on_off_fn(self._host.api, False)
+        self.async_write_ha_state()
+
+    @raise_translated_error
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn light on."""
+        await self.entity_description.turn_on_off_fn(self._host.api, True)
         self.async_write_ha_state()

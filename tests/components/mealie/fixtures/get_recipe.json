@@ -1,0 +1,266 @@
+{
+  "id": "fada9582-709b-46aa-b384-d5952123ad93",
+  "userId": "bf1c62fe-4941-4332-9886-e54e88dbdba0",
+  "groupId": "24477569-f6af-4b53-9e3f-6d04b0ca6916",
+  "name": "Original Sacher-Torte (2)",
+  "slug": "original-sacher-torte-2",
+  "image": "SuPW",
+  "recipeYield": "4 servings",
+  "totalTime": "2 hours 30 minutes",
+  "prepTime": "1 hour 30 minutes",
+  "cookTime": null,
+  "performTime": "1 hour",
+  "description": "The world’s most famous cake, the Original Sacher-Torte, is the consequence of several lucky twists of fate. The first was in 1832, when the Austrian State Chancellor, Prince Klemens Wenzel von Metternich, tasked his kitchen staff with concocting an extraordinary dessert to impress his special guests. As fortune had it, the chef had fallen ill that evening, leaving the apprentice chef, the then-16-year-old Franz Sacher, to perform this culinary magic trick. Metternich’s parting words to the talented teenager: “I hope you won’t disgrace me tonight.”",
+  "recipeCategory": [],
+  "tags": [
+    {
+      "id": "1b5789b9-3af6-412e-8c77-8a01caa0aac9",
+      "name": "Sacher",
+      "slug": "sacher"
+    },
+    {
+      "id": "1cf17f96-58b5-4bd3-b1e8-1606a64b413d",
+      "name": "Cake",
+      "slug": "cake"
+    },
+    {
+      "id": "3f5f0a3d-728f-440d-a6c7-5a68612e8c67",
+      "name": "Torte",
+      "slug": "torte"
+    },
+    {
+      "id": "525f388d-6ee0-4ebe-91fc-dd320a7583f0",
+      "name": "Sachertorte",
+      "slug": "sachertorte"
+    },
+    {
+      "id": "544a6e08-a899-4f63-9c72-bb2924df70cb",
+      "name": "Sacher Torte Cake",
+      "slug": "sacher-torte-cake"
+    },
+    {
+      "id": "576c0a82-84ee-4e50-a14e-aa7a675b6352",
+      "name": "Sacher Torte",
+      "slug": "sacher-torte"
+    },
+    {
+      "id": "d530b8e4-275a-4093-804b-6d0de154c206",
+      "name": "Original Sachertorte",
+      "slug": "original-sachertorte"
+    }
+  ],
+  "tools": [],
+  "rating": null,
+  "orgURL": "https://www.sacher.com/en/original-sacher-torte/recipe/",
+  "dateAdded": "2024-06-29",
+  "dateUpdated": "2024-06-29T06:10:34.412665",
+  "createdAt": "2024-06-29T06:10:34.414927",
+  "updateAt": "2024-06-29T06:10:34.414928",
+  "lastMade": null,
+  "recipeIngredient": [
+    {
+      "quantity": 1.0,
+      "unit": null,
+      "food": null,
+      "note": "130g dark couverture chocolate (min. 55% cocoa content)",
+      "isFood": true,
+      "disableAmount": false,
+      "display": "1 130g dark couverture chocolate (min. 55% cocoa content)",
+      "title": null,
+      "originalText": null,
+      "referenceId": "a3adfe78-d157-44d8-98be-9c133e45bb4e"
+    },
+    {
+      "quantity": 1.0,
+      "unit": null,
+      "food": null,
+      "note": "1 Vanilla Pod",
+      "isFood": true,
+      "disableAmount": false,
+      "display": "1 1 Vanilla Pod",
+      "title": null,
+      "originalText": null,
+      "referenceId": "41d234d7-c040-48f9-91e6-f4636aebb77b"
+    },
+    {
+      "quantity": 1.0,
+      "unit": null,
+      "food": null,
+      "note": "150g softened butter",
+      "isFood": true,
+      "disableAmount": false,
+      "display": "1 150g softened butter",
+      "title": null,
+      "originalText": null,
+      "referenceId": "f6ce06bf-8b02-43e6-8316-0dc3fb0da0fc"
+    },
+    {
+      "quantity": 1.0,
+      "unit": null,
+      "food": null,
+      "note": "100g Icing sugar",
+      "isFood": true,
+      "disableAmount": false,
+      "display": "1 100g Icing sugar",
+      "title": null,
+      "originalText": null,
+      "referenceId": "f7fcd86e-b04b-4e07-b69c-513925811491"
+    },
+    {
+      "quantity": 1.0,
+      "unit": null,
+      "food": null,
+      "note": "6 Eggs",
+      "isFood": true,
+      "disableAmount": false,
+      "display": "1 6 Eggs",
+      "title": null,
+      "originalText": null,
+      "referenceId": "a831fbc3-e2f5-452e-a745-450be8b4a130"
+    },
+    {
+      "quantity": 1.0,
+      "unit": null,
+      "food": null,
+      "note": "100g Castor sugar",
+      "isFood": true,
+      "disableAmount": false,
+      "display": "1 100g Castor sugar",
+      "title": null,
+      "originalText": null,
+      "referenceId": "b5ee4bdc-0047-4de7-968b-f3360bbcb31e"
+    },
+    {
+      "quantity": 1.0,
+      "unit": null,
+      "food": null,
+      "note": "140g Plain wheat flour",
+      "isFood": true,
+      "disableAmount": false,
+      "display": "1 140g Plain wheat flour",
+      "title": null,
+      "originalText": null,
+      "referenceId": "a67db09d-429c-4e77-919d-cfed3da675ad"
+    },
+    {
+      "quantity": 1.0,
+      "unit": null,
+      "food": null,
+      "note": "200g apricot jam",
+      "isFood": true,
+      "disableAmount": false,
+      "display": "1 200g apricot jam",
+      "title": null,
+      "originalText": null,
+      "referenceId": "55479752-c062-4b25-aae3-2b210999d7b9"
+    },
+    {
+      "quantity": 1.0,
+      "unit": null,
+      "food": null,
+      "note": "200g castor sugar",
+      "isFood": true,
+      "disableAmount": false,
+      "display": "1 200g castor sugar",
+      "title": null,
+      "originalText": null,
+      "referenceId": "ff9cd404-24ec-4d38-b0aa-0120ce1df679"
+    },
+    {
+      "quantity": 1.0,
+      "unit": null,
+      "food": null,
+      "note": "150g dark couverture chocolate (min. 55% cocoa content)",
+      "isFood": true,
+      "disableAmount": false,
+      "display": "1 150g dark couverture chocolate (min. 55% cocoa content)",
+      "title": null,
+      "originalText": null,
+      "referenceId": "c7fca92e-971e-4728-a227-8b04783583ed"
+    },
+    {
+      "quantity": 1.0,
+      "unit": null,
+      "food": null,
+      "note": "Unsweetend whipped cream to garnish",
+      "isFood": true,
+      "disableAmount": false,
+      "display": "1 Unsweetend whipped cream to garnish",
+      "title": null,
+      "originalText": null,
+      "referenceId": "ef023f23-7816-4871-87f6-4d29f9a283f7"
+    }
+  ],
+  "recipeInstructions": [
+    {
+      "id": "2d558dbf-5361-4ef2-9d86-4161f5eb6146",
+      "title": "",
+      "text": "Preheat oven to 170°C. Line the base of a springform with baking paper, grease the sides, and dust with a little flour. Melt couverture over boiling water. Let cool slightly.",
+      "ingredientReferences": []
+    },
+    {
+      "id": "dbcc1c37-3cbf-4045-9902-8f7fd1e68f0a",
+      "title": "",
+      "text": "Slit vanilla pod lengthwise and scrape out seeds. Using a hand mixer with whisks, beat the softened butter with the icing sugar and vanilla seeds until bubbles appear.",
+      "ingredientReferences": []
+    },
+    {
+      "id": "2265bd14-a691-40b1-9fe6-7b5dfeac8401",
+      "title": "",
+      "text": "Separate the eggs. Whisk the egg yolks into the butter mixture one by one. Now gradually add melted couverture chocolate. Beat the egg whites with the castor sugar until stiff, then place on top of the butter and chocolate mixture. Sift the flour over the mixture, then fold in the flour and beaten egg whites.",
+      "ingredientReferences": []
+    },
+    {
+      "id": "0aade447-dfac-4aae-8e67-ac250ad13ae2",
+      "title": "",
+      "text": "Transfer the mixture to the springform, smooth the top, and bake in the oven (middle rack) for 10–15 minutes, leaving the oven door a finger's width ajar. Then close the oven and bake for approximately 50 minutes. (The cake is done when it yields slightly to the touch.)",
+      "ingredientReferences": []
+    },
+    {
+      "id": "5fdcb703-7103-468d-a65d-a92460b92eb3",
+      "title": "",
+      "text": "Remove the cake from the oven and loosen the sides of the springform. Carefully tip the cake onto a cake rack lined with baking paper and let cool for approximately 20 minutes. Then pull off the baking paper, turn the cake over, and leave on rack to cool completely.",
+      "ingredientReferences": []
+    },
+    {
+      "id": "81474afc-b44e-49b3-bb67-5d7dab8f832a",
+      "title": "",
+      "text": "Cut the cake in half horizontally. Warm the jam and stir until smooth. Brush the top of both cake halves with the jam and place one on top of the other. Brush the sides with the jam as well.",
+      "ingredientReferences": []
+    },
+    {
+      "id": "8fac8aee-0d3c-4f78-9ff8-56d20472e5f1",
+      "title": "",
+      "text": "To make the glaze, put the castor sugar into a saucepan with 125 ml water and boil over high heat for approximately 5 minutes. Take the sugar syrup off the stove and leave to cool a little. Coarsely chop the couverture, gradually adding it to the syrup, and stir until it forms a thick liquid (see tip below).",
+      "ingredientReferences": []
+    },
+    {
+      "id": "7162e099-d651-4656-902a-a09a9b40c4e1",
+      "title": "",
+      "text": "Pour all the lukewarm glaze liquid at once over the top of the cake and quickly spread using a palette knife. Leave the glaze to set for a few hours. Serve garnished with whipped cream.",
+      "ingredientReferences": []
+    }
+  ],
+  "nutrition": {
+    "calories": "400",
+    "fatContent": "17",
+    "proteinContent": null,
+    "carbohydrateContent": null,
+    "fiberContent": null,
+    "sodiumContent": null,
+    "sugarContent": null
+  },
+  "settings": {
+    "public": true,
+    "showNutrition": true,
+    "showAssets": true,
+    "landscapeView": false,
+    "disableComments": false,
+    "disableAmount": false,
+    "locked": false
+  },
+  "assets": [],
+  "notes": [],
+  "extras": {},
+  "comments": []
+}

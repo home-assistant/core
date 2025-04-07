@@ -16,14 +16,15 @@ from homeassistant.components.withings.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, load_json_array_fixture
-from tests.components.withings import (
+from . import (
     load_activity_fixture,
     load_goals_fixture,
     load_measurements_fixture,
     load_sleep_fixture,
     load_workout_fixture,
 )
+
+from tests.common import MockConfigEntry, load_json_array_fixture
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
@@ -121,6 +122,29 @@ def polling_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
             "token": {
                 "status": 0,
                 "userid": str(USER_ID),
+                "access_token": "mock-access-token",
+                "refresh_token": "mock-refresh-token",
+                "expires_at": expires_at,
+                "scope": ",".join(scopes),
+            },
+            "profile": TITLE,
+            "webhook_id": WEBHOOK_ID,
+        },
+    )
+
+
+@pytest.fixture
+def second_polling_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
+    """Create Withings entry in Home Assistant."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title="Not Henk",
+        unique_id="54321",
+        data={
+            "auth_implementation": DOMAIN,
+            "token": {
+                "status": 0,
+                "userid": "54321",
                 "access_token": "mock-access-token",
                 "refresh_token": "mock-refresh-token",
                 "expires_at": expires_at,

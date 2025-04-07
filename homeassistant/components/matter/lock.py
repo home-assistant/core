@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 
 from chip.clusters import Objects as clusters
@@ -14,7 +15,7 @@ from homeassistant.components.lock import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_CODE, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import LOGGER
 from .entity import MatterEntity
@@ -27,7 +28,7 @@ DoorLockFeature = clusters.DoorLock.Bitmaps.Feature
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter lock from Config Entry."""
     matter = get_matter(hass)
@@ -37,7 +38,9 @@ async def async_setup_entry(
 class MatterLock(MatterEntity, LockEntity):
     """Representation of a Matter lock."""
 
-    features: int | None = None
+    _feature_map: int | None = None
+    _optimistic_timer: asyncio.TimerHandle | None = None
+    _platform_translation_key = "lock"
 
     @property
     def code_format(self) -> str | None:
@@ -59,123 +62,140 @@ class MatterLock(MatterEntity, LockEntity):
 
         return None
 
-    @property
-    def supports_door_position_sensor(self) -> bool:
-        """Return True if the lock supports door position sensor."""
-        if self.features is None:
-            return False
-
-        return bool(self.features & DoorLockFeature.kDoorPositionSensor)
-
-    @property
-    def supports_unbolt(self) -> bool:
-        """Return True if the lock supports unbolt."""
-        if self.features is None:
-            return False
-
-        return bool(self.features & DoorLockFeature.kUnbolt)
-
-    async def send_device_command(
-        self,
-        command: clusters.ClusterCommand,
-        timed_request_timeout_ms: int = 1000,
-    ) -> None:
-        """Send a command to the device."""
-        await self.matter_client.send_device_command(
-            node_id=self._endpoint.node.node_id,
-            endpoint_id=self._endpoint.endpoint_id,
-            command=command,
-            timed_request_timeout_ms=timed_request_timeout_ms,
-        )
-
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock with pin if needed."""
+        if not self._attr_is_locked:
+            # optimistically signal locking to state machine
+            self._attr_is_locking = True
+            self.async_write_ha_state()
+            # the lock should acknowledge the command with an attribute update
+            # but bad things may happen, so guard against it with a timer.
+            self._optimistic_timer = self.hass.loop.call_later(
+                30, self._reset_optimistic_state
+            )
         code: str | None = kwargs.get(ATTR_CODE)
         code_bytes = code.encode() if code else None
         await self.send_device_command(
-            command=clusters.DoorLock.Commands.LockDoor(code_bytes)
+            command=clusters.DoorLock.Commands.LockDoor(code_bytes),
+            timed_request_timeout_ms=1000,
         )
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock with pin if needed."""
+        if self._attr_is_locked:
+            # optimistically signal unlocking to state machine
+            self._attr_is_unlocking = True
+            self.async_write_ha_state()
+            # the lock should acknowledge the command with an attribute update
+            # but bad things may happen, so guard against it with a timer.
+            self._optimistic_timer = self.hass.loop.call_later(
+                30, self._reset_optimistic_state
+            )
         code: str | None = kwargs.get(ATTR_CODE)
         code_bytes = code.encode() if code else None
-        if self.supports_unbolt:
+        if self._attr_supported_features & LockEntityFeature.OPEN:
             # if the lock reports it has separate unbolt support,
             # the unlock command should unbolt only on the unlock command
             # and unlatch on the HA 'open' command.
             await self.send_device_command(
-                command=clusters.DoorLock.Commands.UnboltDoor(code_bytes)
+                command=clusters.DoorLock.Commands.UnboltDoor(code_bytes),
+                timed_request_timeout_ms=1000,
             )
         else:
             await self.send_device_command(
-                command=clusters.DoorLock.Commands.UnlockDoor(code_bytes)
+                command=clusters.DoorLock.Commands.UnlockDoor(code_bytes),
+                timed_request_timeout_ms=1000,
             )
 
     async def async_open(self, **kwargs: Any) -> None:
         """Open the door latch."""
+        # optimistically signal opening to state machine
+        self._attr_is_opening = True
+        self.async_write_ha_state()
+        # the lock should acknowledge the command with an attribute update
+        # but bad things may happen, so guard against it with a timer.
+        self._optimistic_timer = self.hass.loop.call_later(
+            30 if self._attr_is_locked else 5, self._reset_optimistic_state
+        )
         code: str | None = kwargs.get(ATTR_CODE)
         code_bytes = code.encode() if code else None
         await self.send_device_command(
-            command=clusters.DoorLock.Commands.UnlockDoor(code_bytes)
+            command=clusters.DoorLock.Commands.UnlockDoor(code_bytes),
+            timed_request_timeout_ms=1000,
         )
 
     @callback
     def _update_from_device(self) -> None:
         """Update the entity from the device."""
-
-        if self.features is None:
-            self.features = int(
-                self.get_matter_attribute_value(clusters.DoorLock.Attributes.FeatureMap)
-            )
-            if self.supports_unbolt:
-                self._attr_supported_features = LockEntityFeature.OPEN
+        # always calculate the features as they can dynamically change
+        self._calculate_features()
 
         lock_state = self.get_matter_attribute_value(
             clusters.DoorLock.Attributes.LockState
         )
 
+        # always reset the optimisically (un)locking state on state update
+        self._reset_optimistic_state(write_state=False)
+
         LOGGER.debug("Lock state: %s for %s", lock_state, self.entity_id)
 
-        if lock_state is clusters.DoorLock.Enums.DlLockState.kLocked:
-            self._attr_is_locked = True
-            self._attr_is_locking = False
-            self._attr_is_unlocking = False
-        elif lock_state is clusters.DoorLock.Enums.DlLockState.kUnlocked:
+        if lock_state == clusters.DoorLock.Enums.DlLockState.kUnlatched:
             self._attr_is_locked = False
-            self._attr_is_locking = False
-            self._attr_is_unlocking = False
-        elif lock_state is clusters.DoorLock.Enums.DlLockState.kNotFullyLocked:
-            if self.is_locked is True:
-                self._attr_is_unlocking = True
-            elif self.is_locked is False:
-                self._attr_is_locking = True
+            self._attr_is_open = True
+        elif lock_state == clusters.DoorLock.Enums.DlLockState.kLocked:
+            self._attr_is_locked = True
+            self._attr_is_open = False
+        elif lock_state in (
+            clusters.DoorLock.Enums.DlLockState.kUnlocked,
+            clusters.DoorLock.Enums.DlLockState.kNotFullyLocked,
+        ):
+            self._attr_is_locked = False
+            self._attr_is_open = False
         else:
-            # According to the matter docs a null state can happen during device startup.
+            # Treat any other state as unknown.
+            # NOTE: A null state can happen during device startup.
             self._attr_is_locked = None
-            self._attr_is_locking = None
-            self._attr_is_unlocking = None
+            self._attr_is_open = None
 
-        if self.supports_door_position_sensor:
-            door_state = self.get_matter_attribute_value(
-                clusters.DoorLock.Attributes.DoorState
-            )
+    @callback
+    def _reset_optimistic_state(self, write_state: bool = True) -> None:
+        if self._optimistic_timer and not self._optimistic_timer.cancelled():
+            self._optimistic_timer.cancel()
+        self._optimistic_timer = None
+        self._attr_is_locking = False
+        self._attr_is_unlocking = False
+        self._attr_is_opening = False
+        if write_state:
+            self.async_write_ha_state()
 
-            assert door_state is not None
-
-            LOGGER.debug("Door state: %s for %s", door_state, self.entity_id)
-
-            self._attr_is_jammed = (
-                door_state is clusters.DoorLock.Enums.DoorStateEnum.kDoorJammed
-            )
+    @callback
+    def _calculate_features(
+        self,
+    ) -> None:
+        """Calculate features for HA Lock platform from Matter FeatureMap."""
+        feature_map = int(
+            self.get_matter_attribute_value(clusters.DoorLock.Attributes.FeatureMap)
+        )
+        # NOTE: the featuremap can dynamically change, so we need to update the
+        # supported features if the featuremap changes.
+        if self._feature_map == feature_map:
+            return
+        self._feature_map = feature_map
+        supported_features = LockEntityFeature(0)
+        # determine if lock supports optional open/unbolt feature
+        if bool(feature_map & DoorLockFeature.kUnbolt):
+            supported_features |= LockEntityFeature.OPEN
+        self._attr_supported_features = supported_features
 
 
 DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.LOCK,
-        entity_description=LockEntityDescription(key="MatterLock", name=None),
+        entity_description=LockEntityDescription(
+            key="MatterLock",
+            name=None,
+        ),
         entity_class=MatterLock,
         required_attributes=(clusters.DoorLock.Attributes.LockState,),
-        optional_attributes=(clusters.DoorLock.Attributes.DoorState,),
     ),
 ]

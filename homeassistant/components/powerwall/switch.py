@@ -5,15 +5,13 @@ from typing import Any
 from tesla_powerwall import GridStatus, IslandMode, PowerwallError
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
 from .entity import PowerWallEntity
-from .models import PowerwallRuntimeData
+from .models import PowerwallConfigEntry, PowerwallRuntimeData
 
 OFF_GRID_STATUSES = {
     GridStatus.TRANSITION_TO_ISLAND,
@@ -23,12 +21,11 @@ OFF_GRID_STATUSES = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: PowerwallConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Powerwall switch platform from Powerwall resources."""
-    powerwall_data: PowerwallRuntimeData = hass.data[DOMAIN][config_entry.entry_id]
-    async_add_entities([PowerwallOffGridEnabledEntity(powerwall_data)])
+    async_add_entities([PowerwallOffGridEnabledEntity(entry.runtime_data)])
 
 
 class PowerwallOffGridEnabledEntity(PowerWallEntity, SwitchEntity):

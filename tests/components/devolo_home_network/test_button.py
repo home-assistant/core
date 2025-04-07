@@ -106,7 +106,6 @@ async def test_button(
             {ATTR_ENTITY_ID: state_key},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     await hass.config_entries.async_unload(entry.entry_id)
 

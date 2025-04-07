@@ -8,13 +8,11 @@ from aioflo.location import SLEEP_MINUTE_OPTIONS, SYSTEM_MODE_HOME, SYSTEM_REVER
 import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN as FLO_DOMAIN
-from .device import FloDeviceDataUpdateCoordinator
+from .coordinator import FloConfigEntry, FloDeviceDataUpdateCoordinator
 from .entity import FloEntity
 
 ATTR_REVERT_TO_MODE = "revert_to_mode"
@@ -27,13 +25,11 @@ SERVICE_RUN_HEALTH_TEST = "run_health_test"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: FloConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Flo switches from config entry."""
-    devices: list[FloDeviceDataUpdateCoordinator] = hass.data[FLO_DOMAIN][
-        config_entry.entry_id
-    ]["devices"]
+    devices = config_entry.runtime_data.devices
 
     async_add_entities(
         [FloSwitch(device) for device in devices if device.device_type != "puck_oem"]
@@ -42,13 +38,13 @@ async def async_setup_entry(
     platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
-        SERVICE_SET_AWAY_MODE, {}, "async_set_mode_away"
+        SERVICE_SET_AWAY_MODE, None, "async_set_mode_away"
     )
     platform.async_register_entity_service(
-        SERVICE_SET_HOME_MODE, {}, "async_set_mode_home"
+        SERVICE_SET_HOME_MODE, None, "async_set_mode_home"
     )
     platform.async_register_entity_service(
-        SERVICE_RUN_HEALTH_TEST, {}, "async_run_health_test"
+        SERVICE_RUN_HEALTH_TEST, None, "async_run_health_test"
     )
     platform.async_register_entity_service(
         SERVICE_SET_SLEEP_MODE,

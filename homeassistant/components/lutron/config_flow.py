@@ -9,10 +9,21 @@ from urllib.error import HTTPError
 from pylutron import Lutron
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import callback
+from homeassistant.helpers.selector import (
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
+)
 
-from .const import DOMAIN
+from .const import CONF_DEFAULT_DIMMER_LEVEL, DEFAULT_DIMMER_LEVEL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,11 +37,6 @@ class LutronConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """First step in the config flow."""
-
-        # Check if a configuration entry already exists
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         errors = {}
 
         if user_input is not None:
@@ -47,7 +53,7 @@ class LutronConfigFlow(ConfigFlow, domain=DOMAIN):
             except HTTPError:
                 _LOGGER.exception("Http error")
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unknown error")
                 errors["base"] = "unknown"
             else:
@@ -74,36 +80,35 @@ class LutronConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(
-        self, import_config: dict[str, Any]
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> OptionsFlowHandler:
+        """Get the options flow for this handler."""
+        return OptionsFlowHandler()
+
+
+class OptionsFlowHandler(OptionsFlow):
+    """Handle option flow for lutron."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Attempt to import the existing configuration."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-        main_repeater = Lutron(
-            import_config[CONF_HOST],
-            import_config[CONF_USERNAME],
-            import_config[CONF_PASSWORD],
+        """Handle options flow."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        data_schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_DEFAULT_DIMMER_LEVEL,
+                    default=self.config_entry.options.get(
+                        CONF_DEFAULT_DIMMER_LEVEL, DEFAULT_DIMMER_LEVEL
+                    ),
+                ): NumberSelector(
+                    NumberSelectorConfig(min=1, max=255, mode=NumberSelectorMode.SLIDER)
+                )
+            }
         )
-
-        def _load_db() -> None:
-            main_repeater.load_xml_db()
-
-        try:
-            await self.hass.async_add_executor_job(_load_db)
-        except HTTPError:
-            _LOGGER.exception("Http error")
-            return self.async_abort(reason="cannot_connect")
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unknown error")
-            return self.async_abort(reason="unknown")
-
-        guid = main_repeater.guid
-
-        if len(guid) <= 10:
-            return self.async_abort(reason="cannot_connect")
-        _LOGGER.debug("Main Repeater GUID: %s", main_repeater.guid)
-
-        await self.async_set_unique_id(guid)
-        self._abort_if_unique_id_configured()
-        return self.async_create_entry(title="Lutron", data=import_config)
+        return self.async_show_form(step_id="init", data_schema=data_schema)

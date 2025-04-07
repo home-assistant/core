@@ -16,7 +16,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import as_timestamp, now, parse_datetime, utc_from_timestamp
 
@@ -102,7 +102,7 @@ START_MULTIPLE_ZONES_SCHEMA = vol.Schema(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Rachio switches."""
     zone_entities = []
@@ -195,9 +195,9 @@ def _create_entities(hass: HomeAssistant, config_entry: ConfigEntry) -> list[Ent
             for schedule in schedules + flex_schedules
         )
     entities.extend(
-        RachioValve(person, base_station, valve, base_station.coordinator)
+        RachioValve(person, base_station, valve, base_station.status_coordinator)
         for base_station in person.base_stations
-        for valve in base_station.coordinator.data.values()
+        for valve in base_station.status_coordinator.data.values()
     )
     return entities
 
@@ -365,7 +365,7 @@ class RachioZone(RachioSwitch):
 
     def __str__(self):
         """Display the zone as a string."""
-        return f'Rachio Zone "{self.name}" on {str(self._controller)}'
+        return f'Rachio Zone "{self.name}" on {self._controller!s}'
 
     @property
     def zone_id(self) -> str:

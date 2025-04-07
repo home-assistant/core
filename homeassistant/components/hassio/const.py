@@ -1,7 +1,16 @@
 """Hass.io const variables."""
 
+from __future__ import annotations
+
 from datetime import timedelta
 from enum import StrEnum
+from typing import TYPE_CHECKING
+
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from .handler import HassIO
+
 
 DOMAIN = "hassio"
 
@@ -64,12 +73,14 @@ UPDATE_KEY_SUPERVISOR = "supervisor"
 ADDONS_COORDINATOR = "hassio_addons_coordinator"
 
 
+DATA_COMPONENT: HassKey[HassIO] = HassKey(DOMAIN)
 DATA_CORE_INFO = "hassio_core_info"
 DATA_CORE_STATS = "hassio_core_stats"
 DATA_HOST_INFO = "hassio_host_info"
 DATA_STORE = "hassio_store"
 DATA_INFO = "hassio_info"
 DATA_OS_INFO = "hassio_os_info"
+DATA_NETWORK_INFO = "hassio_network_info"
 DATA_SUPERVISOR_INFO = "hassio_supervisor_info"
 DATA_SUPERVISOR_STATS = "hassio_supervisor_stats"
 DATA_ADDONS_CHANGELOGS = "hassio_addons_changelogs"
@@ -97,10 +108,15 @@ DATA_KEY_CORE = "core"
 DATA_KEY_HOST = "host"
 DATA_KEY_SUPERVISOR_ISSUES = "supervisor_issues"
 
+PLACEHOLDER_KEY_ADDON = "addon"
+PLACEHOLDER_KEY_ADDON_URL = "addon_url"
 PLACEHOLDER_KEY_REFERENCE = "reference"
 PLACEHOLDER_KEY_COMPONENTS = "components"
 
+ISSUE_KEY_ADDON_BOOT_FAIL = "issue_addon_boot_fail"
 ISSUE_KEY_SYSTEM_DOCKER_CONFIG = "issue_system_docker_config"
+ISSUE_KEY_ADDON_DETACHED_ADDON_MISSING = "issue_addon_detached_addon_missing"
+ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED = "issue_addon_detached_addon_removed"
 
 CORE_CONTAINER = "homeassistant"
 SUPERVISOR_CONTAINER = "hassio_supervisor"
@@ -131,17 +147,3 @@ class SupervisorEntityModel(StrEnum):
     CORE = "Home Assistant Core"
     SUPERVIOSR = "Home Assistant Supervisor"
     HOST = "Home Assistant Host"
-
-
-class SupervisorIssueContext(StrEnum):
-    """Context for supervisor issues."""
-
-    ADDON = "addon"
-    CORE = "core"
-    DNS_SERVER = "dns_server"
-    MOUNT = "mount"
-    OS = "os"
-    PLUGIN = "plugin"
-    SUPERVISOR = "supervisor"
-    STORE = "store"
-    SYSTEM = "system"

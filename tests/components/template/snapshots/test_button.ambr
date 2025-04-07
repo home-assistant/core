@@ -1,0 +1,28 @@
+# serializer version: 1
+# name: test_setup_config_entry[config_entry_extra_options0]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'My template',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.my_template',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_config_entry[config_entry_extra_options1]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'update',
+      'friendly_name': 'My template',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.my_template',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

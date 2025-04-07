@@ -23,7 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
@@ -50,7 +50,7 @@ from .const import (
     FEATURE_FLAGS_FAN_1C,
     FEATURE_FLAGS_FAN_P5,
     FEATURE_FLAGS_FAN_P9,
-    FEATURE_FLAGS_FAN_P10_P11,
+    FEATURE_FLAGS_FAN_P10_P11_P18,
     FEATURE_FLAGS_FAN_ZA5,
     FEATURE_SET_DELAY_OFF_COUNTDOWN,
     FEATURE_SET_FAN_LEVEL,
@@ -72,6 +72,7 @@ from .const import (
     MODEL_AIRHUMIDIFIER_CB1,
     MODEL_AIRPURIFIER_2S,
     MODEL_AIRPURIFIER_3C,
+    MODEL_AIRPURIFIER_3C_REV_A,
     MODEL_AIRPURIFIER_4,
     MODEL_AIRPURIFIER_4_LITE_RMA1,
     MODEL_AIRPURIFIER_4_LITE_RMB1,
@@ -86,6 +87,7 @@ from .const import (
     MODEL_FAN_P9,
     MODEL_FAN_P10,
     MODEL_FAN_P11,
+    MODEL_FAN_P18,
     MODEL_FAN_SA1,
     MODEL_FAN_V2,
     MODEL_FAN_V3,
@@ -96,7 +98,7 @@ from .const import (
     MODELS_PURIFIER_MIIO,
     MODELS_PURIFIER_MIOT,
 )
-from .device import XiaomiCoordinatedMiioEntity
+from .entity import XiaomiCoordinatedMiioEntity
 
 ATTR_DELAY_OFF_COUNTDOWN = "delay_off_countdown"
 ATTR_FAN_LEVEL = "fan_level"
@@ -139,7 +141,7 @@ class FavoriteLevelValues:
 NUMBER_TYPES = {
     FEATURE_SET_MOTOR_SPEED: XiaomiMiioNumberDescription(
         key=ATTR_MOTOR_SPEED,
-        name="Motor speed",
+        translation_key=ATTR_MOTOR_SPEED,
         icon="mdi:fast-forward-outline",
         native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
         native_min_value=200,
@@ -151,7 +153,7 @@ NUMBER_TYPES = {
     ),
     FEATURE_SET_FAVORITE_LEVEL: XiaomiMiioNumberDescription(
         key=ATTR_FAVORITE_LEVEL,
-        name="Favorite level",
+        translation_key=ATTR_FAVORITE_LEVEL,
         icon="mdi:star-cog",
         native_min_value=0,
         native_max_value=17,
@@ -161,7 +163,7 @@ NUMBER_TYPES = {
     ),
     FEATURE_SET_FAN_LEVEL: XiaomiMiioNumberDescription(
         key=ATTR_FAN_LEVEL,
-        name="Fan level",
+        translation_key=ATTR_FAN_LEVEL,
         icon="mdi:fan",
         native_min_value=1,
         native_max_value=3,
@@ -171,7 +173,7 @@ NUMBER_TYPES = {
     ),
     FEATURE_SET_VOLUME: XiaomiMiioNumberDescription(
         key=ATTR_VOLUME,
-        name="Volume",
+        translation_key=ATTR_VOLUME,
         icon="mdi:volume-high",
         native_min_value=0,
         native_max_value=100,
@@ -181,7 +183,7 @@ NUMBER_TYPES = {
     ),
     FEATURE_SET_OSCILLATION_ANGLE: XiaomiMiioNumberDescription(
         key=ATTR_OSCILLATION_ANGLE,
-        name="Oscillation angle",
+        translation_key=ATTR_OSCILLATION_ANGLE,
         icon="mdi:angle-acute",
         native_unit_of_measurement=DEGREE,
         native_min_value=1,
@@ -192,7 +194,7 @@ NUMBER_TYPES = {
     ),
     FEATURE_SET_DELAY_OFF_COUNTDOWN: XiaomiMiioNumberDescription(
         key=ATTR_DELAY_OFF_COUNTDOWN,
-        name="Delay off countdown",
+        translation_key=ATTR_DELAY_OFF_COUNTDOWN,
         icon="mdi:fan-off",
         native_unit_of_measurement=UnitOfTime.MINUTES,
         native_min_value=0,
@@ -203,7 +205,7 @@ NUMBER_TYPES = {
     ),
     FEATURE_SET_LED_BRIGHTNESS: XiaomiMiioNumberDescription(
         key=ATTR_LED_BRIGHTNESS,
-        name="LED brightness",
+        translation_key=ATTR_LED_BRIGHTNESS,
         icon="mdi:brightness-6",
         native_min_value=0,
         native_max_value=100,
@@ -213,7 +215,7 @@ NUMBER_TYPES = {
     ),
     FEATURE_SET_LED_BRIGHTNESS_LEVEL: XiaomiMiioNumberDescription(
         key=ATTR_LED_BRIGHTNESS_LEVEL,
-        name="LED brightness",
+        translation_key=ATTR_LED_BRIGHTNESS_LEVEL,
         icon="mdi:brightness-6",
         native_min_value=0,
         native_max_value=8,
@@ -223,7 +225,7 @@ NUMBER_TYPES = {
     ),
     FEATURE_SET_FAVORITE_RPM: XiaomiMiioNumberDescription(
         key=ATTR_FAVORITE_RPM,
-        name="Favorite motor speed",
+        translation_key=ATTR_FAVORITE_RPM,
         icon="mdi:star-cog",
         native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
         native_min_value=300,
@@ -244,6 +246,7 @@ MODEL_TO_FEATURES_MAP = {
     MODEL_AIRHUMIDIFIER_CB1: FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB,
     MODEL_AIRPURIFIER_2S: FEATURE_FLAGS_AIRPURIFIER_2S,
     MODEL_AIRPURIFIER_3C: FEATURE_FLAGS_AIRPURIFIER_3C,
+    MODEL_AIRPURIFIER_3C_REV_A: FEATURE_FLAGS_AIRPURIFIER_3C,
     MODEL_AIRPURIFIER_PRO: FEATURE_FLAGS_AIRPURIFIER_PRO,
     MODEL_AIRPURIFIER_PRO_V7: FEATURE_FLAGS_AIRPURIFIER_PRO_V7,
     MODEL_AIRPURIFIER_V1: FEATURE_FLAGS_AIRPURIFIER_V1,
@@ -254,8 +257,9 @@ MODEL_TO_FEATURES_MAP = {
     MODEL_AIRPURIFIER_4_PRO: FEATURE_FLAGS_AIRPURIFIER_4,
     MODEL_AIRPURIFIER_ZA1: FEATURE_FLAGS_AIRPURIFIER_ZA1,
     MODEL_FAN_1C: FEATURE_FLAGS_FAN_1C,
-    MODEL_FAN_P10: FEATURE_FLAGS_FAN_P10_P11,
-    MODEL_FAN_P11: FEATURE_FLAGS_FAN_P10_P11,
+    MODEL_FAN_P10: FEATURE_FLAGS_FAN_P10_P11_P18,
+    MODEL_FAN_P11: FEATURE_FLAGS_FAN_P10_P11_P18,
+    MODEL_FAN_P18: FEATURE_FLAGS_FAN_P10_P11_P18,
     MODEL_FAN_P5: FEATURE_FLAGS_FAN_P5,
     MODEL_FAN_P9: FEATURE_FLAGS_FAN_P9,
     MODEL_FAN_SA1: FEATURE_FLAGS_FAN,
@@ -273,6 +277,7 @@ OSCILLATION_ANGLE_VALUES = {
     MODEL_FAN_P9: OscillationAngleValues(max_value=150, min_value=30, step=30),
     MODEL_FAN_P10: OscillationAngleValues(max_value=140, min_value=30, step=30),
     MODEL_FAN_P11: OscillationAngleValues(max_value=140, min_value=30, step=30),
+    MODEL_FAN_P18: OscillationAngleValues(max_value=140, min_value=30, step=30),
 }
 
 FAVORITE_LEVEL_VALUES = {
@@ -284,7 +289,7 @@ FAVORITE_LEVEL_VALUES = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Selectors from a config entry."""
     entities = []

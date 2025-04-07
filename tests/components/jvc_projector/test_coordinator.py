@@ -5,7 +5,6 @@ from unittest.mock import AsyncMock
 
 from jvcprojector import JvcProjectorAuthError, JvcProjectorConnectError
 
-from homeassistant.components.jvc_projector import DOMAIN
 from homeassistant.components.jvc_projector.coordinator import (
     INTERVAL_FAST,
     INTERVAL_SLOW,
@@ -29,7 +28,7 @@ async def test_coordinator_update(
     )
     await hass.async_block_till_done()
     assert mock_device.get_state.call_count == 3
-    coordinator = hass.data[DOMAIN][mock_integration.entry_id]
+    coordinator = mock_integration.runtime_data
     assert coordinator.update_interval == INTERVAL_SLOW
 
 
@@ -69,5 +68,5 @@ async def test_coordinator_device_on(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    coordinator = hass.data[DOMAIN][mock_config_entry.entry_id]
+    coordinator = mock_config_entry.runtime_data
     assert coordinator.update_interval == INTERVAL_FAST

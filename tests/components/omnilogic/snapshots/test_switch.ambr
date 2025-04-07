@@ -1,0 +1,95 @@
+# serializer version: 1
+# name: test_switches[switch.scrubbed_spa_filter_pump-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.scrubbed_spa_filter_pump',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'SCRUBBED Spa  Filter Pump ',
+    'platform': 'omnilogic',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'SCRUBBED_1_2_pump',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[switch.scrubbed_spa_filter_pump-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'SCRUBBED Spa  Filter Pump ',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.scrubbed_spa_filter_pump',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switches[switch.scrubbed_spa_spa_jets-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.scrubbed_spa_spa_jets',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'SCRUBBED Spa  Spa Jets ',
+    'platform': 'omnilogic',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'SCRUBBED_1_5_pump',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[switch.scrubbed_spa_spa_jets-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'SCRUBBED Spa  Spa Jets ',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.scrubbed_spa_spa_jets',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

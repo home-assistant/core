@@ -5,7 +5,8 @@ from __future__ import annotations
 from datetime import datetime
 
 from xknx import XKNX
-from xknx.devices import DateTime as XknxDateTime
+from xknx.devices import DateTimeDevice as XknxDateTimeDevice
+from xknx.dpt.dpt_19 import KNXDateTime as XKNXDateTime
 
 from homeassistant import config_entries
 from homeassistant.components.datetime import DateTimeEntity
@@ -17,40 +18,41 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
+from . import KNXModule
 from .const import (
     CONF_RESPOND_TO_READ,
     CONF_STATE_ADDRESS,
     CONF_SYNC_STATE,
-    DATA_KNX_CONFIG,
-    DOMAIN,
     KNX_ADDRESS,
+    KNX_MODULE_KEY,
 )
-from .knx_entity import KnxEntity
+from .entity import KnxYamlEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: config_entries.ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entities for KNX platform."""
-    xknx: XKNX = hass.data[DOMAIN].xknx
-    config: list[ConfigType] = hass.data[DATA_KNX_CONFIG][Platform.DATETIME]
+    knx_module = hass.data[KNX_MODULE_KEY]
+    config: list[ConfigType] = knx_module.config_yaml[Platform.DATETIME]
 
-    async_add_entities(KNXDateTime(xknx, entity_config) for entity_config in config)
+    async_add_entities(
+        KNXDateTimeEntity(knx_module, entity_config) for entity_config in config
+    )
 
 
-def _create_xknx_device(xknx: XKNX, config: ConfigType) -> XknxDateTime:
+def _create_xknx_device(xknx: XKNX, config: ConfigType) -> XknxDateTimeDevice:
     """Return a XKNX DateTime object to be used within XKNX."""
-    return XknxDateTime(
+    return XknxDateTimeDevice(
         xknx,
         name=config[CONF_NAME],
-        broadcast_type="DATETIME",
         localtime=False,
         group_address=config[KNX_ADDRESS],
         group_address_state=config.get(CONF_STATE_ADDRESS),
@@ -59,14 +61,17 @@ def _create_xknx_device(xknx: XKNX, config: ConfigType) -> XknxDateTime:
     )
 
 
-class KNXDateTime(KnxEntity, DateTimeEntity, RestoreEntity):
+class KNXDateTimeEntity(KnxYamlEntity, DateTimeEntity, RestoreEntity):
     """Representation of a KNX datetime."""
 
-    _device: XknxDateTime
+    _device: XknxDateTimeDevice
 
-    def __init__(self, xknx: XKNX, config: ConfigType) -> None:
+    def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize a KNX time."""
-        super().__init__(_create_xknx_device(xknx, config))
+        super().__init__(
+            knx_module=knx_module,
+            device=_create_xknx_device(knx_module.xknx, config),
+        )
         self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
         self._attr_unique_id = str(self._device.remote_value.group_address)
 
@@ -78,27 +83,19 @@ class KNXDateTime(KnxEntity, DateTimeEntity, RestoreEntity):
             and (last_state := await self.async_get_last_state()) is not None
             and last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
         ):
-            self._device.remote_value.value = (
-                datetime.fromisoformat(last_state.state)
-                .astimezone(dt_util.DEFAULT_TIME_ZONE)
-                .timetuple()
+            self._device.remote_value.value = XKNXDateTime.from_datetime(
+                datetime.fromisoformat(last_state.state).astimezone(
+                    dt_util.get_default_time_zone()
+                )
             )
 
     @property
     def native_value(self) -> datetime | None:
         """Return the latest value."""
-        if (time_struct := self._device.remote_value.value) is None:
+        if (naive_dt := self._device.value) is None:
             return None
-        return datetime(
-            year=time_struct.tm_year,
-            month=time_struct.tm_mon,
-            day=time_struct.tm_mday,
-            hour=time_struct.tm_hour,
-            minute=time_struct.tm_min,
-            second=min(time_struct.tm_sec, 59),  # account for leap seconds
-            tzinfo=dt_util.DEFAULT_TIME_ZONE,
-        )
+        return naive_dt.replace(tzinfo=dt_util.get_default_time_zone())
 
     async def async_set_value(self, value: datetime) -> None:
         """Change the value."""
-        await self._device.set(value.astimezone(dt_util.DEFAULT_TIME_ZONE).timetuple())
+        await self._device.set(value.astimezone(dt_util.get_default_time_zone()))

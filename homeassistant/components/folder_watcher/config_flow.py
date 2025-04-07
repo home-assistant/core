@@ -8,10 +8,8 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.homeassistant import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.core import callback
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
@@ -34,7 +32,7 @@ async def validate_setup(
     """Check path is a folder."""
     value: str = user_input[CONF_FOLDER]
     dir_in = os.path.expanduser(str(value))
-    handler.parent_handler._async_abort_entries_match({CONF_FOLDER: value})  # pylint: disable=protected-access
+    handler.parent_handler._async_abort_entries_match({CONF_FOLDER: value})  # noqa: SLF001
 
     if not os.path.isdir(dir_in):
         raise SchemaFlowError("not_dir")
@@ -43,28 +41,6 @@ async def validate_setup(
     if not handler.parent_handler.hass.config.is_allowed_path(value):
         raise SchemaFlowError("not_allowed_dir")
 
-    return user_input
-
-
-async def validate_import_setup(
-    handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
-) -> dict[str, Any]:
-    """Create issue on successful import."""
-    async_create_issue(
-        handler.parent_handler.hass,
-        HOMEASSISTANT_DOMAIN,
-        f"deprecated_yaml_{DOMAIN}",
-        breaks_in_ha_version="2024.11.0",
-        is_fixable=False,
-        is_persistent=False,
-        issue_domain=DOMAIN,
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-        translation_placeholders={
-            "domain": DOMAIN,
-            "integration_title": "Folder Watcher",
-        },
-    )
     return user_input
 
 
@@ -88,9 +64,6 @@ DATA_SCHEMA = vol.Schema(
 
 CONFIG_FLOW = {
     "user": SchemaFlowFormStep(schema=DATA_SCHEMA, validate_user_input=validate_setup),
-    "import": SchemaFlowFormStep(
-        schema=DATA_SCHEMA, validate_user_input=validate_import_setup
-    ),
 }
 OPTIONS_FLOW = {
     "init": SchemaFlowFormStep(schema=OPTIONS_SCHEMA),

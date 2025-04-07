@@ -1,12 +1,15 @@
 """Test the Energy sensors."""
 
+from collections.abc import Callable, Coroutine
 import copy
 from datetime import timedelta
 from typing import Any
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.energy import data
+from homeassistant.components.recorder.core import Recorder
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.components.sensor import (
     ATTR_LAST_RESET,
@@ -25,7 +28,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from tests.components.recorder.common import async_wait_recording_done
@@ -35,10 +38,12 @@ TEST_TIME_ADVANCE_INTERVAL = timedelta(milliseconds=10)
 
 
 @pytest.fixture
-async def setup_integration(recorder_mock):
+async def setup_integration(
+    recorder_mock: Recorder,
+) -> Callable[[HomeAssistant], Coroutine[Any, Any, None]]:
     """Set up the integration."""
 
-    async def setup_integration(hass):
+    async def setup_integration(hass: HomeAssistant) -> None:
         assert await async_setup_component(hass, "energy", {})
         await hass.async_block_till_done()
 
@@ -46,7 +51,7 @@ async def setup_integration(recorder_mock):
 
 
 @pytest.fixture(autouse=True)
-def frozen_time(freezer):
+def frozen_time(freezer: FrozenDateTimeFactory) -> FrozenDateTimeFactory:
     """Freeze clock for tests."""
     freezer.move_to("2022-04-19 07:53:05")
     return freezer
@@ -85,6 +90,7 @@ async def test_cost_sensor_no_states(
         "data": energy_data,
     }
     await setup_integration(hass)
+    # pylint: disable-next=fixme
     # TODO: No states, should the cost entity refuse to setup?
 
 

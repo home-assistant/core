@@ -1,0 +1,282 @@
+{
+  "nodeId": 2,
+  "index": 0,
+  "status": 4,
+  "ready": true,
+  "isListening": true,
+  "isRouting": true,
+  "isSecure": false,
+  "interviewAttempts": 1,
+  "isFrequentListening": false,
+  "maxDataRate": 100000,
+  "supportedDataRates": [40000, 9600, 100000],
+  "protocolVersion": 3,
+  "supportsBeaming": true,
+  "supportsSecurity": false,
+  "nodeType": 1,
+  "deviceClass": {
+    "basic": {
+      "key": 4,
+      "label": "Routing End Node"
+    },
+    "generic": {
+      "key": 6,
+      "label": "Appliance"
+    },
+    "specific": {
+      "key": 1,
+      "label": "General Appliance"
+    }
+  },
+  "interviewStage": "Complete",
+  "statistics": {
+    "commandsTX": 8,
+    "commandsRX": 5,
+    "commandsDroppedRX": 0,
+    "commandsDroppedTX": 0,
+    "timeoutResponse": 2,
+    "rtt": 96.3,
+    "lastSeen": "2024-09-12T11:46:43.065Z"
+  },
+  "highestSecurityClass": -1,
+  "isControllerNode": false,
+  "keepAwake": false,
+  "lastSeen": "2024-09-12T11:46:43.065Z",
+  "protocol": 0,
+  "values": [
+    {
+      "endpoint": 0,
+      "commandClass": 106,
+      "commandClassName": "Window Covering",
+      "property": "levelChangeUp",
+      "propertyKey": 13,
+      "propertyName": "levelChangeUp",
+      "propertyKeyName": "Outbound Bottom",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "boolean",
+        "readable": false,
+        "writeable": true,
+        "label": "Open - Outbound Bottom",
+        "ccSpecific": {
+          "parameter": 13
+        },
+        "valueChangeOptions": ["transitionDuration"],
+        "states": {
+          "true": "Start",
+          "false": "Stop"
+        },
+        "stateful": true,
+        "secret": false
+      },
+      "value": true
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 106,
+      "commandClassName": "Window Covering",
+      "property": "levelChangeDown",
+      "propertyKey": 13,
+      "propertyName": "levelChangeDown",
+      "propertyKeyName": "Outbound Bottom",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "boolean",
+        "readable": false,
+        "writeable": true,
+        "label": "Close - Outbound Bottom",
+        "ccSpecific": {
+          "parameter": 13
+        },
+        "valueChangeOptions": ["transitionDuration"],
+        "states": {
+          "true": "Start",
+          "false": "Stop"
+        },
+        "stateful": true,
+        "secret": false
+      },
+      "value": true
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 106,
+      "commandClassName": "Window Covering",
+      "property": "targetValue",
+      "propertyKey": 13,
+      "propertyName": "targetValue",
+      "propertyKeyName": "Outbound Bottom",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Target value - Outbound Bottom",
+        "ccSpecific": {
+          "parameter": 13
+        },
+        "valueChangeOptions": ["transitionDuration"],
+        "min": 0,
+        "max": 99,
+        "states": {
+          "0": "Closed",
+          "99": "Open"
+        },
+        "stateful": true,
+        "secret": false
+      },
+      "value": 52
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 106,
+      "commandClassName": "Window Covering",
+      "property": "currentValue",
+      "propertyKey": 13,
+      "propertyName": "currentValue",
+      "propertyKeyName": "Outbound Bottom",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Current value - Outbound Bottom",
+        "ccSpecific": {
+          "parameter": 13
+        },
+        "min": 0,
+        "max": 99,
+        "states": {
+          "0": "Closed",
+          "99": "Open"
+        },
+        "stateful": true,
+        "secret": false
+      },
+      "value": 52
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 106,
+      "commandClassName": "Window Covering",
+      "property": "duration",
+      "propertyKey": 13,
+      "propertyName": "duration",
+      "propertyKeyName": "Outbound Bottom",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "duration",
+        "readable": true,
+        "writeable": false,
+        "label": "Remaining duration - Outbound Bottom",
+        "ccSpecific": {
+          "parameter": 13
+        },
+        "stateful": true,
+        "secret": false
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "firmwareVersions",
+      "propertyName": "firmwareVersions",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "string[]",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave chip firmware versions",
+        "stateful": true,
+        "secret": false
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "libraryType",
+      "propertyName": "libraryType",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Library type",
+        "states": {
+          "0": "Unknown",
+          "1": "Static Controller",
+          "2": "Controller",
+          "3": "Enhanced Slave",
+          "4": "Slave",
+          "5": "Installer",
+          "6": "Routing Slave",
+          "7": "Bridge Controller",
+          "8": "Device under Test",
+          "9": "N/A",
+          "10": "AV Remote",
+          "11": "AV Device"
+        },
+        "stateful": true,
+        "secret": false
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "protocolVersion",
+      "propertyName": "protocolVersion",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave protocol version",
+        "stateful": true,
+        "secret": false
+      }
+    }
+  ],
+  "endpoints": [
+    {
+      "nodeId": 2,
+      "index": 0,
+      "deviceClass": {
+        "basic": {
+          "key": 4,
+          "label": "Routing End Node"
+        },
+        "generic": {
+          "key": 6,
+          "label": "Appliance"
+        },
+        "specific": {
+          "key": 1,
+          "label": "General Appliance"
+        }
+      },
+      "commandClasses": [
+        {
+          "id": 134,
+          "name": "Version",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 108,
+          "name": "Supervision",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 106,
+          "name": "Window Covering",
+          "version": 1,
+          "isSecure": false
+        }
+      ]
+    }
+  ]
+}

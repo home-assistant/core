@@ -4,13 +4,13 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import logging
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import Any, Concatenate
 
 import sharp_aquos_rc
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -24,12 +24,9 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-
-_SharpAquosTVDeviceT = TypeVar("_SharpAquosTVDeviceT", bound="SharpAquosTVDevice")
-_P = ParamSpec("_P")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,7 +37,7 @@ DEFAULT_PASSWORD = "password"
 DEFAULT_TIMEOUT = 0.5
 DEFAULT_RETRIES = 2
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -85,7 +82,7 @@ def setup_platform(
     add_entities([SharpAquosTVDevice(name, remote, power_on_enabled)])
 
 
-def _retry(
+def _retry[_SharpAquosTVDeviceT: SharpAquosTVDevice, **_P](
     func: Callable[Concatenate[_SharpAquosTVDeviceT, _P], Any],
 ) -> Callable[Concatenate[_SharpAquosTVDeviceT, _P], None]:
     """Handle query retries."""

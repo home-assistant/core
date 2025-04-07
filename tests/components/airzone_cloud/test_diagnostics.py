@@ -15,6 +15,7 @@ from aioairzone_cloud.const import (
     RAW_WEBSERVERS,
 )
 from syrupy import SnapshotAssertion
+from syrupy.filters import props
 
 from homeassistant.components.airzone_cloud.const import DOMAIN
 from homeassistant.const import CONF_ID
@@ -104,7 +105,6 @@ async def test_config_entry_diagnostics(
 ) -> None:
     """Test config entry diagnostics."""
     await async_init_integration(hass)
-    assert hass.data[DOMAIN]
 
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     with patch(
@@ -112,4 +112,4 @@ async def test_config_entry_diagnostics(
         return_value=RAW_DATA_MOCK,
     ):
         result = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
-        assert result == snapshot
+        assert result == snapshot(exclude=props("created_at", "modified_at"))

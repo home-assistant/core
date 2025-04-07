@@ -30,29 +30,10 @@ async def test_emheat_switch(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    device.set_system_mode.assert_not_called()
-
-    device.set_system_mode.reset_mock()
-
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
-        blocking=True,
-    )
-    device.set_system_mode.assert_not_called()
-
-    device.system_mode = "heat"
-
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
-        blocking=True,
-    )
     device.set_system_mode.assert_called_once_with("emheat")
 
     device.set_system_mode.reset_mock()
+
     device.system_mode = "emheat"
     await hass.services.async_call(
         SWITCH_DOMAIN,

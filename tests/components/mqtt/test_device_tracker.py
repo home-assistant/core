@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .test_common import (
+from .common import (
     help_custom_config,
     help_test_reloadable,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
@@ -240,6 +240,8 @@ async def test_device_tracker_discovery_update(
     # Entity was not updated as the state was not changed
     assert state.last_updated == datetime(2023, 8, 22, 19, 16, tzinfo=UTC)
 
+    await hass.async_block_till_done(wait_background_tasks=True)
+
 
 async def test_cleanup_device_tracker(
     hass: HomeAssistant,
@@ -294,7 +296,7 @@ async def test_cleanup_device_tracker(
 
     # Verify retained discovery topic has been cleared
     mqtt_mock.async_publish.assert_called_once_with(
-        "homeassistant/device_tracker/bla/config", "", 0, True
+        "homeassistant/device_tracker/bla/config", None, 0, True
     )
 
 
@@ -325,11 +327,14 @@ async def test_setting_device_tracker_value_via_mqtt_message(
     state = hass.states.get("device_tracker.test")
     assert state.state == STATE_NOT_HOME
 
+    # Test an empty value is ignored and the state is retained
+    async_fire_mqtt_message(hass, "test-topic", "")
+    state = hass.states.get("device_tracker.test")
+    assert state.state == STATE_NOT_HOME
+
 
 async def test_setting_device_tracker_value_via_mqtt_message_and_template(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test the setting of the value via MQTT."""
     await mqtt_mock_entry()
@@ -354,9 +359,7 @@ async def test_setting_device_tracker_value_via_mqtt_message_and_template(
 
 
 async def test_setting_device_tracker_value_via_mqtt_message_and_template2(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test the setting of the value via MQTT."""
     await mqtt_mock_entry()
@@ -384,9 +387,7 @@ async def test_setting_device_tracker_value_via_mqtt_message_and_template2(
 
 
 async def test_setting_device_tracker_location_via_mqtt_message(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test the setting of the location via MQTT."""
     await mqtt_mock_entry()
@@ -408,9 +409,7 @@ async def test_setting_device_tracker_location_via_mqtt_message(
 
 
 async def test_setting_device_tracker_location_via_lat_lon_message(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test the setting of the latitude and longitude via MQTT without state topic."""
     await mqtt_mock_entry()
@@ -465,9 +464,7 @@ async def test_setting_device_tracker_location_via_lat_lon_message(
 
 
 async def test_setting_device_tracker_location_via_reset_message(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test the automatic inference of zones via MQTT via reset."""
     await mqtt_mock_entry()
@@ -541,9 +538,7 @@ async def test_setting_device_tracker_location_via_reset_message(
 
 
 async def test_setting_device_tracker_location_via_abbr_reset_message(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test the setting of reset via abbreviated names and custom payloads via MQTT."""
     await mqtt_mock_entry()
@@ -589,11 +584,7 @@ async def test_setting_blocked_attribute_via_mqtt_json_message(
 ) -> None:
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_blocked_attribute_via_mqtt_json_message(
-        hass,
-        mqtt_mock_entry,
-        device_tracker.DOMAIN,
-        DEFAULT_CONFIG,
-        None,
+        hass, mqtt_mock_entry, device_tracker.DOMAIN, DEFAULT_CONFIG, None
     )
 
 
@@ -618,8 +609,7 @@ async def test_setup_with_modern_schema(
 
 
 async def test_reloadable(
-    hass: HomeAssistant,
-    mqtt_client_mock: MqttMockPahoClient,
+    hass: HomeAssistant, mqtt_client_mock: MqttMockPahoClient
 ) -> None:
     """Test reloading the MQTT platform."""
     domain = device_tracker.DOMAIN

@@ -19,23 +19,23 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
-from tests.common import load_json_object_fixture
-from tests.components.media_extractor import (
-    YOUTUBE_EMPTY_PLAYLIST,
-    YOUTUBE_PLAYLIST,
-    YOUTUBE_VIDEO,
-    MockYoutubeDL,
-)
-from tests.components.media_extractor.const import NO_FORMATS_RESPONSE, SOUNDCLOUD_TRACK
+from . import YOUTUBE_EMPTY_PLAYLIST, YOUTUBE_PLAYLIST, YOUTUBE_VIDEO, MockYoutubeDL
+from .const import NO_FORMATS_RESPONSE, SOUNDCLOUD_TRACK
+
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 async def test_play_media_service_is_registered(hass: HomeAssistant) -> None:
     """Test play media service is registered."""
-    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    mock_config_entry = MockConfigEntry(domain=DOMAIN)
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert hass.services.has_service(DOMAIN, SERVICE_PLAY_MEDIA)
     assert hass.services.has_service(DOMAIN, SERVICE_EXTRACT_MEDIA_URL)
+    assert len(hass.config_entries.async_entries(DOMAIN))
 
 
 @pytest.mark.parametrize(
@@ -103,7 +103,7 @@ async def test_extracting_playlist_no_entries(
 async def test_play_media_service(
     hass: HomeAssistant,
     mock_youtube_dl: MockYoutubeDL,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
     snapshot: SnapshotAssertion,
     request: pytest.FixtureRequest,
     config_fixture: str,
@@ -126,13 +126,14 @@ async def test_play_media_service(
     )
     await hass.async_block_till_done()
 
-    assert calls[0].data == snapshot
+    assert len(service_calls) == 2
+    assert service_calls[1].data == snapshot
 
 
 async def test_download_error(
     hass: HomeAssistant,
     empty_media_extractor_config: dict[str, Any],
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test handling DownloadError."""
@@ -155,7 +156,7 @@ async def test_download_error(
         )
         await hass.async_block_till_done()
 
-    assert len(calls) == 0
+    assert len(service_calls) == 1
     assert f"Could not retrieve data for the URL: {YOUTUBE_VIDEO}" in caplog.text
 
 
@@ -163,7 +164,7 @@ async def test_no_target_entity(
     hass: HomeAssistant,
     mock_youtube_dl: MockYoutubeDL,
     empty_media_extractor_config: dict[str, Any],
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test having no target entity."""
@@ -182,14 +183,15 @@ async def test_no_target_entity(
     )
     await hass.async_block_till_done()
 
-    assert calls[0].data == snapshot
+    assert len(service_calls) == 2
+    assert service_calls[1].data == snapshot
 
 
 async def test_playlist(
     hass: HomeAssistant,
     mock_youtube_dl: MockYoutubeDL,
     empty_media_extractor_config: dict[str, Any],
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test extracting a playlist."""
@@ -208,14 +210,15 @@ async def test_playlist(
     )
     await hass.async_block_till_done()
 
-    assert calls[0].data == snapshot
+    assert len(service_calls) == 2
+    assert service_calls[1].data == snapshot
 
 
 async def test_playlist_no_entries(
     hass: HomeAssistant,
     mock_youtube_dl: MockYoutubeDL,
     empty_media_extractor_config: dict[str, Any],
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test extracting a playlist without entries."""
@@ -234,7 +237,7 @@ async def test_playlist_no_entries(
     )
     await hass.async_block_till_done()
 
-    assert len(calls) == 0
+    assert len(service_calls) == 1
     assert (
         f"Could not retrieve data for the URL: {YOUTUBE_EMPTY_PLAYLIST}" in caplog.text
     )
@@ -243,7 +246,7 @@ async def test_playlist_no_entries(
 async def test_query_error(
     hass: HomeAssistant,
     empty_media_extractor_config: dict[str, Any],
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test handling error with query."""
 
@@ -273,15 +276,13 @@ async def test_query_error(
         )
         await hass.async_block_till_done()
 
-    assert len(calls) == 0
+    assert len(service_calls) == 1
 
 
 async def test_cookiefile_detection(
     hass: HomeAssistant,
     mock_youtube_dl: MockYoutubeDL,
     empty_media_extractor_config: dict[str, Any],
-    calls: list[ServiceCall],
-    snapshot: SnapshotAssertion,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test cookie file detection."""
@@ -292,16 +293,19 @@ async def test_cookiefile_detection(
     cookies_dir = os.path.join(hass.config.config_dir, "media_extractor")
     cookies_file = os.path.join(cookies_dir, "cookies.txt")
 
-    if not os.path.exists(cookies_dir):
-        os.makedirs(cookies_dir)
+    def _write_cookies_file() -> None:
+        if not os.path.exists(cookies_dir):
+            os.makedirs(cookies_dir)
 
-    with open(cookies_file, "w+", encoding="utf-8") as f:
-        f.write(
-            """# Netscape HTTP Cookie File
+        with open(cookies_file, "w+", encoding="utf-8") as f:
+            f.write(
+                """# Netscape HTTP Cookie File
 
-            .youtube.com TRUE / TRUE 1701708706 GPS 1
-            """
-        )
+                .youtube.com TRUE / TRUE 1701708706 GPS 1
+                """
+            )
+
+    await hass.async_add_executor_job(_write_cookies_file)
 
     await hass.services.async_call(
         DOMAIN,
@@ -316,7 +320,7 @@ async def test_cookiefile_detection(
 
     assert "Media extractor loaded cookies file" in caplog.text
 
-    os.remove(cookies_file)
+    await hass.async_add_executor_job(os.remove, cookies_file)
 
     await hass.services.async_call(
         DOMAIN,

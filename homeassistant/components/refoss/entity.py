@@ -18,15 +18,12 @@ class RefossEntity(CoordinatorEntity[RefossDataUpdateCoordinator]):
 
         mac = coordinator.device.mac
         self.channel_id = channel
-        if channel == 0:
-            self._attr_name = None
-        else:
-            self._attr_name = str(channel)
-
         self._attr_unique_id = f"{mac}_{channel}"
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_NETWORK_MAC, mac)},
             identifiers={(DOMAIN, mac)},
             manufacturer="Refoss",
+            sw_version=coordinator.device.fmware_version,
+            hw_version=coordinator.device.hdware_version,
             name=coordinator.device.dev_name,
         )

@@ -68,7 +68,7 @@
     "timestamp": 1701139037461,
     "trip_charging": false,
     "usable_battery_level": 75,
-    "user_charge_enable_request": null
+    "user_charge_enable_request": true
   },
   "climate_state": {
     "allow_cabin_overheat_protection": true,
@@ -98,6 +98,8 @@
     "passenger_temp_setting": 22.5,
     "remote_heater_control_enabled": false,
     "right_temp_direction": 234,
+    "seat_fan_front_left": 0,
+    "seat_fan_front_right": 0,
     "seat_heater_left": 0,
     "seat_heater_rear_center": 0,
     "seat_heater_rear_left": 0,
@@ -157,7 +159,7 @@
     "exterior_trim_override": "",
     "has_air_suspension": false,
     "has_ludicrous_mode": false,
-    "has_seat_cooling": false,
+    "has_seat_cooling": true,
     "headlamp_type": "Global",
     "interior_trim_type": "White2",
     "key_version": 2,
@@ -173,7 +175,7 @@
     "roof_color": "RoofColorGlass",
     "seat_type": null,
     "spoiler_type": "None",
-    "sun_roof_installed": null,
+    "sun_roof_installed": true,
     "supports_qr_pairing": false,
     "third_row_seats": "None",
     "timestamp": 1701139037461,

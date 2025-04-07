@@ -7,8 +7,14 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.ourgroceries.coordinator import SCAN_INTERVAL
-from homeassistant.components.todo import DOMAIN as TODO_DOMAIN
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.components.todo import (
+    ATTR_ITEM,
+    ATTR_RENAME,
+    ATTR_STATUS,
+    DOMAIN as TODO_DOMAIN,
+    TodoServices,
+)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
 
@@ -69,9 +75,9 @@ async def test_add_todo_list_item(
 
     await hass.services.async_call(
         TODO_DOMAIN,
-        "add_item",
-        {"item": "Soda"},
-        target={"entity_id": "todo.test_list"},
+        TodoServices.ADD_ITEM,
+        {ATTR_ITEM: "Soda"},
+        target={ATTR_ENTITY_ID: "todo.test_list"},
         blocking=True,
     )
 
@@ -108,9 +114,9 @@ async def test_update_todo_item_status(
 
     await hass.services.async_call(
         TODO_DOMAIN,
-        "update_item",
-        {"item": "12345", "status": "completed"},
-        target={"entity_id": "todo.test_list"},
+        TodoServices.UPDATE_ITEM,
+        {ATTR_ITEM: "12345", ATTR_STATUS: "completed"},
+        target={ATTR_ENTITY_ID: "todo.test_list"},
         blocking=True,
     )
     assert ourgroceries.toggle_item_crossed_off.called
@@ -132,9 +138,9 @@ async def test_update_todo_item_status(
 
     await hass.services.async_call(
         TODO_DOMAIN,
-        "update_item",
-        {"item": "12345", "status": "needs_action"},
-        target={"entity_id": "todo.test_list"},
+        TodoServices.UPDATE_ITEM,
+        {ATTR_ITEM: "12345", ATTR_STATUS: "needs_action"},
+        target={ATTR_ENTITY_ID: "todo.test_list"},
         blocking=True,
     )
     assert ourgroceries.toggle_item_crossed_off.called
@@ -181,9 +187,9 @@ async def test_update_todo_item_summary(
 
     await hass.services.async_call(
         TODO_DOMAIN,
-        "update_item",
-        {"item": "12345", "rename": "Milk"},
-        target={"entity_id": "todo.test_list"},
+        TodoServices.UPDATE_ITEM,
+        {ATTR_ITEM: "12345", ATTR_RENAME: "Milk"},
+        target={ATTR_ENTITY_ID: "todo.test_list"},
         blocking=True,
     )
     assert ourgroceries.change_item_on_list
@@ -218,9 +224,9 @@ async def test_remove_todo_item(
 
     await hass.services.async_call(
         TODO_DOMAIN,
-        "remove_item",
-        {"item": ["12345", "54321"]},
-        target={"entity_id": "todo.test_list"},
+        TodoServices.REMOVE_ITEM,
+        {ATTR_ITEM: ["12345", "54321"]},
+        target={ATTR_ENTITY_ID: "todo.test_list"},
         blocking=True,
     )
     assert ourgroceries.remove_item_from_list.call_count == 2

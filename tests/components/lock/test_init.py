@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from enum import Enum
 import re
 from typing import Any
 
@@ -15,16 +16,12 @@ from homeassistant.components.lock import (
     SERVICE_LOCK,
     SERVICE_OPEN,
     SERVICE_UNLOCK,
-    STATE_JAMMED,
-    STATE_LOCKED,
-    STATE_LOCKING,
-    STATE_UNLOCKED,
-    STATE_UNLOCKING,
     LockEntityFeature,
+    LockState,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-import homeassistant.helpers.entity_registry as er
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 from .conftest import MockLock
@@ -55,6 +52,8 @@ async def test_lock_default(hass: HomeAssistant, mock_lock_entity: MockLock) -> 
     assert mock_lock_entity.is_locked is None
     assert mock_lock_entity.is_locking is None
     assert mock_lock_entity.is_unlocking is None
+    assert mock_lock_entity.is_opening is None
+    assert mock_lock_entity.is_open is None
 
 
 async def test_lock_states(hass: HomeAssistant, mock_lock_entity: MockLock) -> None:
@@ -64,26 +63,39 @@ async def test_lock_states(hass: HomeAssistant, mock_lock_entity: MockLock) -> N
 
     mock_lock_entity._attr_is_locking = True
     assert mock_lock_entity.is_locking
-    assert mock_lock_entity.state == STATE_LOCKING
+    assert mock_lock_entity.state == LockState.LOCKING
 
     mock_lock_entity._attr_is_locked = True
     mock_lock_entity._attr_is_locking = False
     assert mock_lock_entity.is_locked
-    assert mock_lock_entity.state == STATE_LOCKED
+    assert mock_lock_entity.state == LockState.LOCKED
 
     mock_lock_entity._attr_is_unlocking = True
     assert mock_lock_entity.is_unlocking
-    assert mock_lock_entity.state == STATE_UNLOCKING
+    assert mock_lock_entity.state == LockState.UNLOCKING
 
     mock_lock_entity._attr_is_locked = False
     mock_lock_entity._attr_is_unlocking = False
     assert not mock_lock_entity.is_locked
-    assert mock_lock_entity.state == STATE_UNLOCKED
+    assert mock_lock_entity.state == LockState.UNLOCKED
 
     mock_lock_entity._attr_is_jammed = True
     assert mock_lock_entity.is_jammed
-    assert mock_lock_entity.state == STATE_JAMMED
+    assert mock_lock_entity.state == LockState.JAMMED
     assert not mock_lock_entity.is_locked
+
+    mock_lock_entity._attr_is_jammed = False
+    mock_lock_entity._attr_is_opening = True
+    assert mock_lock_entity.is_opening
+    assert mock_lock_entity.state == LockState.OPENING
+    assert mock_lock_entity.is_opening
+
+    mock_lock_entity._attr_is_opening = False
+    mock_lock_entity._attr_is_open = True
+    assert not mock_lock_entity.is_opening
+    assert mock_lock_entity.state == LockState.OPEN
+    assert not mock_lock_entity.is_opening
+    assert mock_lock_entity.is_open
 
 
 @pytest.mark.parametrize(
@@ -377,27 +389,31 @@ def test_all() -> None:
     help_test_all(lock)
 
 
-@pytest.mark.parametrize(("enum"), list(LockEntityFeature))
+def _create_tuples(
+    enum: type[Enum], constant_prefix: str, remove_in_version: str
+) -> list[tuple[Enum, str]]:
+    return [
+        (enum_field, constant_prefix, remove_in_version)
+        for enum_field in enum
+        if enum_field
+        not in [
+            lock.LockState.OPEN,
+            lock.LockState.OPENING,
+        ]
+    ]
+
+
+@pytest.mark.parametrize(
+    ("enum", "constant_prefix", "remove_in_version"),
+    _create_tuples(lock.LockState, "STATE_", "2025.10"),
+)
 def test_deprecated_constants(
     caplog: pytest.LogCaptureFixture,
-    enum: LockEntityFeature,
+    enum: Enum,
+    constant_prefix: str,
+    remove_in_version: str,
 ) -> None:
     """Test deprecated constants."""
-    import_and_test_deprecated_constant_enum(caplog, lock, enum, "SUPPORT_", "2025.1")
-
-
-def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) -> None:
-    """Test deprecated supported features ints."""
-
-    class MockLockEntity(lock.LockEntity):
-        _attr_supported_features = 1
-
-    entity = MockLockEntity()
-    assert entity.supported_features is lock.LockEntityFeature(1)
-    assert "MockLockEntity" in caplog.text
-    assert "is using deprecated supported features values" in caplog.text
-    assert "Instead it should use" in caplog.text
-    assert "LockEntityFeature.OPEN" in caplog.text
-    caplog.clear()
-    assert entity.supported_features is lock.LockEntityFeature(1)
-    assert "is using deprecated supported features values" not in caplog.text
+    import_and_test_deprecated_constant_enum(
+        caplog, lock, enum, constant_prefix, remove_in_version
+    )

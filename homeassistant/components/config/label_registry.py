@@ -5,10 +5,10 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-from homeassistant.components.websocket_api.connection import ActiveConnection
+from homeassistant.components.websocket_api import ActiveConnection
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.label_registry import LabelEntry, async_get
+from homeassistant.helpers import config_validation as cv, label_registry as lr
+from homeassistant.helpers.label_registry import LabelEntry
 
 SUPPORTED_LABEL_THEME_COLORS = {
     "primary",
@@ -60,7 +60,7 @@ def websocket_list_labels(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle list labels command."""
-    registry = async_get(hass)
+    registry = lr.async_get(hass)
     connection.send_result(
         msg["id"],
         [_entry_dict(entry) for entry in registry.async_list_labels()],
@@ -84,7 +84,7 @@ def websocket_create_label(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Create label command."""
-    registry = async_get(hass)
+    registry = lr.async_get(hass)
 
     data = dict(msg)
     data.pop("type")
@@ -110,7 +110,7 @@ def websocket_delete_label(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Delete label command."""
-    registry = async_get(hass)
+    registry = lr.async_get(hass)
 
     try:
         registry.async_delete(msg["label_id"])
@@ -138,7 +138,7 @@ def websocket_update_label(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle update label websocket command."""
-    registry = async_get(hass)
+    registry = lr.async_get(hass)
 
     data = dict(msg)
     data.pop("type")
@@ -157,8 +157,10 @@ def _entry_dict(entry: LabelEntry) -> dict[str, Any]:
     """Convert entry to API format."""
     return {
         "color": entry.color,
+        "created_at": entry.created_at.timestamp(),
         "description": entry.description,
         "icon": entry.icon,
         "label_id": entry.label_id,
         "name": entry.name,
+        "modified_at": entry.modified_at.timestamp(),
     }

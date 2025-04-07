@@ -16,7 +16,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="tankerkoenig")
-def mock_tankerkoenig() -> Generator[AsyncMock, None, None]:
+def mock_tankerkoenig() -> Generator[AsyncMock]:
     """Mock the aiotankerkoenig client."""
     with (
         patch(

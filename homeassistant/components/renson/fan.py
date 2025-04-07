@@ -18,9 +18,9 @@ import voluptuous as vol
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_platform
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import VolDictType
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
     ranged_value_to_percentage,
@@ -51,20 +51,20 @@ SPEED_MAPPING = {
     Level.LEVEL4.value: 4,
 }
 
-SET_TIMER_LEVEL_SCHEMA = {
+SET_TIMER_LEVEL_SCHEMA: VolDictType = {
     vol.Required("timer_level"): vol.In(
         ["level1", "level2", "level3", "level4", "holiday", "breeze"]
     ),
     vol.Required("minutes"): cv.positive_int,
 }
 
-SET_BREEZE_SCHEMA = {
+SET_BREEZE_SCHEMA: VolDictType = {
     vol.Required("breeze_level"): vol.In(["level1", "level2", "level3", "level4"]),
     vol.Required("temperature"): cv.positive_int,
     vol.Required("activate"): bool,
 }
 
-SET_POLLUTION_SETTINGS_SCHEMA = {
+SET_POLLUTION_SETTINGS_SCHEMA: VolDictType = {
     vol.Required("day_pollution_level"): vol.In(
         ["level1", "level2", "level3", "level4"]
     ),
@@ -85,7 +85,7 @@ SPEED_RANGE: tuple[float, float] = (1, 4)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Renson fan platform."""
 
@@ -121,7 +121,11 @@ class RensonFan(RensonEntity, FanEntity):
     _attr_has_entity_name = True
     _attr_name = None
     _attr_translation_key = "fan"
-    _attr_supported_features = FanEntityFeature.SET_SPEED
+    _attr_supported_features = (
+        FanEntityFeature.SET_SPEED
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
+    )
 
     def __init__(self, api: RensonVentilation, coordinator: RensonCoordinator) -> None:
         """Initialize the Renson fan."""
@@ -136,7 +140,7 @@ class RensonFan(RensonEntity, FanEntity):
             DataType.LEVEL,
         )
 
-        if level == Level.BREEZE:
+        if level == Level.BREEZE.value:
             level = self.api.parse_value(
                 self.api.get_field_value(
                     self.coordinator.data, BREEZE_LEVEL_FIELD.name

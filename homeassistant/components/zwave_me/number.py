@@ -4,10 +4,10 @@ from homeassistant.components.number import NumberEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import ZWaveMeEntity
 from .const import DOMAIN, ZWaveMePlatform
+from .entity import ZWaveMeEntity
 
 DEVICE_NAME = ZWaveMePlatform.NUMBER
 
@@ -15,7 +15,7 @@ DEVICE_NAME = ZWaveMePlatform.NUMBER
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the number platform."""
 
@@ -50,5 +50,5 @@ class ZWaveMeNumber(ZWaveMeEntity, NumberEntity):
     def set_native_value(self, value: float) -> None:
         """Update the current value."""
         self.controller.zwave_api.send_command(
-            self.device.id, f"exact?level={str(round(value))}"
+            self.device.id, f"exact?level={round(value)!s}"
         )

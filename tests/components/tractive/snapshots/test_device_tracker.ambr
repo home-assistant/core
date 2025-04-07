@@ -1,0 +1,53 @@
+# serializer version: 1
+# name: test_device_tracker[device_tracker.test_pet_tracker-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'device_tracker',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'device_tracker.test_pet_tracker',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Tracker',
+    'platform': 'tractive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'tracker',
+    'unique_id': 'pet_id_123',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_device_tracker[device_tracker.test_pet_tracker-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'battery_level': 88,
+      'friendly_name': 'Test Pet Tracker',
+      'gps_accuracy': 99,
+      'latitude': 22.333,
+      'longitude': 44.555,
+      'source_type': <SourceType.GPS: 'gps'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'device_tracker.test_pet_tracker',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'not_home',
+  })
+# ---

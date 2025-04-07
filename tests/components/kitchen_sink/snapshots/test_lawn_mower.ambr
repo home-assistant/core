@@ -51,6 +51,18 @@
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
+        'friendly_name': 'Mower can return',
+        'supported_features': <LawnMowerEntityFeature: 7>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'lawn_mower.mower_can_return',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'returning',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
         'friendly_name': 'Mower is paused',
         'supported_features': <LawnMowerEntityFeature: 7>,
       }),

@@ -1,24 +1,21 @@
 """The tests for the Home Assistant HTTP component."""
 
 import asyncio
+from collections.abc import Callable
 from datetime import timedelta
 from http import HTTPStatus
 from ipaddress import ip_network
 import logging
 from pathlib import Path
 from unittest.mock import Mock, patch
-from urllib.parse import quote_plus
 
 import pytest
 
-from homeassistant.auth.providers.legacy_api_password import (
-    LegacyApiPasswordAuthProvider,
-)
-from homeassistant.components import http
-from homeassistant.components.http.const import StrictConnectionMode
-from homeassistant.config import async_process_ha_core_config
+from homeassistant.auth.providers.homeassistant import HassAuthProvider
+from homeassistant.components import cloud, http
+from homeassistant.components.cloud import CloudNotAvailable
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.http import KEY_HASS
 from homeassistant.helpers.network import NoURLAvailableError
 from homeassistant.setup import async_setup_component
@@ -89,7 +86,9 @@ class TestView(http.HomeAssistantView):
 
 
 async def test_registering_view_while_running(
-    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator, unused_tcp_port_factory
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    unused_tcp_port_factory: Callable[[], int],
 ) -> None:
     """Test that we can register a view while the server is running."""
     await async_setup_component(
@@ -116,7 +115,7 @@ async def test_not_log_password(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     caplog: pytest.LogCaptureFixture,
-    legacy_auth: LegacyApiPasswordAuthProvider,
+    local_auth: HassAuthProvider,
 ) -> None:
     """Test access with password doesn't get logged."""
     assert await async_setup_component(hass, "api", {"http": {}})
@@ -469,7 +468,9 @@ async def test_cors_defaults(hass: HomeAssistant) -> None:
 
 
 async def test_storing_config(
-    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator, unused_tcp_port_factory
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    unused_tcp_port_factory: Callable[[], int],
 ) -> None:
     """Test that we store last working config."""
     config = {
@@ -527,76 +528,169 @@ async def test_logging(
     assert "GET /api/states/logging.entity" not in caplog.text
 
 
-async def test_service_create_temporary_strict_connection_url_strict_connection_disabled(
+async def test_register_static_paths(
     hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test service create_temporary_strict_connection_url with strict_connection not enabled."""
-    assert await async_setup_component(hass, http.DOMAIN, {"http": {}})
-    with pytest.raises(
-        ServiceValidationError,
-        match="Strict connection is not enabled for non-cloud requests",
+    """Test registering a static path with old api."""
+    assert await async_setup_component(hass, "frontend", {})
+    path = str(Path(__file__).parent)
+    hass.http.register_static_path("/something", path)
+    client = await hass_client()
+    resp = await client.get("/something/__init__.py")
+    assert resp.status == HTTPStatus.OK
+
+    assert (
+        "Detected code that calls hass.http.register_static_path "
+        "which is deprecated because it does blocking I/O in the "
+        "event loop, instead call "
+        "`await hass.http.async_register_static_paths"
+    ) in caplog.text
+
+
+async def test_ssl_issue_if_no_urls_configured(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test raising SSL issue if no external or internal URL is configured."""
+
+    assert hass.config.external_url is None
+    assert hass.config.internal_url is None
+
+    cert_path, key_path, _ = await hass.async_add_executor_job(
+        _setup_empty_ssl_pem_files, tmp_path
+    )
+
+    with (
+        patch("ssl.SSLContext.load_cert_chain"),
+        patch(
+            "homeassistant.util.ssl.server_context_modern",
+            side_effect=server_context_modern,
+        ),
     ):
-        await hass.services.async_call(
-            http.DOMAIN,
-            "create_temporary_strict_connection_url",
-            blocking=True,
-            return_response=True,
+        assert await async_setup_component(
+            hass,
+            "http",
+            {"http": {"ssl_certificate": cert_path, "ssl_key": key_path}},
         )
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    assert ("http", "ssl_configured_without_configured_urls") in issue_registry.issues
+
+
+async def test_ssl_issue_if_using_cloud(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test raising no SSL issue if not right configured but using cloud."""
+    assert hass.config.external_url is None
+    assert hass.config.internal_url is None
+
+    cert_path, key_path, _ = await hass.async_add_executor_job(
+        _setup_empty_ssl_pem_files, tmp_path
+    )
+
+    with (
+        patch("ssl.SSLContext.load_cert_chain"),
+        patch.object(cloud, "async_remote_ui_url", return_value="https://example.com"),
+        patch(
+            "homeassistant.util.ssl.server_context_modern",
+            side_effect=server_context_modern,
+        ),
+    ):
+        assert await async_setup_component(
+            hass,
+            "http",
+            {"http": {"ssl_certificate": cert_path, "ssl_key": key_path}},
+        )
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    assert (
+        "http",
+        "ssl_configured_without_configured_urls",
+    ) not in issue_registry.issues
+
+
+async def test_ssl_issue_if_not_connected_to_cloud(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test raising no SSL issue if not right configured and not connected to cloud."""
+    assert hass.config.external_url is None
+    assert hass.config.internal_url is None
+
+    cert_path, key_path, _ = await hass.async_add_executor_job(
+        _setup_empty_ssl_pem_files, tmp_path
+    )
+
+    with (
+        patch("ssl.SSLContext.load_cert_chain"),
+        patch(
+            "homeassistant.util.ssl.server_context_modern",
+            side_effect=server_context_modern,
+        ),
+        patch(
+            "homeassistant.components.cloud.async_remote_ui_url",
+            side_effect=CloudNotAvailable,
+        ),
+    ):
+        assert await async_setup_component(
+            hass,
+            "http",
+            {"http": {"ssl_certificate": cert_path, "ssl_key": key_path}},
+        )
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    assert ("http", "ssl_configured_without_configured_urls") in issue_registry.issues
 
 
 @pytest.mark.parametrize(
-    ("mode"),
+    ("external_url", "internal_url"),
     [
-        StrictConnectionMode.DROP_CONNECTION,
-        StrictConnectionMode.GUARD_PAGE,
+        ("https://example.com", "https://example.local"),
+        (None, "http://example.local"),
+        ("https://example.com", None),
     ],
 )
-async def test_service_create_temporary_strict_connection(
-    hass: HomeAssistant, mode: StrictConnectionMode
+async def test_ssl_issue_urls_configured(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    issue_registry: ir.IssueRegistry,
+    external_url: str | None,
+    internal_url: str | None,
 ) -> None:
-    """Test service create_temporary_strict_connection_url."""
-    assert await async_setup_component(
-        hass, http.DOMAIN, {"http": {"strict_connection": mode}}
+    """Test raising SSL issue if no external or internal URL is configured."""
+
+    cert_path, key_path, _ = await hass.async_add_executor_job(
+        _setup_empty_ssl_pem_files, tmp_path
     )
 
-    # No external url set
-    assert hass.config.external_url is None
-    assert hass.config.internal_url is None
-    with pytest.raises(ServiceValidationError, match="No external URL available"):
-        await hass.services.async_call(
-            http.DOMAIN,
-            "create_temporary_strict_connection_url",
-            blocking=True,
-            return_response=True,
+    hass.config.external_url = external_url
+    hass.config.internal_url = internal_url
+
+    with (
+        patch("ssl.SSLContext.load_cert_chain"),
+        patch(
+            "homeassistant.util.ssl.server_context_modern",
+            side_effect=server_context_modern,
+        ),
+    ):
+        assert await async_setup_component(
+            hass,
+            "http",
+            {"http": {"ssl_certificate": cert_path, "ssl_key": key_path}},
         )
+        await hass.async_start()
+        await hass.async_block_till_done()
 
-    # Raise if only internal url is available
-    hass.config.api = Mock(use_ssl=False, port=8123, local_ip="192.168.123.123")
-    with pytest.raises(ServiceValidationError, match="No external URL available"):
-        await hass.services.async_call(
-            http.DOMAIN,
-            "create_temporary_strict_connection_url",
-            blocking=True,
-            return_response=True,
-        )
-
-    # Set external url too
-    external_url = "https://example.com"
-    await async_process_ha_core_config(
-        hass,
-        {"external_url": external_url},
-    )
-    assert hass.config.external_url == external_url
-    response = await hass.services.async_call(
-        http.DOMAIN,
-        "create_temporary_strict_connection_url",
-        blocking=True,
-        return_response=True,
-    )
-    assert isinstance(response, dict)
-    direct_url_prefix = f"{external_url}/auth/strict_connection/temp_token?authSig="
-    assert response.pop("direct_url").startswith(direct_url_prefix)
-    assert response.pop("url").startswith(
-        f"https://login.home-assistant.io?u={quote_plus(direct_url_prefix)}"
-    )
-    assert response == {}  # No more keys in response
+    assert (
+        "http",
+        "ssl_configured_without_configured_urls",
+    ) not in issue_registry.issues

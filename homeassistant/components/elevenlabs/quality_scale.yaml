@@ -1,0 +1,88 @@
+rules:
+  # Bronze
+  action-setup:
+    status: done
+    comment: >
+      Only entity services
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: >
+      Entities of this integration does not explicitly subscribe to events.
+  entity-unique-id: done
+  has-entity-name: todo
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: todo
+  # Silver
+  config-entry-unloading: done
+  log-when-unavailable: todo
+  entity-unavailable:
+    status: exempt
+    comment: >
+      There is no state in the TTS platform and we can't check poll if the TTS service is available.
+  action-exceptions: done
+  reauthentication-flow: todo
+  parallel-updates: done
+  test-coverage: todo
+  integration-owner: done
+  docs-installation-parameters: todo
+  docs-configuration-parameters: todo
+
+  # Gold
+  entity-translations: todo
+  entity-device-class:
+    status: exempt
+    comment: There is no device class for Text To Speech entities.
+  devices: done
+  entity-category: done
+  entity-disabled-by-default: todo
+  discovery:
+    status: exempt
+    comment: >
+      This is not possible because there is no physical device.
+  stale-devices:
+    status: exempt
+    comment: >
+      This is not possible because there is no physical device.
+  diagnostics: todo
+  exception-translations: todo
+  icon-translations: todo
+  reconfiguration-flow:
+    status: todo
+    comment: >
+      I imagine this could be useful if the default voice is deleted from voice lab.
+  dynamic-devices:
+    status: exempt
+    comment: |
+      This is not possible because there is no physical device.
+  discovery-update-info:
+    status: exempt
+    comment: >
+      This is not needed because there are no physical devices.
+  repair-issues: todo
+  docs-use-cases: done
+  docs-supported-devices:
+    status: exempt
+    comment: >
+      This integration does not support any devices.
+  docs-supported-functions: todo
+  docs-data-update: todo
+  docs-known-limitations: todo
+  docs-troubleshooting: todo
+  docs-examples: todo
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done

@@ -8,7 +8,7 @@ from temperusb.temper import TemperHandler
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
 )
@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_SCALE = "scale"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEVICE_DEFAULT_NAME): vol.Coerce(str),
         vol.Optional(CONF_SCALE, default=1): vol.Coerce(float),

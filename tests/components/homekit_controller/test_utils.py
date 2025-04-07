@@ -3,7 +3,7 @@
 from homeassistant.components.homekit_controller.utils import unique_id_to_iids
 
 
-def test_unique_id_to_iids():
+def test_unique_id_to_iids() -> None:
     """Check that unique_id_to_iids is safe against different invalid ids."""
     assert unique_id_to_iids("pairingid_1_2_3") == (1, 2, 3)
     assert unique_id_to_iids("pairingid_1_2") == (1, 2, None)

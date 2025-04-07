@@ -1,0 +1,1397 @@
+# serializer version: 1
+# name: test_sensors[sensor.test_user_class-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'warrior',
+        'rogue',
+        'wizard',
+        'healer',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_class',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Class',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaSensorEntity.CLASS: 'class'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_class',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.test_user_class-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'entity_picture': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciICB2aWV3Qm94PSItMTIgLTEyIDcyIDcyIj4KICAgIDxnIGZpbGw9Im5vbmUiIGZpbGwtcnVsZT0iZXZlbm9kZCI+CiAgICAgICAgPHBhdGggZmlsbD0iIzFGNkVBMiIgZD0iTTI0LjQ2MiAxLjE1MWMtMy42OTUgMy43MTQtNy4zMjEgMTQuNjItOS4yMzYgMjAuOTEzLS44NC0xLjA2Mi0xLjc5OS0yLjA3Ni0zLjE1OC0zLjMyNi00LjgwNiAzLjUxNC03LjM1NyA3LjI1LTEwLjY0NiAxMS44MTYgOC45MTYgNy45MjYgMTEuMjMzIDkuMjU2IDIyLjk5NSAxNi4wMDVsLjA0NS0uMDI1aC4wMDFsLjA0NS4wMjVjMTEuNzYtNi43NDkgMTQuMDc5LTguMDggMjIuOTk0LTE2LjAwNS0zLjI4Ny00LjU2Ni01Ljg0MS04LjMwMi0xMC42NDUtMTEuODE2LTEuMzYxIDEuMjUtMi4zMTcgMi4yNjQtMy4xNTggMy4zMjYtMS45MTUtNi4yOTQtNS41NDMtMTcuMi05LjIzNi0yMC45MTNoLS4wMDF6Ii8+CiAgICAgICAgPHBhdGggZmlsbD0iIzI3OEFCRiIgZD0iTTI0LjQ2NCAzMi4xMDhsMy41NjEtMS4yNjVjNi4wNzUtLjYwNSA4LjQyNS0yLjI4MSA5LjQyNi0zLjQ5OGw2LjA1MyAyLjcwNy4wMDIuMDEzYS40NS40NSAwIDAgMS0uMTA1LjI4NiA0Ljk3IDQuOTcgMCAwIDEtLjMyLjMzYy0zLjQwNSAzLjMxNS0xOC4yMzcgMTEuOTgxLTE4LjYxNyAxMi4yMDJWMzIuMTA4eiIvPgogICAgICAgIDxwYXRoIGZpbGw9IiM1M0I0RTUiIGQ9Ik0zNi40MDYgMjMuMDQxYy4yMy0uMTg4LjI5Mi0uMzQuNjc0LS4zMzYgMS4xODMuMDY3IDUuMTY5IDUuMTc1IDYuMDY0IDYuNDYxLjE5NC4yNzguMzY2LjYxLjM2Ljg4NWwtNi4wNTMtMi43MDdjLjIzNi0uMzY3LjE5LS45Mi0uMzU1LTEuMjUyLS44MTgtLjUwMS0yLjUyOS45NDktMi45NTkuMjg0LS41OTktLjkyNyAyLjA0LTMuMTQ3IDIuMjctMy4zMzUiLz4KICAgICAgICA8cGF0aCBmaWxsPSIjMkFBMENGIiBkPSJNMjMuNTkxIDcuNDg3Yy01LjM5IDE1LjQxOS04LjIyNyAyMy44MTctOC4yMjcgMjMuODE3bDkuMDk3IDQuNzZWNi44MzljLS4zNiAwLS43MTguMjE2LS44Ny42NDgiLz4KICAgICAgICA8cGF0aCBmaWxsPSIjMjc4QUJGIiBkPSJNMjUuMzMyIDcuNDg3Yy0uMTUyLS40MzItLjUxLS42NDgtLjg3LS42NDh2MjkuMjI1bDkuMDk3LTQuNzZzLTIuODM3LTguMzk4LTguMjI3LTIzLjgxNyIvPgogICAgICAgIDxwYXRoIGZpbGw9IiM0REIyRDYiIGQ9Ik0yNC40NjIgMzIuMTA4TDIwLjkgMzAuODQzYy02LjA3NS0uNjA1LTguMzQyLTIuMzUyLTkuNDI1LTMuNDk4TDUuNDIgMzAuMDUybC0uMDAyLjAxM2EuNDUuNDUgMCAwIDAgLjEwNi4yODZjLjA5LjEwNC4xOTcuMjE1LjMxOC4zMyAzLjQwNiAzLjMxNSAxOC4yMzggMTEuOTgxIDE4LjYxOSAxMi4yMDJWMzIuMTA4eiIvPgogICAgICAgIDxwYXRoIGZpbGw9IiM2QkM0RTkiIGQ9Ik0xMi41MTkgMjMuMDQxYy0uMjMtLjE4OC0uMjkyLS4zNC0uNjc0LS4zMzYtMS4xODMuMDY3LTUuMTY5IDUuMTc1LTYuMDYzIDYuNDYxLS4xOTQuMjc4LS4zNjcuNjEtLjM2MS44ODVsNi4wNTMtMi43MDdjLS4yMzYtLjM2Ny0uMTktLjkyLjM1Ni0xLjI1Mi44MTctLjUwMSAyLjUyOC45NDkgMi45NTguMjg0LjYtLjkyNy0yLjAzOS0zLjE0Ny0yLjI3LTMuMzM1Ii8+CiAgICAgICAgPHBhdGggZmlsbD0iI0E5REJGNiIgZD0iTTI0LjQ2MyAzNC45OTh2LTUuMTAxbC03LjIxLTQuMTMtMS40OCA0LjA0OXoiLz4KICAgICAgICA8cGF0aCBmaWxsPSIjODRDRkYyIiBkPSJNMjQuNDYzIDM0Ljk5OHYtNS4xMDFsNy4yMDctNC4xMyAxLjQ4MyA0LjA0OXoiLz4KICAgIDwvZz4KPC9zdmc+',
+      'friendly_name': 'test-user Class',
+      'options': list([
+        'warrior',
+        'rogue',
+        'wizard',
+        'healer',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_class',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'wizard',
+  })
+# ---
+# name: test_sensors[sensor.test_user_constitution-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_constitution',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Constitution',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaSensorEntity.CONSTITUTION: 'constitution'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_constitution',
+    'unit_of_measurement': 'CON',
+  })
+# ---
+# name: test_sensors[sensor.test_user_constitution-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'allocated': 15,
+      'buffs': 26,
+      'class': 0,
+      'equipment': 42,
+      'friendly_name': 'test-user Constitution',
+      'level': 19,
+      'unit_of_measurement': 'CON',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_constitution',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '102',
+  })
+# ---
+# name: test_sensors[sensor.test_user_display_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_display_name',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Display name',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaSensorEntity.DISPLAY_NAME: 'display_name'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_display_name',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.test_user_display_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'blurb': 'My mind is a swirling miasma of scintillating thoughts and turgid ideas.',
+      'entity_picture': 'https://pbs.twimg.com/profile_images/378800000771780608/a32e71fe6a64eba6773c20d289eddc8e.png',
+      'friendly_name': 'test-user Display name',
+      'joined': datetime.date(2013, 12, 2),
+      'last_login': datetime.date(2025, 2, 1),
+      'total_logins': 241,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_display_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'test-user',
+  })
+# ---
+# name: test_sensors[sensor.test_user_eggs-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_eggs',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Eggs',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaSensorEntity.EGGS_TOTAL: 'eggs_total'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_eggs_total',
+    'unit_of_measurement': 'eggs',
+  })
+# ---
+# name: test_sensors[sensor.test_user_eggs-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'Pandajunges': 2,
+      'Tigerjunges': 0,
+      'Wolfsjunges': 1,
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Egg_Egg.png',
+      'friendly_name': 'test-user Eggs',
+      'unit_of_measurement': 'eggs',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_eggs',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---
+# name: test_sensors[sensor.test_user_experience-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_experience',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Experience',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaSensorEntity.EXPERIENCE: 'experience'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_experience',
+    'unit_of_measurement': 'XP',
+  })
+# ---
+# name: test_sensors[sensor.test_user_experience-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciICB2aWV3Qm94PSItNiAtNiAzNiAzNiI+CiAgICA8ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPgogICAgICAgIDxwYXRoIGZpbGw9IiNGRkE2MjMiIGQ9Ik0xNiAxNmw4LTQtOC00LTQtOC00IDgtOCA0IDggNCA0IDh6Ii8+CiAgICAgICAgPHBhdGggZmlsbD0iI0ZGRiIgZD0iTTQuNSAxMmw1LTIuNUwxMiAxMnpNMTIgMTkuNWwtMi41LTVMMTIgMTJ6TTE5LjUgMTJsLTUgMi41TDEyIDEyek0xMiA0LjVsMi41IDVMMTIgMTJ6IiBvcGFjaXR5PSIuMjUiLz4KICAgICAgICA8cGF0aCBmaWxsPSIjQkY3RDFBIiBkPSJNMTkuNSAxMmwtNS0yLjVMMTIgMTJ6IiBvcGFjaXR5PSIuMjUiLz4KICAgICAgICA8cGF0aCBmaWxsPSIjQkY3RDFBIiBkPSJNMTIgMTkuNWwyLjUtNUwxMiAxMnoiIG9wYWNpdHk9Ii41Ii8+CiAgICAgICAgPHBhdGggZmlsbD0iI0ZGRiIgZD0iTTQuNSAxMmw1IDIuNUwxMiAxMnpNMTIgNC41bC0yLjUgNUwxMiAxMnoiIG9wYWNpdHk9Ii41Ii8+CiAgICAgICAgPHBhdGggZmlsbD0iI0ZGRiIgZD0iTTEwLjggMTMuMkw4LjUgMTJsMi4zLTEuMkwxMiA4LjVsMS4yIDIuMyAyLjMgMS4yLTIuMyAxLjItMS4yIDIuM3oiIG9wYWNpdHk9Ii41Ii8+CiAgICA8L2c+Cjwvc3ZnPg==',
+      'friendly_name': 'test-user Experience',
+      'unit_of_measurement': 'XP',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_experience',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '737',
+  })
+# ---
+# name: test_sensors[sensor.test_user_gems-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_gems',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Gems',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaSensorEntity.GEMS: 'gems'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_gems',
+    'unit_of_measurement': 'gems',
+  })
+# ---
+# name: test_sensors[sensor.test_user_gems-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_gem.png',
+      'friendly_name': 'test-user Gems',
+      'unit_of_measurement': 'gems',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_gems',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '40',
+  })
+# ---
+# name: test_sensors[sensor.test_user_gold-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_gold',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Gold',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaSensorEntity.GOLD: 'gold'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_gold',
+    'unit_of_measurement': 'GP',
+  })
+# ---
+# name: test_sensors[sensor.test_user_gold-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciICB2aWV3Qm94PSItNiAtNiAzNiAzNiI+CiAgICA8ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPgogICAgICAgIDxjaXJjbGUgY3g9IjEyIiBjeT0iMTIiIHI9IjEyIiBmaWxsPSIjRkZBNjIzIi8+CiAgICAgICAgPHBhdGggZmlsbD0iI0ZGRiIgZD0iTTYuMyAxNy43Yy0zLjEtMy4xLTMuMS04LjIgMC0xMS4zIDMuMS0zLjEgOC4yLTMuMSAxMS4zIDAiIG9wYWNpdHk9Ii41Ii8+CiAgICAgICAgPHBhdGggZmlsbD0iI0ZGRiIgZD0iTTE3LjcgNi4zYzMuMSAzLjEgMy4xIDguMiAwIDExLjMtMy4xIDMuMS04LjIgMy4xLTExLjMgMCIgb3BhY2l0eT0iLjI1Ii8+CiAgICAgICAgPHBhdGggZmlsbD0iI0JGN0QxQSIgZD0iTTEyIDJDNi41IDIgMiA2LjUgMiAxMnM0LjUgMTAgMTAgMTAgMTAtNC41IDEwLTEwUzE3LjUgMiAxMiAyem0wIDE4Yy00LjQgMC04LTMuNi04LThzMy42LTggOC04IDggMy42IDggOC0zLjYgOC04IDh6IiBvcGFjaXR5PSIuNSIvPgogICAgICAgIDxwYXRoIGZpbGw9IiNCRjdEMUEiIGQ9Ik0xMyA5djJoLTJWOUg5djZoMnYtMmgydjJoMlY5eiIgb3BhY2l0eT0iLjc1Ii8+CiAgICA8L2c+Cjwvc3ZnPg==',
+      'friendly_name': 'test-user Gold',
+      'unit_of_measurement': 'GP',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_gold',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '137.625872146098',
+  })
+# ---
+# name: test_sensors[sensor.test_user_habits-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_habits',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Habits',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaSensorEntity.HABITS: 'habits'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_habits',
+    'unit_of_measurement': 'tasks',
+  })
+# ---
+# name: test_sensors[sensor.test_user_habits-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      '1d147de6-5c02-4740-8e2f-71d3015a37f4': dict({
+        'challenge': dict({
+          'broken': None,
+          'id': None,
+          'shortName': None,
+          'taskId': None,
+          'winner': None,
+        }),
+        'created_at': '2024-07-07T17:51:53.266000+00:00',
+        'frequency': 'daily',
+        'group': dict({
+          'assignedDate': None,
+          'assignedUsers': list([
+          ]),
+          'assignedUsersDetail': dict({
+          }),
+          'assigningUsername': None,
+          'completedBy': dict({
+            'date': None,
+            'userId': None,
+          }),
+          'id': None,
+          'managerNotes': None,
+          'taskId': None,
+        }),
+        'priority': 1,
+        'repeat': dict({
+          'f': False,
+          'm': True,
+          's': False,
+          'su': False,
+          't': True,
+          'th': False,
+          'w': True,
+        }),
+        'text': 'Eine kurze Pause machen',
+        'type': 'habit',
+        'up': True,
+      }),
+      'bc1d1855-b2b8-4663-98ff-62e7b763dfc4': dict({
+        'challenge': dict({
+          'broken': None,
+          'id': None,
+          'shortName': None,
+          'taskId': None,
+          'winner': None,
+        }),
+        'created_at': '2024-07-07T17:51:53.265000+00:00',
+        'down': True,
+        'frequency': 'daily',
+        'group': dict({
+          'assignedDate': None,
+          'assignedUsers': list([
+          ]),
+          'assignedUsersDetail': dict({
+          }),
+          'assigningUsername': None,
+          'completedBy': dict({
+            'date': None,
+            'userId': None,
+          }),
+          'id': None,
+          'managerNotes': None,
+          'taskId': None,
+        }),
+        'notes': 'Oder lösche es über die Bearbeitungs-Ansicht',
+        'priority': 1,
+        'repeat': dict({
+          'f': False,
+          'm': True,
+          's': False,
+          'su': False,
+          't': True,
+          'th': False,
+          'w': True,
+        }),
+        'text': 'Klicke hier um dies als schlechte Gewohnheit zu markieren, die Du gerne loswerden möchtest',
+        'type': 'habit',
+      }),
+      'e97659e0-2c42-4599-a7bb-00282adc410d': dict({
+        'challenge': dict({
+          'broken': None,
+          'id': None,
+          'shortName': None,
+          'taskId': None,
+          'winner': None,
+        }),
+        'created_at': '2024-07-07T17:51:53.264000+00:00',
+        'frequency': 'daily',
+        'group': dict({
+          'assignedDate': None,
+          'assignedUsers': list([
+          ]),
+          'assignedUsersDetail': dict({
+          }),
+          'assigningUsername': None,
+          'completedBy': dict({
+            'date': None,
+            'userId': None,
+          }),
+          'id': None,
+          'managerNotes': None,
+          'taskId': None,
+        }),
+        'notes': 'Eine Gewohnheit, eine Tagesaufgabe oder ein To-Do',
+        'priority': 1,
+        'repeat': dict({
+          'f': False,
+          'm': True,
+          's': False,
+          'su': False,
+          't': True,
+          'th': False,
+          'w': True,
+        }),
+        'text': 'Füge eine Aufgabe zu Habitica hinzu',
+        'type': 'habit',
+        'up': True,
+      }),
+      'f21fa608-cfc6-4413-9fc7-0eb1b48ca43a': dict({
+        'challenge': dict({
+          'broken': None,
+          'id': None,
+          'shortName': None,
+          'taskId': None,
+          'winner': None,
+        }),
+        'created_at': '2024-07-07T17:51:53.268000+00:00',
+        'down': True,
+        'frequency': 'daily',
+        'group': dict({
+          'assignedDate': None,
+          'assignedUsers': list([
+          ]),
+          'assignedUsersDetail': dict({
+          }),
+          'assigningUsername': None,
+          'completedBy': dict({
+            'date': None,
+            'userId': None,
+          }),
+          'id': None,
+          'managerNotes': None,
+          'taskId': None,
+        }),
+        'priority': 1,
+        'repeat': dict({
+          'f': False,
+          'm': True,
+          's': False,
+          'su': False,
+          't': True,
+          'th': False,
+          'w': True,
+        }),
+        'text': 'Gesundes Essen/Junkfood',
+        'type': 'habit',
+        'up': True,
+      }),
+      'friendly_name': 'test-user Habits',
+      'unit_of_measurement': 'tasks',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_habits',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4',
+  })
+# ---
+# name: test_sensors[sensor.test_user_hatching_potions-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_hatching_potions',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Hatching potions',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaSensorEntity.HATCHING_POTIONS_TOTAL: 'hatching_potions_total'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_hatching_potions_total',
+    'unit_of_measurement': 'potions',
+  })
+# ---
+# name: test_sensors[sensor.test_user_hatching_potions-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'Normales': 2,
+      'Weißes': 0,
+      'Wüstenfarbenes': 1,
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_HatchingPotion_RoyalPurple.png',
+      'friendly_name': 'test-user Hatching potions',
+      'unit_of_measurement': 'potions',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_hatching_potions',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---
+# name: test_sensors[sensor.test_user_health-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_health',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Health',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaSensorEntity.HEALTH: 'health'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_health',
+    'unit_of_measurement': 'HP',
+  })
+# ---
+# name: test_sensors[sensor.test_user_health-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciICB2aWV3Qm94PSItNiAtNiAzNiAzNiI+CiAgICA8ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPgogICAgICAgIDxwYXRoIGZpbGw9IiNGNzRFNTIiIGQ9Ik0yIDQuNUw2LjE2NyAyIDEyIDUuMTY3IDE3LjgzMyAyIDIyIDQuNVYxMmwtNC4xNjcgNS44MzNMMTIgMjJsLTUuODMzLTQuMTY3TDIgMTJ6Ii8+CiAgICAgICAgPHBhdGggZmlsbD0iI0ZGNjE2NSIgZD0iTTcuMzMzIDE2LjY2N0wzLjY2NyAxMS41VjUuNDE3bDIuNS0xLjVMMTIgNy4wODNsNS44MzMtMy4xNjYgMi41IDEuNVYxMS41bC0zLjY2NiA1LjE2N0wxMiAxOS45MTd6Ii8+CiAgICAgICAgPHBhdGggZmlsbD0iI0ZGRiIgZD0iTTEyIDE0LjA4M2w0LjY2NyAyLjU4NEwxMiAxOS45MTd6IiBvcGFjaXR5PSIuNSIvPgogICAgICAgIDxwYXRoIGZpbGw9IiNCNTI0MjgiIGQ9Ik0xMiAxNC4wODNsLTQuNjY3IDIuNTg0TDEyIDE5LjkxN3oiIG9wYWNpdHk9Ii4zNSIvPgogICAgICAgIDxwYXRoIGZpbGw9IiNGRkYiIGQ9Ik03LjMzMyAxNi42NjdMMy42NjcgMTEuNSAxMiAxNC4wODN6IiBvcGFjaXR5PSIuMjUiLz4KICAgICAgICA8cGF0aCBmaWxsPSIjQjUyNDI4IiBkPSJNMTYuNjY3IDE2LjY2N2wzLjY2Ni01LjE2N0wxMiAxNC4wODN6IiBvcGFjaXR5PSIuNSIvPgogICAgICAgIDxwYXRoIGZpbGw9IiNCNTI0MjgiIGQ9Ik0xMiAxNC4wODNsNS44MzMtMTAuMTY2IDIuNSAxLjVWMTEuNXoiIG9wYWNpdHk9Ii4zNSIvPgogICAgICAgIDxwYXRoIGZpbGw9IiNCNTI0MjgiIGQ9Ik0xMiAxNC4wODNMNi4xNjcgMy45MTdsLTIuNSAxLjVWMTEuNXoiIG9wYWNpdHk9Ii41Ii8+CiAgICAgICAgPHBhdGggZmlsbD0iI0ZGRiIgZD0iTTEyIDE0LjA4M0w2LjE2NyAzLjkxNyAxMiA3LjA4M3oiIG9wYWNpdHk9Ii41Ii8+CiAgICAgICAgPHBhdGggZmlsbD0iI0ZGRiIgZD0iTTEyIDE0LjA4M2w1LjgzMy0xMC4xNjZMMTIgNy4wODN6IiBvcGFjaXR5PSIuMjUiLz4KICAgICAgICA8cGF0aCBmaWxsPSIjRkZGIiBkPSJNOS4xNjcgMTQuODMzbC0zLTQuMTY2VjYuODMzaC4wODNMMTIgOS45MTdsNS43NS0zLjA4NGguMDgzdjMuODM0bC0zIDQuMTY2TDEyIDE2LjkxN3oiIG9wYWNpdHk9Ii41Ii8+CiAgICA8L2c+Cjwvc3ZnPg==',
+      'friendly_name': 'test-user Health',
+      'unit_of_measurement': 'HP',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_health',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensors[sensor.test_user_intelligence-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_intelligence',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Intelligence',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaSensorEntity.INTELLIGENCE: 'intelligence'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_intelligence',
+    'unit_of_measurement': 'INT',
+  })
+# ---
+# name: test_sensors[sensor.test_user_intelligence-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'allocated': 15,
+      'buffs': 26,
+      'class': 0,
+      'equipment': 12,
+      'friendly_name': 'test-user Intelligence',
+      'level': 19,
+      'unit_of_measurement': 'INT',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_intelligence',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '72',
+  })
+# ---
+# name: test_sensors[sensor.test_user_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Level',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaSensorEntity.LEVEL: 'level'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_level',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.test_user_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'test-user Level',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '38',
+  })
+# ---
+# name: test_sensors[sensor.test_user_mana-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_mana',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Mana',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaSensorEntity.MANA: 'mana'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_mana',
+    'unit_of_measurement': 'MP',
+  })
+# ---
+# name: test_sensors[sensor.test_user_mana-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciICB2aWV3Qm94PSItNiAtNiAzNiAzNiI+CiAgICA8ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPgogICAgICAgIDxwYXRoIGZpbGw9IiMyOTk1Q0QiIGQ9Ik0yMiAxNWwtMTAgOS0xMC05TDEyIDB6Ii8+CiAgICAgICAgPHBhdGggZmlsbD0iIzUwQjVFOSIgZD0iTTQuNiAxNC43bDcuNC0zdjkuNnoiLz4KICAgICAgICA8cGF0aCBmaWxsPSIjMUY3MDlBIiBkPSJNMTIgMTEuN2w3LjQgMy03LjQgNi42eiIgb3BhY2l0eT0iLjI1Ii8+CiAgICAgICAgPHBhdGggZmlsbD0iI0ZGRiIgZD0iTTEyIDExLjdWMy42bDcuNCAxMS4xeiIgb3BhY2l0eT0iLjI1Ii8+CiAgICAgICAgPHBhdGggZmlsbD0iI0ZGRiIgZD0iTTQuNiAxNC43TDEyIDMuNnY4LjF6IiBvcGFjaXR5PSIuNSIvPgogICAgICAgIDxwYXRoIGZpbGw9IiNGRkYiIGQ9Ik03LjIgMTQuM0wxMiA3LjJsNC44IDcuMS00LjggNC4zeiIgb3BhY2l0eT0iLjUiLz4KICAgIDwvZz4KPC9zdmc+',
+      'friendly_name': 'test-user Mana',
+      'unit_of_measurement': 'MP',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_mana',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '50.9',
+  })
+# ---
+# name: test_sensors[sensor.test_user_max_health-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_max_health',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Max. health',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaSensorEntity.HEALTH_MAX: 'health_max'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_health_max',
+    'unit_of_measurement': 'HP',
+  })
+# ---
+# name: test_sensors[sensor.test_user_max_health-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'test-user Max. health',
+      'unit_of_measurement': 'HP',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_max_health',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '50',
+  })
+# ---
+# name: test_sensors[sensor.test_user_max_mana-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_max_mana',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Max. mana',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaSensorEntity.MANA_MAX: 'mana_max'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_mana_max',
+    'unit_of_measurement': 'MP',
+  })
+# ---
+# name: test_sensors[sensor.test_user_max_mana-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciICB2aWV3Qm94PSItNiAtNiAzNiAzNiI+CiAgICA8ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPgogICAgICAgIDxwYXRoIGZpbGw9IiMyOTk1Q0QiIGQ9Ik0yMiAxNWwtMTAgOS0xMC05TDEyIDB6Ii8+CiAgICAgICAgPHBhdGggZmlsbD0iIzUwQjVFOSIgZD0iTTQuNiAxNC43bDcuNC0zdjkuNnoiLz4KICAgICAgICA8cGF0aCBmaWxsPSIjMUY3MDlBIiBkPSJNMTIgMTEuN2w3LjQgMy03LjQgNi42eiIgb3BhY2l0eT0iLjI1Ii8+CiAgICAgICAgPHBhdGggZmlsbD0iI0ZGRiIgZD0iTTEyIDExLjdWMy42bDcuNCAxMS4xeiIgb3BhY2l0eT0iLjI1Ii8+CiAgICAgICAgPHBhdGggZmlsbD0iI0ZGRiIgZD0iTTQuNiAxNC43TDEyIDMuNnY4LjF6IiBvcGFjaXR5PSIuNSIvPgogICAgICAgIDxwYXRoIGZpbGw9IiNGRkYiIGQ9Ik03LjIgMTQuM0wxMiA3LjJsNC44IDcuMS00LjggNC4zeiIgb3BhY2l0eT0iLjUiLz4KICAgIDwvZz4KPC9zdmc+',
+      'friendly_name': 'test-user Max. mana',
+      'unit_of_measurement': 'MP',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_max_mana',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '166',
+  })
+# ---
+# name: test_sensors[sensor.test_user_mystic_hourglasses-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_mystic_hourglasses',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Mystic hourglasses',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaSensorEntity.TRINKETS: 'trinkets'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_trinkets',
+    'unit_of_measurement': '⧖',
+  })
+# ---
+# name: test_sensors[sensor.test_user_mystic_hourglasses-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/notif_subscriber_reward.png',
+      'friendly_name': 'test-user Mystic hourglasses',
+      'unit_of_measurement': '⧖',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_mystic_hourglasses',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensors[sensor.test_user_next_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_next_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Next level',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaSensorEntity.EXPERIENCE_MAX: 'experience_max'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_experience_max',
+    'unit_of_measurement': 'XP',
+  })
+# ---
+# name: test_sensors[sensor.test_user_next_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciICB2aWV3Qm94PSItNiAtNiAzNiAzNiI+CiAgICA8ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPgogICAgICAgIDxwYXRoIGZpbGw9IiNGRkE2MjMiIGQ9Ik0xNiAxNmw4LTQtOC00LTQtOC00IDgtOCA0IDggNCA0IDh6Ii8+CiAgICAgICAgPHBhdGggZmlsbD0iI0ZGRiIgZD0iTTQuNSAxMmw1LTIuNUwxMiAxMnpNMTIgMTkuNWwtMi41LTVMMTIgMTJ6TTE5LjUgMTJsLTUgMi41TDEyIDEyek0xMiA0LjVsMi41IDVMMTIgMTJ6IiBvcGFjaXR5PSIuMjUiLz4KICAgICAgICA8cGF0aCBmaWxsPSIjQkY3RDFBIiBkPSJNMTkuNSAxMmwtNS0yLjVMMTIgMTJ6IiBvcGFjaXR5PSIuMjUiLz4KICAgICAgICA8cGF0aCBmaWxsPSIjQkY3RDFBIiBkPSJNMTIgMTkuNWwyLjUtNUwxMiAxMnoiIG9wYWNpdHk9Ii41Ii8+CiAgICAgICAgPHBhdGggZmlsbD0iI0ZGRiIgZD0iTTQuNSAxMmw1IDIuNUwxMiAxMnpNMTIgNC41bC0yLjUgNUwxMiAxMnoiIG9wYWNpdHk9Ii41Ii8+CiAgICAgICAgPHBhdGggZmlsbD0iI0ZGRiIgZD0iTTEwLjggMTMuMkw4LjUgMTJsMi4zLTEuMkwxMiA4LjVsMS4yIDIuMyAyLjMgMS4yLTIuMyAxLjItMS4yIDIuM3oiIG9wYWNpdHk9Ii41Ii8+CiAgICA8L2c+Cjwvc3ZnPg==',
+      'friendly_name': 'test-user Next level',
+      'unit_of_measurement': 'XP',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_next_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '880',
+  })
+# ---
+# name: test_sensors[sensor.test_user_perception-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_perception',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Perception',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaSensorEntity.PERCEPTION: 'perception'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_perception',
+    'unit_of_measurement': 'PER',
+  })
+# ---
+# name: test_sensors[sensor.test_user_perception-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'allocated': 15,
+      'buffs': 26,
+      'class': 0,
+      'equipment': 15,
+      'friendly_name': 'test-user Perception',
+      'level': 19,
+      'unit_of_measurement': 'PER',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_perception',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '75',
+  })
+# ---
+# name: test_sensors[sensor.test_user_pet_food-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_pet_food',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Pet food',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaSensorEntity.FOOD_TOTAL: 'food_total'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_food_total',
+    'unit_of_measurement': 'foods',
+  })
+# ---
+# name: test_sensors[sensor.test_user_pet_food-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'Fleisch': 0,
+      'Kartoffel': 2,
+      'Milch': 1,
+      'entity_picture': 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNTgiIHZpZXdCb3g9IjAgMCA2MCA1OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayI+CjxyZWN0IHg9IjM4IiB5PSI2IiB3aWR0aD0iMjIiIGhlaWdodD0iMjYiIGZpbGw9InVybCgjcGF0dGVybjBfMTMyN18yNTYpIj48L3JlY3Q+CjxyZWN0IHdpZHRoPSIyNiIgaGVpZ2h0PSIyNiIgZmlsbD0idXJsKCNwYXR0ZXJuMV8xMzI3XzI1NikiPjwvcmVjdD4KPHJlY3QgeD0iOCIgeT0iMzYiIHdpZHRoPSIzMCIgaGVpZ2h0PSIyMiIgZmlsbD0idXJsKCNwYXR0ZXJuMl8xMzI3XzI1NikiPjwvcmVjdD4KPGRlZnM+CjxwYXR0ZXJuIGlkPSJwYXR0ZXJuMF8xMzI3XzI1NiIgcGF0dGVybkNvbnRlbnRVbml0cz0ib2JqZWN0Qm91bmRpbmdCb3giIHdpZHRoPSIxIiBoZWlnaHQ9IjEiPgo8dXNlIHhsaW5rOmhyZWY9IiNpbWFnZTBfMTMyN18yNTYiIHRyYW5zZm9ybT0ic2NhbGUoMC4wNDU0NTQ1IDAuMDM4NDYxNSkiPjwvdXNlPgo8L3BhdHRlcm4+CjxwYXR0ZXJuIGlkPSJwYXR0ZXJuMV8xMzI3XzI1NiIgcGF0dGVybkNvbnRlbnRVbml0cz0ib2JqZWN0Qm91bmRpbmdCb3giIHdpZHRoPSIxIiBoZWlnaHQ9IjEiPgo8dXNlIHhsaW5rOmhyZWY9IiNpbWFnZTFfMTMyN18yNTYiIHRyYW5zZm9ybT0ic2NhbGUoMC4wMzg0NjE1KSI+PC91c2U+CjwvcGF0dGVybj4KPHBhdHRlcm4gaWQ9InBhdHRlcm4yXzEzMjdfMjU2IiBwYXR0ZXJuQ29udGVudFVuaXRzPSJvYmplY3RCb3VuZGluZ0JveCIgd2lkdGg9IjEiIGhlaWdodD0iMSI+Cjx1c2UgeGxpbms6aHJlZj0iI2ltYWdlMl8xMzI3XzI1NiIgdHJhbnNmb3JtPSJzY2FsZSgwLjAzMzMzMzMgMC4wNDU0NTQ1KSI+PC91c2U+CjwvcGF0dGVybj4KPGltYWdlIGlkPSJpbWFnZTBfMTMyN18yNTYiIHdpZHRoPSIyMiIgaGVpZ2h0PSIyNiIgeGxpbms6aHJlZj0iZGF0YTppbWFnZS9wbmc7YmFzZTY0LGlWQk9SdzBLR2dvQUFBQU5TVWhFVWdBQUFCWUFBQUFhQ0FZQUFBQ3pkcXhBQUFBQUFYTlNSMElBcnM0YzZRQUFBUWxKUkVGVVNBMjkwazFxd2xBVXhmRnNwK3NvWFlkem9lQWFXcUZiY1N4MTRMVFFTYnVBanJ1TFZnZFBudkFyY3NJalJsT0Z5OG45K3Q5alNOY04vQjd1N3N0cERJeWYzejZGMXVmek4yTXlRZnZmOTFMalo3czZSdlpqdlozbTR0Vmd3TjM2cTlUZ2tLclQ3K2VQVXNOZTA2b0JpNEJVblE2Q0UyaUJBcVhxVTV3LzV3b1dEVkwxVkgySzB3TWJBSGliZlpZYTZpMDFkenN3Nnk3bTUrVWZjTXhoUzNGd080WEp3SUNjNWVmRmFlcWc0NXVCMDVtODVWQ2R3ZDY3OVNxQVVnRmEyZ1FEV1RRb1Q4Mit2T2Q0Y3JBTEx0S3N6eDhYcFVhcmI3Nm5GcWdCK2NWZ29GVGdwK1ZMcVNIUHVkRTUwTCtCMTYrYlVzT2gwUTV6QVdoeXNFTU95Q2ZUc2VBRFNTQzNudTVpRmFjQUFBQUFTVVZPUks1Q1lJST0iPjwvaW1hZ2U+CjxpbWFnZSBpZD0iaW1hZ2UxXzEzMjdfMjU2IiB3aWR0aD0iMjYiIGhlaWdodD0iMjYiIHhsaW5rOmhyZWY9ImRhdGE6aW1hZ2UvcG5nO2Jhc2U2NCxpVkJPUncwS0dnb0FBQUFOU1VoRVVnQUFBQm9BQUFBYUNBWUFBQUNwU2t6T0FBQUFBWE5TUjBJQXJzNGM2UUFBQVNsSlJFRlVTQTNGMURGT3cwQVFCVkRUUmhTcDZSSFVhVkxRY0FXT0VDa05SNkhpUHRSY0psMUtxQlp0cEVmeGpiV3J4QTZXUmw4em52bC8vcTdsWVlqbmJuTmIvZ3B0K2U3NWZWMXFxT3Ryb29GRWcxay9XeWdKNzNjM3BRWUIrY1VDL3k2VVRqaDYyMjVMamQwd25NS2kzWmhITlpzUVlvaFl2djk0TERYVU9UbSt2cFFhWHc5UHAxQ2ZkSVFRSXBSZkxJUVFPbnZFTU92Nk9XazZNd0NUY0hZaFJ3UlR3QUtKN3VUNzgxQnFjS2orZTFlY0VJQ3pDeUdtdkZtdFNnMmJFN1JwYnE3UCs4bTd1cG9RSjVBalo1d2IyeHltZzNROCtjZTR1cENOYzhPV0EzT3c2VWpqNGtMdWlDQnNDYWZqcHFQRmhhYSt2bDVoanZYN3VQQ09VSU1CNkFnaDRzejE0eGtKWkVFamRPYUlXbWd1ZVVlNVJyaVlVQ29UN01XYzc4NTdCZlFoL2dGQ2FOUWFobDJ1M2dBQUFBQkpSVTVFcmtKZ2dnPT0iPjwvaW1hZ2U+CjxpbWFnZSBpZD0iaW1hZ2UyXzEzMjdfMjU2IiB3aWR0aD0iMzAiIGhlaWdodD0iMjIiIHhsaW5rOmhyZWY9ImRhdGE6aW1hZ2UvcG5nO2Jhc2U2NCxpVkJPUncwS0dnb0FBQUFOU1VoRVVnQUFBQjRBQUFBV0NBWUFBQURYWXl6UEFBQUFBWE5TUjBJQXJzNGM2UUFBQVJSSlJFRlVTQTNGMDhGdEFqRVVCRkNhZ0FZU0tkM1FBc1VnY1VrRHFTTzMxSkJqTHJuU0JsSms1TU9EMVdndDdSbzVJSDJOL2NlZStiUHNiamFEZjY4dmIyVmFnKzN1OGxQVHVyNHpLMWNwWko4eStoK0g3MUxMUHM4dDNoTklUQUY4dHpFQitQbHpLZFA2UGYrVld2akUwLzZyMUZvOVFBcE5UZXQ2dURIRDQvdTV6Qlhlb0ptME96SGhPZFBhd3o5c1RJQmdHbnJFeWV2dnR0dFNpMDVpdm95M3ZZTXBiQUFHeWVzL2JFeklmOFlJdGdZeCtDM0owb1dMdzR3WkpIcFVra2tzb1g0aW5sNHpxQU9KLzJic080TVNHa2d5aWZCUTMvbG1Vb1NERENGQi9IRGpOR1FNRFFDOWZIZ29XQk1kYkNYRlE0YXcyOWhFaEExZ2o0ZjZpZmpWU09ocHhnWllQWG52Qllhd1YyZnB2U3R4R0Z5dUlYV3NXUUFBQUFCSlJVNUVya0pnZ2c9PSI+PC9pbWFnZT4KPC9kZWZzPgo8L3N2Zz4=',
+      'friendly_name': 'test-user Pet food',
+      'unit_of_measurement': 'foods',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_pet_food',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---
+# name: test_sensors[sensor.test_user_quest_scrolls-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_quest_scrolls',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Quest scrolls',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaSensorEntity.QUEST_SCROLLS: 'quest_scrolls'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_quest_scrolls',
+    'unit_of_measurement': 'scrolls',
+  })
+# ---
+# name: test_sensors[sensor.test_user_quest_scrolls-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'Angriff des Banalen, Teil 1: Abwasch-Katastrophe!': 1,
+      'Der Basi-List': 0,
+      'Die goldene Ritterin, Teil 1: Ein ernstes Gespräch': 0,
+      'Die ungezähmten Staubmäuse': 1,
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/inventory_quest_scroll_dustbunnies.png',
+      'friendly_name': 'test-user Quest scrolls',
+      'unit_of_measurement': 'scrolls',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_quest_scrolls',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
+# name: test_sensors[sensor.test_user_rewards-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_rewards',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Rewards',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaSensorEntity.REWARDS: 'rewards'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_rewards',
+    'unit_of_measurement': 'tasks',
+  })
+# ---
+# name: test_sensors[sensor.test_user_rewards-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      '5e2ea1df-f6e6-4ba3-bccb-97c5ec63e99b': dict({
+        'challenge': dict({
+          'broken': None,
+          'id': None,
+          'shortName': None,
+          'taskId': None,
+          'winner': None,
+        }),
+        'created_at': '2024-07-07T17:51:53.266000+00:00',
+        'group': dict({
+          'assignedDate': None,
+          'assignedUsers': list([
+          ]),
+          'assignedUsersDetail': dict({
+          }),
+          'assigningUsername': None,
+          'completedBy': dict({
+            'date': None,
+            'userId': None,
+          }),
+          'id': None,
+          'managerNotes': None,
+          'taskId': None,
+        }),
+        'notes': 'Schaue fern, spiele ein Spiel, gönne Dir einen Leckerbissen, es liegt ganz bei Dir!',
+        'priority': 1,
+        'repeat': dict({
+          'f': False,
+          'm': True,
+          's': False,
+          'su': False,
+          't': True,
+          'th': False,
+          'w': True,
+        }),
+        'tags': list([
+          '3450351f-1323-4c7e-9fd2-0cdff25b3ce0',
+          'b2780f82-b3b5-49a3-a677-48f2c8c7e3bb',
+        ]),
+        'text': 'Belohne Dich selbst',
+        'type': 'reward',
+        'value': 10.0,
+      }),
+      'friendly_name': 'test-user Rewards',
+      'unit_of_measurement': 'tasks',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_rewards',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_sensors[sensor.test_user_saddles-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_saddles',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Saddles',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaSensorEntity.SADDLE: 'saddle'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_saddle',
+    'unit_of_measurement': 'saddles',
+  })
+# ---
+# name: test_sensors[sensor.test_user_saddles-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Saddle.png',
+      'friendly_name': 'test-user Saddles',
+      'unit_of_measurement': 'saddles',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_saddles',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
+# name: test_sensors[sensor.test_user_strength-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_strength',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Strength',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaSensorEntity.STRENGTH: 'strength'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_strength',
+    'unit_of_measurement': 'STR',
+  })
+# ---
+# name: test_sensors[sensor.test_user_strength-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'allocated': 15,
+      'buffs': 26,
+      'class': 0,
+      'equipment': 44,
+      'friendly_name': 'test-user Strength',
+      'level': 19,
+      'unit_of_measurement': 'STR',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_strength',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '104',
+  })
+# ---

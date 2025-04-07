@@ -4,14 +4,14 @@ from ipaddress import ip_address
 from unittest.mock import patch
 
 from homeassistant import config_entries
-from homeassistant.components import zeroconf
 from homeassistant.components.zwave_me.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult, FlowResultType
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from tests.common import MockConfigEntry
 
-MOCK_ZEROCONF_DATA = zeroconf.ZeroconfServiceInfo(
+MOCK_ZEROCONF_DATA = ZeroconfServiceInfo(
     ip_address=ip_address("192.168.1.14"),
     ip_addresses=[ip_address("192.168.1.14")],
     hostname="mock_hostname",

@@ -6,12 +6,14 @@ from aionotion.errors import InvalidCredentialsError, NotionError
 import pytest
 
 from homeassistant.components.notion import CONF_REFRESH_TOKEN, CONF_USER_UUID, DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import TEST_PASSWORD, TEST_REFRESH_TOKEN, TEST_USER_UUID, TEST_USERNAME
+
+from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -90,21 +92,13 @@ async def test_duplicate_error(hass: HomeAssistant, config, config_entry) -> Non
 async def test_reauth(
     hass: HomeAssistant,
     config,
-    config_entry,
+    config_entry: MockConfigEntry,
     errors,
     get_client_with_exception,
     mock_aionotion,
 ) -> None:
     """Test that re-auth works."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "entry_id": config_entry.entry_id,
-            "unique_id": config_entry.unique_id,
-        },
-        data=config,
-    )
+    result = await config_entry.start_reauth_flow(hass)
     assert result["step_id"] == "reauth_confirm"
 
     # Test errors that can arise when getting a Notion API client:

@@ -11,10 +11,10 @@ from homeassistant.components.binary_sensor import DOMAIN, BinarySensorDeviceCla
 from homeassistant.components.binary_sensor.device_condition import ENTITY_CONDITIONS
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON, EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .common import MockBinarySensor
 
@@ -22,7 +22,6 @@ from tests.common import (
     MockConfigEntry,
     async_get_device_automation_capabilities,
     async_get_device_automations,
-    async_mock_service,
     setup_test_component_platform,
 )
 
@@ -30,12 +29,6 @@ from tests.common import (
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
 def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
     """Stub copying the blueprints to the config folder."""
-
-
-@pytest.fixture
-def calls(hass):
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
 
 
 async def test_get_conditions(
@@ -122,7 +115,7 @@ async def test_get_conditions_hidden_auxiliary(
             "entity_id": entity_entry.id,
             "metadata": {"secondary": True},
         }
-        for condition in ["is_on", "is_off"]
+        for condition in ("is_on", "is_off")
     ]
     conditions = await async_get_device_automations(
         hass, DeviceAutomationType.CONDITION, device_entry.id
@@ -239,7 +232,7 @@ async def test_if_state(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
+    service_calls: list[ServiceCall],
     mock_binary_sensor_entities: dict[str, MockBinarySensor],
 ) -> None:
     """Test for turn_on and turn_off conditions."""
@@ -308,26 +301,26 @@ async def test_if_state(
     )
     await hass.async_block_till_done()
     assert hass.states.get(entry.entity_id).state == STATE_ON
-    assert len(calls) == 0
+    assert len(service_calls) == 0
 
     hass.bus.async_fire("test_event1")
     await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0].data["some"] == "is_on event - test_event1"
+    assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == "is_on event - test_event1"
 
     hass.states.async_set(entry.entity_id, STATE_OFF)
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     await hass.async_block_till_done()
-    assert len(calls) == 2
-    assert calls[1].data["some"] == "is_off event - test_event2"
+    assert len(service_calls) == 2
+    assert service_calls[1].data["some"] == "is_off event - test_event2"
 
 
 async def test_if_state_legacy(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
+    service_calls: list[ServiceCall],
     mock_binary_sensor_entities: dict[str, MockBinarySensor],
 ) -> None:
     """Test for turn_on and turn_off conditions."""
@@ -375,19 +368,19 @@ async def test_if_state_legacy(
     )
     await hass.async_block_till_done()
     assert hass.states.get(entry.entity_id).state == STATE_ON
-    assert len(calls) == 0
+    assert len(service_calls) == 0
 
     hass.bus.async_fire("test_event1")
     await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0].data["some"] == "is_on event - test_event1"
+    assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == "is_on event - test_event1"
 
 
 async def test_if_fires_on_for_condition(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
+    service_calls: list[ServiceCall],
     mock_binary_sensor_entities: dict[str, MockBinarySensor],
 ) -> None:
     """Test for firing if condition is on with delay."""
@@ -439,26 +432,26 @@ async def test_if_fires_on_for_condition(
         )
         await hass.async_block_till_done()
         assert hass.states.get(entry.entity_id).state == STATE_ON
-        assert len(calls) == 0
+        assert len(service_calls) == 0
 
         hass.bus.async_fire("test_event1")
         await hass.async_block_till_done()
-        assert len(calls) == 0
+        assert len(service_calls) == 0
 
         # Time travel 10 secs into the future
         time_freeze.move_to(point2)
         hass.bus.async_fire("test_event1")
         await hass.async_block_till_done()
-        assert len(calls) == 0
+        assert len(service_calls) == 0
 
         hass.states.async_set(entry.entity_id, STATE_OFF)
         hass.bus.async_fire("test_event1")
         await hass.async_block_till_done()
-        assert len(calls) == 0
+        assert len(service_calls) == 0
 
         # Time travel 20 secs into the future
         time_freeze.move_to(point3)
         hass.bus.async_fire("test_event1")
         await hass.async_block_till_done()
-        assert len(calls) == 1
-        assert calls[0].data["some"] == "is_off event - test_event1"
+        assert len(service_calls) == 1
+        assert service_calls[0].data["some"] == "is_off event - test_event1"

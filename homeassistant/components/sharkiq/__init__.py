@@ -25,7 +25,7 @@ from .const import (
     SHARKIQ_REGION_DEFAULT,
     SHARKIQ_REGION_EUROPE,
 )
-from .update_coordinator import SharkIqUpdateCoordinator
+from .coordinator import SharkIqUpdateCoordinator
 
 
 class CannotConnect(exceptions.HomeAssistantError):
