@@ -59,7 +59,6 @@ class RpcNumberDescription(RpcEntityDescription, NumberEntityDescription):
     step_fn: Callable[[dict], float] | None = None
     mode_fn: Callable[[dict], NumberMode] | None = None
     method: str
-    method_params_fn: Callable[[int, float], dict] | None = None
 
 
 class RpcNumber(ShellyRpcAttributeEntity, NumberEntity):
@@ -100,36 +99,6 @@ class RpcNumber(ShellyRpcAttributeEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Change the value."""
-        if TYPE_CHECKING:
-            assert isinstance(self._id, int)
-            assert self.entity_description.method_params_fn is not None
-
-        await self.call_rpc(
-            self.entity_description.method,
-            self.entity_description.method_params_fn(self._id, value),
-        )
-
-
-class RpcBluTrvNumber(RpcNumber):
-    """Represent a RPC BluTrv number."""
-
-    def __init__(
-        self,
-        coordinator: ShellyRpcCoordinator,
-        key: str,
-        attribute: str,
-        description: RpcNumberDescription,
-    ) -> None:
-        """Initialize."""
-
-        super().__init__(coordinator, key, attribute, description)
-        ble_addr: str = coordinator.device.config[key]["addr"]
-        self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_BLUETOOTH, ble_addr)}
-        )
-
-    async def async_set_native_value(self, value: float) -> None:
-        """Change the value."""
         method = getattr(self.coordinator.device, self.entity_description.method)
 
         if TYPE_CHECKING:
@@ -137,7 +106,7 @@ class RpcBluTrvNumber(RpcNumber):
             assert method is not None
 
         try:
-            await method(self._id, int(value))
+            await method(self._id, value)
         except DeviceConnectionError as err:
             self.coordinator.last_update_success = False
             raise HomeAssistantError(
@@ -159,6 +128,25 @@ class RpcBluTrvNumber(RpcNumber):
             ) from err
         except InvalidAuthError:
             await self.coordinator.async_shutdown_device_and_start_reauth()
+
+
+class RpcBluTrvNumber(RpcNumber):
+    """Represent a RPC BluTrv number."""
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcNumberDescription,
+    ) -> None:
+        """Initialize."""
+
+        super().__init__(coordinator, key, attribute, description)
+        ble_addr: str = coordinator.device.config[key]["addr"]
+        self._attr_device_info = DeviceInfo(
+            connections={(CONNECTION_BLUETOOTH, ble_addr)}
+        )
 
 
 class RpcBluTrvExtTempNumber(RpcBluTrvNumber):
@@ -226,8 +214,7 @@ RPC_NUMBERS: Final = {
         unit=lambda config: config["meta"]["ui"]["unit"]
         if config["meta"]["ui"]["unit"]
         else None,
-        method="Number.Set",
-        method_params_fn=lambda idx, value: {"id": idx, "value": value},
+        method="number_set",
     ),
     "valve_position": RpcNumberDescription(
         key="blutrv",
