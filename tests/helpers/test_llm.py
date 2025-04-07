@@ -576,6 +576,10 @@ async def test_assist_api_prompt(
         )
     )
     exposed_entities_prompt = """An overview of the areas and the devices in this smart home:
+- names: '1'
+  domain: light
+  state: unavailable
+  areas: Test Area 2
 - names: Kitchen
   domain: light
   state: 'on'
@@ -587,18 +591,6 @@ async def test_assist_api_prompt(
   state: 'on'
   areas: Test Area, Alternative name
 - names: Test Device, my test light
-  domain: light
-  state: unavailable
-  areas: Test Area, Alternative name
-- names: Test Service
-  domain: light
-  state: unavailable
-  areas: Test Area, Alternative name
-- names: Test Service
-  domain: light
-  state: unavailable
-  areas: Test Area, Alternative name
-- names: Test Service
   domain: light
   state: unavailable
   areas: Test Area, Alternative name
@@ -614,13 +606,55 @@ async def test_assist_api_prompt(
   domain: light
   state: unavailable
   areas: Test Area 2
+- names: Test Service
+  domain: light
+  state: unavailable
+  areas: Test Area, Alternative name
+- names: Test Service
+  domain: light
+  state: unavailable
+  areas: Test Area, Alternative name
+- names: Test Service
+  domain: light
+  state: unavailable
+  areas: Test Area, Alternative name
 - names: Unnamed Device
   domain: light
   state: unavailable
   areas: Test Area 2
+"""
+    stateless_exposed_entities_prompt = """An overview of the areas and the devices in this smart home:
 - names: '1'
   domain: light
-  state: unavailable
+  areas: Test Area 2
+- names: Kitchen
+  domain: light
+- names: Living Room
+  domain: light
+  areas: Test Area, Alternative name
+- names: Test Device, my test light
+  domain: light
+  areas: Test Area, Alternative name
+- names: Test Device 2
+  domain: light
+  areas: Test Area 2
+- names: Test Device 3
+  domain: light
+  areas: Test Area 2
+- names: Test Device 4
+  domain: light
+  areas: Test Area 2
+- names: Test Service
+  domain: light
+  areas: Test Area, Alternative name
+- names: Test Service
+  domain: light
+  areas: Test Area, Alternative name
+- names: Test Service
+  domain: light
+  areas: Test Area, Alternative name
+- names: Unnamed Device
+  domain: light
   areas: Test Area 2
 """
     first_part_prompt = (
@@ -640,7 +674,7 @@ async def test_assist_api_prompt(
         f"""{first_part_prompt}
 {area_prompt}
 {no_timer_prompt}
-{exposed_entities_prompt}"""
+{stateless_exposed_entities_prompt}"""
     )
 
     # Verify that the get_home_state tool returns the same results as the exposed_entities_prompt
@@ -663,7 +697,7 @@ async def test_assist_api_prompt(
         f"""{first_part_prompt}
 {area_prompt}
 {no_timer_prompt}
-{exposed_entities_prompt}"""
+{stateless_exposed_entities_prompt}"""
     )
 
     # Add floor
@@ -678,7 +712,7 @@ async def test_assist_api_prompt(
         f"""{first_part_prompt}
 {area_prompt}
 {no_timer_prompt}
-{exposed_entities_prompt}"""
+{stateless_exposed_entities_prompt}"""
     )
 
     # Register device for timers
@@ -689,7 +723,7 @@ async def test_assist_api_prompt(
     assert api.api_prompt == (
         f"""{first_part_prompt}
 {area_prompt}
-{exposed_entities_prompt}"""
+{stateless_exposed_entities_prompt}"""
     )
 
 

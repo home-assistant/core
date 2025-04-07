@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from tesla_fleet_api import VehicleSpecific
 from tesla_fleet_api.const import Scope
+from tesla_fleet_api.teslemetry import Vehicle
 
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
@@ -62,7 +62,7 @@ async def async_setup_entry(
 class TeslemetryMediaEntity(TeslemetryRootEntity, MediaPlayerEntity):
     """Base vehicle media player class."""
 
-    api: VehicleSpecific
+    api: Vehicle
 
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
     _attr_volume_step = VOLUME_STEP
