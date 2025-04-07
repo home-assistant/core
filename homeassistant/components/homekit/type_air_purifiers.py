@@ -5,9 +5,16 @@ from typing import Any
 
 from pyhap.const import CATEGORY_AIR_PURIFIER
 from pyhap.service import Service
+from pyhap.util import callback as pyhap_callback
 
 from homeassistant.const import STATE_ON
-from homeassistant.core import Event, EventStateChangedData, State, callback
+from homeassistant.core import (
+    Event,
+    EventStateChangedData,
+    HassJobType,
+    State,
+    callback,
+)
 from homeassistant.helpers.event import async_track_state_change_event
 
 from .accessories import TYPES
@@ -186,7 +193,9 @@ class AirPurifier(Fan):
 
         return serv_air_purifier
 
-    async def run(self) -> None:
+    @callback
+    @pyhap_callback  # type: ignore[misc]
+    def run(self) -> None:
         """Handle accessory driver started event.
 
         Run inside the Home Assistant event loop.
@@ -196,7 +205,8 @@ class AirPurifier(Fan):
                 async_track_state_change_event(
                     self.hass,
                     [self.linked_humidity_sensor],
-                    self.async_update_current_humidity_event,
+                    self._async_update_current_humidity_event,
+                    job_type=HassJobType.Callback,
                 )
             )
 
@@ -205,7 +215,8 @@ class AirPurifier(Fan):
                 async_track_state_change_event(
                     self.hass,
                     [self.linked_pm25_sensor],
-                    self.async_update_current_pm25_event,
+                    self._async_update_current_pm25_event,
+                    job_type=HassJobType.Callback,
                 )
             )
 
@@ -214,7 +225,8 @@ class AirPurifier(Fan):
                 async_track_state_change_event(
                     self.hass,
                     [self.linked_temperature_sensor],
-                    self.async_update_current_temperature_event,
+                    self._async_update_current_temperature_event,
+                    job_type=HassJobType.Callback,
                 )
             )
 
@@ -223,7 +235,8 @@ class AirPurifier(Fan):
                 async_track_state_change_event(
                     self.hass,
                     [self.linked_filter_change_indicator_binary_sensor],
-                    self.async_update_filter_change_indicator_event,
+                    self._async_update_filter_change_indicator_event,
+                    job_type=HassJobType.Callback,
                 )
             )
 
@@ -232,214 +245,160 @@ class AirPurifier(Fan):
                 async_track_state_change_event(
                     self.hass,
                     [self.linked_filter_life_level_sensor],
-                    self.async_update_filter_life_level_event,
+                    self._async_update_filter_life_level_event,
+                    job_type=HassJobType.Callback,
                 )
             )
 
+        super().run()
+
     @callback
-    def async_update_current_humidity_event(
+    def _async_update_current_humidity_event(
         self, event: Event[EventStateChangedData]
     ) -> None:
         """Handle state change event listener callback."""
-        if event.data["new_state"] is not None:
-            self._async_update_current_humidity(event.data["new_state"])
-        else:
-            _LOGGER.error(
-                "%s: Unable to update from linked humidity sensor %s: the entity state is None",
-                self.entity_id,
-                self.linked_humidity_sensor,
-            )
+        self._async_update_current_humidity(event.data["new_state"])
 
     @callback
-    def _async_update_current_humidity(self, new_state: State) -> None:
+    def _async_update_current_humidity(self, new_state: State | None) -> None:
         """Handle linked humidity sensor state change to update HomeKit value."""
-        try:
-            current_humidity = float(new_state.state)
-            if self.char_current_humidity is not None:
-                if self.char_current_humidity.value != current_humidity:
-                    _LOGGER.debug(
-                        "%s: Linked humidity sensor %s changed to %d",
-                        self.entity_id,
-                        self.linked_humidity_sensor,
-                        current_humidity,
-                    )
-                    self.char_current_humidity.set_value(current_humidity)
-        except ValueError as ex:
-            _LOGGER.debug(
-                "%s: Unable to update from linked humidity sensor %s: %s",
-                self.entity_id,
-                self.linked_humidity_sensor,
-                ex,
-            )
+        if not new_state:
+            return
+
+        current_humidity = float(new_state.state)
+        if self.char_current_humidity.value == current_humidity:
+            return
+
+        _LOGGER.debug(
+            "%s: Linked humidity sensor %s changed to %d",
+            self.entity_id,
+            self.linked_humidity_sensor,
+            current_humidity,
+        )
+        self.char_current_humidity.set_value(current_humidity)
 
     @callback
-    def async_update_current_pm25_event(
+    def _async_update_current_pm25_event(
         self, event: Event[EventStateChangedData]
     ) -> None:
         """Handle state change event listener callback."""
-        if event.data["new_state"] is not None:
-            self._async_update_current_pm25(event.data["new_state"])
-        else:
-            _LOGGER.error(
-                "%s: Unable to update from linked pm25 sensor %s: the entity state is None",
-                self.entity_id,
-                self.linked_pm25_sensor,
-            )
+        self._async_update_current_pm25(event.data["new_state"])
 
     @callback
-    def _async_update_current_pm25(self, new_state: State) -> None:
+    def _async_update_current_pm25(self, new_state: State | None) -> None:
         """Handle linked pm25 sensor state change to update HomeKit value."""
-        try:
-            current_pm25 = float(new_state.state)
-            if self.char_pm25_density is not None:
-                if self.char_pm25_density.value != current_pm25:
-                    _LOGGER.debug(
-                        "%s: Linked pm25 sensor %s changed to %d",
-                        self.entity_id,
-                        self.linked_pm25_sensor,
-                        current_pm25,
-                    )
-                    self.char_pm25_density.set_value(current_pm25)
-                    air_quality = density_to_air_quality(current_pm25)
-                    self.char_air_quality.set_value(air_quality)
-                    _LOGGER.debug(
-                        "%s: Set air_quality to %d", self.entity_id, air_quality
-                    )
-        except ValueError as ex:
-            _LOGGER.debug(
-                "%s: Unable to update from linked pm25 sensor %s: %s",
-                self.entity_id,
-                self.linked_pm25_sensor,
-                ex,
-            )
+        if not new_state:
+            return
+
+        current_pm25 = float(new_state.state)
+        if self.char_pm25_density.value == current_pm25:
+            return
+
+        _LOGGER.debug(
+            "%s: Linked pm25 sensor %s changed to %d",
+            self.entity_id,
+            self.linked_pm25_sensor,
+            current_pm25,
+        )
+        self.char_pm25_density.set_value(current_pm25)
+        air_quality = density_to_air_quality(current_pm25)
+        self.char_air_quality.set_value(air_quality)
+        _LOGGER.debug("%s: Set air_quality to %d", self.entity_id, air_quality)
 
     @callback
-    def async_update_current_temperature_event(
+    def _async_update_current_temperature_event(
         self, event: Event[EventStateChangedData]
     ) -> None:
         """Handle state change event listener callback."""
-        if event.data["new_state"] is not None:
-            self._async_update_current_temperature(event.data["new_state"])
-        else:
-            _LOGGER.error(
-                "%s: Unable to update from linked temperature sensor %s: the entity state is None",
-                self.entity_id,
-                self.linked_temperature_sensor,
-            )
+        self._async_update_current_temperature(event.data["new_state"])
 
     @callback
-    def _async_update_current_temperature(self, new_state: State) -> None:
+    def _async_update_current_temperature(self, new_state: State | None) -> None:
         """Handle linked temperature sensor state change to update HomeKit value."""
-        try:
-            current_temperature = float(new_state.state)
-            if self.char_current_temperature is not None:
-                if self.char_current_temperature.value != current_temperature:
-                    _LOGGER.debug(
-                        "%s: Linked temperature sensor %s changed to %d",
-                        self.entity_id,
-                        self.linked_temperature_sensor,
-                        current_temperature,
-                    )
-                    self.char_current_temperature.set_value(current_temperature)
-        except ValueError as ex:
-            _LOGGER.debug(
-                "%s: Unable to update from linked temperature sensor %s: %s",
-                self.entity_id,
-                self.linked_temperature_sensor,
-                ex,
-            )
+        if not new_state:
+            return
+
+        current_temperature = float(new_state.state)
+        if self.char_current_temperature.value == current_temperature:
+            return
+
+        _LOGGER.debug(
+            "%s: Linked temperature sensor %s changed to %d",
+            self.entity_id,
+            self.linked_temperature_sensor,
+            current_temperature,
+        )
+        self.char_current_temperature.set_value(current_temperature)
 
     @callback
-    def async_update_filter_change_indicator_event(self, event):
+    def _async_update_filter_change_indicator_event(
+        self, event: Event[EventStateChangedData]
+    ):
         """Handle state change event listener callback."""
         self._async_update_filter_change_indicator(event.data.get("new_state"))
 
     @callback
-    def _async_update_filter_change_indicator(self, new_state):
+    def _async_update_filter_change_indicator(self, new_state: State | None):
         """Handle linked filter change indicator binary sensor state change to update HomeKit value."""
         if new_state is None:
-            _LOGGER.error(
-                "%s: Unable to update from linked filter change indicator binary sensor %s: the entity state is None",
-                self.entity_id,
-                self.linked_filter_change_indicator_binary_sensor,
-            )
             return
-        try:
-            current_change_indicator = (
-                FILTER_CHANGE_FILTER if new_state.state == "on" else FILTER_OK
-            )
-            if self.char_filter_change_indication.value != current_change_indicator:
-                _LOGGER.debug(
-                    "%s: Linked filter change indicator binary sensor %s changed to %d",
-                    self.entity_id,
-                    self.linked_filter_change_indicator_binary_sensor,
-                    current_change_indicator,
-                )
-                self.char_filter_change_indication.set_value(current_change_indicator)
-        except ValueError as ex:
-            _LOGGER.debug(
-                "%s: Unable to update from linked filter change indicator binary sensor %s: %s",
-                self.entity_id,
-                self.linked_filter_change_indicator_binary_sensor,
-                ex,
-            )
+
+        current_change_indicator = (
+            FILTER_CHANGE_FILTER if new_state.state == "on" else FILTER_OK
+        )
+        if self.char_filter_change_indication.value == current_change_indicator:
+            return
+
+        _LOGGER.debug(
+            "%s: Linked filter change indicator binary sensor %s changed to %d",
+            self.entity_id,
+            self.linked_filter_change_indicator_binary_sensor,
+            current_change_indicator,
+        )
+        self.char_filter_change_indication.set_value(current_change_indicator)
 
     @callback
-    def async_update_filter_life_level_event(self, event):
+    def _async_update_filter_life_level_event(
+        self, event: Event[EventStateChangedData]
+    ):
         """Handle state change event listener callback."""
         self._async_update_filter_life_level(event.data.get("new_state"))
 
     @callback
-    def _async_update_filter_life_level(self, new_state):
+    def _async_update_filter_life_level(self, new_state: State | None):
         """Handle linked filter life level sensor state change to update HomeKit value."""
         if new_state is None:
-            _LOGGER.error(
-                "%s: Unable to update from linked filter life level sensor %s: the entity state is None",
-                self.entity_id,
-                self.linked_filter_life_level_sensor,
-            )
             return
+
         current_life_level = float(new_state.state)
-        try:
-            if self.char_filter_life_level.value != current_life_level:
-                _LOGGER.debug(
-                    "%s: Linked filter life level sensor %s changed to %d",
-                    self.entity_id,
-                    self.linked_filter_life_level_sensor,
-                    current_life_level,
-                )
-                self.char_filter_life_level.set_value(current_life_level)
-        except ValueError as ex:
+        if self.char_filter_life_level.value != current_life_level:
             _LOGGER.debug(
-                "%s: Unable to update from linked filter life level sensor %s: %s",
+                "%s: Linked filter life level sensor %s changed to %d",
                 self.entity_id,
                 self.linked_filter_life_level_sensor,
-                ex,
+                current_life_level,
             )
-        if not self.linked_filter_change_indicator_binary_sensor:
-            current_change_indicator = (
-                FILTER_CHANGE_FILTER
-                if (current_life_level < THRESHOLD_FILTER_CHANGE_NEEDED)
-                else FILTER_OK
-            )
-            try:
-                if self.char_filter_change_indication.value != current_change_indicator:
-                    _LOGGER.debug(
-                        "%s: Linked filter life level sensor %s changed to %d",
-                        self.entity_id,
-                        self.linked_filter_life_level_sensor,
-                        current_change_indicator,
-                    )
-                    self.char_filter_change_indication.set_value(
-                        current_change_indicator
-                    )
-            except ValueError as ex:
-                _LOGGER.debug(
-                    "%s: Unable to update from linked filter life level sensor %s: %s",
-                    self.entity_id,
-                    self.linked_filter_life_level_sensor,
-                    ex,
-                )
+            self.char_filter_life_level.set_value(current_life_level)
+
+        if self.linked_filter_change_indicator_binary_sensor:
+            # Handled by its own event listener
+            return
+
+        current_change_indicator = (
+            FILTER_CHANGE_FILTER
+            if (current_life_level < THRESHOLD_FILTER_CHANGE_NEEDED)
+            else FILTER_OK
+        )
+        if self.char_filter_change_indication.value == current_change_indicator:
+            return
+
+        _LOGGER.debug(
+            "%s: Linked filter life level sensor %s changed to %d",
+            self.entity_id,
+            self.linked_filter_life_level_sensor,
+            current_change_indicator,
+        )
+        self.char_filter_change_indication.set_value(current_change_indicator)
 
     @callback
     def async_update_state(self, new_state: State) -> None:
