@@ -50,6 +50,7 @@ from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_NAME,
     CONF_PORT,
+    CONF_TYPE,
     EVENT_HOMEASSISTANT_STOP,
     SERVICE_RELOAD,
 )
@@ -130,6 +131,7 @@ from .const import (
     SERVICE_HOMEKIT_UNPAIR,
     SHUTDOWN_TIMEOUT,
     SIGNAL_RELOAD_ENTITIES,
+    TYPE_AIR_PURIFIER,
 )
 from .iidmanager import AccessoryIIDStorage
 from .models import HomeKitConfigEntry, HomeKitEntryData
@@ -1142,28 +1144,27 @@ class HomeKit:
                     CONF_LINKED_DOORBELL_SENSOR, doorbell_event_entity_id
                 )
 
+        if domain == FAN_DOMAIN:
+            if current_humidity_sensor_entity_id := lookup.get(HUMIDITY_SENSOR):
+                config[entity_id].setdefault(
+                    CONF_LINKED_HUMIDITY_SENSOR, current_humidity_sensor_entity_id
+                )
+            if current_pm25_sensor_entity_id := lookup.get(PM25_SENSOR):
+                config[entity_id].setdefault(CONF_TYPE, TYPE_AIR_PURIFIER)
+                config[entity_id].setdefault(
+                    CONF_LINKED_PM25_SENSOR, current_pm25_sensor_entity_id
+                )
+            if current_temperature_sensor_entity_id := lookup.get(TEMPERATURE_SENSOR):
+                config[entity_id].setdefault(
+                    CONF_LINKED_TEMPERATURE_SENSOR, current_temperature_sensor_entity_id
+                )
+
         if domain == HUMIDIFIER_DOMAIN and (
             current_humidity_sensor_entity_id := lookup.get(HUMIDITY_SENSOR)
         ):
             config[entity_id].setdefault(
                 CONF_LINKED_HUMIDITY_SENSOR, current_humidity_sensor_entity_id
             )
-        if domain == FAN_DOMAIN:
-            current_humidity_sensor_entity_id = lookup.get(HUMIDITY_SENSOR)
-            if current_humidity_sensor_entity_id:
-                config[entity_id].setdefault(
-                    CONF_LINKED_HUMIDITY_SENSOR, current_humidity_sensor_entity_id
-                )
-            current_temperature_sensor_entity_id = lookup.get(TEMPERATURE_SENSOR)
-            if current_temperature_sensor_entity_id:
-                config[entity_id].setdefault(
-                    CONF_LINKED_TEMPERATURE_SENSOR, current_temperature_sensor_entity_id
-                )
-            current_air_sensor_entity_id = lookup.get(PM25_SENSOR)
-            if current_air_sensor_entity_id:
-                config[entity_id].setdefault(
-                    CONF_LINKED_PM25_SENSOR, current_air_sensor_entity_id
-                )
 
     async def _async_set_device_info_attributes(
         self,

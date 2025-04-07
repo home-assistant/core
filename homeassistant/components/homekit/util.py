@@ -100,6 +100,8 @@ from .const import (
     FEATURE_PLAY_STOP,
     FEATURE_TOGGLE_MUTE,
     MAX_NAME_LENGTH,
+    TYPE_AIR_PURIFIER,
+    TYPE_FAN,
     TYPE_FAUCET,
     TYPE_OUTLET,
     TYPE_SHOWER,
@@ -191,12 +193,20 @@ HUMIDIFIER_SCHEMA = BASIC_INFO_SCHEMA.extend(
 
 FAN_SCHEMA = BASIC_INFO_SCHEMA.extend(
     {
+        vol.Optional(CONF_TYPE, default=TYPE_FAN): vol.All(
+            cv.string,
+            vol.In(
+                (
+                    TYPE_FAN,
+                    TYPE_AIR_PURIFIER,
+                )
+            ),
+        ),
         vol.Optional(CONF_LINKED_HUMIDITY_SENSOR): cv.entity_domain(sensor.DOMAIN),
         vol.Optional(CONF_LINKED_PM25_SENSOR): cv.entity_domain(sensor.DOMAIN),
         vol.Optional(CONF_LINKED_TEMPERATURE_SENSOR): cv.entity_domain(sensor.DOMAIN),
     }
 )
-
 
 COVER_SCHEMA = BASIC_INFO_SCHEMA.extend(
     {

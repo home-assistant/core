@@ -122,6 +122,8 @@ TYPE_SHOWER = "shower"
 TYPE_SPRINKLER = "sprinkler"
 TYPE_SWITCH = "switch"
 TYPE_VALVE = "valve"
+TYPE_FAN = "fan"
+TYPE_AIR_PURIFIER = "air_purifier"
 
 # #### Categories ####
 CATEGORY_RECEIVER = 34
