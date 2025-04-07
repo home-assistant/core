@@ -70,6 +70,9 @@
       },
       "display_light": {
         "name": "Lighting"
+      },
+      "air_clean_operation_mode": {
+        "name": "[%key:component::lg_thinq::entity::climate::climate_air_conditioner::state_attributes::preset_mode::state::air_clean%]"
       }
     },
     "binary_sensor": {
