@@ -663,9 +663,6 @@ class HomeKitClimateEntity(HomeKitBaseClimateEntity):
         # This works around a bug in some devices (like Eve radiator valves) that
         # return they are heating when they are not.
         target = self.service.value(CharacteristicsTypes.HEATING_COOLING_TARGET)
-        if target == HeatingCoolingTargetValues.OFF:
-            return HVACAction.IDLE
-
         value = self.service.value(CharacteristicsTypes.HEATING_COOLING_CURRENT)
         current_hass_value = CURRENT_MODE_HOMEKIT_TO_HASS.get(value)
 
@@ -678,6 +675,9 @@ class HomeKitClimateEntity(HomeKitBaseClimateEntity):
             == CurrentFanStateValues.ACTIVE
         ):
             return HVACAction.FAN
+
+        if target == HeatingCoolingTargetValues.OFF:
+            return HVACAction.IDLE
 
         return current_hass_value
 
