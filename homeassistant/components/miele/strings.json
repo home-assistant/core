@@ -27,26 +27,6 @@
     }
   },
   "entity": {
-    "binary_sensor": {
-      "door": {
-        "name": "Door"
-      },
-      "failure": {
-        "name": "Failure"
-      },
-      "info": {
-        "name": "Info"
-      },
-      "mobile_start": {
-        "name": "Mobile start"
-      },
-      "remote_control": {
-        "name": "Remote control"
-      },
-      "smart_grid": {
-        "name": "Smart grid"
-      }
-    },
     "sensor": {
       "status": {
         "name": "Status",
@@ -73,17 +53,6 @@
       },
       "temperature": {
         "name": "Temperature"
-      }
-    },
-    "switch": {
-      "power_on": {
-        "name": "Power on"
-      },
-      "supercooling": {
-        "name": "Supercooling"
-      },
-      "superfreezing": {
-        "name": "Superfreezing"
       }
     }
   },
