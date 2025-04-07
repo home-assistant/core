@@ -5,6 +5,7 @@ from __future__ import annotations
 from asyncio import sleep as asyncio_sleep
 from collections import defaultdict
 from collections.abc import Callable
+from contextlib import suppress
 from dataclasses import dataclass
 import logging
 from typing import Any, cast
@@ -73,6 +74,19 @@ class HomeConnectApplianceData:
         self.settings.update(other.settings)
         self.status.update(other.status)
 
+    @classmethod
+    def empty(cls, appliance: HomeAppliance) -> HomeConnectApplianceData:
+        """Return empty data."""
+        return cls(
+            commands=set(),
+            events={},
+            info=appliance,
+            options={},
+            programs=[],
+            settings={},
+            status={},
+        )
+
 
 class HomeConnectCoordinator(
     DataUpdateCoordinator[dict[str, HomeConnectApplianceData]]
@@ -119,8 +133,11 @@ class HomeConnectCoordinator(
         self.__dict__.pop("context_listeners", None)
 
         def remove_listener_and_invalidate_context_listeners() -> None:
-            remove_listener()
-            self.__dict__.pop("context_listeners", None)
+            # There are cases where the remove_listener will be called
+            # although it has been already removed somewhere else
+            with suppress(KeyError):
+                remove_listener()
+                self.__dict__.pop("context_listeners", None)
 
         return remove_listener_and_invalidate_context_listeners
 
@@ -358,15 +375,7 @@ class HomeConnectCoordinator(
                 model=appliance.vib,
             )
             if appliance.ha_id not in self.data:
-                self.data[appliance.ha_id] = HomeConnectApplianceData(
-                    commands=set(),
-                    events={},
-                    info=appliance,
-                    options={},
-                    programs=[],
-                    settings={},
-                    status={},
-                )
+                self.data[appliance.ha_id] = HomeConnectApplianceData.empty(appliance)
             else:
                 self.data[appliance.ha_id].info.connected = appliance.connected
                 old_appliances.remove(appliance.ha_id)
@@ -402,6 +411,15 @@ class HomeConnectCoordinator(
             name=appliance.name,
             model=appliance.vib,
         )
+        if not appliance.connected:
+            _LOGGER.debug(
+                "Appliance %s is not connected, skipping data fetch",
+                appliance.ha_id,
+            )
+            if appliance_data_to_update:
+                appliance_data_to_update.info.connected = False
+                return appliance_data_to_update
+            return HomeConnectApplianceData.empty(appliance)
         try:
             settings = {
                 setting.key: setting

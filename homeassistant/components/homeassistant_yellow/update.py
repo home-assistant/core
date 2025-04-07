@@ -44,6 +44,7 @@ FIRMWARE_ENTITY_DESCRIPTIONS: dict[
 ] = {
     ApplicationType.EZSP: FirmwareUpdateEntityDescription(
         key="radio_firmware",
+        translation_key="radio_firmware",
         display_precision=0,
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
@@ -55,6 +56,7 @@ FIRMWARE_ENTITY_DESCRIPTIONS: dict[
     ),
     ApplicationType.SPINEL: FirmwareUpdateEntityDescription(
         key="radio_firmware",
+        translation_key="radio_firmware",
         display_precision=0,
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
@@ -64,8 +66,33 @@ FIRMWARE_ENTITY_DESCRIPTIONS: dict[
         expected_firmware_type=ApplicationType.SPINEL,
         firmware_name="OpenThread RCP",
     ),
+    ApplicationType.CPC: FirmwareUpdateEntityDescription(
+        key="radio_firmware",
+        translation_key="radio_firmware",
+        display_precision=0,
+        device_class=UpdateDeviceClass.FIRMWARE,
+        entity_category=EntityCategory.CONFIG,
+        version_parser=lambda fw: fw,
+        fw_type="yellow_multipan",
+        version_key="cpc_version",
+        expected_firmware_type=ApplicationType.CPC,
+        firmware_name="Multiprotocol",
+    ),
+    ApplicationType.GECKO_BOOTLOADER: FirmwareUpdateEntityDescription(
+        key="radio_firmware",
+        translation_key="radio_firmware",
+        display_precision=0,
+        device_class=UpdateDeviceClass.FIRMWARE,
+        entity_category=EntityCategory.CONFIG,
+        version_parser=lambda fw: fw,
+        fw_type=None,  # We don't want to update the bootloader
+        version_key="gecko_bootloader_version",
+        expected_firmware_type=ApplicationType.GECKO_BOOTLOADER,
+        firmware_name="Gecko Bootloader",
+    ),
     None: FirmwareUpdateEntityDescription(
         key="radio_firmware",
+        translation_key="radio_firmware",
         display_precision=0,
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
@@ -86,9 +113,16 @@ def _async_create_update_entity(
 ) -> FirmwareUpdateEntity:
     """Create an update entity that handles firmware type changes."""
     firmware_type = config_entry.data[FIRMWARE]
-    entity_description = FIRMWARE_ENTITY_DESCRIPTIONS[
-        ApplicationType(firmware_type) if firmware_type is not None else None
-    ]
+
+    try:
+        entity_description = FIRMWARE_ENTITY_DESCRIPTIONS[
+            ApplicationType(firmware_type)
+        ]
+    except (KeyError, ValueError):
+        _LOGGER.debug(
+            "Unknown firmware type %r, using default entity description", firmware_type
+        )
+        entity_description = FIRMWARE_ENTITY_DESCRIPTIONS[None]
 
     entity = FirmwareUpdateEntity(
         device=RADIO_DEVICE,
@@ -139,7 +173,6 @@ class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
     """Yellow firmware update entity."""
 
     bootloader_reset_type = "yellow"  # Triggers a GPIO reset
-    _attr_has_entity_name = True
 
     def __init__(
         self,

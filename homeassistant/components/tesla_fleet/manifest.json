@@ -7,5 +7,5 @@
   "documentation": "https://www.home-assistant.io/integrations/tesla_fleet",
   "iot_class": "cloud_polling",
   "loggers": ["tesla-fleet-api"],
-  "requirements": ["tesla-fleet-api==1.0.16"]
+  "requirements": ["tesla-fleet-api==1.0.17"]
 }
