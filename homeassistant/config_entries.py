@@ -1526,7 +1526,7 @@ class ConfigEntriesFlowManager(
                 ir.async_delete_issue(self.hass, HOMEASSISTANT_DOMAIN, issue_id)
 
         if result["type"] != data_entry_flow.FlowResultType.CREATE_ENTRY:
-            # If there's an ignored config entry with a matching unique ID,
+            # If there's a config entry with a matching unique ID,
             # update the discovery key.
             if (
                 (discovery_key := flow.context.get("discovery_key"))
