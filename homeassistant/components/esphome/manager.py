@@ -48,6 +48,7 @@ from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
+    entity_registry as er,
     template,
 )
 from homeassistant.helpers.device_registry import format_mac
@@ -79,6 +80,8 @@ from .domain_data import DomainData
 
 # Import config flow so that it's added to the registry
 from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
+
+DEVICE_CONFLICT_ISSUE_FORMAT = "device_conflict-{}"
 
 if TYPE_CHECKING:
     from aioesphomeapi.api_pb2 import (  # type: ignore[attr-defined]
@@ -448,12 +451,36 @@ class ESPHomeManager:
         if not mac_address_matches and not unique_id_is_mac_address:
             hass.config_entries.async_update_entry(entry, unique_id=device_mac)
 
+        issue = DEVICE_CONFLICT_ISSUE_FORMAT.format(entry.entry_id)
         if not mac_address_matches and unique_id_is_mac_address:
             # If the unique id is a mac address
             # and does not match we have the wrong device and we need
             # to abort the connection. This can happen if the DHCP
             # server changes the IP address of the device and we end up
             # connecting to the wrong device.
+            if stored_device_name == device_info.name:
+                # If the device name matches it might be a device replacement
+                # or they made a mistake and flashed the same firmware on
+                # multiple devices. In this case we start a repair flow
+                # to ask them if its a mistake, or if they want to migrate
+                # the config entry to the hardware.
+                shared_data = {
+                    "name": device_info.name,
+                    "mac": format_mac(device_mac),
+                    "stored_mac": format_mac(unique_id),
+                    "model": device_info.model,
+                    "ip": self.host,
+                }
+                async_create_issue(
+                    hass,
+                    DOMAIN,
+                    issue,
+                    is_fixable=True,
+                    severity=IssueSeverity.ERROR,
+                    translation_key="device_conflict",
+                    translation_placeholders=shared_data,
+                    data={**shared_data, "entry_id": entry.entry_id},
+                )
             _LOGGER.error(
                 "Unexpected device found at %s; "
                 "expected `%s` with mac address `%s`, "
@@ -475,6 +502,7 @@ class ESPHomeManager:
             # flow.
             return
 
+        async_delete_issue(hass, DOMAIN, issue)
         # Make sure we have the correct device name stored
         # so we can map the device to ESPHome Dashboard config
         # If we got here, we know the mac address matches or we
@@ -873,3 +901,29 @@ async def cleanup_instance(
     await data.async_cleanup()
     await data.client.disconnect()
     return data
+
+
+@callback
+def async_replace_device(
+    hass: HomeAssistant,
+    entry_id: str,
+    new_mac: str,
+) -> None:
+    """Migrate an ESPHome entry to replace an existing device."""
+    new_unique_id = new_mac.upper()
+    entry = hass.config_entries.async_get_entry(entry_id)
+    assert entry is not None
+    hass.config_entries.async_update_entry(entry, unique_id=new_unique_id)
+    dev_reg = dr.async_get(hass)
+    for device in dr.async_entries_for_config_entry(dev_reg, entry.entry_id):
+        dev_reg.async_update_device(
+            device.id,
+            new_connections={(dr.CONNECTION_NETWORK_MAC, new_unique_id)},
+        )
+    ent_reg = er.async_get(hass)
+    for entity in er.async_entries_for_config_entry(ent_reg, entry.entry_id):
+        old_unique_id = entity.unique_id.split("_")
+        ent_reg.async_update_entity(
+            entity.entity_id,
+            new_unique_id="_".join([new_unique_id, *old_unique_id[1:]]),
+        )
