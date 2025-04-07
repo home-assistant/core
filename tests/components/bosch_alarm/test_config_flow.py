@@ -364,4 +364,4 @@ async def test_reconfig_flow_incorrect_model(
 
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "unique_id_mismatch"
+    assert result["reason"] == "device_mismatch"
