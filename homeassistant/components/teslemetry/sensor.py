@@ -6,7 +6,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
-from propcache.api import cached_property
 from teslemetry_stream import TeslemetryStreamVehicle
 
 from homeassistant.components.sensor import (
@@ -629,19 +628,7 @@ class TeslemetryStreamSensorEntity(TeslemetryVehicleStreamEntity, RestoreSensor)
         if (sensor_data := await self.async_get_last_sensor_data()) is not None:
             self._attr_native_value = sensor_data.native_value
 
-        if self.entity_description.streaming_listener is not None:
-            self.async_on_remove(
-                self.entity_description.streaming_listener(
-                    self.vehicle.stream_vehicle, self._async_value_from_stream
-                )
-            )
-
-    @cached_property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self.stream.connected
-
-    def _async_value_from_stream(self, value: StateType) -> None:
+    def _async_value_from_stream(self, value) -> None:
         """Update the value of the entity."""
         self._attr_native_value = value
         self.async_write_ha_state()
