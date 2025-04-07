@@ -120,7 +120,7 @@ class BoschAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
                         self._get_reconfigure_entry().data[CONF_MODEL]
                         != self._data[CONF_MODEL]
                     ):
-                        raise AbortFlow("unique_id_mismatch")
+                        raise AbortFlow("device_mismatch")
                 return await self.async_step_auth()
         return self.async_show_form(
             step_id="user",
@@ -175,7 +175,7 @@ class BoschAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
                     await self.async_set_unique_id(str(serial_number))
                 if self.source == SOURCE_RECONFIGURE:
                     if serial_number:
-                        self._abort_if_unique_id_mismatch()
+                        self._abort_if_unique_id_mismatch(reason="device_mismatch")
 
                 if self.source == SOURCE_USER:
                     if serial_number:
