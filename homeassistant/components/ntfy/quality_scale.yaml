@@ -42,9 +42,7 @@ rules:
     status: exempt
     comment: the integration only integrates state-less entities
   parallel-updates: done
-  reauthentication-flow:
-    status: exempt
-    comment: the integration currently does not implement authenticated requests
+  reauthentication-flow: todo
   test-coverage: done
 
   # Gold
