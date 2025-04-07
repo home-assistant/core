@@ -925,14 +925,9 @@ def async_replace_device(
     for entity in er.async_entries_for_config_entry(ent_reg, entry.entry_id):
         # <mac>-<entity type>-<object_id>
         old_unique_id = entity.unique_id.split("-")
-        try:
+        new_unique_id = "-".join([new_unique_id, *old_unique_id[1:]])
+        if entity.unique_id != new_unique_id:
             ent_reg.async_update_entity(
                 entity.entity_id,
                 new_unique_id="-".join([new_unique_id, *old_unique_id[1:]]),
-            )
-        except ValueError:
-            _LOGGER.exception(
-                "Failed to update entity %s with new unique id %s",
-                entity.entity_id,
-                new_unique_id,
             )
