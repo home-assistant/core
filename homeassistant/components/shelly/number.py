@@ -7,8 +7,8 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Final, cast
 
 from aioshelly.block_device import Block
-from aioshelly.const import BLU_TRV_TIMEOUT, RPC_GENERATIONS
-from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
+from aioshelly.const import RPC_GENERATIONS
+from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 
 from homeassistant.components.number import (
     DOMAIN as NUMBER_PLATFORM,
@@ -59,7 +59,7 @@ class RpcNumberDescription(RpcEntityDescription, NumberEntityDescription):
     step_fn: Callable[[dict], float] | None = None
     mode_fn: Callable[[dict], NumberMode] | None = None
     method: str
-    method_params_fn: Callable[[int, float], dict]
+    method_params_fn: Callable[[int, float], dict] | None = None
 
 
 class RpcNumber(ShellyRpcAttributeEntity, NumberEntity):
@@ -102,6 +102,7 @@ class RpcNumber(ShellyRpcAttributeEntity, NumberEntity):
         """Change the value."""
         if TYPE_CHECKING:
             assert isinstance(self._id, int)
+            assert self.entity_description.method_params_fn is not None
 
         await self.call_rpc(
             self.entity_description.method,
@@ -129,14 +130,35 @@ class RpcBluTrvNumber(RpcNumber):
 
     async def async_set_native_value(self, value: float) -> None:
         """Change the value."""
+        method = getattr(self.coordinator.device, self.entity_description.method)
+
         if TYPE_CHECKING:
             assert isinstance(self._id, int)
+            assert method is not None
 
-        await self.call_rpc(
-            self.entity_description.method,
-            self.entity_description.method_params_fn(self._id, value),
-            timeout=BLU_TRV_TIMEOUT,
-        )
+        try:
+            await method(self._id, int(value))
+        except DeviceConnectionError as err:
+            self.coordinator.last_update_success = False
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="device_communication_action_error",
+                translation_placeholders={
+                    "entity": self.entity_id,
+                    "device": self.coordinator.name,
+                },
+            ) from err
+        except RpcCallError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="rpc_call_action_error",
+                translation_placeholders={
+                    "entity": self.entity_id,
+                    "device": self.coordinator.name,
+                },
+            ) from err
+        except InvalidAuthError:
+            await self.coordinator.async_shutdown_device_and_start_reauth()
 
 
 class RpcBluTrvExtTempNumber(RpcBluTrvNumber):
@@ -187,12 +209,7 @@ RPC_NUMBERS: Final = {
         mode=NumberMode.BOX,
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        method="BluTRV.Call",
-        method_params_fn=lambda idx, value: {
-            "id": idx,
-            "method": "Trv.SetExternalTemperature",
-            "params": {"id": 0, "t_C": value},
-        },
+        method="blu_trv_set_external_temperature",
         entity_class=RpcBluTrvExtTempNumber,
     ),
     "number": RpcNumberDescription(
@@ -222,12 +239,7 @@ RPC_NUMBERS: Final = {
         native_step=1,
         mode=NumberMode.SLIDER,
         native_unit_of_measurement=PERCENTAGE,
-        method="BluTRV.Call",
-        method_params_fn=lambda idx, value: {
-            "id": idx,
-            "method": "Trv.SetPosition",
-            "params": {"id": 0, "pos": int(value)},
-        },
+        method="blu_trv_set_valve_position",
         removal_condition=lambda config, _status, key: config[key].get("enable", True)
         is True,
         entity_class=RpcBluTrvNumber,
