@@ -10,13 +10,21 @@ from requests.exceptions import ConnectTimeout, SSLError
 
 from homeassistant.components.proxmoxve import CONF_HOST, CONF_REALM
 from homeassistant.components.proxmoxve.common import ResourceException
-from homeassistant.components.proxmoxve.const import CONF_NODES, DOMAIN
+from homeassistant.components.proxmoxve.const import (
+    CONF_CONTAINERS,
+    CONF_NODE,
+    CONF_NODES,
+    CONF_VMS,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_PORT, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import MOCK_TEST_CONFIG
+
+from tests.common import MockConfigEntry
 
 MOCK_USER_STEP = {
     CONF_HOST: "127.0.0.1",
@@ -160,6 +168,59 @@ async def test_form_nodes_exception(
 
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"base": "no_nodes_found"}
+
+
+async def test_duplicate_entry(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    mock_setup_entry: MagicMock,
+) -> None:
+    """Test we handle duplicate entries."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "127.0.0.1",
+            CONF_USERNAME: "test_user@pam",
+            CONF_PASSWORD: "test_password",
+            CONF_VERIFY_SSL: True,
+            CONF_PORT: 8006,
+            CONF_REALM: "pam",
+            CONF_NODES: [
+                {
+                    CONF_NODE: "pve1",
+                    CONF_VMS: [100],
+                    CONF_CONTAINERS: [200],
+                }
+            ],
+        },
+        unique_id="127.0.0.1",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=MOCK_USER_STEP,
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "setup"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=MOCK_USER_SETUP,
+    )
+
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_import_flow(
