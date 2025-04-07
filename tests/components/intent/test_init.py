@@ -34,11 +34,11 @@ async def test_http_handle_intent(
             assert intent_obj.context.user_id == hass_admin_user.id
             response = intent_obj.create_response()
             response.async_set_speech(
-                "I've ordered a {}!".format(intent_obj.slots["type"]["value"])
+                f"I've ordered a {intent_obj.slots['type']['value']}!"
             )
             response.async_set_card(
                 "Beer ordered",
-                "You chose a {}.".format(intent_obj.slots["type"]["value"]),
+                f"You chose a {intent_obj.slots['type']['value']}.",
             )
             return response
 
@@ -455,3 +455,25 @@ async def test_set_position_intent_unsupported_domain(hass: HomeAssistant) -> No
             "HassSetPosition",
             {"name": {"value": "test light"}, "position": {"value": 100}},
         )
+
+
+async def test_intents_with_no_responses(hass: HomeAssistant) -> None:
+    """Test intents that should not return a response during handling."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "intent", {})
+
+    # The "respond" intent gets its response text from home-assistant-intents
+    for intent_name in (intent.INTENT_NEVERMIND, intent.INTENT_RESPOND):
+        response = await intent.async_handle(hass, "test", intent_name, {})
+        assert not response.speech
+
+
+async def test_intents_respond_intent(hass: HomeAssistant) -> None:
+    """Test HassRespond intent with a response slot value."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "intent", {})
+
+    response = await intent.async_handle(
+        hass, "test", intent.INTENT_RESPOND, {"response": {"value": "Hello World"}}
+    )
+    assert response.speech["plain"]["speech"] == "Hello World"

@@ -1,33 +1,263 @@
 # serializer version: 1
-# name: test_climate
-  ReadOnlyDict({
-    'current_humidity': 32.9,
-    'current_temperature': 21.2,
-    'fan_mode': 'high',
-    'fan_modes': list([
-      'quiet',
-      'low',
-      'medium',
-    ]),
-    'friendly_name': 'Hallway',
-    'hvac_modes': list([
-      <HVACMode.COOL: 'cool'>,
-      <HVACMode.HEAT: 'heat'>,
-      <HVACMode.DRY: 'dry'>,
-      <HVACMode.HEAT_COOL: 'heat_cool'>,
-      <HVACMode.FAN_ONLY: 'fan_only'>,
-      <HVACMode.OFF: 'off'>,
-    ]),
-    'max_temp': 20,
-    'min_temp': 10,
-    'supported_features': <ClimateEntityFeature: 425>,
-    'swing_mode': 'stopped',
-    'swing_modes': list([
-      'stopped',
-      'fixedtop',
-      'fixedmiddletop',
-    ]),
-    'target_temp_step': 1,
-    'temperature': 25,
+# name: test_climate[load_platforms0][climate.bedroom-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 1,
+      'min_temp': 0,
+      'target_temp_step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.bedroom',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'sensibo',
+    'previous_unique_id': None,
+    'supported_features': <ClimateEntityFeature: 384>,
+    'translation_key': 'climate_device',
+    'unique_id': 'BBZZBBZZ',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_climate[load_platforms0][climate.bedroom-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': None,
+      'friendly_name': 'Bedroom',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 1,
+      'min_temp': 0,
+      'supported_features': <ClimateEntityFeature: 384>,
+      'target_temp_step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.bedroom',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_climate[load_platforms0][climate.hallway-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'fan_modes': list([
+        'quiet',
+        'low',
+        'medium',
+      ]),
+      'hvac_modes': list([
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.DRY: 'dry'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 20,
+      'min_temp': 10,
+      'swing_horizontal_modes': list([
+        'stopped',
+        'fixedleft',
+        'fixedcenterleft',
+      ]),
+      'swing_modes': list([
+        'stopped',
+        'fixedtop',
+        'fixedmiddletop',
+      ]),
+      'target_temp_step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.hallway',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'sensibo',
+    'previous_unique_id': None,
+    'supported_features': <ClimateEntityFeature: 937>,
+    'translation_key': 'climate_device',
+    'unique_id': 'ABC999111',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_climate[load_platforms0][climate.hallway-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_humidity': 32.9,
+      'current_temperature': 21.2,
+      'fan_mode': 'high',
+      'fan_modes': list([
+        'quiet',
+        'low',
+        'medium',
+      ]),
+      'friendly_name': 'Hallway',
+      'hvac_modes': list([
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.DRY: 'dry'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 20,
+      'min_temp': 10,
+      'supported_features': <ClimateEntityFeature: 937>,
+      'swing_horizontal_mode': 'stopped',
+      'swing_horizontal_modes': list([
+        'stopped',
+        'fixedleft',
+        'fixedcenterleft',
+      ]),
+      'swing_mode': 'stopped',
+      'swing_modes': list([
+        'stopped',
+        'fixedtop',
+        'fixedmiddletop',
+      ]),
+      'target_temp_step': 1,
+      'temperature': 25,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.hallway',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
+# name: test_climate[load_platforms0][climate.kitchen-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'fan_modes': list([
+        'low',
+        'high',
+      ]),
+      'hvac_modes': list([
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 1,
+      'min_temp': 0,
+      'target_temp_step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.kitchen',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'sensibo',
+    'previous_unique_id': None,
+    'supported_features': <ClimateEntityFeature: 392>,
+    'translation_key': 'climate_device',
+    'unique_id': 'AAZZAAZZ',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_climate[load_platforms0][climate.kitchen-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': None,
+      'fan_mode': 'low',
+      'fan_modes': list([
+        'low',
+        'high',
+      ]),
+      'friendly_name': 'Kitchen',
+      'hvac_modes': list([
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 1,
+      'min_temp': 0,
+      'supported_features': <ClimateEntityFeature: 392>,
+      'target_temp_step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.kitchen',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_climate_get_device_capabilities
+  dict({
+    'climate.hallway': dict({
+      'horizontalswing': list([
+        'stopped',
+        'fixedLeft',
+        'fixedCenterLeft',
+      ]),
+      'light': list([
+        'on',
+        'off',
+      ]),
+      'swing': list([
+        'stopped',
+        'fixedTop',
+        'fixedMiddleTop',
+      ]),
+    }),
   })
 # ---

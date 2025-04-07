@@ -1,6 +1,6 @@
 """Test the Teslemetry config flow."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from aiohttp import ClientConnectionError
 import pytest
@@ -60,7 +60,10 @@ async def test_form(
     ],
 )
 async def test_form_errors(
-    hass: HomeAssistant, side_effect, error, mock_metadata
+    hass: HomeAssistant,
+    side_effect: TeslaFleetError,
+    error: dict[str, str],
+    mock_metadata: AsyncMock,
 ) -> None:
     """Test errors are handled."""
 
@@ -86,7 +89,7 @@ async def test_form_errors(
     assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_reauth(hass: HomeAssistant, mock_metadata) -> None:
+async def test_reauth(hass: HomeAssistant, mock_metadata: AsyncMock) -> None:
     """Test reauth flow."""
 
     mock_entry = MockConfigEntry(
@@ -94,14 +97,7 @@ async def test_reauth(hass: HomeAssistant, mock_metadata) -> None:
     )
     mock_entry.add_to_hass(hass)
 
-    result1 = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": mock_entry.entry_id,
-        },
-        data=BAD_CONFIG,
-    )
+    result1 = await mock_entry.start_reauth_flow(hass)
 
     assert result1["type"] is FlowResultType.FORM
     assert result1["step_id"] == "reauth_confirm"
@@ -134,7 +130,10 @@ async def test_reauth(hass: HomeAssistant, mock_metadata) -> None:
     ],
 )
 async def test_reauth_errors(
-    hass: HomeAssistant, mock_metadata, side_effect, error
+    hass: HomeAssistant,
+    mock_metadata: AsyncMock,
+    side_effect: TeslaFleetError,
+    error: dict[str, str],
 ) -> None:
     """Test reauth flows that fail."""
 
@@ -144,15 +143,7 @@ async def test_reauth_errors(
     )
     mock_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "unique_id": mock_entry.unique_id,
-            "entry_id": mock_entry.entry_id,
-        },
-        data=BAD_CONFIG,
-    )
+    result = await mock_entry.start_reauth_flow(hass)
 
     mock_metadata.side_effect = side_effect
     result2 = await hass.config_entries.flow.async_configure(
@@ -193,7 +184,7 @@ async def test_unique_id_abort(
     assert result2["type"] is FlowResultType.ABORT
 
 
-async def test_migrate_from_1_1(hass: HomeAssistant, mock_metadata) -> None:
+async def test_migrate_from_1_1(hass: HomeAssistant, mock_metadata: AsyncMock) -> None:
     """Test config migration."""
 
     mock_entry = MockConfigEntry(
@@ -214,7 +205,9 @@ async def test_migrate_from_1_1(hass: HomeAssistant, mock_metadata) -> None:
     assert entry.unique_id == METADATA["uid"]
 
 
-async def test_migrate_error_from_1_1(hass: HomeAssistant, mock_metadata) -> None:
+async def test_migrate_error_from_1_1(
+    hass: HomeAssistant, mock_metadata: AsyncMock
+) -> None:
     """Test config migration handles errors."""
 
     mock_metadata.side_effect = TeslaFleetError
@@ -235,7 +228,9 @@ async def test_migrate_error_from_1_1(hass: HomeAssistant, mock_metadata) -> Non
     assert entry.state is ConfigEntryState.MIGRATION_ERROR
 
 
-async def test_migrate_error_from_future(hass: HomeAssistant, mock_metadata) -> None:
+async def test_migrate_error_from_future(
+    hass: HomeAssistant, mock_metadata: AsyncMock
+) -> None:
     """Test a future version isn't migrated."""
 
     mock_metadata.side_effect = TeslaFleetError

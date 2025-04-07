@@ -3,7 +3,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Add Riemann sum integral sensor",
+        "title": "Create Riemann sum integral sensor",
         "description": "Create a sensor that calculates a Riemann sum to estimate the integral of a sensor.",
         "data": {
           "method": "Integration method",
@@ -31,12 +31,14 @@
           "round": "[%key:component::integration::config::step::user::data::round%]",
           "source": "[%key:component::integration::config::step::user::data::source%]",
           "unit_prefix": "[%key:component::integration::config::step::user::data::unit_prefix%]",
-          "unit_time": "[%key:component::integration::config::step::user::data::unit_time%]"
+          "unit_time": "[%key:component::integration::config::step::user::data::unit_time%]",
+          "max_sub_interval": "[%key:component::integration::config::step::user::data::max_sub_interval%]"
         },
         "data_description": {
           "round": "[%key:component::integration::config::step::user::data_description::round%]",
           "unit_prefix": "[%key:component::integration::config::step::user::data_description::unit_prefix%]",
-          "unit_time": "[%key:component::integration::config::step::user::data_description::unit_time%]"
+          "unit_time": "[%key:component::integration::config::step::user::data_description::unit_time%]",
+          "max_sub_interval": "[%key:component::integration::config::step::user::data_description::max_sub_interval%]"
         }
       }
     }

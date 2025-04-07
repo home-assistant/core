@@ -17,3 +17,5 @@ async def setup_platform(
     with patch("homeassistant.components.solarlog.PLATFORMS", platforms):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
+
+    return config_entry

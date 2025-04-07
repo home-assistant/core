@@ -1,0 +1,283 @@
+# serializer version: 1
+# name: test_switch[envoy_eu_batt][switch.envoy_1234_charge_from_grid-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.envoy_1234_charge_from_grid',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Charge from grid',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'charge_from_grid',
+    'unique_id': '1234_charge_from_grid',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[envoy_eu_batt][switch.envoy_1234_charge_from_grid-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Envoy 1234 Charge from grid',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.envoy_1234_charge_from_grid',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[envoy_metered_batt_relay][switch.enpower_654321_charge_from_grid-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.enpower_654321_charge_from_grid',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Charge from grid',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'charge_from_grid',
+    'unique_id': '654321_charge_from_grid',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[envoy_metered_batt_relay][switch.enpower_654321_charge_from_grid-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Enpower 654321 Charge from grid',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.enpower_654321_charge_from_grid',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[envoy_metered_batt_relay][switch.enpower_654321_grid_enabled-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.enpower_654321_grid_enabled',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Grid enabled',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'grid_enabled',
+    'unique_id': '654321_mains_admin_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[envoy_metered_batt_relay][switch.enpower_654321_grid_enabled-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Enpower 654321 Grid enabled',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.enpower_654321_grid_enabled',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[envoy_metered_batt_relay][switch.nc1_fixture-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.nc1_fixture',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'relay_status',
+    'unique_id': '654321_relay_NC1_relay_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[envoy_metered_batt_relay][switch.nc1_fixture-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'NC1 Fixture',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.nc1_fixture',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switch[envoy_metered_batt_relay][switch.nc2_fixture-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.nc2_fixture',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'relay_status',
+    'unique_id': '654321_relay_NC2_relay_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[envoy_metered_batt_relay][switch.nc2_fixture-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'NC2 Fixture',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.nc2_fixture',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[envoy_metered_batt_relay][switch.nc3_fixture-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.nc3_fixture',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'relay_status',
+    'unique_id': '654321_relay_NC3_relay_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[envoy_metered_batt_relay][switch.nc3_fixture-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'NC3 Fixture',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.nc3_fixture',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

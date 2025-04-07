@@ -12,7 +12,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import device_trigger
 from .config import MQTT_BASE_SCHEMA
-from .mixins import async_setup_non_entity_entry_helper
+from .entity import async_setup_non_entity_entry_helper
 
 AUTOMATION_TYPE_TRIGGER = "trigger"
 AUTOMATION_TYPES = [AUTOMATION_TYPE_TRIGGER]

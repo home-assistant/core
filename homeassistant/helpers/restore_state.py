@@ -10,14 +10,13 @@ from typing import Any, Self, cast
 from homeassistant.const import ATTR_RESTORED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, State, callback, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import json_loads
 
 from . import start
 from .entity import Entity
 from .event import async_track_time_interval
-from .frame import report
 from .json import JSONEncoder
 from .singleton import singleton
 from .storage import Store
@@ -115,21 +114,6 @@ class RestoreStateData:
     async def async_save_persistent_states(cls, hass: HomeAssistant) -> None:
         """Dump states now."""
         await async_get(hass).async_dump_states()
-
-    @classmethod
-    async def async_get_instance(cls, hass: HomeAssistant) -> RestoreStateData:
-        """Return the instance of this class."""
-        # Nothing should actually be calling this anymore, but we'll keep it
-        # around for a while to avoid breaking custom components.
-        #
-        # In fact they should not be accessing this at all.
-        report(
-            "restore_state.RestoreStateData.async_get_instance is deprecated, "
-            "and not intended to be called by custom components; Please"
-            "refactor your code to use RestoreEntity instead;"
-            " restore_state.async_get(hass) can be used in the meantime",
-        )
-        return async_get(hass)
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the restore state data class."""

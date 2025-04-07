@@ -26,16 +26,12 @@ from ..const import (
     TYPE,
 )
 from ..schemas import build_x10_schema
+from ..utils import compute_device_name
 from .config import add_x10_device, remove_device_override, remove_x10_device
 
 X10_DEVICE = "x10_device"
 X10_DEVICE_SCHEMA = build_x10_schema()
 REMOVE_ALL_REFS = "remove_all_refs"
-
-
-def compute_device_name(ha_device):
-    """Return the HA device name."""
-    return ha_device.name_by_user if ha_device.name_by_user else ha_device.name
 
 
 async def async_add_devices(address, multiple):
@@ -52,20 +48,10 @@ def get_insteon_device_from_ha_device(ha_device):
     return None
 
 
-async def async_device_name(dev_registry, address):
-    """Get the Insteon device name from a device registry id."""
-    ha_device = dev_registry.async_get_device(identifiers={(DOMAIN, str(address))})
-    if not ha_device:
-        if device := devices[address]:
-            return f"{device.description} ({device.model})"
-        return ""
-    return compute_device_name(ha_device)
-
-
 def notify_device_not_found(connection, msg, text):
     """Notify the caller that the device was not found."""
     connection.send_message(
-        websocket_api.error_message(msg[ID], websocket_api.ERR_NOT_FOUND, text)
+        websocket_api.error_message(msg[ID], websocket_api.const.ERR_NOT_FOUND, text)
     )
 
 

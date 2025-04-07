@@ -209,6 +209,10 @@ def test_good_root_import(
             "homeassistant.components.pylint_test.climate",
         ),
         (
+            "from homeassistant.components.climate.entity import ClimateEntityFeature",
+            "homeassistant.components.pylint_test.climate",
+        ),
+        (
             "from homeassistant.components.climate import const",
             "tests.components.pylint_test.climate",
         ),
@@ -218,6 +222,10 @@ def test_good_root_import(
         ),
         (
             "import homeassistant.components.climate.const as climate",
+            "tests.components.pylint_test.climate",
+        ),
+        (
+            "import homeassistant.components.climate.entity as climate",
             "tests.components.pylint_test.climate",
         ),
     ],
@@ -309,3 +317,54 @@ def test_bad_namespace_import(
         ),
     ):
         imports_checker.visit_importfrom(node)
+
+
+@pytest.mark.parametrize(
+    ("module_name", "import_string", "end_col_offset"),
+    [
+        (
+            "homeassistant.components.pylint_test.sensor",
+            "from homeassistant.components.other import DOMAIN as OTHER_DOMAIN",
+            -1,
+        ),
+        (
+            "homeassistant.components.pylint_test.sensor",
+            "from homeassistant.components.other import DOMAIN",
+            49,
+        ),
+    ],
+)
+def test_domain_alias(
+    linter: UnittestLinter,
+    imports_checker: BaseChecker,
+    module_name: str,
+    import_string: str,
+    end_col_offset: int,
+) -> None:
+    """Ensure good imports pass through ok."""
+
+    import_node = astroid.extract_node(
+        f"{import_string}  #@",
+        module_name,
+    )
+    imports_checker.visit_module(import_node.parent)
+
+    expected_messages = []
+    if end_col_offset > 0:
+        expected_messages.append(
+            pylint.testutils.MessageTest(
+                msg_id="hass-import-constant-alias",
+                node=import_node,
+                args=("DOMAIN", "DOMAIN", "OTHER_DOMAIN"),
+                line=1,
+                col_offset=0,
+                end_line=1,
+                end_col_offset=end_col_offset,
+            )
+        )
+
+    with assert_adds_messages(linter, *expected_messages):
+        if import_string.startswith("import"):
+            imports_checker.visit_import(import_node)
+        else:
+            imports_checker.visit_importfrom(import_node)

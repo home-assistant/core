@@ -8,7 +8,7 @@ from homeassistant.components.number import NumberEntityDescription, RestoreNumb
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .entity import WyomingSatelliteEntity
@@ -24,19 +24,18 @@ _MAX_VOLUME_MULTIPLIER: Final = 10.0
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Wyoming number entities."""
     item: DomainDataItem = hass.data[DOMAIN][config_entry.entry_id]
 
     # Setup is only forwarded for satellites
-    assert item.satellite is not None
+    assert item.device is not None
 
-    device = item.satellite.device
     async_add_entities(
         [
-            WyomingSatelliteAutoGainNumber(device),
-            WyomingSatelliteVolumeMultiplierNumber(device),
+            WyomingSatelliteAutoGainNumber(item.device),
+            WyomingSatelliteVolumeMultiplierNumber(item.device),
         ]
     )
 

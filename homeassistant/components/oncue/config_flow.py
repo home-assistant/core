@@ -9,7 +9,7 @@ from typing import Any
 from aiooncue import LoginFailedException, Oncue
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -22,10 +22,6 @@ class OncueConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Oncue."""
 
     VERSION = 1
-
-    def __init__(self) -> None:
-        """Initialize the oncue config flow."""
-        self.reauth_entry: ConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -80,8 +76,6 @@ class OncueConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reauth."""
-        entry_id = self.context["entry_id"]
-        self.reauth_entry = self.hass.config_entries.async_get_entry(entry_id)
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -89,18 +83,15 @@ class OncueConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle reauth input."""
         errors: dict[str, str] = {}
-        existing_entry = self.reauth_entry
-        assert existing_entry
-        existing_data = existing_entry.data
+        reauth_entry = self._get_reauth_entry()
+        existing_data = reauth_entry.data
         description_placeholders: dict[str, str] = {
             CONF_USERNAME: existing_data[CONF_USERNAME]
         }
         if user_input is not None:
             new_config = {**existing_data, CONF_PASSWORD: user_input[CONF_PASSWORD]}
             if not (errors := await self._async_validate_or_error(new_config)):
-                return self.async_update_reload_and_abort(
-                    existing_entry, data=new_config
-                )
+                return self.async_update_reload_and_abort(reauth_entry, data=new_config)
 
         return self.async_show_form(
             description_placeholders=description_placeholders,

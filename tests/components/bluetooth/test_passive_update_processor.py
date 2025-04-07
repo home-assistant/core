@@ -583,8 +583,7 @@ async def test_exception_from_update_method(
         nonlocal run_count
         run_count += 1
         if run_count == 2:
-            # pylint: disable-next=broad-exception-raised
-            raise Exception("Test exception")
+            raise Exception("Test exception")  # noqa: TRY002
         return GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE
 
     coordinator = PassiveBluetoothProcessorCoordinator(
@@ -1418,8 +1417,7 @@ async def test_exception_from_coordinator_update_method(
         nonlocal run_count
         run_count += 1
         if run_count == 2:
-            # pylint: disable-next=broad-exception-raised
-            raise Exception("Test exception")
+            raise Exception("Test exception")  # noqa: TRY002
         return {"test": "data"}
 
     @callback
@@ -1810,6 +1808,7 @@ async def test_naming(hass: HomeAssistant) -> None:
 
     sensor_entity: PassiveBluetoothProcessorEntity = sensor_entities[0]
     sensor_entity.hass = hass
+    sensor_entity.platform = MockEntityPlatform(hass)
     assert sensor_entity.available is True
     assert sensor_entity.name is UNDEFINED
     assert sensor_entity.device_class is SensorDeviceClass.TEMPERATURE

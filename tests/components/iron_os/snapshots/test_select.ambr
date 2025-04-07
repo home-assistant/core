@@ -1,0 +1,595 @@
+# serializer version: 1
+# name: test_state[select.pinecil_animation_speed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'off',
+        'slow',
+        'medium',
+        'fast',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.pinecil_animation_speed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Animation speed',
+    'platform': 'iron_os',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <PinecilSelect.ANIMATION_SPEED: 'animation_speed'>,
+    'unique_id': 'c0:ff:ee:c0:ff:ee_animation_speed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_state[select.pinecil_animation_speed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Pinecil Animation speed',
+      'options': list([
+        'off',
+        'slow',
+        'medium',
+        'fast',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.pinecil_animation_speed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'medium',
+  })
+# ---
+# name: test_state[select.pinecil_boot_logo_duration-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'off',
+        'seconds_1',
+        'seconds_2',
+        'seconds_3',
+        'seconds_4',
+        'seconds_5',
+        'loop',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.pinecil_boot_logo_duration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Boot logo duration',
+    'platform': 'iron_os',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <PinecilSelect.LOGO_DURATION: 'logo_duration'>,
+    'unique_id': 'c0:ff:ee:c0:ff:ee_logo_duration',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_state[select.pinecil_boot_logo_duration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Pinecil Boot logo duration',
+      'options': list([
+        'off',
+        'seconds_1',
+        'seconds_2',
+        'seconds_3',
+        'seconds_4',
+        'seconds_5',
+        'loop',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.pinecil_boot_logo_duration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'loop',
+  })
+# ---
+# name: test_state[select.pinecil_button_locking_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'off',
+        'boost_only',
+        'full_locking',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.pinecil_button_locking_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Button locking mode',
+    'platform': 'iron_os',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <PinecilSelect.LOCKING_MODE: 'locking_mode'>,
+    'unique_id': 'c0:ff:ee:c0:ff:ee_locking_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_state[select.pinecil_button_locking_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Pinecil Button locking mode',
+      'options': list([
+        'off',
+        'boost_only',
+        'full_locking',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.pinecil_button_locking_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'full_locking',
+  })
+# ---
+# name: test_state[select.pinecil_display_orientation_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'right_handed',
+        'left_handed',
+        'auto',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.pinecil_display_orientation_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Display orientation mode',
+    'platform': 'iron_os',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <PinecilSelect.ORIENTATION_MODE: 'orientation_mode'>,
+    'unique_id': 'c0:ff:ee:c0:ff:ee_orientation_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_state[select.pinecil_display_orientation_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Pinecil Display orientation mode',
+      'options': list([
+        'right_handed',
+        'left_handed',
+        'auto',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.pinecil_display_orientation_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'right_handed',
+  })
+# ---
+# name: test_state[select.pinecil_power_delivery_3_1_epr-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'off',
+        'on',
+        'safe',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.pinecil_power_delivery_3_1_epr',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power Delivery 3.1 EPR',
+    'platform': 'iron_os',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <PinecilSelect.USB_PD_MODE: 'usb_pd_mode'>,
+    'unique_id': 'c0:ff:ee:c0:ff:ee_usb_pd_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_state[select.pinecil_power_delivery_3_1_epr-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Pinecil Power Delivery 3.1 EPR',
+      'options': list([
+        'off',
+        'on',
+        'safe',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.pinecil_power_delivery_3_1_epr',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_state[select.pinecil_power_source-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'no_battery',
+        'battery_3s',
+        'battery_4s',
+        'battery_5s',
+        'battery_6s',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.pinecil_power_source',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power source',
+    'platform': 'iron_os',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <PinecilSelect.MIN_DC_VOLTAGE_CELLS: 'min_dc_voltage_cells'>,
+    'unique_id': 'c0:ff:ee:c0:ff:ee_min_dc_voltage_cells',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_state[select.pinecil_power_source-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Pinecil Power source',
+      'options': list([
+        'no_battery',
+        'battery_3s',
+        'battery_4s',
+        'battery_5s',
+        'battery_6s',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.pinecil_power_source',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'battery_3s',
+  })
+# ---
+# name: test_state[select.pinecil_scrolling_speed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'slow',
+        'fast',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.pinecil_scrolling_speed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Scrolling speed',
+    'platform': 'iron_os',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <PinecilSelect.DESC_SCROLL_SPEED: 'desc_scroll_speed'>,
+    'unique_id': 'c0:ff:ee:c0:ff:ee_desc_scroll_speed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_state[select.pinecil_scrolling_speed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Pinecil Scrolling speed',
+      'options': list([
+        'slow',
+        'fast',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.pinecil_scrolling_speed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'fast',
+  })
+# ---
+# name: test_state[select.pinecil_soldering_tip_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'auto',
+        'ts100_long',
+        'pine_short',
+        'pts200',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.pinecil_soldering_tip_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Soldering tip type',
+    'platform': 'iron_os',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <PinecilSelect.TIP_TYPE: 'tip_type'>,
+    'unique_id': 'c0:ff:ee:c0:ff:ee_tip_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_state[select.pinecil_soldering_tip_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Pinecil Soldering tip type',
+      'options': list([
+        'auto',
+        'ts100_long',
+        'pine_short',
+        'pts200',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.pinecil_soldering_tip_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'pine_short',
+  })
+# ---
+# name: test_state[select.pinecil_start_up_behavior-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'disabled',
+        'soldering',
+        'sleeping',
+        'idle',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.pinecil_start_up_behavior',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Start-up behavior',
+    'platform': 'iron_os',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <PinecilSelect.AUTOSTART_MODE: 'autostart_mode'>,
+    'unique_id': 'c0:ff:ee:c0:ff:ee_autostart_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_state[select.pinecil_start_up_behavior-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Pinecil Start-up behavior',
+      'options': list([
+        'disabled',
+        'soldering',
+        'sleeping',
+        'idle',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.pinecil_start_up_behavior',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---
+# name: test_state[select.pinecil_temperature_display_unit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'celsius',
+        'fahrenheit',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.pinecil_temperature_display_unit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Temperature display unit',
+    'platform': 'iron_os',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <PinecilSelect.TEMP_UNIT: 'temp_unit'>,
+    'unique_id': 'c0:ff:ee:c0:ff:ee_temp_unit',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_state[select.pinecil_temperature_display_unit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Pinecil Temperature display unit',
+      'options': list([
+        'celsius',
+        'fahrenheit',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.pinecil_temperature_display_unit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'celsius',
+  })
+# ---

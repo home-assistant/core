@@ -50,7 +50,10 @@
         "default": "mdi:download"
       },
       "volume_status": {
-        "default": "mdi:checkbox-marked-circle-outline"
+        "default": "mdi:checkbox-marked-circle-outline",
+        "state": {
+          "degrade": "mdi:alert-circle-outline"
+        }
       },
       "volume_size_total": {
         "default": "mdi:chart-pie"
@@ -75,7 +78,11 @@
     }
   },
   "services": {
-    "reboot": "mdi:restart",
-    "shutdown": "mdi:power"
+    "reboot": {
+      "service": "mdi:restart"
+    },
+    "shutdown": {
+      "service": "mdi:power"
+    }
   }
 }

@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from homeassistant.components.ondilo_ico.const import DOMAIN
+from homeassistant.util.json import JsonArrayType
 
 from tests.common import (
     MockConfigEntry,
@@ -46,37 +47,37 @@ def mock_ondilo_client(
         yield client
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="package")
 def pool1() -> list[dict[str, Any]]:
     """First pool description."""
     return [load_json_object_fixture("pool1.json", DOMAIN)]
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="package")
 def pool2() -> list[dict[str, Any]]:
     """Second pool description."""
     return [load_json_object_fixture("pool2.json", DOMAIN)]
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="package")
 def ico_details1() -> dict[str, Any]:
     """ICO details of first pool."""
     return load_json_object_fixture("ico_details1.json", DOMAIN)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="package")
 def ico_details2() -> dict[str, Any]:
     """ICO details of second pool."""
     return load_json_object_fixture("ico_details2.json", DOMAIN)
 
 
-@pytest.fixture(scope="session")
-def last_measures() -> list[dict[str, Any]]:
+@pytest.fixture(scope="package")
+def last_measures() -> JsonArrayType:
     """Pool measurements."""
     return load_json_array_fixture("last_measures.json", DOMAIN)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="package")
 def two_pools(
     pool1: list[dict[str, Any]], pool2: list[dict[str, Any]]
 ) -> list[dict[str, Any]]:

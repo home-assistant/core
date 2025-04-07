@@ -1,12 +1,16 @@
 """Weather data coordinator for the OpenWeatherMap (OWM) service."""
 
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING
 
 from pyopenweathermap import (
     CurrentWeather,
     DailyWeatherForecast,
     HourlyWeatherForecast,
+    MinutelyWeatherForecast,
     OWMClient,
     RequestError,
     WeatherReport,
@@ -17,20 +21,28 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_SUNNY,
     Forecast,
 )
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import sun
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
+
+if TYPE_CHECKING:
+    from . import OpenweathermapConfigEntry
 
 from .const import (
     ATTR_API_CLOUDS,
     ATTR_API_CONDITION,
     ATTR_API_CURRENT,
     ATTR_API_DAILY_FORECAST,
+    ATTR_API_DATETIME,
     ATTR_API_DEW_POINT,
     ATTR_API_FEELS_LIKE_TEMPERATURE,
+    ATTR_API_FORECAST,
     ATTR_API_HOURLY_FORECAST,
     ATTR_API_HUMIDITY,
+    ATTR_API_MINUTE_FORECAST,
+    ATTR_API_PRECIPITATION,
     ATTR_API_PRECIPITATION_KIND,
     ATTR_API_PRESSURE,
     ATTR_API_RAIN,
@@ -56,20 +68,25 @@ WEATHER_UPDATE_INTERVAL = timedelta(minutes=10)
 class WeatherUpdateCoordinator(DataUpdateCoordinator):
     """Weather data update coordinator."""
 
+    config_entry: OpenweathermapConfigEntry
+
     def __init__(
         self,
-        owm_client: OWMClient,
-        latitude,
-        longitude,
         hass: HomeAssistant,
+        config_entry: OpenweathermapConfigEntry,
+        owm_client: OWMClient,
     ) -> None:
         """Initialize coordinator."""
         self._owm_client = owm_client
-        self._latitude = latitude
-        self._longitude = longitude
+        self._latitude = config_entry.data.get(CONF_LATITUDE, hass.config.latitude)
+        self._longitude = config_entry.data.get(CONF_LONGITUDE, hass.config.longitude)
 
         super().__init__(
-            hass, _LOGGER, name=DOMAIN, update_interval=WEATHER_UPDATE_INTERVAL
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            update_interval=WEATHER_UPDATE_INTERVAL,
         )
 
     async def _async_update_data(self):
@@ -86,8 +103,19 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         """Format the weather response correctly."""
         _LOGGER.debug("OWM weather response: %s", weather_report)
 
+        current_weather = (
+            self._get_current_weather_data(weather_report.current)
+            if weather_report.current is not None
+            else {}
+        )
+
         return {
-            ATTR_API_CURRENT: self._get_current_weather_data(weather_report.current),
+            ATTR_API_CURRENT: current_weather,
+            ATTR_API_MINUTE_FORECAST: (
+                self._get_minute_weather_data(weather_report.minutely_forecast)
+                if weather_report.minutely_forecast is not None
+                else {}
+            ),
             ATTR_API_HOURLY_FORECAST: [
                 self._get_hourly_forecast_weather_data(item)
                 for item in weather_report.hourly_forecast
@@ -96,6 +124,20 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
                 self._get_daily_forecast_weather_data(item)
                 for item in weather_report.daily_forecast
             ],
+        }
+
+    def _get_minute_weather_data(
+        self, minute_forecast: list[MinutelyWeatherForecast]
+    ) -> dict:
+        """Get minute weather data from the forecast."""
+        return {
+            ATTR_API_FORECAST: [
+                {
+                    ATTR_API_DATETIME: item.date_time,
+                    ATTR_API_PRECIPITATION: round(item.precipitation, 2),
+                }
+                for item in minute_forecast
+            ]
         }
 
     def _get_current_weather_data(self, current_weather: CurrentWeather):
@@ -122,6 +164,8 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         }
 
     def _get_hourly_forecast_weather_data(self, forecast: HourlyWeatherForecast):
+        uv_index = float(forecast.uv_index) if forecast.uv_index is not None else None
+
         return Forecast(
             datetime=forecast.date_time.isoformat(),
             condition=self._get_condition(forecast.condition.id),
@@ -134,12 +178,14 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             wind_speed=forecast.wind_speed,
             native_wind_gust_speed=forecast.wind_gust,
             wind_bearing=forecast.wind_bearing,
-            uv_index=float(forecast.uv_index),
+            uv_index=uv_index,
             precipitation_probability=round(forecast.precipitation_probability * 100),
             precipitation=self._calc_precipitation(forecast.rain, forecast.snow),
         )
 
     def _get_daily_forecast_weather_data(self, forecast: DailyWeatherForecast):
+        uv_index = float(forecast.uv_index) if forecast.uv_index is not None else None
+
         return Forecast(
             datetime=forecast.date_time.isoformat(),
             condition=self._get_condition(forecast.condition.id),
@@ -153,7 +199,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             wind_speed=forecast.wind_speed,
             native_wind_gust_speed=forecast.wind_gust,
             wind_bearing=forecast.wind_bearing,
-            uv_index=float(forecast.uv_index),
+            uv_index=uv_index,
             precipitation_probability=round(forecast.precipitation_probability * 100),
             precipitation=round(forecast.rain + forecast.snow, 2),
         )
@@ -182,12 +228,13 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
     @staticmethod
     def _get_precipitation_value(precipitation):
         """Get precipitation value from weather data."""
-        if "all" in precipitation:
-            return round(precipitation["all"], 2)
-        if "3h" in precipitation:
-            return round(precipitation["3h"], 2)
-        if "1h" in precipitation:
-            return round(precipitation["1h"], 2)
+        if precipitation is not None:
+            if "all" in precipitation:
+                return round(precipitation["all"], 2)
+            if "3h" in precipitation:
+                return round(precipitation["3h"], 2)
+            if "1h" in precipitation:
+                return round(precipitation["1h"], 2)
         return 0
 
     def _get_condition(self, weather_code, timestamp=None):

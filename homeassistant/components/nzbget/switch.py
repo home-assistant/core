@@ -8,17 +8,17 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import NZBGetEntity
 from .const import DATA_COORDINATOR, DOMAIN
 from .coordinator import NZBGetDataUpdateCoordinator
+from .entity import NZBGetEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up NZBGet sensor based on a config entry."""
     coordinator: NZBGetDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][

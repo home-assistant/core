@@ -10,7 +10,7 @@ from homeassistant.components.accuweather.const import (
     UPDATE_INTERVAL_DAILY_FORECAST,
     UPDATE_INTERVAL_OBSERVATION,
 )
-from homeassistant.components.sensor import DOMAIN as SENSOR_PLATFORM
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -107,7 +107,7 @@ async def test_remove_ozone_sensors(
 ) -> None:
     """Test remove ozone sensors from registry."""
     entity_registry.async_get_or_create(
-        SENSOR_PLATFORM,
+        SENSOR_DOMAIN,
         DOMAIN,
         "0123456-ozone-0",
         suggested_object_id="home_ozone_0d",

@@ -66,7 +66,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, Event, EventOrigin, State
 from homeassistant.helpers.json import JSON_DUMP, json_bytes, json_bytes_strip_null
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 from homeassistant.util.json import (
     JSON_DECODE_EXCEPTIONS,
     json_loads,
@@ -687,7 +687,7 @@ class StatisticsBase:
             created=None,
             created_ts=time.time(),
             start=None,
-            start_ts=dt_util.utc_to_timestamp(stats["start"]),
+            start_ts=stats["start"].timestamp(),
             mean=stats.get("mean"),
             min=stats.get("min"),
             max=stats.get("max"),

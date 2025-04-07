@@ -18,12 +18,12 @@ from homeassistant.core import HomeAssistant
 
 from ..common import async_wait_recording_done
 
-from tests.typing import RecorderInstanceGenerator
+from tests.typing import RecorderInstanceContextManager
 
 
 @pytest.fixture
 async def mock_recorder_before_hass(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
 ) -> None:
     """Set up recorder."""
 
@@ -176,14 +176,14 @@ async def test_validate_db_schema_fix_utf8_issue_with_broken_schema_unrepairable
                     "LOCK=EXCLUSIVE;"
                 )
             )
-            _modify_columns(
-                session_maker,
-                recorder_mock.engine,
-                "states",
-                [
-                    "entity_id VARCHAR(255) NOT NULL",
-                ],
-            )
+        _modify_columns(
+            session_maker,
+            recorder_mock.engine,
+            "states",
+            [
+                "entity_id VARCHAR(255) NOT NULL",
+            ],
+        )
 
     await recorder_mock.async_add_executor_job(_break_states_schema)
     schema_errors = await recorder_mock.async_add_executor_job(

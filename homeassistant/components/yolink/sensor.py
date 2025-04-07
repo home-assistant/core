@@ -40,15 +40,31 @@ from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
+    UnitOfEnergy,
     UnitOfLength,
+    UnitOfPower,
     UnitOfTemperature,
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import percentage
 
-from .const import DOMAIN
+from .const import (
+    DEV_MODEL_PLUG_YS6602_EC,
+    DEV_MODEL_PLUG_YS6602_UC,
+    DEV_MODEL_PLUG_YS6803_EC,
+    DEV_MODEL_PLUG_YS6803_UC,
+    DEV_MODEL_TH_SENSOR_YS8004_EC,
+    DEV_MODEL_TH_SENSOR_YS8004_UC,
+    DEV_MODEL_TH_SENSOR_YS8008_EC,
+    DEV_MODEL_TH_SENSOR_YS8008_UC,
+    DEV_MODEL_TH_SENSOR_YS8014_EC,
+    DEV_MODEL_TH_SENSOR_YS8014_UC,
+    DEV_MODEL_TH_SENSOR_YS8017_EC,
+    DEV_MODEL_TH_SENSOR_YS8017_UC,
+    DOMAIN,
+)
 from .coordinator import YoLinkCoordinator
 from .entity import YoLinkEntity
 
@@ -108,6 +124,24 @@ MCU_DEV_TEMPERATURE_SENSOR = [
     ATTR_DEVICE_CO_SMOKE_SENSOR,
 ]
 
+NONE_HUMIDITY_SENSOR_MODELS = [
+    DEV_MODEL_TH_SENSOR_YS8004_EC,
+    DEV_MODEL_TH_SENSOR_YS8004_UC,
+    DEV_MODEL_TH_SENSOR_YS8008_EC,
+    DEV_MODEL_TH_SENSOR_YS8008_UC,
+    DEV_MODEL_TH_SENSOR_YS8014_EC,
+    DEV_MODEL_TH_SENSOR_YS8014_UC,
+    DEV_MODEL_TH_SENSOR_YS8017_UC,
+    DEV_MODEL_TH_SENSOR_YS8017_EC,
+]
+
+POWER_SUPPORT_MODELS = [
+    DEV_MODEL_PLUG_YS6602_UC,
+    DEV_MODEL_PLUG_YS6602_EC,
+    DEV_MODEL_PLUG_YS6803_UC,
+    DEV_MODEL_PLUG_YS6803_EC,
+]
+
 
 def cvt_battery(val: int | None) -> int | None:
     """Convert battery to percentage."""
@@ -141,7 +175,10 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        exists_fn=lambda device: device.device_type in [ATTR_DEVICE_TH_SENSOR],
+        exists_fn=lambda device: (
+            device.device_type in [ATTR_DEVICE_TH_SENSOR]
+            and device.device_model_name not in NONE_HUMIDITY_SENSOR_MODELS
+        ),
     ),
     YoLinkSensorEntityDescription(
         key="temperature",
@@ -210,12 +247,32 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         key="meter_reading",
         translation_key="water_meter_reading",
         device_class=SensorDeviceClass.WATER,
-        icon="mdi:gauge",
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         state_class=SensorStateClass.TOTAL_INCREASING,
         should_update_entity=lambda value: value is not None,
-        exists_fn=lambda device: device.device_type
-        in ATTR_DEVICE_WATER_METER_CONTROLLER,
+        exists_fn=lambda device: (
+            device.device_type in ATTR_DEVICE_WATER_METER_CONTROLLER
+        ),
+    ),
+    YoLinkSensorEntityDescription(
+        key="power",
+        translation_key="current_power",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        should_update_entity=lambda value: value is not None,
+        exists_fn=lambda device: device.device_model_name in POWER_SUPPORT_MODELS,
+        value=lambda value: value / 10 if value is not None else None,
+    ),
+    YoLinkSensorEntityDescription(
+        key="watt",
+        translation_key="power_consumption",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL,
+        should_update_entity=lambda value: value is not None,
+        exists_fn=lambda device: device.device_model_name in POWER_SUPPORT_MODELS,
+        value=lambda value: value / 100 if value is not None else None,
     ),
 )
 
@@ -223,7 +280,7 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up YoLink Sensor from a config entry."""
     device_coordinators = hass.data[DOMAIN][config_entry.entry_id].device_coordinators

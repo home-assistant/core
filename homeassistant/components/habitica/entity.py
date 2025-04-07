@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
+
+from yarl import URL
 
 from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -22,10 +24,9 @@ class HabiticaBase(CoordinatorEntity[HabiticaDataUpdateCoordinator]):
         self,
         coordinator: HabiticaDataUpdateCoordinator,
         entity_description: EntityDescription,
-        context: Any = None,
     ) -> None:
         """Initialize a Habitica entity."""
-        super().__init__(coordinator, context)
+        super().__init__(coordinator)
         if TYPE_CHECKING:
             assert coordinator.config_entry.unique_id
         self.entity_description = entity_description
@@ -37,6 +38,10 @@ class HabiticaBase(CoordinatorEntity[HabiticaDataUpdateCoordinator]):
             manufacturer=MANUFACTURER,
             model=NAME,
             name=coordinator.config_entry.data[CONF_NAME],
-            configuration_url=coordinator.config_entry.data[CONF_URL],
+            configuration_url=(
+                URL(coordinator.config_entry.data[CONF_URL])
+                / "profile"
+                / coordinator.config_entry.unique_id
+            ),
             identifiers={(DOMAIN, coordinator.config_entry.unique_id)},
         )

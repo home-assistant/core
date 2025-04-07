@@ -7,7 +7,6 @@ from pyatmo.const import ALL_SCOPES
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import zeroconf
 from homeassistant.components.netatmo import config_flow
 from homeassistant.components.netatmo.const import (
     CONF_NEW_AREA,
@@ -20,10 +19,14 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers.service_info.zeroconf import (
+    ATTR_PROPERTIES_ID,
+    ZeroconfServiceInfo,
+)
 
 from .conftest import CLIENT_ID
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, start_reauth_flow
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
@@ -46,13 +49,13 @@ async def test_abort_if_existing_entry(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         "netatmo",
         context={"source": config_entries.SOURCE_HOMEKIT},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("192.168.1.5"),
             ip_addresses=[ip_address("192.168.1.5")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
-            properties={zeroconf.ATTR_PROPERTIES_ID: "aa:bb:cc:dd:ee:ff"},
+            properties={ATTR_PROPERTIES_ID: "aa:bb:cc:dd:ee:ff"},
             type="mock_type",
         ),
     )
@@ -282,9 +285,7 @@ async def test_reauth(
     assert len(mock_setup.mock_calls) == 1
 
     # Should show form
-    result = await hass.config_entries.flow.async_init(
-        "netatmo", context={"source": config_entries.SOURCE_REAUTH}
-    )
+    result = await start_reauth_flow(hass, new_entry)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 

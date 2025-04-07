@@ -11,8 +11,10 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.feedreader.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import Event, HomeAssistant
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers import device_registry as dr
+from homeassistant.util import dt as dt_util
 
 from . import async_setup_config_entry, create_mock_entry
 from .const import (
@@ -49,6 +51,23 @@ async def test_setup(
 
     # no new events
     assert not events
+
+
+async def test_setup_error(
+    hass: HomeAssistant,
+    feed_one_event,
+) -> None:
+    """Test setup error."""
+    entry = create_mock_entry(VALID_CONFIG_DEFAULT)
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.feedreader.coordinator.feedparser.http.get"
+    ) as feedreader:
+        feedreader.side_effect = urllib.error.URLError("Test")
+        feedreader.return_value = feed_one_event
+        await hass.config_entries.async_setup(entry.entry_id)
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_storage_data_writing(
@@ -165,6 +184,21 @@ async def test_feed_identical_timestamps(
     )
 
 
+async def test_feed_with_only_summary(
+    hass: HomeAssistant, events, feed_only_summary
+) -> None:
+    """Test simple feed with only summary, no content."""
+    assert await async_setup_config_entry(
+        hass, VALID_CONFIG_DEFAULT, return_value=feed_only_summary
+    )
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    assert events[0].data.title == "Title 1"
+    assert events[0].data.description == "Description 1"
+    assert events[0].data.content[0].value == "This is a summary"
+
+
 async def test_feed_updates(
     hass: HomeAssistant, events, feed_one_event, feed_two_event
 ) -> None:
@@ -245,6 +279,20 @@ async def test_feed_with_unrecognized_publication_date(
     await hass.async_block_till_done()
 
     assert len(events) == 1
+
+
+async def test_feed_without_items(
+    hass: HomeAssistant, events, feed_without_items, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test simple feed without any items."""
+    assert "No new entries to be published in feed" not in caplog.text
+    assert await async_setup_config_entry(
+        hass, VALID_CONFIG_DEFAULT, return_value=feed_without_items
+    )
+    await hass.async_block_till_done()
+
+    assert "No new entries to be published in feed" in caplog.text
+    assert len(events) == 0
 
 
 async def test_feed_invalid_data(hass: HomeAssistant, events) -> None:
@@ -328,3 +376,23 @@ async def test_feed_errors(
         freezer.tick(timedelta(hours=1, seconds=1))
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
+
+
+async def test_feed_atom_htmlentities(
+    hass: HomeAssistant, feed_atom_htmlentities, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test ATOM feed author with HTML Entities."""
+
+    entry = create_mock_entry(VALID_CONFIG_DEFAULT)
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.feedreader.coordinator.feedparser.http.get",
+        side_effect=[feed_atom_htmlentities],
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        device_entry = device_registry.async_get_device(
+            identifiers={(DOMAIN, entry.entry_id)}
+        )
+        assert device_entry.manufacturer == "Juan Pérez"

@@ -1,0 +1,51 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'device_info': dict({
+      'client_devices': list([
+        dict({
+          'connected': True,
+          'connection_type': 'wifi',
+          'hostname': 'WifiDevice0',
+          'type': 'laptop',
+        }),
+        dict({
+          'connected': False,
+          'connection_type': 'lan',
+          'hostname': 'LanDevice1',
+          'type': 'desktop',
+        }),
+      ]),
+      'last_exception': None,
+      'last_update success': True,
+      'sys_cpu_usage': '97',
+      'sys_firmware_version': 'XF6_4.0.05.04',
+      'sys_hardware_version': 'RHG3006 v1',
+      'sys_memory_usage': '51.94',
+      'sys_model_name': 'RHG3006',
+      'sys_reboot_cause': 'Web Reboot',
+    }),
+    'entry': dict({
+      'data': dict({
+        'host': 'fake_host',
+        'password': '**REDACTED**',
+        'username': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'vodafone_station',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': 'Mock Title',
+      'unique_id': None,
+      'version': 1,
+    }),
+  })
+# ---

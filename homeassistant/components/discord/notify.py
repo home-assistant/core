@@ -7,6 +7,7 @@ import logging
 import os.path
 from typing import Any, cast
 
+import aiohttp
 import nextcord
 from nextcord.abc import Messageable
 
@@ -81,7 +82,7 @@ class DiscordNotificationService(BaseNotificationService):
         async with session.get(
             url,
             ssl=verify_ssl,
-            timeout=30,
+            timeout=aiohttp.ClientTimeout(total=30),
             raise_for_status=True,
         ) as resp:
             content_length = resp.headers.get("Content-Length")

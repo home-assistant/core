@@ -5,7 +5,6 @@ from unittest.mock import AsyncMock, Mock, patch
 import nextcord
 
 from homeassistant.components.discord.const import DOMAIN
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_TOKEN, CONF_NAME
 from homeassistant.core import HomeAssistant
 
@@ -22,7 +21,7 @@ CONF_DATA = {
 }
 
 
-def create_entry(hass: HomeAssistant) -> ConfigEntry:
+def create_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Add config entry in Home Assistant."""
     entry = MockConfigEntry(
         domain=DOMAIN,

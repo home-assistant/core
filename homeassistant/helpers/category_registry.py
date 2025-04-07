@@ -5,9 +5,11 @@ from __future__ import annotations
 from collections.abc import Iterable
 import dataclasses
 from dataclasses import dataclass, field
-from typing import Literal, TypedDict
+from datetime import datetime
+from typing import Any, Literal, TypedDict
 
 from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.util.dt import utc_from_timestamp, utcnow
 from homeassistant.util.event_type import EventType
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.ulid import ulid_now
@@ -23,13 +25,16 @@ EVENT_CATEGORY_REGISTRY_UPDATED: EventType[EventCategoryRegistryUpdatedData] = (
 )
 STORAGE_KEY = "core.category_registry"
 STORAGE_VERSION_MAJOR = 1
+STORAGE_VERSION_MINOR = 2
 
 
 class _CategoryStoreData(TypedDict):
     """Data type for individual category. Used in CategoryRegistryStoreData."""
 
     category_id: str
+    created_at: str
     icon: str | None
+    modified_at: str
     name: str
 
 
@@ -55,8 +60,34 @@ class CategoryEntry:
     """Category registry entry."""
 
     category_id: str = field(default_factory=ulid_now)
+    created_at: datetime = field(default_factory=utcnow)
     icon: str | None = None
+    modified_at: datetime = field(default_factory=utcnow)
     name: str
+
+
+class CategoryRegistryStore(Store[CategoryRegistryStoreData]):
+    """Store category registry data."""
+
+    async def _async_migrate_func(
+        self,
+        old_major_version: int,
+        old_minor_version: int,
+        old_data: dict[str, dict[str, list[dict[str, Any]]]],
+    ) -> CategoryRegistryStoreData:
+        """Migrate to the new version."""
+        if old_major_version > STORAGE_VERSION_MAJOR:
+            raise ValueError("Can't migrate to future version")
+
+        if old_major_version == 1:
+            if old_minor_version < 2:
+                # Version 1.2 implements migration and adds created_at and modified_at
+                created_at = utc_from_timestamp(0).isoformat()
+                for categories in old_data["categories"].values():
+                    for category in categories:
+                        category["created_at"] = category["modified_at"] = created_at
+
+        return old_data  # type: ignore[return-value]
 
 
 class CategoryRegistry(BaseRegistry[CategoryRegistryStoreData]):
@@ -66,11 +97,12 @@ class CategoryRegistry(BaseRegistry[CategoryRegistryStoreData]):
         """Initialize the category registry."""
         self.hass = hass
         self.categories: dict[str, dict[str, CategoryEntry]] = {}
-        self._store = Store(
+        self._store = CategoryRegistryStore(
             hass,
             STORAGE_VERSION_MAJOR,
             STORAGE_KEY,
             atomic_writes=True,
+            minor_version=STORAGE_VERSION_MINOR,
         )
 
     @callback
@@ -145,7 +177,7 @@ class CategoryRegistry(BaseRegistry[CategoryRegistryStoreData]):
     ) -> CategoryEntry:
         """Update name or icon of the category."""
         old = self.categories[scope][category_id]
-        changes = {}
+        changes: dict[str, Any] = {}
 
         if icon is not UNDEFINED and icon != old.icon:
             changes["icon"] = icon
@@ -157,8 +189,10 @@ class CategoryRegistry(BaseRegistry[CategoryRegistryStoreData]):
         if not changes:
             return old
 
+        changes["modified_at"] = utcnow()
+
         self.hass.verify_event_loop_thread("category_registry.async_update")
-        new = self.categories[scope][category_id] = dataclasses.replace(old, **changes)  # type: ignore[arg-type]
+        new = self.categories[scope][category_id] = dataclasses.replace(old, **changes)
 
         self.async_schedule_save()
         self.hass.bus.async_fire_internal(
@@ -180,7 +214,9 @@ class CategoryRegistry(BaseRegistry[CategoryRegistryStoreData]):
                 category_entries[scope] = {
                     category["category_id"]: CategoryEntry(
                         category_id=category["category_id"],
+                        created_at=datetime.fromisoformat(category["created_at"]),
                         icon=category["icon"],
+                        modified_at=datetime.fromisoformat(category["modified_at"]),
                         name=category["name"],
                     )
                     for category in categories
@@ -196,7 +232,9 @@ class CategoryRegistry(BaseRegistry[CategoryRegistryStoreData]):
                 scope: [
                     {
                         "category_id": entry.category_id,
+                        "created_at": entry.created_at.isoformat(),
                         "icon": entry.icon,
+                        "modified_at": entry.modified_at.isoformat(),
                         "name": entry.name,
                     }
                     for entry in entries.values()

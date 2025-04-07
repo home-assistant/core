@@ -1,0 +1,576 @@
+# serializer version: 1
+# name: test_cloud_all_sensors[climate.bedroom-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 28.0,
+      'min_temp': 4.0,
+      'preset_modes': list([
+        'boost',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.bedroom',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:radiator',
+    'original_name': 'Bedroom',
+    'platform': 'geniushub',
+    'previous_unique_id': None,
+    'supported_features': <ClimateEntityFeature: 401>,
+    'translation_key': None,
+    'unique_id': '01J71MQF0EC62D620DGYNG2R8H_zone_29',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cloud_all_sensors[climate.bedroom-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 21.5,
+      'friendly_name': 'Bedroom',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'icon': 'mdi:radiator',
+      'max_temp': 28.0,
+      'min_temp': 4.0,
+      'preset_mode': None,
+      'preset_modes': list([
+        'boost',
+      ]),
+      'status': dict({
+        'mode': 'off',
+        'override': dict({
+          'duration': 0,
+          'setpoint': 23.5,
+        }),
+        'temperature': 21.5,
+        'type': 'radiator',
+      }),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'temperature': 4,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.bedroom',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_cloud_all_sensors[climate.ensuite-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 28.0,
+      'min_temp': 4.0,
+      'preset_modes': list([
+        'activity',
+        'boost',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.ensuite',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:radiator',
+    'original_name': 'Ensuite',
+    'platform': 'geniushub',
+    'previous_unique_id': None,
+    'supported_features': <ClimateEntityFeature: 401>,
+    'translation_key': None,
+    'unique_id': '01J71MQF0EC62D620DGYNG2R8H_zone_5',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cloud_all_sensors[climate.ensuite-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 21,
+      'friendly_name': 'Ensuite',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'icon': 'mdi:radiator',
+      'max_temp': 28.0,
+      'min_temp': 4.0,
+      'preset_mode': None,
+      'preset_modes': list([
+        'activity',
+        'boost',
+      ]),
+      'status': dict({
+        'mode': 'off',
+        'occupied': 'False',
+        'override': dict({
+          'duration': 0,
+          'setpoint': 28,
+        }),
+        'temperature': 21,
+        'type': 'radiator',
+      }),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'temperature': 4,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.ensuite',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_cloud_all_sensors[climate.guest_room-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 28.0,
+      'min_temp': 4.0,
+      'preset_modes': list([
+        'activity',
+        'boost',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.guest_room',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:radiator',
+    'original_name': 'Guest room',
+    'platform': 'geniushub',
+    'previous_unique_id': None,
+    'supported_features': <ClimateEntityFeature: 401>,
+    'translation_key': None,
+    'unique_id': '01J71MQF0EC62D620DGYNG2R8H_zone_7',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cloud_all_sensors[climate.guest_room-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 21,
+      'friendly_name': 'Guest room',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'icon': 'mdi:radiator',
+      'max_temp': 28.0,
+      'min_temp': 4.0,
+      'preset_mode': None,
+      'preset_modes': list([
+        'activity',
+        'boost',
+      ]),
+      'status': dict({
+        'mode': 'off',
+        'occupied': 'True',
+        'override': dict({
+          'duration': 0,
+          'setpoint': 20,
+        }),
+        'temperature': 21,
+        'type': 'radiator',
+      }),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'temperature': 4,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.guest_room',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_cloud_all_sensors[climate.hall-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 28.0,
+      'min_temp': 4.0,
+      'preset_modes': list([
+        'activity',
+        'boost',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.hall',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:radiator',
+    'original_name': 'Hall',
+    'platform': 'geniushub',
+    'previous_unique_id': None,
+    'supported_features': <ClimateEntityFeature: 401>,
+    'translation_key': None,
+    'unique_id': '01J71MQF0EC62D620DGYNG2R8H_zone_2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cloud_all_sensors[climate.hall-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 21,
+      'friendly_name': 'Hall',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'icon': 'mdi:radiator',
+      'max_temp': 28.0,
+      'min_temp': 4.0,
+      'preset_mode': None,
+      'preset_modes': list([
+        'activity',
+        'boost',
+      ]),
+      'status': dict({
+        'mode': 'off',
+        'occupied': 'False',
+        'override': dict({
+          'duration': 0,
+          'setpoint': 20,
+        }),
+        'temperature': 21,
+        'type': 'radiator',
+      }),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'temperature': 4,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.hall',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_cloud_all_sensors[climate.kitchen-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 28.0,
+      'min_temp': 4.0,
+      'preset_modes': list([
+        'activity',
+        'boost',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.kitchen',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:radiator',
+    'original_name': 'Kitchen',
+    'platform': 'geniushub',
+    'previous_unique_id': None,
+    'supported_features': <ClimateEntityFeature: 401>,
+    'translation_key': None,
+    'unique_id': '01J71MQF0EC62D620DGYNG2R8H_zone_3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cloud_all_sensors[climate.kitchen-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 21.5,
+      'friendly_name': 'Kitchen',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'icon': 'mdi:radiator',
+      'max_temp': 28.0,
+      'min_temp': 4.0,
+      'preset_mode': None,
+      'preset_modes': list([
+        'activity',
+        'boost',
+      ]),
+      'status': dict({
+        'mode': 'off',
+        'occupied': 'False',
+        'override': dict({
+          'duration': 0,
+          'setpoint': 20,
+        }),
+        'temperature': 21.5,
+        'type': 'radiator',
+      }),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'temperature': 4,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.kitchen',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_cloud_all_sensors[climate.lounge-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 28.0,
+      'min_temp': 4.0,
+      'preset_modes': list([
+        'boost',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.lounge',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:radiator',
+    'original_name': 'Lounge',
+    'platform': 'geniushub',
+    'previous_unique_id': None,
+    'supported_features': <ClimateEntityFeature: 401>,
+    'translation_key': None,
+    'unique_id': '01J71MQF0EC62D620DGYNG2R8H_zone_1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cloud_all_sensors[climate.lounge-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 20,
+      'friendly_name': 'Lounge',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'icon': 'mdi:radiator',
+      'max_temp': 28.0,
+      'min_temp': 4.0,
+      'preset_mode': None,
+      'preset_modes': list([
+        'boost',
+      ]),
+      'status': dict({
+        'mode': 'off',
+        'override': dict({
+          'duration': 0,
+          'setpoint': 20,
+        }),
+        'temperature': 20,
+        'type': 'radiator',
+      }),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'temperature': 4,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.lounge',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_cloud_all_sensors[climate.study-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 28.0,
+      'min_temp': 4.0,
+      'preset_modes': list([
+        'activity',
+        'boost',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.study',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:radiator',
+    'original_name': 'Study',
+    'platform': 'geniushub',
+    'previous_unique_id': None,
+    'supported_features': <ClimateEntityFeature: 401>,
+    'translation_key': None,
+    'unique_id': '01J71MQF0EC62D620DGYNG2R8H_zone_30',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cloud_all_sensors[climate.study-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 22,
+      'friendly_name': 'Study',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'icon': 'mdi:radiator',
+      'max_temp': 28.0,
+      'min_temp': 4.0,
+      'preset_mode': None,
+      'preset_modes': list([
+        'activity',
+        'boost',
+      ]),
+      'status': dict({
+        'mode': 'off',
+        'occupied': 'False',
+        'override': dict({
+          'duration': 0,
+          'setpoint': 28,
+        }),
+        'temperature': 22,
+        'type': 'radiator',
+      }),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'temperature': 4,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.study',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

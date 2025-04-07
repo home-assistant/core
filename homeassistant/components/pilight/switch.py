@@ -10,11 +10,11 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import CONF_SWITCHES
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .base_class import SWITCHES_SCHEMA, PilightBaseDevice
+from .entity import SWITCHES_SCHEMA, PilightBaseDevice
 
 PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_SWITCHES): vol.Schema({cv.string: SWITCHES_SCHEMA})}

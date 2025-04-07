@@ -10,6 +10,10 @@
       {
         "key": "BSH.Common.Status.DoorState",
         "value": "BSH.Common.EnumType.DoorState.Closed"
+      },
+      {
+        "key": "Refrigeration.Common.Status.Door.Refrigerator",
+        "value": "BSH.Common.EnumType.DoorState.Open"
       }
     ]
   }

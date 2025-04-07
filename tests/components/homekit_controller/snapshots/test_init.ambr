@@ -7,6 +7,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -24,6 +29,7 @@
         ]),
         'manufacturer': 'Sleekpoint Innovations',
         'model': 'AP2',
+        'model_id': None,
         'name': 'Airversa AP2 1808',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -41,6 +47,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -84,6 +91,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'fan',
@@ -102,7 +110,7 @@
             'original_name': 'Airversa AP2 1808 AirPurifier',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
-            'supported_features': <FanEntityFeature: 1>,
+            'supported_features': <FanEntityFeature: 49>,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_1_32832',
             'unit_of_measurement': None,
@@ -114,7 +122,7 @@
               'percentage_step': 20.0,
               'preset_mode': None,
               'preset_modes': None,
-              'supported_features': <FanEntityFeature: 1>,
+              'supported_features': <FanEntityFeature: 49>,
             }),
             'entity_id': 'fan.airversa_ap2_1808_airpurifier',
             'state': 'off',
@@ -134,6 +142,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'select',
@@ -184,6 +193,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -232,6 +242,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -276,6 +287,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -320,6 +332,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -372,6 +385,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -431,6 +445,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -481,6 +496,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -521,6 +537,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -561,6 +578,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -604,6 +622,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -621,6 +644,7 @@
         ]),
         'manufacturer': 'Anker',
         'model': 'T8010',
+        'model_id': None,
         'name': 'eufy HomeBase2-0AAA',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -638,6 +662,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -678,6 +703,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -695,6 +725,7 @@
         ]),
         'manufacturer': 'Anker',
         'model': 'T8113',
+        'model_id': None,
         'name': 'eufyCam2-0000',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -712,6 +743,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'binary_sensor',
@@ -753,6 +785,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -794,6 +827,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'camera',
@@ -837,6 +871,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -881,6 +916,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -920,6 +956,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -937,6 +978,7 @@
         ]),
         'manufacturer': 'Anker',
         'model': 'T8113',
+        'model_id': None,
         'name': 'eufyCam2-000A',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -954,6 +996,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'binary_sensor',
@@ -995,6 +1038,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -1036,6 +1080,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'camera',
@@ -1079,6 +1124,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -1123,6 +1169,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -1162,6 +1209,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -1179,6 +1231,7 @@
         ]),
         'manufacturer': 'Anker',
         'model': 'T8113',
+        'model_id': None,
         'name': 'eufyCam2-000A',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -1196,6 +1249,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'binary_sensor',
@@ -1237,6 +1291,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -1278,6 +1333,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'camera',
@@ -1321,6 +1377,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -1365,6 +1422,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -1408,6 +1466,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -1425,6 +1488,7 @@
         ]),
         'manufacturer': 'Aqara',
         'model': 'HE1-G01',
+        'model_id': None,
         'name': 'Aqara-Hub-E1-00A0',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -1442,6 +1506,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'alarm_control_panel',
@@ -1468,7 +1533,7 @@
           'state': dict({
             'attributes': dict({
               'changed_by': None,
-              'code_arm_required': True,
+              'code_arm_required': False,
               'code_format': None,
               'friendly_name': 'Aqara-Hub-E1-00A0 Security System',
               'supported_features': <AlarmControlPanelEntityFeature: 7>,
@@ -1486,6 +1551,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -1532,6 +1598,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'number',
@@ -1576,6 +1643,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -1615,6 +1683,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -1632,6 +1705,7 @@
         ]),
         'manufacturer': 'Aqara',
         'model': 'AS006',
+        'model_id': None,
         'name': 'Contact Sensor',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -1649,6 +1723,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'binary_sensor',
@@ -1690,6 +1765,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -1733,6 +1809,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -1780,6 +1857,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -1797,6 +1879,7 @@
         ]),
         'manufacturer': 'Aqara',
         'model': 'ZHWA11LM',
+        'model_id': None,
         'name': 'Aqara Hub-1563',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -1814,6 +1897,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'alarm_control_panel',
@@ -1840,7 +1924,7 @@
           'state': dict({
             'attributes': dict({
               'changed_by': None,
-              'code_arm_required': True,
+              'code_arm_required': False,
               'code_format': None,
               'friendly_name': 'Aqara Hub-1563 Security System',
               'supported_features': <AlarmControlPanelEntityFeature: 7>,
@@ -1858,6 +1942,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -1908,6 +1993,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'light',
@@ -1969,6 +2055,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'number',
@@ -2013,6 +2100,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -2056,6 +2144,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -2073,6 +2166,7 @@
         ]),
         'manufacturer': 'Aqara',
         'model': 'AR004',
+        'model_id': None,
         'name': 'Programmable Switch',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -2090,6 +2184,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -2133,6 +2228,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -2180,6 +2276,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -2197,6 +2298,7 @@
         ]),
         'manufacturer': 'Netgear, Inc',
         'model': 'ABC1000',
+        'model_id': None,
         'name': 'ArloBabyA0',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -2214,6 +2316,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'binary_sensor',
@@ -2255,6 +2358,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -2296,6 +2400,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'camera',
@@ -2346,6 +2451,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'light',
@@ -2404,6 +2510,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -2448,6 +2555,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -2494,6 +2602,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -2539,6 +2648,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -2582,6 +2692,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -2622,6 +2733,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -2665,6 +2777,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -2682,6 +2799,7 @@
         ]),
         'manufacturer': 'ConnectSense',
         'model': 'CS-IWO',
+        'model_id': None,
         'name': 'InWall Outlet-0394DE',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -2699,6 +2817,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -2742,6 +2861,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -2787,6 +2907,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -2832,6 +2953,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -2877,6 +2999,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -2922,6 +3045,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -2967,6 +3091,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -3010,6 +3135,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -3051,6 +3177,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -3095,6 +3222,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -3112,6 +3244,7 @@
         ]),
         'manufacturer': 'ecobee Inc.',
         'model': 'REMOTE SENSOR',
+        'model_id': None,
         'name': 'Basement',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -3129,6 +3262,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'binary_sensor',
@@ -3170,6 +3304,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -3213,6 +3348,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -3255,6 +3391,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -3272,6 +3413,7 @@
         ]),
         'manufacturer': 'ecobee Inc.',
         'model': 'ecobee3',
+        'model_id': None,
         'name': 'HomeW',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -3289,6 +3431,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'binary_sensor',
@@ -3330,6 +3473,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'binary_sensor',
@@ -3371,6 +3515,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -3411,6 +3556,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -3463,6 +3609,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'climate',
@@ -3527,6 +3674,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'select',
@@ -3577,6 +3725,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'select',
@@ -3623,6 +3772,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -3668,6 +3818,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -3710,6 +3861,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -3727,6 +3883,7 @@
         ]),
         'manufacturer': 'ecobee Inc.',
         'model': 'REMOTE SENSOR',
+        'model_id': None,
         'name': 'Kitchen',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -3744,6 +3901,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'binary_sensor',
@@ -3785,6 +3943,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -3828,6 +3987,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -3870,6 +4030,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -3887,6 +4052,7 @@
         ]),
         'manufacturer': 'ecobee Inc.',
         'model': 'REMOTE SENSOR',
+        'model_id': None,
         'name': 'Porch',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -3904,6 +4070,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'binary_sensor',
@@ -3945,6 +4112,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -3988,6 +4156,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -4034,6 +4203,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -4051,6 +4225,7 @@
         ]),
         'manufacturer': 'ecobee Inc.',
         'model': 'ecobee3',
+        'model_id': None,
         'name': 'HomeW',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -4068,6 +4243,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'binary_sensor',
@@ -4109,6 +4285,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'binary_sensor',
@@ -4150,6 +4327,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -4190,6 +4368,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -4242,6 +4421,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'climate',
@@ -4306,6 +4486,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'select',
@@ -4356,6 +4537,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'select',
@@ -4402,6 +4584,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -4447,6 +4630,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -4493,6 +4677,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -4510,6 +4699,7 @@
         ]),
         'manufacturer': 'ecobee Inc.',
         'model': 'REMOTE SENSOR',
+        'model_id': None,
         'name': 'Basement',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -4527,6 +4717,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'binary_sensor',
@@ -4568,6 +4759,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -4608,6 +4800,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -4625,6 +4822,7 @@
         ]),
         'manufacturer': 'ecobee Inc.',
         'model': 'ecobee3',
+        'model_id': None,
         'name': 'HomeW',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -4642,6 +4840,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -4694,6 +4893,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'climate',
@@ -4757,6 +4957,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'select',
@@ -4803,6 +5004,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -4848,6 +5050,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -4890,6 +5093,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -4907,6 +5115,7 @@
         ]),
         'manufacturer': 'ecobee Inc.',
         'model': 'REMOTE SENSOR',
+        'model_id': None,
         'name': 'Kitchen',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -4924,6 +5133,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'binary_sensor',
@@ -4965,6 +5175,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -5008,6 +5219,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -5050,6 +5262,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -5067,6 +5284,7 @@
         ]),
         'manufacturer': 'ecobee Inc.',
         'model': 'REMOTE SENSOR',
+        'model_id': None,
         'name': 'Porch',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -5084,6 +5302,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'binary_sensor',
@@ -5125,6 +5344,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -5168,6 +5388,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -5214,6 +5435,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -5231,6 +5457,7 @@
         ]),
         'manufacturer': 'ecobee Inc.',
         'model': 'ECB501',
+        'model_id': None,
         'name': 'My ecobee',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -5248,6 +5475,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'binary_sensor',
@@ -5289,6 +5517,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'binary_sensor',
@@ -5330,6 +5559,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -5370,6 +5600,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -5426,6 +5657,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'climate',
@@ -5495,6 +5727,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'select',
@@ -5545,6 +5778,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'select',
@@ -5591,6 +5825,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -5636,6 +5871,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -5682,6 +5918,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -5699,6 +5940,7 @@
         ]),
         'manufacturer': 'ecobee Inc.',
         'model': 'ecobee Switch+',
+        'model_id': None,
         'name': 'Master Fan',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -5716,6 +5958,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'binary_sensor',
@@ -5757,6 +6000,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'binary_sensor',
@@ -5798,6 +6042,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -5841,6 +6086,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -5886,6 +6132,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -5929,6 +6176,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -5972,6 +6220,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -5989,6 +6242,7 @@
         ]),
         'manufacturer': 'Elgato',
         'model': 'Eve Degree 00AAA0000',
+        'model_id': None,
         'name': 'Eve Degree AA11',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -6006,6 +6260,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -6052,6 +6307,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'number',
@@ -6101,6 +6357,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'select',
@@ -6147,6 +6404,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -6192,6 +6450,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -6238,6 +6497,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -6283,6 +6543,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -6329,6 +6590,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -6346,6 +6612,7 @@
         ]),
         'manufacturer': 'Elgato',
         'model': 'Eve Energy 20EAO8601',
+        'model_id': None,
         'name': 'Eve Energy 50FF',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -6363,6 +6630,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -6406,6 +6674,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -6451,6 +6720,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -6496,6 +6766,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -6541,6 +6812,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -6584,6 +6856,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -6625,6 +6898,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -6668,6 +6942,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -6685,6 +6964,7 @@
         ]),
         'manufacturer': 'José A. Jiménez Campos',
         'model': 'RavenSystem HAA',
+        'model_id': None,
         'name': 'HAA-C718B3',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -6702,6 +6982,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -6743,6 +7024,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -6783,6 +7065,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -6826,6 +7109,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'fan',
@@ -6844,7 +7128,7 @@
             'original_name': 'HAA-C718B3',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
-            'supported_features': <FanEntityFeature: 1>,
+            'supported_features': <FanEntityFeature: 49>,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_1_8',
             'unit_of_measurement': None,
@@ -6856,7 +7140,7 @@
               'percentage_step': 33.333333333333336,
               'preset_mode': None,
               'preset_modes': None,
-              'supported_features': <FanEntityFeature: 1>,
+              'supported_features': <FanEntityFeature: 49>,
             }),
             'entity_id': 'fan.haa_c718b3',
             'state': 'on',
@@ -6874,6 +7158,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -6891,6 +7180,7 @@
         ]),
         'manufacturer': 'José A. Jiménez Campos',
         'model': 'RavenSystem HAA',
+        'model_id': None,
         'name': 'HAA-C718B3',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -6908,6 +7198,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -6949,6 +7240,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -6970,324 +7262,6 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_1_8',
-            'unit_of_measurement': None,
-          }),
-          'state': dict({
-            'attributes': dict({
-              'friendly_name': 'HAA-C718B3',
-            }),
-            'entity_id': 'switch.haa_c718b3',
-            'state': 'off',
-          }),
-        }),
-      ]),
-    }),
-  ])
-# ---
-# name: test_snapshots[haa_fan]
-  list([
-    dict({
-      'device': dict({
-        'area_id': None,
-        'config_entries': list([
-          'TestData',
-        ]),
-        'configuration_url': None,
-        'connections': list([
-        ]),
-        'disabled_by': None,
-        'entry_type': None,
-        'hw_version': '',
-        'identifiers': list([
-          list([
-            'homekit_controller:accessory-id',
-            '00:00:00:00:00:00:aid:1',
-          ]),
-        ]),
-        'is_new': False,
-        'labels': list([
-        ]),
-        'manufacturer': 'José A. Jiménez Campos',
-        'model': 'RavenSystem HAA',
-        'name': 'HAA-C718B3',
-        'name_by_user': None,
-        'serial_number': 'C718B3-1',
-        'suggested_area': None,
-        'sw_version': '5.0.18',
-      }),
-      'entities': list([
-        dict({
-          'entry': dict({
-            'aliases': list([
-            ]),
-            'area_id': None,
-            'capabilities': None,
-            'categories': dict({
-            }),
-            'config_entry_id': 'TestData',
-            'device_class': None,
-            'disabled_by': None,
-            'domain': 'button',
-            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-            'entity_id': 'button.haa_c718b3_identify',
-            'has_entity_name': False,
-            'hidden_by': None,
-            'icon': None,
-            'labels': list([
-            ]),
-            'name': None,
-            'options': dict({
-            }),
-            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
-            'original_icon': None,
-            'original_name': 'HAA-C718B3 Identify',
-            'platform': 'homekit_controller',
-            'previous_unique_id': None,
-            'supported_features': 0,
-            'translation_key': None,
-            'unique_id': '00:00:00:00:00:00_1_1_7',
-            'unit_of_measurement': None,
-          }),
-          'state': dict({
-            'attributes': dict({
-              'device_class': 'identify',
-              'friendly_name': 'HAA-C718B3 Identify',
-            }),
-            'entity_id': 'button.haa_c718b3_identify',
-            'state': 'unknown',
-          }),
-        }),
-        dict({
-          'entry': dict({
-            'aliases': list([
-            ]),
-            'area_id': None,
-            'capabilities': None,
-            'categories': dict({
-            }),
-            'config_entry_id': 'TestData',
-            'device_class': None,
-            'disabled_by': None,
-            'domain': 'button',
-            'entity_category': <EntityCategory.CONFIG: 'config'>,
-            'entity_id': 'button.haa_c718b3_setup',
-            'has_entity_name': False,
-            'hidden_by': None,
-            'icon': None,
-            'labels': list([
-            ]),
-            'name': None,
-            'options': dict({
-            }),
-            'original_device_class': None,
-            'original_icon': None,
-            'original_name': 'HAA-C718B3 Setup',
-            'platform': 'homekit_controller',
-            'previous_unique_id': None,
-            'supported_features': 0,
-            'translation_key': 'setup',
-            'unique_id': '00:00:00:00:00:00_1_1010_1012',
-            'unit_of_measurement': None,
-          }),
-          'state': dict({
-            'attributes': dict({
-              'friendly_name': 'HAA-C718B3 Setup',
-            }),
-            'entity_id': 'button.haa_c718b3_setup',
-            'state': 'unknown',
-          }),
-        }),
-        dict({
-          'entry': dict({
-            'aliases': list([
-            ]),
-            'area_id': None,
-            'capabilities': None,
-            'categories': dict({
-            }),
-            'config_entry_id': 'TestData',
-            'device_class': None,
-            'disabled_by': None,
-            'domain': 'button',
-            'entity_category': <EntityCategory.CONFIG: 'config'>,
-            'entity_id': 'button.haa_c718b3_update',
-            'has_entity_name': False,
-            'hidden_by': None,
-            'icon': None,
-            'labels': list([
-            ]),
-            'name': None,
-            'options': dict({
-            }),
-            'original_device_class': <ButtonDeviceClass.UPDATE: 'update'>,
-            'original_icon': None,
-            'original_name': 'HAA-C718B3 Update',
-            'platform': 'homekit_controller',
-            'previous_unique_id': None,
-            'supported_features': 0,
-            'translation_key': None,
-            'unique_id': '00:00:00:00:00:00_1_1010_1011',
-            'unit_of_measurement': None,
-          }),
-          'state': dict({
-            'attributes': dict({
-              'device_class': 'update',
-              'friendly_name': 'HAA-C718B3 Update',
-            }),
-            'entity_id': 'button.haa_c718b3_update',
-            'state': 'unknown',
-          }),
-        }),
-        dict({
-          'entry': dict({
-            'aliases': list([
-            ]),
-            'area_id': None,
-            'capabilities': dict({
-              'preset_modes': None,
-            }),
-            'categories': dict({
-            }),
-            'config_entry_id': 'TestData',
-            'device_class': None,
-            'disabled_by': None,
-            'domain': 'fan',
-            'entity_category': None,
-            'entity_id': 'fan.haa_c718b3',
-            'has_entity_name': False,
-            'hidden_by': None,
-            'icon': None,
-            'labels': list([
-            ]),
-            'name': None,
-            'options': dict({
-            }),
-            'original_device_class': None,
-            'original_icon': None,
-            'original_name': 'HAA-C718B3',
-            'platform': 'homekit_controller',
-            'previous_unique_id': None,
-            'supported_features': <FanEntityFeature: 1>,
-            'translation_key': None,
-            'unique_id': '00:00:00:00:00:00_1_8',
-            'unit_of_measurement': None,
-          }),
-          'state': dict({
-            'attributes': dict({
-              'friendly_name': 'HAA-C718B3',
-              'percentage': 66,
-              'percentage_step': 33.333333333333336,
-              'preset_mode': None,
-              'preset_modes': None,
-              'supported_features': <FanEntityFeature: 1>,
-            }),
-            'entity_id': 'fan.haa_c718b3',
-            'state': 'on',
-          }),
-        }),
-      ]),
-    }),
-    dict({
-      'device': dict({
-        'area_id': None,
-        'config_entries': list([
-          'TestData',
-        ]),
-        'configuration_url': None,
-        'connections': list([
-        ]),
-        'disabled_by': None,
-        'entry_type': None,
-        'hw_version': '',
-        'identifiers': list([
-          list([
-            'homekit_controller:accessory-id',
-            '00:00:00:00:00:00:aid:2',
-          ]),
-        ]),
-        'is_new': False,
-        'labels': list([
-        ]),
-        'manufacturer': 'José A. Jiménez Campos',
-        'model': 'RavenSystem HAA',
-        'name': 'HAA-C718B3',
-        'name_by_user': None,
-        'serial_number': 'C718B3-2',
-        'suggested_area': None,
-        'sw_version': '5.0.18',
-      }),
-      'entities': list([
-        dict({
-          'entry': dict({
-            'aliases': list([
-            ]),
-            'area_id': None,
-            'capabilities': None,
-            'categories': dict({
-            }),
-            'config_entry_id': 'TestData',
-            'device_class': None,
-            'disabled_by': None,
-            'domain': 'button',
-            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-            'entity_id': 'button.haa_c718b3_identify_2',
-            'has_entity_name': False,
-            'hidden_by': None,
-            'icon': None,
-            'labels': list([
-            ]),
-            'name': None,
-            'options': dict({
-            }),
-            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
-            'original_icon': None,
-            'original_name': 'HAA-C718B3 Identify',
-            'platform': 'homekit_controller',
-            'previous_unique_id': None,
-            'supported_features': 0,
-            'translation_key': None,
-            'unique_id': '00:00:00:00:00:00_2_1_7',
-            'unit_of_measurement': None,
-          }),
-          'state': dict({
-            'attributes': dict({
-              'device_class': 'identify',
-              'friendly_name': 'HAA-C718B3 Identify',
-            }),
-            'entity_id': 'button.haa_c718b3_identify_2',
-            'state': 'unknown',
-          }),
-        }),
-        dict({
-          'entry': dict({
-            'aliases': list([
-            ]),
-            'area_id': None,
-            'capabilities': None,
-            'categories': dict({
-            }),
-            'config_entry_id': 'TestData',
-            'device_class': None,
-            'disabled_by': None,
-            'domain': 'switch',
-            'entity_category': None,
-            'entity_id': 'switch.haa_c718b3',
-            'has_entity_name': False,
-            'hidden_by': None,
-            'icon': None,
-            'labels': list([
-            ]),
-            'name': None,
-            'options': dict({
-            }),
-            'original_device_class': None,
-            'original_icon': None,
-            'original_name': 'HAA-C718B3',
-            'platform': 'homekit_controller',
-            'previous_unique_id': None,
-            'supported_features': 0,
-            'translation_key': None,
-            'unique_id': '00:00:00:00:00:00_2_8',
             'unit_of_measurement': None,
           }),
           'state': dict({
@@ -7310,6 +7284,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -7327,6 +7306,7 @@
         ]),
         'manufacturer': 'RYSE Inc.',
         'model': 'RYSE Shade',
+        'model_id': None,
         'name': 'Family Room North',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -7344,6 +7324,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -7385,6 +7366,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'cover',
@@ -7429,6 +7411,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -7472,6 +7455,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -7489,6 +7477,7 @@
         ]),
         'manufacturer': 'Home Assistant',
         'model': 'Bridge',
+        'model_id': None,
         'name': 'HASS Bridge S6',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -7506,6 +7495,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -7546,6 +7536,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -7563,6 +7558,7 @@
         ]),
         'manufacturer': 'RYSE Inc.',
         'model': 'RYSE Shade',
+        'model_id': None,
         'name': 'Kitchen Window',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -7580,6 +7576,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -7621,6 +7618,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'cover',
@@ -7665,6 +7663,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -7712,6 +7711,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -7729,6 +7733,7 @@
         ]),
         'manufacturer': 'Home Assistant',
         'model': 'Fan',
+        'model_id': None,
         'name': 'Ceiling Fan',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -7746,6 +7751,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -7789,6 +7795,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'fan',
@@ -7807,7 +7814,7 @@
             'original_name': 'Ceiling Fan',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
-            'supported_features': <FanEntityFeature: 1>,
+            'supported_features': <FanEntityFeature: 49>,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_766313939_8',
             'unit_of_measurement': None,
@@ -7819,7 +7826,7 @@
               'percentage_step': 1.0,
               'preset_mode': None,
               'preset_modes': None,
-              'supported_features': <FanEntityFeature: 1>,
+              'supported_features': <FanEntityFeature: 49>,
             }),
             'entity_id': 'fan.ceiling_fan',
             'state': 'off',
@@ -7833,6 +7840,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -7850,6 +7862,7 @@
         ]),
         'manufacturer': 'Home Assistant',
         'model': 'Bridge',
+        'model_id': None,
         'name': 'Home Assistant Bridge',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -7867,6 +7880,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -7907,6 +7921,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -7924,6 +7943,7 @@
         ]),
         'manufacturer': 'Home Assistant',
         'model': 'Fan',
+        'model_id': None,
         'name': 'Living Room Fan',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -7941,6 +7961,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -7984,6 +8005,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'fan',
@@ -8002,7 +8024,7 @@
             'original_name': 'Living Room Fan',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
-            'supported_features': <FanEntityFeature: 5>,
+            'supported_features': <FanEntityFeature: 53>,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_1256851357_8',
             'unit_of_measurement': None,
@@ -8015,7 +8037,7 @@
               'percentage_step': 1.0,
               'preset_mode': None,
               'preset_modes': None,
-              'supported_features': <FanEntityFeature: 5>,
+              'supported_features': <FanEntityFeature: 53>,
             }),
             'entity_id': 'fan.living_room_fan',
             'state': 'off',
@@ -8033,6 +8055,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -8050,6 +8077,7 @@
         ]),
         'manufacturer': 'Lookin',
         'model': 'Climate Control',
+        'model_id': None,
         'name': '89 Living Room',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -8067,6 +8095,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -8118,6 +8147,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'climate',
@@ -8172,6 +8202,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'fan',
@@ -8190,7 +8221,7 @@
             'original_name': '89 Living Room',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
-            'supported_features': <FanEntityFeature: 3>,
+            'supported_features': <FanEntityFeature: 51>,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_1233851541_175',
             'unit_of_measurement': None,
@@ -8203,7 +8234,7 @@
               'percentage_step': 33.333333333333336,
               'preset_mode': None,
               'preset_modes': None,
-              'supported_features': <FanEntityFeature: 3>,
+              'supported_features': <FanEntityFeature: 51>,
             }),
             'entity_id': 'fan.89_living_room',
             'state': 'on',
@@ -8223,6 +8254,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'select',
@@ -8269,6 +8301,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -8314,6 +8347,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -8356,6 +8390,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -8373,6 +8412,7 @@
         ]),
         'manufacturer': 'Home Assistant',
         'model': 'Bridge',
+        'model_id': None,
         'name': 'HASS Bridge S6',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -8390,6 +8430,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -8434,6 +8475,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -8451,6 +8497,7 @@
         ]),
         'manufacturer': 'Home Assistant',
         'model': 'Bridge',
+        'model_id': None,
         'name': 'HASS Bridge S6',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -8468,6 +8515,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -8508,6 +8556,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -8525,6 +8578,7 @@
         ]),
         'manufacturer': 'FirstAlert',
         'model': '1039102',
+        'model_id': None,
         'name': 'Laundry Smoke ED78',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -8542,6 +8596,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -8587,6 +8642,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'light',
@@ -8635,6 +8691,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -8682,6 +8739,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -8699,6 +8761,7 @@
         ]),
         'manufacturer': 'RYSE Inc.',
         'model': 'RYSE Shade',
+        'model_id': None,
         'name': 'Family Room North',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -8716,6 +8779,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -8757,6 +8821,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'cover',
@@ -8801,6 +8866,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -8844,6 +8910,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -8861,6 +8932,7 @@
         ]),
         'manufacturer': 'Home Assistant',
         'model': 'Bridge',
+        'model_id': None,
         'name': 'HASS Bridge S6',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -8878,6 +8950,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -8918,6 +8991,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -8935,6 +9013,7 @@
         ]),
         'manufacturer': 'RYSE Inc.',
         'model': 'RYSE Shade',
+        'model_id': None,
         'name': 'Kitchen Window',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -8952,6 +9031,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -8993,6 +9073,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'cover',
@@ -9037,6 +9118,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -9084,6 +9166,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -9101,6 +9188,7 @@
         ]),
         'manufacturer': 'Home Assistant',
         'model': 'Fan',
+        'model_id': None,
         'name': 'Ceiling Fan',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -9118,6 +9206,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -9161,6 +9250,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'fan',
@@ -9179,7 +9269,7 @@
             'original_name': 'Ceiling Fan',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
-            'supported_features': <FanEntityFeature: 1>,
+            'supported_features': <FanEntityFeature: 49>,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_766313939_8',
             'unit_of_measurement': None,
@@ -9191,7 +9281,7 @@
               'percentage_step': 1.0,
               'preset_mode': None,
               'preset_modes': None,
-              'supported_features': <FanEntityFeature: 1>,
+              'supported_features': <FanEntityFeature: 49>,
             }),
             'entity_id': 'fan.ceiling_fan',
             'state': 'off',
@@ -9205,6 +9295,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -9222,6 +9317,7 @@
         ]),
         'manufacturer': 'Home Assistant',
         'model': 'Bridge',
+        'model_id': None,
         'name': 'Home Assistant Bridge',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -9239,6 +9335,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -9279,6 +9376,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -9296,6 +9398,7 @@
         ]),
         'manufacturer': 'Home Assistant',
         'model': 'Fan',
+        'model_id': None,
         'name': 'Living Room Fan',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -9313,6 +9416,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -9356,6 +9460,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'fan',
@@ -9374,7 +9479,7 @@
             'original_name': 'Living Room Fan',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
-            'supported_features': <FanEntityFeature: 7>,
+            'supported_features': <FanEntityFeature: 55>,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_1256851357_8',
             'unit_of_measurement': None,
@@ -9388,7 +9493,7 @@
               'percentage_step': 1.0,
               'preset_mode': None,
               'preset_modes': None,
-              'supported_features': <FanEntityFeature: 7>,
+              'supported_features': <FanEntityFeature: 55>,
             }),
             'entity_id': 'fan.living_room_fan',
             'state': 'off',
@@ -9406,6 +9511,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -9423,6 +9533,7 @@
         ]),
         'manufacturer': 'Home Assistant',
         'model': 'Bridge',
+        'model_id': None,
         'name': 'Home Assistant Bridge',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -9440,6 +9551,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -9480,6 +9592,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -9497,6 +9614,7 @@
         ]),
         'manufacturer': 'Home Assistant',
         'model': 'Fan',
+        'model_id': None,
         'name': 'Living Room Fan',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -9514,6 +9632,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -9557,6 +9676,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'fan',
@@ -9575,7 +9695,7 @@
             'original_name': 'Living Room Fan',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
-            'supported_features': <FanEntityFeature: 7>,
+            'supported_features': <FanEntityFeature: 55>,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_1256851357_8',
             'unit_of_measurement': None,
@@ -9589,7 +9709,7 @@
               'percentage_step': 1.0,
               'preset_mode': None,
               'preset_modes': None,
-              'supported_features': <FanEntityFeature: 7>,
+              'supported_features': <FanEntityFeature: 55>,
             }),
             'entity_id': 'fan.living_room_fan',
             'state': 'off',
@@ -9607,6 +9727,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -9624,6 +9749,7 @@
         ]),
         'manufacturer': 'Lookin',
         'model': 'Climate Control',
+        'model_id': None,
         'name': '89 Living Room',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -9641,6 +9767,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -9696,6 +9823,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'climate',
@@ -9755,6 +9883,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'fan',
@@ -9773,7 +9902,7 @@
             'original_name': '89 Living Room',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
-            'supported_features': <FanEntityFeature: 3>,
+            'supported_features': <FanEntityFeature: 51>,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_1233851541_175',
             'unit_of_measurement': None,
@@ -9786,7 +9915,7 @@
               'percentage_step': 33.333333333333336,
               'preset_mode': None,
               'preset_modes': None,
-              'supported_features': <FanEntityFeature: 3>,
+              'supported_features': <FanEntityFeature: 51>,
             }),
             'entity_id': 'fan.89_living_room',
             'state': 'on',
@@ -9806,6 +9935,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'select',
@@ -9852,6 +9982,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -9897,6 +10028,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -9939,6 +10071,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -9956,6 +10093,7 @@
         ]),
         'manufacturer': 'Home Assistant',
         'model': 'Bridge',
+        'model_id': None,
         'name': 'HASS Bridge S6',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -9973,6 +10111,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -10017,6 +10156,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -10034,6 +10178,7 @@
         ]),
         'manufacturer': 'Home Assistant',
         'model': 'Bridge',
+        'model_id': None,
         'name': 'HASS Bridge S6',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -10051,6 +10196,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -10091,6 +10237,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -10108,6 +10259,7 @@
         ]),
         'manufacturer': 'switchbot',
         'model': 'WoHumi',
+        'model_id': None,
         'name': 'Humidifier 182A',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -10125,6 +10277,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -10173,6 +10326,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'humidifier',
@@ -10226,6 +10380,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -10272,6 +10427,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -10289,6 +10449,7 @@
         ]),
         'manufacturer': 'Home Assistant',
         'model': 'Bridge',
+        'model_id': None,
         'name': 'HASS Bridge S6',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -10306,6 +10467,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -10346,6 +10508,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -10363,6 +10530,7 @@
         ]),
         'manufacturer': 'switchbot',
         'model': 'WoHumi',
+        'model_id': None,
         'name': 'Humidifier 182A',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -10380,6 +10548,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -10428,6 +10597,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'humidifier',
@@ -10481,6 +10651,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -10527,6 +10698,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -10544,6 +10720,7 @@
         ]),
         'manufacturer': 'Home Assistant',
         'model': 'Bridge',
+        'model_id': None,
         'name': 'HASS Bridge S6',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -10561,6 +10738,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -10601,6 +10779,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -10618,6 +10801,7 @@
         ]),
         'manufacturer': 'FirstAlert',
         'model': '1039102',
+        'model_id': None,
         'name': 'Laundry Smoke ED78',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -10635,6 +10819,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -10685,6 +10870,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'light',
@@ -10743,6 +10929,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -10790,6 +10977,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -10807,6 +10999,7 @@
         ]),
         'manufacturer': 'Garzola Marco',
         'model': 'Daikin-fwec3a-esp32-homekit-bridge',
+        'model_id': None,
         'name': 'Air Conditioner',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -10824,6 +11017,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -10881,6 +11075,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'climate',
@@ -10943,6 +11138,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -10989,6 +11185,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -11006,6 +11207,7 @@
         ]),
         'manufacturer': 'Philips',
         'model': 'LTW012',
+        'model_id': None,
         'name': 'Hue ambiance candle',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -11023,6 +11225,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -11072,6 +11275,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'light',
@@ -11126,6 +11330,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -11143,6 +11352,7 @@
         ]),
         'manufacturer': 'Philips',
         'model': 'LTW012',
+        'model_id': None,
         'name': 'Hue ambiance candle',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -11160,6 +11370,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -11209,6 +11420,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'light',
@@ -11263,6 +11475,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -11280,6 +11497,7 @@
         ]),
         'manufacturer': 'Philips',
         'model': 'LTW012',
+        'model_id': None,
         'name': 'Hue ambiance candle',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -11297,6 +11515,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -11346,6 +11565,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'light',
@@ -11400,6 +11620,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -11417,6 +11642,7 @@
         ]),
         'manufacturer': 'Philips',
         'model': 'LTW012',
+        'model_id': None,
         'name': 'Hue ambiance candle',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -11434,6 +11660,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -11483,6 +11710,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'light',
@@ -11537,6 +11765,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -11554,6 +11787,7 @@
         ]),
         'manufacturer': 'Philips',
         'model': 'LTW013',
+        'model_id': None,
         'name': 'Hue ambiance spot',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -11571,6 +11805,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -11620,6 +11855,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'light',
@@ -11660,15 +11896,15 @@
               'min_mireds': 153,
               'rgb_color': tuple(
                 255,
-                167,
-                89,
+                168,
+                90,
               ),
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
               'xy_color': tuple(
-                0.524,
+                0.522,
                 0.387,
               ),
             }),
@@ -11684,6 +11920,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -11701,6 +11942,7 @@
         ]),
         'manufacturer': 'Philips',
         'model': 'LTW013',
+        'model_id': None,
         'name': 'Hue ambiance spot',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -11718,6 +11960,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -11767,6 +12010,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'light',
@@ -11807,15 +12051,15 @@
               'min_mireds': 153,
               'rgb_color': tuple(
                 255,
-                167,
-                89,
+                168,
+                90,
               ),
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
               'xy_color': tuple(
-                0.524,
+                0.522,
                 0.387,
               ),
             }),
@@ -11831,6 +12075,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -11848,6 +12097,7 @@
         ]),
         'manufacturer': 'Philips',
         'model': 'RWL021',
+        'model_id': None,
         'name': 'Hue dimmer switch',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -11865,6 +12115,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -11910,6 +12161,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'event',
@@ -11959,6 +12211,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'event',
@@ -12008,6 +12261,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'event',
@@ -12057,6 +12311,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'event',
@@ -12104,6 +12359,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -12147,6 +12403,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -12164,6 +12425,7 @@
         ]),
         'manufacturer': 'Philips',
         'model': 'LWB010',
+        'model_id': None,
         'name': 'Hue white lamp',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -12181,6 +12443,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -12226,6 +12489,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'light',
@@ -12271,6 +12535,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -12288,6 +12557,7 @@
         ]),
         'manufacturer': 'Philips',
         'model': 'LWB010',
+        'model_id': None,
         'name': 'Hue white lamp',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -12305,6 +12575,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -12350,6 +12621,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'light',
@@ -12395,6 +12667,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -12412,6 +12689,7 @@
         ]),
         'manufacturer': 'Philips',
         'model': 'LWB010',
+        'model_id': None,
         'name': 'Hue white lamp',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -12429,6 +12707,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -12474,6 +12753,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'light',
@@ -12519,6 +12799,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -12536,6 +12821,7 @@
         ]),
         'manufacturer': 'Philips',
         'model': 'LWB010',
+        'model_id': None,
         'name': 'Hue white lamp',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -12553,6 +12839,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -12598,6 +12885,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'light',
@@ -12643,6 +12931,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -12660,6 +12953,7 @@
         ]),
         'manufacturer': 'Philips',
         'model': 'LWB010',
+        'model_id': None,
         'name': 'Hue white lamp',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -12677,6 +12971,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -12722,6 +13017,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'light',
@@ -12767,6 +13063,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -12784,6 +13085,7 @@
         ]),
         'manufacturer': 'Philips',
         'model': 'LWB010',
+        'model_id': None,
         'name': 'Hue white lamp',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -12801,6 +13103,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -12846,6 +13149,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'light',
@@ -12891,6 +13195,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -12908,6 +13217,7 @@
         ]),
         'manufacturer': 'Philips',
         'model': 'LWB010',
+        'model_id': None,
         'name': 'Hue white lamp',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -12925,6 +13235,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -12970,6 +13281,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'light',
@@ -13015,6 +13327,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -13032,6 +13349,7 @@
         ]),
         'manufacturer': 'Philips Lighting',
         'model': 'BSB002',
+        'model_id': None,
         'name': 'Philips hue - 482544',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -13049,6 +13367,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -13093,6 +13412,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -13110,6 +13434,7 @@
         ]),
         'manufacturer': 'Koogeek',
         'model': 'LS1',
+        'model_id': None,
         'name': 'Koogeek-LS1-20833F',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -13127,6 +13452,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -13177,6 +13503,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'light',
@@ -13236,6 +13563,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -13253,6 +13585,7 @@
         ]),
         'manufacturer': 'Koogeek',
         'model': 'P1EU',
+        'model_id': None,
         'name': 'Koogeek-P1-A00AA0',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -13270,6 +13603,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -13313,6 +13647,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -13356,6 +13691,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -13400,6 +13736,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -13417,6 +13758,7 @@
         ]),
         'manufacturer': 'Koogeek',
         'model': 'KH02CN',
+        'model_id': None,
         'name': 'Koogeek-SW2-187A91',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -13434,6 +13776,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -13477,6 +13820,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -13520,6 +13864,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -13560,6 +13905,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -13603,6 +13949,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -13620,6 +13971,7 @@
         ]),
         'manufacturer': 'Lennox',
         'model': 'E30 2B',
+        'model_id': None,
         'name': 'Lennox',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -13637,6 +13989,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -13687,6 +14040,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'climate',
@@ -13747,6 +14101,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'select',
@@ -13793,6 +14148,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -13838,6 +14194,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -13884,6 +14241,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -13901,6 +14263,7 @@
         ]),
         'manufacturer': 'LG Electronics',
         'model': 'OLED55B9PUA',
+        'model_id': None,
         'name': 'LG webOS TV AF80',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -13918,6 +14281,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -13969,6 +14333,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'media_player',
@@ -13987,7 +14352,7 @@
             'original_name': 'LG webOS TV AF80',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
-            'supported_features': <MediaPlayerEntityFeature: 18433>,
+            'supported_features': <MediaPlayerEntityFeature: 18817>,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_1_48',
             'unit_of_measurement': None,
@@ -14006,7 +14371,7 @@
                 'AV',
                 'HDMI 4',
               ]),
-              'supported_features': <MediaPlayerEntityFeature: 18433>,
+              'supported_features': <MediaPlayerEntityFeature: 18817>,
             }),
             'entity_id': 'media_player.lg_webos_tv_af80',
             'state': 'on',
@@ -14021,6 +14386,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -14064,6 +14430,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -14081,6 +14452,7 @@
         ]),
         'manufacturer': 'Lutron Electronics Co., Inc',
         'model': 'PD-FSQN-XX',
+        'model_id': None,
         'name': 'Caséta® Wireless Fan Speed Control',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -14098,6 +14470,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -14141,6 +14514,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'fan',
@@ -14159,7 +14533,7 @@
             'original_name': 'Caséta® Wireless Fan Speed Control',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
-            'supported_features': <FanEntityFeature: 1>,
+            'supported_features': <FanEntityFeature: 49>,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_21474836482_2',
             'unit_of_measurement': None,
@@ -14171,7 +14545,7 @@
               'percentage_step': 25.0,
               'preset_mode': None,
               'preset_modes': None,
-              'supported_features': <FanEntityFeature: 1>,
+              'supported_features': <FanEntityFeature: 49>,
             }),
             'entity_id': 'fan.caseta_r_wireless_fan_speed_control',
             'state': 'off',
@@ -14185,6 +14559,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -14202,6 +14581,7 @@
         ]),
         'manufacturer': 'Lutron Electronics Co., Inc',
         'model': 'L-BDG2-WH',
+        'model_id': None,
         'name': 'Smart Bridge 2',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -14219,6 +14599,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -14263,6 +14644,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -14280,6 +14666,7 @@
         ]),
         'manufacturer': 'Meross',
         'model': 'MSS425F',
+        'model_id': None,
         'name': 'MSS425F-15cc',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -14297,6 +14684,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -14338,6 +14726,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -14378,6 +14767,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -14418,6 +14808,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -14458,6 +14849,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -14498,6 +14890,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -14541,6 +14934,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -14558,6 +14956,7 @@
         ]),
         'manufacturer': 'Meross',
         'model': 'MSS565',
+        'model_id': None,
         'name': 'MSS565-28da',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -14575,6 +14974,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -14620,6 +15020,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'light',
@@ -14669,6 +15070,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -14686,6 +15092,7 @@
         ]),
         'manufacturer': 'Empowered Homes Inc.',
         'model': 'v1',
+        'model_id': None,
         'name': 'Mysa-85dda9',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -14703,6 +15110,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -14753,6 +15161,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'climate',
@@ -14810,6 +15219,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'light',
@@ -14861,6 +15271,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'select',
@@ -14907,6 +15318,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -14952,6 +15364,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -14998,6 +15411,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -15015,6 +15433,7 @@
         ]),
         'manufacturer': 'Nanoleaf',
         'model': 'NL55',
+        'model_id': None,
         'name': 'Nanoleaf Strip 3B32',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -15032,6 +15451,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -15082,6 +15502,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'light',
@@ -15122,7 +15543,7 @@
               'min_mireds': 153,
               'rgb_color': tuple(
                 255,
-                141,
+                142,
                 28,
               ),
               'supported_color_modes': list([
@@ -15131,8 +15552,8 @@
               ]),
               'supported_features': <LightEntityFeature: 0>,
               'xy_color': tuple(
-                0.589,
-                0.385,
+                0.588,
+                0.386,
               ),
             }),
             'entity_id': 'light.nanoleaf_strip_3b32_nanoleaf_light_strip',
@@ -15157,6 +15578,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -15216,6 +15638,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -15269,6 +15692,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -15286,6 +15714,7 @@
         ]),
         'manufacturer': 'Netatmo',
         'model': 'Netatmo Doorbell',
+        'model_id': None,
         'name': 'Netatmo-Doorbell-g738658',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -15303,6 +15732,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'binary_sensor',
@@ -15344,6 +15774,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -15385,6 +15816,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'camera',
@@ -15432,6 +15864,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'event',
@@ -15479,6 +15912,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -15519,6 +15953,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -15562,6 +15997,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -15579,6 +16019,7 @@
         ]),
         'manufacturer': 'Netatmo',
         'model': 'Smart CO Alarm',
+        'model_id': None,
         'name': 'Smart CO Alarm',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -15596,6 +16037,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'binary_sensor',
@@ -15637,6 +16079,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'binary_sensor',
@@ -15678,6 +16121,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -15722,6 +16166,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -15739,6 +16188,7 @@
         ]),
         'manufacturer': 'Netatmo',
         'model': 'Healthy Home Coach',
+        'model_id': None,
         'name': 'Healthy Home Coach',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -15756,6 +16206,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -15799,6 +16250,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -15843,6 +16295,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -15888,6 +16341,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -15933,6 +16387,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -15978,6 +16433,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -16024,6 +16480,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -16041,6 +16502,7 @@
         ]),
         'manufacturer': 'Green Electronics LLC',
         'model': 'SPK5 Pro',
+        'model_id': None,
         'name': 'RainMachine-00ce4a',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -16058,6 +16520,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -16099,6 +16562,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -16142,6 +16606,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -16185,6 +16650,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -16228,6 +16694,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -16271,6 +16738,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -16314,6 +16782,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -16357,6 +16826,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -16400,6 +16870,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -16446,6 +16917,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -16463,6 +16939,7 @@
         ]),
         'manufacturer': 'RYSE Inc.',
         'model': 'RYSE Shade',
+        'model_id': None,
         'name': 'Master Bath South',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -16480,6 +16957,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -16521,6 +16999,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'cover',
@@ -16565,6 +17044,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -16608,6 +17088,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -16625,6 +17110,7 @@
         ]),
         'manufacturer': 'RYSE Inc.',
         'model': 'RYSE SmartBridge',
+        'model_id': None,
         'name': 'RYSE SmartBridge',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -16642,6 +17128,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -16682,6 +17169,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -16699,6 +17191,7 @@
         ]),
         'manufacturer': 'RYSE Inc.',
         'model': 'RYSE Shade',
+        'model_id': None,
         'name': 'RYSE SmartShade',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -16716,6 +17209,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -16757,6 +17251,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'cover',
@@ -16801,6 +17296,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -16848,6 +17344,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -16865,6 +17366,7 @@
         ]),
         'manufacturer': 'RYSE Inc.',
         'model': 'RYSE Shade',
+        'model_id': None,
         'name': 'BR Left',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -16882,6 +17384,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -16923,6 +17426,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'cover',
@@ -16967,6 +17471,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -17010,6 +17515,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -17027,6 +17537,7 @@
         ]),
         'manufacturer': 'RYSE Inc.',
         'model': 'RYSE Shade',
+        'model_id': None,
         'name': 'LR Left',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -17044,6 +17555,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -17085,6 +17597,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'cover',
@@ -17129,6 +17642,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -17172,6 +17686,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -17189,6 +17708,7 @@
         ]),
         'manufacturer': 'RYSE Inc.',
         'model': 'RYSE Shade',
+        'model_id': None,
         'name': 'LR Right',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -17206,6 +17726,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -17247,6 +17768,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'cover',
@@ -17291,6 +17813,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -17334,6 +17857,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -17351,6 +17879,7 @@
         ]),
         'manufacturer': 'RYSE Inc.',
         'model': 'RYSE SmartBridge',
+        'model_id': None,
         'name': 'RYSE SmartBridge',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -17368,6 +17897,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -17408,6 +17938,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -17425,6 +17960,7 @@
         ]),
         'manufacturer': 'RYSE Inc.',
         'model': 'RYSE Shade',
+        'model_id': None,
         'name': 'RZSS',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -17442,6 +17978,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -17483,6 +18020,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'cover',
@@ -17527,6 +18065,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -17574,6 +18113,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -17591,6 +18135,7 @@
         ]),
         'manufacturer': 'Schlage ',
         'model': 'BE479CAM619',
+        'model_id': None,
         'name': 'SENSE  ',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -17608,6 +18153,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -17649,6 +18195,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'lock',
@@ -17693,6 +18240,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -17710,6 +18262,7 @@
         ]),
         'manufacturer': 'Hunter Fan',
         'model': 'SIMPLEconnect',
+        'model_id': None,
         'name': 'SIMPLEconnect Fan-06F674',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -17727,6 +18280,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -17770,6 +18324,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'fan',
@@ -17788,7 +18343,7 @@
             'original_name': 'SIMPLEconnect Fan-06F674 Hunter Fan',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
-            'supported_features': <FanEntityFeature: 5>,
+            'supported_features': <FanEntityFeature: 53>,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_1_8',
             'unit_of_measurement': None,
@@ -17801,7 +18356,7 @@
               'percentage_step': 25.0,
               'preset_mode': None,
               'preset_modes': None,
-              'supported_features': <FanEntityFeature: 5>,
+              'supported_features': <FanEntityFeature: 53>,
             }),
             'entity_id': 'fan.simpleconnect_fan_06f674_hunter_fan',
             'state': 'off',
@@ -17820,6 +18375,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'light',
@@ -17861,6 +18417,762 @@
     }),
   ])
 # ---
+# name: test_snapshots[somfy_venetian_blinds]
+  list([
+    dict({
+      'device': dict({
+        'area_id': None,
+        'config_entries': list([
+          'TestData',
+        ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
+        'configuration_url': None,
+        'connections': list([
+        ]),
+        'disabled_by': None,
+        'entry_type': None,
+        'hw_version': '',
+        'identifiers': list([
+          list([
+            'homekit_controller:accessory-id',
+            '00:00:00:00:00:00:aid:1',
+          ]),
+        ]),
+        'is_new': False,
+        'labels': list([
+        ]),
+        'manufacturer': 'Netatmo',
+        'model': 'VELUX Internal Cover',
+        'model_id': None,
+        'name': 'VELUX Internal Cover',
+        'name_by_user': None,
+        'primary_config_entry': 'TestData',
+        'serial_number': '**REDACTED**',
+        'suggested_area': None,
+        'sw_version': '0.0.0',
+      }),
+      'entities': list([
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'button',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'button.velux_internal_cover_identify',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+            'original_icon': None,
+            'original_name': 'VELUX Internal Cover Identify',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_1_7',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'identify',
+              'friendly_name': 'VELUX Internal Cover Identify',
+            }),
+            'entity_id': 'button.velux_internal_cover_identify',
+            'state': 'unknown',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'cover',
+            'entity_category': None,
+            'entity_id': 'cover.velux_internal_cover_venetian_blinds',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': None,
+            'original_icon': None,
+            'original_name': 'VELUX Internal Cover Venetian Blinds',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': <CoverEntityFeature: 183>,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_8',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'current_position': 0,
+              'current_tilt_position': 100,
+              'friendly_name': 'VELUX Internal Cover Venetian Blinds',
+              'supported_features': <CoverEntityFeature: 183>,
+            }),
+            'entity_id': 'cover.velux_internal_cover_venetian_blinds',
+            'state': 'closed',
+          }),
+        }),
+      ]),
+    }),
+  ])
+# ---
+# name: test_snapshots[u_by_moen_ts3304]
+  list([
+    dict({
+      'device': dict({
+        'area_id': None,
+        'config_entries': list([
+          'TestData',
+        ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
+        'configuration_url': None,
+        'connections': list([
+        ]),
+        'disabled_by': None,
+        'entry_type': None,
+        'hw_version': '',
+        'identifiers': list([
+          list([
+            'homekit_controller:accessory-id',
+            '00:00:00:00:00:00:aid:1',
+          ]),
+        ]),
+        'is_new': False,
+        'labels': list([
+        ]),
+        'manufacturer': 'Moen Incorporated',
+        'model': 'TS3304',
+        'model_id': None,
+        'name': 'U by Moen-015F44',
+        'name_by_user': None,
+        'primary_config_entry': 'TestData',
+        'serial_number': '**REDACTED**',
+        'suggested_area': None,
+        'sw_version': '3.3.0',
+      }),
+      'entities': list([
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'button',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'button.u_by_moen_015f44_identify',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+            'original_icon': None,
+            'original_name': 'U by Moen-015F44 Identify',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_1_6',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'identify',
+              'friendly_name': 'U by Moen-015F44 Identify',
+            }),
+            'entity_id': 'button.u_by_moen_015f44_identify',
+            'state': 'unknown',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              'hvac_modes': list([
+                <HVACMode.HEAT_COOL: 'heat_cool'>,
+                <HVACMode.HEAT: 'heat'>,
+                <HVACMode.COOL: 'cool'>,
+                <HVACMode.OFF: 'off'>,
+              ]),
+              'max_temp': 35,
+              'min_temp': 7,
+              'target_temp_step': 1.0,
+            }),
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'climate',
+            'entity_category': None,
+            'entity_id': 'climate.u_by_moen_015f44',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': None,
+            'original_icon': None,
+            'original_name': 'U by Moen-015F44',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': <ClimateEntityFeature: 385>,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_11',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'current_temperature': 21.7,
+              'friendly_name': 'U by Moen-015F44',
+              'hvac_action': <HVACAction.OFF: 'off'>,
+              'hvac_modes': list([
+                <HVACMode.HEAT_COOL: 'heat_cool'>,
+                <HVACMode.HEAT: 'heat'>,
+                <HVACMode.COOL: 'cool'>,
+                <HVACMode.OFF: 'off'>,
+              ]),
+              'max_temp': 35,
+              'min_temp': 7,
+              'supported_features': <ClimateEntityFeature: 385>,
+              'target_temp_step': 1.0,
+              'temperature': None,
+            }),
+            'entity_id': 'climate.u_by_moen_015f44',
+            'state': 'off',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'sensor',
+            'entity_category': None,
+            'entity_id': 'sensor.u_by_moen_015f44_current_temperature',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+            'original_icon': None,
+            'original_name': 'U by Moen-015F44 Current Temperature',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_11_13',
+            'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'temperature',
+              'friendly_name': 'U by Moen-015F44 Current Temperature',
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+            }),
+            'entity_id': 'sensor.u_by_moen_015f44_current_temperature',
+            'state': '21.66666',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'switch',
+            'entity_category': None,
+            'entity_id': 'switch.u_by_moen_015f44',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': None,
+            'original_icon': None,
+            'original_name': 'U by Moen-015F44',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_8',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'friendly_name': 'U by Moen-015F44',
+            }),
+            'entity_id': 'switch.u_by_moen_015f44',
+            'state': 'off',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'switch',
+            'entity_category': None,
+            'entity_id': 'switch.u_by_moen_015f44_outlet_1',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': None,
+            'original_icon': None,
+            'original_name': 'U by Moen-015F44 Outlet 1',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': 'valve',
+            'unique_id': '00:00:00:00:00:00_1_17',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'friendly_name': 'U by Moen-015F44 Outlet 1',
+              'in_use': False,
+            }),
+            'entity_id': 'switch.u_by_moen_015f44_outlet_1',
+            'state': 'off',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'switch',
+            'entity_category': None,
+            'entity_id': 'switch.u_by_moen_015f44_outlet_2',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': None,
+            'original_icon': None,
+            'original_name': 'U by Moen-015F44 Outlet 2',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': 'valve',
+            'unique_id': '00:00:00:00:00:00_1_22',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'friendly_name': 'U by Moen-015F44 Outlet 2',
+              'in_use': False,
+            }),
+            'entity_id': 'switch.u_by_moen_015f44_outlet_2',
+            'state': 'off',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'switch',
+            'entity_category': None,
+            'entity_id': 'switch.u_by_moen_015f44_outlet_3',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': None,
+            'original_icon': None,
+            'original_name': 'U by Moen-015F44 Outlet 3',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': 'valve',
+            'unique_id': '00:00:00:00:00:00_1_27',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'friendly_name': 'U by Moen-015F44 Outlet 3',
+              'in_use': False,
+            }),
+            'entity_id': 'switch.u_by_moen_015f44_outlet_3',
+            'state': 'off',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'switch',
+            'entity_category': None,
+            'entity_id': 'switch.u_by_moen_015f44_outlet_4',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': None,
+            'original_icon': None,
+            'original_name': 'U by Moen-015F44 Outlet 4',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': 'valve',
+            'unique_id': '00:00:00:00:00:00_1_32',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'friendly_name': 'U by Moen-015F44 Outlet 4',
+              'in_use': False,
+            }),
+            'entity_id': 'switch.u_by_moen_015f44_outlet_4',
+            'state': 'off',
+          }),
+        }),
+      ]),
+    }),
+  ])
+# ---
+# name: test_snapshots[velux_active_netatmo_co2]
+  list([
+    dict({
+      'device': dict({
+        'area_id': None,
+        'config_entries': list([
+          'TestData',
+        ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
+        'configuration_url': None,
+        'connections': list([
+        ]),
+        'disabled_by': None,
+        'entry_type': None,
+        'hw_version': '',
+        'identifiers': list([
+          list([
+            'homekit_controller:accessory-id',
+            '00:00:00:00:00:00:aid:1',
+          ]),
+        ]),
+        'is_new': False,
+        'labels': list([
+        ]),
+        'manufacturer': 'Netatmo',
+        'model': 'VELUX Sensor',
+        'model_id': None,
+        'name': 'VELUX Sensor',
+        'name_by_user': None,
+        'primary_config_entry': 'TestData',
+        'serial_number': '**REDACTED**',
+        'suggested_area': None,
+        'sw_version': '16.0.0',
+      }),
+      'entities': list([
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'button',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'button.velux_sensor_identify',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+            'original_icon': None,
+            'original_name': 'VELUX Sensor Identify',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_1_7',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'identify',
+              'friendly_name': 'VELUX Sensor Identify',
+            }),
+            'entity_id': 'button.velux_sensor_identify',
+            'state': 'unknown',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'sensor',
+            'entity_category': None,
+            'entity_id': 'sensor.velux_sensor_carbon_dioxide_sensor',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
+            'original_icon': None,
+            'original_name': 'VELUX Sensor Carbon Dioxide sensor',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_14',
+            'unit_of_measurement': 'ppm',
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'carbon_dioxide',
+              'friendly_name': 'VELUX Sensor Carbon Dioxide sensor',
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              'unit_of_measurement': 'ppm',
+            }),
+            'entity_id': 'sensor.velux_sensor_carbon_dioxide_sensor',
+            'state': '1124.0',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'sensor',
+            'entity_category': None,
+            'entity_id': 'sensor.velux_sensor_humidity_sensor',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+            'original_icon': None,
+            'original_name': 'VELUX Sensor Humidity sensor',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_11',
+            'unit_of_measurement': '%',
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'humidity',
+              'friendly_name': 'VELUX Sensor Humidity sensor',
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              'unit_of_measurement': '%',
+            }),
+            'entity_id': 'sensor.velux_sensor_humidity_sensor',
+            'state': '69.0',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'sensor',
+            'entity_category': None,
+            'entity_id': 'sensor.velux_sensor_temperature_sensor',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+            'original_icon': None,
+            'original_name': 'VELUX Sensor Temperature sensor',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_8',
+            'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'temperature',
+              'friendly_name': 'VELUX Sensor Temperature sensor',
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+            }),
+            'entity_id': 'sensor.velux_sensor_temperature_sensor',
+            'state': '23.9',
+          }),
+        }),
+      ]),
+    }),
+  ])
+# ---
 # name: test_snapshots[velux_gateway]
   list([
     dict({
@@ -17869,6 +19181,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -17886,6 +19203,7 @@
         ]),
         'manufacturer': 'VELUX',
         'model': 'VELUX Gateway',
+        'model_id': None,
         'name': 'VELUX Gateway',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -17903,6 +19221,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -17943,6 +19262,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -17960,6 +19284,7 @@
         ]),
         'manufacturer': 'VELUX',
         'model': 'VELUX Sensor',
+        'model_id': None,
         'name': 'VELUX Sensor',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -17977,6 +19302,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -18020,6 +19346,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -18065,6 +19392,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -18110,6 +19438,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -18152,6 +19481,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -18169,6 +19503,7 @@
         ]),
         'manufacturer': 'VELUX',
         'model': 'VELUX Window',
+        'model_id': None,
         'name': 'VELUX Window',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -18186,6 +19521,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -18227,6 +19563,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'cover',
@@ -18265,6 +19602,263 @@
     }),
   ])
 # ---
+# name: test_snapshots[velux_window]
+  list([
+    dict({
+      'device': dict({
+        'area_id': None,
+        'config_entries': list([
+          'TestData',
+        ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
+        'configuration_url': None,
+        'connections': list([
+        ]),
+        'disabled_by': None,
+        'entry_type': None,
+        'hw_version': '',
+        'identifiers': list([
+          list([
+            'homekit_controller:accessory-id',
+            '00:00:00:00:00:00:aid:1',
+          ]),
+        ]),
+        'is_new': False,
+        'labels': list([
+        ]),
+        'manufacturer': 'Netatmo',
+        'model': 'VELUX Window',
+        'model_id': None,
+        'name': 'VELUX Window',
+        'name_by_user': None,
+        'primary_config_entry': 'TestData',
+        'serial_number': '**REDACTED**',
+        'suggested_area': None,
+        'sw_version': '0.0.0',
+      }),
+      'entities': list([
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'button',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'button.velux_window_identify',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+            'original_icon': None,
+            'original_name': 'VELUX Window Identify',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_1_7',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'identify',
+              'friendly_name': 'VELUX Window Identify',
+            }),
+            'entity_id': 'button.velux_window_identify',
+            'state': 'unknown',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'cover',
+            'entity_category': None,
+            'entity_id': 'cover.velux_window_roof_window',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
+            'original_icon': None,
+            'original_name': 'VELUX Window Roof Window',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': <CoverEntityFeature: 7>,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_8',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'current_position': 0,
+              'device_class': 'window',
+              'friendly_name': 'VELUX Window Roof Window',
+              'supported_features': <CoverEntityFeature: 7>,
+            }),
+            'entity_id': 'cover.velux_window_roof_window',
+            'state': 'closed',
+          }),
+        }),
+      ]),
+    }),
+  ])
+# ---
+# name: test_snapshots[velux_window_cover]
+  list([
+    dict({
+      'device': dict({
+        'area_id': None,
+        'config_entries': list([
+          'TestData',
+        ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
+        'configuration_url': None,
+        'connections': list([
+        ]),
+        'disabled_by': None,
+        'entry_type': None,
+        'hw_version': '',
+        'identifiers': list([
+          list([
+            'homekit_controller:accessory-id',
+            '00:00:00:00:00:00:aid:1',
+          ]),
+        ]),
+        'is_new': False,
+        'labels': list([
+        ]),
+        'manufacturer': 'Netatmo',
+        'model': 'VELUX External Cover',
+        'model_id': None,
+        'name': 'VELUX External Cover',
+        'name_by_user': None,
+        'primary_config_entry': 'TestData',
+        'serial_number': '**REDACTED**',
+        'suggested_area': None,
+        'sw_version': '15.0.0',
+      }),
+      'entities': list([
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'button',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'button.velux_external_cover_identify',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+            'original_icon': None,
+            'original_name': 'VELUX External Cover Identify',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_1_7',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'identify',
+              'friendly_name': 'VELUX External Cover Identify',
+            }),
+            'entity_id': 'button.velux_external_cover_identify',
+            'state': 'unknown',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'categories': dict({
+            }),
+            'config_entry_id': 'TestData',
+            'config_subentry_id': None,
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'cover',
+            'entity_category': None,
+            'entity_id': 'cover.velux_external_cover_awning_blinds',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'labels': list([
+            ]),
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': None,
+            'original_icon': None,
+            'original_name': 'VELUX External Cover Awning Blinds',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': <CoverEntityFeature: 7>,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_8',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'current_position': 0,
+              'friendly_name': 'VELUX External Cover Awning Blinds',
+              'supported_features': <CoverEntityFeature: 7>,
+            }),
+            'entity_id': 'cover.velux_external_cover_awning_blinds',
+            'state': 'closed',
+          }),
+        }),
+      ]),
+    }),
+  ])
+# ---
 # name: test_snapshots[vocolinc_flowerbud]
   list([
     dict({
@@ -18273,6 +19867,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -18290,6 +19889,7 @@
         ]),
         'manufacturer': 'VOCOlinc',
         'model': 'Flowerbud',
+        'model_id': None,
         'name': 'VOCOlinc-Flowerbud-0d324b',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -18307,6 +19907,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -18355,6 +19956,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'humidifier',
@@ -18415,6 +20017,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'light',
@@ -18486,6 +20089,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'number',
@@ -18532,6 +20136,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -18578,6 +20183,11 @@
         'config_entries': list([
           'TestData',
         ]),
+        'config_entries_subentries': dict({
+          'TestData': list([
+            None,
+          ]),
+        }),
         'configuration_url': None,
         'connections': list([
         ]),
@@ -18595,6 +20205,7 @@
         ]),
         'manufacturer': 'VOCOlinc',
         'model': 'VP3',
+        'model_id': None,
         'name': 'VOCOlinc-VP3-123456',
         'name_by_user': None,
         'primary_config_entry': 'TestData',
@@ -18612,6 +20223,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -18655,6 +20267,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -18698,6 +20311,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',

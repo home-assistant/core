@@ -3,7 +3,7 @@
 import logging
 import ssl
 
-from smart_meter_texas import Account, Client, ClientSSLContext
+from smart_meter_texas import Account, Client
 from smart_meter_texas.exceptions import (
     SmartMeterTexasAPIError,
     SmartMeterTexasAuthError,
@@ -16,6 +16,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util.ssl import get_default_context
 
 from .const import (
     DATA_COORDINATOR,
@@ -38,8 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     account = Account(username, password)
 
-    client_ssl_context = ClientSSLContext()
-    ssl_context = await client_ssl_context.get_ssl_context()
+    ssl_context = get_default_context()
 
     smart_meter_texas_data = SmartMeterTexasData(hass, entry, account, ssl_context)
     try:
@@ -64,6 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=entry,
         name="Smart Meter Texas",
         update_method=async_update_data,
         update_interval=SCAN_INTERVAL,

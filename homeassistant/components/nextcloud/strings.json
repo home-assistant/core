@@ -21,7 +21,7 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "connection_error_during_import": "Connection error occured during yaml configuration import",
+      "connection_error_during_import": "Connection error occurred during yaml configuration import",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
@@ -70,7 +70,7 @@
         "name": "Cache memory"
       },
       "nextcloud_cache_num_entries": {
-        "name": "Cache number of entires"
+        "name": "Cache number of entries"
       },
       "nextcloud_cache_num_hits": {
         "name": "Cache number of hits"
@@ -88,7 +88,7 @@
         "name": "Cache start time"
       },
       "nextcloud_cache_ttl": {
-        "name": "Cache ttl"
+        "name": "Cache TTL"
       },
       "nextcloud_database_size": {
         "name": "Database size"
@@ -268,13 +268,13 @@
         "name": "Updates available"
       },
       "nextcloud_system_cpuload_1": {
-        "name": "CPU Load last 1 minute"
+        "name": "CPU load last 1 minute"
       },
       "nextcloud_system_cpuload_15": {
-        "name": "CPU Load last 15 minutes"
+        "name": "CPU load last 15 minutes"
       },
       "nextcloud_system_cpuload_5": {
-        "name": "CPU Load last 5 minutes"
+        "name": "CPU load last 5 minutes"
       },
       "nextcloud_system_freespace": {
         "name": "Free space"

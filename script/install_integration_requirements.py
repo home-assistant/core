@@ -45,6 +45,7 @@ def main() -> int | None:
         cmd,
         check=True,
     )
+    return None
 
 
 if __name__ == "__main__":

@@ -1,0 +1,286 @@
+# serializer version: 1
+# name: test_binary_sensor[envoy_eu_batt][binary_sensor.encharge_123456_communicating-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.encharge_123456_communicating',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
+    'original_icon': None,
+    'original_name': 'Communicating',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'communicating',
+    'unique_id': '123456_communicating',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[envoy_eu_batt][binary_sensor.encharge_123456_communicating-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'friendly_name': 'Encharge 123456 Communicating',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.encharge_123456_communicating',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensor[envoy_eu_batt][binary_sensor.encharge_123456_dc_switch-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.encharge_123456_dc_switch',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'DC switch',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'dc_switch',
+    'unique_id': '123456_dc_switch',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[envoy_eu_batt][binary_sensor.encharge_123456_dc_switch-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Encharge 123456 DC switch',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.encharge_123456_dc_switch',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensor[envoy_metered_batt_relay][binary_sensor.encharge_123456_communicating-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.encharge_123456_communicating',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
+    'original_icon': None,
+    'original_name': 'Communicating',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'communicating',
+    'unique_id': '123456_communicating',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[envoy_metered_batt_relay][binary_sensor.encharge_123456_communicating-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'friendly_name': 'Encharge 123456 Communicating',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.encharge_123456_communicating',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensor[envoy_metered_batt_relay][binary_sensor.encharge_123456_dc_switch-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.encharge_123456_dc_switch',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'DC switch',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'dc_switch',
+    'unique_id': '123456_dc_switch',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[envoy_metered_batt_relay][binary_sensor.encharge_123456_dc_switch-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Encharge 123456 DC switch',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.encharge_123456_dc_switch',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensor[envoy_metered_batt_relay][binary_sensor.enpower_654321_communicating-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.enpower_654321_communicating',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
+    'original_icon': None,
+    'original_name': 'Communicating',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'communicating',
+    'unique_id': '654321_communicating',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[envoy_metered_batt_relay][binary_sensor.enpower_654321_communicating-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'friendly_name': 'Enpower 654321 Communicating',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.enpower_654321_communicating',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensor[envoy_metered_batt_relay][binary_sensor.enpower_654321_grid_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.enpower_654321_grid_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Grid status',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'grid_status',
+    'unique_id': '654321_mains_oper_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[envoy_metered_batt_relay][binary_sensor.enpower_654321_grid_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Enpower 654321 Grid status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.enpower_654321_grid_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

@@ -7,30 +7,24 @@ from typing import Any
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
 
-from homeassistant.components.lock import STATE_JAMMED, LockEntity
+from homeassistant.components.lock import LockEntity, LockState
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_BATTERY_LEVEL,
-    STATE_LOCKED,
-    STATE_UNKNOWN,
-    STATE_UNLOCKED,
-    Platform,
-)
+from homeassistant.const import ATTR_BATTERY_LEVEL, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import KNOWN_DEVICES
 from .connection import HKDevice
 from .entity import HomeKitEntity
 
 CURRENT_STATE_MAP = {
-    0: STATE_UNLOCKED,
-    1: STATE_LOCKED,
-    2: STATE_JAMMED,
+    0: LockState.UNLOCKED,
+    1: LockState.LOCKED,
+    2: LockState.JAMMED,
     3: STATE_UNKNOWN,
 }
 
-TARGET_STATE_MAP = {STATE_UNLOCKED: 0, STATE_LOCKED: 1}
+TARGET_STATE_MAP = {LockState.UNLOCKED: 0, LockState.LOCKED: 1}
 
 REVERSED_TARGET_STATE_MAP = {v: k for k, v in TARGET_STATE_MAP.items()}
 
@@ -38,7 +32,7 @@ REVERSED_TARGET_STATE_MAP = {v: k for k, v in TARGET_STATE_MAP.items()}
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Homekit lock."""
     hkid: str = config_entry.data["AccessoryPairingID"]
@@ -76,7 +70,7 @@ class HomeKitLock(HomeKitEntity, LockEntity):
         value = self.service.value(CharacteristicsTypes.LOCK_MECHANISM_CURRENT_STATE)
         if CURRENT_STATE_MAP[value] == STATE_UNKNOWN:
             return None
-        return CURRENT_STATE_MAP[value] == STATE_LOCKED
+        return CURRENT_STATE_MAP[value] == LockState.LOCKED
 
     @property
     def is_locking(self) -> bool:
@@ -88,8 +82,8 @@ class HomeKitLock(HomeKitEntity, LockEntity):
             CharacteristicsTypes.LOCK_MECHANISM_TARGET_STATE
         )
         return (
-            CURRENT_STATE_MAP[current_value] == STATE_UNLOCKED
-            and REVERSED_TARGET_STATE_MAP.get(target_value) == STATE_LOCKED
+            CURRENT_STATE_MAP[current_value] == LockState.UNLOCKED
+            and REVERSED_TARGET_STATE_MAP.get(target_value) == LockState.LOCKED
         )
 
     @property
@@ -102,25 +96,25 @@ class HomeKitLock(HomeKitEntity, LockEntity):
             CharacteristicsTypes.LOCK_MECHANISM_TARGET_STATE
         )
         return (
-            CURRENT_STATE_MAP[current_value] == STATE_LOCKED
-            and REVERSED_TARGET_STATE_MAP.get(target_value) == STATE_UNLOCKED
+            CURRENT_STATE_MAP[current_value] == LockState.LOCKED
+            and REVERSED_TARGET_STATE_MAP.get(target_value) == LockState.UNLOCKED
         )
 
     @property
     def is_jammed(self) -> bool:
         """Return true if device is jammed."""
         value = self.service.value(CharacteristicsTypes.LOCK_MECHANISM_CURRENT_STATE)
-        return CURRENT_STATE_MAP[value] == STATE_JAMMED
+        return CURRENT_STATE_MAP[value] == LockState.JAMMED
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device."""
-        await self._set_lock_state(STATE_LOCKED)
+        await self._set_lock_state(LockState.LOCKED)
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
-        await self._set_lock_state(STATE_UNLOCKED)
+        await self._set_lock_state(LockState.UNLOCKED)
 
-    async def _set_lock_state(self, state: str) -> None:
+    async def _set_lock_state(self, state: LockState) -> None:
         """Send state command."""
         await self.async_put_characteristics(
             {CharacteristicsTypes.LOCK_MECHANISM_TARGET_STATE: TARGET_STATE_MAP[state]}

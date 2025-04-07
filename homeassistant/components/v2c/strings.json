@@ -33,11 +33,20 @@
     "number": {
       "intensity": {
         "name": "Intensity"
+      },
+      "max_intensity": {
+        "name": "Max intensity"
+      },
+      "min_intensity": {
+        "name": "Min intensity"
       }
     },
     "sensor": {
       "charge_power": {
         "name": "Charge power"
+      },
+      "voltage_installation": {
+        "name": "Installation voltage"
       },
       "charge_energy": {
         "name": "Charge energy"
@@ -93,6 +102,15 @@
           "empty_message": "Empty message",
           "undefined_error": "Undefined error"
         }
+      },
+      "ssid": {
+        "name": "SSID"
+      },
+      "ip_address": {
+        "name": "IP address"
+      },
+      "signal_status": {
+        "name": "Signal status"
       }
     },
     "switch": {

@@ -1,5 +1,7 @@
 """Tests for hassfest version."""
 
+from pathlib import Path
+
 import pytest
 import voluptuous as vol
 
@@ -7,13 +9,21 @@ from script.hassfest.manifest import (
     CUSTOM_INTEGRATION_MANIFEST_SCHEMA,
     validate_version,
 )
-from script.hassfest.model import Integration
+from script.hassfest.model import Config, Integration
 
 
 @pytest.fixture
 def integration():
     """Fixture for hassfest integration model."""
-    integration = Integration("")
+    integration = Integration(
+        Path(),
+        _config=Config(
+            root=Path(".").absolute(),
+            specific_integrations=None,
+            action="validate",
+            requirements=True,
+        ),
+    )
     integration._manifest = {
         "domain": "test",
         "documentation": "https://example.com",

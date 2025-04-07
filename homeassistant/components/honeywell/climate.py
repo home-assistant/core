@@ -31,19 +31,15 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import (
-    device_registry as dr,
-    entity_registry as er,
-    issue_registry as ir,
-)
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util.unit_conversion import TemperatureConverter
 
-from . import HoneywellData
+from . import HoneywellConfigEntry, HoneywellData
 from .const import (
     _LOGGER,
     CONF_COOL_AWAY_TEMPERATURE,
@@ -51,6 +47,10 @@ from .const import (
     DOMAIN,
     RETRY,
 )
+
+MODE_PERMANENT_HOLD = 2
+MODE_TEMPORARY_HOLD = 1
+MODE_HOLD = {MODE_PERMANENT_HOLD, MODE_TEMPORARY_HOLD}
 
 ATTR_FAN_ACTION = "fan_action"
 
@@ -96,13 +96,15 @@ SCAN_INTERVAL = datetime.timedelta(seconds=30)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: HoneywellConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Honeywell thermostat."""
     cool_away_temp = entry.options.get(CONF_COOL_AWAY_TEMPERATURE)
     heat_away_temp = entry.options.get(CONF_HEAT_AWAY_TEMPERATURE)
 
-    data: HoneywellData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
     _async_migrate_unique_id(hass, data.devices)
     async_add_entities(
         [
@@ -130,7 +132,7 @@ def _async_migrate_unique_id(
 
 def remove_stale_devices(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: HoneywellConfigEntry,
     devices: dict[str, SomeComfortDevice],
 ) -> None:
     """Remove stale devices from device registry."""
@@ -163,7 +165,6 @@ class HoneywellUSThermostat(ClimateEntity):
     _attr_has_entity_name = True
     _attr_name = None
     _attr_translation_key = "honeywell"
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
@@ -178,6 +179,7 @@ class HoneywellUSThermostat(ClimateEntity):
         self._cool_away_temp = cool_away_temp
         self._heat_away_temp = heat_away_temp
         self._away = False
+        self._away_hold = False
         self._retry = 0
 
         self._attr_unique_id = str(device.deviceid)
@@ -216,9 +218,6 @@ class HoneywellUSThermostat(ClimateEntity):
 
         if device._data.get("canControlHumidification"):  # noqa: SLF001
             self._attr_supported_features |= ClimateEntityFeature.TARGET_HUMIDITY
-
-        if device.raw_ui_data.get("SwitchEmergencyHeatAllowed"):
-            self._attr_supported_features |= ClimateEntityFeature.AUX_HEAT
 
         if not device._data.get("hasFan"):  # noqa: SLF001
             return
@@ -259,7 +258,9 @@ class HoneywellUSThermostat(ClimateEntity):
                     self._device.raw_ui_data["HeatLowerSetptLimit"],
                 ]
             )
-        return DEFAULT_MIN_TEMP
+        return TemperatureConverter.convert(
+            DEFAULT_MIN_TEMP, UnitOfTemperature.CELSIUS, self.temperature_unit
+        )
 
     @property
     def max_temp(self) -> float:
@@ -275,7 +276,9 @@ class HoneywellUSThermostat(ClimateEntity):
                     self._device.raw_ui_data["HeatUpperSetptLimit"],
                 ]
             )
-        return DEFAULT_MAX_TEMP
+        return TemperatureConverter.convert(
+            DEFAULT_MAX_TEMP, UnitOfTemperature.CELSIUS, self.temperature_unit
+        )
 
     @property
     def current_humidity(self) -> int | None:
@@ -291,7 +294,7 @@ class HoneywellUSThermostat(ClimateEntity):
     def hvac_action(self) -> HVACAction | None:
         """Return the current running hvac operation if supported."""
         if self.hvac_mode == HVACMode.OFF:
-            return None
+            return HVACAction.OFF
         return HW_MODE_TO_HA_HVAC_ACTION.get(self._device.equipment_output_status)
 
     @property
@@ -325,27 +328,31 @@ class HoneywellUSThermostat(ClimateEntity):
     @property
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
-        if self._away:
+        if self._away and self._is_hold():
+            self._away_hold = True
             return PRESET_AWAY
-        if self._is_permanent_hold():
+        if self._is_hold():
             return PRESET_HOLD
-
+        # Someone has changed the stat manually out of hold in away mode
+        if self._away and self._away_hold:
+            self._away = False
+            self._away_hold = False
         return PRESET_NONE
-
-    @property
-    def is_aux_heat(self) -> bool | None:
-        """Return true if aux heater."""
-        return self._device.system_mode == "emheat"
 
     @property
     def fan_mode(self) -> str | None:
         """Return the fan setting."""
         return HW_FAN_MODE_TO_HA.get(self._device.fan_mode)
 
+    def _is_hold(self) -> bool:
+        heat_status = self._device.raw_ui_data.get("StatusHeat", 0)
+        cool_status = self._device.raw_ui_data.get("StatusCool", 0)
+        return heat_status in MODE_HOLD or cool_status in MODE_HOLD
+
     def _is_permanent_hold(self) -> bool:
         heat_status = self._device.raw_ui_data.get("StatusHeat", 0)
         cool_status = self._device.raw_ui_data.get("StatusCool", 0)
-        return heat_status == 2 or cool_status == 2
+        return MODE_PERMANENT_HOLD in (heat_status, cool_status)
 
     async def _set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
@@ -391,7 +398,7 @@ class HoneywellUSThermostat(ClimateEntity):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="temp_failed_value",
-                translation_placeholders={"temp": temperature},
+                translation_placeholders={"temperature": temperature},
             ) from err
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -415,7 +422,7 @@ class HoneywellUSThermostat(ClimateEntity):
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="temp_failed_value",
-                    translation_placeholders={"temp": str(temperature)},
+                    translation_placeholders={"temperature": str(temperature)},
                 ) from err
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
@@ -532,53 +539,6 @@ class HoneywellUSThermostat(ClimateEntity):
             await self._turn_hold_mode_on()
         else:
             await self._turn_away_mode_off()
-
-    async def async_turn_aux_heat_on(self) -> None:
-        """Turn auxiliary heater on."""
-        ir.async_create_issue(
-            self.hass,
-            DOMAIN,
-            "service_deprecation",
-            breaks_in_ha_version="2024.10.0",
-            is_fixable=True,
-            is_persistent=True,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="service_deprecation",
-        )
-        try:
-            await self._device.set_system_mode("emheat")
-
-        except SomeComfortError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="set_aux_failed",
-            ) from err
-
-    async def async_turn_aux_heat_off(self) -> None:
-        """Turn auxiliary heater off."""
-
-        ir.async_create_issue(
-            self.hass,
-            DOMAIN,
-            "service_deprecation",
-            breaks_in_ha_version="2024.10.0",
-            is_fixable=True,
-            is_persistent=True,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="service_deprecation",
-        )
-
-        try:
-            if HVACMode.HEAT in self.hvac_modes:
-                await self.async_set_hvac_mode(HVACMode.HEAT)
-            else:
-                await self.async_set_hvac_mode(HVACMode.OFF)
-
-        except HomeAssistantError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="disable_aux_failed",
-            ) from err
 
     async def async_update(self) -> None:
         """Get the latest state from the service."""

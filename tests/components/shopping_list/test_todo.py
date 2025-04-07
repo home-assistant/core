@@ -1,6 +1,6 @@
 """Test shopping list todo platform."""
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable, Coroutine
 from typing import Any
 
 import pytest
@@ -20,11 +20,12 @@ from tests.typing import WebSocketGenerator
 
 TEST_ENTITY = "todo.shopping_list"
 
+type WsGetItemsType = Callable[[], Coroutine[Any, Any, list[dict[str, str]]]]
+type WsMoveItemType = Callable[[str, str | None], Coroutine[Any, Any, dict[str, Any]]]
+
 
 @pytest.fixture
-async def ws_get_items(
-    hass_ws_client: WebSocketGenerator,
-) -> Callable[[], Awaitable[dict[str, str]]]:
+async def ws_get_items(hass_ws_client: WebSocketGenerator) -> WsGetItemsType:
     """Fixture to fetch items from the todo websocket."""
 
     async def get() -> list[dict[str, str]]:
@@ -44,9 +45,7 @@ async def ws_get_items(
 
 
 @pytest.fixture
-async def ws_move_item(
-    hass_ws_client: WebSocketGenerator,
-) -> Callable[[str, str | None], Awaitable[None]]:
+async def ws_move_item(hass_ws_client: WebSocketGenerator) -> WsMoveItemType:
     """Fixture to move an item in the todo list."""
 
     async def move(uid: str, previous_uid: str | None) -> dict[str, Any]:
@@ -69,7 +68,7 @@ async def test_get_items(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     sl_setup: None,
-    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    ws_get_items: WsGetItemsType,
 ) -> None:
     """Test creating a shopping list item with the WS API and verifying with To-do API."""
     client = await hass_ws_client(hass)
@@ -100,7 +99,7 @@ async def test_get_items(
 async def test_add_item(
     hass: HomeAssistant,
     sl_setup: None,
-    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    ws_get_items: WsGetItemsType,
 ) -> None:
     """Test adding shopping_list item and listing it."""
     await hass.services.async_call(
@@ -127,7 +126,7 @@ async def test_add_item(
 async def test_remove_item(
     hass: HomeAssistant,
     sl_setup: None,
-    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    ws_get_items: WsGetItemsType,
 ) -> None:
     """Test removing a todo item."""
     await hass.services.async_call(
@@ -168,7 +167,7 @@ async def test_remove_item(
 async def test_bulk_remove(
     hass: HomeAssistant,
     sl_setup: None,
-    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    ws_get_items: WsGetItemsType,
 ) -> None:
     """Test removing a todo item."""
 
@@ -212,7 +211,7 @@ async def test_bulk_remove(
 async def test_update_item(
     hass: HomeAssistant,
     sl_setup: None,
-    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    ws_get_items: WsGetItemsType,
 ) -> None:
     """Test updating a todo item."""
 
@@ -265,7 +264,7 @@ async def test_update_item(
 async def test_partial_update_item(
     hass: HomeAssistant,
     sl_setup: None,
-    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    ws_get_items: WsGetItemsType,
 ) -> None:
     """Test updating a todo item with partial information."""
 
@@ -341,7 +340,7 @@ async def test_partial_update_item(
 async def test_update_invalid_item(
     hass: HomeAssistant,
     sl_setup: None,
-    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    ws_get_items: WsGetItemsType,
 ) -> None:
     """Test updating a todo item that does not exist."""
 
@@ -387,8 +386,8 @@ async def test_update_invalid_item(
 async def test_move_item(
     hass: HomeAssistant,
     sl_setup: None,
-    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
-    ws_move_item: Callable[[str, str | None], Awaitable[dict[str, Any]]],
+    ws_get_items: WsGetItemsType,
+    ws_move_item: WsMoveItemType,
     src_idx: int,
     dst_idx: int | None,
     expected_items: list[str],
@@ -429,8 +428,8 @@ async def test_move_item(
 async def test_move_invalid_item(
     hass: HomeAssistant,
     sl_setup: None,
-    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
-    ws_move_item: Callable[[str, int | None], Awaitable[dict[str, Any]]],
+    ws_get_items: WsGetItemsType,
+    ws_move_item: WsMoveItemType,
 ) -> None:
     """Test moving an item that does not exist."""
 

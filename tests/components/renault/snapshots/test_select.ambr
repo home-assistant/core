@@ -4,6 +4,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -22,12 +23,13 @@
       }),
       'manufacturer': 'Renault',
       'model': 'Captur ii',
+      'model_id': 'XJB1SU',
       'name': 'REG-NUMBER',
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
-      'sw_version': 'XJB1SU',
+      'sw_version': None,
       'via_device_id': None,
     }),
   ])
@@ -45,6 +47,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -63,12 +66,13 @@
       }),
       'manufacturer': 'Renault',
       'model': 'Captur ii',
+      'model_id': 'XJB1SU',
       'name': 'REG-NUMBER',
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
-      'sw_version': 'XJB1SU',
+      'sw_version': None,
       'via_device_id': None,
     }),
   ])
@@ -88,6 +92,7 @@
         ]),
       }),
       'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
       'disabled_by': None,
@@ -141,6 +146,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -159,12 +165,13 @@
       }),
       'manufacturer': 'Renault',
       'model': 'Zoe',
+      'model_id': 'X101VE',
       'name': 'REG-NUMBER',
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
-      'sw_version': 'X101VE',
+      'sw_version': None,
       'via_device_id': None,
     }),
   ])
@@ -184,6 +191,7 @@
         ]),
       }),
       'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
       'disabled_by': None,
@@ -237,6 +245,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -255,12 +264,13 @@
       }),
       'manufacturer': 'Renault',
       'model': 'Zoe',
+      'model_id': 'X102VE',
       'name': 'REG-NUMBER',
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
-      'sw_version': 'X102VE',
+      'sw_version': None,
       'via_device_id': None,
     }),
   ])
@@ -280,6 +290,7 @@
         ]),
       }),
       'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
       'disabled_by': None,
@@ -333,6 +344,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -351,12 +363,13 @@
       }),
       'manufacturer': 'Renault',
       'model': 'Captur ii',
+      'model_id': 'XJB1SU',
       'name': 'REG-NUMBER',
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
-      'sw_version': 'XJB1SU',
+      'sw_version': None,
       'via_device_id': None,
     }),
   ])
@@ -374,6 +387,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -392,12 +406,13 @@
       }),
       'manufacturer': 'Renault',
       'model': 'Captur ii',
+      'model_id': 'XJB1SU',
       'name': 'REG-NUMBER',
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
-      'sw_version': 'XJB1SU',
+      'sw_version': None,
       'via_device_id': None,
     }),
   ])
@@ -417,6 +432,7 @@
         ]),
       }),
       'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
       'disabled_by': None,
@@ -470,6 +486,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -488,12 +505,13 @@
       }),
       'manufacturer': 'Renault',
       'model': 'Zoe',
+      'model_id': 'X101VE',
       'name': 'REG-NUMBER',
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
-      'sw_version': 'X101VE',
+      'sw_version': None,
       'via_device_id': None,
     }),
   ])
@@ -513,6 +531,7 @@
         ]),
       }),
       'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
       'disabled_by': None,
@@ -566,6 +585,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -584,12 +604,13 @@
       }),
       'manufacturer': 'Renault',
       'model': 'Zoe',
+      'model_id': 'X102VE',
       'name': 'REG-NUMBER',
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
-      'sw_version': 'X102VE',
+      'sw_version': None,
       'via_device_id': None,
     }),
   ])
@@ -609,6 +630,7 @@
         ]),
       }),
       'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
       'disabled_by': None,

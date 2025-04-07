@@ -1,0 +1,71 @@
+rules:
+  # Bronze
+  config-flow: done
+  brands: done
+  dependency-transparency: todo
+  common-modules:
+    status: exempt
+    comment: |
+      The integration has a coordinator.py and no base entities.
+  has-entity-name: done
+  action-setup:
+    status: exempt
+    comment: The integration does not register any actions.
+  appropriate-polling: done
+  test-before-configure: done
+  entity-event-setup:
+    status: exempt
+    comment: Integration does not subscribe to events.
+  unique-config-entry: done
+  entity-unique-id: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  test-before-setup: done
+  docs-high-level-description: done
+  config-flow-test-coverage: done
+  docs-actions:
+    status: exempt
+    comment: The integration does not register any actions.
+  runtime-data: done
+
+  # Silver
+  log-when-unavailable: done
+  config-entry-unloading: done
+  reauthentication-flow: done
+  action-exceptions: done
+  docs-installation-parameters: done
+  integration-owner: done
+  parallel-updates: done
+  test-coverage: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: The integration does not have any configuration parameters.
+  entity-unavailable: done
+
+  # Gold
+  docs-examples: done
+  discovery-update-info: todo
+  entity-device-class: todo
+  entity-translations: todo
+  docs-data-update: done
+  entity-disabled-by-default: todo
+  discovery: todo
+  exception-translations: todo
+  devices: todo
+  docs-supported-devices: done
+  icon-translations: todo
+  docs-known-limitations: done
+  stale-devices: todo
+  docs-supported-functions: done
+  repair-issues: todo
+  reconfiguration-flow: todo
+  entity-category: todo
+  dynamic-devices: todo
+  docs-troubleshooting: done
+  diagnostics: todo
+  docs-use-cases: done
+
+  # Platinum
+  async-dependency: todo
+  strict-typing: todo
+  inject-websession: todo

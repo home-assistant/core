@@ -9,5 +9,3 @@ from typing import Final
 DOMAIN: Final = "autarco"
 LOGGER = logging.getLogger(__package__)
 SCAN_INTERVAL = timedelta(minutes=5)
-
-SENSORS_SOLAR: Final = "solar"

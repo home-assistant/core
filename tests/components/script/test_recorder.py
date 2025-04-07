@@ -52,7 +52,7 @@ async def test_exclude_attributes(
             "script": {
                 "test": {
                     "sequence": {
-                        "service": "test.script",
+                        "action": "test.script",
                         "data_template": {"hello": "{{ greeting }}"},
                     }
                 }

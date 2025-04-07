@@ -148,7 +148,7 @@ class EsphomeFan(EsphomeEntity[FanInfo, FanState], FanEntity):
         api_version = self._api_version
         supports_speed_levels = api_version.major == 1 and api_version.minor > 3
         self._supports_speed_levels = supports_speed_levels
-        flags = FanEntityFeature(0)
+        flags = FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
         if static_info.supports_oscillation:
             flags |= FanEntityFeature.OSCILLATE
         if static_info.supports_speed:

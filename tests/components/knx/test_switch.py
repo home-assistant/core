@@ -6,9 +6,10 @@ from homeassistant.components.knx.const import (
     KNX_ADDRESS,
 )
 from homeassistant.components.knx.schema import SwitchSchema
-from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON
+from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant, State
 
+from . import KnxEntityGenerator
 from .conftest import KNXTestKit
 
 from tests.common import mock_restore_cache
@@ -146,3 +147,40 @@ async def test_switch_restore_and_respond(hass: HomeAssistant, knx) -> None:
     # respond to new state
     await knx.receive_read(_ADDRESS)
     await knx.assert_response(_ADDRESS, False)
+
+
+async def test_switch_ui_create(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    create_ui_entity: KnxEntityGenerator,
+) -> None:
+    """Test creating a switch."""
+    await knx.setup_integration()
+    await create_ui_entity(
+        platform=Platform.SWITCH,
+        entity_data={"name": "test"},
+        knx_data={
+            "ga_switch": {"write": "1/1/1", "state": "2/2/2"},
+            "respond_to_read": True,
+            "sync_state": True,
+            "invert": False,
+        },
+    )
+    # created entity sends read-request to KNX bus
+    await knx.assert_read("2/2/2")
+    await knx.receive_response("2/2/2", True)
+    state = hass.states.get("switch.test")
+    assert state.state is STATE_ON
+
+
+async def test_switch_ui_load(knx: KNXTestKit) -> None:
+    """Test loading a switch from storage."""
+    await knx.setup_integration(config_store_fixture="config_store_light_switch.json")
+
+    await knx.assert_read("1/0/45", response=True, ignore_order=True)
+    # unrelated light in config store
+    await knx.assert_read("1/0/21", response=True, ignore_order=True)
+    knx.assert_state(
+        "switch.none_test",  # has_entity_name with unregistered device -> none_test
+        STATE_ON,
+    )

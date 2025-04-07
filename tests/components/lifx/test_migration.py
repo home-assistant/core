@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import Any
 from unittest.mock import patch
 
 from homeassistant import setup
@@ -114,7 +115,7 @@ async def test_discovery_is_more_frequent_during_migration(
     class MockLifxDiscovery:
         """Mock lifx discovery."""
 
-        def __init__(self, *args, **kwargs):
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
             """Init discovery."""
             self.bulb = bulb
             self.lights = {}

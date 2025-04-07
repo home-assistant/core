@@ -19,7 +19,7 @@ from homeassistant.components.fan import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
     ranged_value_to_percentage,
@@ -40,7 +40,7 @@ PRESET_MODE_BREEZE = "Breeze"
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: BondConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Bond fan devices."""
     data = entry.runtime_data
@@ -69,7 +69,7 @@ class BondFan(BondEntity, FanEntity):
         super().__init__(data, device)
         if self._device.has_action(Action.BREEZE_ON):
             self._attr_preset_modes = [PRESET_MODE_BREEZE]
-        features = FanEntityFeature(0)
+        features = FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
         if self._device.supports_speed():
             features |= FanEntityFeature.SET_SPEED
         if self._device.supports_direction():

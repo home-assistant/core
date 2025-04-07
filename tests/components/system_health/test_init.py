@@ -1,5 +1,6 @@
 """Tests for the system health component init."""
 
+from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp.client_exceptions import ClientError
@@ -14,7 +15,9 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import WebSocketGenerator
 
 
-async def gather_system_health_info(hass, hass_ws_client):
+async def gather_system_health_info(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> dict[str, Any]:
     """Gather all info."""
     client = await hass_ws_client(hass)
 
@@ -72,7 +75,7 @@ async def test_info_endpoint_register_callback(
 ) -> None:
     """Test that the info endpoint allows registering callbacks."""
 
-    async def mock_info(hass):
+    async def mock_info(hass: HomeAssistant) -> dict[str, Any]:
         return {"storage": "YAML"}
 
     async_register_info(hass, "lovelace", mock_info)
@@ -92,7 +95,7 @@ async def test_info_endpoint_register_callback_timeout(
 ) -> None:
     """Test that the info endpoint timing out."""
 
-    async def mock_info(hass):
+    async def mock_info(hass: HomeAssistant) -> dict[str, Any]:
         raise TimeoutError
 
     async_register_info(hass, "lovelace", mock_info)
@@ -109,8 +112,8 @@ async def test_info_endpoint_register_callback_exc(
 ) -> None:
     """Test that the info endpoint requires auth."""
 
-    async def mock_info(hass):
-        raise Exception("TEST ERROR")  # pylint: disable=broad-exception-raised
+    async def mock_info(hass: HomeAssistant) -> dict[str, Any]:
+        raise Exception("TEST ERROR")  # noqa: TRY002
 
     async_register_info(hass, "lovelace", mock_info)
     assert await async_setup_component(hass, "system_health", {})

@@ -7,7 +7,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
-from .const import DOMAIN as AXIS_DOMAIN, PLATFORMS
+from .const import PLATFORMS
 from .errors import AuthenticationRequired, CannotConnect
 from .hub import AxisHub, get_axis_api
 
@@ -18,8 +18,6 @@ type AxisConfigEntry = ConfigEntry[AxisHub]
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: AxisConfigEntry) -> bool:
     """Set up the Axis integration."""
-    hass.data.setdefault(AXIS_DOMAIN, {})
-
     try:
         api = await get_axis_api(hass, config_entry.data)
     except CannotConnect as err:
@@ -54,6 +52,6 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         # Home Assistant 2023.2
         hass.config_entries.async_update_entry(config_entry, version=3)
 
-    _LOGGER.info("Migration to version %s successful", config_entry.version)
+    _LOGGER.debug("Migration to version %s successful", config_entry.version)
 
     return True

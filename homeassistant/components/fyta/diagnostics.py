@@ -8,7 +8,7 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from . import FytaConfigEntry
+from .coordinator import FytaConfigEntry
 
 TO_REDACT = [
     CONF_PASSWORD,
@@ -25,5 +25,5 @@ async def async_get_config_entry_diagnostics(
 
     return {
         "config_entry": async_redact_data(config_entry.as_dict(), TO_REDACT),
-        "plant_data": data,
+        "plant_data": {key: value.to_dict() for key, value in data.items()},
     }

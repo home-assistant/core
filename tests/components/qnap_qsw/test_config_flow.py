@@ -6,19 +6,19 @@ from aioqsw.const import API_MAC_ADDR, API_PRODUCT, API_RESULT
 from aioqsw.exceptions import LoginError, QswError
 
 from homeassistant import config_entries
-from homeassistant.components import dhcp
 from homeassistant.components.qnap_qsw.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .util import CONFIG, LIVE_MOCK, SYSTEM_BOARD_MOCK, USERS_LOGIN_MOCK
 
 from tests.common import MockConfigEntry
 
-DHCP_SERVICE_INFO = dhcp.DhcpServiceInfo(
+DHCP_SERVICE_INFO = DhcpServiceInfo(
     hostname="qsw-m408-4c",
     ip="192.168.1.200",
     macaddress="245ebe000000",

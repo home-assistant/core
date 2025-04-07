@@ -5,5 +5,6 @@
   "documentation": "https://www.home-assistant.io/integrations/danfoss_air",
   "iot_class": "local_polling",
   "loggers": ["pydanfossair"],
+  "quality_scale": "legacy",
   "requirements": ["pydanfossair==0.1.0"]
 }

@@ -11,10 +11,11 @@ from tololib import ToloClient, ToloStatus
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import ToloSaunaCoordinatorEntity, ToloSaunaUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import ToloSaunaUpdateCoordinator
+from .entity import ToloSaunaCoordinatorEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -44,7 +45,7 @@ SWITCHES = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switch controls for TOLO Sauna."""
     coordinator = hass.data[DOMAIN][entry.entry_id]

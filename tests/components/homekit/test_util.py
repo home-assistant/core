@@ -7,13 +7,40 @@ import voluptuous as vol
 
 from homeassistant.components.homekit.const import (
     BRIDGE_NAME,
+    CONF_AUDIO_CODEC,
+    CONF_AUDIO_MAP,
+    CONF_AUDIO_PACKET_SIZE,
     CONF_FEATURE,
     CONF_FEATURE_LIST,
     CONF_LINKED_BATTERY_SENSOR,
+    CONF_LINKED_DOORBELL_SENSOR,
+    CONF_LINKED_MOTION_SENSOR,
     CONF_LOW_BATTERY_THRESHOLD,
+    CONF_MAX_FPS,
+    CONF_MAX_HEIGHT,
+    CONF_MAX_WIDTH,
+    CONF_STREAM_COUNT,
+    CONF_SUPPORT_AUDIO,
     CONF_THRESHOLD_CO,
     CONF_THRESHOLD_CO2,
+    CONF_VIDEO_CODEC,
+    CONF_VIDEO_MAP,
+    CONF_VIDEO_PACKET_SIZE,
+    CONF_VIDEO_PROFILE_NAMES,
+    DEFAULT_AUDIO_CODEC,
+    DEFAULT_AUDIO_MAP,
+    DEFAULT_AUDIO_PACKET_SIZE,
     DEFAULT_CONFIG_FLOW_PORT,
+    DEFAULT_LOW_BATTERY_THRESHOLD,
+    DEFAULT_MAX_FPS,
+    DEFAULT_MAX_HEIGHT,
+    DEFAULT_MAX_WIDTH,
+    DEFAULT_STREAM_COUNT,
+    DEFAULT_SUPPORT_AUDIO,
+    DEFAULT_VIDEO_CODEC,
+    DEFAULT_VIDEO_MAP,
+    DEFAULT_VIDEO_PACKET_SIZE,
+    DEFAULT_VIDEO_PROFILE_NAMES,
     DOMAIN,
     FEATURE_ON_OFF,
     FEATURE_PLAY_PAUSE,
@@ -134,8 +161,20 @@ def test_validate_entity_config() -> None:
     assert vec({"lock.demo": {}}) == {
         "lock.demo": {ATTR_CODE: None, CONF_LOW_BATTERY_THRESHOLD: 20}
     }
-    assert vec({"lock.demo": {ATTR_CODE: "1234"}}) == {
-        "lock.demo": {ATTR_CODE: "1234", CONF_LOW_BATTERY_THRESHOLD: 20}
+
+    assert vec(
+        {
+            "lock.demo": {
+                ATTR_CODE: "1234",
+                CONF_LINKED_DOORBELL_SENSOR: "event.doorbell",
+            }
+        }
+    ) == {
+        "lock.demo": {
+            ATTR_CODE: "1234",
+            CONF_LOW_BATTERY_THRESHOLD: 20,
+            CONF_LINKED_DOORBELL_SENSOR: "event.doorbell",
+        }
     }
 
     assert vec({"media_player.demo": {}}) == {
@@ -178,6 +217,32 @@ def test_validate_entity_config() -> None:
     assert vec({"sensor.co2": {CONF_THRESHOLD_CO2: 500}}) == {
         "sensor.co2": {CONF_THRESHOLD_CO2: 500, CONF_LOW_BATTERY_THRESHOLD: 20}
     }
+    assert vec(
+        {
+            "camera.demo": {
+                CONF_LINKED_DOORBELL_SENSOR: "event.doorbell",
+                CONF_LINKED_MOTION_SENSOR: "event.motion",
+            }
+        }
+    ) == {
+        "camera.demo": {
+            CONF_LINKED_DOORBELL_SENSOR: "event.doorbell",
+            CONF_LINKED_MOTION_SENSOR: "event.motion",
+            CONF_AUDIO_CODEC: DEFAULT_AUDIO_CODEC,
+            CONF_SUPPORT_AUDIO: DEFAULT_SUPPORT_AUDIO,
+            CONF_MAX_WIDTH: DEFAULT_MAX_WIDTH,
+            CONF_MAX_HEIGHT: DEFAULT_MAX_HEIGHT,
+            CONF_MAX_FPS: DEFAULT_MAX_FPS,
+            CONF_AUDIO_MAP: DEFAULT_AUDIO_MAP,
+            CONF_VIDEO_MAP: DEFAULT_VIDEO_MAP,
+            CONF_STREAM_COUNT: DEFAULT_STREAM_COUNT,
+            CONF_VIDEO_CODEC: DEFAULT_VIDEO_CODEC,
+            CONF_VIDEO_PROFILE_NAMES: DEFAULT_VIDEO_PROFILE_NAMES,
+            CONF_AUDIO_PACKET_SIZE: DEFAULT_AUDIO_PACKET_SIZE,
+            CONF_VIDEO_PACKET_SIZE: DEFAULT_VIDEO_PACKET_SIZE,
+            CONF_LOW_BATTERY_THRESHOLD: DEFAULT_LOW_BATTERY_THRESHOLD,
+        }
+    }
 
 
 def test_validate_media_player_features() -> None:
@@ -206,6 +271,7 @@ def test_cleanup_name_for_homekit() -> None:
     """Ensure name sanitize works as expected."""
 
     assert cleanup_name_for_homekit("abc") == "abc"
+    assert cleanup_name_for_homekit("abc ") == "abc"
     assert cleanup_name_for_homekit("a b c") == "a b c"
     assert cleanup_name_for_homekit("ab_c") == "ab c"
     assert (
@@ -217,14 +283,16 @@ def test_cleanup_name_for_homekit() -> None:
 
 def test_temperature_to_homekit() -> None:
     """Test temperature conversion from HA to HomeKit."""
-    assert temperature_to_homekit(20.46, UnitOfTemperature.CELSIUS) == 20.5
-    assert temperature_to_homekit(92.1, UnitOfTemperature.FAHRENHEIT) == 33.4
+    assert temperature_to_homekit(20.46, UnitOfTemperature.CELSIUS) == 20.46
+    assert temperature_to_homekit(92.1, UnitOfTemperature.FAHRENHEIT) == pytest.approx(
+        33.388888888888886
+    )
 
 
 def test_temperature_to_states() -> None:
     """Test temperature conversion from HomeKit to HA."""
     assert temperature_to_states(20, UnitOfTemperature.CELSIUS) == 20.0
-    assert temperature_to_states(20.2, UnitOfTemperature.FAHRENHEIT) == 68.5
+    assert temperature_to_states(20.2, UnitOfTemperature.FAHRENHEIT) == 68.36
 
 
 def test_density_to_air_quality() -> None:
@@ -257,7 +325,12 @@ async def test_async_show_setup_msg(hass: HomeAssistant, hk_driver) -> None:
             hass, entry.entry_id, "bridge_name", pincode, "X-HM://0"
         )
         await hass.async_block_till_done()
-    entry_data: HomeKitEntryData = hass.data[DOMAIN][entry.entry_id]
+
+    # New tests should not access runtime data.
+    # Do not use this pattern for new tests.
+    entry_data: HomeKitEntryData = hass.config_entries.async_get_entry(
+        entry.entry_id
+    ).runtime_data
     assert entry_data.pairing_qr_secret
     assert entry_data.pairing_qr
 

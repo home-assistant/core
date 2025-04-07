@@ -14,13 +14,11 @@ from homeassistant.components.humidifier import (
     HumidifierEntity,
     HumidifierEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN
-from .coordinator import AprilaireCoordinator
+from .coordinator import AprilaireConfigEntry, AprilaireCoordinator
 from .entity import BaseAprilaireEntity
 
 HUMIDIFIER_ACTION_MAP: dict[StateType, HumidifierAction] = {
@@ -41,18 +39,18 @@ DEHUMIDIFIER_ACTION_MAP: dict[StateType, HumidifierAction] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: AprilaireConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Aprilaire humidifier devices."""
 
-    coordinator: AprilaireCoordinator = hass.data[DOMAIN][config_entry.unique_id]
+    coordinator = config_entry.runtime_data
 
     assert config_entry.unique_id is not None
 
     descriptions: list[AprilaireHumidifierDescription] = []
 
-    if coordinator.data.get(Attribute.HUMIDIFICATION_AVAILABLE) in (0, 1, 2):
+    if coordinator.data.get(Attribute.HUMIDIFICATION_AVAILABLE) in (1, 2):
         descriptions.append(
             AprilaireHumidifierDescription(
                 key="humidifier",
@@ -69,7 +67,7 @@ async def async_setup_entry(
             )
         )
 
-    if coordinator.data.get(Attribute.DEHUMIDIFICATION_AVAILABLE) in (0, 1):
+    if coordinator.data.get(Attribute.DEHUMIDIFICATION_AVAILABLE) == 1:
         descriptions.append(
             AprilaireHumidifierDescription(
                 key="dehumidifier",

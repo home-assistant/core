@@ -25,6 +25,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from tests.common import MockConfigEntry
+
 
 @pytest.mark.parametrize(
     ("exc", "error"),
@@ -144,21 +146,16 @@ async def test_show_form_user(hass: HomeAssistant) -> None:
 
 
 async def test_step_reauth(
-    hass: HomeAssistant, config_auth, config_coordinates, config_entry, setup_watttime
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    setup_watttime,
 ) -> None:
     """Test a full reauth flow."""
+    result = await config_entry.start_reauth_flow(hass)
     with patch(
         "homeassistant.components.watttime.async_setup_entry",
         return_value=True,
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_REAUTH},
-            data={
-                **config_auth,
-                **config_coordinates,
-            },
-        )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={CONF_PASSWORD: "password"},

@@ -28,7 +28,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import LIGHT_LUX, PERCENTAGE, EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from ..bridge import HueBridge
 from ..const import DOMAIN
@@ -46,7 +46,7 @@ type ControllerType = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Hue Sensors from Config Entry."""
     bridge: HueBridge = hass.data[DOMAIN][config_entry.entry_id]
@@ -79,6 +79,7 @@ async def async_setup_entry(
     register_items(ctrl_base.zigbee_connectivity, HueZigbeeConnectivitySensor)
 
 
+# pylint: disable-next=hass-enforce-class-module
 class HueSensorBase(HueBaseEntity, SensorEntity):
     """Representation of a Hue sensor."""
 
@@ -94,6 +95,7 @@ class HueSensorBase(HueBaseEntity, SensorEntity):
         self.controller = controller
 
 
+# pylint: disable-next=hass-enforce-class-module
 class HueTemperatureSensor(HueSensorBase):
     """Representation of a Hue Temperature sensor."""
 
@@ -111,6 +113,7 @@ class HueTemperatureSensor(HueSensorBase):
         return round(self.resource.temperature.value, 1)
 
 
+# pylint: disable-next=hass-enforce-class-module
 class HueLightLevelSensor(HueSensorBase):
     """Representation of a Hue LightLevel (illuminance) sensor."""
 
@@ -139,6 +142,7 @@ class HueLightLevelSensor(HueSensorBase):
         }
 
 
+# pylint: disable-next=hass-enforce-class-module
 class HueBatterySensor(HueSensorBase):
     """Representation of a Hue Battery sensor."""
 
@@ -164,6 +168,7 @@ class HueBatterySensor(HueSensorBase):
         return {"battery_state": self.resource.power_state.battery_state.value}
 
 
+# pylint: disable-next=hass-enforce-class-module
 class HueZigbeeConnectivitySensor(HueSensorBase):
     """Representation of a Hue ZigbeeConnectivity sensor."""
 

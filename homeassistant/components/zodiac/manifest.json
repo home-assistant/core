@@ -4,6 +4,5 @@
   "codeowners": ["@JulienTant"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/zodiac",
-  "iot_class": "calculated",
-  "quality_scale": "silver"
+  "iot_class": "calculated"
 }

@@ -13,7 +13,7 @@ from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
@@ -48,7 +48,7 @@ SET_HUMIDITY_SCHEMA: VolDictType = {
 async def async_setup_entry(
     hass: HomeAssistant,
     _config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up WeMo binary sensors."""
 
@@ -67,14 +67,18 @@ async def async_setup_entry(
 
     # This will call WemoHumidifier.reset_filter_life()
     platform.async_register_entity_service(
-        SERVICE_RESET_FILTER_LIFE, {}, WemoHumidifier.reset_filter_life.__name__
+        SERVICE_RESET_FILTER_LIFE, None, WemoHumidifier.reset_filter_life.__name__
     )
 
 
 class WemoHumidifier(WemoBinaryStateEntity, FanEntity):
     """Representation of a WeMo humidifier."""
 
-    _attr_supported_features = FanEntityFeature.SET_SPEED
+    _attr_supported_features = (
+        FanEntityFeature.SET_SPEED
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
+    )
     wemo: Humidifier
     _last_fan_on_mode: FanMode
 

@@ -2,17 +2,19 @@
 
 from collections.abc import Callable
 from types import ModuleType
+from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
 
 from homeassistant import loader
+from homeassistant.const import EVENT_COMPONENT_LOADED
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
 )
-from homeassistant.setup import ATTR_COMPONENT, EVENT_COMPONENT_LOADED
+from homeassistant.setup import ATTR_COMPONENT
 
 from tests.common import mock_platform
 
@@ -28,7 +30,9 @@ async def test_process_integration_platforms_with_wait(hass: HomeAssistant) -> N
 
     processed = []
 
-    async def _process_platform(hass, domain, platform):
+    async def _process_platform(
+        hass: HomeAssistant, domain: str, platform: Any
+    ) -> None:
         """Process platform."""
         processed.append((domain, platform))
 
@@ -66,7 +70,9 @@ async def test_process_integration_platforms(hass: HomeAssistant) -> None:
 
     processed = []
 
-    async def _process_platform(hass, domain, platform):
+    async def _process_platform(
+        hass: HomeAssistant, domain: str, platform: Any
+    ) -> None:
         """Process platform."""
         processed.append((domain, platform))
 
@@ -106,7 +112,9 @@ async def test_process_integration_platforms_import_fails(
 
     processed = []
 
-    async def _process_platform(hass, domain, platform):
+    async def _process_platform(
+        hass: HomeAssistant, domain: str, platform: Any
+    ) -> None:
         """Process platform."""
         processed.append((domain, platform))
 
@@ -149,7 +157,9 @@ async def test_process_integration_platforms_import_fails_after_registered(
 
     processed = []
 
-    async def _process_platform(hass, domain, platform):
+    async def _process_platform(
+        hass: HomeAssistant, domain: str, platform: Any
+    ) -> None:
         """Process platform."""
         processed.append((domain, platform))
 
@@ -241,7 +251,9 @@ async def test_broken_integration(
 
     processed = []
 
-    async def _process_platform(hass, domain, platform):
+    async def _process_platform(
+        hass: HomeAssistant, domain: str, platform: Any
+    ) -> None:
         """Process platform."""
         processed.append((domain, platform))
 
@@ -264,7 +276,9 @@ async def test_process_integration_platforms_no_integrations(
 
     processed = []
 
-    async def _process_platform(hass, domain, platform):
+    async def _process_platform(
+        hass: HomeAssistant, domain: str, platform: Any
+    ) -> None:
         """Process platform."""
         processed.append((domain, platform))
 

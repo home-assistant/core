@@ -3,7 +3,11 @@
     "step": {
       "user": {
         "data": {
-          "ip_address": "[%key:common::config_flow::data::ip%]"
+          "ip_address": "[%key:common::config_flow::data::ip%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "port": "The integration will default to 8050, if not set, which should be suitable for most installs"
         }
       }
     },
@@ -15,19 +19,63 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "off_grid_status": {
+        "name": "Off grid status"
+      },
+      "dc_1_short_circuit_error_status": {
+        "name": "DC 1 short circuit error status"
+      },
+      "dc_2_short_circuit_error_status": {
+        "name": "DC 2 short circuit error status"
+      },
+      "output_fault_status": {
+        "name": "Output fault status"
+      }
+    },
     "sensor": {
-      "total_power": { "name": "Total power" },
-      "total_power_p1": { "name": "Power of P1" },
-      "total_power_p2": { "name": "Power of P2" },
-      "lifetime_production": { "name": "Total lifetime production" },
-      "lifetime_production_p1": { "name": "Lifetime production of P1" },
-      "lifetime_production_p2": { "name": "Lifetime production of P2" },
-      "today_production": { "name": "Production of today" },
-      "today_production_p1": { "name": "Production of today from P1" },
-      "today_production_p2": { "name": "Production of today from P2" }
+      "total_power": {
+        "name": "Total power"
+      },
+      "total_power_p1": {
+        "name": "Power of P1"
+      },
+      "total_power_p2": {
+        "name": "Power of P2"
+      },
+      "lifetime_production": {
+        "name": "Total lifetime production"
+      },
+      "lifetime_production_p1": {
+        "name": "Lifetime production of P1"
+      },
+      "lifetime_production_p2": {
+        "name": "Lifetime production of P2"
+      },
+      "today_production": {
+        "name": "Production of today"
+      },
+      "today_production_p1": {
+        "name": "Production of today from P1"
+      },
+      "today_production_p2": {
+        "name": "Production of today from P2"
+      }
     },
     "number": {
-      "max_output": { "name": "Max output" }
+      "max_output": {
+        "name": "Max output"
+      }
+    },
+    "switch": {
+      "inverter_status": {
+        "name": "Inverter status"
+      }
+    }
+  },
+  "exceptions": {
+    "inverter_error": {
+      "message": "Inverter returned an error"
     }
   }
 }

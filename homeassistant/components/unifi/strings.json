@@ -2,6 +2,11 @@
   "config": {
     "flow_title": "{site} ({host})",
     "step": {
+      "site": {
+        "data": {
+          "site": "Site ID"
+        }
+      },
       "user": {
         "title": "Set up UniFi Network",
         "data": {
@@ -26,6 +31,26 @@
       "already_configured": "UniFi Network site is already configured",
       "configuration_updated": "Configuration updated",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "device_state": {
+        "state": {
+          "disconnected": "[%key:common::state::disconnected%]",
+          "connected": "[%key:common::state::connected%]",
+          "pending": "Pending",
+          "firmware_mismatch": "Firmware mismatch",
+          "upgrading": "Upgrading",
+          "provisioning": "Provisioning",
+          "heartbeat_missed": "Heartbeat missed",
+          "adopting": "Adopting",
+          "deleting": "Deleting",
+          "inform_error": "Inform error",
+          "adoption_failed": "Adoption failed",
+          "isolated": "Isolated"
+        }
+      }
     }
   },
   "options": {
@@ -86,7 +111,7 @@
       "fields": {
         "device_id": {
           "name": "[%key:common::config_flow::data::device%]",
-          "description": "Try reconnect client to wireless network."
+          "description": "The device that should be forced to reconnect to the wireless network."
         }
       }
     },

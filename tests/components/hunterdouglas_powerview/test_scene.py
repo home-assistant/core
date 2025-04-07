@@ -14,10 +14,10 @@ from .const import MOCK_MAC
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("mock_hunterdouglas_hub")
 @pytest.mark.parametrize("api_version", [1, 2, 3])
 async def test_scenes(
     hass: HomeAssistant,
-    mock_hunterdouglas_hub: None,
     api_version: int,
 ) -> None:
     """Test the scenes."""

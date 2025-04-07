@@ -6,7 +6,11 @@ from zwave_js_server.event import Event
 from zwave_js_server.exceptions import FailedZWaveCommand
 from zwave_js_server.model.node import Node
 
-from homeassistant.components.switch import DOMAIN, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.components.switch import (
+    DOMAIN as SWITCH_DOMAIN,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+)
 from homeassistant.components.zwave_js.helpers import ZwaveValueMatcher
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN, EntityCategory
 from homeassistant.core import HomeAssistant
@@ -95,7 +99,7 @@ async def test_barrier_signaling_switch(
 
     # Test turning off
     await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_OFF, {"entity_id": entity}, blocking=True
+        SWITCH_DOMAIN, SERVICE_TURN_OFF, {"entity_id": entity}, blocking=True
     )
 
     assert len(client.async_send_command.call_args_list) == 1
@@ -120,7 +124,7 @@ async def test_barrier_signaling_switch(
 
     # Test turning on
     await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_ON, {"entity_id": entity}, blocking=True
+        SWITCH_DOMAIN, SERVICE_TURN_ON, {"entity_id": entity}, blocking=True
     )
 
     # Note: the valueId's value is still 255 because we never
@@ -250,7 +254,7 @@ async def test_config_parameter_switch(
 
     # Test turning on
     await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_ON, {"entity_id": switch_entity_id}, blocking=True
+        SWITCH_DOMAIN, SERVICE_TURN_ON, {"entity_id": switch_entity_id}, blocking=True
     )
 
     assert len(client.async_send_command.call_args_list) == 1
@@ -268,7 +272,7 @@ async def test_config_parameter_switch(
 
     # Test turning off
     await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_OFF, {"entity_id": switch_entity_id}, blocking=True
+        SWITCH_DOMAIN, SERVICE_TURN_OFF, {"entity_id": switch_entity_id}, blocking=True
     )
 
     assert len(client.async_send_command.call_args_list) == 1
@@ -286,7 +290,14 @@ async def test_config_parameter_switch(
     client.async_send_command.side_effect = FailedZWaveCommand("test", 1, "test")
 
     # Test turning off error raises proper exception
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
-            DOMAIN, SERVICE_TURN_OFF, {"entity_id": switch_entity_id}, blocking=True
+            SWITCH_DOMAIN,
+            SERVICE_TURN_OFF,
+            {"entity_id": switch_entity_id},
+            blocking=True,
         )
+
+    assert str(err.value) == (
+        "Unable to set value 32-112-0-20: zwave_error: Z-Wave error 1 - test"
+    )

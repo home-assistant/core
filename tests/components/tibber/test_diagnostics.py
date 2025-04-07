@@ -19,12 +19,9 @@ async def test_entry_diagnostics(
     config_entry,
 ) -> None:
     """Test config entry diagnostics."""
-    with (
-        patch(
-            "tibber.Tibber.update_info",
-            return_value=None,
-        ),
-        patch("homeassistant.components.tibber.discovery.async_load_platform"),
+    with patch(
+        "tibber.Tibber.update_info",
+        return_value=None,
     ):
         assert await async_setup_component(hass, "tibber", {})
 

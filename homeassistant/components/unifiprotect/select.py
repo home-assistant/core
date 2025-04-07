@@ -29,12 +29,18 @@ from uiprotect.data import (
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import TYPE_EMPTY_VALUE
 from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
-from .entity import ProtectDeviceEntity, async_all_device_entities
-from .models import PermRequired, ProtectEntityDescription, ProtectSetableKeysMixin, T
+from .entity import (
+    PermRequired,
+    ProtectDeviceEntity,
+    ProtectEntityDescription,
+    ProtectSetableKeysMixin,
+    T,
+    async_all_device_entities,
+)
 from .utils import async_get_light_motion_current
 
 _LOGGER = logging.getLogger(__name__)
@@ -328,7 +334,9 @@ _MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectEntityDescription]] = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: UFPConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: UFPConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up number entities for UniFi Protect integration."""
     data = entry.runtime_data

@@ -1,0 +1,15 @@
+{
+  "entity": {
+    "sensor": {
+      "cpu_usage": {
+        "default": "mdi:cpu-32-bit"
+      },
+      "free_memory": {
+        "default": "mdi:memory"
+      },
+      "thermostat_coverage": {
+        "default": "mdi:signal"
+      }
+    }
+  }
+}

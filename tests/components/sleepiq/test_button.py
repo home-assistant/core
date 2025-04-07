@@ -1,6 +1,6 @@
 """The tests for SleepIQ binary sensor platform."""
 
-from homeassistant.components.button import DOMAIN
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -12,7 +12,7 @@ async def test_button_calibrate(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_asyncsleepiq
 ) -> None:
     """Test the SleepIQ calibrate button."""
-    await setup_platform(hass, DOMAIN)
+    await setup_platform(hass, BUTTON_DOMAIN)
 
     state = hass.states.get(f"button.sleepnumber_{BED_NAME_LOWER}_calibrate")
     assert (
@@ -24,7 +24,7 @@ async def test_button_calibrate(
     assert entity.unique_id == f"{BED_ID}-calibrate"
 
     await hass.services.async_call(
-        DOMAIN,
+        BUTTON_DOMAIN,
         "press",
         {ATTR_ENTITY_ID: f"button.sleepnumber_{BED_NAME_LOWER}_calibrate"},
         blocking=True,
@@ -38,7 +38,7 @@ async def test_button_stop_pump(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_asyncsleepiq
 ) -> None:
     """Test the SleepIQ stop pump button."""
-    await setup_platform(hass, DOMAIN)
+    await setup_platform(hass, BUTTON_DOMAIN)
 
     state = hass.states.get(f"button.sleepnumber_{BED_NAME_LOWER}_stop_pump")
     assert (
@@ -50,7 +50,7 @@ async def test_button_stop_pump(
     assert entity.unique_id == f"{BED_ID}-stop-pump"
 
     await hass.services.async_call(
-        DOMAIN,
+        BUTTON_DOMAIN,
         "press",
         {ATTR_ENTITY_ID: f"button.sleepnumber_{BED_NAME_LOWER}_stop_pump"},
         blocking=True,

@@ -1,0 +1,172 @@
+# serializer version: 1
+# name: test_entities[sensor.stookwijzer_advice_code-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'code_yellow',
+        'code_orange',
+        'code_red',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.stookwijzer_advice_code',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Advice code',
+    'platform': 'stookwijzer',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'advice',
+    'unique_id': '12345_advice',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[sensor.stookwijzer_advice_code-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by atlasleefomgeving.nl',
+      'device_class': 'enum',
+      'friendly_name': 'Stookwijzer Advice code',
+      'options': list([
+        'code_yellow',
+        'code_orange',
+        'code_red',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.stookwijzer_advice_code',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'code_yellow',
+  })
+# ---
+# name: test_entities[sensor.stookwijzer_air_quality_index-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.stookwijzer_air_quality_index',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.AQI: 'aqi'>,
+    'original_icon': None,
+    'original_name': 'Air quality index',
+    'platform': 'stookwijzer',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '12345_air_quality_index',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[sensor.stookwijzer_air_quality_index-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by atlasleefomgeving.nl',
+      'device_class': 'aqi',
+      'friendly_name': 'Stookwijzer Air quality index',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.stookwijzer_air_quality_index',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
+# name: test_entities[sensor.stookwijzer_wind_speed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.stookwijzer_wind_speed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfSpeed.BEAUFORT: 'Beaufort'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
+    'original_icon': None,
+    'original_name': 'Wind speed',
+    'platform': 'stookwijzer',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '12345_windspeed',
+    'unit_of_measurement': <UnitOfSpeed.BEAUFORT: 'Beaufort'>,
+  })
+# ---
+# name: test_entities[sensor.stookwijzer_wind_speed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by atlasleefomgeving.nl',
+      'device_class': 'wind_speed',
+      'friendly_name': 'Stookwijzer Wind speed',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfSpeed.BEAUFORT: 'Beaufort'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.stookwijzer_wind_speed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.0',
+  })
+# ---

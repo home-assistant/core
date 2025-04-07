@@ -1,6 +1,7 @@
 """Tests for the diagnostics data provided by the Fronius integration."""
 
 from syrupy import SnapshotAssertion
+from syrupy.filters import props
 
 from homeassistant.core import HomeAssistant
 
@@ -21,11 +22,8 @@ async def test_diagnostics(
     mock_responses(aioclient_mock)
     entry = await setup_fronius_integration(hass)
 
-    assert (
-        await get_diagnostics_for_config_entry(
-            hass,
-            hass_client,
-            entry,
-        )
-        == snapshot
-    )
+    assert await get_diagnostics_for_config_entry(
+        hass,
+        hass_client,
+        entry,
+    ) == snapshot(exclude=props("created_at", "modified_at"))

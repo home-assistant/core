@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Generator
 from socket import AddressFamily  # pylint: disable=no-name-in-module
 from unittest.mock import Mock, create_autospec, patch, seal
 
@@ -32,7 +32,7 @@ NEW_DEVICE_LOCATION = "http://198.51.100.7" + "/dmr_description.xml"
 
 
 @pytest.fixture
-def domain_data_mock(hass: HomeAssistant) -> Iterable[Mock]:
+def domain_data_mock(hass: HomeAssistant) -> Mock:
     """Mock the global data used by this component.
 
     This includes network clients and library object factories. Mocking it
@@ -114,7 +114,7 @@ def config_entry_mock_no_mac() -> MockConfigEntry:
 
 
 @pytest.fixture
-def dmr_device_mock(domain_data_mock: Mock) -> Iterable[Mock]:
+def dmr_device_mock(domain_data_mock: Mock) -> Generator[Mock]:
     """Mock the async_upnp_client DMR device, initially connected."""
     with patch(
         "homeassistant.components.dlna_dmr.media_player.DmrDevice", autospec=True
@@ -135,7 +135,7 @@ def dmr_device_mock(domain_data_mock: Mock) -> Iterable[Mock]:
 
 
 @pytest.fixture(autouse=True)
-def ssdp_scanner_mock() -> Iterable[Mock]:
+def ssdp_scanner_mock() -> Generator[Mock]:
     """Mock the SSDP Scanner."""
     with patch("homeassistant.components.ssdp.Scanner", autospec=True) as mock_scanner:
         reg_callback = mock_scanner.return_value.async_register_callback
@@ -144,14 +144,14 @@ def ssdp_scanner_mock() -> Iterable[Mock]:
 
 
 @pytest.fixture(autouse=True)
-def ssdp_server_mock() -> Iterable[Mock]:
+def ssdp_server_mock() -> Generator[None]:
     """Mock the SSDP Server."""
     with patch("homeassistant.components.ssdp.Server", autospec=True):
         yield
 
 
 @pytest.fixture(autouse=True)
-def async_get_local_ip_mock() -> Iterable[Mock]:
+def async_get_local_ip_mock() -> Generator[Mock]:
     """Mock the async_get_local_ip utility function to prevent network access."""
     with patch(
         "homeassistant.components.dlna_dmr.media_player.async_get_local_ip",

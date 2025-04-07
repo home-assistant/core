@@ -1,7 +1,5 @@
 """The tests for Lutron Caséta device triggers."""
 
-from unittest.mock import patch
-
 import pytest
 from pytest_unordered import unordered
 
@@ -37,7 +35,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from . import MockBridge
+from . import MockBridge, async_setup_integration
 
 from tests.common import MockConfigEntry, async_get_device_automations
 
@@ -98,7 +96,7 @@ MOCK_BUTTON_DEVICES = [
 ]
 
 
-async def _async_setup_lutron_with_picos(hass):
+async def _async_setup_lutron_with_picos(hass: HomeAssistant) -> str:
     """Setups a lutron bridge with picos."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -112,12 +110,7 @@ async def _async_setup_lutron_with_picos(hass):
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.lutron_caseta.Smartbridge.create_tls",
-        return_value=MockBridge(can_connect=True),
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    await async_setup_integration(hass, MockBridge, config_entry.entry_id)
 
     return config_entry.entry_id
 
@@ -125,7 +118,11 @@ async def _async_setup_lutron_with_picos(hass):
 async def test_get_triggers(hass: HomeAssistant) -> None:
     """Test we get the expected triggers from a lutron pico."""
     config_entry_id = await _async_setup_lutron_with_picos(hass)
-    data: LutronCasetaData = hass.data[DOMAIN][config_entry_id]
+    # Fetching the config entry runtime_data is a legacy pattern
+    # and should not be copied for new integrations
+    data: LutronCasetaData = hass.config_entries.async_get_entry(
+        config_entry_id
+    ).runtime_data
     keypads = data.keypad_data.keypads
     device_id = keypads[list(keypads)[0]]["dr_device_id"]
 
@@ -359,7 +356,11 @@ async def test_validate_trigger_config_unknown_device(
     """Test for no press with an unknown device."""
 
     config_entry_id = await _async_setup_lutron_with_picos(hass)
-    data: LutronCasetaData = hass.data[DOMAIN][config_entry_id]
+    # Fetching the config entry runtime_data is a legacy pattern
+    # and should not be copied for new integrations
+    data: LutronCasetaData = hass.config_entries.async_get_entry(
+        config_entry_id
+    ).runtime_data
     keypads = data.keypad_data.keypads
     lutron_device_id = list(keypads)[0]
     keypad = keypads[lutron_device_id]
@@ -406,7 +407,11 @@ async def test_validate_trigger_invalid_triggers(
 ) -> None:
     """Test for click_event with invalid triggers."""
     config_entry_id = await _async_setup_lutron_with_picos(hass)
-    data: LutronCasetaData = hass.data[DOMAIN][config_entry_id]
+    # Fetching the config entry runtime_data is a legacy pattern
+    # and should not be copied for new integrations
+    data: LutronCasetaData = hass.config_entries.async_get_entry(
+        config_entry_id
+    ).runtime_data
     keypads = data.keypad_data.keypads
     lutron_device_id = list(keypads)[0]
     keypad = keypads[lutron_device_id]
@@ -475,8 +480,7 @@ async def test_if_fires_on_button_event_late_setup(
         },
     )
 
-    await hass.config_entries.async_setup(config_entry_id)
-    await hass.async_block_till_done()
+    await async_setup_integration(hass, MockBridge, config_entry_id)
 
     message = {
         ATTR_SERIAL: device.get("serial"),

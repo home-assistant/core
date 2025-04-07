@@ -11,7 +11,7 @@ from homeassistant.components.sonarr.const import (
     DEFAULT_WANTED_MAX_ITEMS,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_SOURCE, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -48,6 +48,34 @@ async def test_cannot_connect(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_url_rewrite(
+    hass: HomeAssistant,
+    mock_sonarr_config_flow: MagicMock,
+    mock_setup_entry: None,
+) -> None:
+    """Test the full manual user flow from start to finish."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    user_input = MOCK_USER_INPUT.copy()
+    user_input[CONF_URL] = "https://192.168.1.189"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=user_input,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "192.168.1.189"
+
+    assert result["data"]
+    assert result["data"][CONF_URL] == "https://192.168.1.189:443/"
 
 
 async def test_invalid_auth(
@@ -96,15 +124,7 @@ async def test_full_reauth_flow_implementation(
     """Test the manual reauth flow from start to finish."""
     entry = init_integration
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            CONF_SOURCE: SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-            "unique_id": entry.unique_id,
-        },
-        data=entry.data,
-    )
+    result = await entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
@@ -153,7 +173,7 @@ async def test_full_user_flow_implementation(
     assert result["title"] == "192.168.1.189"
 
     assert result["data"]
-    assert result["data"][CONF_URL] == "http://192.168.1.189:8989"
+    assert result["data"][CONF_URL] == "http://192.168.1.189:8989/"
 
 
 async def test_full_user_flow_advanced_options(
@@ -183,7 +203,7 @@ async def test_full_user_flow_advanced_options(
     assert result["title"] == "192.168.1.189"
 
     assert result["data"]
-    assert result["data"][CONF_URL] == "http://192.168.1.189:8989"
+    assert result["data"][CONF_URL] == "http://192.168.1.189:8989/"
     assert result["data"][CONF_VERIFY_SSL]
 
 

@@ -10,6 +10,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .common import (
+    TEST_DATA_ALERT,
+    TEST_DATA_ALERT_RESET,
+    TEST_DATA_ALERT_TOPIC,
     TEST_DATA_HUB,
     TEST_DATA_HUB_RESET,
     TEST_DATA_HUB_TOPIC,
@@ -28,6 +31,7 @@ from .common import (
     TEST_DATA_SOFTENER,
     TEST_DATA_SOFTENER_RESET,
     TEST_DATA_SOFTENER_TOPIC,
+    config_entry_alert,
     config_entry_hub,
     config_entry_leak,
     config_entry_protection_valve,
@@ -44,6 +48,12 @@ from tests.typing import MqttMockHAClient
     ("config_entry", "topic", "reset", "data"),
     [
         (config_entry_hub(), TEST_DATA_HUB_TOPIC, TEST_DATA_HUB_RESET, TEST_DATA_HUB),
+        (
+            config_entry_alert(),
+            TEST_DATA_ALERT_TOPIC,
+            TEST_DATA_ALERT_RESET,
+            TEST_DATA_ALERT,
+        ),
         (
             config_entry_leak(),
             TEST_DATA_LEAK_TOPIC,
@@ -77,6 +87,7 @@ from tests.typing import MqttMockHAClient
     ],
     ids=[
         "hub",
+        "alert",
         "leak",
         "softener",
         "protection_valve",

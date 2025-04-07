@@ -33,9 +33,9 @@ class BaseEditConfigView[_DataT: (dict[str, dict[str, Any]], list[dict[str, Any]
         config_type: str,
         path: str,
         key_schema: Callable[[Any], str],
-        data_schema: Callable[[dict[str, Any]], Any],
         *,
         post_write_hook: Callable[[str, str], Coroutine[Any, Any, None]] | None = None,
+        data_schema: Callable[[dict[str, Any]], Any] | None = None,
         data_validator: Callable[
             [HomeAssistant, str, dict[str, Any]],
             Coroutine[Any, Any, dict[str, Any] | None],
@@ -51,6 +51,12 @@ class BaseEditConfigView[_DataT: (dict[str, dict[str, Any]], list[dict[str, Any]
         self.post_write_hook = post_write_hook
         self.data_validator = data_validator
         self.mutation_lock = asyncio.Lock()
+        if (self.data_schema is None and self.data_validator is None) or (
+            self.data_schema is not None and self.data_validator is not None
+        ):
+            raise ValueError(
+                "Must specify exactly one of data_schema or data_validator"
+            )
 
     def _empty_config(self) -> _DataT:
         """Empty config if file not found."""
@@ -112,7 +118,8 @@ class BaseEditConfigView[_DataT: (dict[str, dict[str, Any]], list[dict[str, Any]
             if self.data_validator:
                 await self.data_validator(hass, config_key, data)
             else:
-                self.data_schema(data)
+                # We either have a data_schema or a data_validator, ignore mypy
+                self.data_schema(data)  # type: ignore[misc]
         except (vol.Invalid, HomeAssistantError) as err:
             return self.json_message(
                 f"Message malformed: {err}", HTTPStatus.BAD_REQUEST

@@ -25,6 +25,7 @@ CONF_ADDON_S2_AUTHENTICATED_KEY = "s2_authenticated_key"
 CONF_ADDON_S2_UNAUTHENTICATED_KEY = "s2_unauthenticated_key"
 CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY = "lr_s2_access_control_key"
 CONF_ADDON_LR_S2_AUTHENTICATED_KEY = "lr_s2_authenticated_key"
+CONF_INSTALLER_MODE = "installer_mode"
 CONF_INTEGRATION_CREATED_ADDON = "integration_created_addon"
 CONF_NETWORK_KEY = "network_key"
 CONF_S0_LEGACY_KEY = "s0_legacy_key"
@@ -42,6 +43,7 @@ DATA_CLIENT = "client"
 DATA_OLD_SERVER_LOG_LEVEL = "old_server_log_level"
 
 EVENT_DEVICE_ADDED_TO_REGISTRY = f"{DOMAIN}_device_added_to_registry"
+EVENT_VALUE_UPDATED = "value updated"
 
 LOGGER = logging.getLogger(__package__)
 LIB_LOGGER = logging.getLogger("zwave_js_server")

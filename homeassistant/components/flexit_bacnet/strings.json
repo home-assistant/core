@@ -5,6 +5,10 @@
         "data": {
           "ip_address": "[%key:common::config_flow::data::ip%]",
           "device_id": "[%key:common::config_flow::data::device%]"
+        },
+        "data_description": {
+          "ip_address": "The IP address of the Flexit Nordic device",
+          "device_id": "The device ID of the Flexit Nordic device"
         }
       }
     },
@@ -52,6 +56,9 @@
       },
       "home_supply_fan_setpoint": {
         "name": "Home supply fan setpoint"
+      },
+      "fireplace_mode_runtime": {
+        "name": "Fireplace mode runtime"
       }
     },
     "sensor": {
@@ -104,7 +111,33 @@
     "switch": {
       "electric_heater": {
         "name": "Electric heater"
+      },
+      "fireplace_mode": {
+        "name": "Fireplace mode"
+      },
+      "cooker_hood_mode": {
+        "name": "Cooker hood mode"
       }
+    }
+  },
+  "exceptions": {
+    "set_value_error": {
+      "message": "Failed setting the value {value}."
+    },
+    "switch_turn": {
+      "message": "Failed to turn the switch {state}."
+    },
+    "set_preset_mode": {
+      "message": "Failed to set preset mode {preset}."
+    },
+    "set_temperature": {
+      "message": "Failed to set temperature {temperature}."
+    },
+    "set_hvac_mode": {
+      "message": "Failed to set HVAC mode {mode}."
+    },
+    "not_ready": {
+      "message": "Timeout while connecting to {ip}."
     }
   }
 }

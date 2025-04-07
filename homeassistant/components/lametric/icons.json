@@ -39,7 +39,11 @@
     }
   },
   "services": {
-    "chart": "mdi:chart-areaspline-variant",
-    "message": "mdi:message"
+    "chart": {
+      "service": "mdi:chart-areaspline-variant"
+    },
+    "message": {
+      "service": "mdi:message"
+    }
   }
 }

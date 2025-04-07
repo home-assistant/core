@@ -3,64 +3,76 @@
 import logging
 from typing import Any
 
+from pyvesync.vesyncbasedevice import VeSyncBaseDevice
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ColorMode,
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import color as color_util
 
-from .common import VeSyncDevice
-from .const import DEV_TYPE_TO_HA, DOMAIN, VS_DISCOVERY, VS_LIGHTS
+from .const import DEV_TYPE_TO_HA, DOMAIN, VS_COORDINATOR, VS_DEVICES, VS_DISCOVERY
+from .coordinator import VeSyncDataCoordinator
+from .entity import VeSyncBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
+MAX_MIREDS = 370  # 1,000,000 divided by 2700 Kelvin = 370 Mireds
+MIN_MIREDS = 153  # 1,000,000 divided by 6500 Kelvin = 153 Mireds
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up lights."""
+
+    coordinator = hass.data[DOMAIN][VS_COORDINATOR]
 
     @callback
     def discover(devices):
         """Add new devices to platform."""
-        _setup_entities(devices, async_add_entities)
+        _setup_entities(devices, async_add_entities, coordinator)
 
     config_entry.async_on_unload(
-        async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_LIGHTS), discover)
+        async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_DEVICES), discover)
     )
 
-    _setup_entities(hass.data[DOMAIN][VS_LIGHTS], async_add_entities)
+    _setup_entities(hass.data[DOMAIN][VS_DEVICES], async_add_entities, coordinator)
 
 
 @callback
-def _setup_entities(devices, async_add_entities):
-    """Check if device is online and add entity."""
-    entities = []
+def _setup_entities(
+    devices: list[VeSyncBaseDevice],
+    async_add_entities,
+    coordinator: VeSyncDataCoordinator,
+):
+    """Check if device is a light and add entity."""
+    entities: list[VeSyncBaseLightHA] = []
     for dev in devices:
         if DEV_TYPE_TO_HA.get(dev.device_type) in ("walldimmer", "bulb-dimmable"):
-            entities.append(VeSyncDimmableLightHA(dev))
+            entities.append(VeSyncDimmableLightHA(dev, coordinator))
         elif DEV_TYPE_TO_HA.get(dev.device_type) in ("bulb-tunable-white",):
-            entities.append(VeSyncTunableWhiteLightHA(dev))
-        else:
-            _LOGGER.debug(
-                "%s - Unknown device type - %s", dev.device_name, dev.device_type
-            )
-            continue
+            entities.append(VeSyncTunableWhiteLightHA(dev, coordinator))
 
     async_add_entities(entities, update_before_add=True)
 
 
-class VeSyncBaseLight(VeSyncDevice, LightEntity):
+class VeSyncBaseLightHA(VeSyncBaseEntity, LightEntity):
     """Base class for VeSync Light Devices Representations."""
 
     _attr_name = None
+
+    @property
+    def is_on(self) -> bool:
+        """Return True if device is on."""
+        return self.device.device_status == "on"
 
     @property
     def brightness(self) -> int:
@@ -84,15 +96,16 @@ class VeSyncBaseLight(VeSyncDevice, LightEntity):
         """Turn the device on."""
         attribute_adjustment_only = False
         # set white temperature
-        if self.color_mode == ColorMode.COLOR_TEMP and ATTR_COLOR_TEMP in kwargs:
+        if self.color_mode == ColorMode.COLOR_TEMP and ATTR_COLOR_TEMP_KELVIN in kwargs:
             # get white temperature from HA data
-            color_temp = int(kwargs[ATTR_COLOR_TEMP])
+            color_temp = color_util.color_temperature_kelvin_to_mired(
+                kwargs[ATTR_COLOR_TEMP_KELVIN]
+            )
             # ensure value between min-max supported Mireds
-            color_temp = max(self.min_mireds, min(color_temp, self.max_mireds))
+            color_temp = max(MIN_MIREDS, min(color_temp, MAX_MIREDS))
             # convert Mireds to Percent value that api expects
             color_temp = round(
-                ((color_temp - self.min_mireds) / (self.max_mireds - self.min_mireds))
-                * 100
+                ((color_temp - MIN_MIREDS) / (MAX_MIREDS - MIN_MIREDS)) * 100
             )
             # flip cold/warm to what pyvesync api expects
             color_temp = 100 - color_temp
@@ -126,25 +139,29 @@ class VeSyncBaseLight(VeSyncDevice, LightEntity):
         # send turn_on command to pyvesync api
         self.device.turn_on()
 
+    def turn_off(self, **kwargs: Any) -> None:
+        """Turn the device off."""
+        self.device.turn_off()
 
-class VeSyncDimmableLightHA(VeSyncBaseLight, LightEntity):
+
+class VeSyncDimmableLightHA(VeSyncBaseLightHA, LightEntity):
     """Representation of a VeSync dimmable light device."""
 
     _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
 
-class VeSyncTunableWhiteLightHA(VeSyncBaseLight, LightEntity):
+class VeSyncTunableWhiteLightHA(VeSyncBaseLightHA, LightEntity):
     """Representation of a VeSync Tunable White Light device."""
 
     _attr_color_mode = ColorMode.COLOR_TEMP
-    _attr_max_mireds = 370  # 1,000,000 divided by 2700 Kelvin = 370 Mireds
-    _attr_min_mireds = 154  # 1,000,000 divided by 6500 Kelvin = 154 Mireds
+    _attr_min_color_temp_kelvin = 2700  # 370 Mireds
+    _attr_max_color_temp_kelvin = 6500  # 153 Mireds
     _attr_supported_color_modes = {ColorMode.COLOR_TEMP}
 
     @property
-    def color_temp(self) -> int:
-        """Get device white temperature."""
+    def color_temp_kelvin(self) -> int | None:
+        """Return the color temperature value in Kelvin."""
         # get value from pyvesync library api,
         result = self.device.color_temp_pct
         try:
@@ -159,15 +176,16 @@ class VeSyncTunableWhiteLightHA(VeSyncBaseLight, LightEntity):
                 ),
                 result,
             )
-            return 0
+            return None
         # flip cold/warm
         color_temp_value = 100 - color_temp_value
         # ensure value between 0-100
         color_temp_value = max(0, min(color_temp_value, 100))
         # convert percent value to Mireds
         color_temp_value = round(
-            self.min_mireds
-            + ((self.max_mireds - self.min_mireds) / 100 * color_temp_value)
+            MIN_MIREDS + ((MAX_MIREDS - MIN_MIREDS) / 100 * color_temp_value)
         )
         # ensure value between minimum and maximum Mireds
-        return max(self.min_mireds, min(color_temp_value, self.max_mireds))
+        return color_util.color_temperature_mired_to_kelvin(
+            max(MIN_MIREDS, min(color_temp_value, MAX_MIREDS))
+        )

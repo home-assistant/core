@@ -11,7 +11,9 @@ from homeassistant.components.airvisual import (
     INTEGRATION_TYPE_GEOGRAPHY_NAME,
     INTEGRATION_TYPE_NODE_PRO,
 )
-from homeassistant.components.airvisual_pro import DOMAIN as AIRVISUAL_PRO_DOMAIN
+
+# pylint: disable-next=hass-component-root-import
+from homeassistant.components.airvisual_pro.const import DOMAIN as AIRVISUAL_PRO_DOMAIN
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_COUNTRY,

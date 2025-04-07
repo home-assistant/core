@@ -44,7 +44,10 @@ from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, selector, template
 from homeassistant.helpers.device import async_device_info_to_link_from_device_id
 from homeassistant.helpers.entity import async_generate_entity_id
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.trigger_template_entity import TEMPLATE_SENSOR_BASE_SCHEMA
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
@@ -142,17 +145,21 @@ def extra_validation_checks(val):
     return val
 
 
-def rewrite_legacy_to_modern_conf(cfg: dict[str, dict]) -> list[dict]:
+def rewrite_legacy_to_modern_conf(
+    hass: HomeAssistant, cfg: dict[str, dict]
+) -> list[dict]:
     """Rewrite legacy sensor definitions to modern ones."""
     sensors = []
 
     for object_id, entity_cfg in cfg.items():
         entity_cfg = {**entity_cfg, CONF_OBJECT_ID: object_id}
 
-        entity_cfg = rewrite_common_legacy_to_modern_conf(entity_cfg, LEGACY_FIELDS)
+        entity_cfg = rewrite_common_legacy_to_modern_conf(
+            hass, entity_cfg, LEGACY_FIELDS
+        )
 
         if CONF_NAME not in entity_cfg:
-            entity_cfg[CONF_NAME] = template.Template(object_id)
+            entity_cfg[CONF_NAME] = template.Template(object_id, hass)
 
         sensors.append(entity_cfg)
 
@@ -174,7 +181,7 @@ _LOGGER = logging.getLogger(__name__)
 
 @callback
 def _async_create_template_tracking_entities(
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback | AddConfigEntryEntitiesCallback,
     hass: HomeAssistant,
     definitions: list[dict],
     unique_id_prefix: str | None,
@@ -210,7 +217,7 @@ async def async_setup_platform(
         _async_create_template_tracking_entities(
             async_add_entities,
             hass,
-            rewrite_legacy_to_modern_conf(config[CONF_SENSORS]),
+            rewrite_legacy_to_modern_conf(hass, config[CONF_SENSORS]),
             None,
         )
         return
@@ -233,7 +240,7 @@ async def async_setup_platform(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize config entry."""
     _options = dict(config_entry.options)

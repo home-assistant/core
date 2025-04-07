@@ -29,7 +29,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.trigger_template_entity import (
@@ -139,8 +139,6 @@ class RestSensor(ManualTriggerSensorEntity, RestEntity):
             config[CONF_FORCE_UPDATE],
         )
         self._value_template = config.get(CONF_VALUE_TEMPLATE)
-        if (value_template := self._value_template) is not None:
-            value_template.hass = hass
         self._json_attrs = config.get(CONF_JSON_ATTRS)
         self._json_attrs_path = config.get(CONF_JSON_ATTRS_PATH)
         self._attr_extra_state_attributes = {}

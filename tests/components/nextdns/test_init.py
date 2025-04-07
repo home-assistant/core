@@ -2,12 +2,12 @@
 
 from unittest.mock import patch
 
-from nextdns import ApiError
+from nextdns import ApiError, InvalidApiKeyError
 import pytest
 from tenacity import RetryError
 
 from homeassistant.components.nextdns.const import CONF_PROFILE_ID, DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_API_KEY, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
@@ -59,3 +59,33 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
 
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert not hass.data.get(DOMAIN)
+
+
+async def test_config_auth_failed(hass: HomeAssistant) -> None:
+    """Test for setup failure if the auth fails."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Fake Profile",
+        unique_id="xyz12",
+        data={CONF_API_KEY: "fake_api_key", CONF_PROFILE_ID: "xyz12"},
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.nextdns.NextDns.get_profiles",
+        side_effect=InvalidApiKeyError,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+
+    flow = flows[0]
+    assert flow.get("step_id") == "reauth_confirm"
+    assert flow.get("handler") == DOMAIN
+
+    assert "context" in flow
+    assert flow["context"].get("source") == SOURCE_REAUTH
+    assert flow["context"].get("entry_id") == entry.entry_id

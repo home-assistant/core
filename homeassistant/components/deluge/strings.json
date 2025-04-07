@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "To be able to use this integration, you have to enable the following option in deluge settings: Daemon > Allow remote controls",
+        "description": "To be able to use this integration, you have to enable the following option in Deluge settings: Daemon > Allow remote controls",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "username": "[%key:common::config_flow::data::username%]",
@@ -17,10 +17,12 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
   "entity": {
@@ -36,6 +38,12 @@
       },
       "download_speed": {
         "name": "Download speed"
+      },
+      "protocol_traffic_download_speed": {
+        "name": "Protocol traffic download speed"
+      },
+      "protocol_traffic_upload_speed": {
+        "name": "Protocol traffic upload speed"
       },
       "upload_speed": {
         "name": "Upload speed"

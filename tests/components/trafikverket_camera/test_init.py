@@ -6,8 +6,7 @@ from datetime import datetime
 from unittest.mock import patch
 
 import pytest
-from pytrafikverket.exceptions import UnknownError
-from pytrafikverket.models import CameraInfoModel
+from pytrafikverket import CameraInfoModel, UnknownError
 
 from homeassistant.components.trafikverket_camera import async_migrate_entry
 from homeassistant.components.trafikverket_camera.const import DOMAIN

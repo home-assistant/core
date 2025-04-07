@@ -2,34 +2,36 @@
   "title": "Workday",
   "config": {
     "abort": {
-      "already_configured": "Workday has already been setup with chosen configuration"
+      "already_configured": "Workday has already been set up with chosen configuration"
     },
     "step": {
       "user": {
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
-          "country": "Country"
+          "country": "[%key:common::config_flow::data::country%]"
         }
       },
       "options": {
         "description": "Set additional options for {name} configured for country {country}",
         "data": {
-          "excludes": "Excludes",
+          "excludes": "Days to exclude",
           "days_offset": "Offset",
-          "workdays": "Workdays",
+          "workdays": "Days to include",
           "add_holidays": "Add holidays",
-          "remove_holidays": "Remove Holidays",
+          "remove_holidays": "Remove holidays",
           "province": "Subdivision of country",
-          "language": "Language for named holidays"
+          "language": "Language for named holidays",
+          "category": "Additional category as holiday"
         },
         "data_description": {
-          "excludes": "List of workdays to exclude, notice the keyword `holiday` and read the documentation on how to use it correctly",
+          "excludes": "Select which weekdays to exclude as workdays.\nThe key `holidays` adds those for the configured country, customizable by all the settings below. Read the documentation on how to use them correctly.",
           "days_offset": "Days offset from current day",
-          "workdays": "List of working days",
+          "workdays": "Select which weekdays to include as possible workdays.",
           "add_holidays": "Add custom holidays as YYYY-MM-DD or as range using `,` as separator",
           "remove_holidays": "Remove holidays as YYYY-MM-DD, as range using `,` as separator or by using partial of name",
           "province": "State, territory, province or region of country",
-          "language": "Language to use when configuring named holiday exclusions"
+          "language": "Language to use when configuring named holiday exclusions",
+          "category": "Select additional categories to include as holidays"
         }
       }
     },
@@ -51,7 +53,8 @@
           "add_holidays": "[%key:component::workday::config::step::options::data::add_holidays%]",
           "remove_holidays": "[%key:component::workday::config::step::options::data::remove_holidays%]",
           "province": "[%key:component::workday::config::step::options::data::province%]",
-          "language": "[%key:component::workday::config::step::options::data::language%]"
+          "language": "[%key:component::workday::config::step::options::data::language%]",
+          "category": "[%key:component::workday::config::step::options::data::category%]"
         },
         "data_description": {
           "excludes": "[%key:component::workday::config::step::options::data_description::excludes%]",
@@ -60,7 +63,8 @@
           "add_holidays": "[%key:component::workday::config::step::options::data_description::add_holidays%]",
           "remove_holidays": "[%key:component::workday::config::step::options::data_description::remove_holidays%]",
           "province": "[%key:component::workday::config::step::options::data_description::province%]",
-          "language": "[%key:component::workday::config::step::options::data_description::language%]"
+          "language": "[%key:component::workday::config::step::options::data_description::language%]",
+          "category": "[%key:component::workday::config::step::options::data_description::category%]"
         }
       }
     },
@@ -78,6 +82,25 @@
         "none": "No subdivision"
       }
     },
+    "category": {
+      "options": {
+        "armed_forces": "Armed forces",
+        "bank": "Bank",
+        "catholic": "Catholic",
+        "chinese": "Chinese",
+        "christian": "Christian",
+        "government": "Government",
+        "half_day": "Half day",
+        "hebrew": "Hebrew",
+        "hindu": "Hindu",
+        "islamic": "Islamic",
+        "optional": "Optional",
+        "public": "Public",
+        "school": "School",
+        "unofficial": "Unofficial",
+        "workday": "Workday"
+      }
+    },
     "days": {
       "options": {
         "mon": "[%key:common::time::monday%]",
@@ -93,14 +116,14 @@
   },
   "issues": {
     "bad_country": {
-      "title": "Configured Country for {title} does not exist",
+      "title": "Configured country for {title} does not exist",
       "fix_flow": {
         "step": {
           "country": {
             "title": "Select country for {title}",
             "description": "Select a country to use for your Workday sensor.",
             "data": {
-              "country": "[%key:component::workday::config::step::user::data::country%]"
+              "country": "[%key:common::config_flow::data::country%]"
             }
           },
           "province": {
@@ -110,7 +133,7 @@
               "province": "[%key:component::workday::config::step::options::data::province%]"
             },
             "data_description": {
-              "province": "State, Territory, Province, Region of Country"
+              "province": "[%key:component::workday::config::step::options::data_description::province%]"
             }
           }
         }
@@ -127,7 +150,7 @@
               "province": "[%key:component::workday::config::step::options::data::province%]"
             },
             "data_description": {
-              "province": "[%key:component::workday::issues::bad_country::fix_flow::step::province::data_description::province%]"
+              "province": "[%key:component::workday::config::step::options::data_description::province%]"
             }
           }
         }
@@ -194,7 +217,7 @@
   "services": {
     "check_date": {
       "name": "Check date",
-      "description": "Check if date is workday.",
+      "description": "Checks if a given date is a workday.",
       "fields": {
         "check_date": {
           "name": "Date",

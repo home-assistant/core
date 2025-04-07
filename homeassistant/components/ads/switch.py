@@ -13,11 +13,12 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import CONF_ADS_VAR, DATA_ADS, STATE_KEY_STATE, AdsEntity
+from .const import CONF_ADS_VAR, DATA_ADS, STATE_KEY_STATE
+from .entity import AdsEntity
 
 DEFAULT_NAME = "ADS Switch"
 
@@ -36,10 +37,10 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up switch platform for ADS."""
-    ads_hub = hass.data.get(DATA_ADS)
+    ads_hub = hass.data[DATA_ADS]
 
-    name = config[CONF_NAME]
-    ads_var = config[CONF_ADS_VAR]
+    name: str = config[CONF_NAME]
+    ads_var: str = config[CONF_ADS_VAR]
 
     add_entities([AdsSwitch(ads_hub, name, ads_var)])
 

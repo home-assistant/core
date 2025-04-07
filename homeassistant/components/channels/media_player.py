@@ -49,12 +49,12 @@ async def async_setup_platform(
 
     platform.async_register_entity_service(
         SERVICE_SEEK_FORWARD,
-        {},
+        None,
         "seek_forward",
     )
     platform.async_register_entity_service(
         SERVICE_SEEK_BACKWARD,
-        {},
+        None,
         "seek_backward",
     )
     platform.async_register_entity_service(

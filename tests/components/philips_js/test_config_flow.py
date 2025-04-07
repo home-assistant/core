@@ -60,7 +60,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry) -> None:
 
 
 async def test_reauth(
-    hass: HomeAssistant, mock_setup_entry, mock_config_entry, mock_tv
+    hass: HomeAssistant, mock_setup_entry, mock_config_entry: MockConfigEntry, mock_tv
 ) -> None:
     """Test we get the form."""
 
@@ -69,15 +69,7 @@ async def test_reauth(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert len(mock_setup_entry.mock_calls) == 1
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "unique_id": mock_config_entry.unique_id,
-            "entry_id": mock_config_entry.entry_id,
-        },
-        data=mock_config_entry.data,
-    )
+    result = await mock_config_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -163,6 +155,7 @@ async def test_pairing(hass: HomeAssistant, mock_tv_pairable, mock_setup_entry) 
         "version": 1,
         "options": {},
         "minor_version": 1,
+        "subentries": (),
     }
 
     await hass.async_block_till_done()

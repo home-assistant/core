@@ -7,13 +7,12 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.cert_expiry.const import DEFAULT_PORT, DOMAIN
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.components.cert_expiry.const import DOMAIN
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .const import HOST, PORT
-from .helpers import future_timestamp
 
 from tests.common import MockConfigEntry
 
@@ -64,122 +63,6 @@ async def test_user_with_bad_cert(hass: HomeAssistant) -> None:
     assert result["result"].unique_id == f"{HOST}:{PORT}"
 
 
-async def test_import_host_only(hass: HomeAssistant) -> None:
-    """Test import with host only."""
-    with (
-        patch(
-            "homeassistant.components.cert_expiry.config_flow.get_cert_expiry_timestamp"
-        ),
-        patch(
-            "homeassistant.components.cert_expiry.coordinator.get_cert_expiry_timestamp",
-            return_value=future_timestamp(1),
-        ),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={CONF_HOST: HOST},
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == HOST
-    assert result["data"][CONF_HOST] == HOST
-    assert result["data"][CONF_PORT] == DEFAULT_PORT
-    assert result["result"].unique_id == f"{HOST}:{DEFAULT_PORT}"
-
-
-async def test_import_host_and_port(hass: HomeAssistant) -> None:
-    """Test import with host and port."""
-    with (
-        patch(
-            "homeassistant.components.cert_expiry.config_flow.get_cert_expiry_timestamp"
-        ),
-        patch(
-            "homeassistant.components.cert_expiry.coordinator.get_cert_expiry_timestamp",
-            return_value=future_timestamp(1),
-        ),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={CONF_HOST: HOST, CONF_PORT: PORT},
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == HOST
-    assert result["data"][CONF_HOST] == HOST
-    assert result["data"][CONF_PORT] == PORT
-    assert result["result"].unique_id == f"{HOST}:{PORT}"
-
-
-async def test_import_non_default_port(hass: HomeAssistant) -> None:
-    """Test import with host and non-default port."""
-    with (
-        patch(
-            "homeassistant.components.cert_expiry.config_flow.get_cert_expiry_timestamp"
-        ),
-        patch(
-            "homeassistant.components.cert_expiry.coordinator.get_cert_expiry_timestamp",
-            return_value=future_timestamp(1),
-        ),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={CONF_HOST: HOST, CONF_PORT: 888},
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"{HOST}:888"
-    assert result["data"][CONF_HOST] == HOST
-    assert result["data"][CONF_PORT] == 888
-    assert result["result"].unique_id == f"{HOST}:888"
-
-
-async def test_import_with_name(hass: HomeAssistant) -> None:
-    """Test import with name (deprecated)."""
-    with (
-        patch(
-            "homeassistant.components.cert_expiry.config_flow.get_cert_expiry_timestamp"
-        ),
-        patch(
-            "homeassistant.components.cert_expiry.coordinator.get_cert_expiry_timestamp",
-            return_value=future_timestamp(1),
-        ),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={CONF_NAME: "legacy", CONF_HOST: HOST, CONF_PORT: PORT},
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == HOST
-    assert result["data"][CONF_HOST] == HOST
-    assert result["data"][CONF_PORT] == PORT
-    assert result["result"].unique_id == f"{HOST}:{PORT}"
-
-
-async def test_bad_import(hass: HomeAssistant) -> None:
-    """Test import step."""
-    with patch(
-        "homeassistant.components.cert_expiry.helper.async_get_cert",
-        side_effect=ConnectionRefusedError(),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={CONF_HOST: HOST},
-        )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "import_failed"
-
-
 async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
     """Test we abort if the cert is already setup."""
     MockConfigEntry(
@@ -187,14 +70,6 @@ async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
         data={CONF_HOST: HOST, CONF_PORT: PORT},
         unique_id=f"{HOST}:{PORT}",
     ).add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={CONF_HOST: HOST, CONF_PORT: PORT},
-    )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,

@@ -109,10 +109,11 @@ class SatelIntegraBinarySensor(BinarySensorEntity):
         return self._name
 
     @property
-    def icon(self):
+    def icon(self) -> str | None:
         """Icon for device by its type."""
         if self._zone_type is BinarySensorDeviceClass.SMOKE:
             return "mdi:fire"
+        return None
 
     @property
     def is_on(self):

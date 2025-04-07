@@ -2,16 +2,20 @@
 
 from unittest.mock import call
 
-from aioesphomeapi import APIClient, LockCommand, LockEntityState, LockInfo, LockState
+from aioesphomeapi import (
+    APIClient,
+    LockCommand,
+    LockEntityState,
+    LockInfo,
+    LockState as ESPHomeLockState,
+)
 
 from homeassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN,
     SERVICE_LOCK,
     SERVICE_OPEN,
     SERVICE_UNLOCK,
-    STATE_LOCKED,
-    STATE_LOCKING,
-    STATE_UNLOCKING,
+    LockState,
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
@@ -31,7 +35,7 @@ async def test_lock_entity_no_open(
             requires_code=False,
         )
     ]
-    states = [LockEntityState(key=1, state=LockState.UNLOCKING)]
+    states = [LockEntityState(key=1, state=ESPHomeLockState.UNLOCKING)]
     user_service = []
     await mock_generic_device_entry(
         mock_client=mock_client,
@@ -41,7 +45,7 @@ async def test_lock_entity_no_open(
     )
     state = hass.states.get("lock.test_mylock")
     assert state is not None
-    assert state.state == STATE_UNLOCKING
+    assert state.state == LockState.UNLOCKING
 
     await hass.services.async_call(
         LOCK_DOMAIN,
@@ -65,7 +69,7 @@ async def test_lock_entity_start_locked(
             unique_id="my_lock",
         )
     ]
-    states = [LockEntityState(key=1, state=LockState.LOCKED)]
+    states = [LockEntityState(key=1, state=ESPHomeLockState.LOCKED)]
     user_service = []
     await mock_generic_device_entry(
         mock_client=mock_client,
@@ -75,7 +79,7 @@ async def test_lock_entity_start_locked(
     )
     state = hass.states.get("lock.test_mylock")
     assert state is not None
-    assert state.state == STATE_LOCKED
+    assert state.state == LockState.LOCKED
 
 
 async def test_lock_entity_supports_open(
@@ -92,7 +96,7 @@ async def test_lock_entity_supports_open(
             requires_code=True,
         )
     ]
-    states = [LockEntityState(key=1, state=LockState.LOCKING)]
+    states = [LockEntityState(key=1, state=ESPHomeLockState.LOCKING)]
     user_service = []
     await mock_generic_device_entry(
         mock_client=mock_client,
@@ -102,7 +106,7 @@ async def test_lock_entity_supports_open(
     )
     state = hass.states.get("lock.test_mylock")
     assert state is not None
-    assert state.state == STATE_LOCKING
+    assert state.state == LockState.LOCKING
 
     await hass.services.async_call(
         LOCK_DOMAIN,

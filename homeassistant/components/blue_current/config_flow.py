@@ -14,7 +14,7 @@ from bluecurrent_api.exceptions import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_TOKEN
 
 from .const import DOMAIN, LOGGER
@@ -26,7 +26,6 @@ class BlueCurrentConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle the config flow for Blue Current."""
 
     VERSION = 1
-    _reauth_entry: ConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -53,19 +52,16 @@ class BlueCurrentConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
 
             else:
-                if not self._reauth_entry:
+                if self.source != SOURCE_REAUTH:
                     await self.async_set_unique_id(customer_id)
                     self._abort_if_unique_id_configured()
                     return self.async_create_entry(title=email, data=user_input)
 
-                if self._reauth_entry.unique_id == customer_id:
-                    self.hass.config_entries.async_update_entry(
-                        self._reauth_entry, data=user_input
+                reauth_entry = self._get_reauth_entry()
+                if reauth_entry.unique_id == customer_id:
+                    return self.async_update_reload_and_abort(
+                        reauth_entry, data=user_input
                     )
-                    await self.hass.config_entries.async_reload(
-                        self._reauth_entry.entry_id
-                    )
-                    return self.async_abort(reason="reauth_successful")
 
                 return self.async_abort(
                     reason="wrong_account",
@@ -79,7 +75,4 @@ class BlueCurrentConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle a reauthorization flow request."""
-        self._reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         return await self.async_step_user()

@@ -10,7 +10,7 @@ from functools import wraps
 from typing import Any
 
 from homeassistant.core import ServiceResponse
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .typing import TemplateVarsType
 
@@ -23,18 +23,18 @@ class TraceElement:
         "_child_run_id",
         "_error",
         "_last_variables",
-        "path",
         "_result",
-        "reuse_by_child",
         "_timestamp",
         "_variables",
+        "path",
+        "reuse_by_child",
     )
 
     def __init__(self, variables: TemplateVarsType, path: str) -> None:
         """Container for trace data."""
         self._child_key: str | None = None
         self._child_run_id: str | None = None
-        self._error: Exception | None = None
+        self._error: BaseException | None = None
         self.path: str = path
         self._result: dict[str, Any] | None = None
         self.reuse_by_child = False
@@ -52,7 +52,7 @@ class TraceElement:
         self._child_key = child_key
         self._child_run_id = child_run_id
 
-    def set_error(self, ex: Exception) -> None:
+    def set_error(self, ex: BaseException | None) -> None:
         """Set error."""
         self._error = ex
 

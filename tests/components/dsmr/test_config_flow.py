@@ -10,7 +10,8 @@ import serial
 import serial.tools.list_ports
 
 from homeassistant import config_entries
-from homeassistant.components.dsmr import DOMAIN, config_flow
+from homeassistant.components.dsmr import config_flow
+from homeassistant.components.dsmr.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -160,6 +161,16 @@ async def test_setup_network_rfxtrx(
                 "protocol": "dsmr_protocol",
                 "serial_id": "12345678",
                 "serial_id_gas": "123456789",
+            },
+        ),
+        (
+            "5EONHU",
+            {
+                "port": "/dev/ttyUSB1234",
+                "dsmr_version": "5EONHU",
+                "protocol": "dsmr_protocol",
+                "serial_id": "12345678",
+                "serial_id_gas": None,
             },
         ),
         (

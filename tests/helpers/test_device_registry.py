@@ -2,11 +2,13 @@
 
 from collections.abc import Iterable
 from contextlib import AbstractContextManager, nullcontext
+from datetime import datetime
 from functools import partial
 import time
 from typing import Any
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from yarl import URL
 
@@ -19,14 +21,9 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
+from homeassistant.util.dt import utcnow
 
-from tests.common import (
-    MockConfigEntry,
-    async_capture_events,
-    flush_store,
-    help_test_all,
-    import_and_test_deprecated_constant_enum,
-)
+from tests.common import MockConfigEntry, async_capture_events, flush_store
 
 
 @pytest.fixture
@@ -176,13 +173,119 @@ async def test_multiple_config_entries(
     assert entry3.primary_config_entry == config_entry_1.entry_id
 
 
+async def test_multiple_config_subentries(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Make sure we do not get duplicate entries."""
+    config_entry_1 = MockConfigEntry(
+        subentries_data=(
+            config_entries.ConfigSubentryData(
+                data={},
+                subentry_id="mock-subentry-id-1-1",
+                subentry_type="test",
+                title="Mock title",
+                unique_id="test",
+            ),
+            config_entries.ConfigSubentryData(
+                data={},
+                subentry_id="mock-subentry-id-1-2",
+                subentry_type="test",
+                title="Mock title",
+                unique_id="test",
+            ),
+        )
+    )
+    config_entry_1.add_to_hass(hass)
+    config_entry_2 = MockConfigEntry(
+        subentries_data=(
+            config_entries.ConfigSubentryData(
+                data={},
+                subentry_id="mock-subentry-id-2-1",
+                subentry_type="test",
+                title="Mock title",
+                unique_id="test",
+            ),
+        )
+    )
+    config_entry_2.add_to_hass(hass)
+
+    entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry_1.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bridgeid", "0123")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+    assert entry.config_entries == {config_entry_1.entry_id}
+    assert entry.config_entries_subentries == {config_entry_1.entry_id: {None}}
+    entry_id = entry.id
+
+    entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry_1.entry_id,
+        config_subentry_id=None,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bridgeid", "0123")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+    assert entry.id == entry_id
+    assert entry.config_entries == {config_entry_1.entry_id}
+    assert entry.config_entries_subentries == {config_entry_1.entry_id: {None}}
+
+    entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry_1.entry_id,
+        config_subentry_id="mock-subentry-id-1-1",
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bridgeid", "0123")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+    assert entry.id == entry_id
+    assert entry.config_entries == {config_entry_1.entry_id}
+    assert entry.config_entries_subentries == {
+        config_entry_1.entry_id: {None, "mock-subentry-id-1-1"}
+    }
+
+    entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry_1.entry_id,
+        config_subentry_id="mock-subentry-id-1-2",
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bridgeid", "0123")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+    assert entry.id == entry_id
+    assert entry.config_entries == {config_entry_1.entry_id}
+    assert entry.config_entries_subentries == {
+        config_entry_1.entry_id: {None, "mock-subentry-id-1-1", "mock-subentry-id-1-2"}
+    }
+
+    entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry_2.entry_id,
+        config_subentry_id="mock-subentry-id-2-1",
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bridgeid", "0123")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+    assert entry.id == entry_id
+    assert entry.config_entries == {config_entry_1.entry_id, config_entry_2.entry_id}
+    assert entry.config_entries_subentries == {
+        config_entry_1.entry_id: {None, "mock-subentry-id-1-1", "mock-subentry-id-1-2"},
+        config_entry_2.entry_id: {"mock-subentry-id-2-1"},
+    }
+
+
 @pytest.mark.parametrize("load_registries", [False])
+@pytest.mark.usefixtures("freezer")
 async def test_loading_from_storage(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test loading stored devices on start."""
+    created_at = "2024-01-01T00:00:00+00:00"
+    modified_at = "2024-02-01T00:00:00+00:00"
     hass_storage[dr.STORAGE_KEY] = {
         "version": dr.STORAGE_VERSION_MAJOR,
         "minor_version": dr.STORAGE_VERSION_MINOR,
@@ -191,8 +294,10 @@ async def test_loading_from_storage(
                 {
                     "area_id": "12345A",
                     "config_entries": [mock_config_entry.entry_id],
+                    "config_entries_subentries": {mock_config_entry.entry_id: [None]},
                     "configuration_url": "https://example.com/config",
                     "connections": [["Zigbee", "01.23.45.67.89"]],
+                    "created_at": created_at,
                     "disabled_by": dr.DeviceEntryDisabler.USER,
                     "entry_type": dr.DeviceEntryType.SERVICE,
                     "hw_version": "hw_version",
@@ -201,6 +306,8 @@ async def test_loading_from_storage(
                     "labels": {"label1", "label2"},
                     "manufacturer": "manufacturer",
                     "model": "model",
+                    "model_id": "model_id",
+                    "modified_at": modified_at,
                     "name_by_user": "Test Friendly Name",
                     "name": "name",
                     "primary_config_entry": mock_config_entry.entry_id,
@@ -212,9 +319,12 @@ async def test_loading_from_storage(
             "deleted_devices": [
                 {
                     "config_entries": [mock_config_entry.entry_id],
+                    "config_entries_subentries": {mock_config_entry.entry_id: [None]},
                     "connections": [["Zigbee", "23.45.67.89.01"]],
+                    "created_at": created_at,
                     "id": "bcdefghijklmn",
                     "identifiers": [["serial", "3456ABCDEF12"]],
+                    "modified_at": modified_at,
                     "orphaned_timestamp": None,
                 }
             ],
@@ -226,6 +336,17 @@ async def test_loading_from_storage(
     assert len(registry.devices) == 1
     assert len(registry.deleted_devices) == 1
 
+    assert registry.deleted_devices["bcdefghijklmn"] == dr.DeletedDeviceEntry(
+        config_entries={mock_config_entry.entry_id},
+        config_entries_subentries={mock_config_entry.entry_id: {None}},
+        connections={("Zigbee", "23.45.67.89.01")},
+        created_at=datetime.fromisoformat(created_at),
+        id="bcdefghijklmn",
+        identifiers={("serial", "3456ABCDEF12")},
+        modified_at=datetime.fromisoformat(modified_at),
+        orphaned_timestamp=None,
+    )
+
     entry = registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         connections={("Zigbee", "01.23.45.67.89")},
@@ -236,8 +357,10 @@ async def test_loading_from_storage(
     assert entry == dr.DeviceEntry(
         area_id="12345A",
         config_entries={mock_config_entry.entry_id},
+        config_entries_subentries={mock_config_entry.entry_id: {None}},
         configuration_url="https://example.com/config",
         connections={("Zigbee", "01.23.45.67.89")},
+        created_at=datetime.fromisoformat(created_at),
         disabled_by=dr.DeviceEntryDisabler.USER,
         entry_type=dr.DeviceEntryType.SERVICE,
         hw_version="hw_version",
@@ -246,6 +369,8 @@ async def test_loading_from_storage(
         labels={"label1", "label2"},
         manufacturer="manufacturer",
         model="model",
+        model_id="model_id",
+        modified_at=datetime.fromisoformat(modified_at),
         name_by_user="Test Friendly Name",
         name="name",
         primary_config_entry=mock_config_entry.entry_id,
@@ -267,11 +392,14 @@ async def test_loading_from_storage(
     )
     assert entry == dr.DeviceEntry(
         config_entries={mock_config_entry.entry_id},
+        config_entries_subentries={mock_config_entry.entry_id: {None}},
         connections={("Zigbee", "23.45.67.89.01")},
+        created_at=datetime.fromisoformat(created_at),
         id="bcdefghijklmn",
         identifiers={("serial", "3456ABCDEF12")},
         manufacturer="manufacturer",
         model="model",
+        modified_at=utcnow(),
         primary_config_entry=mock_config_entry.entry_id,
     )
     assert entry.id == "bcdefghijklmn"
@@ -281,12 +409,13 @@ async def test_loading_from_storage(
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_migration_1_1_to_1_6(
+@pytest.mark.usefixtures("freezer")
+async def test_migration_from_1_1(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test migration from version 1.1 to 1.6."""
+    """Test migration from version 1.1."""
     hass_storage[dr.STORAGE_KEY] = {
         "version": 1,
         "minor_version": 1,
@@ -305,7 +434,7 @@ async def test_migration_1_1_to_1_6(
                 },
                 # Invalid entry type
                 {
-                    "config_entries": [None],
+                    "config_entries": ["234567"],
                     "connections": [],
                     "entry_type": "INVALID_VALUE",
                     "id": "invalid-entry-type",
@@ -363,8 +492,10 @@ async def test_migration_1_1_to_1_6(
                 {
                     "area_id": None,
                     "config_entries": [mock_config_entry.entry_id],
+                    "config_entries_subentries": {mock_config_entry.entry_id: [None]},
                     "configuration_url": None,
                     "connections": [["Zigbee", "01.23.45.67.89"]],
+                    "created_at": "1970-01-01T00:00:00+00:00",
                     "disabled_by": None,
                     "entry_type": "service",
                     "hw_version": None,
@@ -373,6 +504,8 @@ async def test_migration_1_1_to_1_6(
                     "labels": [],
                     "manufacturer": "manufacturer",
                     "model": "model",
+                    "model_id": None,
+                    "modified_at": utcnow().isoformat(),
                     "name": "name",
                     "name_by_user": None,
                     "primary_config_entry": mock_config_entry.entry_id,
@@ -382,9 +515,11 @@ async def test_migration_1_1_to_1_6(
                 },
                 {
                     "area_id": None,
-                    "config_entries": [None],
+                    "config_entries": ["234567"],
+                    "config_entries_subentries": {"234567": [None]},
                     "configuration_url": None,
                     "connections": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
                     "disabled_by": None,
                     "entry_type": None,
                     "hw_version": None,
@@ -393,6 +528,8 @@ async def test_migration_1_1_to_1_6(
                     "labels": [],
                     "manufacturer": None,
                     "model": None,
+                    "model_id": None,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
                     "name_by_user": None,
                     "name": None,
                     "primary_config_entry": None,
@@ -404,9 +541,12 @@ async def test_migration_1_1_to_1_6(
             "deleted_devices": [
                 {
                     "config_entries": ["123456"],
+                    "config_entries_subentries": {"123456": [None]},
                     "connections": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
                     "id": "deletedid",
                     "identifiers": [["serial", "123456ABCDFF"]],
+                    "modified_at": "1970-01-01T00:00:00+00:00",
                     "orphaned_timestamp": None,
                 }
             ],
@@ -415,12 +555,13 @@ async def test_migration_1_1_to_1_6(
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_migration_1_2_to_1_6(
+@pytest.mark.usefixtures("freezer")
+async def test_migration_from_1_2(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test migration from version 1.2 to 1.6."""
+    """Test migration from version 1.2."""
     hass_storage[dr.STORAGE_KEY] = {
         "version": 1,
         "minor_version": 2,
@@ -438,6 +579,7 @@ async def test_migration_1_2_to_1_6(
                     "identifiers": [["serial", "123456ABCDEF"]],
                     "manufacturer": "manufacturer",
                     "model": "model",
+                    "modified_at": utcnow().isoformat(),
                     "name": "name",
                     "name_by_user": None,
                     "sw_version": "version",
@@ -445,7 +587,7 @@ async def test_migration_1_2_to_1_6(
                 },
                 {
                     "area_id": None,
-                    "config_entries": [None],
+                    "config_entries": ["234567"],
                     "configuration_url": None,
                     "connections": [],
                     "disabled_by": None,
@@ -454,6 +596,7 @@ async def test_migration_1_2_to_1_6(
                     "identifiers": [["serial", "mock-id-invalid-entry"]],
                     "manufacturer": None,
                     "model": None,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
                     "name_by_user": None,
                     "name": None,
                     "sw_version": None,
@@ -496,8 +639,10 @@ async def test_migration_1_2_to_1_6(
                 {
                     "area_id": None,
                     "config_entries": [mock_config_entry.entry_id],
+                    "config_entries_subentries": {mock_config_entry.entry_id: [None]},
                     "configuration_url": None,
                     "connections": [["Zigbee", "01.23.45.67.89"]],
+                    "created_at": "1970-01-01T00:00:00+00:00",
                     "disabled_by": None,
                     "entry_type": "service",
                     "hw_version": None,
@@ -506,6 +651,8 @@ async def test_migration_1_2_to_1_6(
                     "labels": [],
                     "manufacturer": "manufacturer",
                     "model": "model",
+                    "model_id": None,
+                    "modified_at": utcnow().isoformat(),
                     "name": "name",
                     "name_by_user": None,
                     "primary_config_entry": mock_config_entry.entry_id,
@@ -515,9 +662,11 @@ async def test_migration_1_2_to_1_6(
                 },
                 {
                     "area_id": None,
-                    "config_entries": [None],
+                    "config_entries": ["234567"],
+                    "config_entries_subentries": {"234567": [None]},
                     "configuration_url": None,
                     "connections": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
                     "disabled_by": None,
                     "entry_type": None,
                     "hw_version": None,
@@ -526,6 +675,8 @@ async def test_migration_1_2_to_1_6(
                     "labels": [],
                     "manufacturer": None,
                     "model": None,
+                    "model_id": None,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
                     "name_by_user": None,
                     "name": None,
                     "primary_config_entry": None,
@@ -540,12 +691,13 @@ async def test_migration_1_2_to_1_6(
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_migration_1_3_to_1_6(
+@pytest.mark.usefixtures("freezer")
+async def test_migration_fom_1_3(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test migration from version 1.3 to 1.6."""
+    """Test migration from version 1.3."""
     hass_storage[dr.STORAGE_KEY] = {
         "version": 1,
         "minor_version": 3,
@@ -571,7 +723,7 @@ async def test_migration_1_3_to_1_6(
                 },
                 {
                     "area_id": None,
-                    "config_entries": [None],
+                    "config_entries": ["234567"],
                     "configuration_url": None,
                     "connections": [],
                     "disabled_by": None,
@@ -623,8 +775,10 @@ async def test_migration_1_3_to_1_6(
                 {
                     "area_id": None,
                     "config_entries": [mock_config_entry.entry_id],
+                    "config_entries_subentries": {mock_config_entry.entry_id: [None]},
                     "configuration_url": None,
                     "connections": [["Zigbee", "01.23.45.67.89"]],
+                    "created_at": "1970-01-01T00:00:00+00:00",
                     "disabled_by": None,
                     "entry_type": "service",
                     "hw_version": "hw_version",
@@ -633,6 +787,8 @@ async def test_migration_1_3_to_1_6(
                     "labels": [],
                     "manufacturer": "manufacturer",
                     "model": "model",
+                    "model_id": None,
+                    "modified_at": utcnow().isoformat(),
                     "name": "name",
                     "name_by_user": None,
                     "primary_config_entry": mock_config_entry.entry_id,
@@ -642,9 +798,11 @@ async def test_migration_1_3_to_1_6(
                 },
                 {
                     "area_id": None,
-                    "config_entries": [None],
+                    "config_entries": ["234567"],
+                    "config_entries_subentries": {"234567": [None]},
                     "configuration_url": None,
                     "connections": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
                     "disabled_by": None,
                     "entry_type": None,
                     "hw_version": None,
@@ -653,6 +811,8 @@ async def test_migration_1_3_to_1_6(
                     "labels": [],
                     "manufacturer": None,
                     "model": None,
+                    "model_id": None,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
                     "name": None,
                     "name_by_user": None,
                     "primary_config_entry": None,
@@ -667,12 +827,13 @@ async def test_migration_1_3_to_1_6(
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_migration_1_4_to_1_6(
+@pytest.mark.usefixtures("freezer")
+async def test_migration_from_1_4(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test migration from version 1.4 to 1.6."""
+    """Test migration from version 1.4."""
     hass_storage[dr.STORAGE_KEY] = {
         "version": 1,
         "minor_version": 4,
@@ -699,7 +860,7 @@ async def test_migration_1_4_to_1_6(
                 },
                 {
                     "area_id": None,
-                    "config_entries": [None],
+                    "config_entries": ["234567"],
                     "configuration_url": None,
                     "connections": [],
                     "disabled_by": None,
@@ -752,8 +913,10 @@ async def test_migration_1_4_to_1_6(
                 {
                     "area_id": None,
                     "config_entries": [mock_config_entry.entry_id],
+                    "config_entries_subentries": {mock_config_entry.entry_id: [None]},
                     "configuration_url": None,
                     "connections": [["Zigbee", "01.23.45.67.89"]],
+                    "created_at": "1970-01-01T00:00:00+00:00",
                     "disabled_by": None,
                     "entry_type": "service",
                     "hw_version": "hw_version",
@@ -762,6 +925,8 @@ async def test_migration_1_4_to_1_6(
                     "labels": [],
                     "manufacturer": "manufacturer",
                     "model": "model",
+                    "model_id": None,
+                    "modified_at": utcnow().isoformat(),
                     "name": "name",
                     "name_by_user": None,
                     "primary_config_entry": mock_config_entry.entry_id,
@@ -771,9 +936,11 @@ async def test_migration_1_4_to_1_6(
                 },
                 {
                     "area_id": None,
-                    "config_entries": [None],
+                    "config_entries": ["234567"],
+                    "config_entries_subentries": {"234567": [None]},
                     "configuration_url": None,
                     "connections": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
                     "disabled_by": None,
                     "entry_type": None,
                     "hw_version": None,
@@ -782,6 +949,8 @@ async def test_migration_1_4_to_1_6(
                     "labels": [],
                     "manufacturer": None,
                     "model": None,
+                    "model_id": None,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
                     "name_by_user": None,
                     "name": None,
                     "primary_config_entry": None,
@@ -796,12 +965,13 @@ async def test_migration_1_4_to_1_6(
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_migration_1_5_to_1_6(
+@pytest.mark.usefixtures("freezer")
+async def test_migration_from_1_5(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test migration from version 1.5 to 1.6."""
+    """Test migration from version 1.5."""
     hass_storage[dr.STORAGE_KEY] = {
         "version": 1,
         "minor_version": 5,
@@ -829,7 +999,7 @@ async def test_migration_1_5_to_1_6(
                 },
                 {
                     "area_id": None,
-                    "config_entries": [None],
+                    "config_entries": ["234567"],
                     "configuration_url": None,
                     "connections": [],
                     "disabled_by": None,
@@ -883,6 +1053,74 @@ async def test_migration_1_5_to_1_6(
                 {
                     "area_id": None,
                     "config_entries": [mock_config_entry.entry_id],
+                    "config_entries_subentries": {mock_config_entry.entry_id: [None]},
+                    "configuration_url": None,
+                    "connections": [["Zigbee", "01.23.45.67.89"]],
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "disabled_by": None,
+                    "entry_type": "service",
+                    "hw_version": "hw_version",
+                    "id": "abcdefghijklm",
+                    "identifiers": [["serial", "123456ABCDEF"]],
+                    "labels": ["blah"],
+                    "manufacturer": "manufacturer",
+                    "model": "model",
+                    "name": "name",
+                    "model_id": None,
+                    "modified_at": utcnow().isoformat(),
+                    "name_by_user": None,
+                    "primary_config_entry": mock_config_entry.entry_id,
+                    "serial_number": None,
+                    "sw_version": "new_version",
+                    "via_device_id": None,
+                },
+                {
+                    "area_id": None,
+                    "config_entries": ["234567"],
+                    "config_entries_subentries": {"234567": [None]},
+                    "configuration_url": None,
+                    "connections": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "disabled_by": None,
+                    "entry_type": None,
+                    "hw_version": None,
+                    "id": "invalid-entry-type",
+                    "identifiers": [["serial", "mock-id-invalid-entry"]],
+                    "labels": ["blah"],
+                    "manufacturer": None,
+                    "model": None,
+                    "model_id": None,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name_by_user": None,
+                    "name": None,
+                    "primary_config_entry": None,
+                    "serial_number": None,
+                    "sw_version": None,
+                    "via_device_id": None,
+                },
+            ],
+            "deleted_devices": [],
+        },
+    }
+
+
+@pytest.mark.parametrize("load_registries", [False])
+@pytest.mark.usefixtures("freezer")
+async def test_migration_from_1_6(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test migration from version 1.6."""
+    hass_storage[dr.STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 6,
+        "key": dr.STORAGE_KEY,
+        "data": {
+            "devices": [
+                {
+                    "area_id": None,
+                    "config_entries": [mock_config_entry.entry_id],
                     "configuration_url": None,
                     "connections": [["Zigbee", "01.23.45.67.89"]],
                     "disabled_by": None,
@@ -902,7 +1140,7 @@ async def test_migration_1_5_to_1_6(
                 },
                 {
                     "area_id": None,
-                    "config_entries": [None],
+                    "config_entries": ["234567"],
                     "configuration_url": None,
                     "connections": [],
                     "disabled_by": None,
@@ -913,6 +1151,232 @@ async def test_migration_1_5_to_1_6(
                     "labels": ["blah"],
                     "manufacturer": None,
                     "model": None,
+                    "name_by_user": None,
+                    "primary_config_entry": None,
+                    "name": None,
+                    "serial_number": None,
+                    "sw_version": None,
+                    "via_device_id": None,
+                },
+            ],
+            "deleted_devices": [],
+        },
+    }
+
+    await dr.async_load(hass)
+    registry = dr.async_get(hass)
+
+    # Test data was loaded
+    entry = registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        connections={("Zigbee", "01.23.45.67.89")},
+        identifiers={("serial", "123456ABCDEF")},
+    )
+    assert entry.id == "abcdefghijklm"
+
+    # Update to trigger a store
+    entry = registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        connections={("Zigbee", "01.23.45.67.89")},
+        identifiers={("serial", "123456ABCDEF")},
+        sw_version="new_version",
+    )
+    assert entry.id == "abcdefghijklm"
+
+    # Check we store migrated data
+    await flush_store(registry._store)
+
+    assert hass_storage[dr.STORAGE_KEY] == {
+        "version": dr.STORAGE_VERSION_MAJOR,
+        "minor_version": dr.STORAGE_VERSION_MINOR,
+        "key": dr.STORAGE_KEY,
+        "data": {
+            "devices": [
+                {
+                    "area_id": None,
+                    "config_entries": [mock_config_entry.entry_id],
+                    "config_entries_subentries": {mock_config_entry.entry_id: [None]},
+                    "configuration_url": None,
+                    "connections": [["Zigbee", "01.23.45.67.89"]],
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "disabled_by": None,
+                    "entry_type": "service",
+                    "hw_version": "hw_version",
+                    "id": "abcdefghijklm",
+                    "identifiers": [["serial", "123456ABCDEF"]],
+                    "labels": ["blah"],
+                    "manufacturer": "manufacturer",
+                    "model": "model",
+                    "name": "name",
+                    "model_id": None,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name_by_user": None,
+                    "primary_config_entry": mock_config_entry.entry_id,
+                    "serial_number": None,
+                    "sw_version": "new_version",
+                    "via_device_id": None,
+                },
+                {
+                    "area_id": None,
+                    "config_entries": ["234567"],
+                    "config_entries_subentries": {"234567": [None]},
+                    "configuration_url": None,
+                    "connections": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "disabled_by": None,
+                    "entry_type": None,
+                    "hw_version": None,
+                    "id": "invalid-entry-type",
+                    "identifiers": [["serial", "mock-id-invalid-entry"]],
+                    "labels": ["blah"],
+                    "manufacturer": None,
+                    "model": None,
+                    "model_id": None,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name_by_user": None,
+                    "name": None,
+                    "primary_config_entry": None,
+                    "serial_number": None,
+                    "sw_version": None,
+                    "via_device_id": None,
+                },
+            ],
+            "deleted_devices": [],
+        },
+    }
+
+
+@pytest.mark.parametrize("load_registries", [False])
+@pytest.mark.usefixtures("freezer")
+async def test_migration_from_1_7(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test migration from version 1.7."""
+    hass_storage[dr.STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 7,
+        "key": dr.STORAGE_KEY,
+        "data": {
+            "devices": [
+                {
+                    "area_id": None,
+                    "config_entries": [mock_config_entry.entry_id],
+                    "configuration_url": None,
+                    "connections": [["Zigbee", "01.23.45.67.89"]],
+                    "disabled_by": None,
+                    "entry_type": "service",
+                    "hw_version": "hw_version",
+                    "id": "abcdefghijklm",
+                    "identifiers": [["serial", "123456ABCDEF"]],
+                    "labels": ["blah"],
+                    "manufacturer": "manufacturer",
+                    "model": "model",
+                    "model_id": None,
+                    "name": "name",
+                    "name_by_user": None,
+                    "primary_config_entry": mock_config_entry.entry_id,
+                    "serial_number": None,
+                    "sw_version": "new_version",
+                    "via_device_id": None,
+                },
+                {
+                    "area_id": None,
+                    "config_entries": ["234567"],
+                    "configuration_url": None,
+                    "connections": [],
+                    "disabled_by": None,
+                    "entry_type": None,
+                    "hw_version": None,
+                    "id": "invalid-entry-type",
+                    "identifiers": [["serial", "mock-id-invalid-entry"]],
+                    "labels": ["blah"],
+                    "manufacturer": None,
+                    "model": None,
+                    "model_id": None,
+                    "name_by_user": None,
+                    "primary_config_entry": None,
+                    "name": None,
+                    "serial_number": None,
+                    "sw_version": None,
+                    "via_device_id": None,
+                },
+            ],
+            "deleted_devices": [],
+        },
+    }
+
+    await dr.async_load(hass)
+    registry = dr.async_get(hass)
+
+    # Test data was loaded
+    entry = registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        connections={("Zigbee", "01.23.45.67.89")},
+        identifiers={("serial", "123456ABCDEF")},
+    )
+    assert entry.id == "abcdefghijklm"
+
+    # Update to trigger a store
+    entry = registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        connections={("Zigbee", "01.23.45.67.89")},
+        identifiers={("serial", "123456ABCDEF")},
+        sw_version="new_version",
+    )
+    assert entry.id == "abcdefghijklm"
+
+    # Check we store migrated data
+    await flush_store(registry._store)
+
+    assert hass_storage[dr.STORAGE_KEY] == {
+        "version": dr.STORAGE_VERSION_MAJOR,
+        "minor_version": dr.STORAGE_VERSION_MINOR,
+        "key": dr.STORAGE_KEY,
+        "data": {
+            "devices": [
+                {
+                    "area_id": None,
+                    "config_entries": [mock_config_entry.entry_id],
+                    "config_entries_subentries": {mock_config_entry.entry_id: [None]},
+                    "configuration_url": None,
+                    "connections": [["Zigbee", "01.23.45.67.89"]],
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "disabled_by": None,
+                    "entry_type": "service",
+                    "hw_version": "hw_version",
+                    "id": "abcdefghijklm",
+                    "identifiers": [["serial", "123456ABCDEF"]],
+                    "labels": ["blah"],
+                    "manufacturer": "manufacturer",
+                    "model": "model",
+                    "name": "name",
+                    "model_id": None,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name_by_user": None,
+                    "primary_config_entry": mock_config_entry.entry_id,
+                    "serial_number": None,
+                    "sw_version": "new_version",
+                    "via_device_id": None,
+                },
+                {
+                    "area_id": None,
+                    "config_entries": ["234567"],
+                    "config_entries_subentries": {"234567": [None]},
+                    "configuration_url": None,
+                    "connections": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "disabled_by": None,
+                    "entry_type": None,
+                    "hw_version": None,
+                    "id": "invalid-entry-type",
+                    "identifiers": [["serial", "mock-id-invalid-entry"]],
+                    "labels": ["blah"],
+                    "manufacturer": None,
+                    "model": None,
+                    "model_id": None,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
                     "name_by_user": None,
                     "name": None,
                     "primary_config_entry": None,
@@ -962,6 +1426,10 @@ async def test_removing_config_entries(
     assert entry.id == entry2.id
     assert entry.id != entry3.id
     assert entry2.config_entries == {config_entry_1.entry_id, config_entry_2.entry_id}
+    assert entry2.config_entries_subentries == {
+        config_entry_1.entry_id: {None},
+        config_entry_2.entry_id: {None},
+    }
 
     device_registry.async_clear_config_entry(config_entry_1.entry_id)
     entry = device_registry.async_get_device(identifiers={("bridgeid", "0123")})
@@ -970,6 +1438,7 @@ async def test_removing_config_entries(
     )
 
     assert entry.config_entries == {config_entry_2.entry_id}
+    assert entry.config_entries_subentries == {config_entry_2.entry_id: {None}}
     assert entry3_removed is None
 
     await hass.async_block_till_done()
@@ -984,6 +1453,7 @@ async def test_removing_config_entries(
         "device_id": entry.id,
         "changes": {
             "config_entries": {config_entry_1.entry_id},
+            "config_entries_subentries": {config_entry_1.entry_id: {None}},
         },
     }
     assert update_events[2].data == {
@@ -995,6 +1465,10 @@ async def test_removing_config_entries(
         "device_id": entry.id,
         "changes": {
             "config_entries": {config_entry_1.entry_id, config_entry_2.entry_id},
+            "config_entries_subentries": {
+                config_entry_1.entry_id: {None},
+                config_entry_2.entry_id: {None},
+            },
             "primary_config_entry": config_entry_1.entry_id,
         },
     }
@@ -1041,6 +1515,10 @@ async def test_deleted_device_removing_config_entries(
     assert entry.id == entry2.id
     assert entry.id != entry3.id
     assert entry2.config_entries == {config_entry_1.entry_id, config_entry_2.entry_id}
+    assert entry2.config_entries_subentries == {
+        config_entry_1.entry_id: {None},
+        config_entry_2.entry_id: {None},
+    }
 
     device_registry.async_remove_device(entry.id)
     device_registry.async_remove_device(entry3.id)
@@ -1059,6 +1537,7 @@ async def test_deleted_device_removing_config_entries(
         "device_id": entry2.id,
         "changes": {
             "config_entries": {config_entry_1.entry_id},
+            "config_entries_subentries": {config_entry_1.entry_id: {None}},
         },
     }
     assert update_events[2].data == {
@@ -1077,10 +1556,16 @@ async def test_deleted_device_removing_config_entries(
     device_registry.async_clear_config_entry(config_entry_1.entry_id)
     assert len(device_registry.devices) == 0
     assert len(device_registry.deleted_devices) == 2
+    entry = device_registry.deleted_devices.get_entry({("bridgeid", "0123")}, None)
+    assert entry.config_entries == {config_entry_2.entry_id}
+    assert entry.config_entries_subentries == {config_entry_2.entry_id: {None}}
 
     device_registry.async_clear_config_entry(config_entry_2.entry_id)
     assert len(device_registry.devices) == 0
     assert len(device_registry.deleted_devices) == 2
+    entry = device_registry.deleted_devices.get_entry({("bridgeid", "0123")}, None)
+    assert entry.config_entries == set()
+    assert entry.config_entries_subentries == {}
 
     # No event when a deleted device is purged
     await hass.async_block_till_done()
@@ -1113,6 +1598,427 @@ async def test_deleted_device_removing_config_entries(
     assert entry3.id != entry4.id
 
 
+async def test_removing_config_subentries(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Make sure we do not get duplicate entries."""
+    update_events = async_capture_events(hass, dr.EVENT_DEVICE_REGISTRY_UPDATED)
+    config_entry_1 = MockConfigEntry(
+        subentries_data=(
+            config_entries.ConfigSubentryData(
+                data={},
+                subentry_id="mock-subentry-id-1-1",
+                subentry_type="test",
+                title="Mock title",
+                unique_id="test",
+            ),
+            config_entries.ConfigSubentryData(
+                data={},
+                subentry_id="mock-subentry-id-1-2",
+                subentry_type="test",
+                title="Mock title",
+                unique_id="test",
+            ),
+        )
+    )
+    config_entry_1.add_to_hass(hass)
+    config_entry_2 = MockConfigEntry(
+        subentries_data=(
+            config_entries.ConfigSubentryData(
+                data={},
+                subentry_id="mock-subentry-id-2-1",
+                subentry_type="test",
+                title="Mock title",
+                unique_id="test",
+            ),
+        )
+    )
+    config_entry_2.add_to_hass(hass)
+
+    entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry_1.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bridgeid", "0123")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+    entry2 = device_registry.async_get_or_create(
+        config_entry_id=config_entry_1.entry_id,
+        config_subentry_id="mock-subentry-id-1-1",
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bridgeid", "0123")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+    entry3 = device_registry.async_get_or_create(
+        config_entry_id=config_entry_1.entry_id,
+        config_subentry_id="mock-subentry-id-1-2",
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bridgeid", "0123")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+    entry4 = device_registry.async_get_or_create(
+        config_entry_id=config_entry_2.entry_id,
+        config_subentry_id="mock-subentry-id-2-1",
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bridgeid", "4567")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+
+    assert len(device_registry.devices) == 1
+    assert entry.id == entry2.id
+    assert entry.id == entry3.id
+    assert entry.id == entry4.id
+    assert entry4.config_entries == {config_entry_1.entry_id, config_entry_2.entry_id}
+    assert entry4.config_entries_subentries == {
+        config_entry_1.entry_id: {None, "mock-subentry-id-1-1", "mock-subentry-id-1-2"},
+        config_entry_2.entry_id: {"mock-subentry-id-2-1"},
+    }
+
+    device_registry.async_update_device(
+        entry.id,
+        remove_config_entry_id=config_entry_1.entry_id,
+        remove_config_subentry_id=None,
+    )
+    entry = device_registry.async_get_device(identifiers={("bridgeid", "0123")})
+    assert entry.config_entries == {config_entry_1.entry_id, config_entry_2.entry_id}
+    assert entry.config_entries_subentries == {
+        config_entry_1.entry_id: {"mock-subentry-id-1-1", "mock-subentry-id-1-2"},
+        config_entry_2.entry_id: {"mock-subentry-id-2-1"},
+    }
+
+    hass.config_entries.async_remove_subentry(config_entry_1, "mock-subentry-id-1-1")
+    entry = device_registry.async_get_device(identifiers={("bridgeid", "0123")})
+    assert entry.config_entries == {config_entry_1.entry_id, config_entry_2.entry_id}
+    assert entry.config_entries_subentries == {
+        config_entry_1.entry_id: {"mock-subentry-id-1-2"},
+        config_entry_2.entry_id: {"mock-subentry-id-2-1"},
+    }
+
+    hass.config_entries.async_remove_subentry(config_entry_1, "mock-subentry-id-1-2")
+    entry = device_registry.async_get_device(identifiers={("bridgeid", "0123")})
+    assert entry.config_entries == {config_entry_2.entry_id}
+    assert entry.config_entries_subentries == {
+        config_entry_2.entry_id: {"mock-subentry-id-2-1"}
+    }
+
+    hass.config_entries.async_remove_subentry(config_entry_2, "mock-subentry-id-2-1")
+    assert device_registry.async_get_device(identifiers={("bridgeid", "0123")}) is None
+    assert device_registry.async_get_device(identifiers={("bridgeid", "4567")}) is None
+
+    await hass.async_block_till_done()
+
+    assert len(update_events) == 8
+    assert update_events[0].data == {
+        "action": "create",
+        "device_id": entry.id,
+    }
+    assert update_events[1].data == {
+        "action": "update",
+        "device_id": entry.id,
+        "changes": {
+            "config_entries_subentries": {config_entry_1.entry_id: {None}},
+        },
+    }
+    assert update_events[2].data == {
+        "action": "update",
+        "device_id": entry.id,
+        "changes": {
+            "config_entries_subentries": {
+                config_entry_1.entry_id: {None, "mock-subentry-id-1-1"}
+            },
+        },
+    }
+    assert update_events[3].data == {
+        "action": "update",
+        "device_id": entry.id,
+        "changes": {
+            "config_entries": {config_entry_1.entry_id},
+            "config_entries_subentries": {
+                config_entry_1.entry_id: {
+                    None,
+                    "mock-subentry-id-1-1",
+                    "mock-subentry-id-1-2",
+                }
+            },
+            "identifiers": {("bridgeid", "0123")},
+        },
+    }
+    assert update_events[4].data == {
+        "action": "update",
+        "device_id": entry.id,
+        "changes": {
+            "config_entries_subentries": {
+                config_entry_1.entry_id: {
+                    None,
+                    "mock-subentry-id-1-1",
+                    "mock-subentry-id-1-2",
+                },
+                config_entry_2.entry_id: {
+                    "mock-subentry-id-2-1",
+                },
+            },
+        },
+    }
+    assert update_events[5].data == {
+        "action": "update",
+        "device_id": entry.id,
+        "changes": {
+            "config_entries_subentries": {
+                config_entry_1.entry_id: {
+                    "mock-subentry-id-1-1",
+                    "mock-subentry-id-1-2",
+                },
+                config_entry_2.entry_id: {
+                    "mock-subentry-id-2-1",
+                },
+            },
+        },
+    }
+    assert update_events[6].data == {
+        "action": "update",
+        "device_id": entry.id,
+        "changes": {
+            "config_entries": {config_entry_1.entry_id, config_entry_2.entry_id},
+            "config_entries_subentries": {
+                config_entry_1.entry_id: {
+                    "mock-subentry-id-1-2",
+                },
+                config_entry_2.entry_id: {
+                    "mock-subentry-id-2-1",
+                },
+            },
+            "primary_config_entry": config_entry_1.entry_id,
+        },
+    }
+    assert update_events[7].data == {
+        "action": "remove",
+        "device_id": entry.id,
+    }
+
+
+async def test_deleted_device_removing_config_subentries(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Make sure we do not get duplicate entries."""
+    update_events = async_capture_events(hass, dr.EVENT_DEVICE_REGISTRY_UPDATED)
+    config_entry_1 = MockConfigEntry(
+        subentries_data=(
+            config_entries.ConfigSubentryData(
+                data={},
+                subentry_id="mock-subentry-id-1-1",
+                subentry_type="test",
+                title="Mock title",
+                unique_id="test",
+            ),
+            config_entries.ConfigSubentryData(
+                data={},
+                subentry_id="mock-subentry-id-1-2",
+                subentry_type="test",
+                title="Mock title",
+                unique_id="test",
+            ),
+        )
+    )
+    config_entry_1.add_to_hass(hass)
+    config_entry_2 = MockConfigEntry(
+        subentries_data=(
+            config_entries.ConfigSubentryData(
+                data={},
+                subentry_id="mock-subentry-id-2-1",
+                subentry_type="test",
+                title="Mock title",
+                unique_id="test",
+            ),
+        )
+    )
+    config_entry_2.add_to_hass(hass)
+
+    entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry_1.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bridgeid", "0123")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+    entry2 = device_registry.async_get_or_create(
+        config_entry_id=config_entry_1.entry_id,
+        config_subentry_id="mock-subentry-id-1-1",
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bridgeid", "0123")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+    entry3 = device_registry.async_get_or_create(
+        config_entry_id=config_entry_1.entry_id,
+        config_subentry_id="mock-subentry-id-1-2",
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bridgeid", "0123")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+    entry4 = device_registry.async_get_or_create(
+        config_entry_id=config_entry_2.entry_id,
+        config_subentry_id="mock-subentry-id-2-1",
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bridgeid", "4567")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+
+    assert len(device_registry.devices) == 1
+    assert len(device_registry.deleted_devices) == 0
+    assert entry.id == entry2.id
+    assert entry.id == entry3.id
+    assert entry.id == entry4.id
+    assert entry4.config_entries == {config_entry_1.entry_id, config_entry_2.entry_id}
+    assert entry4.config_entries_subentries == {
+        config_entry_1.entry_id: {None, "mock-subentry-id-1-1", "mock-subentry-id-1-2"},
+        config_entry_2.entry_id: {"mock-subentry-id-2-1"},
+    }
+
+    device_registry.async_remove_device(entry.id)
+
+    assert len(device_registry.devices) == 0
+    assert len(device_registry.deleted_devices) == 1
+
+    await hass.async_block_till_done()
+
+    assert len(update_events) == 5
+    assert update_events[0].data == {
+        "action": "create",
+        "device_id": entry.id,
+    }
+    assert update_events[1].data == {
+        "action": "update",
+        "device_id": entry.id,
+        "changes": {
+            "config_entries_subentries": {config_entry_1.entry_id: {None}},
+        },
+    }
+    assert update_events[2].data == {
+        "action": "update",
+        "device_id": entry.id,
+        "changes": {
+            "config_entries_subentries": {
+                config_entry_1.entry_id: {None, "mock-subentry-id-1-1"}
+            },
+        },
+    }
+    assert update_events[3].data == {
+        "action": "update",
+        "device_id": entry.id,
+        "changes": {
+            "config_entries": {config_entry_1.entry_id},
+            "config_entries_subentries": {
+                config_entry_1.entry_id: {
+                    None,
+                    "mock-subentry-id-1-1",
+                    "mock-subentry-id-1-2",
+                }
+            },
+            "identifiers": {("bridgeid", "0123")},
+        },
+    }
+    assert update_events[4].data == {
+        "action": "remove",
+        "device_id": entry.id,
+    }
+
+    device_registry.async_clear_config_subentry(config_entry_1.entry_id, None)
+    entry = device_registry.deleted_devices.get_entry({("bridgeid", "0123")}, None)
+    assert entry.config_entries == {config_entry_1.entry_id, config_entry_2.entry_id}
+    assert entry.config_entries_subentries == {
+        config_entry_1.entry_id: {"mock-subentry-id-1-1", "mock-subentry-id-1-2"},
+        config_entry_2.entry_id: {"mock-subentry-id-2-1"},
+    }
+    assert entry.orphaned_timestamp is None
+
+    hass.config_entries.async_remove_subentry(config_entry_1, "mock-subentry-id-1-1")
+    entry = device_registry.deleted_devices.get_entry({("bridgeid", "0123")}, None)
+    assert entry.config_entries == {config_entry_1.entry_id, config_entry_2.entry_id}
+    assert entry.config_entries_subentries == {
+        config_entry_1.entry_id: {"mock-subentry-id-1-2"},
+        config_entry_2.entry_id: {"mock-subentry-id-2-1"},
+    }
+    assert entry.orphaned_timestamp is None
+
+    # Remove the same subentry again
+    device_registry.async_clear_config_subentry(
+        config_entry_1.entry_id, "mock-subentry-id-1-1"
+    )
+    assert (
+        device_registry.deleted_devices.get_entry({("bridgeid", "0123")}, None) is entry
+    )
+
+    hass.config_entries.async_remove_subentry(config_entry_1, "mock-subentry-id-1-2")
+    entry = device_registry.deleted_devices.get_entry({("bridgeid", "0123")}, None)
+    assert entry.config_entries == {config_entry_2.entry_id}
+    assert entry.config_entries_subentries == {
+        config_entry_2.entry_id: {"mock-subentry-id-2-1"}
+    }
+    assert entry.orphaned_timestamp is None
+
+    hass.config_entries.async_remove_subentry(config_entry_2, "mock-subentry-id-2-1")
+    entry = device_registry.deleted_devices.get_entry({("bridgeid", "0123")}, None)
+    assert entry.config_entries == set()
+    assert entry.config_entries_subentries == {}
+    assert entry.orphaned_timestamp is not None
+
+    # No event when a deleted device is purged
+    await hass.async_block_till_done()
+    assert len(update_events) == 5
+
+    # Re-add, expect to keep the device id
+    hass.config_entries.async_add_subentry(
+        config_entry_2,
+        config_entries.ConfigSubentry(
+            data={},
+            subentry_id="mock-subentry-id-2-1",
+            subentry_type="test",
+            title="Mock title",
+            unique_id="test",
+        ),
+    )
+    restored_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry_2.entry_id,
+        config_subentry_id="mock-subentry-id-2-1",
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bridgeid", "0123")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+    assert restored_entry.id == entry.id
+
+    # Remove again, and trigger purge
+    device_registry.async_remove_device(entry.id)
+    hass.config_entries.async_remove_subentry(config_entry_2, "mock-subentry-id-2-1")
+    entry = device_registry.deleted_devices.get_entry({("bridgeid", "0123")}, None)
+    assert entry.config_entries == set()
+    assert entry.config_entries_subentries == {}
+    assert entry.orphaned_timestamp is not None
+
+    future_time = time.time() + dr.ORPHANED_DEVICE_KEEP_SECONDS + 1
+
+    with patch("time.time", return_value=future_time):
+        device_registry.async_purge_expired_orphaned_devices()
+
+    assert len(device_registry.devices) == 0
+    assert len(device_registry.deleted_devices) == 0
+
+    # Re-add, expect to get a new device id after the purge
+    new_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry_1.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bridgeid", "0123")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+    assert new_entry.id != entry.id
+
+
 async def test_removing_area_id(
     device_registry: dr.DeviceRegistry, mock_config_entry: MockConfigEntry
 ) -> None:
@@ -1135,7 +2041,9 @@ async def test_removing_area_id(
 
 
 async def test_specifying_via_device_create(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test specifying a via_device and removal of the hub device."""
     config_entry_1 = MockConfigEntry()
@@ -1166,9 +2074,32 @@ async def test_specifying_via_device_create(
     light = device_registry.async_get_device(identifiers={("hue", "456")})
     assert light.via_device_id is None
 
+    # A device with a non existing via_device reference should create
+    light_via_nonexisting_parent_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry_2.entry_id,
+        connections=set(),
+        identifiers={("hue", "789")},
+        manufacturer="manufacturer",
+        model="light",
+        via_device=("hue", "non_existing_123"),
+    )
+    assert {
+        "calls `device_registry.async_get_or_create` "
+        "referencing a non existing `via_device` "
+        '("hue","non_existing_123")' in caplog.text
+    }
+    assert light_via_nonexisting_parent_device is not None
+    assert light_via_nonexisting_parent_device.via_device_id is None
+    nonexisting_parent_device = device_registry.async_get_device(
+        identifiers={("hue", "non_existing_123")}
+    )
+    assert nonexisting_parent_device is None
+
 
 async def test_specifying_via_device_update(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test specifying a via_device and updating."""
     config_entry_1 = MockConfigEntry()
@@ -1182,6 +2113,7 @@ async def test_specifying_via_device_update(
         identifiers={("hue", "456")},
         manufacturer="manufacturer",
         model="light",
+        name="Light",
         via_device=("hue", "0123"),
     )
 
@@ -1205,6 +2137,26 @@ async def test_specifying_via_device_update(
     )
 
     assert light.via_device_id == via.id
+    assert light.name == "Light"
+
+    # Try updating with a non existing via device
+    light = device_registry.async_get_or_create(
+        config_entry_id=config_entry_2.entry_id,
+        connections=set(),
+        identifiers={("hue", "456")},
+        manufacturer="manufacturer",
+        model="light",
+        name="New light",
+        via_device=("hue", "non_existing_abc"),
+    )
+    assert {
+        "calls `device_registry.async_get_or_create` "
+        "referencing a non existing `via_device` "
+        '("hue","non_existing_123")' in caplog.text
+    }
+    # Assert the name was updated correctly
+    assert light.via_device_id == via.id
+    assert light.name == "New light"
 
 
 async def test_loading_saving_data(
@@ -1399,8 +2351,11 @@ async def test_update(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Verify that we can update some attributes of a device."""
+    created_at = datetime.fromisoformat("2024-01-01T01:00:00+00:00")
+    freezer.move_to(created_at)
     update_events = async_capture_events(hass, dr.EVENT_DEVICE_REGISTRY_UPDATED)
     entry = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
@@ -1412,7 +2367,11 @@ async def test_update(
     assert not entry.area_id
     assert not entry.labels
     assert not entry.name_by_user
+    assert entry.created_at == created_at
+    assert entry.modified_at == created_at
 
+    modified_at = datetime.fromisoformat("2024-02-01T01:00:00+00:00")
+    freezer.move_to(modified_at)
     with patch.object(device_registry, "async_schedule_save") as mock_save:
         updated_entry = device_registry.async_update_device(
             entry.id,
@@ -1424,6 +2383,7 @@ async def test_update(
             labels={"label1", "label2"},
             manufacturer="Test Producer",
             model="Test Model",
+            model_id="Test Model Name",
             name_by_user="Test Friendly Name",
             name="name",
             new_connections=new_connections,
@@ -1439,8 +2399,10 @@ async def test_update(
     assert updated_entry == dr.DeviceEntry(
         area_id="12345A",
         config_entries={mock_config_entry.entry_id},
+        config_entries_subentries={mock_config_entry.entry_id: {None}},
         configuration_url="https://example.com/config",
         connections={("mac", "65:43:21:fe:dc:ba")},
+        created_at=created_at,
         disabled_by=dr.DeviceEntryDisabler.USER,
         entry_type=dr.DeviceEntryType.SERVICE,
         hw_version="hw_version",
@@ -1449,6 +2411,8 @@ async def test_update(
         labels={"label1", "label2"},
         manufacturer="Test Producer",
         model="Test Model",
+        model_id="Test Model Name",
+        modified_at=modified_at,
         name_by_user="Test Friendly Name",
         name="name",
         serial_number="serial_no",
@@ -1503,6 +2467,7 @@ async def test_update(
             "labels": set(),
             "manufacturer": None,
             "model": None,
+            "model_id": None,
             "name": None,
             "name_by_user": None,
             "serial_number": None,
@@ -1691,6 +2656,7 @@ async def test_update_remove_config_entries(
         "device_id": entry2.id,
         "changes": {
             "config_entries": {config_entry_1.entry_id},
+            "config_entries_subentries": {config_entry_1.entry_id: {None}},
         },
     }
     assert update_events[2].data == {
@@ -1701,7 +2667,11 @@ async def test_update_remove_config_entries(
         "action": "update",
         "device_id": entry.id,
         "changes": {
-            "config_entries": {config_entry_1.entry_id, config_entry_2.entry_id}
+            "config_entries": {config_entry_1.entry_id, config_entry_2.entry_id},
+            "config_entries_subentries": {
+                config_entry_1.entry_id: {None},
+                config_entry_2.entry_id: {None},
+            },
         },
     }
     assert update_events[4].data == {
@@ -1713,6 +2683,11 @@ async def test_update_remove_config_entries(
                 config_entry_2.entry_id,
                 config_entry_3.entry_id,
             },
+            "config_entries_subentries": {
+                config_entry_1.entry_id: {None},
+                config_entry_2.entry_id: {None},
+                config_entry_3.entry_id: {None},
+            },
             "primary_config_entry": config_entry_1.entry_id,
         },
     }
@@ -1720,12 +2695,292 @@ async def test_update_remove_config_entries(
         "action": "update",
         "device_id": entry2.id,
         "changes": {
-            "config_entries": {config_entry_2.entry_id, config_entry_3.entry_id}
+            "config_entries": {config_entry_2.entry_id, config_entry_3.entry_id},
+            "config_entries_subentries": {
+                config_entry_2.entry_id: {None},
+                config_entry_3.entry_id: {None},
+            },
         },
     }
     assert update_events[6].data == {
         "action": "remove",
         "device_id": entry3.id,
+    }
+
+
+async def test_update_remove_config_subentries(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Make sure we do not get duplicate entries."""
+    update_events = async_capture_events(hass, dr.EVENT_DEVICE_REGISTRY_UPDATED)
+    config_entry_1 = MockConfigEntry(
+        subentries_data=(
+            config_entries.ConfigSubentryData(
+                data={},
+                subentry_id="mock-subentry-id-1-1",
+                subentry_type="test",
+                title="Mock title",
+                unique_id="test",
+            ),
+            config_entries.ConfigSubentryData(
+                data={},
+                subentry_id="mock-subentry-id-1-2",
+                subentry_type="test",
+                title="Mock title",
+                unique_id="test",
+            ),
+        )
+    )
+    config_entry_1.add_to_hass(hass)
+    config_entry_2 = MockConfigEntry(
+        subentries_data=(
+            config_entries.ConfigSubentryData(
+                data={},
+                subentry_id="mock-subentry-id-2-1",
+                subentry_type="test",
+                title="Mock title",
+                unique_id="test",
+            ),
+        )
+    )
+    config_entry_2.add_to_hass(hass)
+    config_entry_3 = MockConfigEntry()
+    config_entry_3.add_to_hass(hass)
+
+    entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry_1.entry_id,
+        config_subentry_id="mock-subentry-id-1-1",
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bridgeid", "0123")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+    entry_id = entry.id
+    assert entry.config_entries == {config_entry_1.entry_id}
+    assert entry.config_entries_subentries == {
+        config_entry_1.entry_id: {"mock-subentry-id-1-1"}
+    }
+
+    entry = device_registry.async_update_device(
+        entry_id,
+        add_config_entry_id=config_entry_1.entry_id,
+        add_config_subentry_id="mock-subentry-id-1-2",
+    )
+    assert entry.config_entries == {config_entry_1.entry_id}
+    assert entry.config_entries_subentries == {
+        config_entry_1.entry_id: {"mock-subentry-id-1-1", "mock-subentry-id-1-2"}
+    }
+
+    # Try adding the same subentry again
+    assert (
+        device_registry.async_update_device(
+            entry_id,
+            add_config_entry_id=config_entry_1.entry_id,
+            add_config_subentry_id="mock-subentry-id-1-2",
+        )
+        is entry
+    )
+
+    entry = device_registry.async_update_device(
+        entry_id,
+        add_config_entry_id=config_entry_2.entry_id,
+        add_config_subentry_id="mock-subentry-id-2-1",
+    )
+    assert entry.config_entries == {config_entry_1.entry_id, config_entry_2.entry_id}
+    assert entry.config_entries_subentries == {
+        config_entry_1.entry_id: {"mock-subentry-id-1-1", "mock-subentry-id-1-2"},
+        config_entry_2.entry_id: {"mock-subentry-id-2-1"},
+    }
+
+    entry = device_registry.async_update_device(
+        entry_id,
+        add_config_entry_id=config_entry_3.entry_id,
+        add_config_subentry_id=None,
+    )
+    assert entry.config_entries == {
+        config_entry_1.entry_id,
+        config_entry_2.entry_id,
+        config_entry_3.entry_id,
+    }
+    assert entry.config_entries_subentries == {
+        config_entry_1.entry_id: {"mock-subentry-id-1-1", "mock-subentry-id-1-2"},
+        config_entry_2.entry_id: {"mock-subentry-id-2-1"},
+        config_entry_3.entry_id: {None},
+    }
+
+    # Try to add a subentry without specifying entry
+    with pytest.raises(
+        HomeAssistantError,
+        match="Can't add config subentry without specifying config entry",
+    ):
+        device_registry.async_update_device(entry_id, add_config_subentry_id="blabla")
+
+    # Try to add an unknown subentry
+    with pytest.raises(
+        HomeAssistantError,
+        match=f"Config entry {config_entry_3.entry_id} has no subentry blabla",
+    ):
+        device_registry.async_update_device(
+            entry_id,
+            add_config_entry_id=config_entry_3.entry_id,
+            add_config_subentry_id="blabla",
+        )
+
+    # Try to remove a subentry without specifying entry
+    with pytest.raises(
+        HomeAssistantError,
+        match="Can't remove config subentry without specifying config entry",
+    ):
+        device_registry.async_update_device(
+            entry_id, remove_config_subentry_id="blabla"
+        )
+
+    assert len(device_registry.devices) == 1
+
+    entry = device_registry.async_update_device(
+        entry_id,
+        remove_config_entry_id=config_entry_1.entry_id,
+        remove_config_subentry_id="mock-subentry-id-1-1",
+    )
+    assert entry.config_entries == {
+        config_entry_1.entry_id,
+        config_entry_2.entry_id,
+        config_entry_3.entry_id,
+    }
+    assert entry.config_entries_subentries == {
+        config_entry_1.entry_id: {"mock-subentry-id-1-2"},
+        config_entry_2.entry_id: {"mock-subentry-id-2-1"},
+        config_entry_3.entry_id: {None},
+    }
+
+    # Try removing the same subentry again
+    assert (
+        device_registry.async_update_device(
+            entry_id,
+            remove_config_entry_id=config_entry_1.entry_id,
+            remove_config_subentry_id="mock-subentry-id-1-1",
+        )
+        is entry
+    )
+
+    entry = device_registry.async_update_device(
+        entry_id,
+        remove_config_entry_id=config_entry_1.entry_id,
+        remove_config_subentry_id="mock-subentry-id-1-2",
+    )
+    assert entry.config_entries == {config_entry_2.entry_id, config_entry_3.entry_id}
+    assert entry.config_entries_subentries == {
+        config_entry_2.entry_id: {"mock-subentry-id-2-1"},
+        config_entry_3.entry_id: {None},
+    }
+
+    entry = device_registry.async_update_device(
+        entry_id,
+        remove_config_entry_id=config_entry_2.entry_id,
+        remove_config_subentry_id="mock-subentry-id-2-1",
+    )
+    assert entry.config_entries == {config_entry_3.entry_id}
+    assert entry.config_entries_subentries == {
+        config_entry_3.entry_id: {None},
+    }
+
+    entry = device_registry.async_update_device(
+        entry_id,
+        remove_config_entry_id=config_entry_3.entry_id,
+        remove_config_subentry_id=None,
+    )
+    assert entry is None
+
+    await hass.async_block_till_done()
+
+    assert len(update_events) == 8
+    assert update_events[0].data == {
+        "action": "create",
+        "device_id": entry_id,
+    }
+    assert update_events[1].data == {
+        "action": "update",
+        "device_id": entry_id,
+        "changes": {
+            "config_entries_subentries": {
+                config_entry_1.entry_id: {"mock-subentry-id-1-1"}
+            },
+        },
+    }
+    assert update_events[2].data == {
+        "action": "update",
+        "device_id": entry_id,
+        "changes": {
+            "config_entries": {config_entry_1.entry_id},
+            "config_entries_subentries": {
+                config_entry_1.entry_id: {
+                    "mock-subentry-id-1-1",
+                    "mock-subentry-id-1-2",
+                }
+            },
+        },
+    }
+    assert update_events[3].data == {
+        "action": "update",
+        "device_id": entry_id,
+        "changes": {
+            "config_entries": {config_entry_1.entry_id, config_entry_2.entry_id},
+            "config_entries_subentries": {
+                config_entry_1.entry_id: {
+                    "mock-subentry-id-1-1",
+                    "mock-subentry-id-1-2",
+                },
+                config_entry_2.entry_id: {"mock-subentry-id-2-1"},
+            },
+        },
+    }
+    assert update_events[4].data == {
+        "action": "update",
+        "device_id": entry_id,
+        "changes": {
+            "config_entries_subentries": {
+                config_entry_1.entry_id: {
+                    "mock-subentry-id-1-1",
+                    "mock-subentry-id-1-2",
+                },
+                config_entry_2.entry_id: {"mock-subentry-id-2-1"},
+                config_entry_3.entry_id: {None},
+            },
+        },
+    }
+    assert update_events[5].data == {
+        "action": "update",
+        "device_id": entry_id,
+        "changes": {
+            "config_entries": {
+                config_entry_1.entry_id,
+                config_entry_2.entry_id,
+                config_entry_3.entry_id,
+            },
+            "config_entries_subentries": {
+                config_entry_1.entry_id: {
+                    "mock-subentry-id-1-2",
+                },
+                config_entry_2.entry_id: {"mock-subentry-id-2-1"},
+                config_entry_3.entry_id: {None},
+            },
+            "primary_config_entry": config_entry_1.entry_id,
+        },
+    }
+    assert update_events[6].data == {
+        "action": "update",
+        "device_id": entry_id,
+        "changes": {
+            "config_entries": {config_entry_2.entry_id, config_entry_3.entry_id},
+            "config_entries_subentries": {
+                config_entry_2.entry_id: {"mock-subentry-id-2-1"},
+                config_entry_3.entry_id: {None},
+            },
+        },
+    }
+    assert update_events[7].data == {
+        "action": "remove",
+        "device_id": entry_id,
     }
 
 
@@ -1877,7 +3132,9 @@ async def test_cleanup_startup(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_cleanup_entity_registry_change(hass: HomeAssistant) -> None:
+async def test_cleanup_entity_registry_change(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test we run a cleanup when entity registry changes.
 
     Don't pre-load the registries as the debouncer will then not be waiting for
@@ -1885,7 +3142,13 @@ async def test_cleanup_entity_registry_change(hass: HomeAssistant) -> None:
     """
     await dr.async_load(hass)
     await er.async_load(hass)
+    dev_reg = dr.async_get(hass)
     ent_reg = er.async_get(hass)
+
+    entry = dev_reg.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
 
     with patch(
         "homeassistant.helpers.device_registry.Debouncer.async_schedule_call"
@@ -1900,7 +3163,7 @@ async def test_cleanup_entity_registry_change(hass: HomeAssistant) -> None:
         assert len(mock_call.mock_calls) == 0
 
         # Device ID update triggers
-        ent_reg.async_get_or_create("light", "hue", "e1", device_id="bla")
+        ent_reg.async_get_or_create("light", "hue", "e1", device_id=entry.id)
         await hass.async_block_till_done()
         assert len(mock_call.mock_calls) == 1
 
@@ -2135,6 +3398,7 @@ async def test_restore_shared_device(
         "device_id": entry.id,
         "changes": {
             "config_entries": {config_entry_1.entry_id},
+            "config_entries_subentries": {config_entry_1.entry_id: {None}},
             "identifiers": {("entry_123", "0123")},
         },
     }
@@ -2159,6 +3423,7 @@ async def test_restore_shared_device(
         "device_id": entry.id,
         "changes": {
             "config_entries": {config_entry_2.entry_id},
+            "config_entries_subentries": {config_entry_2.entry_id: {None}},
             "identifiers": {("entry_234", "2345")},
         },
     }
@@ -2464,8 +3729,10 @@ async def test_loading_invalid_configuration_url_from_storage(
                 {
                     "area_id": None,
                     "config_entries": ["1234"],
+                    "config_entries_subentries": {"1234": [None]},
                     "configuration_url": "invalid",
                     "connections": [],
+                    "created_at": "2024-01-01T00:00:00+00:00",
                     "disabled_by": None,
                     "entry_type": dr.DeviceEntryType.SERVICE,
                     "hw_version": None,
@@ -2474,6 +3741,8 @@ async def test_loading_invalid_configuration_url_from_storage(
                     "labels": [],
                     "manufacturer": None,
                     "model": None,
+                    "model_id": None,
+                    "modified_at": "2024-02-01T00:00:00+00:00",
                     "name_by_user": None,
                     "name": None,
                     "primary_config_entry": "1234",
@@ -2494,20 +3763,6 @@ async def test_loading_invalid_configuration_url_from_storage(
         identifiers={("serial", "123456ABCDEF")},
     )
     assert entry.configuration_url == "invalid"
-
-
-def test_all() -> None:
-    """Test module.__all__ is correctly set."""
-    help_test_all(dr)
-
-
-@pytest.mark.parametrize(("enum"), list(dr.DeviceEntryDisabler))
-def test_deprecated_constants(
-    caplog: pytest.LogCaptureFixture,
-    enum: dr.DeviceEntryDisabler,
-) -> None:
-    """Test deprecated constants."""
-    import_and_test_deprecated_constant_enum(caplog, dr, enum, "DISABLED_", "2025.1")
 
 
 async def test_removing_labels(
@@ -2980,6 +4235,39 @@ async def test_device_registry_identifiers_collision(
     device3_refetched = device_registry.async_get(device3.id)
     device1_refetched = device_registry.async_get(device1.id)
     assert not device1_refetched.identifiers.isdisjoint(device3_refetched.identifiers)
+
+
+async def test_device_registry_deleted_device_collision(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test update collisions with deleted devices in the device registry."""
+    config_entry = MockConfigEntry()
+    config_entry.add_to_hass(hass)
+
+    device1 = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "EE:EE:EE:EE:EE:EE")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+    assert len(device_registry.deleted_devices) == 0
+
+    device_registry.async_remove_device(device1.id)
+    assert len(device_registry.deleted_devices) == 1
+
+    device2 = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("bridgeid", "0123")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+    assert len(device_registry.deleted_devices) == 1
+
+    device_registry.async_update_device(
+        device2.id,
+        merge_connections={(dr.CONNECTION_NETWORK_MAC, "EE:EE:EE:EE:EE:EE")},
+    )
+    assert len(device_registry.deleted_devices) == 0
 
 
 async def test_primary_config_entry(

@@ -13,7 +13,7 @@ from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .test_common import (
+from .common import (
     help_custom_config,
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
@@ -37,6 +37,7 @@ from .test_common import (
     help_test_entity_device_info_with_connection,
     help_test_entity_device_info_with_identifier,
     help_test_entity_disabled_by_default,
+    help_test_entity_icon_and_entity_picture,
     help_test_entity_id_update_discovery_update,
     help_test_entity_id_update_subscriptions,
     help_test_entity_name,
@@ -90,7 +91,7 @@ async def test_multiple_events_are_all_updating_the_state(
     """Test all events are respected and trigger a state write."""
     await mqtt_mock_entry()
     with patch(
-        "homeassistant.components.mqtt.mixins.MqttEntity.async_write_ha_state"
+        "homeassistant.components.mqtt.entity.MqttEntity.async_write_ha_state"
     ) as mock_async_ha_write_state:
         async_fire_mqtt_message(
             hass, "test-topic", '{"event_type": "press", "duration": "short" }'
@@ -109,7 +110,7 @@ async def test_handling_retained_event_payloads(
     """Test if event messages with a retained flag are ignored."""
     await mqtt_mock_entry()
     with patch(
-        "homeassistant.components.mqtt.mixins.MqttEntity.async_write_ha_state"
+        "homeassistant.components.mqtt.entity.MqttEntity.async_write_ha_state"
     ) as mock_async_ha_write_state:
         async_fire_mqtt_message(
             hass,
@@ -705,6 +706,18 @@ async def test_entity_name(
     )
 
 
+async def test_entity_icon_and_entity_picture(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test the entity icon or picture setup."""
+    domain = event.DOMAIN
+    config = DEFAULT_CONFIG
+    await help_test_entity_icon_and_entity_picture(
+        hass, mqtt_mock_entry, domain, config
+    )
+
+
 @pytest.mark.parametrize(
     "hass_config",
     [
@@ -752,7 +765,7 @@ async def test_skipped_async_ha_write_state2(
     payload1 = '{"event_type": "press"}'
     payload2 = '{"event_type": "unknown"}'
     with patch(
-        "homeassistant.components.mqtt.mixins.MqttEntity.async_write_ha_state"
+        "homeassistant.components.mqtt.entity.MqttEntity.async_write_ha_state"
     ) as mock_async_ha_write_state:
         assert len(mock_async_ha_write_state.mock_calls) == 0
         async_fire_mqtt_message(hass, topic, payload1)

@@ -6,6 +6,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -54,6 +55,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -95,39 +97,6 @@
     'state': 'closed',
   })
 # ---
-# name: test_covers[cover.test_none-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'cover',
-    'entity_category': None,
-    'entity_id': 'cover.test_none',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'tessie',
-    'previous_unique_id': None,
-    'supported_features': <CoverEntityFeature: 3>,
-    'translation_key': 'vehicle_state_sun_roof_state',
-    'unique_id': 'VINVINVIN-vehicle_state_sun_roof_state',
-    'unit_of_measurement': None,
-  })
-# ---
 # name: test_covers[cover.test_sunroof-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -135,6 +104,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -183,6 +153,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -231,6 +202,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,

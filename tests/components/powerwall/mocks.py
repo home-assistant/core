@@ -17,6 +17,7 @@ from tesla_powerwall import (
 )
 
 from homeassistant.core import HomeAssistant
+from homeassistant.util.json import JsonValueType
 
 from tests.common import load_fixture
 
@@ -87,7 +88,7 @@ async def _mock_powerwall_return_value(
     return powerwall_mock
 
 
-async def _mock_powerwall_site_name(hass, site_name):
+async def _mock_powerwall_site_name(hass: HomeAssistant, site_name: str) -> MagicMock:
     powerwall_mock = MagicMock(Powerwall)
     powerwall_mock.__aenter__.return_value = powerwall_mock
 
@@ -110,7 +111,7 @@ async def _mock_powerwall_side_effect(site_info=None):
     return powerwall_mock
 
 
-async def _async_load_json_fixture(hass, path):
+async def _async_load_json_fixture(hass: HomeAssistant, path: str) -> JsonValueType:
     fixture = await hass.async_add_executor_job(
         load_fixture, os.path.join("powerwall", path)
     )

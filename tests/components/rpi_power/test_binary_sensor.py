@@ -24,7 +24,7 @@ ENTITY_ID = "binary_sensor.rpi_power_status"
 MODULE = "homeassistant.components.rpi_power.binary_sensor.new_under_voltage"
 
 
-async def _async_setup_component(hass, detected):
+async def _async_setup_component(hass: HomeAssistant, detected: bool) -> MagicMock:
     mocked_under_voltage = MagicMock()
     type(mocked_under_voltage).get = MagicMock(return_value=detected)
     entry = MockConfigEntry(domain=DOMAIN)
@@ -68,6 +68,6 @@ async def test_new_detected(
     assert state.state == STATE_OFF
     assert (
         binary_sensor.__name__,
-        logging.INFO,
+        logging.DEBUG,
         DESCRIPTION_NORMALIZED,
     ) in caplog.record_tuples

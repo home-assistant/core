@@ -1,6 +1,7 @@
 """Helper for HomematicIP Cloud Tests."""
 
 import json
+from typing import Any
 from unittest.mock import Mock, patch
 
 from homematicip.aio.class_maps import (
@@ -11,19 +12,19 @@ from homematicip.aio.class_maps import (
 from homematicip.aio.device import AsyncDevice
 from homematicip.aio.group import AsyncGroup
 from homematicip.aio.home import AsyncHome
+from homematicip.base.homematicip_object import HomeMaticIPObject
 from homematicip.home import Home
 
-from homeassistant import config_entries
 from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
-from homeassistant.components.homematicip_cloud.generic_entity import (
+from homeassistant.components.homematicip_cloud.entity import (
     ATTR_IS_GROUP,
     ATTR_MODEL_TYPE,
 )
 from homeassistant.components.homematicip_cloud.hap import HomematicipHAP
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.setup import async_setup_component
 
-from tests.common import load_fixture
+from tests.common import MockConfigEntry, load_fixture
 
 HAPID = "3014F7110000000000000001"
 HAPPIN = "5678"
@@ -31,7 +32,13 @@ AUTH_TOKEN = "1234"
 FIXTURE_DATA = load_fixture("homematicip_cloud.json", "homematicip_cloud")
 
 
-def get_and_check_entity_basics(hass, mock_hap, entity_id, entity_name, device_model):
+def get_and_check_entity_basics(
+    hass: HomeAssistant,
+    mock_hap: HomematicipHAP,
+    entity_id: str,
+    entity_name: str,
+    device_model: str | None,
+) -> tuple[State, HomeMaticIPObject | None]:
     """Get and test basic device."""
     ha_state = hass.states.get(entity_id)
     assert ha_state is not None
@@ -50,7 +57,12 @@ def get_and_check_entity_basics(hass, mock_hap, entity_id, entity_name, device_m
 
 
 async def async_manipulate_test_data(
-    hass, hmip_device, attribute, new_value, channel=1, fire_device=None
+    hass: HomeAssistant,
+    hmip_device: HomeMaticIPObject,
+    attribute: str,
+    new_value: Any,
+    channel: int = 1,
+    fire_device: HomeMaticIPObject | None = None,
 ):
     """Set new value on hmip device."""
     if channel == 1:
@@ -76,7 +88,7 @@ class HomeFactory:
         self,
         hass: HomeAssistant,
         mock_connection,
-        hmip_config_entry: config_entries.ConfigEntry,
+        hmip_config_entry: MockConfigEntry,
     ) -> None:
         """Initialize the Factory."""
         self.hass = hass
@@ -132,7 +144,7 @@ class HomeTemplate(Home):
 
     def __init__(
         self, connection=None, home_name="", test_devices=None, test_groups=None
-    ):
+    ) -> None:
         """Init template with connection."""
         super().__init__(connection=connection)
         self.name = home_name
@@ -174,6 +186,10 @@ class HomeTemplate(Home):
     def _generate_mocks(self):
         """Generate mocks for groups and devices."""
         self.devices = [_get_mock(device) for device in self.devices]
+        for device in self.devices:
+            device.functionalChannels = [
+                _get_mock(ch) for ch in device.functionalChannels
+            ]
 
         self.groups = [_get_mock(group) for group in self.groups]
 

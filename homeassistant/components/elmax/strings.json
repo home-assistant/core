@@ -50,7 +50,7 @@
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]",
-          "panel_pin": "Panel Pin"
+          "panel_pin": "Panel PIN"
         }
       }
     },
@@ -58,7 +58,7 @@
       "no_panel_online": "No online Elmax control panel was found.",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "network_error": "A network error occurred",
-      "invalid_pin": "The provided pin is invalid",
+      "invalid_pin": "The provided PIN is invalid",
       "invalid_mode": "Invalid or unsupported mode",
       "reauth_panel_disappeared": "The given panel is no longer associated to this user. Please log in using an account associated to this panel.",
       "unknown": "[%key:common::config_flow::error::unknown%]"

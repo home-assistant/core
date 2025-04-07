@@ -25,21 +25,16 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.helpers.device_registry import (
-    DeviceInfo,
-    EventDeviceRegistryUpdatedData,
-)
+from homeassistant.helpers.device_registry import EventDeviceRegistryUpdatedData
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
     ATTR_EVENT,
-    COMMAND_GROUP_LIST,
     CONF_AUTOMATIC_ADD,
     CONF_DATA_BITS,
     CONF_PROTOCOLS,
@@ -48,11 +43,11 @@ from .const import (
     DOMAIN,
     EVENT_RFXTRX_EVENT,
     SERVICE_SEND,
+    SIGNAL_EVENT,
 )
 
 DEFAULT_OFF_DELAY = 2.0
 
-SIGNAL_EVENT = f"{DOMAIN}_event"
 CONNECT_TIMEOUT = 30.0
 
 _LOGGER = logging.getLogger(__name__)
@@ -231,7 +226,7 @@ async def async_setup_internal(hass: HomeAssistant, entry: ConfigEntry) -> None:
         config = {}
         config[CONF_DEVICE_ID] = device_id
 
-        _LOGGER.info(
+        _LOGGER.debug(
             "Added device (Device ID: %s Class: %s Sub: %s, Event: %s)",
             event.device.id_string.lower(),
             event.device.__class__.__name__,
@@ -416,7 +411,7 @@ def find_possible_pt2262_device(device_ids: set[str], device_id: str) -> str | N
                 size = i
             if size is not None:
                 size = len(dev_id) - size - 1
-                _LOGGER.info(
+                _LOGGER.debug(
                     (
                         "Found possible device %s for %s "
                         "with the following configuration:\n"
@@ -461,14 +456,6 @@ def get_device_tuple_from_identifiers(
     return DeviceTuple(identifier2[1], identifier2[2], identifier2[3])
 
 
-def get_identifiers_from_device_tuple(
-    device_tuple: DeviceTuple,
-) -> set[tuple[str, str]]:
-    """Calculate the device identifier from a device tuple."""
-    # work around legacy identifier, being a multi tuple value
-    return {(DOMAIN, *device_tuple)}  # type: ignore[arg-type]
-
-
 async def async_remove_config_entry_device(
     hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
 ) -> bool:
@@ -477,102 +464,3 @@ async def async_remove_config_entry_device(
     The actual cleanup is done in the device registry event
     """
     return True
-
-
-class RfxtrxEntity(RestoreEntity):
-    """Represents a Rfxtrx device.
-
-    Contains the common logic for Rfxtrx lights and switches.
-    """
-
-    _attr_assumed_state = True
-    _attr_has_entity_name = True
-    _attr_should_poll = False
-    _device: rfxtrxmod.RFXtrxDevice
-    _event: rfxtrxmod.RFXtrxEvent | None
-
-    def __init__(
-        self,
-        device: rfxtrxmod.RFXtrxDevice,
-        device_id: DeviceTuple,
-        event: rfxtrxmod.RFXtrxEvent | None = None,
-    ) -> None:
-        """Initialize the device."""
-        self._attr_device_info = DeviceInfo(
-            identifiers=get_identifiers_from_device_tuple(device_id),
-            model=device.type_string,
-            name=f"{device.type_string} {device.id_string}",
-        )
-        self._attr_unique_id = "_".join(x for x in device_id)
-        self._device = device
-        self._event = event
-        self._device_id = device_id
-        # If id_string is 213c7f2:1, the group_id is 213c7f2, and the device will respond to
-        # group events regardless of their group indices.
-        (self._group_id, _, _) = cast(str, device.id_string).partition(":")
-
-    async def async_added_to_hass(self) -> None:
-        """Restore RFXtrx device state (ON/OFF)."""
-        if self._event:
-            self._apply_event(self._event)
-
-        self.async_on_remove(
-            async_dispatcher_connect(self.hass, SIGNAL_EVENT, self._handle_event)
-        )
-
-    @property
-    def extra_state_attributes(self) -> dict[str, str] | None:
-        """Return the device state attributes."""
-        if not self._event:
-            return None
-        return {ATTR_EVENT: "".join(f"{x:02x}" for x in self._event.data)}
-
-    def _event_applies(
-        self, event: rfxtrxmod.RFXtrxEvent, device_id: DeviceTuple
-    ) -> bool:
-        """Check if event applies to me."""
-        if isinstance(event, rfxtrxmod.ControlEvent):
-            if (
-                "Command" in event.values
-                and event.values["Command"] in COMMAND_GROUP_LIST
-            ):
-                device: rfxtrxmod.RFXtrxDevice = event.device
-                (group_id, _, _) = cast(str, device.id_string).partition(":")
-                return group_id == self._group_id
-
-        # Otherwise, the event only applies to the matching device.
-        return device_id == self._device_id
-
-    def _apply_event(self, event: rfxtrxmod.RFXtrxEvent) -> None:
-        """Apply a received event."""
-        self._event = event
-
-    @callback
-    def _handle_event(
-        self, event: rfxtrxmod.RFXtrxEvent, device_id: DeviceTuple
-    ) -> None:
-        """Handle a reception of data, overridden by other classes."""
-
-
-class RfxtrxCommandEntity(RfxtrxEntity):
-    """Represents a Rfxtrx device.
-
-    Contains the common logic for Rfxtrx lights and switches.
-    """
-
-    _attr_name = None
-
-    def __init__(
-        self,
-        device: rfxtrxmod.RFXtrxDevice,
-        device_id: DeviceTuple,
-        event: rfxtrxmod.RFXtrxEvent | None = None,
-    ) -> None:
-        """Initialzie a switch or light device."""
-        super().__init__(device, device_id, event=event)
-
-    async def _async_send[*_Ts](
-        self, fun: Callable[[rfxtrxmod.PySerialTransport, *_Ts], None], *args: *_Ts
-    ) -> None:
-        rfx_object: rfxtrxmod.Connect = self.hass.data[DOMAIN][DATA_RFXOBJECT]
-        await self.hass.async_add_executor_job(fun, rfx_object.transport, *args)

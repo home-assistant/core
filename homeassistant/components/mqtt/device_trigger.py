@@ -36,7 +36,7 @@ from .const import (
     DOMAIN,
 )
 from .discovery import MQTTDiscoveryPayload, clear_discovery_hash
-from .mixins import MqttDiscoveryDeviceUpdateMixin, send_discovery_done, update_device
+from .entity import MqttDiscoveryDeviceUpdateMixin, send_discovery_done, update_device
 from .models import DATA_MQTT
 from .schemas import MQTT_ENTITY_DEVICE_INFO_SCHEMA
 
@@ -148,7 +148,10 @@ class Trigger:
         def async_remove() -> None:
             """Remove trigger."""
             if instance not in self.trigger_instances:
-                raise HomeAssistantError("Can't remove trigger twice")
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="mqtt_trigger_cannot_remove_twice",
+                )
 
             if instance.remove:
                 instance.remove()

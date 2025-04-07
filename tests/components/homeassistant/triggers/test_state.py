@@ -17,7 +17,7 @@ from homeassistant.const import (
 from homeassistant.core import Context, HomeAssistant, ServiceCall
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import assert_setup_component, async_fire_time_changed, mock_component
 
@@ -1423,8 +1423,7 @@ async def test_if_fires_on_entities_change_overlap_for_template(
                     "platform": "state",
                     "entity_id": ["test.entity_1", "test.entity_2"],
                     "to": "world",
-                    "for": '{{ 5 if trigger.entity_id == "test.entity_1"'
-                    "   else 10 }}",
+                    "for": '{{ 5 if trigger.entity_id == "test.entity_1" else 10 }}',
                 },
                 "action": {
                     "service": "test.automation",
@@ -1727,8 +1726,7 @@ async def test_variables_priority(
                     "platform": "state",
                     "entity_id": ["test.entity_1", "test.entity_2"],
                     "to": "world",
-                    "for": '{{ 5 if trigger.entity_id == "test.entity_1"'
-                    "   else 10 }}",
+                    "for": '{{ 5 if trigger.entity_id == "test.entity_1" else 10 }}',
                 },
                 "action": {
                     "service": "test.automation",

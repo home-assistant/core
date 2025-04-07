@@ -36,6 +36,7 @@ from homeassistant.helpers import (
     intent,
 )
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from tests.common import async_mock_service
 
@@ -121,6 +122,34 @@ async def test_cover_set_position(
     assert len(calls) == 1
     call = calls[0]
     assert call.data == {"entity_id": entity_id, cover.ATTR_POSITION: 50}
+
+
+async def test_cover_device_class(
+    hass: HomeAssistant,
+    init_components,
+) -> None:
+    """Test the open position for covers by device class."""
+    await cover_intent.async_setup_intents(hass)
+
+    entity_id = f"{cover.DOMAIN}.front"
+    hass.states.async_set(
+        entity_id, STATE_CLOSED, attributes={"device_class": "garage"}
+    )
+    async_expose_entity(hass, conversation.DOMAIN, entity_id, True)
+
+    # Open service
+    calls = async_mock_service(hass, cover.DOMAIN, cover.SERVICE_OPEN_COVER)
+    result = await conversation.async_converse(
+        hass, "open the garage door", None, Context(), None
+    )
+    await hass.async_block_till_done()
+
+    response = result.response
+    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.speech["plain"]["speech"] == "Opened the garage"
+    assert len(calls) == 1
+    call = calls[0]
+    assert call.data == {"entity_id": entity_id}
 
 
 async def test_valve_intents(
@@ -417,12 +446,22 @@ async def test_todo_add_item_fr(
         assert intent_obj.slots.get("item", {}).get("value", "").strip() == "farine"
 
 
-@freeze_time(datetime(year=2013, month=9, day=17, hour=1, minute=2))
+@freeze_time(
+    datetime(
+        year=2013,
+        month=9,
+        day=17,
+        hour=1,
+        minute=2,
+        tzinfo=dt_util.UTC,
+    )
+)
 async def test_date_time(
     hass: HomeAssistant,
     init_components,
 ) -> None:
     """Test the date and time intents."""
+    await hass.config.async_set_time_zone("UTC")
     result = await conversation.async_converse(
         hass, "what is the date", None, Context(), None
     )

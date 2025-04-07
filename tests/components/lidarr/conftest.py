@@ -44,10 +44,12 @@ def mock_error(
         aioclient_mock.get(f"{API_URL}/rootfolder", status=status)
         aioclient_mock.get(f"{API_URL}/system/status", status=status)
         aioclient_mock.get(f"{API_URL}/wanted/missing", status=status)
+        aioclient_mock.get(f"{API_URL}/album", status=status)
     aioclient_mock.get(f"{API_URL}/queue", exc=ClientError)
     aioclient_mock.get(f"{API_URL}/rootfolder", exc=ClientError)
     aioclient_mock.get(f"{API_URL}/system/status", exc=ClientError)
     aioclient_mock.get(f"{API_URL}/wanted/missing", exc=ClientError)
+    aioclient_mock.get(f"{API_URL}/album", exc=ClientError)
 
 
 @pytest.fixture
@@ -113,6 +115,11 @@ def mock_connection(aioclient_mock: AiohttpClientMocker) -> None:
     aioclient_mock.get(
         f"{API_URL}/wanted/missing",
         text=load_fixture("lidarr/wanted-missing.json"),
+        headers={"Content-Type": CONTENT_TYPE_JSON},
+    )
+    aioclient_mock.get(
+        f"{API_URL}/album",
+        text=load_fixture("lidarr/album.json"),
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
     aioclient_mock.get(

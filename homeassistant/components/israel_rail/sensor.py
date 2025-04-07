@@ -13,16 +13,18 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import IsraelRailConfigEntry
 from .const import ATTRIBUTION, DEPARTURES_COUNT, DOMAIN
-from .coordinator import DataConnection, IsraelRailDataUpdateCoordinator
+from .coordinator import (
+    DataConnection,
+    IsraelRailConfigEntry,
+    IsraelRailDataUpdateCoordinator,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,20 +53,14 @@ DEPARTURE_SENSORS: tuple[IsraelRailSensorEntityDescription, ...] = (
 
 SENSORS: tuple[IsraelRailSensorEntityDescription, ...] = (
     IsraelRailSensorEntityDescription(
-        key="duration",
-        device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.SECONDS,
-        value_fn=lambda data_connection: data_connection.duration,
-    ),
-    IsraelRailSensorEntityDescription(
         key="platform",
         translation_key="platform",
         value_fn=lambda data_connection: data_connection.platform,
     ),
     IsraelRailSensorEntityDescription(
-        key="transfers",
-        translation_key="transfers",
-        value_fn=lambda data_connection: data_connection.transfers,
+        key="trains",
+        translation_key="trains",
+        value_fn=lambda data_connection: data_connection.trains,
     ),
     IsraelRailSensorEntityDescription(
         key="train_number",
@@ -77,7 +73,7 @@ SENSORS: tuple[IsraelRailSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: IsraelRailConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor from a config entry created in the integrations UI."""
     coordinator = config_entry.runtime_data

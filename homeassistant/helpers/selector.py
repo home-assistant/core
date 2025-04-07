@@ -164,6 +164,8 @@ DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA = vol.Schema(
         vol.Optional("manufacturer"): str,
         # Model of device
         vol.Optional("model"): str,
+        # Model ID of device
+        vol.Optional("model_id"): str,
         # Device has to contain entities matching this selector
         vol.Optional("entity"): vol.All(
             cv.ensure_list, [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA]
@@ -178,6 +180,7 @@ class DeviceFilterSelectorConfig(TypedDict, total=False):
     integration: str
     manufacturer: str
     model: str
+    model_id: str
 
 
 class ActionSelectorConfig(TypedDict):
@@ -725,6 +728,7 @@ class DurationSelectorConfig(TypedDict, total=False):
     """Class to represent a duration selector config."""
 
     enable_day: bool
+    enable_millisecond: bool
     allow_negative: bool
 
 
@@ -739,6 +743,8 @@ class DurationSelector(Selector[DurationSelectorConfig]):
             # Enable day field in frontend. A selection with `days` set is allowed
             # even if `enable_day` is not set
             vol.Optional("enable_day"): cv.boolean,
+            # Enable millisecond field in frontend.
+            vol.Optional("enable_millisecond"): cv.boolean,
             # Allow negative durations. Will default to False in HA Core 2025.6.0.
             vol.Optional("allow_negative"): cv.boolean,
         }
@@ -1130,7 +1136,7 @@ class SelectOptionDict(TypedDict):
 
 
 class SelectSelectorMode(StrEnum):
-    """Possible modes for a number selector."""
+    """Possible modes for a select selector."""
 
     LIST = "list"
     DROPDOWN = "dropdown"

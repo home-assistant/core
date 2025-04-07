@@ -16,7 +16,7 @@ from homeassistant import __path__ as HOMEASSISTANT_PATH
 from homeassistant.components import websocket_api
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 type KeyType = tuple[str, tuple[str, int], tuple[str, int, str] | None]
@@ -163,16 +163,16 @@ class LogEntry:
     """Store HA log entries."""
 
     __slots__ = (
+        "count",
+        "exception",
         "first_occurred",
-        "timestamp",
-        "name",
+        "key",
         "level",
         "message",
-        "exception",
+        "name",
         "root_cause",
         "source",
-        "count",
-        "key",
+        "timestamp",
     )
 
     def __init__(
@@ -299,9 +299,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass_path: str = HOMEASSISTANT_PATH[0]
     config_dir = hass.config.config_dir
-    paths_re = re.compile(
-        r"(?:{})/(.*)".format("|".join([re.escape(x) for x in (hass_path, config_dir)]))
-    )
+    paths_re = re.compile(rf"(?:{re.escape(hass_path)}|{re.escape(config_dir)})/(.*)")
     handler = LogErrorHandler(
         hass, conf[CONF_MAX_ENTRIES], conf[CONF_FIRE_EVENT], paths_re
     )

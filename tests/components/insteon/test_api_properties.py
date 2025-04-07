@@ -1,6 +1,8 @@
 """Test the Insteon properties APIs."""
 
+import asyncio
 import json
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from pyinsteon.config import MOMENTARY_DELAY, RELAY_MODE, TOGGLE_BUTTON
@@ -26,7 +28,7 @@ from homeassistant.core import HomeAssistant
 from .mock_devices import MockDevices
 
 from tests.common import load_fixture
-from tests.typing import WebSocketGenerator
+from tests.typing import MockHAClientWebSocket, WebSocketGenerator
 
 
 @pytest.fixture(name="kpl_properties_data", scope="module")
@@ -41,7 +43,12 @@ def iolinc_properties_data_fixture():
     return json.loads(load_fixture("insteon/iolinc_properties.json"))
 
 
-async def _setup(hass, hass_ws_client, address, properties_data):
+async def _setup(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    address: str,
+    properties_data: dict[str, Any],
+) -> tuple[MockHAClientWebSocket, MockDevices]:
     """Set up tests."""
     ws_client = await hass_ws_client(hass)
     devices = MockDevices()
@@ -150,6 +157,7 @@ async def test_get_read_only_properties(
         msg = await ws_client.receive_json()
         assert msg["success"]
         assert len(msg["result"]["properties"]) == 15
+    await asyncio.sleep(1)
 
 
 async def test_get_unknown_properties(

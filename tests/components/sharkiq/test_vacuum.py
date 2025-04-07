@@ -35,10 +35,7 @@ from homeassistant.components.vacuum import (
     SERVICE_SET_FAN_SPEED,
     SERVICE_START,
     SERVICE_STOP,
-    STATE_CLEANING,
-    STATE_IDLE,
-    STATE_PAUSED,
-    STATE_RETURNING,
+    VacuumActivity,
     VacuumEntityFeature,
 )
 from homeassistant.const import (
@@ -141,7 +138,7 @@ class MockShark(SharkIqVacuum):
 
 @pytest.fixture(autouse=True)
 @patch("sharkiq.ayla_api.AylaApi", MockAyla)
-async def setup_integration(hass):
+async def setup_integration(hass: HomeAssistant) -> None:
     """Build the mock integration."""
     entry = MockConfigEntry(
         domain=DOMAIN, unique_id=TEST_USERNAME, data=CONFIG, entry_id=ENTRY_ID
@@ -160,7 +157,7 @@ async def test_simple_properties(
 
     assert entity
     assert state
-    assert state.state == STATE_CLEANING
+    assert state.state == VacuumActivity.CLEANING
     assert entity.unique_id == "AC000Wxxxxxxxxx"
 
 
@@ -189,10 +186,10 @@ async def test_initial_attributes(
 @pytest.mark.parametrize(
     ("service", "target_state"),
     [
-        (SERVICE_STOP, STATE_IDLE),
-        (SERVICE_PAUSE, STATE_PAUSED),
-        (SERVICE_RETURN_TO_BASE, STATE_RETURNING),
-        (SERVICE_START, STATE_CLEANING),
+        (SERVICE_STOP, VacuumActivity.IDLE),
+        (SERVICE_PAUSE, VacuumActivity.PAUSED),
+        (SERVICE_RETURN_TO_BASE, VacuumActivity.RETURNING),
+        (SERVICE_START, VacuumActivity.CLEANING),
     ],
 )
 async def test_cleaning_states(

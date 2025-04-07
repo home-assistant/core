@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from homeassistant.components.repairs import RepairsFlow
-from homeassistant.components.repairs.issue_handler import ConfirmRepairFlow
+from homeassistant.components.repairs import ConfirmRepairFlow, RepairsFlow
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
 

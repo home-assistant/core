@@ -9,10 +9,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEGREE, LIGHT_LUX, UnitOfPressure, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import WiffiEntity
 from .const import CREATE_ENTITY_SIGNAL
+from .entity import WiffiEntity
 from .wiffi_strings import (
     WIFFI_UOM_DEGREE,
     WIFFI_UOM_LUX,
@@ -41,7 +41,7 @@ UOM_MAP = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up platform for a new integration.
 

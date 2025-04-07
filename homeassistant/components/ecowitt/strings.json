@@ -6,7 +6,7 @@
       }
     },
     "create_entry": {
-      "default": "To finish setting up the integration, use the Ecowitt App (on your phone) or access the Ecowitt WebUI in a browser at the station IP address.\n\nPick your station -> Menu Others -> DIY Upload Servers. Hit next and select 'Customized'\n\n- Server IP: `{server}`\n- Path: `{path}`\n- Port: `{port}`\n\nClick on 'Save'."
+      "default": "To finish setting up the integration, you need to tell the Ecowitt station to send data to Home Assistant at the following address:\n\n- Server IP / Host Name: `{server}`\n- Path: `{path}`\n- Port: `{port}`\n\nYou can access the Ecowitt configuration in one of two ways:\n\n1. Use the Ecowitt App (on your phone):\n    - Select the Menu Icon (☰) on the upper left, then **My Devices** → **Pick your station**\n    - Select the Ellipsis Icon (⋯) → **Others**\n    - Select **DIY Upload Servers** → **Customized**\n    - Make sure to choose 'Protocol Type Same As: Ecowitt'\n    - Enter the Server IP / Host Name, Path, and Port (printed above). _Note: The path has to match! Remove the first forward slash from the path, as the app will prepend one._\n    - Save\n1. Navigate to the Ecowitt web UI in a browser at the station IP address:\n    - Select **Weather Services** then scroll down to 'Customized'\n    - Make sure to select 'Customized: 🔘 Enable' and 'Protocol Type Same As: 🔘 Ecowitt'\n    - Enter the Server IP / Host Name, Path, and Port (printed above).\n    - Save"
     }
   }
 }

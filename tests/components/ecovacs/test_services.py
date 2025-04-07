@@ -71,7 +71,7 @@ def mock_device_execute_response(data: dict[str, Any]) -> Generator[dict[str, An
 )
 async def test_get_positions_service(
     hass: HomeAssistant,
-    mock_device_execute_response: dict[str],
+    mock_device_execute_response: dict[str, Any],
     entity_id: str,
 ) -> None:
     """Test that get_positions service response snapshots match."""

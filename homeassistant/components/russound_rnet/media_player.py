@@ -16,7 +16,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -96,7 +96,13 @@ class RussoundRNETDevice(MediaPlayerEntity):
         # Updated this function to make a single call to get_zone_info, so that
         # with a single call we can get On/Off, Volume and Source, reducing the
         # amount of traffic and speeding up the update process.
-        ret = self._russ.get_zone_info(self._controller_id, self._zone_id, 4)
+        try:
+            ret = self._russ.get_zone_info(self._controller_id, self._zone_id, 4)
+        except BrokenPipeError:
+            _LOGGER.error("Broken Pipe Error, trying to reconnect to Russound RNET")
+            self._russ.connect()
+            ret = self._russ.get_zone_info(self._controller_id, self._zone_id, 4)
+
         _LOGGER.debug("ret= %s", ret)
         if ret is not None:
             _LOGGER.debug(

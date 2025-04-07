@@ -88,13 +88,17 @@ class Options:
 class DeviceCoordinator(DataUpdateCoordinator[None]):
     """Home Assistant wrapper for a pyWeMo device."""
 
+    config_entry: ConfigEntry
     options: Options | None = None
 
-    def __init__(self, hass: HomeAssistant, wemo: WeMoDevice) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: ConfigEntry, wemo: WeMoDevice
+    ) -> None:
         """Initialize DeviceCoordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=wemo.name,
             update_interval=timedelta(seconds=30),
         )
@@ -275,6 +279,7 @@ def _device_info(wemo: WeMoDevice) -> DeviceInfo:
         identifiers={(DOMAIN, wemo.serial_number)},
         manufacturer="Belkin",
         model=wemo.model_name,
+        model_id=wemo.model,
         name=wemo.name,
         sw_version=wemo.firmware_version,
     )
@@ -284,7 +289,7 @@ async def async_register_device(
     hass: HomeAssistant, config_entry: ConfigEntry, wemo: WeMoDevice
 ) -> DeviceCoordinator:
     """Register a device with home assistant and enable pywemo event callbacks."""
-    device = DeviceCoordinator(hass, wemo)
+    device = DeviceCoordinator(hass, config_entry, wemo)
     await device.async_refresh()
     if not device.last_update_success and device.last_exception:
         raise device.last_exception

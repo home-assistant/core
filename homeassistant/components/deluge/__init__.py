@@ -7,7 +7,6 @@ from ssl import SSLError
 
 from deluge_client.client import DelugeRPCClient
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -17,16 +16,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_WEB_PORT, DEFAULT_NAME, DOMAIN
-from .coordinator import DelugeDataUpdateCoordinator
+from .const import CONF_WEB_PORT
+from .coordinator import DelugeConfigEntry, DelugeDataUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
 
 _LOGGER = logging.getLogger(__name__)
-type DelugeConfigEntry = ConfigEntry[DelugeDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: DelugeConfigEntry) -> bool:
@@ -43,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DelugeConfigEntry) -> bo
         await hass.async_add_executor_job(api.connect)
     except (ConnectionRefusedError, TimeoutError, SSLError) as ex:
         raise ConfigEntryNotReady("Connection to Deluge Daemon failed") from ex
-    except Exception as ex:  # noqa: BLE001
+    except Exception as ex:
         if type(ex).__name__ == "BadLoginError":
             raise ConfigEntryAuthFailed(
                 "Credentials for Deluge client are not valid"
@@ -61,24 +57,3 @@ async def async_setup_entry(hass: HomeAssistant, entry: DelugeConfigEntry) -> bo
 async def async_unload_entry(hass: HomeAssistant, entry: DelugeConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
-class DelugeEntity(CoordinatorEntity[DelugeDataUpdateCoordinator]):
-    """Representation of a Deluge entity."""
-
-    _attr_has_entity_name = True
-
-    def __init__(self, coordinator: DelugeDataUpdateCoordinator) -> None:
-        """Initialize a Deluge entity."""
-        super().__init__(coordinator)
-        self._server_unique_id = coordinator.config_entry.entry_id
-        self._attr_device_info = DeviceInfo(
-            configuration_url=(
-                f"http://{coordinator.api.host}:{coordinator.api.web_port}"
-            ),
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
-            manufacturer=DEFAULT_NAME,
-            name=DEFAULT_NAME,
-            sw_version=coordinator.api.deluge_version,
-        )

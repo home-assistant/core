@@ -8,7 +8,13 @@ import logging
 from typing import cast
 
 from python_otbr_api.mdns import StateBitmap
-from zeroconf import BadTypeInNameException, DNSPointer, ServiceListener, Zeroconf
+from zeroconf import (
+    BadTypeInNameException,
+    DNSPointer,
+    ServiceListener,
+    Zeroconf,
+    instance_name_from_service_info,
+)
 from zeroconf.asyncio import AsyncServiceInfo, AsyncZeroconf
 
 from homeassistant.components import zeroconf
@@ -37,6 +43,7 @@ TYPE_PTR = 12
 class ThreadRouterDiscoveryData:
     """Thread router discovery data."""
 
+    instance_name: str
     addresses: list[str]
     border_agent_id: str | None
     brand: str | None
@@ -89,6 +96,7 @@ def async_discovery_data_from_service(
             unconfigured = True
 
     return ThreadRouterDiscoveryData(
+        instance_name=instance_name_from_service_info(service),
         addresses=service.parsed_addresses(),
         border_agent_id=border_agent_id.hex() if border_agent_id is not None else None,
         brand=brand,

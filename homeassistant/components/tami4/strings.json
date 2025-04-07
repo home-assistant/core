@@ -1,17 +1,11 @@
 {
   "entity": {
     "sensor": {
-      "uv_last_replacement": {
-        "name": "UV last replacement"
-      },
       "uv_upcoming_replacement": {
         "name": "UV upcoming replacement"
       },
       "uv_installed": {
         "name": "UV installed"
-      },
-      "filter_last_replacement": {
-        "name": "Filter last replacement"
       },
       "filter_upcoming_replacement": {
         "name": "Filter upcoming replacement"
@@ -26,6 +20,9 @@
     "button": {
       "boil_water": {
         "name": "Boil water"
+      },
+      "prepare_drink": {
+        "name": "Prepare {drink_name}"
       }
     }
   },

@@ -8,6 +8,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -58,6 +59,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -99,56 +101,6 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_sensor_update_exceptions[CannotConnect][sensor.pyload_finished_downloads-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.pyload_finished_downloads',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Finished downloads',
-    'platform': 'pyload',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': <PyLoadSensorEntity.TOTAL: 'total'>,
-    'unique_id': 'XXXXXXXXXXXXXX_total',
-    'unit_of_measurement': 'downloads',
-  })
-# ---
-# name: test_sensor_update_exceptions[CannotConnect][sensor.pyload_finished_downloads-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'pyLoad Finished downloads',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'downloads',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.pyload_finished_downloads',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unavailable',
-  })
-# ---
 # name: test_sensor_update_exceptions[CannotConnect][sensor.pyload_free_space-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -156,6 +108,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -210,6 +163,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -257,6 +211,57 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_sensor_update_exceptions[CannotConnect][sensor.pyload_total_downloads-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.pyload_total_downloads',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Total downloads',
+    'platform': 'pyload',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <PyLoadSensorEntity.TOTAL: 'total'>,
+    'unique_id': 'XXXXXXXXXXXXXX_total',
+    'unit_of_measurement': 'downloads',
+  })
+# ---
+# name: test_sensor_update_exceptions[CannotConnect][sensor.pyload_total_downloads-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'pyLoad Total downloads',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'downloads',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.pyload_total_downloads',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_sensor_update_exceptions[InvalidAuth][sensor.pyload_active_downloads-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -266,6 +271,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -304,7 +310,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': '1',
   })
 # ---
 # name: test_sensor_update_exceptions[InvalidAuth][sensor.pyload_downloads_in_queue-entry]
@@ -316,6 +322,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -354,57 +361,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
-  })
-# ---
-# name: test_sensor_update_exceptions[InvalidAuth][sensor.pyload_finished_downloads-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.pyload_finished_downloads',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Finished downloads',
-    'platform': 'pyload',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': <PyLoadSensorEntity.TOTAL: 'total'>,
-    'unique_id': 'XXXXXXXXXXXXXX_total',
-    'unit_of_measurement': 'downloads',
-  })
-# ---
-# name: test_sensor_update_exceptions[InvalidAuth][sensor.pyload_finished_downloads-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'pyLoad Finished downloads',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'downloads',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.pyload_finished_downloads',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': '6',
   })
 # ---
 # name: test_sensor_update_exceptions[InvalidAuth][sensor.pyload_free_space-entry]
@@ -414,6 +371,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -458,7 +416,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': '93.1322574606165',
   })
 # ---
 # name: test_sensor_update_exceptions[InvalidAuth][sensor.pyload_speed-entry]
@@ -468,6 +426,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -512,7 +471,58 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': '43.247704',
+  })
+# ---
+# name: test_sensor_update_exceptions[InvalidAuth][sensor.pyload_total_downloads-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.pyload_total_downloads',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Total downloads',
+    'platform': 'pyload',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <PyLoadSensorEntity.TOTAL: 'total'>,
+    'unique_id': 'XXXXXXXXXXXXXX_total',
+    'unit_of_measurement': 'downloads',
+  })
+# ---
+# name: test_sensor_update_exceptions[InvalidAuth][sensor.pyload_total_downloads-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'pyLoad Total downloads',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'downloads',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.pyload_total_downloads',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '37',
   })
 # ---
 # name: test_sensor_update_exceptions[ParserError][sensor.pyload_active_downloads-entry]
@@ -524,6 +534,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -574,6 +585,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -615,56 +627,6 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_sensor_update_exceptions[ParserError][sensor.pyload_finished_downloads-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.pyload_finished_downloads',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Finished downloads',
-    'platform': 'pyload',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': <PyLoadSensorEntity.TOTAL: 'total'>,
-    'unique_id': 'XXXXXXXXXXXXXX_total',
-    'unit_of_measurement': 'downloads',
-  })
-# ---
-# name: test_sensor_update_exceptions[ParserError][sensor.pyload_finished_downloads-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'pyLoad Finished downloads',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'downloads',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.pyload_finished_downloads',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unavailable',
-  })
-# ---
 # name: test_sensor_update_exceptions[ParserError][sensor.pyload_free_space-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -672,6 +634,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -726,6 +689,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -773,6 +737,57 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_sensor_update_exceptions[ParserError][sensor.pyload_total_downloads-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.pyload_total_downloads',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Total downloads',
+    'platform': 'pyload',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <PyLoadSensorEntity.TOTAL: 'total'>,
+    'unique_id': 'XXXXXXXXXXXXXX_total',
+    'unit_of_measurement': 'downloads',
+  })
+# ---
+# name: test_sensor_update_exceptions[ParserError][sensor.pyload_total_downloads-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'pyLoad Total downloads',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'downloads',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.pyload_total_downloads',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_setup[sensor.pyload_active_downloads-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -782,6 +797,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -832,6 +848,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -873,56 +890,6 @@
     'state': '6',
   })
 # ---
-# name: test_setup[sensor.pyload_finished_downloads-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.pyload_finished_downloads',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Finished downloads',
-    'platform': 'pyload',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': <PyLoadSensorEntity.TOTAL: 'total'>,
-    'unique_id': 'XXXXXXXXXXXXXX_total',
-    'unit_of_measurement': 'downloads',
-  })
-# ---
-# name: test_setup[sensor.pyload_finished_downloads-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'pyLoad Finished downloads',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'downloads',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.pyload_finished_downloads',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '37',
-  })
-# ---
 # name: test_setup[sensor.pyload_free_space-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -930,6 +897,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -984,6 +952,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1029,5 +998,56 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '43.247704',
+  })
+# ---
+# name: test_setup[sensor.pyload_total_downloads-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.pyload_total_downloads',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Total downloads',
+    'platform': 'pyload',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <PyLoadSensorEntity.TOTAL: 'total'>,
+    'unique_id': 'XXXXXXXXXXXXXX_total',
+    'unit_of_measurement': 'downloads',
+  })
+# ---
+# name: test_setup[sensor.pyload_total_downloads-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'pyLoad Total downloads',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'downloads',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.pyload_total_downloads',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '37',
   })
 # ---

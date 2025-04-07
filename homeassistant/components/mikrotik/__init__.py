@@ -1,20 +1,15 @@
 """The Mikrotik component."""
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import device_registry as dr
 
 from .const import ATTR_MANUFACTURER, DOMAIN
-from .coordinator import MikrotikDataUpdateCoordinator, get_api
+from .coordinator import MikrotikConfigEntry, MikrotikDataUpdateCoordinator, get_api
 from .errors import CannotConnect, LoginError
 
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
-
 PLATFORMS = [Platform.DEVICE_TRACKER]
-
-type MikrotikConfigEntry = ConfigEntry[MikrotikDataUpdateCoordinator]
 
 
 async def async_setup_entry(
@@ -49,6 +44,8 @@ async def async_setup_entry(
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: MikrotikConfigEntry
+) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)

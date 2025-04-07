@@ -31,7 +31,12 @@ async def test_hue_event(
 
     # Emit button update event
     btn_event = {
-        "button": {"last_event": "initial_press"},
+        "button": {
+            "button_report": {
+                "event": "initial_press",
+                "updated": "2021-10-01T12:00:00Z",
+            }
+        },
         "id": "c658d3d8-a013-4b81-8ac6-78b248537e70",
         "metadata": {"control_id": 1},
         "type": "button",
@@ -44,7 +49,7 @@ async def test_hue_event(
     assert len(events) == 1
     assert events[0].data["id"] == "wall_switch_with_2_controls_button"
     assert events[0].data["unique_id"] == btn_event["id"]
-    assert events[0].data["type"] == btn_event["button"]["last_event"]
+    assert events[0].data["type"] == btn_event["button"]["button_report"]["event"]
     assert events[0].data["subtype"] == btn_event["metadata"]["control_id"]
 
 

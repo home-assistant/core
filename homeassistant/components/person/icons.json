@@ -8,6 +8,8 @@
     }
   },
   "services": {
-    "reload": "mdi:reload"
+    "reload": {
+      "service": "mdi:reload"
+    }
   }
 }

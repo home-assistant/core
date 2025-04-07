@@ -13,20 +13,24 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    PERCENTAGE,
     EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfFrequency,
     UnitOfPower,
+    UnitOfPressure,
     UnitOfTemperature,
     UnitOfTime,
+    UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import CoilEntity, Coordinator
+from .coordinator import CoilCoordinator
+from .entity import CoilEntity
 
 UNIT_DESCRIPTIONS = {
     "°C": SensorEntityDescription(
@@ -113,6 +117,20 @@ UNIT_DESCRIPTIONS = {
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfTime.HOURS,
     ),
+    "min": SensorEntityDescription(
+        key="min",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+    ),
+    "s": SensorEntityDescription(
+        key="s",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+    ),
     "Hz": SensorEntityDescription(
         key="Hz",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -120,17 +138,59 @@ UNIT_DESCRIPTIONS = {
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
     ),
+    "Pa": SensorEntityDescription(
+        key="Pa",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.PRESSURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPressure.PA,
+    ),
+    "kPa": SensorEntityDescription(
+        key="kPa",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.PRESSURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPressure.KPA,
+    ),
+    "bar": SensorEntityDescription(
+        key="bar",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.PRESSURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPressure.BAR,
+    ),
+    "l/m": SensorEntityDescription(
+        key="l/m",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+    ),
+    "m³/h": SensorEntityDescription(
+        key="m³/h",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+    ),
+    "%RH": SensorEntityDescription(
+        key="%RH",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+    ),
 }
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up platform."""
 
-    coordinator: Coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: CoilCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     async_add_entities(
         Sensor(coordinator, coil, UNIT_DESCRIPTIONS.get(coil.unit))
@@ -144,7 +204,7 @@ class Sensor(CoilEntity, SensorEntity):
 
     def __init__(
         self,
-        coordinator: Coordinator,
+        coordinator: CoilCoordinator,
         coil: Coil,
         entity_description: SensorEntityDescription | None,
     ) -> None:

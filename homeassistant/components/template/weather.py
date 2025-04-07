@@ -92,7 +92,6 @@ CONF_WIND_SPEED_TEMPLATE = "wind_speed_template"
 CONF_WIND_BEARING_TEMPLATE = "wind_bearing_template"
 CONF_OZONE_TEMPLATE = "ozone_template"
 CONF_VISIBILITY_TEMPLATE = "visibility_template"
-CONF_FORECAST_TEMPLATE = "forecast_template"
 CONF_FORECAST_DAILY_TEMPLATE = "forecast_daily_template"
 CONF_FORECAST_HOURLY_TEMPLATE = "forecast_hourly_template"
 CONF_FORECAST_TWICE_DAILY_TEMPLATE = "forecast_twice_daily_template"
@@ -133,10 +132,34 @@ WEATHER_SCHEMA = vol.Schema(
     }
 )
 
-PLATFORM_SCHEMA = vol.All(
-    cv.deprecated(CONF_FORECAST_TEMPLATE),
-    WEATHER_PLATFORM_SCHEMA.extend(WEATHER_SCHEMA.schema),
-)
+PLATFORM_SCHEMA = WEATHER_PLATFORM_SCHEMA.extend(WEATHER_SCHEMA.schema)
+
+
+@callback
+def _async_create_template_tracking_entities(
+    async_add_entities: AddEntitiesCallback,
+    hass: HomeAssistant,
+    definitions: list[dict],
+    unique_id_prefix: str | None,
+) -> None:
+    """Create the weather entities."""
+    entities = []
+
+    for entity_conf in definitions:
+        unique_id = entity_conf.get(CONF_UNIQUE_ID)
+
+        if unique_id and unique_id_prefix:
+            unique_id = f"{unique_id_prefix}-{unique_id}"
+
+        entities.append(
+            WeatherTemplate(
+                hass,
+                entity_conf,
+                unique_id,
+            )
+        )
+
+    async_add_entities(entities)
 
 
 async def async_setup_platform(
@@ -146,24 +169,32 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Template weather."""
-    if discovery_info and "coordinator" in discovery_info:
+    if discovery_info is None:
+        config = rewrite_common_legacy_to_modern_conf(hass, config)
+        unique_id = config.get(CONF_UNIQUE_ID)
+        async_add_entities(
+            [
+                WeatherTemplate(
+                    hass,
+                    config,
+                    unique_id,
+                )
+            ]
+        )
+        return
+
+    if "coordinator" in discovery_info:
         async_add_entities(
             TriggerWeatherEntity(hass, discovery_info["coordinator"], config)
             for config in discovery_info["entities"]
         )
         return
 
-    config = rewrite_common_legacy_to_modern_conf(config)
-    unique_id = config.get(CONF_UNIQUE_ID)
-
-    async_add_entities(
-        [
-            WeatherTemplate(
-                hass,
-                config,
-                unique_id,
-            )
-        ]
+    _async_create_template_tracking_entities(
+        async_add_entities,
+        hass,
+        discovery_info["entities"],
+        discovery_info["unique_id"],
     )
 
 

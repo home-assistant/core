@@ -1,11 +1,11 @@
 """Test MatrixBot's ability to parse and respond to commands in matrix rooms."""
 
+from dataclasses import dataclass
 from functools import partial
 from itertools import chain
 from typing import Any
 
 from nio import MatrixRoom, RoomMessageText
-from pydantic.dataclasses import dataclass
 import pytest
 
 from homeassistant.components.matrix import MatrixBot, RoomID
@@ -42,9 +42,8 @@ class CommandTestParameters:
         Commands that are named with 'Subset' are expected not to be read from Room A.
         """
 
-        if (
-            self.expected_event_data_extra is None
-            or "Subset" in self.expected_event_data_extra["command"]
+        if self.expected_event_data_extra is None or (
+            "Subset" in self.expected_event_data_extra["command"]
             and self.room_id not in SUBSET_ROOMS
         ):
             return None

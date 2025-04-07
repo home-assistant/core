@@ -19,15 +19,5 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
-  },
-  "issues": {
-    "deprecated_yaml_import_issue_cannot_connect": {
-      "title": "The {integration_title} YAML configuration import cannot connect to daemon",
-      "description": "Configuring {integration_title} using YAML is being removed but there was a connection error importing your YAML configuration.\n\nPlease make sure {integration_title} is turned on, and restart Home Assistant to try importing again. Otherwise, please remove the YAML from your configuration and add the integration manually."
-    },
-    "deprecated_yaml_import_issue_unknown": {
-      "title": "The {integration_title} YAML configuration could not be imported",
-      "description": "Configuring {integration_title} using YAML is being removed but there was an unknown error importing your YAML configuration.\n\nPlease make sure {integration_title} is turned on, and restart Home Assistant to try importing again. Otherwise, please remove the YAML from your configuration and add the integration manually."
-    }
   }
 }

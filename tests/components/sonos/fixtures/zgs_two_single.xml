@@ -1,0 +1,10 @@
+<ZoneGroupState>
+    <ZoneGroups>
+        <ZoneGroup Coordinator="RINCON_test_10.10.10.1" ID="RINCON_test:123">
+            <ZoneGroupMember UUID="RINCON_test_10.10.10.1" Location="http://192.168.4.2:1400/xml/device_description.xml" ZoneName="Living Room" Icon="" Configuration="1" SoftwareVersion="70.4-36090" SWGen="2" MinCompatibleVersion="69.0-00000" LegacyCompatibleVersion="58.0-00000" BootSeq="1234" TVConfigurationError="0" HdmiCecAvailable="0" WirelessMode="1" WirelessLeafOnly="0" ChannelFreq="5180" BehindWifiExtender="0" WifiEnabled="1" EthLink="0" Orientation="0" RoomCalibrationState="4" SecureRegState="3" VoiceConfigState="0" MicEnabled="1" AirPlayEnabled="1" IdleState="1" MoreInfo="" SSLPort="1443" HHSSLPort="1843"/>
+        </ZoneGroup>
+        <ZoneGroup Coordinator="RINCON_test_10.10.10.2" ID="RINCON_test:456">
+            <ZoneGroupMember UUID="RINCON_test_10.10.10.2" Location="http://192.168.4.2:1400/xml/device_description.xml" ZoneName="Bedroom" Icon="" Configuration="1" SoftwareVersion="70.4-36090" SWGen="2" MinCompatibleVersion="69.0-00000" LegacyCompatibleVersion="58.0-00000" BootSeq="1234" TVConfigurationError="0" HdmiCecAvailable="0" WirelessMode="1" WirelessLeafOnly="0" ChannelFreq="5180" BehindWifiExtender="0" WifiEnabled="1" EthLink="0" Orientation="0" RoomCalibrationState="4" SecureRegState="3" VoiceConfigState="0" MicEnabled="1" AirPlayEnabled="1" IdleState="1" MoreInfo="" SSLPort="1443" HHSSLPort="1843"/>
+        </ZoneGroup>
+    </ZoneGroups>
+</ZoneGroupState>
