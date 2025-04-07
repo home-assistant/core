@@ -179,13 +179,11 @@ class BoschAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 if self.source == SOURCE_USER:
                     if serial_number:
-                        await self.async_set_unique_id(str(serial_number))
                         self._abort_if_unique_id_configured()
                     else:
                         self._async_abort_entries_match(
                             {CONF_HOST: self._data[CONF_HOST]}
                         )
-                if self.source == SOURCE_USER:
                     return self.async_create_entry(
                         title=f"Bosch {model}", data=self._data
                     )
