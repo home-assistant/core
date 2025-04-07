@@ -14,7 +14,7 @@ from .const import DOMAIN
 
 
 async def async_setup_entry(
-    hass: HomeAssistant | None,
+    hass: HomeAssistant,
     config_entry: BoschAlarmConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
@@ -45,12 +45,7 @@ class PointSensor(BinarySensorEntity):
             identifiers={(DOMAIN, self._attr_unique_id)},
             manufacturer="Bosch Security Systems",
             name=self._point.name,
-            model=panel.model,
-            sw_version=panel.firmware_version,
-            via_device=(
-                DOMAIN,
-                unique_id,
-            ),
+            via_device=(DOMAIN, unique_id),
         )
 
     @property
@@ -61,7 +56,7 @@ class PointSensor(BinarySensorEntity):
     @property
     def available(self) -> bool:
         """Return if this point sensor is available."""
-        return super().available and (self._point.is_open() or self._point.is_normal())
+        return self._point.is_open() or self._point.is_normal()
 
     async def async_added_to_hass(self) -> None:
         """Run when entity attached to hass."""
@@ -69,5 +64,5 @@ class PointSensor(BinarySensorEntity):
         self._point.status_observer.attach(self.schedule_update_ha_state)
 
     async def async_will_remove_from_hass(self) -> None:
-        """Set the date and time on a bosch alarm panel."""
+        """Run when entity removed from hass."""
         self._point.status_observer.detach(self.schedule_update_ha_state)
