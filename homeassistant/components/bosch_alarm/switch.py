@@ -16,31 +16,21 @@ from .const import DOMAIN
 
 
 async def async_setup_entry(
-    hass: HomeAssistant | None,
+    hass: HomeAssistant,
     config_entry: BoschAlarmConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switch entities for outputs."""
 
     panel = config_entry.runtime_data
-
-    async_add_entities(
+    entities: list[SwitchEntity] = [
         PanelOutputEntity(
             panel, output_id, config_entry.unique_id or config_entry.entry_id
         )
         for output_id in panel.outputs
-    )
+    ]
 
-    async_add_entities(
-        PanelDoorLockedEntity(
-            panel,
-            door_id,
-            config_entry.unique_id or config_entry.entry_id,
-        )
-        for door_id in panel.doors
-    )
-
-    async_add_entities(
+    entities.extend(
         PanelDoorSecuredEntity(
             panel,
             door_id,
@@ -49,7 +39,7 @@ async def async_setup_entry(
         for door_id in panel.doors
     )
 
-    async_add_entities(
+    entities.extend(
         PanelDoorCyclingEntity(
             panel,
             door_id,
@@ -57,6 +47,8 @@ async def async_setup_entry(
         )
         for door_id in panel.doors
     )
+
+    async_add_entities(entities)
 
 
 PARALLEL_UPDATES = 0
