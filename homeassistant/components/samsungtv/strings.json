@@ -53,7 +53,7 @@
       "message": "Unhandled trigger type {trigger_type}."
     },
     "service_unsupported": {
-      "message": "Entity {entity} does not support this service."
+      "message": "Entity {entity} does not support this action."
     }
   }
 }
