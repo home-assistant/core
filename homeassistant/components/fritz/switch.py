@@ -38,6 +38,9 @@ from .entity import FritzBoxBaseEntity, FritzDeviceBase
 
 _LOGGER = logging.getLogger(__name__)
 
+# Set a sane value to avoid too many updates
+PARALLEL_UPDATES = 5
+
 
 async def _async_deflection_entities_list(
     avm_wrapper: AvmWrapper, device_friendly_name: str

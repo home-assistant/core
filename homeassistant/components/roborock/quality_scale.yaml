@@ -21,7 +21,7 @@ rules:
   test-before-setup: done
   unique-config-entry: done
   # Silver
-  action-exceptions: todo
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
@@ -29,14 +29,12 @@ rules:
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
-  reauthentication-flow: todo
+  reauthentication-flow: done
   test-coverage: done
   # Gold
   devices: done
   diagnostics: done
-  discovery:
-    status: todo
-    comment: Determine if these devices can support discovery
+  discovery: done
   discovery-update-info:
     status: exempt
     comment: Devices do not support discovery.
@@ -64,20 +62,14 @@ rules:
     status: exempt
     comment: There are no noisy entities.
   entity-translations: done
-  exception-translations: todo
+  exception-translations: done
   icon-translations: todo
   reconfiguration-flow: todo
   repair-issues:
     status: todo
     comment: The Cloud vs Local API warning should probably be a repair issue.
-  stale-devices:
-    status: todo
-    comment: |
-      The integration does not yet handle stale devices. The roborock app does
-      support deleting devices and this is a gap #132590
+  stale-devices: done
   # Platinum
   async-dependency: todo
-  inject-websession:
-    status: todo
-    comment: Web API uses aiohttp but does not yet inject web session.
-  strict-typing: todo
+  inject-websession: done
+  strict-typing: done
