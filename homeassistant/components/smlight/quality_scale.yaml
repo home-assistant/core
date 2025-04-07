@@ -46,7 +46,7 @@ rules:
   log-when-unavailable:
     status: done
     comment: Handled by coordinator
-  parallel-updates: todo
+  parallel-updates: done
   reauthentication-flow: done
   test-coverage: done
 
