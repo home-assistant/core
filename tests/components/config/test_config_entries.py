@@ -13,7 +13,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries as core_ce, data_entry_flow, loader
 from homeassistant.components.config import config_entries
-from homeassistant.config_entries import HANDLERS, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
@@ -33,13 +33,6 @@ from tests.common import (
     mock_platform,
 )
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
-
-
-@pytest.fixture
-def clear_handlers() -> Generator[None]:
-    """Clear config entry handlers."""
-    with patch.dict(HANDLERS, clear=True):
-        yield
 
 
 @pytest.fixture(autouse=True)
@@ -75,7 +68,7 @@ def mock_flow() -> Generator[None]:
 
 
 @pytest.mark.usefixtures("freezer")
-@pytest.mark.usefixtures("clear_handlers", "mock_flow")
+@pytest.mark.usefixtures("mock_flow")
 async def test_get_entries(hass: HomeAssistant, client: TestClient) -> None:
     """Test get entries."""
     mock_integration(hass, MockModule("comp1"))
@@ -359,7 +352,7 @@ async def test_reload_entry_in_setup_retry(
     entry.add_to_hass(hass)
     hass.config.components.add("comp")
 
-    with patch.dict(HANDLERS, {"comp": ConfigFlow, "test": ConfigFlow}):
+    with mock_config_flow("comp", ConfigFlow), mock_config_flow("test", ConfigFlow):
         resp = await client.post(
             f"/api/config/config_entries/entry/{entry.entry_id}/reload"
         )
@@ -423,7 +416,7 @@ async def test_initialize_flow(hass: HomeAssistant, client: TestClient) -> None:
                 errors={"username": "Should be unique."},
             )
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+    with mock_config_flow("test", TestFlow):
         resp = await client.post(
             "/api/config/config_entries/flow",
             json={"handler": "test", "show_advanced_options": True},
@@ -472,7 +465,7 @@ async def test_initialize_flow_unmet_dependency(
         async def async_step_user(self, user_input=None):
             pass
 
-    with patch.dict(HANDLERS, {"test2": TestFlow}):
+    with mock_config_flow("test2", TestFlow):
         resp = await client.post(
             "/api/config/config_entries/flow",
             json={"handler": "test2", "show_advanced_options": True},
@@ -503,7 +496,7 @@ async def test_initialize_flow_unauth(
                 errors={"username": "Should be unique."},
             )
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+    with mock_config_flow("test", TestFlow):
         resp = await client.post(
             "/api/config/config_entries/flow", json={"handler": "test"}
         )
@@ -520,7 +513,7 @@ async def test_abort(hass: HomeAssistant, client: TestClient) -> None:
         async def async_step_user(self, user_input=None):
             return self.async_abort(reason="bla")
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+    with mock_config_flow("test", TestFlow):
         resp = await client.post(
             "/api/config/config_entries/flow", json={"handler": "test"}
         )
@@ -553,7 +546,7 @@ async def test_create_account(hass: HomeAssistant, client: TestClient) -> None:
                 title="Test Entry", data={"secret": "account_token"}
             )
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+    with mock_config_flow("test", TestFlow):
         resp = await client.post(
             "/api/config/config_entries/flow", json={"handler": "test"}
         )
@@ -621,7 +614,7 @@ async def test_two_step_flow(hass: HomeAssistant, client: TestClient) -> None:
                 title=user_input["user_title"], data={"secret": "account_token"}
             )
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+    with mock_config_flow("test", TestFlow):
         resp = await client.post(
             "/api/config/config_entries/flow", json={"handler": "test"}
         )
@@ -639,7 +632,7 @@ async def test_two_step_flow(hass: HomeAssistant, client: TestClient) -> None:
             "preview": None,
         }
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+    with mock_config_flow("test", TestFlow):
         resp = await client.post(
             f"/api/config/config_entries/flow/{flow_id}",
             json={"user_title": "user-title"},
@@ -708,7 +701,7 @@ async def test_continue_flow_unauth(
                 title=user_input["user_title"], data={"secret": "account_token"}
             )
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+    with mock_config_flow("test", TestFlow):
         resp = await client.post(
             "/api/config/config_entries/flow", json={"handler": "test"}
         )
@@ -775,7 +768,7 @@ async def test_get_progress_index(
             assert self._get_reconfigure_entry() is entry
             return await self.async_step_account()
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+    with mock_config_flow("test", TestFlow):
         form_hassio = await hass.config_entries.flow.async_init(
             "test", context={"source": core_ce.SOURCE_HASSIO}
         )
@@ -839,7 +832,7 @@ async def test_get_progress_flow(hass: HomeAssistant, client: TestClient) -> Non
                 errors={"username": "Should be unique."},
             )
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+    with mock_config_flow("test", TestFlow):
         resp = await client.post(
             "/api/config/config_entries/flow", json={"handler": "test"}
         )
@@ -875,7 +868,7 @@ async def test_get_progress_flow_unauth(
                 errors={"username": "Should be unique."},
             )
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+    with mock_config_flow("test", TestFlow):
         resp = await client.post(
             "/api/config/config_entries/flow", json={"handler": "test"}
         )
@@ -1161,7 +1154,7 @@ async def test_options_flow(hass: HomeAssistant, client: TestClient) -> None:
     ).add_to_hass(hass)
     entry = hass.config_entries.async_entries()[0]
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+    with mock_config_flow("test", TestFlow):
         url = "/api/config/config_entries/options/flow"
         resp = await client.post(url, json={"handler": entry.entry_id})
 
@@ -1223,7 +1216,7 @@ async def test_options_flow_unauth(
 
     hass_admin_user.groups = []
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+    with mock_config_flow("test", TestFlow):
         resp = await getattr(client, method)(endpoint, json={"handler": entry.entry_id})
 
     assert resp.status == HTTPStatus.UNAUTHORIZED
@@ -1260,7 +1253,7 @@ async def test_two_step_options_flow(hass: HomeAssistant, client: TestClient) ->
     ).add_to_hass(hass)
     entry = hass.config_entries.async_entries()[0]
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+    with mock_config_flow("test", TestFlow):
         url = "/api/config/config_entries/options/flow"
         resp = await client.post(url, json={"handler": entry.entry_id})
 
@@ -1278,7 +1271,7 @@ async def test_two_step_options_flow(hass: HomeAssistant, client: TestClient) ->
             "preview": None,
         }
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+    with mock_config_flow("test", TestFlow):
         resp = await client.post(
             f"/api/config/config_entries/options/flow/{flow_id}",
             json={"enabled": True},
@@ -1335,7 +1328,7 @@ async def test_options_flow_with_invalid_data(
     ).add_to_hass(hass)
     entry = hass.config_entries.async_entries()[0]
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+    with mock_config_flow("test", TestFlow):
         url = "/api/config/config_entries/options/flow"
         resp = await client.post(url, json={"handler": entry.entry_id})
 
@@ -1361,7 +1354,7 @@ async def test_options_flow_with_invalid_data(
             "preview": None,
         }
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+    with mock_config_flow("test", TestFlow):
         resp = await client.post(
             f"/api/config/config_entries/options/flow/{flow_id}",
             json={"choices": ["valid", "invalid"]},
@@ -2055,7 +2048,7 @@ async def test_ignore_flow(
 
     ws_client = await hass_ws_client(hass)
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+    with mock_config_flow("test", TestFlow):
         result = await hass.config_entries.flow.async_init(
             "test", context={"source": core_ce.SOURCE_USER} | flow_context
         )
@@ -2104,7 +2097,7 @@ async def test_ignore_flow_nonexisting(
     assert response["error"]["code"] == "not_found"
 
 
-@pytest.mark.usefixtures("clear_handlers", "freezer")
+@pytest.mark.usefixtures("freezer")
 async def test_get_matching_entries_ws(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
@@ -2556,7 +2549,6 @@ async def test_get_matching_entries_ws(
     assert response["success"] is False
 
 
-@pytest.mark.usefixtures("clear_handlers")
 async def test_subscribe_entries_ws(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -2775,7 +2767,6 @@ async def test_subscribe_entries_ws(
     ]
 
 
-@pytest.mark.usefixtures("clear_handlers")
 async def test_subscribe_entries_ws_filtered(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -3035,7 +3026,7 @@ async def test_flow_with_multiple_schema_errors(
                 ),
             )
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+    with mock_config_flow("test", TestFlow):
         resp = await client.post(
             "/api/config/config_entries/flow", json={"handler": "test"}
         )
@@ -3077,7 +3068,7 @@ async def test_flow_with_multiple_schema_errors_base(
                 ),
             )
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+    with mock_config_flow("test", TestFlow):
         resp = await client.post(
             "/api/config/config_entries/flow", json={"handler": "test"}
         )
@@ -3136,7 +3127,7 @@ async def test_supports_reconfigure(
                 data={"secret": "account_token"},
             )
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+    with mock_config_flow("test", TestFlow):
         resp = await client.post(
             "/api/config/config_entries/flow",
             json={"handler": "test", "entry_id": "1"},
@@ -3158,7 +3149,7 @@ async def test_supports_reconfigure(
         "errors": None,
     }
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+    with mock_config_flow("test", TestFlow):
         resp = await client.post(
             f"/api/config/config_entries/flow/{flow_id}",
             json={},
@@ -3196,7 +3187,7 @@ async def test_does_not_support_reconfigure(
                 title="Test Entry", data={"secret": "account_token"}
             )
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+    with mock_config_flow("test", TestFlow):
         resp = await client.post(
             "/api/config/config_entries/flow",
             json={"handler": "test", "entry_id": "1"},

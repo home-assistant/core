@@ -227,6 +227,14 @@
           }
         }
       }
+    },
+    "sensor": {
+      "impedance": {
+        "name": "Impedance"
+      },
+      "weight_non_stabilized": {
+        "name": "Weight non stabilized"
+      }
     }
   }
 }
