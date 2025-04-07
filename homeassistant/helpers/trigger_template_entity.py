@@ -25,6 +25,7 @@ from homeassistant.const import (
     CONF_STATE,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
+    CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import TemplateError
@@ -251,10 +252,18 @@ class TriggerBaseEntity(Entity):
                 return
 
             rendered[CONF_STATE] = result
+        elif CONF_VALUE_TEMPLATE in self._to_render_simple:
+            if (
+                result := self._render_single_template(CONF_VALUE_TEMPLATE, variables)
+            ) is _SENTINEL:
+                self._rendered = self._static_rendered
+                return
+
+            rendered[CONF_VALUE_TEMPLATE] = result
 
         for key in itertools.chain(self._to_render_simple, self._to_render_complex):
             # Skip availability because we already handled it before.
-            if key in (CONF_AVAILABILITY, CONF_STATE):
+            if key in (CONF_AVAILABILITY, CONF_STATE, CONF_VALUE_TEMPLATE):
                 continue
 
             if (

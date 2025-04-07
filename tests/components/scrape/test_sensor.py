@@ -623,3 +623,40 @@ async def test_availability(
 
     state = hass.states.get("sensor.current_version")
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_template_render_with_availability_syntax_error(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test availability template render with syntax errors."""
+    config = {
+        DOMAIN: [
+            return_integration_config(
+                sensors=[
+                    {
+                        "select": ".current-version h1",
+                        "name": "Current version",
+                        "unique_id": "ha_version_unique_id",
+                        CONF_VALUE_TEMPLATE: "{{ value.split(':')[1] }}",
+                        CONF_AVAILABILITY: "{{ what_the_heck == 2 }}",
+                    }
+                ]
+            )
+        ]
+    }
+
+    mocker = MockRestData("test_scrape_sensor")
+    with patch(
+        "homeassistant.components.rest.RestData",
+        return_value=mocker,
+    ):
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.current_version")
+    assert state.state == "2021.12.10"
+
+    assert (
+        "Error rendering availability template for sensor.current_version: UndefinedError: 'what_the_heck' is undefined"
+        in caplog.text
+    )
