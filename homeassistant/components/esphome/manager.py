@@ -463,7 +463,7 @@ class ESPHomeManager:
                 # or they made a mistake and flashed the same firmware on
                 # multiple devices. In this case we start a repair flow
                 # to ask them if its a mistake, or if they want to migrate
-                # the config entry to the hardware.
+                # the config entry to the replacement hardware.
                 shared_data = {
                     "name": device_info.name,
                     "mac": format_mac(device_mac),
