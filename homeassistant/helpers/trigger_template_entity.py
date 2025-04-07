@@ -65,6 +65,27 @@ def make_template_entity_base_schema(default_name: str) -> vol.Schema:
     )
 
 
+def log_triggered_template_error(
+    entity_id: str,
+    err: TemplateError,
+    key: str | None = None,
+    attribute: str | None = None,
+) -> None:
+    """Log a trigger entity template error."""
+    target = ""
+    if key:
+        target = f" {key}"
+    elif attribute:
+        target = f" {CONF_ATTRIBUTES}.{attribute}"
+
+    logging.getLogger(f"{__package__}.{entity_id.split('.')[0]}").error(
+        "Error rendering%s template for %s: %s",
+        target,
+        entity_id,
+        err,
+    )
+
+
 TEMPLATE_SENSOR_BASE_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
@@ -201,9 +222,7 @@ class TriggerBaseEntity(Entity):
 
             self._rendered = rendered
         except TemplateError as err:
-            logging.getLogger(f"{__package__}.{self.entity_id.split('.')[0]}").error(
-                "Error rendering %s template for %s: %s", key, self.entity_id, err
-            )
+            log_triggered_template_error(self.entity_id, err, key=key)
             self._rendered = self._static_rendered
 
 
