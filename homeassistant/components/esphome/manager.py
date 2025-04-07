@@ -910,10 +910,11 @@ def async_replace_device(
     new_mac: str,
 ) -> None:
     """Migrate an ESPHome entry to replace an existing device."""
-    new_unique_id = new_mac.upper()
     entry = hass.config_entries.async_get_entry(entry_id)
     assert entry is not None
-    hass.config_entries.async_update_entry(entry, unique_id=new_unique_id)
+    hass.config_entries.async_update_entry(entry, unique_id=new_mac.lower())
+
+    new_unique_id = new_mac.upper()
     dev_reg = dr.async_get(hass)
     for device in dr.async_entries_for_config_entry(dev_reg, entry.entry_id):
         dev_reg.async_update_device(
