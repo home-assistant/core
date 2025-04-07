@@ -25,6 +25,7 @@ def get_update_manager(device: BroadlinkDevice[_ApiT]) -> BroadlinkUpdateManager
     """Return an update manager for a given Broadlink device."""
     update_managers: dict[str, type[BroadlinkUpdateManager]] = {
         "A1": BroadlinkA1UpdateManager,
+        "A2": BroadlinkA2UpdateManager,
         "BG1": BroadlinkBG1UpdateManager,
         "HYS": BroadlinkThermostatUpdateManager,
         "LB1": BroadlinkLB1UpdateManager,
