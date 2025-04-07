@@ -947,83 +947,57 @@ async def test_get_progress_subscribe(
     assert response == {"id": ANY, "result": None, "success": True, "type": "result"}
     subscription = response["id"]
 
+    flow_context = {
+        "bluetooth": {"source": core_ce.SOURCE_BLUETOOTH},
+        "hassio": {"source": core_ce.SOURCE_HASSIO},
+        "user": {"source": core_ce.SOURCE_USER},
+        "reauth": {"source": core_ce.SOURCE_REAUTH, "entry_id": "1234"},
+        "reconfigure": {"source": core_ce.SOURCE_RECONFIGURE, "entry_id": "1234"},
+    }
+    forms = {}
+
     with mock_config_flow("test", TestFlow):
-        form_bluetooth = await hass.config_entries.flow.async_init(
-            "test", context={"source": core_ce.SOURCE_BLUETOOTH}
-        )
-        form_hassio = await hass.config_entries.flow.async_init(
-            "test", context={"source": core_ce.SOURCE_HASSIO}
-        )
-        form_user = await hass.config_entries.flow.async_init(
-            "test", context={"source": core_ce.SOURCE_USER}
-        )
-        form_reauth = await hass.config_entries.flow.async_init(
-            "test", context={"source": core_ce.SOURCE_REAUTH, "entry_id": "1234"}
-        )
-        form_reconfigure = await hass.config_entries.flow.async_init(
-            "test", context={"source": core_ce.SOURCE_RECONFIGURE, "entry_id": "1234"}
-        )
+        for key, context in flow_context.items():
+            forms[key] = await hass.config_entries.flow.async_init(
+                "test", context=context
+            )
 
-    assert form_bluetooth["type"] == data_entry_flow.FlowResultType.ABORT
-    for form in (form_hassio, form_user, form_reauth, form_reconfigure):
-        assert form["type"] == data_entry_flow.FlowResultType.FORM
-        assert form["step_id"] == "account"
+    assert forms["bluetooth"]["type"] == data_entry_flow.FlowResultType.ABORT
+    for key in ("hassio", "user", "reauth", "reconfigure"):
+        assert forms[key]["type"] == data_entry_flow.FlowResultType.FORM
+        assert forms[key]["step_id"] == "account"
 
-    hass.config_entries.flow.async_abort(form_hassio["flow_id"])
-    hass.config_entries.flow.async_abort(form_user["flow_id"])
-    hass.config_entries.flow.async_abort(form_reauth["flow_id"])
-    hass.config_entries.flow.async_abort(form_reconfigure["flow_id"])
+    for key in ("hassio", "user", "reauth", "reconfigure"):
+        hass.config_entries.flow.async_abort(forms[key]["flow_id"])
 
     # Uninitialized flows and flows with SOURCE_USER and SOURCE_RECONFIGURE
     # should be filtered out
-    response = await ws_client.receive_json()
-    assert response == {
-        "event": {
-            "flow": {
-                "flow_id": form_hassio["flow_id"],
-                "handler": "test",
-                "step_id": "account",
-                "context": {"source": core_ce.SOURCE_HASSIO},
+    for key in ("hassio", "reauth"):
+        response = await ws_client.receive_json()
+        assert response == {
+            "event": {
+                "flow": {
+                    "flow_id": forms[key]["flow_id"],
+                    "handler": "test",
+                    "step_id": "account",
+                    "context": flow_context[key],
+                },
+                "flow_id": forms[key]["flow_id"],
+                "type": "init",
             },
-            "flow_id": form_hassio["flow_id"],
-            "type": "init",
-        },
-        "id": subscription,
-        "type": "event",
-    }
-    response = await ws_client.receive_json()
-    assert response == {
-        "event": {
-            "flow": {
-                "flow_id": form_reauth["flow_id"],
-                "handler": "test",
-                "step_id": "account",
-                "context": {"entry_id": "1234", "source": core_ce.SOURCE_REAUTH},
+            "id": subscription,
+            "type": "event",
+        }
+    for key in ("hassio", "reauth"):
+        response = await ws_client.receive_json()
+        assert response == {
+            "event": {
+                "flow_id": forms[key]["flow_id"],
+                "type": "remove",
             },
-            "flow_id": form_reauth["flow_id"],
-            "type": "init",
-        },
-        "id": subscription,
-        "type": "event",
-    }
-    response = await ws_client.receive_json()
-    assert response == {
-        "event": {
-            "flow_id": form_hassio["flow_id"],
-            "type": "remove",
-        },
-        "id": subscription,
-        "type": "event",
-    }
-    response = await ws_client.receive_json()
-    assert response == {
-        "event": {
-            "flow_id": form_reauth["flow_id"],
-            "type": "remove",
-        },
-        "id": subscription,
-        "type": "event",
-    }
+            "id": 1,
+            "type": "event",
+        }
 
 
 async def test_get_progress_subscribe_in_progress(
@@ -1078,27 +1052,25 @@ async def test_get_progress_subscribe_in_progress(
             assert self._get_reconfigure_entry() is entry
             return await self.async_step_account()
 
-    with mock_config_flow("test", TestFlow):
-        form_bluetooth = await hass.config_entries.flow.async_init(
-            "test", context={"source": core_ce.SOURCE_BLUETOOTH}
-        )
-        form_hassio = await hass.config_entries.flow.async_init(
-            "test", context={"source": core_ce.SOURCE_HASSIO}
-        )
-        form_user = await hass.config_entries.flow.async_init(
-            "test", context={"source": core_ce.SOURCE_USER}
-        )
-        form_reauth = await hass.config_entries.flow.async_init(
-            "test", context={"source": core_ce.SOURCE_REAUTH, "entry_id": "1234"}
-        )
-        form_reconfigure = await hass.config_entries.flow.async_init(
-            "test", context={"source": core_ce.SOURCE_RECONFIGURE, "entry_id": "1234"}
-        )
+    flow_context = {
+        "bluetooth": {"source": core_ce.SOURCE_BLUETOOTH},
+        "hassio": {"source": core_ce.SOURCE_HASSIO},
+        "user": {"source": core_ce.SOURCE_USER},
+        "reauth": {"source": core_ce.SOURCE_REAUTH, "entry_id": "1234"},
+        "reconfigure": {"source": core_ce.SOURCE_RECONFIGURE, "entry_id": "1234"},
+    }
+    forms = {}
 
-    assert form_bluetooth["type"] == data_entry_flow.FlowResultType.ABORT
-    for form in (form_hassio, form_user, form_reauth, form_reconfigure):
-        assert form["type"] == data_entry_flow.FlowResultType.FORM
-        assert form["step_id"] == "account"
+    with mock_config_flow("test", TestFlow):
+        for key, context in flow_context.items():
+            forms[key] = await hass.config_entries.flow.async_init(
+                "test", context=context
+            )
+
+    assert forms["bluetooth"]["type"] == data_entry_flow.FlowResultType.ABORT
+    for key in ("hassio", "user", "reauth", "reconfigure"):
+        assert forms[key]["type"] == data_entry_flow.FlowResultType.FORM
+        assert forms[key]["step_id"] == "account"
 
     await ws_client.send_json({"id": 1, "type": "config_entries/flow/subscribe"})
 
@@ -1112,63 +1084,37 @@ async def test_get_progress_subscribe_in_progress(
             {
                 "event": {
                     "flow": {
-                        "flow_id": form_hassio["flow_id"],
+                        "flow_id": forms[key]["flow_id"],
                         "handler": "test",
                         "step_id": "account",
-                        "context": {"source": core_ce.SOURCE_HASSIO},
+                        "context": flow_context[key],
                     },
-                    "flow_id": form_hassio["flow_id"],
+                    "flow_id": forms[key]["flow_id"],
                     "type": "init",
                 },
                 "id": 1,
                 "type": "event",
-            },
-            {
-                "event": {
-                    "flow": {
-                        "flow_id": form_reauth["flow_id"],
-                        "handler": "test",
-                        "step_id": "account",
-                        "context": {
-                            "entry_id": "1234",
-                            "source": core_ce.SOURCE_REAUTH,
-                        },
-                    },
-                    "flow_id": form_reauth["flow_id"],
-                    "type": "init",
-                },
-                "id": 1,
-                "type": "event",
-            },
+            }
+            for key in ("hassio", "reauth")
         ]
     )
 
     response = await ws_client.receive_json()
     assert response == {"id": ANY, "result": None, "success": True, "type": "result"}
 
-    hass.config_entries.flow.async_abort(form_hassio["flow_id"])
-    hass.config_entries.flow.async_abort(form_user["flow_id"])
-    hass.config_entries.flow.async_abort(form_reauth["flow_id"])
-    hass.config_entries.flow.async_abort(form_reconfigure["flow_id"])
+    for key in ("hassio", "user", "reauth", "reconfigure"):
+        hass.config_entries.flow.async_abort(forms[key]["flow_id"])
 
-    response = await ws_client.receive_json()
-    assert response == {
-        "event": {
-            "flow_id": form_hassio["flow_id"],
-            "type": "remove",
-        },
-        "id": 1,
-        "type": "event",
-    }
-    response = await ws_client.receive_json()
-    assert response == {
-        "event": {
-            "flow_id": form_reauth["flow_id"],
-            "type": "remove",
-        },
-        "id": 1,
-        "type": "event",
-    }
+    for key in ("hassio", "reauth"):
+        response = await ws_client.receive_json()
+        assert response == {
+            "event": {
+                "flow_id": forms[key]["flow_id"],
+                "type": "remove",
+            },
+            "id": 1,
+            "type": "event",
+        }
 
 
 async def test_get_progress_subscribe_unauth(
