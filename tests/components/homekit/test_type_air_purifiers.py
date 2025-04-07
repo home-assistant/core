@@ -8,8 +8,31 @@ from homeassistant.components.fan import (
     DOMAIN,
     FanEntityFeature,
 )
-from homeassistant.components.homekit.type_air_purifiers import AirPurifier
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, STATE_ON
+from homeassistant.components.homekit import (
+    CONF_LINKED_HUMIDITY_SENSOR,
+    CONF_LINKED_PM25_SENSOR,
+    CONF_LINKED_TEMPERATURE_SENSOR,
+)
+from homeassistant.components.homekit.const import (
+    CONF_LINKED_FILTER_CHANGE_INDICATION,
+    CONF_LINKED_FILTER_LIFE_LEVEL,
+    THRESHOLD_FILTER_CHANGE_NEEDED,
+)
+from homeassistant.components.homekit.type_air_purifiers import (
+    FILTER_CHANGE_FILTER,
+    FILTER_OK,
+    TARGET_STATE_AUTO,
+    TARGET_STATE_MANUAL,
+    AirPurifier,
+)
+from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
+    STATE_OFF,
+    STATE_ON,
+)
 
 from tests.common import async_mock_service
 
@@ -37,16 +60,17 @@ async def test_fan_auto_manual(hass, hk_driver, events):
 
     assert acc.auto_preset is not None
 
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
-    assert acc.char_target_air_purifier_state.value == 1
+    assert acc.char_target_air_purifier_state.value == TARGET_STATE_AUTO
 
     hass.states.async_set(
         entity_id,
         STATE_ON,
         {
-            ATTR_SUPPORTED_FEATURES: FanEntityFeature.PRESET_MODE,
+            ATTR_SUPPORTED_FEATURES: FanEntityFeature.PRESET_MODE
+            | FanEntityFeature.SET_SPEED,
             ATTR_PRESET_MODE: "smart",
             ATTR_PRESET_MODES: ["auto", "smart"],
         },
@@ -55,7 +79,7 @@ async def test_fan_auto_manual(hass, hk_driver, events):
 
     assert acc.preset_mode_chars["auto"].value == 0
     assert acc.preset_mode_chars["smart"].value == 1
-    assert acc.char_target_air_purifier_state.value == 0
+    assert acc.char_target_air_purifier_state.value == TARGET_STATE_MANUAL
 
     # Set from HomeKit
     call_set_preset_mode = async_mock_service(hass, DOMAIN, "set_preset_mode")
@@ -77,7 +101,7 @@ async def test_fan_auto_manual(hass, hk_driver, events):
     )
     await hass.async_block_till_done()
 
-    assert acc.char_target_air_purifier_state.value == 1
+    assert acc.char_target_air_purifier_state.value == TARGET_STATE_AUTO
     assert call_set_preset_mode[0]
     assert call_set_preset_mode[0].data[ATTR_ENTITY_ID] == entity_id
     assert call_set_preset_mode[0].data[ATTR_PRESET_MODE] == "auto"
@@ -97,8 +121,232 @@ async def test_fan_auto_manual(hass, hk_driver, events):
         "mock_addr",
     )
     await hass.async_block_till_done()
-    assert acc.char_target_air_purifier_state.value == 0
+    assert acc.char_target_air_purifier_state.value == TARGET_STATE_MANUAL
     assert call_set_percentage[0]
     assert call_set_percentage[0].data[ATTR_ENTITY_ID] == entity_id
     assert events[-1].data["service"] == "set_percentage"
     assert len(events) == 2
+
+
+async def test_expose_linked_sensors(hass, hk_driver, events):
+    """Test that linked sensors are exposed."""
+    entity_id = "fan.demo"
+
+    hass.states.async_set(
+        entity_id,
+        STATE_ON,
+        {
+            ATTR_SUPPORTED_FEATURES: FanEntityFeature.SET_SPEED,
+        },
+    )
+
+    humidity_entity_id = "sensor.demo_humidity"
+    hass.states.async_set(
+        humidity_entity_id,
+        50,
+        {
+            ATTR_DEVICE_CLASS: SensorDeviceClass.HUMIDITY,
+        },
+    )
+
+    pm25_entity_id = "sensor.demo_pm25"
+    hass.states.async_set(
+        pm25_entity_id,
+        10,
+        {
+            ATTR_DEVICE_CLASS: SensorDeviceClass.PM25,
+        },
+    )
+
+    temperature_entity_id = "sensor.demo_temperature"
+    hass.states.async_set(
+        temperature_entity_id,
+        25,
+        {
+            ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
+        },
+    )
+
+    await hass.async_block_till_done()
+    acc = AirPurifier(
+        hass,
+        hk_driver,
+        "Air Purifier",
+        entity_id,
+        1,
+        {
+            CONF_LINKED_TEMPERATURE_SENSOR: temperature_entity_id,
+            CONF_LINKED_PM25_SENSOR: pm25_entity_id,
+            CONF_LINKED_HUMIDITY_SENSOR: humidity_entity_id,
+        },
+    )
+    hk_driver.add_accessory(acc)
+
+    assert acc.linked_humidity_sensor is not None
+    assert acc.char_current_humidity is not None
+    assert acc.linked_pm25_sensor is not None
+    assert acc.char_pm25_density is not None
+    assert acc.char_air_quality is not None
+    assert acc.linked_temperature_sensor is not None
+    assert acc.char_current_temperature is not None
+
+    acc.run()
+    await hass.async_block_till_done()
+
+    assert acc.char_current_humidity.value == 50
+    assert acc.char_pm25_density.value == 10
+    assert acc.char_air_quality.value == 2
+    assert acc.char_current_temperature.value == 25
+
+    hass.states.async_set(humidity_entity_id, 60)
+    await hass.async_block_till_done()
+    assert acc.char_current_humidity.value == 60
+
+    hass.states.async_set(pm25_entity_id, 5)
+    await hass.async_block_till_done()
+    assert acc.char_pm25_density.value == 5
+    assert acc.char_air_quality.value == 1
+
+    hass.states.async_set(temperature_entity_id, 30)
+    await hass.async_block_till_done()
+    assert acc.char_current_temperature.value == 30
+
+
+async def test_filter_maintenance_linked_sensors(hass, hk_driver, events):
+    """Test that a linked filter level and filter change indicator are exposed."""
+    entity_id = "fan.demo"
+    hass.states.async_set(
+        entity_id,
+        STATE_ON,
+        {
+            ATTR_SUPPORTED_FEATURES: FanEntityFeature.SET_SPEED,
+        },
+    )
+
+    filter_change_indicator_entity_id = "binary_sensor.demo_filter_change_indicator"
+    hass.states.async_set(filter_change_indicator_entity_id, STATE_OFF)
+
+    filter_life_level_entity_id = "sensor.demo_filter_life_level"
+    hass.states.async_set(filter_life_level_entity_id, 50)
+
+    await hass.async_block_till_done()
+    acc = AirPurifier(
+        hass,
+        hk_driver,
+        "Air Purifier",
+        entity_id,
+        1,
+        {
+            CONF_LINKED_FILTER_CHANGE_INDICATION: filter_change_indicator_entity_id,
+            CONF_LINKED_FILTER_LIFE_LEVEL: filter_life_level_entity_id,
+        },
+    )
+    hk_driver.add_accessory(acc)
+
+    assert acc.linked_filter_change_indicator_binary_sensor is not None
+    assert acc.char_filter_change_indication is not None
+    assert acc.linked_filter_life_level_sensor is not None
+    assert acc.char_filter_life_level is not None
+
+    acc.run()
+    await hass.async_block_till_done()
+
+    assert acc.char_filter_change_indication.value == FILTER_OK
+    assert acc.char_filter_life_level.value == 50
+
+    hass.states.async_set(filter_change_indicator_entity_id, STATE_ON)
+    await hass.async_block_till_done()
+    assert acc.char_filter_change_indication.value == FILTER_CHANGE_FILTER
+
+    hass.states.async_set(filter_life_level_entity_id, 25)
+    await hass.async_block_till_done()
+    assert acc.char_filter_life_level.value == 25
+
+
+async def test_filter_maintenance_only_change_indicator_sensor(hass, hk_driver, events):
+    """Test that a linked filter change indicator is exposed."""
+    entity_id = "fan.demo"
+    hass.states.async_set(
+        entity_id,
+        STATE_ON,
+        {
+            ATTR_SUPPORTED_FEATURES: FanEntityFeature.SET_SPEED,
+        },
+    )
+
+    filter_change_indicator_entity_id = "binary_sensor.demo_filter_change_indicator"
+    hass.states.async_set(filter_change_indicator_entity_id, STATE_OFF)
+
+    await hass.async_block_till_done()
+    acc = AirPurifier(
+        hass,
+        hk_driver,
+        "Air Purifier",
+        entity_id,
+        1,
+        {
+            CONF_LINKED_FILTER_CHANGE_INDICATION: filter_change_indicator_entity_id,
+        },
+    )
+    hk_driver.add_accessory(acc)
+
+    assert acc.linked_filter_change_indicator_binary_sensor is not None
+    assert acc.char_filter_change_indication is not None
+    assert acc.linked_filter_life_level_sensor is None
+
+    acc.run()
+    await hass.async_block_till_done()
+
+    assert acc.char_filter_change_indication.value == FILTER_OK
+
+    hass.states.async_set(filter_change_indicator_entity_id, STATE_ON)
+    await hass.async_block_till_done()
+    assert acc.char_filter_change_indication.value == FILTER_CHANGE_FILTER
+
+
+async def test_filter_life_level_linked_sensors(hass, hk_driver, events):
+    """Test that a linked filter life level sensor exposed."""
+    entity_id = "fan.demo"
+    hass.states.async_set(
+        entity_id,
+        STATE_ON,
+        {
+            ATTR_SUPPORTED_FEATURES: FanEntityFeature.SET_SPEED,
+        },
+    )
+
+    filter_life_level_entity_id = "sensor.demo_filter_life_level"
+    hass.states.async_set(filter_life_level_entity_id, 50)
+
+    await hass.async_block_till_done()
+    acc = AirPurifier(
+        hass,
+        hk_driver,
+        "Air Purifier",
+        entity_id,
+        1,
+        {
+            CONF_LINKED_FILTER_LIFE_LEVEL: filter_life_level_entity_id,
+        },
+    )
+    hk_driver.add_accessory(acc)
+
+    assert acc.linked_filter_change_indicator_binary_sensor is None
+    assert (
+        acc.char_filter_change_indication is not None
+    )  # calculated based on filter life level
+    assert acc.linked_filter_life_level_sensor is not None
+    assert acc.char_filter_life_level is not None
+
+    acc.run()
+    await hass.async_block_till_done()
+
+    assert acc.char_filter_change_indication.value == FILTER_OK
+    assert acc.char_filter_life_level.value == 50
+
+    hass.states.async_set(
+        filter_life_level_entity_id, THRESHOLD_FILTER_CHANGE_NEEDED - 1
+    )
+    await hass.async_block_till_done()
+    assert acc.char_filter_life_level.value == THRESHOLD_FILTER_CHANGE_NEEDED - 1
+    assert acc.char_filter_change_indication.value == FILTER_CHANGE_FILTER
