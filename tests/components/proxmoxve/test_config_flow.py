@@ -11,7 +11,7 @@ from requests.exceptions import ConnectTimeout, SSLError
 from homeassistant.components.proxmoxve import CONF_HOST, CONF_REALM
 from homeassistant.components.proxmoxve.common import ResourceException
 from homeassistant.components.proxmoxve.const import CONF_NODES, DOMAIN
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_PORT, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -160,3 +160,47 @@ async def test_form_nodes_exception(
 
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"base": "no_nodes_found"}
+
+
+async def test_import_flow(
+    hass: HomeAssistant,
+    mock_setup_entry,
+    mock_proxmox_client,
+) -> None:
+    """Test importing from YAML creates a config entry and sets it up."""
+    MOCK_IMPORT_CONFIG = {
+        DOMAIN: {
+            **MOCK_USER_STEP,
+            **MOCK_USER_SETUP,
+        }
+    }
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=MOCK_IMPORT_CONFIG[DOMAIN]
+    )
+
+    # The import step should present the setup step to pick nodes
+    assert result["type"] == "form"
+    assert result["step_id"] == "setup"
+
+    # Submit selected nodes (simulate setup step)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"nodes": ["pve1"]},
+    )
+    await hass.async_block_till_done()
+
+    # Entry should now be created
+    assert result["type"] == "create_entry"
+    assert result["title"] == "127.0.0.1"
+    assert result["data"][CONF_HOST] == "127.0.0.1"
+
+    # Check that async_setup_entry was called
+    assert len(mock_setup_entry.mock_calls) == 1
+
+    # Optionally, verify entry is loaded
+    entry = next(
+        entry
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        if entry.data[CONF_HOST] == "127.0.0.1"
+    )
+    assert entry.state is ConfigEntryState.LOADED

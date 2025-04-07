@@ -21,6 +21,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
@@ -191,6 +192,27 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title=self._user_input[CONF_HOST], data=self._user_input
         )
+
+    async def async_step_import(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a flow initiated by configuration file."""
+        async_create_issue(
+            self.hass,
+            DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            breaks_in_ha_version="2025.11.0",  # Assuming this gets released in 2025.5?
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Proxmox VE",
+            },
+        )
+
+        return await self.async_step_user(user_input)
 
 
 class ProxmoxNoNodesFound(HomeAssistantError):
