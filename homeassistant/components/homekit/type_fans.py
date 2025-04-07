@@ -4,6 +4,7 @@ import logging
 from typing import Any
 
 from pyhap.const import CATEGORY_FAN
+from pyhap.service import Service
 
 from homeassistant.components.fan import (
     ATTR_DIRECTION,
@@ -136,7 +137,7 @@ class Fan(HomeAccessory):
         self.async_update_state(state)
         serv_fan.setter_callback = self.set_chars
 
-    def create_services(self) -> Any:
+    def create_services(self) -> Service:
         """Create and configure the primary service for this accessory."""
         if self.preset_modes and len(self.preset_modes) == 1:
             self.chars.append(CHAR_TARGET_FAN_STATE)

@@ -4,6 +4,7 @@ import logging
 from typing import Any
 
 from pyhap.const import CATEGORY_AIR_PURIFIER
+from pyhap.service import Service
 
 from homeassistant.const import STATE_ON
 from homeassistant.core import Event, EventStateChangedData, State, callback
@@ -57,7 +58,7 @@ class AirPurifier(Fan):
                 filter(lambda x: ("" + x).lower() == "auto", self.preset_modes), None
             )
 
-    def create_services(self) -> Any:
+    def create_services(self) -> Service:
         """Create and configure the primary service for this accessory."""
         self.chars.append(CHAR_ACTIVE)
         self.chars.append(CHAR_CURRENT_AIR_PURIFIER_STATE)
