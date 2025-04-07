@@ -11,7 +11,7 @@
     },
     "step": {
       "user": {
-        "title": "Configure homee",
+        "title": "Configure Homee",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "password": "[%key:common::config_flow::data::password%]",
@@ -45,7 +45,7 @@
       "load_alarm": {
         "name": "Load",
         "state": {
-          "off": "Normal",
+          "off": "[%key:common::state::normal%]",
           "on": "Overload"
         }
       },
