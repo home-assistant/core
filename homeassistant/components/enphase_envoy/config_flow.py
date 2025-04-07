@@ -202,10 +202,13 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_SERIAL: serial,
             CONF_HOST: reauth_entry.data[CONF_HOST],
         }
+        suggested_values = user_input or reauth_entry.data
         description_placeholders["serial"] = serial
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=self._async_generate_schema(),
+            data_schema=self.add_suggested_values_to_schema(
+                self._async_generate_schema(), suggested_values
+            ),
             description_placeholders=description_placeholders,
             errors=errors,
         )
@@ -262,7 +265,9 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=self._async_generate_schema(),
+            data_schema=self.add_suggested_values_to_schema(
+                self._async_generate_schema(), user_input
+            ),
             description_placeholders=description_placeholders,
             errors=errors,
         )
