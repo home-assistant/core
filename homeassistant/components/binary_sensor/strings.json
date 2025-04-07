@@ -125,7 +125,7 @@
       "name": "Battery",
       "state": {
         "off": "[%key:common::state::normal%]",
-        "on": "Low"
+        "on": "[%key:common::state::low%]"
       }
     },
     "battery_charging": {
