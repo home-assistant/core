@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -30,18 +30,9 @@ class SFTPConfigEntryData:
     host: str
     port: int = 22
     username: str
-    password: str = ""
+    password: str = field(repr=False)
     private_key_file: str = ""
     backup_location: str = ""
-
-    def __str__(self):
-        """Override string implementation of Config Entry to hide password."""
-        str_repr = super().__str__()
-        if bool(self.password):
-            return str_repr.replace(
-                f"password='{self.password}'", "password='<hidden>'"
-            )
-        return str_repr
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SFTPConfigEntry) -> bool:
