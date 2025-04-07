@@ -137,11 +137,15 @@
         "step": {
           "start": {
             "title": "Device conflict for {name}",
-            "description": "The ESPHome device with {name} ({model}) at {ip} has changed from {stored_mac} to {mac}. If you have multiple devices with the same name, please rename one one with MAC address {mac} to a new name to avoid conflicts.\n\nIf you have replaced the device with new hardware, confirm that you want to migrate the configuration to the new device."
+            "description": "The ESPHome device with `{name}` (`{model}`) at `{ip}` has changed from `{stored_mac}` to `{mac}`. If you have multiple devices with the same name, please rename the one with MAC address `{mac}` to a new name to avoid conflicts.\n\nIf you have replaced the device with new hardware, confirm that you want to migrate the configuration to the new device."
           },
           "confirm": {
             "title": "Confirm device replacement for {name}",
-            "description": "Are you sure you want to migrate {name} ({model}) at {ip} from {stored_mac} to {mac}?"
+            "description": "Are you sure you want to migrate `{name}` (`{model}`) at `{ip}` from `{stored_mac}` to `{mac}`?"
+          },
+          "ignored": {
+            "title": "Device conflict for {name} ignored",
+            "description": "Please rename the device with MAC address `{mac}` to a new name to avoid conflicts"
           }
         }
       }

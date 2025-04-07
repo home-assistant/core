@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 import voluptuous as vol
 
 from homeassistant import data_entry_flow
@@ -34,18 +32,6 @@ class ESPHomeRepair(RepairsFlow):
         return description_placeholders
 
 
-DEVICE_CONFLICT_SCHEMA = vol.Schema(
-    {
-        vol.Required("action"): vol.In(
-            {
-                "replace_device": "Replace device",
-                "ignore_device": "Ignore device",
-            },
-        ),
-    }
-)
-
-
 class DeviceConflictRepair(ESPHomeRepair):
     """Handler for an issue fixing device conflict."""
 
@@ -62,12 +48,18 @@ class DeviceConflictRepair(ESPHomeRepair):
         if user_input is None:
             return self.async_show_form(
                 step_id="start",
-                data_schema=DEVICE_CONFLICT_SCHEMA,
+                data_schema=vol.Schema(
+                    {
+                        vol.Required("action"): vol.In(
+                            {"replace": "Replace", "ignore": "Ignore"}
+                        )
+                    }
+                ),
                 description_placeholders=self._async_get_placeholders(),
             )
-        if user_input["action"] == "replace_device":
+        if user_input["action"] == "replace":
             return await self.async_step_confirm()
-        return self.async_abort(reason="ignored")
+        return await self.async_step_ignored()
 
     async def async_step_confirm(
         self, user_input: dict[str, str] | None = None
@@ -79,14 +71,24 @@ class DeviceConflictRepair(ESPHomeRepair):
                 data_schema=vol.Schema({}),
                 description_placeholders=self._async_get_placeholders(),
             )
-        if TYPE_CHECKING:
-            assert isinstance(self._data, dict)
+        assert isinstance(self._data, dict)
         entry_id = self._data["entry_id"]
-        new_mac = self._data["new_mac"]  # is formatted with format_mac
-        if TYPE_CHECKING:
-            assert isinstance(entry_id, str)
-            assert isinstance(new_mac, str)
-        async_replace_device(self.hass, entry_id, new_mac)
+        mac = self._data["mac"]
+        assert isinstance(entry_id, str)
+        assert isinstance(mac, str)
+        async_replace_device(self.hass, entry_id, mac)
+        return self.async_create_entry(data={})
+
+    async def async_step_ignored(
+        self, user_input: dict[str, str] | None = None
+    ) -> data_entry_flow.FlowResult:
+        """Handle the ignored step of a fix flow."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="ignored",
+                data_schema=vol.Schema({}),
+                description_placeholders=self._async_get_placeholders(),
+            )
         return self.async_create_entry(data={})
 
 
@@ -99,7 +101,7 @@ async def async_create_fix_flow(
     if issue_id.startswith("assist_in_progress_deprecated"):
         return AssistInProgressDeprecatedRepairFlow(data)
     if issue_id.startswith("device_conflict"):
-        return ESPHomeRepair(data)
+        return DeviceConflictRepair(data)
     # If ESPHome adds confirm-only repairs in the future, this should be changed
     # to return a ConfirmRepairFlow instead of raising a ValueError
     raise ValueError(f"unknown repair {issue_id}")
