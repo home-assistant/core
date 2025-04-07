@@ -15,7 +15,7 @@ from .const import DOMAIN
 
 
 async def async_setup_entry(
-    hass: HomeAssistant | None,
+    hass: HomeAssistant,
     config_entry: BoschAlarmConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
@@ -23,12 +23,11 @@ async def async_setup_entry(
 
     panel = config_entry.runtime_data
     unique_id = config_entry.unique_id or config_entry.entry_id
-    async_add_entities(
-        [
-            PanelFaultsSensor(panel, unique_id),
-        ]
-    )
-    async_add_entities(
+    entities: list[SensorEntity] = [
+        PanelFaultsSensor(panel, unique_id),
+    ]
+
+    entities.extend(
         AreaReadyToArmSensor(
             panel,
             area_id,
@@ -36,7 +35,7 @@ async def async_setup_entry(
         )
         for area_id in panel.areas
     )
-    async_add_entities(
+    entities.extend(
         FaultingPointsSensor(
             panel,
             area_id,
@@ -44,7 +43,7 @@ async def async_setup_entry(
         )
         for area_id in panel.areas
     )
-    async_add_entities(
+    entities.extend(
         AreaAlarmsSensor(
             panel,
             area_id,
@@ -52,6 +51,7 @@ async def async_setup_entry(
         )
         for area_id in panel.areas
     )
+    async_add_entities(entities)
 
 
 PARALLEL_UPDATES = 0
