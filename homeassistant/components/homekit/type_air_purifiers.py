@@ -266,7 +266,10 @@ class AirPurifier(Fan):
             return
 
         current_humidity = float(new_state.state)
-        if self.char_current_humidity.value == current_humidity:
+        if (
+            not self.char_current_humidity
+            or self.char_current_humidity.value == current_humidity
+        ):
             return
 
         _LOGGER.debug(
@@ -291,7 +294,7 @@ class AirPurifier(Fan):
             return
 
         current_pm25 = float(new_state.state)
-        if self.char_pm25_density.value == current_pm25:
+        if not self.char_pm25_density or self.char_pm25_density.value == current_pm25:
             return
 
         _LOGGER.debug(
@@ -319,7 +322,10 @@ class AirPurifier(Fan):
             return
 
         current_temperature = float(new_state.state)
-        if self.char_current_temperature.value == current_temperature:
+        if (
+            not self.char_current_temperature
+            or self.char_current_temperature.value == current_temperature
+        ):
             return
 
         _LOGGER.debug(
@@ -333,12 +339,12 @@ class AirPurifier(Fan):
     @callback
     def _async_update_filter_change_indicator_event(
         self, event: Event[EventStateChangedData]
-    ):
+    ) -> None:
         """Handle state change event listener callback."""
         self._async_update_filter_change_indicator(event.data.get("new_state"))
 
     @callback
-    def _async_update_filter_change_indicator(self, new_state: State | None):
+    def _async_update_filter_change_indicator(self, new_state: State | None) -> None:
         """Handle linked filter change indicator binary sensor state change to update HomeKit value."""
         if new_state is None:
             return
@@ -346,7 +352,10 @@ class AirPurifier(Fan):
         current_change_indicator = (
             FILTER_CHANGE_FILTER if new_state.state == "on" else FILTER_OK
         )
-        if self.char_filter_change_indication.value == current_change_indicator:
+        if (
+            not self.char_filter_change_indication
+            or self.char_filter_change_indication.value == current_change_indicator
+        ):
             return
 
         _LOGGER.debug(
@@ -360,18 +369,21 @@ class AirPurifier(Fan):
     @callback
     def _async_update_filter_life_level_event(
         self, event: Event[EventStateChangedData]
-    ):
+    ) -> None:
         """Handle state change event listener callback."""
         self._async_update_filter_life_level(event.data.get("new_state"))
 
     @callback
-    def _async_update_filter_life_level(self, new_state: State | None):
+    def _async_update_filter_life_level(self, new_state: State | None) -> None:
         """Handle linked filter life level sensor state change to update HomeKit value."""
         if new_state is None:
             return
 
         current_life_level = float(new_state.state)
-        if self.char_filter_life_level.value != current_life_level:
+        if (
+            self.char_filter_life_level
+            and self.char_filter_life_level.value != current_life_level
+        ):
             _LOGGER.debug(
                 "%s: Linked filter life level sensor %s changed to %d",
                 self.entity_id,
@@ -389,7 +401,10 @@ class AirPurifier(Fan):
             if (current_life_level < THRESHOLD_FILTER_CHANGE_NEEDED)
             else FILTER_OK
         )
-        if self.char_filter_change_indication.value == current_change_indicator:
+        if (
+            not self.char_filter_change_indication
+            or self.char_filter_change_indication.value == current_change_indicator
+        ):
             return
 
         _LOGGER.debug(
