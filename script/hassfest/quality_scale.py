@@ -1993,7 +1993,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "smarttub",
     "smarty",
     "smhi",
-    "smlight",
     "sms",
     "smtp",
     "snapcast",
