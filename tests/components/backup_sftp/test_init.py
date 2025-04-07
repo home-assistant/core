@@ -76,14 +76,4 @@ async def test_setup_error_reauth(
 async def test_config_entry_data_password_hidden() -> None:
     """Test hiding password in `SFTPConfigEntryData` string representation."""
     entry_data = SFTPConfigEntryData(**USER_INPUT)
-    assert "password='<hidden>'" in str(entry_data)
-
-    user_input = USER_INPUT.copy()
-    user_input["password"] = None
-    entry_data = SFTPConfigEntryData(**user_input)
-    assert "password=None" in str(entry_data)
-
-    user_input = USER_INPUT.copy()
-    user_input["password"] = ""
-    entry_data = SFTPConfigEntryData(**user_input)
-    assert "password=''" in str(entry_data)
+    assert "password=" not in str(entry_data)
