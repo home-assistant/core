@@ -148,7 +148,7 @@ DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
         key="drive_state_shift_state",
         options=["p", "d", "r", "n"],
         device_class=SensorDeviceClass.ENUM,
-        value_fn=lambda x: x.lower() if isinstance(x, str) else x,
+        value_fn=lambda x: x.lower() if isinstance(x, str) else "p",
     ),
     TessieSensorEntityDescription(
         key="vehicle_state_odometer",
@@ -397,6 +397,7 @@ async def async_setup_entry(
                 for energysite in entry.runtime_data.energysites
                 for description in ENERGY_LIVE_DESCRIPTIONS
                 if description.key in energysite.live_coordinator.data
+                or description.key == "percentage_charged"
             ),
             (  # Add wall connectors
                 TessieWallConnectorSensorEntity(energysite, din, description)
@@ -449,7 +450,6 @@ class TessieEnergyLiveSensorEntity(TessieEnergyEntity, SensorEntity):
 
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
-        self._attr_available = self._value is not None
         self._attr_native_value = self.entity_description.value_fn(self._value)
 
 

@@ -20,6 +20,9 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import ComelitConfigEntry, ComelitSerialBridge, ComelitVedoSystem
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 SENSOR_BRIDGE_TYPES: Final = (
     SensorEntityDescription(
         key="power",

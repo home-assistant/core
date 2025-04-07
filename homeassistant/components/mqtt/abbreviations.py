@@ -150,6 +150,7 @@ ABBREVIATIONS = {
     "pl_rst_pct": "payload_reset_percentage",
     "pl_rst_pr_mode": "payload_reset_preset_mode",
     "pl_stop": "payload_stop",
+    "pl_stop_tilt": "payload_stop_tilt",
     "pl_strt": "payload_start",
     "pl_ret": "payload_return_to_base",
     "pl_toff": "payload_turn_off",
