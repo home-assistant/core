@@ -923,8 +923,9 @@ def async_replace_device(
         )
     ent_reg = er.async_get(hass)
     for entity in er.async_entries_for_config_entry(ent_reg, entry.entry_id):
-        old_unique_id = entity.unique_id.split("_")
+        # <mac>-<entity type>-<object_id>
+        old_unique_id = entity.unique_id.split("-")
         ent_reg.async_update_entity(
             entity.entity_id,
-            new_unique_id="_".join([new_unique_id, *old_unique_id[1:]]),
+            new_unique_id="-".join([new_unique_id, *old_unique_id[1:]]),
         )
