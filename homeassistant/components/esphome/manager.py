@@ -927,7 +927,4 @@ def async_replace_device(
         old_unique_id = entity.unique_id.split("-")
         new_unique_id = "-".join([new_unique_id, *old_unique_id[1:]])
         if entity.unique_id != new_unique_id:
-            ent_reg.async_update_entity(
-                entity.entity_id,
-                new_unique_id="-".join([new_unique_id, *old_unique_id[1:]]),
-            )
+            ent_reg.async_update_entity(entity.entity_id, new_unique_id=new_unique_id)
