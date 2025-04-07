@@ -55,6 +55,7 @@ class MatterGenericSwitchEventEntity(MatterEntity, EventEntity):
         super().__init__(*args, **kwargs)
         # fill the event types based on the features the switch supports
         event_types: list[str] = []
+        event_types.append("any_button_interaction")
         feature_map = int(
             self.get_matter_attribute_value(clusters.Switch.Attributes.FeatureMap)
         )
@@ -124,6 +125,12 @@ class MatterGenericSwitchEventEntity(MatterEntity, EventEntity):
             # some remotes send events that they do not report as supported (sigh...)
             return
 
+        # For each button interaction, generate two event. The first is a high-level event that enables triggering on any type of button interaction.
+        # This first event also fixes an automation issue in which the state change trigger only picks up the event if the prior event
+        # was different. By inserting the any_button_interaction, it ensures that that code never generates two of the same events in a row
+        # the second event is more specific and conveys the specific interaction event.
+        self._trigger_event("any_button_interaction", data.data)
+        self.async_write_ha_state()
         # pass the rest of the data as-is (such as the advanced Position data)
         self._trigger_event(event_type, data.data)
         self.async_write_ha_state()
@@ -356,7 +363,7 @@ class MatterDoorLockEventEntity(MatterEntity, EventEntity):
             case clusters.DoorLock.Events.DoorLockAlarm.event_id:
                 # Event 2 is an event that further conveys the Alarm Code information from Matter App. Cluster Spec. 5.2.6.7.
                 event_type = DOOR_LOCK_EVENT_TYPES_EXTENDED_MAP[data.event_id][
-                    data.data["alarmCode"]
+                    data.data.get("alarmCode")
                 ]
                 self._trigger_event(event_type, data.data)
                 self.async_write_ha_state()
@@ -364,7 +371,7 @@ class MatterDoorLockEventEntity(MatterEntity, EventEntity):
             case clusters.DoorLock.Events.DoorStateChange.event_id:
                 # Event 2 is an event that further conveys the Alarm Code information from Matter App. Cluster Spec. 5.2.6.11.
                 event_type = DOOR_LOCK_EVENT_TYPES_EXTENDED_MAP[data.event_id][
-                    data.data["doorState"]
+                    data.data.get("doorState")
                 ]
                 self._trigger_event(event_type, data.data)
                 self.async_write_ha_state()
@@ -374,7 +381,7 @@ class MatterDoorLockEventEntity(MatterEntity, EventEntity):
                 | clusters.DoorLock.Events.LockOperationError.event_id
             ):  # This case applies to both LockOperation or LockOperationError event types
                 event_type = DOOR_LOCK_EVENT_TYPES_EXTENDED_MAP[data.event_id][
-                    data.data["lockOperationType"]
+                    data.data.get("lockOperationType")
                 ]
 
                 # Event 2 is an event that conveys the LockOperationType information from Matter App. Cluster Spec. 5.2.6.13.
@@ -383,13 +390,13 @@ class MatterDoorLockEventEntity(MatterEntity, EventEntity):
                 self.async_write_ha_state()
 
                 # Event 3 is an event that further conveys the operationSource information from Matter App. Cluster Spec. Section 5.2.6.16
-                event_type = f"{event_type}: {DOOR_LOCK_OPERATION_SOURCE[data.data['operationSource']]}"
+                event_type = f"{event_type}: {DOOR_LOCK_OPERATION_SOURCE[data.data.get('operationSource')]}"
                 self._trigger_event(event_type, data.data)
                 self.async_write_ha_state()
 
             case clusters.DoorLock.Events.LockUserChange.event_id:
                 event_type = DOOR_LOCK_EVENT_TYPES_EXTENDED_MAP[data.event_id][
-                    data.data["lockDataType"]
+                    data.data.get("lockDataType")
                 ]
                 # Event 2 is an event that further conveys the LockDataType information from Matter App. Cluster Spec. 5.2.6.12.
                 # This is designated as "(Any)" event since triggering on this will include all further subcategories
@@ -397,7 +404,7 @@ class MatterDoorLockEventEntity(MatterEntity, EventEntity):
                 self.async_write_ha_state()
 
                 # Event 3 is an event that further conveys the DataOperationType information from Matter App. Cluster Spec. Section 5.2.6.10
-                event_type = f"{event_type}: {DOOR_LOCK_DATA_OPERATION_TYPE[data.data['dataOperationType']]}"
+                event_type = f"{event_type}: {DOOR_LOCK_DATA_OPERATION_TYPE[data.data.get('dataOperationType')]}"
                 self._trigger_event(event_type, data.data)
                 self.async_write_ha_state()
 
