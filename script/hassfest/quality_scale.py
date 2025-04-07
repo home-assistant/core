@@ -921,7 +921,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "smarttub",
     "smarty",
     "smhi",
-    "smlight",
     "sms",
     "smtp",
     "snapcast",
