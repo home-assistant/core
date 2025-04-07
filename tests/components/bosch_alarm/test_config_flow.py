@@ -282,7 +282,7 @@ async def test_dhcp_exceptions(
     assert result["reason"] == message
 
 
-async def test_dhcp_already_exists(
+async def test_dhcp_updates_mac(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
@@ -307,6 +307,7 @@ async def test_dhcp_already_exists(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_MAC] == "34:ea:34:b4:3b:5a"
 
 
 @pytest.mark.parametrize("mac_address", ["34ea34b43b5a"])
@@ -335,7 +336,7 @@ async def test_dhcp_updates_host(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert mock_config_entry.data["host"] == "4.5.6.7"
+    assert mock_config_entry.data[CONF_HOST] == "4.5.6.7"
 
 
 async def test_reauth_flow_success(

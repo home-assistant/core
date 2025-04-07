@@ -126,14 +126,25 @@ class BoschAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle DHCP discovery."""
-        self._async_abort_entries_match({CONF_HOST: discovery_info.ip})
+        mac = format_mac(discovery_info.macaddress)
         for entry in self.hass.config_entries.async_entries(DOMAIN):
-            if entry.data[CONF_MAC] == format_mac(discovery_info.macaddress):
+            if entry.data[CONF_MAC] == mac:
                 result = self.hass.config_entries.async_update_entry(
                     entry,
                     data={
                         **entry.data,
                         CONF_HOST: discovery_info.ip,
+                    },
+                )
+                if result:
+                    self.hass.config_entries.async_schedule_reload(entry.entry_id)
+                return self.async_abort(reason="already_configured")
+            if entry.data[CONF_HOST] == discovery_info.ip:
+                result = self.hass.config_entries.async_update_entry(
+                    entry,
+                    data={
+                        **entry.data,
+                        CONF_MAC: mac,
                     },
                 )
                 if result:
@@ -159,7 +170,7 @@ class BoschAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         self._data = {
             CONF_HOST: discovery_info.ip,
-            CONF_MAC: format_mac(discovery_info.macaddress),
+            CONF_MAC: mac,
             CONF_MODEL: model,
             CONF_PORT: 7700,
         }
