@@ -120,6 +120,7 @@
         "state_attributes": {
           "event_type": {
             "state": {
+              "any_button_interaction": "(Any button interaction)",
               "switch_latched": "Switch latched",
               "initial_press": "Pressed",
               "long_press": "Held down",
@@ -222,7 +223,7 @@
         "name": "Number of rinses",
         "state": {
           "off": "[%key:common::state::off%]",
-          "normal": "[%key:common::state::normal%]",
+          "normal": "Normal",
           "extra": "Extra",
           "max": "Max"
         }
@@ -238,7 +239,7 @@
       "contamination_state": {
         "name": "Contamination state",
         "state": {
-          "normal": "[%key:common::state::normal%]",
+          "normal": "Normal",
           "low": "[%key:common::state::low%]",
           "warning": "Warning",
           "critical": "Critical"
