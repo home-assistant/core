@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import contextlib
+import itertools
 import logging
 from typing import Any
 
@@ -21,6 +22,7 @@ from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ICON,
     CONF_NAME,
+    CONF_STATE,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
 )
@@ -30,7 +32,7 @@ from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
 from . import config_validation as cv
 from .entity import Entity
-from .template import TemplateStateFromEntityId, render_complex
+from .template import _SENTINEL, TemplateStateFromEntityId, render_complex
 from .typing import ConfigType
 
 CONF_AVAILABILITY = "availability"
@@ -197,33 +199,81 @@ class TriggerBaseEntity(Entity):
                 extra_state_attributes[attr] = last_state.attributes[attr]
             self._rendered[CONF_ATTRIBUTES] = extra_state_attributes
 
-    def _render_templates(self, variables: dict[str, Any]) -> None:
-        """Render templates."""
+    def _render_single_template(
+        self,
+        key: str,
+        variables: dict[str, Any],
+        strict: bool = False,
+    ) -> Any:
+        """Render a single template."""
         try:
-            rendered = dict(self._static_rendered)
+            if key in self._to_render_complex:
+                return render_complex(self._config[key], variables)
 
-            for key in self._to_render_simple:
-                rendered[key] = self._config[key].async_render(
-                    variables,
-                    parse_result=key in self._parse_result,
-                )
-
-            for key in self._to_render_complex:
-                rendered[key] = render_complex(
-                    self._config[key],
-                    variables,
-                )
-
-            if CONF_ATTRIBUTES in self._config:
-                rendered[CONF_ATTRIBUTES] = render_complex(
-                    self._config[CONF_ATTRIBUTES],
-                    variables,
-                )
-
-            self._rendered = rendered
+            return self._config[key].async_render(
+                variables, parse_result=key in self._parse_result, strict=strict
+            )
         except TemplateError as err:
             log_triggered_template_error(self.entity_id, err, key=key)
-            self._rendered = self._static_rendered
+
+        return _SENTINEL
+
+    def _render_templates(self, variables: dict[str, Any]) -> None:
+        """Render templates."""
+        rendered = dict(self._static_rendered)
+
+        # Check availability first and render as a simple template because
+        # availability should only be able to render True, False, or None.
+        available = True
+        if CONF_AVAILABILITY in self._to_render_simple:
+            if (
+                result := self._render_single_template(
+                    CONF_AVAILABILITY, variables, strict=True
+                )
+            ) is not _SENTINEL:
+                rendered[CONF_AVAILABILITY] = available = result
+
+        if not available:
+            self._rendered = rendered
+            return
+
+        # If state fails to render, the entity should go unavailable.  Render the
+        # state as a simple template because the result should always be a string or None.
+        if CONF_STATE in self._to_render_simple:
+            if (
+                result := self._render_single_template(CONF_STATE, variables)
+            ) is _SENTINEL:
+                self._rendered = self._static_rendered
+                return
+
+            rendered[CONF_STATE] = result
+
+        for key in itertools.chain(self._to_render_simple, self._to_render_complex):
+            # Skip availability because we already handled it before.
+            if key in (CONF_AVAILABILITY, CONF_STATE):
+                continue
+
+            if (
+                result := self._render_single_template(
+                    key, variables, strict=key in self._to_render_complex
+                )
+            ) is not _SENTINEL:
+                rendered[key] = result
+
+        if CONF_ATTRIBUTES in self._config:
+            attributes = {}
+            for attribute, attribute_template in self._config[CONF_ATTRIBUTES].items():
+                try:
+                    value = render_complex(attribute_template, variables)
+                    attributes[attribute] = value
+                    variables.update({attribute: value})
+                except TemplateError as err:
+                    log_triggered_template_error(
+                        self.entity_id, err, attribute=attribute
+                    )
+            rendered[CONF_ATTRIBUTES] = attributes
+
+        self._rendered = rendered
 
 
 class ManualTriggerEntity(TriggerBaseEntity):
