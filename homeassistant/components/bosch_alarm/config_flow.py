@@ -120,7 +120,7 @@ class BoschAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
                         self._get_reconfigure_entry().data[CONF_MODEL]
                         != self._data[CONF_MODEL]
                     ):
-                        raise AbortFlow("device_mismatch")
+                        return self.async_abort(reason="device_mismatch")
                 return await self.async_step_auth()
         return self.async_show_form(
             step_id="user",
