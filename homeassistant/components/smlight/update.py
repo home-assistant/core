@@ -26,6 +26,8 @@ from .const import LOGGER
 from .coordinator import SmConfigEntry, SmFirmwareUpdateCoordinator, SmFwData
 from .entity import SmEntity
 
+PARALLEL_UPDATES = 1
+
 
 def zigbee_latest_version(data: SmFwData, idx: int) -> Firmware | None:
     """Get the latest Zigbee firmware version."""
