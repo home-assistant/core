@@ -115,13 +115,13 @@
     },
     "button": {
       "operation_mode_start": {
-        "name": "Start"
+        "name": "[%key:common::action::start%]"
       },
       "operation_mode_start_for_location": {
         "name": "{location} start"
       },
       "operation_mode_stop": {
-        "name": "Pause"
+        "name": "[%key:common::action::pause%]"
       },
       "operation_mode_stop_for_location": {
         "name": "{location} pause"
