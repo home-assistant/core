@@ -3066,7 +3066,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.add_extension("jinja2.ext.do")
 
         self.globals["acos"] = arc_cosine
-        self.globals["apply"] = apply
         self.globals["as_datetime"] = as_datetime
         self.globals["as_function"] = as_function
         self.globals["as_local"] = dt_util.as_local
