@@ -23,6 +23,7 @@ class ESPHomeRepair(RepairsFlow):
     def __init__(self, data: dict[str, str | int | float | None] | None) -> None:
         """Initialize."""
         self._data = data
+        super().__init__()
 
     @callback
     def _async_get_placeholders(self) -> dict[str, str]:
@@ -31,6 +32,18 @@ class ESPHomeRepair(RepairsFlow):
         if issue := issue_registry.async_get_issue(self.handler, self.issue_id):
             return issue.translation_placeholders or {}
         return description_placeholders
+
+
+DEVICE_CONFLICT_SCHEMA = vol.Schema(
+    {
+        vol.Required("action"): vol.In(
+            {
+                "replace_device": "Replace device",
+                "ignore_device": "Ignore device",
+            },
+        ),
+    }
+)
 
 
 class DeviceConflictRepair(ESPHomeRepair):
@@ -49,10 +62,12 @@ class DeviceConflictRepair(ESPHomeRepair):
         if user_input is None:
             return self.async_show_form(
                 step_id="start",
-                data_schema=vol.Schema({}),
+                data_schema=DEVICE_CONFLICT_SCHEMA,
                 description_placeholders=self._async_get_placeholders(),
             )
-        return await self.async_step_confirm()
+        if user_input["action"] == "replace_device":
+            return await self.async_step_confirm()
+        return self.async_abort(reason="ignored")
 
     async def async_step_confirm(
         self, user_input: dict[str, str] | None = None
@@ -83,7 +98,7 @@ async def async_create_fix_flow(
     """Create flow."""
     if issue_id.startswith("assist_in_progress_deprecated"):
         return AssistInProgressDeprecatedRepairFlow(data)
-    if issue_id.startswith("device_conflict_"):
+    if issue_id.startswith("device_conflict"):
         return ESPHomeRepair(data)
     # If ESPHome adds confirm-only repairs in the future, this should be changed
     # to return a ConfirmRepairFlow instead of raising a ValueError
