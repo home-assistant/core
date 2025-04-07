@@ -49,6 +49,8 @@ CONF_EXCLUDE_ACCESSORY_MODE = "exclude_accessory_mode"
 CONF_LINKED_BATTERY_SENSOR = "linked_battery_sensor"
 CONF_LINKED_BATTERY_CHARGING_SENSOR = "linked_battery_charging_sensor"
 CONF_LINKED_DOORBELL_SENSOR = "linked_doorbell_sensor"
+CONF_LINKED_FILTER_CHANGE_INDICATION = "linked_filter_change_indication_binary_sensor"
+CONF_LINKED_FILTER_LIFE_LEVEL = "linked_filter_life_level_sensor"
 CONF_LINKED_MOTION_SENSOR = "linked_motion_sensor"
 CONF_LINKED_HUMIDITY_SENSOR = "linked_humidity_sensor"
 CONF_LINKED_OBSTRUCTION_SENSOR = "linked_obstruction_sensor"
@@ -140,6 +142,7 @@ SERV_CONTACT_SENSOR = "ContactSensor"
 SERV_DOOR = "Door"
 SERV_DOORBELL = "Doorbell"
 SERV_FANV2 = "Fanv2"
+SERV_FILTER_MAINTENANCE = "FilterMaintenance"
 SERV_GARAGE_DOOR_OPENER = "GarageDoorOpener"
 SERV_HUMIDIFIER_DEHUMIDIFIER = "HumidifierDehumidifier"
 SERV_HUMIDITY_SENSOR = "HumiditySensor"
@@ -198,6 +201,8 @@ CHAR_CURRENT_TEMPERATURE = "CurrentTemperature"
 CHAR_CURRENT_TILT_ANGLE = "CurrentHorizontalTiltAngle"
 CHAR_CURRENT_VISIBILITY_STATE = "CurrentVisibilityState"
 CHAR_DEHUMIDIFIER_THRESHOLD_HUMIDITY = "RelativeHumidityDehumidifierThreshold"
+CHAR_FILTER_CHANGE_INDICATION = "FilterChangeIndication"
+CHAR_FILTER_LIFE_LEVEL = "FilterLifeLevel"
 CHAR_FIRMWARE_REVISION = "FirmwareRevision"
 CHAR_HARDWARE_REVISION = "HardwareRevision"
 CHAR_HEATING_THRESHOLD_TEMPERATURE = "HeatingThresholdTemperature"
@@ -263,6 +268,7 @@ PROP_VALID_VALUES = "ValidValues"
 # #### Thresholds ####
 THRESHOLD_CO = 25
 THRESHOLD_CO2 = 1000
+THRESHOLD_FILTER_CHANGE_NEEDED = 10
 
 # #### Default values ####
 DEFAULT_MIN_TEMP_WATER_HEATER = 40  # °C

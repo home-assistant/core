@@ -17,19 +17,25 @@ from .const import (
     CHAR_CURRENT_AIR_PURIFIER_STATE,
     CHAR_CURRENT_HUMIDITY,
     CHAR_CURRENT_TEMPERATURE,
+    CHAR_FILTER_CHANGE_INDICATION,
+    CHAR_FILTER_LIFE_LEVEL,
     CHAR_NAME,
     CHAR_PM25_DENSITY,
     CHAR_TARGET_AIR_PURIFIER_STATE,
+    CONF_LINKED_FILTER_CHANGE_INDICATION,
+    CONF_LINKED_FILTER_LIFE_LEVEL,
     CONF_LINKED_HUMIDITY_SENSOR,
     CONF_LINKED_PM25_SENSOR,
     CONF_LINKED_TEMPERATURE_SENSOR,
     SERV_AIR_PURIFIER,
     SERV_AIR_QUALITY_SENSOR,
+    SERV_FILTER_MAINTENANCE,
     SERV_HUMIDITY_SENSOR,
     SERV_TEMPERATURE_SENSOR,
+    THRESHOLD_FILTER_CHANGE_NEEDED,
 )
 from .type_fans import ATTR_PRESET_MODE, CHAR_ROTATION_SPEED, Fan
-from .util import density_to_air_quality
+from .util import cleanup_name_for_homekit, density_to_air_quality
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,6 +44,8 @@ CURRENT_STATE_IDLE = 1
 CURRENT_STATE_PURIFYING_AIR = 2
 TARGET_STATE_MANUAL = 0
 TARGET_STATE_AUTO = 1
+FILTER_CHANGE_FILTER = 1
+FILTER_OK = 0
 
 
 @TYPES.register("AirPurifier")
@@ -72,6 +80,8 @@ class AirPurifier(Fan):
         self.char_current_humidity = None
         self.char_pm25_density = None
         self.char_current_temperature = None
+        self.char_filter_change_indication = None
+        self.char_filter_life_level = None
 
         self.char_target_air_purifier_state = serv_air_purifier.configure_char(
             CHAR_TARGET_AIR_PURIFIER_STATE,
@@ -126,6 +136,54 @@ class AirPurifier(Fan):
             if temperature_state:
                 self._async_update_current_temperature(temperature_state)
 
+        self.linked_filter_change_indicator_binary_sensor = self.config.get(
+            CONF_LINKED_FILTER_CHANGE_INDICATION
+        )
+        self.linked_filter_life_level_sensor = self.config.get(
+            CONF_LINKED_FILTER_LIFE_LEVEL
+        )
+        if (
+            self.linked_filter_change_indicator_binary_sensor
+            or self.linked_filter_life_level_sensor
+        ):
+            chars = [CHAR_NAME, CHAR_FILTER_CHANGE_INDICATION]
+            if self.linked_filter_life_level_sensor:
+                chars.append(CHAR_FILTER_LIFE_LEVEL)
+            serv_filter_maintenance = self.add_preload_service(
+                SERV_FILTER_MAINTENANCE, chars
+            )
+            serv_air_purifier.add_linked_service(serv_filter_maintenance)
+            serv_filter_maintenance.configure_char(
+                CHAR_NAME,
+                value=cleanup_name_for_homekit(f"{self.display_name} Filter"),
+            )
+
+            self.char_filter_change_indication = serv_filter_maintenance.configure_char(
+                CHAR_FILTER_CHANGE_INDICATION,
+                value=0,
+            )
+
+            if self.linked_filter_change_indicator_binary_sensor:
+                filter_change_indicator_state = self.hass.states.get(
+                    self.linked_filter_change_indicator_binary_sensor
+                )
+                if filter_change_indicator_state:
+                    self._async_update_filter_change_indicator(
+                        filter_change_indicator_state
+                    )
+
+            if self.linked_filter_life_level_sensor:
+                self.char_filter_life_level = serv_filter_maintenance.configure_char(
+                    CHAR_FILTER_LIFE_LEVEL,
+                    value=0,
+                )
+
+                filter_life_level_state = self.hass.states.get(
+                    self.linked_filter_life_level_sensor
+                )
+                if filter_life_level_state:
+                    self._async_update_filter_life_level(filter_life_level_state)
+
         return serv_air_purifier
 
     async def run(self) -> None:
@@ -157,6 +215,24 @@ class AirPurifier(Fan):
                     self.hass,
                     [self.linked_temperature_sensor],
                     self.async_update_current_temperature_event,
+                )
+            )
+
+        if self.linked_filter_change_indicator_binary_sensor:
+            self._subscriptions.append(
+                async_track_state_change_event(
+                    self.hass,
+                    [self.linked_filter_change_indicator_binary_sensor],
+                    self.async_update_filter_change_indicator_event,
+                )
+            )
+
+        if self.linked_filter_life_level_sensor:
+            self._subscriptions.append(
+                async_track_state_change_event(
+                    self.hass,
+                    [self.linked_filter_life_level_sensor],
+                    self.async_update_filter_life_level_event,
                 )
             )
 
@@ -272,6 +348,98 @@ class AirPurifier(Fan):
                 self.linked_temperature_sensor,
                 ex,
             )
+
+    @callback
+    def async_update_filter_change_indicator_event(self, event):
+        """Handle state change event listener callback."""
+        self._async_update_filter_change_indicator(event.data.get("new_state"))
+
+    @callback
+    def _async_update_filter_change_indicator(self, new_state):
+        """Handle linked filter change indicator binary sensor state change to update HomeKit value."""
+        if new_state is None:
+            _LOGGER.error(
+                "%s: Unable to update from linked filter change indicator binary sensor %s: the entity state is None",
+                self.entity_id,
+                self.linked_filter_change_indicator_binary_sensor,
+            )
+            return
+        try:
+            current_change_indicator = (
+                FILTER_CHANGE_FILTER if new_state.state == "on" else FILTER_OK
+            )
+            if self.char_filter_change_indication.value != current_change_indicator:
+                _LOGGER.debug(
+                    "%s: Linked filter change indicator binary sensor %s changed to %d",
+                    self.entity_id,
+                    self.linked_filter_change_indicator_binary_sensor,
+                    current_change_indicator,
+                )
+                self.char_filter_change_indication.set_value(current_change_indicator)
+        except ValueError as ex:
+            _LOGGER.debug(
+                "%s: Unable to update from linked filter change indicator binary sensor %s: %s",
+                self.entity_id,
+                self.linked_filter_change_indicator_binary_sensor,
+                ex,
+            )
+
+    @callback
+    def async_update_filter_life_level_event(self, event):
+        """Handle state change event listener callback."""
+        self._async_update_filter_life_level(event.data.get("new_state"))
+
+    @callback
+    def _async_update_filter_life_level(self, new_state):
+        """Handle linked filter life level sensor state change to update HomeKit value."""
+        if new_state is None:
+            _LOGGER.error(
+                "%s: Unable to update from linked filter life level sensor %s: the entity state is None",
+                self.entity_id,
+                self.linked_filter_life_level_sensor,
+            )
+            return
+        current_life_level = float(new_state.state)
+        try:
+            if self.char_filter_life_level.value != current_life_level:
+                _LOGGER.debug(
+                    "%s: Linked filter life level sensor %s changed to %d",
+                    self.entity_id,
+                    self.linked_filter_life_level_sensor,
+                    current_life_level,
+                )
+                self.char_filter_life_level.set_value(current_life_level)
+        except ValueError as ex:
+            _LOGGER.debug(
+                "%s: Unable to update from linked filter life level sensor %s: %s",
+                self.entity_id,
+                self.linked_filter_life_level_sensor,
+                ex,
+            )
+        if not self.linked_filter_change_indicator_binary_sensor:
+            current_change_indicator = (
+                FILTER_CHANGE_FILTER
+                if (current_life_level < THRESHOLD_FILTER_CHANGE_NEEDED)
+                else FILTER_OK
+            )
+            try:
+                if self.char_filter_change_indication.value != current_change_indicator:
+                    _LOGGER.debug(
+                        "%s: Linked filter life level sensor %s changed to %d",
+                        self.entity_id,
+                        self.linked_filter_life_level_sensor,
+                        current_change_indicator,
+                    )
+                    self.char_filter_change_indication.set_value(
+                        current_change_indicator
+                    )
+            except ValueError as ex:
+                _LOGGER.debug(
+                    "%s: Unable to update from linked filter life level sensor %s: %s",
+                    self.entity_id,
+                    self.linked_filter_life_level_sensor,
+                    ex,
+                )
 
     @callback
     def async_update_state(self, new_state: State) -> None:
