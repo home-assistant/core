@@ -34,6 +34,7 @@ from .const import (
     CONF_NODES,
     CONF_REALM,
     CONF_VMS,
+    DEFAULT_PORT,
     DEFAULT_REALM,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
@@ -43,7 +44,7 @@ _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PORT, default=8006): cv.port,
+        vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_REALM, default=DEFAULT_REALM): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
@@ -152,45 +153,46 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the setup step."""
         assert self._proxmox_setup
 
-        if user_input is not None:
-            selected_nodes: list[dict[str, Any]] = []
-            for node in self._proxmox_setup["nodes"]:
-                if node["node"] in user_input[CONF_NODES]:
-                    updated_node = {
-                        CONF_NODE: node["node"],
-                        CONF_VMS: [vm["vmid"] for vm in node["vms"]],
-                        CONF_CONTAINERS: [
-                            container["vmid"] for container in node["containers"]
-                        ],
+        if user_input is None:
+            return self.async_show_form(
+                step_id="setup",
+                data_schema=vol.Schema(
+                    {
+                        vol.Required(CONF_NODES): SelectSelector(
+                            SelectSelectorConfig(
+                                options=[
+                                    node["node"]
+                                    for node in self._proxmox_setup["nodes"]
+                                ],
+                                mode=SelectSelectorMode.LIST,
+                                multiple=True,
+                            )
+                        )
                     }
-                    selected_nodes.append(updated_node)
-
-            user_input[CONF_NODES] = selected_nodes
-            assert self._user_input
-            self._user_input |= user_input
-
-            await self.async_set_unique_id(self._user_input[CONF_HOST])
-            self._abort_if_unique_id_configured()
-
-            return self.async_create_entry(
-                title=self._user_input[CONF_HOST], data=self._user_input
+                ),
             )
 
-        return self.async_show_form(
-            step_id="setup",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(CONF_NODES): SelectSelector(
-                        SelectSelectorConfig(
-                            options=[
-                                node["node"] for node in self._proxmox_setup["nodes"]
-                            ],
-                            mode=SelectSelectorMode.LIST,
-                            multiple=True,
-                        )
-                    )
+        selected_nodes: list[dict[str, Any]] = []
+        for node in self._proxmox_setup["nodes"]:
+            if node["node"] in user_input[CONF_NODES]:
+                updated_node = {
+                    CONF_NODE: node["node"],
+                    CONF_VMS: [vm["vmid"] for vm in node["vms"]],
+                    CONF_CONTAINERS: [
+                        container["vmid"] for container in node["containers"]
+                    ],
                 }
-            ),
+                selected_nodes.append(updated_node)
+
+        user_input[CONF_NODES] = selected_nodes
+        assert self._user_input
+        self._user_input |= user_input
+
+        await self.async_set_unique_id(self._user_input[CONF_HOST])
+        self._abort_if_unique_id_configured()
+
+        return self.async_create_entry(
+            title=self._user_input[CONF_HOST], data=self._user_input
         )
 
 
