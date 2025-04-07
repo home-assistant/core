@@ -8,6 +8,7 @@ from unittest.mock import ANY, AsyncMock, patch
 from aiohttp.test_utils import TestClient
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_unordered import unordered
 import voluptuous as vol
 
 from homeassistant import config_entries as core_ce, data_entry_flow, loader
@@ -887,6 +888,298 @@ async def test_get_progress_flow_unauth(
     resp2 = await client.get(f"/api/config/config_entries/flow/{data['flow_id']}")
 
     assert resp2.status == HTTPStatus.UNAUTHORIZED
+
+
+async def test_get_progress_subscribe(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test querying for the flows that are in progress."""
+    assert await async_setup_component(hass, "config", {})
+    mock_platform(hass, "test.config_flow", None)
+    ws_client = await hass_ws_client(hass)
+
+    mock_integration(
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+    )
+
+    entry = MockConfigEntry(domain="test", title="Test", entry_id="1234")
+    entry.add_to_hass(hass)
+
+    class TestFlow(core_ce.ConfigFlow):
+        VERSION = 5
+
+        async def async_step_bluetooth(
+            self, discovery_info: HassioServiceInfo
+        ) -> ConfigFlowResult:
+            """Handle a bluetooth discovery."""
+            return self.async_abort(reason="already_configured")
+
+        async def async_step_hassio(
+            self, discovery_info: HassioServiceInfo
+        ) -> ConfigFlowResult:
+            """Handle a Hass.io discovery."""
+            return await self.async_step_account()
+
+        async def async_step_account(self, user_input: dict[str, Any] | None = None):
+            """Show a form to the user."""
+            return self.async_show_form(step_id="account")
+
+        async def async_step_user(self, user_input: dict[str, Any] | None = None):
+            """Handle a config flow initialized by the user."""
+            return await self.async_step_account()
+
+        async def async_step_reauth(self, user_input: dict[str, Any] | None = None):
+            """Handle a reauthentication flow."""
+            nonlocal entry
+            assert self._get_reauth_entry() is entry
+            return await self.async_step_account()
+
+        async def async_step_reconfigure(
+            self, user_input: dict[str, Any] | None = None
+        ):
+            """Handle a reconfiguration flow initialized by the user."""
+            nonlocal entry
+            assert self._get_reconfigure_entry() is entry
+            return await self.async_step_account()
+
+    await ws_client.send_json_auto_id({"type": "config_entries/flow/subscribe"})
+    response = await ws_client.receive_json()
+    assert response == {"id": ANY, "result": None, "success": True, "type": "result"}
+    subscription = response["id"]
+
+    with mock_config_flow("test", TestFlow):
+        form_bluetooth = await hass.config_entries.flow.async_init(
+            "test", context={"source": core_ce.SOURCE_BLUETOOTH}
+        )
+        form_hassio = await hass.config_entries.flow.async_init(
+            "test", context={"source": core_ce.SOURCE_HASSIO}
+        )
+        form_user = await hass.config_entries.flow.async_init(
+            "test", context={"source": core_ce.SOURCE_USER}
+        )
+        form_reauth = await hass.config_entries.flow.async_init(
+            "test", context={"source": core_ce.SOURCE_REAUTH, "entry_id": "1234"}
+        )
+        form_reconfigure = await hass.config_entries.flow.async_init(
+            "test", context={"source": core_ce.SOURCE_RECONFIGURE, "entry_id": "1234"}
+        )
+
+    assert form_bluetooth["type"] == data_entry_flow.FlowResultType.ABORT
+    for form in (form_hassio, form_user, form_reauth, form_reconfigure):
+        assert form["type"] == data_entry_flow.FlowResultType.FORM
+        assert form["step_id"] == "account"
+
+    hass.config_entries.flow.async_abort(form_hassio["flow_id"])
+    hass.config_entries.flow.async_abort(form_user["flow_id"])
+    hass.config_entries.flow.async_abort(form_reauth["flow_id"])
+    hass.config_entries.flow.async_abort(form_reconfigure["flow_id"])
+
+    # Uninitialized flows and flows with SOURCE_USER and SOURCE_RECONFIGURE
+    # should be filtered out
+    response = await ws_client.receive_json()
+    assert response == {
+        "event": {
+            "flow": {
+                "flow_id": form_hassio["flow_id"],
+                "handler": "test",
+                "step_id": "account",
+                "context": {"source": core_ce.SOURCE_HASSIO},
+            },
+            "type": "init",
+        },
+        "id": subscription,
+        "type": "event",
+    }
+    response = await ws_client.receive_json()
+    assert response == {
+        "event": {
+            "flow": {
+                "flow_id": form_reauth["flow_id"],
+                "handler": "test",
+                "step_id": "account",
+                "context": {"entry_id": "1234", "source": core_ce.SOURCE_REAUTH},
+            },
+            "type": "init",
+        },
+        "id": subscription,
+        "type": "event",
+    }
+    response = await ws_client.receive_json()
+    assert response == {
+        "event": {
+            "flow_id": form_hassio["flow_id"],
+            "type": "remove",
+        },
+        "id": subscription,
+        "type": "event",
+    }
+    response = await ws_client.receive_json()
+    assert response == {
+        "event": {
+            "flow_id": form_reauth["flow_id"],
+            "type": "remove",
+        },
+        "id": subscription,
+        "type": "event",
+    }
+
+
+async def test_get_progress_subscribe_in_progress(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test querying for the flows that are in progress."""
+    assert await async_setup_component(hass, "config", {})
+    mock_platform(hass, "test.config_flow", None)
+    ws_client = await hass_ws_client(hass)
+
+    mock_integration(
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+    )
+
+    entry = MockConfigEntry(domain="test", title="Test", entry_id="1234")
+    entry.add_to_hass(hass)
+
+    class TestFlow(core_ce.ConfigFlow):
+        VERSION = 5
+
+        async def async_step_bluetooth(
+            self, discovery_info: HassioServiceInfo
+        ) -> ConfigFlowResult:
+            """Handle a bluetooth discovery."""
+            return self.async_abort(reason="already_configured")
+
+        async def async_step_hassio(
+            self, discovery_info: HassioServiceInfo
+        ) -> ConfigFlowResult:
+            """Handle a Hass.io discovery."""
+            return await self.async_step_account()
+
+        async def async_step_account(self, user_input: dict[str, Any] | None = None):
+            """Show a form to the user."""
+            return self.async_show_form(step_id="account")
+
+        async def async_step_user(self, user_input: dict[str, Any] | None = None):
+            """Handle a config flow initialized by the user."""
+            return await self.async_step_account()
+
+        async def async_step_reauth(self, user_input: dict[str, Any] | None = None):
+            """Handle a reauthentication flow."""
+            nonlocal entry
+            assert self._get_reauth_entry() is entry
+            return await self.async_step_account()
+
+        async def async_step_reconfigure(
+            self, user_input: dict[str, Any] | None = None
+        ):
+            """Handle a reconfiguration flow initialized by the user."""
+            nonlocal entry
+            assert self._get_reconfigure_entry() is entry
+            return await self.async_step_account()
+
+    with mock_config_flow("test", TestFlow):
+        form_bluetooth = await hass.config_entries.flow.async_init(
+            "test", context={"source": core_ce.SOURCE_BLUETOOTH}
+        )
+        form_hassio = await hass.config_entries.flow.async_init(
+            "test", context={"source": core_ce.SOURCE_HASSIO}
+        )
+        form_user = await hass.config_entries.flow.async_init(
+            "test", context={"source": core_ce.SOURCE_USER}
+        )
+        form_reauth = await hass.config_entries.flow.async_init(
+            "test", context={"source": core_ce.SOURCE_REAUTH, "entry_id": "1234"}
+        )
+        form_reconfigure = await hass.config_entries.flow.async_init(
+            "test", context={"source": core_ce.SOURCE_RECONFIGURE, "entry_id": "1234"}
+        )
+
+    assert form_bluetooth["type"] == data_entry_flow.FlowResultType.ABORT
+    for form in (form_hassio, form_user, form_reauth, form_reconfigure):
+        assert form["type"] == data_entry_flow.FlowResultType.FORM
+        assert form["step_id"] == "account"
+
+    await ws_client.send_json({"id": 1, "type": "config_entries/flow/subscribe"})
+
+    # Uninitialized flows and flows with SOURCE_USER and SOURCE_RECONFIGURE
+    # should be filtered out
+    responses = []
+    responses.append(await ws_client.receive_json())
+    responses.append(await ws_client.receive_json())
+    assert responses == unordered(
+        [
+            {
+                "event": {
+                    "flow": {
+                        "flow_id": form_hassio["flow_id"],
+                        "handler": "test",
+                        "step_id": "account",
+                        "context": {"source": core_ce.SOURCE_HASSIO},
+                    },
+                    "type": "init",
+                },
+                "id": 1,
+                "type": "event",
+            },
+            {
+                "event": {
+                    "flow": {
+                        "flow_id": form_reauth["flow_id"],
+                        "handler": "test",
+                        "step_id": "account",
+                        "context": {
+                            "entry_id": "1234",
+                            "source": core_ce.SOURCE_REAUTH,
+                        },
+                    },
+                    "type": "init",
+                },
+                "id": 1,
+                "type": "event",
+            },
+        ]
+    )
+
+    response = await ws_client.receive_json()
+    assert response == {"id": ANY, "result": None, "success": True, "type": "result"}
+
+    hass.config_entries.flow.async_abort(form_hassio["flow_id"])
+    hass.config_entries.flow.async_abort(form_user["flow_id"])
+    hass.config_entries.flow.async_abort(form_reauth["flow_id"])
+    hass.config_entries.flow.async_abort(form_reconfigure["flow_id"])
+
+    response = await ws_client.receive_json()
+    assert response == {
+        "event": {
+            "flow_id": form_hassio["flow_id"],
+            "type": "remove",
+        },
+        "id": 1,
+        "type": "event",
+    }
+    response = await ws_client.receive_json()
+    assert response == {
+        "event": {
+            "flow_id": form_reauth["flow_id"],
+            "type": "remove",
+        },
+        "id": 1,
+        "type": "event",
+    }
+
+
+async def test_get_progress_subscribe_unauth(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, hass_admin_user: MockUser
+) -> None:
+    """Test we can't subscribe to flows."""
+    assert await async_setup_component(hass, "config", {})
+    hass_admin_user.groups = []
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json({"id": 5, "type": "config_entries/flow/subscribe"})
+    response = await ws_client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "unauthorized"
 
 
 async def test_options_flow(hass: HomeAssistant, client: TestClient) -> None:
