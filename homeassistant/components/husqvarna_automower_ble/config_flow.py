@@ -74,7 +74,6 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
             self.pin = user_input[CONF_PIN]
             return await self.async_step_confirm()
 
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="bluetooth_confirm",
             data_schema=vol.Schema(
