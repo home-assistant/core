@@ -22,23 +22,14 @@
       }
     },
     "error": {
-      "cannot_connect": "Failed to connect to the server",
-      "invalid_auth": "Invalid authentication",
-      "unknown": "Unexpected error"
+      "cannot_connect": "Cannot connect to Proxmox VE server",
+      "connect_timeout": "[%key:common::config_flow::error::timeout_connect%]",
+      "ssl_error": "SSL check failed. Check the SSL settings",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "no_nodes_found": "No active nodes found"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "title": "Proxmox VE Options",
-        "description": "Configure additional options for the Proxmox VE integration.",
-        "data": {
-          "scan_interval": "Polling interval (seconds)"
-        }
-      }
     }
   }
 }

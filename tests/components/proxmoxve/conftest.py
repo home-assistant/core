@@ -56,22 +56,25 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 @pytest.fixture
 def mock_proxmox_client():
-    """Mock Proxmox client."""
+    """Mock Proxmox client with dynamic exception injection support."""
     with (
         patch(
             "homeassistant.components.proxmoxve.ProxmoxAPI", autospec=True
         ) as mock_api,
-        patch("homeassistant.components.proxmoxve.config_flow.ProxmoxAPI") as mock_api,
+        patch(
+            "homeassistant.components.proxmoxve.config_flow.ProxmoxAPI"
+        ) as mock_api_cf,
     ):
         mock_instance = MagicMock()
         mock_api.return_value = mock_instance
+        mock_api_cf.return_value = mock_instance
+
         mock_instance.access.ticket.post.return_value = load_json_object_fixture(
             "access_ticket.json", DOMAIN
         )
 
-        # Simulate proxmox.nodes("pve").qemu.get()
+        # Make a separate mock for the qemu and lxc endpoints
         node_mock = MagicMock()
-
         node_mock.qemu.get.return_value = load_json_array_fixture(
             "nodes/qemu.json", DOMAIN
         )
@@ -79,12 +82,16 @@ def mock_proxmox_client():
             "nodes/lxc.json", DOMAIN
         )
 
-        # Mock .nodes.__call__('pve') to return the node_mock
-        mock_instance.nodes.return_value = node_mock
-        mock_instance.nodes.get.return_value = load_json_array_fixture(
+        nodes_mock = MagicMock()
+        nodes_mock.get.return_value = load_json_array_fixture(
             "nodes/nodes.json", DOMAIN
         )
-        mock_instance.nodes.__getitem__.side_effect = lambda key: node_mock
+        nodes_mock.__getitem__.side_effect = lambda key: node_mock
+        nodes_mock.return_value = node_mock
+
+        mock_instance.nodes = nodes_mock
+        mock_instance._node_mock = node_mock
+        mock_instance._nodes_mock = nodes_mock
 
         yield mock_instance
 

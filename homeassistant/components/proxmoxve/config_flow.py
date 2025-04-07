@@ -56,7 +56,7 @@ CONFIG_SCHEMA = vol.Schema(
 async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input and fetch data."""
 
-    def create_proxmox_client():
+    def create_proxmox_client() -> ProxmoxAPI:
         """Create a ProxmoxAPI client."""
         user_id = (
             data[CONF_USERNAME]
@@ -75,19 +75,16 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str
     try:
         client = await hass.async_add_executor_job(create_proxmox_client)
     except AuthenticationError as err:
-        raise CannotConnect from err
+        raise ProxmoxAuthenticationError from err
     except SSLError as err:
-        raise CannotConnect from err
+        raise ProxmoxSSLError from err
     except ConnectTimeout as err:
-        raise TimeoutError from err
+        raise ProxmoxConnectTimeout from err
 
     try:
         nodes = await hass.async_add_executor_job(client.nodes.get)
     except (ResourceException, requests.exceptions.ConnectionError) as err:
-        raise NoNodesFound from err
-
-    if not nodes:
-        raise NoNodesFound
+        raise ProxmoxNoNodesFound from err
 
     _LOGGER.debug("Proxmox nodes: %s", nodes)
 
@@ -99,7 +96,7 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str
                 client.nodes(node["node"]).lxc.get
             )
         except (ResourceException, requests.exceptions.ConnectionError) as err:
-            raise NoNodesFound from err
+            raise ProxmoxNoNodesFound from err
 
         nodes_data.append(
             {
@@ -128,13 +125,13 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 self._proxmox_setup = await _validate_input(self.hass, user_input)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except AuthenticationError:
+            except ProxmoxConnectTimeout:
+                errors["base"] = "connect_timeout"
+            except ProxmoxAuthenticationError:
                 errors["base"] = "invalid_auth"
-            except SSLError:
+            except ProxmoxSSLError:
                 errors["base"] = "ssl_error"
-            except NoNodesFound:
+            except ProxmoxNoNodesFound:
                 errors["base"] = "no_nodes_found"
 
             if "base" not in errors:
@@ -196,13 +193,17 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
+class ProxmoxNoNodesFound(HomeAssistantError):
+    """Error to indicate no nodes found."""
 
 
-class NoNodesFound(HomeAssistantError):
-    """Error to indicate no nodes were found."""
+class ProxmoxConnectTimeout(HomeAssistantError):
+    """Error to indicate a connection timeout."""
 
 
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""
+class ProxmoxSSLError(HomeAssistantError):
+    """Error to indicate an SSL error."""
+
+
+class ProxmoxAuthenticationError(HomeAssistantError):
+    """Error to indicate an authentication error."""
