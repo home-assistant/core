@@ -80,7 +80,7 @@
     'previous_unique_id': None,
     'supported_features': <AlarmControlPanelEntityFeature: 3>,
     'translation_key': None,
-    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_area_1',
+    'unique_id': '1234567890_area_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -131,7 +131,7 @@
     'previous_unique_id': None,
     'supported_features': <AlarmControlPanelEntityFeature: 3>,
     'translation_key': None,
-    'unique_id': '1234567890_area_1',
+    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_area_1',
     'unit_of_measurement': None,
   })
 # ---

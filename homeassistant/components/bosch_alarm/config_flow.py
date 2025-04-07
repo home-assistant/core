@@ -11,10 +11,11 @@ from typing import Any
 from bosch_alarm_mode2 import Panel
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_CODE,
     CONF_HOST,
+    CONF_MAC,
     CONF_MODEL,
     CONF_PASSWORD,
     CONF_PORT,
@@ -94,6 +95,7 @@ class BoschAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
             try:
                 # Use load_selector = 0 to fetch the panel model without authentication.
                 (model, serial) = await try_connect(user_input, 0)
@@ -125,9 +127,18 @@ class BoschAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle DHCP discovery."""
         self._async_abort_entries_match({CONF_HOST: discovery_info.ip})
-
-        await self.async_set_unique_id(format_mac(discovery_info.macaddress))
-        self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
+        for entry in self.hass.config_entries.async_entries(DOMAIN):
+            if entry.data[CONF_MAC] == format_mac(discovery_info.macaddress):
+                result = self.hass.config_entries.async_update_entry(
+                    entry,
+                    data={
+                        **entry.data,
+                        CONF_HOST: discovery_info.ip,
+                    },
+                )
+                if result:
+                    self.hass.config_entries.async_schedule_reload(entry.entry_id)
+                return self.async_abort(reason="already_configured")
         try:
             # Use load_selector = 0 to fetch the panel model without authentication.
             (model, _) = await try_connect(
@@ -138,7 +149,7 @@ class BoschAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
             ConnectionRefusedError,
             ssl.SSLError,
             asyncio.exceptions.TimeoutError,
-        ) as err:
+        ):
             return self.async_abort(reason="cannot_connect")
         except Exception as err:
             raise AbortFlow("unknown") from err
@@ -148,6 +159,7 @@ class BoschAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         self._data = {
             CONF_HOST: discovery_info.ip,
+            CONF_MAC: format_mac(discovery_info.macaddress),
             CONF_MODEL: model,
             CONF_PORT: 7700,
         }
@@ -189,15 +201,9 @@ class BoschAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                if serial_number and not self.unique_id:
+                if serial_number:
                     await self.async_set_unique_id(str(serial_number))
-                if self.source == SOURCE_USER:
-                    if serial_number:
-                        self._abort_if_unique_id_configured()
-                    else:
-                        self._async_abort_entries_match(
-                            {CONF_HOST: self._data[CONF_HOST]}
-                        )
+                    self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=f"Bosch {model}", data=self._data)
 
         return self.async_show_form(

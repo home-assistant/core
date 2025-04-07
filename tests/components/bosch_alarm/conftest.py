@@ -13,7 +13,13 @@ from homeassistant.components.bosch_alarm.const import (
     CONF_USER_CODE,
     DOMAIN,
 )
-from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_PASSWORD, CONF_PORT
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_MAC,
+    CONF_MODEL,
+    CONF_PASSWORD,
+    CONF_PORT,
+)
 from homeassistant.helpers.device_registry import format_mac
 
 from tests.common import MockConfigEntry
@@ -70,7 +76,7 @@ def model_name(model: str) -> str | None:
 @pytest.fixture
 def serial_number(model: str) -> str | None:
     """Return extra config entry data."""
-    if model == "solution_3000":
+    if model == "b5512":
         return "1234567890"
     return None
 
@@ -193,12 +199,13 @@ def mock_config_entry(
     """Mock config entry for bosch alarm."""
     return MockConfigEntry(
         domain=DOMAIN,
-        unique_id=(mac_address and format_mac(mac_address)) or serial_number,
+        unique_id=serial_number,
         entry_id="01JQ917ACKQ33HHM7YCFXYZX51",
         data={
             CONF_HOST: "0.0.0.0",
             CONF_PORT: 7700,
             CONF_MODEL: "bosch_alarm_test_data.model",
+            CONF_MAC: mac_address and format_mac(mac_address),
         }
         | extra_config_entry_data,
     )

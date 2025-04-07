@@ -9,7 +9,7 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.bosch_alarm.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_MODEL, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
@@ -175,13 +175,6 @@ async def test_entry_already_configured_host(
         result["flow_id"], {CONF_HOST: "0.0.0.0"}
     )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "auth"
-    assert result["errors"] == {}
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], config_flow_data
-    )
-
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
@@ -201,7 +194,7 @@ async def test_entry_already_configured_serial(
     )
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_HOST: "0.0.0.0"}
+        result["flow_id"], {CONF_HOST: "1.1.1.1"}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -249,6 +242,7 @@ async def test_dhcp_can_finish(
     assert result["title"] == f"Bosch {model_name}"
     assert result["data"] == {
         CONF_HOST: "1.1.1.1",
+        CONF_MAC: "34:ea:34:b4:3b:5a",
         CONF_PORT: 7700,
         CONF_MODEL: model_name,
         **config_flow_data,
