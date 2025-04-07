@@ -56,7 +56,7 @@
             "topic": "[%key:component::ntfy::common::topic%]"
           },
           "data_description": {
-            "topic": "Enter the name of the topic you want to use for notifications. Topics may not be password-protected, so choose a name that's not easy to guess. If left empty, a random topic name will be generated."
+            "topic": "Enter the name of the topic you want to use for notifications. Topics may not be password-protected, so choose a name that's not easy to guess."
           }
         }
       },
