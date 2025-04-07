@@ -7,7 +7,7 @@
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "password": "Please enter the correct password for host: {host}"
+          "password": "[%key:component::vodafone_station::config::step::user::data_description::password%]"
         }
       },
       "user": {
@@ -21,22 +21,35 @@
           "username": "The username for your Vodafone Station.",
           "password": "The password for your Vodafone Station."
         }
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "host": "[%key:component::vodafone_station::config::step::user::data_description::host%]",
+          "username": "[%key:component::vodafone_station::config::step::user::data_description::username%]",
+          "password": "[%key:component::vodafone_station::config::step::user::data_description::password%]"
+        }
       }
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "already_logged": "User already logged-in, please try again later.",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "model_not_supported": "The device model is currently unsupported.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
-      "already_logged": "User already logged-in, please try again later.",
+      "already_logged": "[%key:component::vodafone_station::config::abort::already_logged%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "model_not_supported": "The device model is currently unsupported.",
+      "model_not_supported": "[%key:component::vodafone_station::config::abort::model_not_supported%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
@@ -115,6 +128,9 @@
   "exceptions": {
     "update_failed": {
       "message": "Error fetching data: {error}"
+    },
+    "cannot_execute_action": {
+      "message": "Cannot execute requested action: {error}"
     },
     "cannot_authenticate": {
       "message": "Error authenticating: {error}"

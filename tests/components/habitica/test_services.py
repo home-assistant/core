@@ -60,6 +60,7 @@ from homeassistant.components.habitica.const import (
     SERVICE_ACCEPT_QUEST,
     SERVICE_CANCEL_QUEST,
     SERVICE_CAST_SKILL,
+    SERVICE_CREATE_DAILY,
     SERVICE_CREATE_HABIT,
     SERVICE_CREATE_REWARD,
     SERVICE_CREATE_TODO,
@@ -1012,7 +1013,12 @@ async def test_update_task_exceptions(
 )
 @pytest.mark.parametrize(
     "service",
-    [SERVICE_CREATE_REWARD, SERVICE_CREATE_HABIT, SERVICE_CREATE_TODO],
+    [
+        SERVICE_CREATE_DAILY,
+        SERVICE_CREATE_HABIT,
+        SERVICE_CREATE_REWARD,
+        SERVICE_CREATE_TODO,
+    ],
 )
 @pytest.mark.usefixtures("habitica")
 async def test_create_task_exceptions(
@@ -1835,6 +1841,182 @@ async def test_update_daily(
         blocking=True,
     )
     habitica.update_task.assert_awaited_with(UUID(task_id), call_args)
+
+
+@pytest.mark.parametrize(
+    ("service_data", "call_args"),
+    [
+        (
+            {
+                ATTR_NAME: "TITLE",
+            },
+            Task(type=TaskType.DAILY, text="TITLE"),
+        ),
+        (
+            {
+                ATTR_NAME: "TITLE",
+                ATTR_NOTES: "NOTES",
+            },
+            Task(type=TaskType.DAILY, text="TITLE", notes="NOTES"),
+        ),
+        (
+            {
+                ATTR_NAME: "TITLE",
+                ATTR_ADD_CHECKLIST_ITEM: "Checklist-item",
+            },
+            Task(
+                type=TaskType.DAILY,
+                text="TITLE",
+                checklist=[
+                    Checklist(
+                        id=UUID("12345678-1234-5678-1234-567812345678"),
+                        text="Checklist-item",
+                        completed=False,
+                    ),
+                ],
+            ),
+        ),
+        (
+            {
+                ATTR_NAME: "TITLE",
+                ATTR_PRIORITY: "trivial",
+            },
+            Task(type=TaskType.DAILY, text="TITLE", priority=TaskPriority.TRIVIAL),
+        ),
+        (
+            {
+                ATTR_NAME: "TITLE",
+                ATTR_START_DATE: "2025-03-05",
+            },
+            Task(type=TaskType.DAILY, text="TITLE", startDate=datetime(2025, 3, 5)),
+        ),
+        (
+            {
+                ATTR_NAME: "TITLE",
+                ATTR_FREQUENCY: "weekly",
+            },
+            Task(type=TaskType.DAILY, text="TITLE", frequency=Frequency.WEEKLY),
+        ),
+        (
+            {
+                ATTR_NAME: "TITLE",
+                ATTR_INTERVAL: 5,
+            },
+            Task(type=TaskType.DAILY, text="TITLE", everyX=5),
+        ),
+        (
+            {
+                ATTR_NAME: "TITLE",
+                ATTR_FREQUENCY: "weekly",
+                ATTR_REPEAT: ["m", "t", "w", "th"],
+            },
+            Task(
+                type=TaskType.DAILY,
+                text="TITLE",
+                frequency=Frequency.WEEKLY,
+                repeat=Repeat(m=True, t=True, w=True, th=True),
+            ),
+        ),
+        (
+            {
+                ATTR_NAME: "TITLE",
+                ATTR_FREQUENCY: "monthly",
+                ATTR_REPEAT_MONTHLY: "day_of_month",
+            },
+            Task(
+                type=TaskType.DAILY,
+                text="TITLE",
+                frequency=Frequency.MONTHLY,
+                daysOfMonth=[25],
+                weeksOfMonth=[],
+            ),
+        ),
+        (
+            {
+                ATTR_NAME: "TITLE",
+                ATTR_FREQUENCY: "monthly",
+                ATTR_REPEAT_MONTHLY: "day_of_week",
+            },
+            Task(
+                type=TaskType.DAILY,
+                text="TITLE",
+                frequency=Frequency.MONTHLY,
+                daysOfMonth=[],
+                weeksOfMonth=[3],
+                repeat=Repeat(
+                    m=False, t=True, w=False, th=False, f=False, s=False, su=False
+                ),
+            ),
+        ),
+        (
+            {
+                ATTR_NAME: "TITLE",
+                ATTR_REMINDER: ["10:00"],
+            },
+            Task(
+                type=TaskType.DAILY,
+                text="TITLE",
+                reminders=[
+                    Reminders(
+                        id=UUID("12345678-1234-5678-1234-567812345678"),
+                        time=datetime(2025, 2, 25, 10, 0, tzinfo=UTC),
+                        startDate=None,
+                    )
+                ],
+            ),
+        ),
+        (
+            {
+                ATTR_NAME: "TITLE",
+                ATTR_REMOVE_REMINDER: ["10:00"],
+            },
+            Task(type=TaskType.DAILY, text="TITLE", reminders=[]),
+        ),
+        (
+            {
+                ATTR_NAME: "TITLE",
+                ATTR_CLEAR_REMINDER: True,
+            },
+            Task(type=TaskType.DAILY, text="TITLE", reminders=[]),
+        ),
+        (
+            {
+                ATTR_NAME: "TITLE",
+                ATTR_STREAK: 10,
+            },
+            Task(type=TaskType.DAILY, text="TITLE", streak=10),
+        ),
+        (
+            {
+                ATTR_NAME: "TITLE",
+                ATTR_ALIAS: "ALIAS",
+            },
+            Task(type=TaskType.DAILY, text="TITLE", alias="ALIAS"),
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_uuid4")
+@freeze_time("2025-02-25T22:00:00.000Z")
+async def test_create_daily(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    habitica: AsyncMock,
+    service_data: dict[str, Any],
+    call_args: Task,
+) -> None:
+    """Test Habitica create daily action."""
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_CREATE_DAILY,
+        service_data={
+            ATTR_CONFIG_ENTRY: config_entry.entry_id,
+            **service_data,
+        },
+        return_response=True,
+        blocking=True,
+    )
+    habitica.create_task.assert_awaited_with(call_args)
 
 
 @pytest.mark.parametrize(

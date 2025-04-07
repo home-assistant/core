@@ -26,9 +26,7 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: todo
-    comment: button presses not exception handled with HomeAssistantError
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
@@ -49,20 +47,14 @@ rules:
     status: exempt
     comment: device not discoverable
   docs-data-update: done
-  docs-examples:
-    status: todo
-    comment: add some automation example
+  docs-examples: done
   docs-known-limitations:
     status: exempt
     comment: no known limitations, yet
   docs-supported-devices: done
   docs-supported-functions: done
-  docs-troubleshooting:
-    status: todo
-    comment: add some info for troubleshooting
-  docs-use-cases:
-    status: todo
-    comment: add some use caes
+  docs-troubleshooting: done
+  docs-use-cases: done
   dynamic-devices: done
   entity-category: done
   entity-device-class: done
@@ -72,9 +64,7 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow:
-    status: todo
-    comment: handle host change
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: no known use cases for repair issues or flows, yet

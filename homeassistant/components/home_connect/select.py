@@ -31,11 +31,6 @@ from .const import (
     INTENSIVE_LEVEL_OPTIONS,
     PROGRAMS_TRANSLATION_KEYS_MAP,
     SPIN_SPEED_OPTIONS,
-    SVE_TRANSLATION_KEY_SET_SETTING,
-    SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID,
-    SVE_TRANSLATION_PLACEHOLDER_KEY,
-    SVE_TRANSLATION_PLACEHOLDER_PROGRAM,
-    SVE_TRANSLATION_PLACEHOLDER_VALUE,
     TEMPERATURE_OPTIONS,
     TRANSLATION_KEYS_PROGRAMS_MAP,
     VARIO_PERFECT_OPTIONS,
@@ -406,7 +401,7 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
                 translation_key=self.entity_description.error_translation_key,
                 translation_placeholders={
                     **get_dict_from_home_connect_error(err),
-                    SVE_TRANSLATION_PLACEHOLDER_PROGRAM: program_key.value,
+                    "program": program_key.value,
                 },
             ) from err
 
@@ -443,12 +438,12 @@ class HomeConnectSelectEntity(HomeConnectEntity, SelectEntity):
         except HomeConnectError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key=SVE_TRANSLATION_KEY_SET_SETTING,
+                translation_key="set_setting_entity",
                 translation_placeholders={
                     **get_dict_from_home_connect_error(err),
-                    SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID: self.entity_id,
-                    SVE_TRANSLATION_PLACEHOLDER_KEY: self.bsh_key,
-                    SVE_TRANSLATION_PLACEHOLDER_VALUE: value,
+                    "entity_id": self.entity_id,
+                    "key": self.bsh_key,
+                    "value": value,
                 },
             ) from err
 
