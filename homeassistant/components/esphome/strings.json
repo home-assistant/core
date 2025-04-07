@@ -145,7 +145,7 @@
           },
           "ignored": {
             "title": "Device conflict for {name} ignored",
-            "description": "Please rename the device with MAC address `{mac}` to a new name to avoid conflicts"
+            "description": "Please rename the device with MAC address `{mac}` to a new name to avoid conflicts."
           }
         }
       }
