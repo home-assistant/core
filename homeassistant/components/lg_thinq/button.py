@@ -172,13 +172,14 @@ class ThinQButtonEntity(ThinQEntity, ButtonEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        if self.device_state is None:
-            return True
         states = ENABLE_BUTTON_STATE.get(self.entity_description.value)
-        return (
-            self.device_state.device_is_on
-            and self.device_state.remote_control_enabled
-            and (states is not None and self.device_state.state in states)
+        return super().available and (
+            self.device_state is None
+            or (
+                self.device_state.device_is_on
+                and self.device_state.remote_control_enabled
+                and (states is not None and self.device_state.state in states)
+            )
         )
 
     async def async_press(self) -> None:
