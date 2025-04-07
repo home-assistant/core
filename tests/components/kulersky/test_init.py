@@ -43,3 +43,23 @@ async def test_migrate_entry(
     assert mock_config_entry_v1.data == {
         CONF_ADDRESS: "AA:BB:CC:11:22:33",
     }
+
+
+async def test_migrate_entry_no_devices_found(
+    hass: HomeAssistant,
+) -> None:
+    """Test migrate config entry from v1 to v2."""
+
+    mock_config_entry_v1 = MockConfigEntry(
+        version=1,
+        domain=DOMAIN,
+        title="KulerSky",
+    )
+
+    mock_config_entry_v1.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry_v1.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry_v1.state is ConfigEntryState.MIGRATION_ERROR
+    assert mock_config_entry_v1.version == 1
