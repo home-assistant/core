@@ -497,6 +497,32 @@ async def test_empty_response(
 
 
 @pytest.mark.usefixtures("mock_init_component")
+async def test_none_response(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test empty response."""
+    with patch("google.genai.chats.AsyncChats.create") as mock_create:
+        mock_chat = AsyncMock()
+        mock_create.return_value.send_message = mock_chat
+        chat_response = Mock(prompt_feedback=None)
+        mock_chat.return_value = chat_response
+        chat_response.candidates = None
+        result = await conversation.async_converse(
+            hass,
+            "hello",
+            None,
+            Context(),
+            agent_id="conversation.google_generative_ai_conversation",
+        )
+
+    assert result.response.response_type == intent.IntentResponseType.ERROR, result
+    assert result.response.error_code == "unknown", result
+    assert result.response.as_dict()["speech"]["plain"]["speech"] == (
+        "Sorry, I had a problem getting a response from Google Generative AI."
+    )
+
+
+@pytest.mark.usefixtures("mock_init_component")
 async def test_converse_error(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:

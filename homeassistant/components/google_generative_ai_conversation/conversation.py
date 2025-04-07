@@ -420,6 +420,14 @@ class GoogleGenerativeAIConversationEntity(
                     raise HomeAssistantError(
                         f"The message got blocked due to content violations, reason: {chat_response.prompt_feedback.block_reason_message}"
                     )
+                if not chat_response.candidates:
+                    LOGGER.error(
+                        "No candidates found in the response: %s",
+                        chat_response,
+                    )
+                    raise HomeAssistantError(
+                        "Sorry, I had a problem getting a response from Google Generative AI."
+                    )
 
             except (
                 APIError,
