@@ -58,6 +58,30 @@
   },
   "entity": {
     "sensor": {
+      "alarms_gas": {
+        "name": "Gas Alarm Issues",
+        "state": {
+          "supervisory": "Supervisory",
+          "trouble": "Trouble",
+          "no_issues": "No Issues"
+        }
+      },
+      "alarms_fire": {
+        "name": "Fire Alarm Issues",
+        "state": {
+          "supervisory": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::supervisory%]",
+          "trouble": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::trouble%]",
+          "no_issues": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::no_issues%]"
+        }
+      },
+      "alarms_burglary": {
+        "name": "Burglary Alarm Issues",
+        "state": {
+          "supervisory": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::supervisory%]",
+          "trouble": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::trouble%]",
+          "no_issues": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::no_issues%]"
+        }
+      },
       "faulting_points": {
         "name": "Faulting points",
         "unit_of_measurement": "points"
