@@ -52,30 +52,11 @@ class DeviceConflictRepair(ESPHomeRepair):
         self, user_input: dict[str, str] | None = None
     ) -> data_entry_flow.FlowResult:
         """Handle the first step of a fix flow."""
-        return await self.async_step_start()
-
-    async def async_step_start(
-        self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
-        """Handle the start step of a fix flow."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="start",
-                data_schema=vol.Schema(
-                    {
-                        vol.Required("action"): vol.In(
-                            {
-                                "migrate": "Migrate to new hardware",
-                                "manual": "Remove or rename the device",
-                            }
-                        )
-                    }
-                ),
-                description_placeholders=self._async_get_placeholders(),
-            )
-        if user_input["action"] == "migrate":
-            return await self.async_step_migrate()
-        return await self.async_step_manual()
+        return self.async_show_menu(
+            step_id="init",
+            menu_options=["migrate", "manual"],
+            description_placeholders=self._async_get_placeholders(),
+        )
 
     async def async_step_migrate(
         self, user_input: dict[str, str] | None = None

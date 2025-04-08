@@ -94,10 +94,12 @@ async def test_device_conflict_manual(
         "name": "test",
         "stored_mac": "11:22:33:44:55:aa",
     }
-    assert data["type"] == FlowResultType.FORM
-    assert data["step_id"] == "start"
+    assert data["type"] == FlowResultType.MENU
+    assert data["step_id"] == "init"
 
-    data = await process_repair_fix_flow(client, flow_id, json={"action": "manual"})
+    data = await process_repair_fix_flow(
+        client, flow_id, json={"next_step_id": "manual"}
+    )
 
     flow_id = data["flow_id"]
     assert data["description_placeholders"] == {
@@ -202,10 +204,12 @@ async def test_device_conflict_migration(
         "name": "test",
         "stored_mac": "11:22:33:44:55:aa",
     }
-    assert data["type"] == FlowResultType.FORM
-    assert data["step_id"] == "start"
+    assert data["type"] == FlowResultType.MENU
+    assert data["step_id"] == "init"
 
-    data = await process_repair_fix_flow(client, flow_id, json={"action": "migrate"})
+    data = await process_repair_fix_flow(
+        client, flow_id, json={"next_step_id": "migrate"}
+    )
 
     flow_id = data["flow_id"]
     assert data["description_placeholders"] == {
