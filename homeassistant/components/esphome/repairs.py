@@ -48,6 +48,12 @@ class DeviceConflictRepair(ESPHomeRepair):
         assert isinstance(self._data, dict)
         return cast(str, self._data["mac"])
 
+    @property
+    def stored_mac(self) -> str:
+        """Return the MAC address of the stored device."""
+        assert isinstance(self._data, dict)
+        return cast(str, self._data["stored_mac"])
+
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
     ) -> data_entry_flow.FlowResult:
@@ -69,7 +75,7 @@ class DeviceConflictRepair(ESPHomeRepair):
                 description_placeholders=self._async_get_placeholders(),
             )
         entry_id = self.entry_id
-        await async_replace_device(self.hass, entry_id, self.mac)
+        await async_replace_device(self.hass, entry_id, self.stored_mac, self.mac)
         self.hass.config_entries.async_schedule_reload(entry_id)
         return self.async_create_entry(data={})
 
