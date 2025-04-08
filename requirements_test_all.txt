@@ -170,7 +170,7 @@ aioairq==0.4.4
 aioairzone-cloud==0.6.11
 
 # homeassistant.components.airzone
-aioairzone==0.9.9
+aioairzone==1.0.0
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -231,7 +231,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==29.8.0
+aioesphomeapi==29.9.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -353,7 +353,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==13.4.0
+aioshelly==13.4.1
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -570,7 +570,7 @@ bluetooth-data-tools==1.27.0
 bond-async==0.2.1
 
 # homeassistant.components.bosch_alarm
-bosch-alarm-mode2==0.4.3
+bosch-alarm-mode2==0.4.6
 
 # homeassistant.components.bosch_shc
 boschshcpy==0.2.91
@@ -1253,7 +1253,7 @@ netmap==0.7.0.2
 nettigo-air-monitor==4.1.0
 
 # homeassistant.components.nexia
-nexia==2.4.0
+nexia==2.7.0
 
 # homeassistant.components.nextcloud
 nextcloudmonitor==1.5.1
@@ -1344,7 +1344,7 @@ openhomedevice==2.2.0
 openwebifpy==4.3.1
 
 # homeassistant.components.opower
-opower==0.10.0
+opower==0.11.1
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -2411,7 +2411,7 @@ upcloud-api==2.6.0
 # homeassistant.components.huawei_lte
 # homeassistant.components.syncthru
 # homeassistant.components.zwave_me
-url-normalize==1.4.3
+url-normalize==2.2.0
 
 # homeassistant.components.uvc
 uvcclient==0.12.1
