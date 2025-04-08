@@ -391,14 +391,14 @@ async def reverse_proxy_client() -> None:
             # Ensure both URL and port are available
             if external_url:
                 # Construct the command
-                # frpc http -s home1.msh.srvmysmarthomes.us -P 8002 -p websocket -n external_url -l 8123 -d external_url
+                # frpc http -s home1.msh.srvmysmarthomes.us -P 80 -p websocket -n external_url -l 8123 -d external_url
                 command = [
                     "frpc",
                     "http",
                     "-s",
                     "home1.msh.srvmysmarthomes.us",  # Updated server address
                     "-P",
-                    "8002",  # Updated server port
+                    "80",  # Updated server port
                     "-p",
                     "websocket",  # Updated transport protocol
                     "-n",
