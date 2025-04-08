@@ -34,14 +34,18 @@ class HandlerProtocol(Protocol):
     """Define a handler protocol."""
 
     def __call__(  # noqa: D102
-        self, request: web.Request, *args: Any, **kwds: Any
+        self, request: web.BaseRequest, *args: Any, **kwds: Any
     ) -> Awaitable[HandlerResponseType] | HandlerResponseType: ...
 
 
 type AllowCorsType = Callable[[AbstractRoute | AbstractResource], None]
-type HandlerResponseInnerType = web.StreamResponse | bytes | str | None
-type HandlerResponseTupleType = tuple[HandlerResponseInnerType, HTTPStatus]
-type HandlerResponseType = HandlerResponseInnerType | HandlerResponseTupleType
+type HandlerResponseType = (
+    web.StreamResponse
+    | bytes
+    | str
+    | None
+    | tuple[web.StreamResponse | bytes | str | None, HTTPStatus]
+)
 KEY_AUTHENTICATED: Final = "ha_authenticated"
 KEY_ALLOW_ALL_CORS = AppKey[AllowCorsType]("allow_all_cors")
 KEY_ALLOW_CONFIGURED_CORS = AppKey[AllowCorsType]("allow_configured_cors")

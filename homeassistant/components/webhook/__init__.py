@@ -7,7 +7,7 @@ from http import HTTPStatus
 from ipaddress import ip_address
 import logging
 import secrets
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from aiohttp import StreamReader
 from aiohttp.hdrs import METH_GET, METH_HEAD, METH_POST, METH_PUT
@@ -18,6 +18,7 @@ from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.http import HandlerProtocol
 from homeassistant.helpers.network import get_url, is_cloud_connection
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
@@ -222,10 +223,10 @@ class WebhookView(HomeAssistantView):
         hass = request.app[KEY_HASS]
         return await async_handle_webhook(hass, webhook_id, request)
 
-    get = _handle
-    head = _handle
-    post = _handle
-    put = _handle
+    get = cast(HandlerProtocol, _handle)
+    head = cast(HandlerProtocol, _handle)
+    post = cast(HandlerProtocol, _handle)
+    put = cast(HandlerProtocol, _handle)
 
 
 @websocket_api.websocket_command(

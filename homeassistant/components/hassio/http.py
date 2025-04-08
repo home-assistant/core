@@ -6,7 +6,7 @@ from http import HTTPStatus
 import logging
 import os
 import re
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 from urllib.parse import quote, unquote
 
 import aiohttp
@@ -30,6 +30,7 @@ from homeassistant.components.http import (
     HomeAssistantView,
 )
 from homeassistant.components.onboarding import async_is_onboarded
+from homeassistant.helpers.http import HandlerProtocol
 
 from .const import X_HASS_SOURCE
 
@@ -239,8 +240,8 @@ class HassIOView(HomeAssistantView):
             raise HTTPBadGateway from err
         return response
 
-    get = _handle
-    post = _handle
+    get = cast(HandlerProtocol, _handle)
+    post = cast(HandlerProtocol, _handle)
 
 
 def _response_header(response: aiohttp.ClientResponse, path: str) -> dict[str, str]:
