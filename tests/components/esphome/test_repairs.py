@@ -180,7 +180,7 @@ async def test_device_conflict_migration(
 
     mock_client.disconnect = async_disconnect
     new_device_info = DeviceInfo(
-        mac_address="1122334455ab", name="test", model="esp32-iso-poe"
+        mac_address="11:22:33:44:55:AB", name="test", model="esp32-iso-poe"
     )
     mock_client.device_info = AsyncMock(return_value=new_device_info)
     device.device_info = new_device_info

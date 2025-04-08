@@ -906,14 +906,13 @@ async def cleanup_instance(
 async def async_replace_device(
     hass: HomeAssistant,
     entry_id: str,
-    old_mac: str,
-    new_mac: str,
+    old_mac: str,  # will be lower case (format_mac)
+    new_mac: str,  # will be lower case (format_mac)
 ) -> None:
     """Migrate an ESPHome entry to replace an existing device."""
     entry = hass.config_entries.async_get_entry(entry_id)
     assert entry is not None
-    lower_mac = new_mac.lower()
-    hass.config_entries.async_update_entry(entry, unique_id=lower_mac)
+    hass.config_entries.async_update_entry(entry, unique_id=new_mac)
 
     dev_reg = dr.async_get(hass)
     for device in dr.async_entries_for_config_entry(dev_reg, entry.entry_id):
@@ -937,5 +936,5 @@ async def async_replace_device(
     domain_data = DomainData.get(hass)
     store = domain_data.get_or_create_store(hass, entry)
     if data := await store.async_load():
-        data["device_info"]["mac_address"] = lower_mac
+        data["device_info"]["mac_address"] = upper_mac
         await store.async_save(data)
