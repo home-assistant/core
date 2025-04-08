@@ -216,13 +216,24 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
         if not self.is_on:
             characteristics[self.on_characteristic] = True
 
-        if (
+        if preset_mode is not None:
+            characteristics[CharacteristicsTypes.FAN_STATE_TARGET] = (
+                TargetFanStateValues.AUTOMATIC
+                if preset_mode == PRESET_AUTO
+                else TargetFanStateValues.MANUAL
+            )
+
+        elif (
             percentage is not None
             and FanEntityFeature.SET_SPEED in self.supported_features
         ):
             characteristics[CharacteristicsTypes.ROTATION_SPEED] = round(
                 percentage_to_ranged_value(self._speed_range, percentage)
             )
+            if FanEntityFeature.PRESET_MODE in self.supported_features:
+                characteristics[CharacteristicsTypes.FAN_STATE_TARGET] = (
+                    TargetFanStateValues.MANUAL
+                )
 
         if characteristics:
             await self.async_put_characteristics(characteristics)
@@ -274,6 +285,40 @@ class HomeKitAirPurifer(HomeKitFanV2):
             == TargetAirPurifierStateValues.AUTOMATIC
             else None
         )
+
+    async def async_turn_on(
+        self,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Turn the specified fan on."""
+        characteristics: dict[str, Any] = {}
+
+        if not self.is_on:
+            characteristics[self.on_characteristic] = True
+
+        if preset_mode is not None:
+            characteristics[CharacteristicsTypes.AIR_PURIFIER_STATE_TARGET] = (
+                TargetAirPurifierStateValues.AUTOMATIC
+                if preset_mode == PRESET_AUTO
+                else TargetAirPurifierStateValues.MANUAL
+            )
+
+        elif (
+            percentage is not None
+            and FanEntityFeature.SET_SPEED in self.supported_features
+        ):
+            characteristics[CharacteristicsTypes.ROTATION_SPEED] = round(
+                percentage_to_ranged_value(self._speed_range, percentage)
+            )
+            if FanEntityFeature.PRESET_MODE in self.supported_features:
+                characteristics[CharacteristicsTypes.FAN_STATE_TARGET] = (
+                    TargetAirPurifierStateValues.MANUAL
+                )
+
+        if characteristics:
+            await self.async_put_characteristics(characteristics)
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
