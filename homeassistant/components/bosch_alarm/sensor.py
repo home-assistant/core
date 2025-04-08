@@ -98,11 +98,13 @@ class AreaSensor(SensorEntity):
     async def async_added_to_hass(self) -> None:
         """Observe state changes."""
         await super().async_added_to_hass()
-        self.panel.faults_observer.attach(self.schedule_update_ha_state)
+        self._area.alarm_observer.attach(self.schedule_update_ha_state)
+        self._area.ready_observer.attach(self.schedule_update_ha_state)
 
     async def async_will_remove_from_hass(self) -> None:
         """Stop observing state changes."""
-        self.panel.faults_observer.detach(self.schedule_update_ha_state)
+        self._area.alarm_observer.detach(self.schedule_update_ha_state)
+        self._area.ready_observer.detach(self.schedule_update_ha_state)
 
 
 class FaultingPointsSensor(AreaSensor):
@@ -133,12 +135,3 @@ class AreaAlarmsSensor(AreaSensor):
             if priority in self._area.alarms_ids:
                 return state
         return "no_alarms"
-
-    async def async_added_to_hass(self) -> None:
-        """Observe state changes."""
-        await super().async_added_to_hass()
-        self._area.alarm_observer.attach(self.schedule_update_ha_state)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Stop observing state changes."""
-        self._area.alarm_observer.attach(self.schedule_update_ha_state)
