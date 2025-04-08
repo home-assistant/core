@@ -127,11 +127,6 @@ class AreaAlarmsSensor(AreaSensor):
         self.type = type
 
     @property
-    def icon(self) -> str:
-        """The icon for this alarms entity."""
-        return "mdi:alert-circle-outline"
-
-    @property
     def native_value(self) -> str:
         """The state of this alarms entity."""
         for state, priority in priority_types[self.type].items():
