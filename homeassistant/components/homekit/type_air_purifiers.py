@@ -3,6 +3,7 @@
 import logging
 from typing import Any
 
+from pyhap.characteristic import Characteristic
 from pyhap.const import CATEGORY_AIR_PURIFIER
 from pyhap.service import Service
 from pyhap.util import callback as pyhap_callback
@@ -81,23 +82,29 @@ class AirPurifier(Fan):
         serv_air_purifier = self.add_preload_service(SERV_AIR_PURIFIER, self.chars)
         self.set_primary_service(serv_air_purifier)
 
-        self.char_active = serv_air_purifier.configure_char(CHAR_ACTIVE, value=0)
-
-        self.preset_mode_chars = {}
-        self.char_current_humidity = None
-        self.char_pm25_density = None
-        self.char_current_temperature = None
-        self.char_filter_change_indication = None
-        self.char_filter_life_level = None
-
-        self.char_target_air_purifier_state = serv_air_purifier.configure_char(
-            CHAR_TARGET_AIR_PURIFIER_STATE,
-            value=0,
+        self.char_active: Characteristic = serv_air_purifier.configure_char(
+            CHAR_ACTIVE, value=0
         )
 
-        self.char_current_air_purifier_state = serv_air_purifier.configure_char(
-            CHAR_CURRENT_AIR_PURIFIER_STATE,
-            value=0,
+        self.preset_mode_chars: dict[str, Characteristic]
+        self.char_current_humidity: Characteristic | None = None
+        self.char_pm25_density: Characteristic | None = None
+        self.char_current_temperature: Characteristic | None = None
+        self.char_filter_change_indication: Characteristic | None = None
+        self.char_filter_life_level: Characteristic | None = None
+
+        self.char_target_air_purifier_state: Characteristic = (
+            serv_air_purifier.configure_char(
+                CHAR_TARGET_AIR_PURIFIER_STATE,
+                value=0,
+            )
+        )
+
+        self.char_current_air_purifier_state: Characteristic = (
+            serv_air_purifier.configure_char(
+                CHAR_CURRENT_AIR_PURIFIER_STATE,
+                value=0,
+            )
         )
 
         self.linked_humidity_sensor = self.config.get(CONF_LINKED_HUMIDITY_SENSOR)
@@ -439,7 +446,7 @@ class AirPurifier(Fan):
                 else TARGET_STATE_MANUAL
             )
 
-    def set_chars(self, char_values: Any) -> None:
+    def set_chars(self, char_values: dict[str, Any]) -> None:
         """Handle automatic mode after state change."""
         super().set_chars(char_values)
         if (
