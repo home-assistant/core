@@ -420,6 +420,9 @@ def migrate_entity_ids(
         if entity.device_id in ch_device_ids:
             ch = ch_device_ids[entity.device_id]
             id_parts = entity.unique_id.split("_", 2)
+            if len(id_parts) < 2:
+                _LOGGER.warning("Reolink entity has unexpected unique_id format %s", entity.unique_id)
+                continue
             if host.api.supported(ch, "UID") and id_parts[1] != host.api.camera_uid(ch):
                 new_id = f"{host.unique_id}_{host.api.camera_uid(ch)}_{id_parts[2]}"
                 existing_entity = entity_reg.async_get_entity_id(
