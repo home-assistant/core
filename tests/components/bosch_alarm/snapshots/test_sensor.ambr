@@ -11,7 +11,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_category': None,
     'entity_id': 'sensor.area1_burglary_alarm_status',
     'has_entity_name': True,
     'hidden_by': None,
@@ -23,7 +23,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:alert-circle-outline',
+    'original_icon': None,
     'original_name': 'Burglary Alarm Status',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
@@ -37,7 +37,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Area1 Burglary Alarm Status',
-      'icon': 'mdi:alert-circle-outline',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.area1_burglary_alarm_status',
@@ -59,7 +58,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_category': None,
     'entity_id': 'sensor.area1_faulting_points',
     'has_entity_name': True,
     'hidden_by': None,
@@ -106,7 +105,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_category': None,
     'entity_id': 'sensor.area1_fire_alarm_status',
     'has_entity_name': True,
     'hidden_by': None,
@@ -118,7 +117,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:alert-circle-outline',
+    'original_icon': None,
     'original_name': 'Fire Alarm Status',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
@@ -132,7 +131,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Area1 Fire Alarm Status',
-      'icon': 'mdi:alert-circle-outline',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.area1_fire_alarm_status',
@@ -154,7 +152,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_category': None,
     'entity_id': 'sensor.area1_gas_alarm_status',
     'has_entity_name': True,
     'hidden_by': None,
@@ -166,7 +164,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:alert-circle-outline',
+    'original_icon': None,
     'original_name': 'Gas Alarm Status',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
@@ -180,7 +178,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Area1 Gas Alarm Status',
-      'icon': 'mdi:alert-circle-outline',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.area1_gas_alarm_status',
@@ -202,7 +199,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_category': None,
     'entity_id': 'sensor.area1_personal_emergency_alarm_status',
     'has_entity_name': True,
     'hidden_by': None,
@@ -214,13 +211,13 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:alert-circle-outline',
+    'original_icon': None,
     'original_name': 'Personal Emergency Alarm Status',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'alarms_personal',
-    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_area_1_alarms_personal',
+    'translation_key': 'alarms_personal_emergency',
+    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_area_1_alarms_personal_emergency',
     'unit_of_measurement': None,
   })
 # ---
@@ -228,7 +225,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Area1 Personal Emergency Alarm Status',
-      'icon': 'mdi:alert-circle-outline',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.area1_personal_emergency_alarm_status',
@@ -250,7 +246,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_category': None,
     'entity_id': 'sensor.area1_burglary_alarm_status',
     'has_entity_name': True,
     'hidden_by': None,
@@ -262,7 +258,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:alert-circle-outline',
+    'original_icon': None,
     'original_name': 'Burglary Alarm Status',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
@@ -276,7 +272,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Area1 Burglary Alarm Status',
-      'icon': 'mdi:alert-circle-outline',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.area1_burglary_alarm_status',
@@ -298,7 +293,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_category': None,
     'entity_id': 'sensor.area1_faulting_points',
     'has_entity_name': True,
     'hidden_by': None,
@@ -345,7 +340,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_category': None,
     'entity_id': 'sensor.area1_fire_alarm_status',
     'has_entity_name': True,
     'hidden_by': None,
@@ -357,7 +352,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:alert-circle-outline',
+    'original_icon': None,
     'original_name': 'Fire Alarm Status',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
@@ -371,7 +366,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Area1 Fire Alarm Status',
-      'icon': 'mdi:alert-circle-outline',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.area1_fire_alarm_status',
@@ -393,7 +387,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_category': None,
     'entity_id': 'sensor.area1_gas_alarm_status',
     'has_entity_name': True,
     'hidden_by': None,
@@ -405,7 +399,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:alert-circle-outline',
+    'original_icon': None,
     'original_name': 'Gas Alarm Status',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
@@ -419,7 +413,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Area1 Gas Alarm Status',
-      'icon': 'mdi:alert-circle-outline',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.area1_gas_alarm_status',
@@ -441,7 +434,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_category': None,
     'entity_id': 'sensor.area1_personal_emergency_alarm_status',
     'has_entity_name': True,
     'hidden_by': None,
@@ -453,13 +446,13 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:alert-circle-outline',
+    'original_icon': None,
     'original_name': 'Personal Emergency Alarm Status',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'alarms_personal',
-    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_area_1_alarms_personal',
+    'translation_key': 'alarms_personal_emergency',
+    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_area_1_alarms_personal_emergency',
     'unit_of_measurement': None,
   })
 # ---
@@ -467,7 +460,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Area1 Personal Emergency Alarm Status',
-      'icon': 'mdi:alert-circle-outline',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.area1_personal_emergency_alarm_status',
@@ -489,7 +481,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_category': None,
     'entity_id': 'sensor.area1_burglary_alarm_status',
     'has_entity_name': True,
     'hidden_by': None,
@@ -501,7 +493,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:alert-circle-outline',
+    'original_icon': None,
     'original_name': 'Burglary Alarm Status',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
@@ -515,7 +507,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Area1 Burglary Alarm Status',
-      'icon': 'mdi:alert-circle-outline',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.area1_burglary_alarm_status',
@@ -537,7 +528,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_category': None,
     'entity_id': 'sensor.area1_faulting_points',
     'has_entity_name': True,
     'hidden_by': None,
@@ -584,7 +575,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_category': None,
     'entity_id': 'sensor.area1_fire_alarm_status',
     'has_entity_name': True,
     'hidden_by': None,
@@ -596,7 +587,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:alert-circle-outline',
+    'original_icon': None,
     'original_name': 'Fire Alarm Status',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
@@ -610,7 +601,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Area1 Fire Alarm Status',
-      'icon': 'mdi:alert-circle-outline',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.area1_fire_alarm_status',
@@ -632,7 +622,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_category': None,
     'entity_id': 'sensor.area1_gas_alarm_status',
     'has_entity_name': True,
     'hidden_by': None,
@@ -644,7 +634,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:alert-circle-outline',
+    'original_icon': None,
     'original_name': 'Gas Alarm Status',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
@@ -658,7 +648,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Area1 Gas Alarm Status',
-      'icon': 'mdi:alert-circle-outline',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.area1_gas_alarm_status',
@@ -680,7 +669,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_category': None,
     'entity_id': 'sensor.area1_personal_emergency_alarm_status',
     'has_entity_name': True,
     'hidden_by': None,
@@ -692,13 +681,13 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:alert-circle-outline',
+    'original_icon': None,
     'original_name': 'Personal Emergency Alarm Status',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'alarms_personal',
-    'unique_id': '1234567890_area_1_alarms_personal',
+    'translation_key': 'alarms_personal_emergency',
+    'unique_id': '1234567890_area_1_alarms_personal_emergency',
     'unit_of_measurement': None,
   })
 # ---
@@ -706,7 +695,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Area1 Personal Emergency Alarm Status',
-      'icon': 'mdi:alert-circle-outline',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.area1_personal_emergency_alarm_status',

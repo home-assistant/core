@@ -85,10 +85,10 @@
           "no_alarms": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::no_alarms%]"
         }
       },
-      "alarms_personal": {
+      "alarms_personal_emergency": {
         "name": "Personal Emergency Alarm Status",
         "state": {
-          "emergency": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::alarm%]",
+          "alarm": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::alarm%]",
           "no_alarms": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::no_alarms%]"
         }
       },

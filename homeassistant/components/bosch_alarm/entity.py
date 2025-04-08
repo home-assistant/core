@@ -1,0 +1,81 @@
+"""Support for Bosch Alarm Panel History as a sensor."""
+
+from __future__ import annotations
+
+from bosch_alarm_mode2 import Panel
+
+from homeassistant.components.sensor import Entity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
+
+from .const import DOMAIN
+
+PARALLEL_UPDATES = 0
+
+
+class BoschAlarmEntity(Entity):
+    """A base entity for a bosch alarm panel."""
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self, panel: Panel, unique_id: str, entity_description: EntityDescription
+    ) -> None:
+        """Set up a entity for a bosch alarm panel."""
+        self.panel = panel
+        self.entity_description = entity_description
+        self._attr_unique_id = f"{unique_id}_{entity_description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, unique_id)},
+            name=f"Bosch {panel.model}",
+            manufacturer="Bosch Security Systems",
+        )
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self.panel.connection_status()
+
+    async def async_added_to_hass(self) -> None:
+        """Observe state changes."""
+        self.panel.connection_status_observer.attach(self.schedule_update_ha_state)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Stop observing state changes."""
+        self.panel.connection_status_observer.detach(self.schedule_update_ha_state)
+
+
+class BoschAlarmAreaEntity(BoschAlarmEntity):
+    """A base entity for area related entities within a bosch alarm panel."""
+
+    def __init__(
+        self,
+        panel: Panel,
+        area_id: int,
+        unique_id: str,
+        entity_description: EntityDescription,
+    ) -> None:
+        """Set up a area related entity for a bosch alarm panel."""
+        super().__init__(panel, unique_id, entity_description)
+        area_unique_id = f"{unique_id}_area_{area_id}"
+        self.panel = panel
+        self._area = panel.areas[area_id]
+        self._attr_unique_id = f"{area_unique_id}_{entity_description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, area_unique_id)},
+            name=self._area.name,
+            manufacturer="Bosch Security Systems",
+            via_device=(DOMAIN, unique_id),
+        )
+
+    async def async_added_to_hass(self) -> None:
+        """Observe state changes."""
+        await super().async_added_to_hass()
+        self._area.alarm_observer.attach(self.schedule_update_ha_state)
+        self._area.ready_observer.attach(self.schedule_update_ha_state)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Stop observing state changes."""
+        await super().async_added_to_hass()
+        self._area.alarm_observer.detach(self.schedule_update_ha_state)
+        self._area.ready_observer.detach(self.schedule_update_ha_state)

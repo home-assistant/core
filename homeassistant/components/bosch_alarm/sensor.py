@@ -2,17 +2,19 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
+
 from bosch_alarm_mode2 import Panel
 from bosch_alarm_mode2.const import ALARM_MEMORY_PRIORITIES
+from bosch_alarm_mode2.panel import Area
 
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import EntityCategory
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BoschAlarmConfigEntry
-from .const import DOMAIN
+from .entity import BoschAlarmAreaEntity
 
 priority_types = {
     "burglary": {
@@ -30,8 +32,72 @@ priority_types = {
         "supervisory": ALARM_MEMORY_PRIORITIES.FIRE_SUPERVISORY,
         "trouble": ALARM_MEMORY_PRIORITIES.FIRE_TROUBLE,
     },
-    "personal": {"emergency": ALARM_MEMORY_PRIORITIES.PERSONAL_EMERGENCY},
+    "personal_emergency": {"alarm": ALARM_MEMORY_PRIORITIES.PERSONAL_EMERGENCY},
 }
+
+
+@dataclass(kw_only=True, frozen=True)
+class BoschAlarmSensorEntityDescription(SensorEntityDescription):
+    """Describes Bosch Alarm sensor entity."""
+
+    value_fn: Callable[[Area], str]
+
+
+SENSOR_TYPES: tuple[BoschAlarmSensorEntityDescription, ...] = (
+    BoschAlarmSensorEntityDescription(
+        key="alarms_burglary",
+        translation_key="alarms_burglary",
+        value_fn=lambda area: next(
+            (
+                key
+                for key, priority in priority_types["burglary"].items()
+                if priority in area.alarms_ids
+            ),
+            "no_alarms",
+        ),
+    ),
+    BoschAlarmSensorEntityDescription(
+        key="alarms_gas",
+        translation_key="alarms_gas",
+        value_fn=lambda area: next(
+            (
+                key
+                for key, priority in priority_types["gas"].items()
+                if priority in area.alarms_ids
+            ),
+            "no_alarms",
+        ),
+    ),
+    BoschAlarmSensorEntityDescription(
+        key="alarms_fire",
+        translation_key="alarms_fire",
+        value_fn=lambda area: next(
+            (
+                key
+                for key, priority in priority_types["fire"].items()
+                if priority in area.alarms_ids
+            ),
+            "no_alarms",
+        ),
+    ),
+    BoschAlarmSensorEntityDescription(
+        key="alarms_personal_emergency",
+        translation_key="alarms_personal_emergency",
+        value_fn=lambda area: next(
+            (
+                key
+                for key, priority in priority_types["personal_emergency"].items()
+                if priority in area.alarms_ids
+            ),
+            "no_alarms",
+        ),
+    ),
+    BoschAlarmSensorEntityDescription(
+        key="faulting_points",
+        translation_key="faulting_points",
+        value_fn=lambda area: str(area.faults),
+    ),
+)
 
 
 async def async_setup_entry(
@@ -39,22 +105,14 @@ async def async_setup_entry(
     config_entry: BoschAlarmConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up a sensor for tracking panel history."""
+    """Set up bosch alarm sensors."""
 
     panel = config_entry.runtime_data
     unique_id = config_entry.unique_id or config_entry.entry_id
-    entities: list[SensorEntity] = [
-        FaultingPointsSensor(
-            panel,
-            area_id,
-            unique_id,
-        )
-        for area_id in panel.areas
-    ]
-
-    for priority_type in priority_types:
+    entities: list[SensorEntity] = []
+    for template in SENSOR_TYPES:
         entities.extend(
-            AreaAlarmsSensor(panel, area_id, unique_id, priority_type)
+            BoschAreaSensor(panel, area_id, unique_id, template)
             for area_id in panel.areas
         )
 
@@ -64,70 +122,22 @@ async def async_setup_entry(
 PARALLEL_UPDATES = 0
 
 
-class AreaSensor(SensorEntity):
+class BoschAreaSensor(SensorEntity, BoschAlarmAreaEntity):
     """A faults sensor entity for a bosch alarm panel."""
 
-    _attr_has_entity_name = True
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    entity_description: BoschAlarmSensorEntityDescription
 
-    def __init__(self, panel: Panel, area_id: int, unique_id: str, type: str) -> None:
+    def __init__(
+        self,
+        panel: Panel,
+        area_id: int,
+        unique_id: str,
+        entity_description: BoschAlarmSensorEntityDescription,
+    ) -> None:
         """Set up a faults sensor entity for a bosch alarm panel."""
-        self.panel = panel
-        area_unique_id = f"{unique_id}_area_{area_id}"
-        self._attr_translation_key = type
-        self._area = panel.areas[area_id]
-        self._attr_unique_id = f"{area_unique_id}_{type}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, area_unique_id)},
-            name=self._area.name,
-            manufacturer="Bosch Security Systems",
-            via_device=(DOMAIN, unique_id),
-        )
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self.panel.connection_status()
-
-    async def async_added_to_hass(self) -> None:
-        """Observe state changes."""
-        await super().async_added_to_hass()
-        self._area.alarm_observer.attach(self.schedule_update_ha_state)
-        self._area.ready_observer.attach(self.schedule_update_ha_state)
-        self.panel.connection_status_observer.attach(self.schedule_update_ha_state)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Stop observing state changes."""
-        self._area.alarm_observer.detach(self.schedule_update_ha_state)
-        self._area.ready_observer.detach(self.schedule_update_ha_state)
-        self.panel.connection_status_observer.detach(self.schedule_update_ha_state)
-
-
-class FaultingPointsSensor(AreaSensor):
-    """A faults sensor entity for a bosch alarm panel."""
-
-    def __init__(self, panel: Panel, area_id: int, unique_id: str) -> None:
-        """Set up a faults sensor entity for a bosch alarm panel."""
-        super().__init__(panel, area_id, unique_id, "faulting_points")
+        super().__init__(panel, area_id, unique_id, entity_description)
 
     @property
     def native_value(self) -> str:
-        """The state of this faults entity."""
-        return str(self._area.faults)
-
-
-class AreaAlarmsSensor(AreaSensor):
-    """A sensor entity showing the alarms for an area for a bosch alarm panel."""
-
-    def __init__(self, panel: Panel, area_id: int, unique_id: str, type: str) -> None:
-        """Set up a faults sensor entity for a bosch alarm panel."""
-        super().__init__(panel, area_id, unique_id, f"alarms_{type}")
-        self.type = type
-
-    @property
-    def native_value(self) -> str:
-        """The state of this alarms entity."""
-        for state, priority in priority_types[self.type].items():
-            if priority in self._area.alarms_ids:
-                return state
-        return "no_alarms"
+        """Return the state of the sensor."""
+        return self.entity_description.value_fn(self._area)
