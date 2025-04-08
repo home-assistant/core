@@ -12,7 +12,12 @@ from homeassistant.components.esphome import repairs
 from homeassistant.components.esphome.const import DOMAIN
 from homeassistant.components.esphome.manager import DEVICE_CONFLICT_ISSUE_FORMAT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 
 from tests.common import MockConfigEntry
 from tests.components.repairs import (
@@ -38,6 +43,7 @@ async def test_device_conflict_manual(
     hass_ws_client: WebSocketGenerator,
     mock_config_entry: MockConfigEntry,
     issue_registry: ir.IssueRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test EA warning is created if using prerelease version of Protect."""
     disconnect_done = hass.loop.create_future()
@@ -55,6 +61,8 @@ async def test_device_conflict_manual(
     await hass.async_block_till_done()
     async with asyncio.timeout(1):
         await disconnect_done
+
+    assert "Unexpected device found" in caplog.text
     issue_id = DEVICE_CONFLICT_ISSUE_FORMAT.format(mock_config_entry.entry_id)
 
     issues = await get_repairs(hass, hass_ws_client)
@@ -74,9 +82,10 @@ async def test_device_conflict_manual(
         "name": "test",
         "stored_mac": "11:22:33:44:55:aa",
     }
+    assert data["type"] == FlowResultType.FORM
     assert data["step_id"] == "start"
 
-    data = await process_repair_fix_flow(client, flow_id)
+    data = await process_repair_fix_flow(client, flow_id, json={"action": "manual"})
 
     flow_id = data["flow_id"]
     assert data["description_placeholders"] == {
@@ -86,8 +95,107 @@ async def test_device_conflict_manual(
         "name": "test",
         "stored_mac": "11:22:33:44:55:aa",
     }
-    assert data["step_id"] == "confirm"
+    assert data["type"] == FlowResultType.FORM
+    assert data["step_id"] == "manual"
 
+    mock_client.device_info = AsyncMock(
+        return_value=DeviceInfo(
+            mac_address="11:22:33:44:55:aa", name="test", model="esp32-iso-poe"
+        )
+    )
+    caplog.clear()
     data = await process_repair_fix_flow(client, flow_id)
 
-    assert data["type"] == "create_entry"
+    assert data["type"] == FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
+    assert "Unexpected device found" not in caplog.text
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+async def test_device_conflict_migration(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
+    mock_config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test EA warning is created if using prerelease version of Protect."""
+    disconnect_done = hass.loop.create_future()
+
+    async def async_disconnect(*args, **kwargs) -> None:
+        disconnect_done.set_result(None)
+
+    mock_client.disconnect = async_disconnect
+    mock_client.device_info = AsyncMock(
+        return_value=DeviceInfo(
+            mac_address="1122334455ab", name="test", model="esp32-iso-poe"
+        )
+    )
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    async with asyncio.timeout(1):
+        await disconnect_done
+
+    dev_entry = device_registry.async_get_device(
+        identifiers={}, connections={(dr.CONNECTION_NETWORK_MAC, "11:22:33:44:55:aa")}
+    )
+    assert dev_entry is not None
+
+    assert "Unexpected device found" in caplog.text
+    issue_id = DEVICE_CONFLICT_ISSUE_FORMAT.format(mock_config_entry.entry_id)
+
+    issues = await get_repairs(hass, hass_ws_client)
+    assert issues
+    assert len(issues) == 1
+    assert any(True for issue in issues if issue["issue_id"] == issue_id)
+
+    await async_process_repairs_platforms(hass)
+    client = await hass_client()
+    data = await start_repair_fix_flow(client, DOMAIN, issue_id)
+
+    flow_id = data["flow_id"]
+    assert data["description_placeholders"] == {
+        "ip": "192.168.1.2",
+        "mac": "11:22:33:44:55:ab",
+        "model": "esp32-iso-poe",
+        "name": "test",
+        "stored_mac": "11:22:33:44:55:aa",
+    }
+    assert data["type"] == FlowResultType.FORM
+    assert data["step_id"] == "start"
+
+    data = await process_repair_fix_flow(client, flow_id, json={"action": "migrate"})
+
+    flow_id = data["flow_id"]
+    assert data["description_placeholders"] == {
+        "ip": "192.168.1.2",
+        "mac": "11:22:33:44:55:ab",
+        "model": "esp32-iso-poe",
+        "name": "test",
+        "stored_mac": "11:22:33:44:55:aa",
+    }
+    assert data["type"] == FlowResultType.FORM
+    assert data["step_id"] == "migrate"
+
+    caplog.clear()
+    data = await process_repair_fix_flow(client, flow_id)
+
+    assert data["type"] == FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
+    assert "Unexpected device found" not in caplog.text
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+    assert mock_config_entry.unique_id == "11:22:33:44:55:ab"
+
+    dev_entry = device_registry.async_get_device(
+        identifiers={}, connections={(dr.CONNECTION_NETWORK_MAC, "11:22:33:44:55:aa")}
+    )
+    assert dev_entry is None
+    dev_entry = device_registry.async_get_device(
+        identifiers={}, connections={(dr.CONNECTION_NETWORK_MAC, "11:22:33:44:55:ab")}
+    )
+    assert dev_entry is not None
