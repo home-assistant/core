@@ -421,7 +421,7 @@ class ESPHomeManager:
         assert reconnect_logic is not None, "Reconnect logic must be set"
         hass = self.hass
         cli = self.cli
-        stored_device_name = entry.data.get(CONF_DEVICE_NAME)
+        stored_device_name: str | None = entry.data.get(CONF_DEVICE_NAME)
         unique_id_is_mac_address = unique_id and ":" in unique_id
         if entry.options.get(CONF_SUBSCRIBE_LOGS):
             self._async_subscribe_logs(self._async_get_equivalent_log_level())
