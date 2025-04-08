@@ -1047,6 +1047,36 @@ async def test_reauth_confirm_invalid_with_unique_id(
     assert entry.data[CONF_NOISE_PSK] == VALID_NOISE_PSK
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_reauth_encryption_key_removed(
+    hass: HomeAssistant, mock_client, mock_setup_entry: None
+) -> None:
+    """Test reauth when the encryption key was removed."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 6053,
+            CONF_PASSWORD: "",
+            CONF_NOISE_PSK: VALID_NOISE_PSK,
+        },
+        unique_id="test",
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_encryption_removed_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.data[CONF_NOISE_PSK] == ""
+
+
 async def test_discovery_dhcp_updates_host(
     hass: HomeAssistant, mock_client: APIClient, mock_setup_entry: None
 ) -> None:

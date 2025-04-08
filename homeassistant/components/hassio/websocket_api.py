@@ -182,6 +182,6 @@ async def websocket_update_addon(
 async def websocket_update_core(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
-    """Websocket handler to update an addon."""
+    """Websocket handler to update Home Assistant Core."""
     await update_core(hass, None, msg["backup"])
     connection.send_result(msg[WS_ID])

@@ -51,7 +51,7 @@ class QbusLight(QbusEntity, LightEntity):
 
         super().__init__(mqtt_output)
 
-        self._set_state()
+        self._set_state(0)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
@@ -74,7 +74,6 @@ class QbusLight(QbusEntity, LightEntity):
             state.write_percentage(percentage)
 
         await self._async_publish_output_state(state)
-        self._set_state(percentage=percentage, on=on)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
@@ -82,7 +81,6 @@ class QbusLight(QbusEntity, LightEntity):
         state.write_on_off(on=False)
 
         await self._async_publish_output_state(state)
-        self._set_state(on=False)
 
     async def _state_received(self, msg: ReceiveMessage) -> None:
         output = self._message_factory.parse_output_state(
@@ -91,20 +89,9 @@ class QbusLight(QbusEntity, LightEntity):
 
         if output is not None:
             percentage = round(output.read_percentage())
-            self._set_state(percentage=percentage)
+            self._set_state(percentage)
             self.async_schedule_update_ha_state()
 
-    def _set_state(
-        self, *, percentage: int | None = None, on: bool | None = None
-    ) -> None:
-        if percentage is None:
-            # When turning on without brightness, we don't know the desired
-            # brightness. It will be set during _state_received().
-            if on is True:
-                self._attr_is_on = True
-            else:
-                self._attr_is_on = False
-                self._attr_brightness = 0
-        else:
-            self._attr_is_on = percentage > 0
-            self._attr_brightness = value_to_brightness((1, 100), percentage)
+    def _set_state(self, percentage: int = 0) -> None:
+        self._attr_is_on = percentage > 0
+        self._attr_brightness = value_to_brightness((1, 100), percentage)

@@ -39,7 +39,7 @@
           "description": "The OpenThread Border Router (OTBR) add-on is now starting."
         },
         "otbr_failed": {
-          "title": "Failed to setup OpenThread Border Router",
+          "title": "Failed to set up OpenThread Border Router",
           "description": "The OpenThread Border Router add-on installation was unsuccessful. Ensure no other software is trying to communicate with the {model}, you have access to the Internet and can install other add-ons, and try again. Check the Supervisor logs if the problem persists."
         },
         "confirm_otbr": {

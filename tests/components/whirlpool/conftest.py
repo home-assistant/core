@@ -141,31 +141,21 @@ def fixture_mock_aircon_api_instances(mock_aircon1_api, mock_aircon2_api):
         yield mock_aircon_api
 
 
-def side_effect_function(*args, **kwargs):
-    """Return correct value for attribute."""
-    if args[0] == "Cavity_TimeStatusEstTimeRemaining":
-        return 3540
-    if args[0] == "Cavity_OpStatusDoorOpen":
-        return "0"
-    if args[0] == "WashCavity_OpStatusBulkDispense1Level":
-        return "3"
-
-    return None
-
-
-def get_sensor_mock(said):
+def get_sensor_mock(said: str, data_model: str):
     """Get a mock of a sensor."""
     mock_sensor = mock.Mock(said=said)
     mock_sensor.name = f"WasherDryer {said}"
     mock_sensor.register_attr_callback = MagicMock()
-    mock_sensor.appliance_info.data_model = "washer_dryer_model"
+    mock_sensor.appliance_info.data_model = data_model
     mock_sensor.appliance_info.category = "washer_dryer"
     mock_sensor.appliance_info.model_number = "12345"
     mock_sensor.get_online.return_value = True
     mock_sensor.get_machine_state.return_value = (
         whirlpool.washerdryer.MachineState.Standby
     )
-    mock_sensor.get_attribute.side_effect = side_effect_function
+    mock_sensor.get_door_open.return_value = False
+    mock_sensor.get_dispense_1_level.return_value = 3
+    mock_sensor.get_time_remaining.return_value = 3540
     mock_sensor.get_cycle_status_filling.return_value = False
     mock_sensor.get_cycle_status_rinsing.return_value = False
     mock_sensor.get_cycle_status_sensing.return_value = False
@@ -179,13 +169,13 @@ def get_sensor_mock(said):
 @pytest.fixture(name="mock_sensor1_api", autouse=False)
 def fixture_mock_sensor1_api():
     """Set up sensor API fixture."""
-    return get_sensor_mock(MOCK_SAID3)
+    return get_sensor_mock(MOCK_SAID3, "washer")
 
 
 @pytest.fixture(name="mock_sensor2_api", autouse=False)
 def fixture_mock_sensor2_api():
     """Set up sensor API fixture."""
-    return get_sensor_mock(MOCK_SAID4)
+    return get_sensor_mock(MOCK_SAID4, "dryer")
 
 
 @pytest.fixture(name="mock_sensor_api_instances", autouse=False)

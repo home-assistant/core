@@ -7,6 +7,6 @@
   "documentation": "https://www.home-assistant.io/integrations/home_connect",
   "iot_class": "cloud_push",
   "loggers": ["aiohomeconnect"],
-  "requirements": ["aiohomeconnect==0.16.3"],
+  "requirements": ["aiohomeconnect==0.17.0"],
   "single_config_entry": true
 }

@@ -17,7 +17,6 @@ from homeassistant.components.backup import (
     BackupNotFound,
     suggested_filename,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import ChunkAsyncStreamIterator
 from homeassistant.helpers.json import json_dumps
@@ -29,7 +28,7 @@ from .const import (
     DATA_BACKUP_AGENT_LISTENERS,
     DOMAIN,
 )
-from .models import SynologyDSMData
+from .coordinator import SynologyDSMConfigEntry
 
 LOGGER = logging.getLogger(__name__)
 
@@ -47,19 +46,19 @@ async def async_get_backup_agents(
     hass: HomeAssistant,
 ) -> list[BackupAgent]:
     """Return a list of backup agents."""
-    if not (
-        entries := hass.config_entries.async_loaded_entries(DOMAIN)
-    ) or not hass.data.get(DOMAIN):
+    entries: list[SynologyDSMConfigEntry] = hass.config_entries.async_loaded_entries(
+        DOMAIN
+    )
+    if not entries:
         LOGGER.debug("No proper config entry found")
         return []
-    syno_datas: dict[str, SynologyDSMData] = hass.data[DOMAIN]
     return [
         SynologyDSMBackupAgent(hass, entry, entry.unique_id)
         for entry in entries
         if entry.unique_id is not None
-        and (syno_data := syno_datas.get(entry.unique_id))
-        and syno_data.api.file_station
+        and entry.runtime_data.api.file_station
         and entry.options.get(CONF_BACKUP_PATH)
+        and entry.runtime_data.coordinator_central.last_update_success
     ]
 
 
@@ -91,7 +90,9 @@ class SynologyDSMBackupAgent(BackupAgent):
 
     domain = DOMAIN
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, unique_id: str) -> None:
+    def __init__(
+        self, hass: HomeAssistant, entry: SynologyDSMConfigEntry, unique_id: str
+    ) -> None:
         """Initialize the Synology DSM backup agent."""
         super().__init__()
         LOGGER.debug("Initializing Synology DSM backup agent for %s", entry.unique_id)
@@ -100,7 +101,7 @@ class SynologyDSMBackupAgent(BackupAgent):
         self.path = (
             f"{entry.options[CONF_BACKUP_SHARE]}/{entry.options[CONF_BACKUP_PATH]}"
         )
-        syno_data: SynologyDSMData = hass.data[DOMAIN][entry.unique_id]
+        syno_data = entry.runtime_data
         self.api = syno_data.api
         self.backup_base_names: dict[str, str] = {}
 

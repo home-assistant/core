@@ -16,7 +16,13 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_TOKEN,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -39,6 +45,13 @@ ENVOY = "Envoy"
 CONF_SERIAL = "serial"
 
 INSTALLER_AUTH_USERNAME = "installer"
+
+AVOID_REFLECT_KEYS = {CONF_PASSWORD, CONF_TOKEN}
+
+
+def without_avoid_reflect_keys(dictionary: Mapping[str, Any]) -> dict[str, Any]:
+    """Return a dictionary without AVOID_REFLECT_KEYS."""
+    return {k: v for k, v in dictionary.items() if k not in AVOID_REFLECT_KEYS}
 
 
 async def validate_input(
@@ -205,7 +218,10 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
         description_placeholders["serial"] = serial
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=self._async_generate_schema(),
+            data_schema=self.add_suggested_values_to_schema(
+                self._async_generate_schema(),
+                without_avoid_reflect_keys(user_input or reauth_entry.data),
+            ),
             description_placeholders=description_placeholders,
             errors=errors,
         )
@@ -259,10 +275,12 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_SERIAL: self.unique_id,
                 CONF_HOST: host,
             }
-
         return self.async_show_form(
             step_id="user",
-            data_schema=self._async_generate_schema(),
+            data_schema=self.add_suggested_values_to_schema(
+                self._async_generate_schema(),
+                without_avoid_reflect_keys(user_input or {}),
+            ),
             description_placeholders=description_placeholders,
             errors=errors,
         )
@@ -306,11 +324,11 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         description_placeholders["serial"] = serial
 
-        suggested_values: Mapping[str, Any] = user_input or reconfigure_entry.data
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                self._async_generate_schema(), suggested_values
+                self._async_generate_schema(),
+                without_avoid_reflect_keys(user_input or reconfigure_entry.data),
             ),
             description_placeholders=description_placeholders,
             errors=errors,

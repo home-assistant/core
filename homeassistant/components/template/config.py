@@ -17,6 +17,7 @@ from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
 from homeassistant.config import async_log_schema_error, config_without_domain
 from homeassistant.const import (
@@ -46,6 +47,7 @@ from . import (
     number as number_platform,
     select as select_platform,
     sensor as sensor_platform,
+    switch as switch_platform,
     weather as weather_platform,
 )
 from .const import DOMAIN, PLATFORMS, TemplateConfig
@@ -111,9 +113,14 @@ CONFIG_SECTION_SCHEMA = vol.All(
             vol.Optional(WEATHER_DOMAIN): vol.All(
                 cv.ensure_list, [weather_platform.WEATHER_SCHEMA]
             ),
+            vol.Optional(SWITCH_DOMAIN): vol.All(
+                cv.ensure_list, [switch_platform.SWITCH_SCHEMA]
+            ),
         }
     ),
-    ensure_domains_do_not_have_trigger_or_action(BUTTON_DOMAIN, LIGHT_DOMAIN),
+    ensure_domains_do_not_have_trigger_or_action(
+      BUTTON_DOMAIN, LIGHT_DOMAIN, SWITCH_DOMAIN
+    ),
 )
 
 TEMPLATE_BLUEPRINT_INSTANCE_SCHEMA = vol.Schema(

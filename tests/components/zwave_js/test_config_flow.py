@@ -557,6 +557,28 @@ async def test_abort_hassio_discovery_for_other_addon(
 
 
 @pytest.mark.parametrize(
+    ("usb_discovery_info", "device", "discovery_name"),
+    [
+        (
+            USB_DISCOVERY_INFO,
+            USB_DISCOVERY_INFO.device,
+            "zwave radio",
+        ),
+        (
+            UsbServiceInfo(
+                device="/dev/zwa2",
+                pid="303A",
+                vid="4001",
+                serial_number="1234",
+                description="ZWA-2 - Nabu Casa ZWA-2",
+                manufacturer="Nabu Casa",
+            ),
+            "/dev/zwa2",
+            "Home Assistant Connect ZWA-2",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
     "discovery_info",
     [
         [
@@ -578,15 +600,19 @@ async def test_usb_discovery(
     get_addon_discovery_info,
     set_addon_options,
     start_addon,
+    usb_discovery_info: UsbServiceInfo,
+    device: str,
+    discovery_name: str,
 ) -> None:
     """Test usb discovery success path."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USB},
-        data=USB_DISCOVERY_INFO,
+        data=usb_discovery_info,
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "usb_confirm"
+    assert result["description_placeholders"] == {"name": discovery_name}
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
@@ -619,7 +645,7 @@ async def test_usb_discovery(
         "core_zwave_js",
         AddonsOptions(
             config={
-                "device": USB_DISCOVERY_INFO.device,
+                "device": device,
                 "s0_legacy_key": "new123",
                 "s2_access_control_key": "new456",
                 "s2_authenticated_key": "new789",
@@ -652,7 +678,7 @@ async def test_usb_discovery(
     assert result["title"] == TITLE
     assert result["data"] == {
         "url": "ws://host1:3001",
-        "usb_path": USB_DISCOVERY_INFO.device,
+        "usb_path": device,
         "s0_legacy_key": "new123",
         "s2_access_control_key": "new456",
         "s2_authenticated_key": "new789",

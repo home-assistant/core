@@ -31,7 +31,7 @@ from homeassistant.helpers import area_registry as ar
 from homeassistant.helpers.backup import async_get_manager as async_get_backup_manager
 from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.helpers.translation import async_get_translations
-from homeassistant.setup import async_setup_component
+from homeassistant.setup import SetupPhases, async_pause_setup, async_setup_component
 
 if TYPE_CHECKING:
     from . import OnboardingData, OnboardingStorage, OnboardingStoreData
@@ -51,7 +51,7 @@ async def async_setup(
     hass: HomeAssistant, data: OnboardingStoreData, store: OnboardingStorage
 ) -> None:
     """Set up the onboarding view."""
-    hass.http.register_view(OnboardingView(data, store))
+    hass.http.register_view(OnboardingStatusView(data, store))
     hass.http.register_view(InstallationTypeOnboardingView(data))
     hass.http.register_view(UserOnboardingView(data, store))
     hass.http.register_view(CoreConfigOnboardingView(data, store))
@@ -60,19 +60,33 @@ async def async_setup(
     hass.http.register_view(BackupInfoView(data))
     hass.http.register_view(RestoreBackupView(data))
     hass.http.register_view(UploadBackupView(data))
+    await setup_cloud_views(hass, data)
 
 
-class OnboardingView(HomeAssistantView):
-    """Return the onboarding status."""
+class _BaseOnboardingView(HomeAssistantView):
+    """Base class for onboarding views."""
+
+    def __init__(self, data: OnboardingStoreData) -> None:
+        """Initialize the onboarding view."""
+        self._data = data
+
+
+class _NoAuthBaseOnboardingView(_BaseOnboardingView):
+    """Base class for unauthenticated onboarding views."""
 
     requires_auth = False
+
+
+class OnboardingStatusView(_NoAuthBaseOnboardingView):
+    """Return the onboarding status."""
+
     url = "/api/onboarding"
     name = "api:onboarding"
 
     def __init__(self, data: OnboardingStoreData, store: OnboardingStorage) -> None:
         """Initialize the onboarding view."""
+        super().__init__(data)
         self._store = store
-        self._data = data
 
     async def get(self, request: web.Request) -> web.Response:
         """Return the onboarding status."""
@@ -81,16 +95,11 @@ class OnboardingView(HomeAssistantView):
         )
 
 
-class InstallationTypeOnboardingView(HomeAssistantView):
+class InstallationTypeOnboardingView(_NoAuthBaseOnboardingView):
     """Return the installation type during onboarding."""
 
-    requires_auth = False
     url = "/api/onboarding/installation_type"
     name = "api:onboarding:installation_type"
-
-    def __init__(self, data: OnboardingStoreData) -> None:
-        """Initialize the onboarding installation type view."""
-        self._data = data
 
     async def get(self, request: web.Request) -> web.Response:
         """Return the onboarding status."""
@@ -102,15 +111,15 @@ class InstallationTypeOnboardingView(HomeAssistantView):
         return self.json({"installation_type": info["installation_type"]})
 
 
-class _BaseOnboardingView(HomeAssistantView):
-    """Base class for onboarding."""
+class _BaseOnboardingStepView(_BaseOnboardingView):
+    """Base class for an onboarding step."""
 
     step: str
 
     def __init__(self, data: OnboardingStoreData, store: OnboardingStorage) -> None:
         """Initialize the onboarding view."""
+        super().__init__(data)
         self._store = store
-        self._data = data
         self._lock = asyncio.Lock()
 
     @callback
@@ -130,7 +139,7 @@ class _BaseOnboardingView(HomeAssistantView):
                 listener()
 
 
-class UserOnboardingView(_BaseOnboardingView):
+class UserOnboardingView(_BaseOnboardingStepView):
     """View to handle create user onboarding step."""
 
     url = "/api/onboarding/users"
@@ -196,7 +205,7 @@ class UserOnboardingView(_BaseOnboardingView):
             return self.json({"auth_code": auth_code})
 
 
-class CoreConfigOnboardingView(_BaseOnboardingView):
+class CoreConfigOnboardingView(_BaseOnboardingStepView):
     """View to finish core config onboarding step."""
 
     url = "/api/onboarding/core_config"
@@ -242,7 +251,7 @@ class CoreConfigOnboardingView(_BaseOnboardingView):
             return self.json({})
 
 
-class IntegrationOnboardingView(_BaseOnboardingView):
+class IntegrationOnboardingView(_BaseOnboardingStepView):
     """View to finish integration onboarding step."""
 
     url = "/api/onboarding/integration"
@@ -289,7 +298,7 @@ class IntegrationOnboardingView(_BaseOnboardingView):
             return self.json({"auth_code": auth_code})
 
 
-class AnalyticsOnboardingView(_BaseOnboardingView):
+class AnalyticsOnboardingView(_BaseOnboardingStepView):
     """View to finish analytics onboarding step."""
 
     url = "/api/onboarding/analytics"
@@ -311,17 +320,7 @@ class AnalyticsOnboardingView(_BaseOnboardingView):
             return self.json({})
 
 
-class BackupOnboardingView(HomeAssistantView):
-    """Backup onboarding view."""
-
-    requires_auth = False
-
-    def __init__(self, data: OnboardingStoreData) -> None:
-        """Initialize the view."""
-        self._data = data
-
-
-def with_backup_manager[_ViewT: BackupOnboardingView, **_P](
+def with_backup_manager[_ViewT: _BaseOnboardingView, **_P](
     func: Callable[
         Concatenate[_ViewT, BackupManager, web.Request, _P],
         Coroutine[Any, Any, web.Response],
@@ -353,7 +352,7 @@ def with_backup_manager[_ViewT: BackupOnboardingView, **_P](
     return with_backup
 
 
-class BackupInfoView(BackupOnboardingView):
+class BackupInfoView(_NoAuthBaseOnboardingView):
     """Get backup info view."""
 
     url = "/api/onboarding/backup/info"
@@ -367,12 +366,12 @@ class BackupInfoView(BackupOnboardingView):
             {
                 "backups": list(backups.values()),
                 "state": manager.state,
-                "last_non_idle_event": manager.last_non_idle_event,
+                "last_action_event": manager.last_action_event,
             }
         )
 
 
-class RestoreBackupView(BackupOnboardingView):
+class RestoreBackupView(_NoAuthBaseOnboardingView):
     """Restore backup view."""
 
     url = "/api/onboarding/backup/restore"
@@ -417,7 +416,7 @@ class RestoreBackupView(BackupOnboardingView):
         return web.Response(status=HTTPStatus.OK)
 
 
-class UploadBackupView(BackupOnboardingView, backup_http.UploadBackupView):
+class UploadBackupView(_NoAuthBaseOnboardingView, backup_http.UploadBackupView):
     """Upload backup view."""
 
     url = "/api/onboarding/backup/upload"
@@ -427,6 +426,116 @@ class UploadBackupView(BackupOnboardingView, backup_http.UploadBackupView):
     async def post(self, manager: BackupManager, request: web.Request) -> web.Response:
         """Upload a backup file."""
         return await self._post(request)
+
+
+async def setup_cloud_views(hass: HomeAssistant, data: OnboardingStoreData) -> None:
+    """Set up the cloud views."""
+
+    with async_pause_setup(hass, SetupPhases.WAIT_IMPORT_PACKAGES):
+        # Import the cloud integration in an executor to avoid blocking the
+        # event loop.
+        def import_cloud() -> None:
+            """Import the cloud integration."""
+            # pylint: disable-next=import-outside-toplevel
+            from homeassistant.components.cloud import http_api  # noqa: F401
+
+        await hass.async_add_import_executor_job(import_cloud)
+
+    # The cloud integration is imported locally to avoid cloud being imported by
+    # bootstrap.py and to avoid circular imports.
+
+    # pylint: disable-next=import-outside-toplevel
+    from homeassistant.components.cloud import http_api as cloud_http
+
+    # pylint: disable-next=import-outside-toplevel,hass-component-root-import
+    from homeassistant.components.cloud.const import DATA_CLOUD
+
+    def with_cloud[_ViewT: _BaseOnboardingView, **_P](
+        func: Callable[
+            Concatenate[_ViewT, web.Request, _P],
+            Coroutine[Any, Any, web.Response],
+        ],
+    ) -> Callable[
+        Concatenate[_ViewT, web.Request, _P], Coroutine[Any, Any, web.Response]
+    ]:
+        """Home Assistant API decorator to check onboarding and cloud."""
+
+        @wraps(func)
+        async def _with_cloud(
+            self: _ViewT,
+            request: web.Request,
+            *args: _P.args,
+            **kwargs: _P.kwargs,
+        ) -> web.Response:
+            """Check onboarding status, cloud and call function."""
+            if self._data["done"]:
+                # If at least one onboarding step is done, we don't allow accessing
+                # the cloud onboarding views.
+                raise HTTPUnauthorized
+
+            hass = request.app[KEY_HASS]
+            if DATA_CLOUD not in hass.data:
+                return self.json(
+                    {"code": "cloud_disabled"},
+                    status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+                )
+
+            return await func(self, request, *args, **kwargs)
+
+        return _with_cloud
+
+    class CloudForgotPasswordView(
+        _NoAuthBaseOnboardingView, cloud_http.CloudForgotPasswordView
+    ):
+        """View to start Forgot Password flow."""
+
+        url = "/api/onboarding/cloud/forgot_password"
+        name = "api:onboarding:cloud:forgot_password"
+
+        @with_cloud
+        async def post(self, request: web.Request) -> web.Response:
+            """Handle forgot password request."""
+            return await super()._post(request)
+
+    class CloudLoginView(_NoAuthBaseOnboardingView, cloud_http.CloudLoginView):
+        """Login to Home Assistant Cloud."""
+
+        url = "/api/onboarding/cloud/login"
+        name = "api:onboarding:cloud:login"
+
+        @with_cloud
+        async def post(self, request: web.Request) -> web.Response:
+            """Handle login request."""
+            return await super()._post(request)
+
+    class CloudLogoutView(_NoAuthBaseOnboardingView, cloud_http.CloudLogoutView):
+        """Log out of the Home Assistant cloud."""
+
+        url = "/api/onboarding/cloud/logout"
+        name = "api:onboarding:cloud:logout"
+
+        @with_cloud
+        async def post(self, request: web.Request) -> web.Response:
+            """Handle logout request."""
+            return await super()._post(request)
+
+    class CloudStatusView(_NoAuthBaseOnboardingView):
+        """Get cloud status view."""
+
+        url = "/api/onboarding/cloud/status"
+        name = "api:onboarding:cloud:status"
+
+        @with_cloud
+        async def get(self, request: web.Request) -> web.Response:
+            """Return cloud status."""
+            hass = request.app[KEY_HASS]
+            cloud = hass.data[DATA_CLOUD]
+            return self.json({"logged_in": cloud.is_logged_in})
+
+    hass.http.register_view(CloudForgotPasswordView(data))
+    hass.http.register_view(CloudLoginView(data))
+    hass.http.register_view(CloudLogoutView(data))
+    hass.http.register_view(CloudStatusView(data))
 
 
 @callback

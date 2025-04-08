@@ -7,5 +7,5 @@
   "iot_class": "cloud_push",
   "loggers": ["snoo"],
   "quality_scale": "bronze",
-  "requirements": ["python-snoo==0.6.1"]
+  "requirements": ["python-snoo==0.6.5"]
 }
