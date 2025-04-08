@@ -239,7 +239,7 @@
       "contamination_state": {
         "name": "Contamination state",
         "state": {
-          "normal": "Normal",
+          "normal": "[%key:common::state::normal%]",
           "low": "[%key:common::state::low%]",
           "warning": "Warning",
           "critical": "Critical"
