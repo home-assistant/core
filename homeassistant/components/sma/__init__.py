@@ -79,7 +79,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Add the MAC address to connections, if it comes via DHCP
     if CONF_MAC in entry.data:
-        device_info["connections"] = {(dr.CONNECTION_NETWORK_MAC, entry.data[CONF_MAC])}
+        device_info[ATTR_CONNECTIONS] = {(dr.CONNECTION_NETWORK_MAC, entry.data[CONF_MAC])}
 
     # Define the coordinator
     async def async_update_data():
