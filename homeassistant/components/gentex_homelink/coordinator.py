@@ -1,19 +1,18 @@
 """Makes requests to the state server and stores the resulting data so that the buttons can access it."""
 
-import asyncio
 from dataclasses import dataclass
-from datetime import timedelta
+import functools
 import logging
 from typing import Any
 
-from homelink.provider import Provider
+from homelink.mqtt_provider import MQTTProvider
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.util.ssl import get_default_context
 
-from .const import POLLING_INTERVAL
 from .event import HomeLinkEventEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 class HomeLinkData:
     """Class for HomeLink integration runtime data."""
 
-    provider: Provider
+    provider: MQTTProvider
     coordinator: DataUpdateCoordinator
     last_update_id: str | None
 
@@ -34,7 +33,7 @@ class HomeLinkCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def __init__(
         self,
         hass: HomeAssistant,
-        provider: Provider,
+        provider: MQTTProvider,
         config_entry: ConfigEntry[HomeLinkData],
     ) -> None:
         """Initialize my coordinator."""
@@ -43,8 +42,6 @@ class HomeLinkCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             _LOGGER,
             # Name of the data. For logging purposes.
             name="HomeLink Coordinator",
-            # Polling interval. Will only be polled if there are subscribers.
-            update_interval=timedelta(seconds=POLLING_INTERVAL),
             config_entry=config_entry,
         )
         self.provider = provider
@@ -53,9 +50,20 @@ class HomeLinkCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.config_entry = config_entry
         self.buttons: list[HomeLinkEventEntity] = []
 
-    async def _async_setup(self):
-        await self.provider.enable()
+    async def async_on_unload(self, _event):
+        """Disconnect and unregister when unloaded."""
+        await self.provider.disable()
 
+    async def _async_setup(self):
+        """Set up the coordinator."""
+        await self.provider.enable(get_default_context())
+
+        await self.discover_devices()
+        callback = functools.partial(on_message, self)
+        self.provider.listen(callback)
+
+    async def discover_devices(self):
+        """Discover devices and build the Entities."""
         device_data = await self.provider.discover()
 
         for device in device_data:
@@ -72,37 +80,23 @@ class HomeLinkCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from API endpoint."""
-        if self.config_entry is None:
-            _LOGGER.error("Config entry is empty, unable to update data")
-            return {}
+        return {}
 
-        # Note: asyncio.TimeoutError and aiohttp.ClientError are already
-        # handled by the data update coordinator.
-        async with asyncio.timeout(10):
-            # Grab active context variables to limit data required to be fetched from API
-            # Note: using context is not required if there is no need or ability to limit
-            # data retrieved from API.
-            try:
-                should_sync, devices = await self.provider.get_state()
-            except Exception:
-                _LOGGER.exception(
-                    "An unexpected error occurred retrieving HomeLink device state"
-                )
-                return {}
-            else:
-                if (
-                    should_sync
-                    and should_sync["requestId"] != self.last_sync_id
-                    and self.config_entry.data["last_update_id"]
-                    != should_sync["requestId"]
-                    and should_sync["timestamp"] != self.last_sync_timestamp
-                ):
-                    config_data = self.config_entry.data.copy()
-                    config_data["last_update_id"] = should_sync["requestId"]
+    async def async_update_devices(self, message):
+        """Update the devices from the server."""
+        config_data = self.config_entry.data.copy()
+        config_data["last_update_id"] = message["requestId"]
+        await self.discover_devices()
 
-                    self.hass.config_entries.async_update_entry(
-                        self.config_entry, data=config_data
-                    )
-                    self.last_sync_id = should_sync["requestId"]
-                    self.last_sync_timestamp = should_sync["timestamp"]
-                return devices
+        self.hass.config_entries.async_update_entry(self.config_entry, data=config_data)
+        self.last_sync_id = message["requestId"]
+        self.last_sync_timestamp = message["timestamp"]
+
+
+def on_message(coordinator: HomeLinkCoordinator, _topic, message):
+    "MQTT Callback function."
+
+    if message["type"] == "state":
+        coordinator.async_set_updated_data(message["data"])
+    if message["type"] == "requestSync":
+        coordinator.async_set_updated_data(message["data"])

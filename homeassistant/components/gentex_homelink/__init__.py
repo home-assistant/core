@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-import logging
-
-from homelink.provider import Provider
+from homelink.mqtt_provider import MQTTProvider
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
@@ -22,7 +20,6 @@ type HomeLinkConfigEntry = ConfigEntry[HomeLinkData]
 
 async def async_setup_entry(hass: HomeAssistant, entry: HomeLinkConfigEntry) -> bool:
     """Set up homelink from a config entry."""
-    logging.debug("Starting config entry setup")
     auth_implementation = oauth2.SRPAuthImplementation(hass, DOMAIN)
 
     config_entry_oauth2_flow.async_register_implementation(
@@ -40,8 +37,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeLinkConfigEntry) -> 
         aiohttp_client.async_get_clientsession(hass), session
     )
 
-    provider = Provider(authenticated_session)
+    provider = MQTTProvider(authenticated_session)
     coordinator = HomeLinkCoordinator(hass, provider, entry)
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, coordinator.async_on_unload
+        )
+    )
 
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = HomeLinkData(

@@ -40,7 +40,6 @@ class SRPFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         """Ask for username and password."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            _LOGGER.info(user_input)
             self._async_abort_entries_match({CONF_EMAIL: user_input[CONF_EMAIL]})
 
             srp_auth = SRPAuth()
@@ -53,6 +52,7 @@ class SRPFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                     user_input[CONF_PASSWORD],
                 )
             except botocore.exceptions.ClientError:
+                _LOGGER.exception("Error authenticating homelink account")
                 errors["base"] = "Error authenticating HomeLink account"
             except Exception:
                 _LOGGER.exception("An unexpected error occurred")

@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/gentex_homelink",
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",
-  "requirements": ["homelink-home-assistant==0.0.6"]
+  "requirements": ["homelink-home-assistant==0.0.7"]
 }
