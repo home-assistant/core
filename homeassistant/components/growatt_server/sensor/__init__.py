@@ -45,16 +45,11 @@ def get_device_list(api, config):
 
     # Log in to api and fetch first plant if no plant id is defined.
     login_response = api.login(config[CONF_USERNAME], config[CONF_PASSWORD])
-    if (
-        not login_response["success"]
-        and login_response["msg"] == LOGIN_INVALID_AUTH_CODE
-    ):
-        raise ConfigEntryError("Username, Password or URL may be incorrect!")
-    if (
-        not login_response["success"]
-        and login_response["msg"] == LOGIN_LOCKED_CODE
-    ):
-        raise ConfigEntryError(login_response["error"] + "; lockDuration=" +  login_response["lockDuration"])
+    if not login_response["success"]:
+        if login_response["msg"] == LOGIN_INVALID_AUTH_CODE:
+          raise ConfigEntryError("Username, Password or URL may be incorrect!")
+        if login_response["msg"] == LOGIN_LOCKED_CODE:
+           raise ConfigEntryError(login_response["error"] + "; lockDuration=" +  login_response["lockDuration"])
     user_id = login_response["user"]["id"]
     if plant_id == DEFAULT_PLANT_ID:
         plant_info = api.plant_list(user_id)
