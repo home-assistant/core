@@ -57,7 +57,7 @@ async def test_device_conflict_manual(
     issue_registry: ir.IssueRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test EA warning is created if using prerelease version of Protect."""
+    """Test guided manual conflict resolution."""
     disconnect_done = hass.loop.create_future()
 
     async def async_disconnect(*args, **kwargs) -> None:
@@ -138,7 +138,7 @@ async def test_device_conflict_migration(
         Awaitable[MockESPHomeDevice],
     ],
 ) -> None:
-    """Test EA warning is created if using prerelease version of Protect."""
+    """Test migrating existing configuration to new hardware."""
     entity_info = [
         BinarySensorInfo(
             object_id="mybinary_sensor",
