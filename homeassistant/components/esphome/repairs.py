@@ -28,10 +28,9 @@ class ESPHomeRepair(RepairsFlow):
     @callback
     def _async_get_placeholders(self) -> dict[str, str]:
         issue_registry = ir.async_get(self.hass)
-        description_placeholders: dict[str, str] = {}
-        if issue := issue_registry.async_get_issue(self.handler, self.issue_id):
-            return issue.translation_placeholders or {}
-        return description_placeholders
+        issue = issue_registry.async_get_issue(self.handler, self.issue_id)
+        assert issue is not None
+        return issue.translation_placeholders or {}
 
 
 class DeviceConflictRepair(ESPHomeRepair):
