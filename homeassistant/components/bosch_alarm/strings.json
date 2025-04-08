@@ -59,7 +59,8 @@
   "entity": {
     "sensor": {
       "faulting_points": {
-        "name": "Faulting points"
+        "name": "Faulting points",
+        "unit_of_measurement": "points"
       }
     }
   }
