@@ -371,7 +371,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==13.4.0
+aioshelly==13.4.1
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -645,7 +645,7 @@ bluetooth-data-tools==1.27.0
 bond-async==0.2.1
 
 # homeassistant.components.bosch_alarm
-bosch-alarm-mode2==0.4.3
+bosch-alarm-mode2==0.4.6
 
 # homeassistant.components.bosch_shc
 boschshcpy==0.2.91
@@ -1489,7 +1489,7 @@ nettigo-air-monitor==4.1.0
 neurio==0.3.1
 
 # homeassistant.components.nexia
-nexia==2.4.0
+nexia==2.7.0
 
 # homeassistant.components.nextcloud
 nextcloudmonitor==1.5.1
@@ -1607,7 +1607,7 @@ openwrt-luci-rpc==1.1.17
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.10.0
+opower==0.11.1
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -3064,7 +3064,7 @@ webio-api==0.1.11
 webmin-xmlrpc==0.0.2
 
 # homeassistant.components.weheat
-weheat==2025.2.26
+weheat==2025.3.7
 
 # homeassistant.components.whirlpool
 whirlpool-sixth-sense==0.20.0

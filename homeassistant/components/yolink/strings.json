@@ -61,8 +61,8 @@
       "power_failure_alarm": {
         "name": "Power failure alarm",
         "state": {
-          "normal": "Normal",
           "alert": "Alert",
+          "normal": "[%key:common::state::normal%]",
           "off": "[%key:common::state::off%]"
         }
       },
