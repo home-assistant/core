@@ -12,6 +12,7 @@ import voluptuous as vol
 from homeassistant.components import conversation
 from homeassistant.components.conversation import UserContent, async_get_chat_log, trace
 from homeassistant.components.google_generative_ai_conversation.conversation import (
+    ERROR_GETTING_RESPONSE,
     _escape_decode,
     _format_schema,
 )
@@ -492,7 +493,7 @@ async def test_empty_response(
     assert result.response.response_type == intent.IntentResponseType.ERROR, result
     assert result.response.error_code == "unknown", result
     assert result.response.as_dict()["speech"]["plain"]["speech"] == (
-        "Sorry, I had a problem getting a response from Google Generative AI."
+        ERROR_GETTING_RESPONSE
     )
 
 
@@ -518,7 +519,7 @@ async def test_none_response(
     assert result.response.response_type == intent.IntentResponseType.ERROR, result
     assert result.response.error_code == "unknown", result
     assert result.response.as_dict()["speech"]["plain"]["speech"] == (
-        "Sorry, I had a problem getting a response from Google Generative AI."
+        ERROR_GETTING_RESPONSE
     )
 
 

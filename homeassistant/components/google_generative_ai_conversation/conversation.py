@@ -55,6 +55,10 @@ from .const import (
 # Max number of back and forth with the LLM to generate a response
 MAX_TOOL_ITERATIONS = 10
 
+ERROR_GETTING_RESPONSE = (
+    "Sorry, I had a problem getting a response from Google Generative AI."
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -425,9 +429,7 @@ class GoogleGenerativeAIConversationEntity(
                         "No candidates found in the response: %s",
                         chat_response,
                     )
-                    raise HomeAssistantError(
-                        "Sorry, I had a problem getting a response from Google Generative AI."
-                    )
+                    raise HomeAssistantError(ERROR_GETTING_RESPONSE)
 
             except (
                 APIError,
@@ -451,9 +453,7 @@ class GoogleGenerativeAIConversationEntity(
 
             response_parts = chat_response.candidates[0].content.parts
             if not response_parts:
-                raise HomeAssistantError(
-                    "Sorry, I had a problem getting a response from Google Generative AI."
-                )
+                raise HomeAssistantError(ERROR_GETTING_RESPONSE)
             content = " ".join(
                 [part.text.strip() for part in response_parts if part.text]
             )
