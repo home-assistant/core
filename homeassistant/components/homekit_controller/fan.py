@@ -5,6 +5,10 @@ from __future__ import annotations
 from typing import Any
 
 from aiohomekit.model.characteristics import CharacteristicsTypes
+from aiohomekit.model.characteristics.const import (
+    TargetAirPurifierStateValues,
+    TargetFanStateValues,
+)
 from aiohomekit.model.services import Service, ServicesTypes
 from propcache.api import cached_property
 
@@ -35,6 +39,8 @@ DIRECTION_TO_HK = {
 }
 HK_DIRECTION_TO_HA = {v: k for (k, v) in DIRECTION_TO_HK.items()}
 
+PRESET_AUTO = "Auto"
+
 
 class BaseHomeKitFan(HomeKitEntity, FanEntity):
     """Representation of a Homekit fan."""
@@ -51,6 +57,7 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
                 "_speed_range",
                 "_min_speed",
                 "_max_speed",
+                "preset_modes",
                 "speed_count",
                 "supported_features",
             )
@@ -59,12 +66,15 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
 
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""
-        return [
+        types = [
             CharacteristicsTypes.SWING_MODE,
             CharacteristicsTypes.ROTATION_DIRECTION,
             CharacteristicsTypes.ROTATION_SPEED,
             self.on_characteristic,
         ]
+        if self.service.has(CharacteristicsTypes.FAN_STATE_TARGET):
+            types.append(CharacteristicsTypes.FAN_STATE_TARGET)
+        return types
 
     @property
     def is_on(self) -> bool:
@@ -124,6 +134,9 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
         if self.service.has(CharacteristicsTypes.SWING_MODE):
             features |= FanEntityFeature.OSCILLATE
 
+        if self.service.has(CharacteristicsTypes.FAN_STATE_TARGET):
+            features |= FanEntityFeature.PRESET_MODE
+
         return features
 
     @cached_property
@@ -133,6 +146,37 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
             min(self._max_speed, 100)
             / max(1, self.service[CharacteristicsTypes.ROTATION_SPEED].minStep or 0)
         )
+
+    @cached_property
+    def preset_modes(self) -> list[str]:
+        """Return the preset modes."""
+        return (
+            [PRESET_AUTO]
+            if self.service.has(CharacteristicsTypes.FAN_STATE_TARGET)
+            else []
+        )
+
+    @property
+    def preset_mode(self) -> str | None:
+        """Return the current preset mode."""
+        return (
+            PRESET_AUTO
+            if self.service.has(CharacteristicsTypes.FAN_STATE_TARGET)
+            and self.service.value(CharacteristicsTypes.FAN_STATE_TARGET)
+            == TargetFanStateValues.AUTOMATIC
+            else None
+        )
+
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set the preset mode of the fan."""
+        if self.service.has(CharacteristicsTypes.FAN_STATE_TARGET):
+            await self.async_put_characteristics(
+                {
+                    CharacteristicsTypes.FAN_STATE_TARGET: TargetFanStateValues.AUTOMATIC
+                    if preset_mode == PRESET_AUTO
+                    else TargetFanStateValues.MANUAL
+                }
+            )
 
     async def async_set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
@@ -200,10 +244,52 @@ class HomeKitFanV2(BaseHomeKitFan):
     on_characteristic = CharacteristicsTypes.ACTIVE
 
 
+class HomeKitAirPurifer(HomeKitFanV2):
+    """Implement air purifier support for public.hap.service.airpurifier."""
+
+    on_characteristic = CharacteristicsTypes.ACTIVE
+
+    def get_characteristic_types(self) -> list[str]:
+        """Define the homekit characteristics the entity cares about."""
+        types = super().get_characteristic_types()
+        types.append(CharacteristicsTypes.AIR_PURIFIER_STATE_TARGET)
+        return types
+
+    @cached_property
+    def supported_features(self) -> FanEntityFeature:
+        """Flag supported features."""
+        return super().supported_features | FanEntityFeature.PRESET_MODE
+
+    @cached_property
+    def preset_modes(self) -> list[str]:
+        """Return the preset modes."""
+        return [PRESET_AUTO]
+
+    @property
+    def preset_mode(self) -> str | None:
+        """Return the current preset mode."""
+        return (
+            PRESET_AUTO
+            if self.service.value(CharacteristicsTypes.AIR_PURIFIER_STATE_TARGET)
+            == TargetAirPurifierStateValues.AUTOMATIC
+            else None
+        )
+
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set the preset mode of the fan."""
+        await self.async_put_characteristics(
+            {
+                CharacteristicsTypes.AIR_PURIFIER_STATE_TARGET: TargetAirPurifierStateValues.AUTOMATIC
+                if preset_mode == PRESET_AUTO
+                else TargetAirPurifierStateValues.MANUAL
+            }
+        )
+
+
 ENTITY_TYPES = {
     ServicesTypes.FAN: HomeKitFanV1,
     ServicesTypes.FAN_V2: HomeKitFanV2,
-    ServicesTypes.AIR_PURIFIER: HomeKitFanV2,
+    ServicesTypes.AIR_PURIFIER: HomeKitAirPurifer,
 }
 
 
