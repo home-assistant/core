@@ -13,6 +13,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONCENTRATION_PARTS_PER_MILLION,
     CONF_DOMAIN,
     CONF_ENTITIES,
     CONF_SOURCE,
@@ -49,6 +50,7 @@ DEVICE_CLASS_MAPPING = {
     pypck.lcn_defs.VarUnit.METERPERSECOND: SensorDeviceClass.SPEED,
     pypck.lcn_defs.VarUnit.VOLT: SensorDeviceClass.VOLTAGE,
     pypck.lcn_defs.VarUnit.AMPERE: SensorDeviceClass.CURRENT,
+    pypck.lcn_defs.VarUnit.PPM: SensorDeviceClass.CO2,
 }
 
 UNIT_OF_MEASUREMENT_MAPPING = {
@@ -60,6 +62,7 @@ UNIT_OF_MEASUREMENT_MAPPING = {
     pypck.lcn_defs.VarUnit.METERPERSECOND: UnitOfSpeed.METERS_PER_SECOND,
     pypck.lcn_defs.VarUnit.VOLT: UnitOfElectricPotential.VOLT,
     pypck.lcn_defs.VarUnit.AMPERE: UnitOfElectricCurrent.AMPERE,
+    pypck.lcn_defs.VarUnit.PPM: CONCENTRATION_PARTS_PER_MILLION,
 }
 
 

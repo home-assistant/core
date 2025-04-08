@@ -85,6 +85,16 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "20A171*",
     },
     {
+        "domain": "bond",
+        "hostname": "bond-*",
+        "macaddress": "3C6A2C1*",
+    },
+    {
+        "domain": "bond",
+        "hostname": "bond-*",
+        "macaddress": "F44E38*",
+    },
+    {
         "domain": "broadlink",
         "registered_devices": True,
     },
