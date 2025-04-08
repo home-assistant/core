@@ -352,7 +352,7 @@ class SensorDeviceClass(StrEnum):
     REACTIVE_POWER = "reactive_power"
     """Reactive power.
 
-    Unit of measurement: `var`
+    Unit of measurement: `var`, `kvar`
     """
 
     SIGNAL_STRENGTH = "signal_strength"
