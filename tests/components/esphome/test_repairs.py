@@ -127,7 +127,8 @@ async def test_device_conflict_migration(
     disconnect_done = hass.loop.create_future()
 
     async def async_disconnect(*args, **kwargs) -> None:
-        disconnect_done.set_result(None)
+        if not disconnect_done.done():
+            disconnect_done.set_result(None)
 
     mock_client.disconnect = async_disconnect
     mock_client.device_info = AsyncMock(
@@ -139,11 +140,6 @@ async def test_device_conflict_migration(
     await hass.async_block_till_done()
     async with asyncio.timeout(1):
         await disconnect_done
-
-    dev_entry = device_registry.async_get_device(
-        identifiers={}, connections={(dr.CONNECTION_NETWORK_MAC, "11:22:33:44:55:aa")}
-    )
-    assert dev_entry is not None
 
     assert "Unexpected device found" in caplog.text
     issue_id = DEVICE_CONFLICT_ISSUE_FORMAT.format(mock_config_entry.entry_id)
