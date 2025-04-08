@@ -21,7 +21,7 @@ class WhirlpoolEntity(Entity):
             identifiers={(DOMAIN, appliance.said)},
             name=appliance.name.capitalize() if appliance.name else appliance.said,
             manufacturer="Whirlpool",
-            model=appliance.appliance_info.model_number,
+            model_id=appliance.appliance_info.model_number,
         )
         self._attr_unique_id = f"{appliance.said}{unique_id_suffix}"
 
