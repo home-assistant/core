@@ -3154,7 +3154,7 @@ async def test_websocket_config(
 async def test_websocket_all_descriptions(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
-    """Test describe_all command."""
+    """Test automation/description/all command."""
     config = {
         "alias": "hello",
         "description": "hello world",
