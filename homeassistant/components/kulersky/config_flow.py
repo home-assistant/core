@@ -29,6 +29,28 @@ class KulerskyConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovery_info: BluetoothServiceInfoBleak | None = None
         self._discovered_devices: dict[str, BluetoothServiceInfoBleak] = {}
 
+    async def async_step_integration_discovery(
+        self, discovery_info: dict[str, str]
+    ) -> ConfigFlowResult:
+        """Handle the integration discovery step.
+
+        The old version of the integration used to have multiple
+        device in a single config entry. This is now deprecated.
+        The integration discovery step is used to create config
+        entries for each device beyond the first one.
+        """
+        address: str = discovery_info[CONF_ADDRESS]
+        if service_info := async_last_service_info(self.hass, address):
+            title = human_readable_name(None, service_info.name, service_info.address)
+        else:
+            title = address
+        await self.async_set_unique_id(address)
+        self._abort_if_unique_id_configured()
+        return self.async_create_entry(
+            title=title,
+            data={CONF_ADDRESS: address},
+        )
+
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
