@@ -88,7 +88,7 @@ class DeviceConflictRepair(ESPHomeRepair):
                 description_placeholders=self._async_get_placeholders(),
             )
         entry_id = self.entry_id
-        async_replace_device(self.hass, entry_id, self.mac)
+        await async_replace_device(self.hass, entry_id, self.mac)
         self.hass.config_entries.async_schedule_reload(entry_id)
         return self.async_create_entry(data={})
 

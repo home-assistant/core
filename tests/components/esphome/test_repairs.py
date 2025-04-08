@@ -139,7 +139,6 @@ async def test_device_conflict_migration(
     ],
 ) -> None:
     """Test EA warning is created if using prerelease version of Protect."""
-
     entity_info = [
         BinarySensorInfo(
             object_id="mybinary_sensor",
@@ -237,7 +236,7 @@ async def test_device_conflict_migration(
     )
     assert dev_entry is not None
 
-    dev_entry = device_registry.async_get_device(
+    old_dev_entry = device_registry.async_get_device(
         identifiers={}, connections={(dr.CONNECTION_NETWORK_MAC, "11:22:33:44:55:aa")}
     )
-    assert dev_entry is None
+    assert old_dev_entry is None
