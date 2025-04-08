@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import cast
+
 import voluptuous as vol
 
 from homeassistant import data_entry_flow
@@ -34,6 +36,18 @@ class ESPHomeRepair(RepairsFlow):
 
 class DeviceConflictRepair(ESPHomeRepair):
     """Handler for an issue fixing device conflict."""
+
+    @property
+    def entry_id(self) -> str:
+        """Return the config entry id."""
+        assert isinstance(self._data, dict)
+        return cast(str, self._data["entry_id"])
+
+    @property
+    def mac(self) -> str:
+        """Return the MAC address of the new device."""
+        assert isinstance(self._data, dict)
+        return cast(str, self._data["mac"])
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
@@ -71,12 +85,8 @@ class DeviceConflictRepair(ESPHomeRepair):
                 data_schema=vol.Schema({}),
                 description_placeholders=self._async_get_placeholders(),
             )
-        assert isinstance(self._data, dict)
-        entry_id = self._data["entry_id"]
-        mac = self._data["mac"]
-        assert isinstance(entry_id, str)
-        assert isinstance(mac, str)
-        async_replace_device(self.hass, entry_id, mac)
+        entry_id = self.entry_id
+        async_replace_device(self.hass, entry_id, self.mac)
         self.hass.config_entries.async_schedule_reload(entry_id)
         return self.async_create_entry(data={})
 
@@ -90,6 +100,7 @@ class DeviceConflictRepair(ESPHomeRepair):
                 data_schema=vol.Schema({}),
                 description_placeholders=self._async_get_placeholders(),
             )
+        self.hass.config_entries.async_schedule_reload(self.entry_id)
         return self.async_create_entry(data={})
 
 
