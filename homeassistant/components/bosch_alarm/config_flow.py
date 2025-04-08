@@ -11,7 +11,13 @@ from typing import Any
 from bosch_alarm_mode2 import Panel
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_DHCP,
+    SOURCE_RECONFIGURE,
+    SOURCE_USER,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import (
     CONF_CODE,
     CONF_HOST,
@@ -95,7 +101,8 @@ class BoschAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
+            if self.source == SOURCE_USER:
+                self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
             try:
                 # Use load_selector = 0 to fetch the panel model without authentication.
                 (model, serial) = await try_connect(user_input, 0)
@@ -113,6 +120,13 @@ class BoschAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 self._data = user_input
                 self._data[CONF_MODEL] = model
+
+                if self.source == SOURCE_RECONFIGURE:
+                    if (
+                        self._get_reconfigure_entry().data[CONF_MODEL]
+                        != self._data[CONF_MODEL]
+                    ):
+                        return self.async_abort(reason="device_mismatch")
                 return await self.async_step_auth()
         return self.async_show_form(
             step_id="user",
@@ -177,6 +191,12 @@ class BoschAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_auth()
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the reconfigure step."""
+        return await self.async_step_user()
+
     async def async_step_auth(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -214,8 +234,23 @@ class BoschAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 if serial_number:
                     await self.async_set_unique_id(str(serial_number))
-                    self._abort_if_unique_id_configured()
-                return self.async_create_entry(title=f"Bosch {model}", data=self._data)
+                if self.source in (SOURCE_USER, SOURCE_DHCP):
+                    if serial_number:
+                        self._abort_if_unique_id_configured()
+                    else:
+                        self._async_abort_entries_match(
+                            {CONF_HOST: self._data[CONF_HOST]}
+                        )
+                    return self.async_create_entry(
+                        title=f"Bosch {model}", data=self._data
+                    )
+                if serial_number:
+                    self._abort_if_unique_id_mismatch(reason="device_mismatch")
+
+                return self.async_update_reload_and_abort(
+                    self._get_reconfigure_entry(),
+                    data=self._data,
+                )
 
         return self.async_show_form(
             step_id="auth",
