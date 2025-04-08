@@ -36,7 +36,9 @@ priority_types = {
 class BoschAlarmSensorEntityDescription(SensorEntityDescription):
     """Describes Bosch Alarm sensor entity."""
 
-    value_fn: Callable[[Area], str]
+    value_fn: Callable[[Area], str | int]
+    observe_alarms: bool = False
+    observe_ready: bool = False
 
 
 def priority_value_fn(priority_info: dict[int, str]) -> Callable[[Area], str]:
@@ -52,6 +54,7 @@ SENSOR_TYPES: list[BoschAlarmSensorEntityDescription] = [
         key=f"alarms_{key}",
         translation_key=f"alarms_{key}",
         value_fn=priority_value_fn(priority_type),
+        observe_alarms=True,
     )
     for key, priority_type in priority_types.items()
 ]
@@ -59,7 +62,8 @@ SENSOR_TYPES.append(
     BoschAlarmSensorEntityDescription(
         key="faulting_points",
         translation_key="faulting_points",
-        value_fn=lambda area: str(area.faults),
+        value_fn=lambda area: area.faults,
+        observe_ready=True,
     ),
 )
 
@@ -99,10 +103,17 @@ class BoschAreaSensor(SensorEntity, BoschAlarmAreaEntity):
         entity_description: BoschAlarmSensorEntityDescription,
     ) -> None:
         """Set up an area sensor entity for a bosch alarm panel."""
-        super().__init__(panel, area_id, unique_id, entity_description.key)
+        super().__init__(
+            panel,
+            area_id,
+            unique_id,
+            entity_description.key,
+            entity_description.observe_alarms,
+            entity_description.observe_ready,
+        )
         self.entity_description = entity_description
 
     @property
-    def native_value(self) -> str:
+    def native_value(self) -> str | int:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self._area)
