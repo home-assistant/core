@@ -9,6 +9,7 @@ from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
     DOMAIN as COVER_DOMAIN,
+    CoverEntityFeature,
     CoverState,
 )
 from homeassistant.const import (
@@ -28,6 +29,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component
 
@@ -1123,3 +1125,50 @@ async def test_self_referencing_icon_with_no_template_is_not_a_loop(
     assert len(hass.states.async_all()) == 1
 
     assert "Template loop detected" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("script", "supported_feature"),
+    [
+        ("stop_cover", CoverEntityFeature.STOP),
+        ("set_cover_position", CoverEntityFeature.SET_POSITION),
+        (
+            "set_cover_tilt_position",
+            CoverEntityFeature.OPEN_TILT
+            | CoverEntityFeature.CLOSE_TILT
+            | CoverEntityFeature.STOP_TILT
+            | CoverEntityFeature.SET_TILT_POSITION,
+        ),
+    ],
+)
+async def test_emtpy_action_config(
+    hass: HomeAssistant, script: str, supported_feature: CoverEntityFeature
+) -> None:
+    """Test configuration with empty script."""
+    with assert_setup_component(1, COVER_DOMAIN):
+        assert await async_setup_component(
+            hass,
+            COVER_DOMAIN,
+            {
+                COVER_DOMAIN: {
+                    "platform": "template",
+                    "covers": {
+                        "test_template_cover": {
+                            "open_cover": [],
+                            "close_cover": [],
+                            script: [],
+                        }
+                    },
+                }
+            },
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("cover.test_template_cover")
+    assert (
+        state.attributes["supported_features"]
+        == CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | supported_feature
+    )
