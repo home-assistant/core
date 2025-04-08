@@ -50,12 +50,14 @@ async def test_complete_item_intent_already_completed(
     )
 
     assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert hass.data["shopping_list"].items[0]["complete"]
 
 
 async def test_prefer_completing_non_complete_items(
     hass: HomeAssistant, sl_setup
 ) -> None:
     """Test completing non-complete items."""
+    # Complete first item
     await intent.async_handle(
         hass, "test", "HassShoppingListAddItem", {"item": {"value": "beer"}}
     )
@@ -66,6 +68,7 @@ async def test_prefer_completing_non_complete_items(
 
     assert hass.data["shopping_list"].items[0]["complete"]
 
+    # Complete second item with same name
     await intent.async_handle(
         hass, "test", "HassShoppingListAddItem", {"item": {"value": "beer"}}
     )
@@ -75,7 +78,7 @@ async def test_prefer_completing_non_complete_items(
     )
 
     assert response.response_type == intent.IntentResponseType.ACTION_DONE
-    assert hass.data["shopping_list"].items[1]["complete"]
+    assert all(item["complete"] for item in hass.data["shopping_list"].items)
 
 
 async def test_recent_items_intent(hass: HomeAssistant, sl_setup) -> None:
