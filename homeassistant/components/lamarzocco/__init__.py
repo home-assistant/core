@@ -25,7 +25,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from .const import CONF_USE_BLUETOOTH, DOMAIN
+from .const import BT_MODEL_PREFIXES, CONF_USE_BLUETOOTH, DOMAIN
 from .coordinator import (
     LaMarzoccoConfigEntry,
     LaMarzoccoConfigUpdateCoordinator,
@@ -43,8 +43,6 @@ PLATFORMS = [
     Platform.SWITCH,
     Platform.UPDATE,
 ]
-
-BT_MODEL_PREFIXES = ("MICRA", "MINI", "GS3")
 
 _LOGGER = logging.getLogger(__name__)
 

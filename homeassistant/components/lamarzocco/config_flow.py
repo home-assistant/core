@@ -45,7 +45,7 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from .const import CONF_USE_BLUETOOTH, DOMAIN
+from .const import BT_MODEL_PREFIXES, CONF_USE_BLUETOOTH, DOMAIN
 from .coordinator import LaMarzoccoConfigEntry
 
 CONF_MACHINE = "machine"
@@ -169,10 +169,18 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
             if not errors:
                 if self.source == SOURCE_RECONFIGURE:
                     for service_info in async_discovered_service_info(self.hass):
-                        self._discovered[service_info.name] = service_info.address
+                        if service_info.name.startswith(BT_MODEL_PREFIXES):
+                            self._discovered[service_info.name] = service_info.address
 
                     if self._discovered:
                         return await self.async_step_bluetooth_selection()
+                    return self.async_update_reload_and_abort(
+                        self._get_reconfigure_entry(),
+                        data={
+                            **self._get_reconfigure_entry().data,
+                            **self._config,
+                        },
+                    )
 
                 return self.async_create_entry(
                     title=selected_device.name,
@@ -218,6 +226,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_update_reload_and_abort(
                 self._get_reconfigure_entry(),
                 data={
+                    **self._get_reconfigure_entry().data,
                     **self._config,
                     CONF_MAC: user_input[CONF_MAC],
                 },
