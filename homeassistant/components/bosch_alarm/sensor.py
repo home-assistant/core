@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from bosch_alarm_mode2 import Panel
+from bosch_alarm_mode2.const import ALARM_MEMORY_PRIORITIES
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import EntityCategory
@@ -12,6 +13,25 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BoschAlarmConfigEntry
 from .const import DOMAIN
+
+priority_types = {
+    "burglary": {
+        "alarm": ALARM_MEMORY_PRIORITIES.BURGLARY_ALARM,
+        "supervisory": ALARM_MEMORY_PRIORITIES.BURGLARY_SUPERVISORY,
+        "trouble": ALARM_MEMORY_PRIORITIES.BURGLARY_TROUBLE,
+    },
+    "gas": {
+        "alarm": ALARM_MEMORY_PRIORITIES.GAS_ALARM,
+        "supervisory": ALARM_MEMORY_PRIORITIES.GAS_SUPERVISORY,
+        "trouble": ALARM_MEMORY_PRIORITIES.GAS_TROUBLE,
+    },
+    "fire": {
+        "alarm": ALARM_MEMORY_PRIORITIES.FIRE_ALARM,
+        "supervisory": ALARM_MEMORY_PRIORITIES.FIRE_SUPERVISORY,
+        "trouble": ALARM_MEMORY_PRIORITIES.FIRE_TROUBLE,
+    },
+    "personal": {"emergency": ALARM_MEMORY_PRIORITIES.PERSONAL_EMERGENCY},
+}
 
 
 async def async_setup_entry(
@@ -24,72 +44,35 @@ async def async_setup_entry(
     panel = config_entry.runtime_data
     unique_id = config_entry.unique_id or config_entry.entry_id
     entities: list[SensorEntity] = [
-        PanelFaultsSensor(panel, unique_id),
-    ]
-
-    entities.extend(
-        AreaReadyToArmSensor(
-            panel,
-            area_id,
-            unique_id,
-        )
-        for area_id in panel.areas
-    )
-    entities.extend(
         FaultingPointsSensor(
             panel,
             area_id,
             unique_id,
         )
         for area_id in panel.areas
-    )
+    ]
+
     entities.extend(
-        AreaAlarmsSensor(
-            panel,
-            area_id,
-            unique_id,
-        )
+        AreaAlarmsSensor(panel, area_id, unique_id, "burglary")
+        for area_id in panel.areas
+    )
+
+    entities.extend(
+        AreaAlarmsSensor(panel, area_id, unique_id, "gas") for area_id in panel.areas
+    )
+
+    entities.extend(
+        AreaAlarmsSensor(panel, area_id, unique_id, "fire") for area_id in panel.areas
+    )
+
+    entities.extend(
+        AreaAlarmsSensor(panel, area_id, unique_id, "personal")
         for area_id in panel.areas
     )
     async_add_entities(entities)
 
 
 PARALLEL_UPDATES = 0
-
-
-class PanelFaultsSensor(SensorEntity):
-    """A faults sensor entity for a bosch alarm panel."""
-
-    _attr_has_entity_name = True
-    _attr_name = "Faults"
-    _attr_translation_key = "panel_faults"
-
-    def __init__(self, panel: Panel, unique_id: str) -> None:
-        """Set up a faults sensor entity for a bosch alarm panel."""
-        self.panel = panel
-        self._attr_entity_category = EntityCategory.DIAGNOSTIC
-        self._attr_unique_id = f"{unique_id}_faults"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, unique_id)},
-            name=f"Bosch {panel.model}",
-            manufacturer="Bosch Security Systems",
-            model=panel.model,
-            sw_version=panel.firmware_version,
-        )
-
-    @property
-    def native_value(self) -> str:
-        """The state of this faults entity."""
-        faults = self.panel.panel_faults
-        return "\n".join(faults) if faults else "No faults"
-
-    async def async_added_to_hass(self) -> None:
-        """Observe state changes."""
-        self.panel.faults_observer.attach(self.schedule_update_ha_state)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Stop observing state changes."""
-        self.panel.faults_observer.detach(self.schedule_update_ha_state)
 
 
 class AreaSensor(SensorEntity):
@@ -104,17 +87,11 @@ class AreaSensor(SensorEntity):
         area_unique_id = f"{unique_id}_area_{area_id}"
         self._area = panel.areas[area_id]
         self._attr_unique_id = f"{area_unique_id}_{type}"
-        self._attr_translation_placeholders = {"area": self._area.name}
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, area_unique_id)},
             name=self._area.name,
             manufacturer="Bosch Security Systems",
-            model=panel.model,
-            sw_version=panel.firmware_version,
-            via_device=(
-                DOMAIN,
-                unique_id,
-            ),
+            via_device=(DOMAIN, unique_id),
         )
 
     async def async_added_to_hass(self) -> None:
@@ -139,45 +116,17 @@ class FaultingPointsSensor(AreaSensor):
     @property
     def native_value(self) -> str:
         """The state of this faults entity."""
-        return f"{self._area.faults}"
-
-
-class AreaReadyToArmSensor(AreaSensor):
-    """A sensor entity showing the ready state for an area for a bosch alarm panel."""
-
-    _attr_translation_key = "ready_to_arm"
-
-    def __init__(self, panel: Panel, area_id: int, unique_id: str) -> None:
-        """Set up a faults sensor entity for a bosch alarm panel."""
-        super().__init__(panel, area_id, unique_id, "ready_to_arm")
-
-    @property
-    def native_value(self) -> str:
-        """The state of this entity."""
-        if self._area.all_ready:
-            return "home_and_away_ready"
-        if self._area.part_ready:
-            return "home_ready"
-        return "not_ready"
-
-    async def async_added_to_hass(self) -> None:
-        """Observe state changes."""
-        await super().async_added_to_hass()
-        self._area.ready_observer.attach(self.schedule_update_ha_state)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Stop observing state changes."""
-        self._area.ready_observer.attach(self.schedule_update_ha_state)
+        return str(self._area.faults)
 
 
 class AreaAlarmsSensor(AreaSensor):
     """A sensor entity showing the alarms for an area for a bosch alarm panel."""
 
-    _attr_translation_key = "alarms"
-
-    def __init__(self, panel: Panel, area_id: int, unique_id: str) -> None:
+    def __init__(self, panel: Panel, area_id: int, unique_id: str, type: str) -> None:
         """Set up a faults sensor entity for a bosch alarm panel."""
         super().__init__(panel, area_id, unique_id, "alarms")
+        self._attr_translation_key = f"alarms_{type}"
+        self.type = type
 
     @property
     def icon(self) -> str:
@@ -187,7 +136,10 @@ class AreaAlarmsSensor(AreaSensor):
     @property
     def native_value(self) -> str:
         """The state of this alarms entity."""
-        return "\n".join(self._area.alarms) if self._area.alarms else "No Alarms"
+        for state, priority in priority_types[self.type].items():
+            if priority in self._area.alarms_ids:
+                return state
+        return "no_alarms"
 
     async def async_added_to_hass(self) -> None:
         """Observe state changes."""

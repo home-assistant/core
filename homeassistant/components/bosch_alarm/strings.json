@@ -58,22 +58,35 @@
   },
   "entity": {
     "sensor": {
-      "alarms": {
-        "name": "Alarms"
+      "alarms_gas": {
+        "name": "Gas Alarm Status",
+        "state": {
+          "alarm": "Alarm",
+          "supervisory": "Supervisory (requires maintenance or functioning suboptimally)",
+          "trouble": "Trouble (device malfunction)",
+          "no_alarms": "No Alarms"
+        }
+      },
+      "alarms_fire": {
+        "name": "Fire Alarm Status",
+        "state": {
+          "alarm": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::alarm%]",
+          "supervisory": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::supervisory%]",
+          "trouble": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::trouble%]",
+          "no_alarms": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::no_alarms%]"
+        }
+      },
+      "alarms_burglary": {
+        "name": "Burglary Alarm Status",
+        "state": {
+          "alarm": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::alarm%]",
+          "supervisory": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::supervisory%]",
+          "trouble": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::trouble%]",
+          "no_alarms": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::no_alarms%]"
+        }
       },
       "faulting_points": {
         "name": "Faulting points"
-      },
-      "panel_faults": {
-        "name": "Panel faults"
-      },
-      "ready_to_arm": {
-        "name": "Ready to arm",
-        "state": {
-          "not_ready": "Not ready to arm",
-          "home_ready": "Ready to arm home, but not away",
-          "home_and_away_ready": "Ready to arm for both home and away"
-        }
       }
     }
   }
