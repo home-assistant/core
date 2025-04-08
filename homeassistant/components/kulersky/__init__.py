@@ -63,17 +63,6 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             config_entry,
             title=first_device.name or address,
             data={CONF_ADDRESS: address},
-            discovery_keys=MappingProxyType(
-                {
-                    BLUETOOTH_DOMAIN: (
-                        DiscoveryKey(
-                            domain=BLUETOOTH_DOMAIN,
-                            key=address,
-                            version=1,
-                        ),
-                    )
-                }
-            ),
             unique_id=address,
             version=2,
         )
