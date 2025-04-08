@@ -201,6 +201,10 @@ class AirPurifier(Fan):
 
         return serv_air_purifier
 
+    def should_add_preset_mode_switch(self, preset_mode: str) -> bool:
+        """Check if a preset mode switch should be added."""
+        return preset_mode.lower() != "auto"
+
     @callback
     @pyhap_callback  # type: ignore[misc]
     def run(self) -> None:

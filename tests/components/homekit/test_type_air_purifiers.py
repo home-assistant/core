@@ -74,7 +74,6 @@ async def test_fan_auto_manual(
     hk_driver.add_accessory(acc)
 
     if auto_preset:
-        assert acc.preset_mode_chars[auto_preset].value == 1
         assert acc.preset_mode_chars["smart"].value == 0
     else:
         assert acc.preset_mode_chars["smart"].value == 1
@@ -84,6 +83,22 @@ async def test_fan_auto_manual(
         assert acc.auto_preset is not None
     else:
         assert acc.auto_preset is None
+
+    # Auto presets are handled as the target air purifier state, so
+    # not supposed to be exposed as a separate switch
+    switches = set()
+    for service in acc.services:
+        if service.display_name == "Switch":
+            switches.add(service.unique_id)
+
+    if auto_preset:
+        assert len(switches) == len(preset_modes) - 1
+    else:
+        assert len(switches) == len(preset_modes)
+    assert "smart" in switches
+    assert "sleep" in switches
+    if auto_preset:
+        assert auto_preset not in switches
 
     acc.run()
     await hass.async_block_till_done()
@@ -104,8 +119,6 @@ async def test_fan_auto_manual(
     )
     await hass.async_block_till_done()
 
-    if auto_preset:
-        assert acc.preset_mode_chars[auto_preset].value == 0
     assert acc.preset_mode_chars["smart"].value == 1
     assert acc.char_target_air_purifier_state.value == TARGET_STATE_MANUAL
 
@@ -133,7 +146,7 @@ async def test_fan_auto_manual(
     await hass.async_block_till_done()
 
     assert acc.char_target_air_purifier_state.value == TARGET_STATE_AUTO
-    assert call_set_preset_mode[0]
+    assert len(call_set_preset_mode) == 1
     assert call_set_preset_mode[0].data[ATTR_ENTITY_ID] == entity_id
     assert call_set_preset_mode[0].data[ATTR_PRESET_MODE] == auto_preset
     assert len(events) == 1
@@ -153,7 +166,7 @@ async def test_fan_auto_manual(
     )
     await hass.async_block_till_done()
     assert acc.char_target_air_purifier_state.value == TARGET_STATE_MANUAL
-    assert call_set_percentage[0]
+    assert len(call_set_percentage) == 1
     assert call_set_percentage[0].data[ATTR_ENTITY_ID] == entity_id
     assert events[-1].data["service"] == "set_percentage"
     assert len(events) == 2

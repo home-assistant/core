@@ -116,6 +116,9 @@ class Fan(HomeAccessory):
             )
         elif self.preset_modes:
             for preset_mode in self.preset_modes:
+                if not self.should_add_preset_mode_switch(preset_mode):
+                    continue
+
                 preset_serv = self.add_preload_service(
                     SERV_SWITCH, CHAR_NAME, unique_id=preset_mode
                 )
@@ -149,6 +152,13 @@ class Fan(HomeAccessory):
         self.set_primary_service(serv_fan)
         self.char_active = serv_fan.configure_char(CHAR_ACTIVE, value=0)
         return serv_fan
+
+    def should_add_preset_mode_switch(self, preset_mode: str) -> bool:
+        """Check if a preset mode switch should be added.
+
+        Always true for fans, but can be overridden by subclasses.
+        """
+        return True
 
     def set_chars(self, char_values: dict[str, Any]) -> None:
         """Set characteristic values."""
