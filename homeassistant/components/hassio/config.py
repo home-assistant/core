@@ -51,47 +51,6 @@ class HassioConfig:
         self._store.save()
 
 
-class StoredHassioConfig(TypedDict, total=False):
-    """Represent the stored hassio config."""
-
-    hassio_user: Required[str | None]
-    update_config: StoredHassioUpdateConfig
-
-
-class StoredHassioUpdateConfig(TypedDict):
-    """Represent the stored update config."""
-
-    add_on_backup_before_update: bool
-    add_on_backup_retain_copies: int
-    core_backup_before_update: bool
-
-
-class HassioConfigStore:
-    """Store hassio config."""
-
-    def __init__(self, hass: HomeAssistant, config: HassioConfig) -> None:
-        """Initialize the hassio config store."""
-        self._hass = hass
-        self._config = config
-        self._store: Store[StoredHassioConfig] = Store(
-            hass, STORAGE_VERSION, STORAGE_KEY, minor_version=STORAGE_VERSION_MINOR
-        )
-
-    async def load(self) -> StoredHassioConfig | None:
-        """Load the store."""
-        return await self._store.async_load()
-
-    @callback
-    def save(self) -> None:
-        """Save config."""
-        self._store.async_delay_save(self._data_to_save, STORE_DELAY_SAVE)
-
-    @callback
-    def _data_to_save(self) -> StoredHassioConfig:
-        """Return data to save."""
-        return self._config.data.to_dict()
-
-
 @dataclass(kw_only=True)
 class HassioConfigData:
     """Represent loaded update config data."""
@@ -142,6 +101,47 @@ class HassioUpdateConfig:
 
 class HassioUpdateParametersDict(TypedDict, total=False):
     """Represent the parameters for update."""
+
+    add_on_backup_before_update: bool
+    add_on_backup_retain_copies: int
+    core_backup_before_update: bool
+
+
+class HassioConfigStore:
+    """Store hassio config."""
+
+    def __init__(self, hass: HomeAssistant, config: HassioConfig) -> None:
+        """Initialize the hassio config store."""
+        self._hass = hass
+        self._config = config
+        self._store: Store[StoredHassioConfig] = Store(
+            hass, STORAGE_VERSION, STORAGE_KEY, minor_version=STORAGE_VERSION_MINOR
+        )
+
+    async def load(self) -> StoredHassioConfig | None:
+        """Load the store."""
+        return await self._store.async_load()
+
+    @callback
+    def save(self) -> None:
+        """Save config."""
+        self._store.async_delay_save(self._data_to_save, STORE_DELAY_SAVE)
+
+    @callback
+    def _data_to_save(self) -> StoredHassioConfig:
+        """Return data to save."""
+        return self._config.data.to_dict()
+
+
+class StoredHassioConfig(TypedDict, total=False):
+    """Represent the stored hassio config."""
+
+    hassio_user: Required[str | None]
+    update_config: StoredHassioUpdateConfig
+
+
+class StoredHassioUpdateConfig(TypedDict):
+    """Represent the stored update config."""
 
     add_on_backup_before_update: bool
     add_on_backup_retain_copies: int
