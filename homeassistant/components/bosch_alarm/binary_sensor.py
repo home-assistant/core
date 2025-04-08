@@ -11,6 +11,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -130,6 +131,7 @@ class AreaReadyToArmSensor(BinarySensorEntity):
     """A binary sensor entity showing if a panel is ready to arm."""
 
     _attr_has_entity_name = True
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(
         self, panel: Panel, area_id: int, unique_id: str, arm_type: str
@@ -181,6 +183,7 @@ class PanelFaultsSensor(BinarySensorEntity):
     """A binary sensor entity for each fault type in a bosch alarm panel."""
 
     _attr_has_entity_name = True
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(
         self,
