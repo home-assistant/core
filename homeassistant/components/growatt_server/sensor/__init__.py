@@ -145,7 +145,7 @@ async def async_setup_entry(
             [
                 GrowattInverter(
                     probe,
-                    name=f"{device['deviceAilas']}",
+                    name=f"{device['deviceType']}",
                     unique_id=f"{device['deviceSn']}-{description.key}",
                     description=description,
                 )
