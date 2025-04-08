@@ -1,4 +1,13 @@
 {
+  "common": {
+    "data_description": {
+      "host": "The hostname or IP address of your FRITZ!Box router.",
+      "port": "Leave it empty to use the default port.",
+      "username": "Username for the FRITZ!Box.",
+      "password": "Password for the FRITZ!Box.",
+      "ssl": "Use SSL to connect to the FRITZ!Box."
+    }
+  },
   "config": {
     "flow_title": "{name}",
     "step": {
@@ -11,9 +20,9 @@
           "ssl": "[%key:common::config_flow::data::ssl%]"
         },
         "data_description": {
-          "username": "Username for the FRITZ!Box.",
-          "password": "Password for the FRITZ!Box.",
-          "ssl": "Use SSL to connect to the FRITZ!Box."
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "ssl": "[%key:common::config_flow::data::ssl%]"
         }
       },
       "reauth_confirm": {
@@ -24,8 +33,8 @@
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "username": "[%key:component::fritz::config::step::confirm::data_description::username%]",
-          "password": "[%key:component::fritz::config::step::confirm::data_description::password%]"
+          "username": "[%key:component::fritz::common::data_description::username%]",
+          "password": "[%key:component::fritz::common::data_description::password%]"
         }
       },
       "reconfigure": {
@@ -37,9 +46,9 @@
           "ssl": "[%key:common::config_flow::data::ssl%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of your FRITZ!Box router.",
-          "port": "Leave it empty to use the default port.",
-          "ssl": "[%key:component::fritz::config::step::confirm::data_description::ssl%]"
+          "host": "[%key:component::fritz::common::data_description::host%]",
+          "port": "[%key:component::fritz::common::data_description::port%]",
+          "ssl": "[%key:component::fritz::common::data_description::ssl%]"
         }
       },
       "user": {
@@ -53,11 +62,11 @@
           "ssl": "[%key:common::config_flow::data::ssl%]"
         },
         "data_description": {
-          "host": "[%key:component::fritz::config::step::reconfigure::data_description::host%]",
-          "port": "[%key:component::fritz::config::step::reconfigure::data_description::port%]",
-          "username": "[%key:component::fritz::config::step::confirm::data_description::username%]",
-          "password": "[%key:component::fritz::config::step::confirm::data_description::password%]",
-          "ssl": "[%key:component::fritz::config::step::confirm::data_description::ssl%]"
+          "host": "[%key:component::fritz::common::data_description::host%]",
+          "port": "[%key:component::fritz::common::data_description::port%]",
+          "username": "[%key:component::fritz::common::data_description::username%]",
+          "password": "[%key:component::fritz::common::data_description::password%]",
+          "ssl": "[%key:component::fritz::common::data_description::ssl%]"
         }
       }
     },
