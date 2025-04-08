@@ -30,13 +30,14 @@
     'supported_features': 0,
     'translation_key': 'faulting_points',
     'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_area_1_faulting_points',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'points',
   })
 # ---
 # name: test_sensor[amax_3000][sensor.area1_faulting_points-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Area1 Faulting points',
+      'unit_of_measurement': 'points',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.area1_faulting_points',
@@ -77,13 +78,14 @@
     'supported_features': 0,
     'translation_key': 'faulting_points',
     'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_area_1_faulting_points',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'points',
   })
 # ---
 # name: test_sensor[b5512][sensor.area1_faulting_points-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Area1 Faulting points',
+      'unit_of_measurement': 'points',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.area1_faulting_points',
@@ -124,13 +126,14 @@
     'supported_features': 0,
     'translation_key': 'faulting_points',
     'unique_id': '1234567890_area_1_faulting_points',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'points',
   })
 # ---
 # name: test_sensor[solution_3000][sensor.area1_faulting_points-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Area1 Faulting points',
+      'unit_of_measurement': 'points',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.area1_faulting_points',
