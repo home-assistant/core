@@ -20,17 +20,9 @@ from .entity import BoschAlarmAreaEntity
 class BoschAlarmSensorEntityDescription(SensorEntityDescription):
     """Describes Bosch Alarm sensor entity."""
 
-    value_fn: Callable[[Area], str | int]
+    value_fn: Callable[[Area], int]
     observe_alarms: bool = False
     observe_ready: bool = False
-
-
-def priority_value_fn(priority_info: dict[int, str]) -> Callable[[Area], str]:
-    """Build a value_fn for a given priority type."""
-    return lambda area: next(
-        (key for priority, key in priority_info.items() if priority in area.alarms_ids),
-        "no_issues",
-    )
 
 
 SENSOR_TYPES: list[BoschAlarmSensorEntityDescription] = [
@@ -52,20 +44,18 @@ async def async_setup_entry(
 
     panel = config_entry.runtime_data
     unique_id = config_entry.unique_id or config_entry.entry_id
-    entities: list[SensorEntity] = []
-    for template in SENSOR_TYPES:
-        entities.extend(
-            BoschAreaSensor(panel, area_id, unique_id, template)
-            for area_id in panel.areas
-        )
 
-    async_add_entities(entities)
+    async_add_entities(
+        BoschAreaSensor(panel, area_id, unique_id, template)
+        for area_id in panel.areas
+        for template in SENSOR_TYPES
+    )
 
 
 PARALLEL_UPDATES = 0
 
 
-class BoschAreaSensor(SensorEntity, BoschAlarmAreaEntity):
+class BoschAreaSensor(BoschAlarmAreaEntity, SensorEntity):
     """An area sensor entity for a bosch alarm panel."""
 
     entity_description: BoschAlarmSensorEntityDescription
@@ -89,6 +79,6 @@ class BoschAreaSensor(SensorEntity, BoschAlarmAreaEntity):
         self._attr_unique_id = f"{self._area_unique_id}_{entity_description.key}"
 
     @property
-    def native_value(self) -> str | int:
+    def native_value(self) -> int:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self._area)
