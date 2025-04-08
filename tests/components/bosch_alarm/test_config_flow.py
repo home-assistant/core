@@ -339,6 +339,38 @@ async def test_dhcp_updates_host(
     assert mock_config_entry.data[CONF_HOST] == "4.5.6.7"
 
 
+@pytest.mark.parametrize("model", ["solution_3000", "amax_3000"])
+async def test_dhcp_abort_ongoing_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_panel: AsyncMock,
+    config_flow_data: dict[str, Any],
+) -> None:
+    """Test if a dhcp flow is aborted if there is already an ongoing flow."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "0.0.0.0"}
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            hostname="test",
+            ip="0.0.0.0",
+            macaddress="34ea34b43b5a",
+        ),
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_in_progress"
+
+
 async def test_reauth_flow_success(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,

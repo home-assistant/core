@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Mapping
 import logging
 import ssl
-from typing import Any
+from typing import Any, Self
 
 from bosch_alarm_mode2 import Panel
 import voluptuous as vol
@@ -93,6 +93,12 @@ class BoschAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
         """Init config flow."""
 
         self._data: dict[str, Any] = {}
+        self.mac: str | None = None
+        self.host: str | None = None
+
+    def is_matching(self, other_flow: Self) -> bool:
+        """Return True if other_flow is matching this flow."""
+        return self.mac == other_flow.mac or self.host == other_flow.host
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -101,11 +107,12 @@ class BoschAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            self.host = user_input[CONF_HOST]
             if self.source == SOURCE_USER:
                 self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
             try:
                 # Use load_selector = 0 to fetch the panel model without authentication.
-                (model, serial) = await try_connect(user_input, 0)
+                (model, _) = await try_connect(user_input, 0)
             except (
                 OSError,
                 ConnectionRefusedError,
@@ -140,9 +147,13 @@ class BoschAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle DHCP discovery."""
-        mac = format_mac(discovery_info.macaddress)
+        self.mac = format_mac(discovery_info.macaddress)
+        self.host = discovery_info.ip
+        if self.hass.config_entries.flow.async_has_matching_flow(self):
+            return self.async_abort(reason="already_in_progress")
+
         for entry in self.hass.config_entries.async_entries(DOMAIN):
-            if entry.data[CONF_MAC] == mac:
+            if entry.data[CONF_MAC] == self.mac:
                 result = self.hass.config_entries.async_update_entry(
                     entry,
                     data={
@@ -158,7 +169,7 @@ class BoschAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
                     entry,
                     data={
                         **entry.data,
-                        CONF_MAC: mac,
+                        CONF_MAC: self.mac,
                     },
                 )
                 if result:
@@ -184,7 +195,7 @@ class BoschAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         self._data = {
             CONF_HOST: discovery_info.ip,
-            CONF_MAC: mac,
+            CONF_MAC: self.mac,
             CONF_MODEL: model,
             CONF_PORT: 7700,
         }
