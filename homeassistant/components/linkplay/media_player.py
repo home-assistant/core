@@ -281,19 +281,19 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
             multiroom = LinkPlayMultiroom(self._bridge)
 
         for group_member in group_members:
-            bridge = self._get_linkplay_bridge(group_member)
+            bridge = await self._get_linkplay_bridge(group_member)
             if bridge:
                 await multiroom.add_follower(bridge)
 
         await controller.discover_multirooms()
 
-    def _get_linkplay_bridge(self, entity_id: str) -> LinkPlayBridge:
+    async def _get_linkplay_bridge(self, entity_id: str) -> LinkPlayBridge:
         """Get linkplay bridge from entity_id."""
 
         shared_data = self.hass.data[SHARED_DATA_KEY]
         controller = shared_data.controller
         bridge_uuid = shared_data.entity_to_bridge.get(entity_id, None)
-        bridge = controller.find_bridge(bridge_uuid)
+        bridge = await controller.find_bridge(bridge_uuid)
 
         if bridge is None:
             raise ServiceValidationError(
