@@ -31,6 +31,15 @@ async def async_setup_entry(
     ]
 
     entities.extend(
+        PanelDoorLockedEntity(
+            panel,
+            door_id,
+            config_entry.unique_id or config_entry.entry_id,
+        )
+        for door_id in panel.doors
+    )
+
+    entities.extend(
         PanelDoorSecuredEntity(
             panel,
             door_id,
