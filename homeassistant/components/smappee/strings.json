@@ -15,7 +15,7 @@
         }
       },
       "zeroconf_confirm": {
-        "description": "Do you want to add the Smappee device with serialnumber `{serialnumber}` to Home Assistant?",
+        "description": "Do you want to add the Smappee device with serial number `{serialnumber}` to Home Assistant?",
         "title": "Discovered Smappee device"
       },
       "pick_implementation": {

@@ -142,12 +142,14 @@ MOCK_BLOCKS = [
             "gas": "mild",
             "motionActive": 1,
             "sensorOp": "normal",
+            "selfTest": "pending",
         },
         channel="0",
         motion=0,
         temp=22.1,
         gas="mild",
         sensorOp="normal",
+        selfTest="pending",
         targetTemp=4,
         description="sensor_0",
         type="sensor",
@@ -511,6 +513,9 @@ def _mock_blu_rtv_device(version: str | None = None):
         firmware_version="some fw string",
         initialized=True,
         connected=True,
+        script_getcode=AsyncMock(
+            side_effect=lambda script_id: {"data": MOCK_SCRIPTS[script_id - 1]}
+        ),
         xmod_info={},
     )
     type(device).name = PropertyMock(return_value="Test name")

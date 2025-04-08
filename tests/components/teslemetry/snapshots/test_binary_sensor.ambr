@@ -1631,7 +1631,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Pin to drive enabled',
+    'original_name': 'PIN to Drive enabled',
     'platform': 'teslemetry',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1643,7 +1643,7 @@
 # name: test_binary_sensor[binary_sensor.test_pin_to_drive_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Pin to drive enabled',
+      'friendly_name': 'Test PIN to Drive enabled',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_pin_to_drive_enabled',
@@ -3010,7 +3010,7 @@
 # name: test_binary_sensor_refresh[binary_sensor.test_pin_to_drive_enabled-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Pin to drive enabled',
+      'friendly_name': 'Test PIN to Drive enabled',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_pin_to_drive_enabled',

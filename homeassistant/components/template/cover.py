@@ -172,7 +172,8 @@ class CoverTemplate(TemplateEntity, CoverEntity):
             (POSITION_ACTION, CoverEntityFeature.SET_POSITION),
             (TILT_ACTION, TILT_FEATURES),
         ):
-            if action_config := config.get(action_id):
+            # Scripts can be an empty list, therefore we need to check for None
+            if (action_config := config.get(action_id)) is not None:
                 self.add_script(action_id, action_config, name, DOMAIN)
                 self._attr_supported_features |= supported_feature
 
