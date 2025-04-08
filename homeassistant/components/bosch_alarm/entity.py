@@ -48,20 +48,18 @@ class BoschAlarmAreaEntity(BoschAlarmEntity):
         panel: Panel,
         area_id: int,
         unique_id: str,
-        key: str,
         observe_alarms: bool,
         observe_ready: bool,
     ) -> None:
         """Set up a area related entity for a bosch alarm panel."""
         super().__init__(panel, unique_id)
-        area_unique_id = f"{unique_id}_area_{area_id}"
-        self.panel = panel
+        self._area_id = area_id
+        self._area_unique_id = f"{unique_id}_area_{area_id}"
         self._observe_alarms = observe_alarms
         self._observe_ready = observe_ready
         self._area = panel.areas[area_id]
-        self._attr_unique_id = f"{area_unique_id}_{key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, area_unique_id)},
+            identifiers={(DOMAIN, self._area_unique_id)},
             name=self._area.name,
             manufacturer="Bosch Security Systems",
             via_device=(DOMAIN, unique_id),

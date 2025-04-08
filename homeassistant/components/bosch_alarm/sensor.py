@@ -6,7 +6,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from bosch_alarm_mode2 import Panel
-from bosch_alarm_mode2.const import ALARM_MEMORY_PRIORITIES
 from bosch_alarm_mode2.panel import Area
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
@@ -15,21 +14,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BoschAlarmConfigEntry
 from .entity import BoschAlarmAreaEntity
-
-priority_types = {
-    "burglary": {
-        ALARM_MEMORY_PRIORITIES.BURGLARY_SUPERVISORY: "supervisory",
-        ALARM_MEMORY_PRIORITIES.BURGLARY_TROUBLE: "trouble",
-    },
-    "gas": {
-        ALARM_MEMORY_PRIORITIES.GAS_SUPERVISORY: "supervisory",
-        ALARM_MEMORY_PRIORITIES.GAS_TROUBLE: "trouble",
-    },
-    "fire": {
-        ALARM_MEMORY_PRIORITIES.FIRE_SUPERVISORY: "supervisory",
-        ALARM_MEMORY_PRIORITIES.FIRE_TROUBLE: "trouble",
-    },
-}
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -51,21 +35,12 @@ def priority_value_fn(priority_info: dict[int, str]) -> Callable[[Area], str]:
 
 SENSOR_TYPES: list[BoschAlarmSensorEntityDescription] = [
     BoschAlarmSensorEntityDescription(
-        key=f"alarms_{key}",
-        translation_key=f"alarms_{key}",
-        value_fn=priority_value_fn(priority_type),
-        observe_alarms=True,
-    )
-    for key, priority_type in priority_types.items()
-]
-SENSOR_TYPES.append(
-    BoschAlarmSensorEntityDescription(
         key="faulting_points",
         translation_key="faulting_points",
         value_fn=lambda area: area.faults,
         observe_ready=True,
     ),
-)
+]
 
 
 async def async_setup_entry(
@@ -107,11 +82,11 @@ class BoschAreaSensor(SensorEntity, BoschAlarmAreaEntity):
             panel,
             area_id,
             unique_id,
-            entity_description.key,
             entity_description.observe_alarms,
             entity_description.observe_ready,
         )
         self.entity_description = entity_description
+        self._attr_unique_id = f"{self._area_unique_id}_{entity_description.key}"
 
     @property
     def native_value(self) -> str | int:
