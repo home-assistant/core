@@ -76,6 +76,9 @@
     "sensor": {
       "rssi": {
         "name": "RSSI"
+      },
+      "thermostat_signal": {
+        "name": "Signal strength"
       }
     }
   }
