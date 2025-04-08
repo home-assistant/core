@@ -27,7 +27,6 @@ from homeassistant.components.spotify import (
     resolve_spotify_media_type,
     spotify_uri_from_media_browser_url,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -54,9 +53,7 @@ from .const import (
     DEFAULT_TTS_PAUSE_TIME,
     DEFAULT_TTS_VOLUME,
     DEFAULT_UNMUTE_VOLUME,
-    DOMAIN,
     FD_NAME,
-    HASS_DATA_UPDATER_KEY,
     KNOWN_PIPES,
     PIPE_FUNCTION_MAP,
     SIGNAL_ADD_ZONES,
@@ -73,20 +70,18 @@ from .const import (
     SUPPORTED_FEATURES_ZONE,
     TTS_TIMEOUT,
 )
-from .coordinator import ForkedDaapdUpdater
+from .coordinator import ForkedDaapdConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ForkedDaapdConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up forked-daapd from a config entry."""
-    forked_daapd_updater: ForkedDaapdUpdater = hass.data[DOMAIN][config_entry.entry_id][
-        HASS_DATA_UPDATER_KEY
-    ]
+    forked_daapd_updater = config_entry.runtime_data
 
     host: str = config_entry.data[CONF_HOST]
     forked_daapd_api = forked_daapd_updater.api
@@ -115,7 +110,7 @@ async def async_setup_entry(
     await forked_daapd_updater.async_init()
 
 
-async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def update_listener(hass: HomeAssistant, entry: ForkedDaapdConfigEntry) -> None:
     """Handle options update."""
     async_dispatcher_send(
         hass, SIGNAL_CONFIG_OPTIONS_UPDATE.format(entry.entry_id), entry.options

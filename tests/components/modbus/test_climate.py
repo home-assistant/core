@@ -5,6 +5,7 @@ import pytest
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
     ATTR_FAN_MODES,
+    ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     ATTR_HVAC_MODES,
     ATTR_SWING_MODE,
@@ -31,6 +32,7 @@ from homeassistant.components.climate import (
     SWING_OFF,
     SWING_ON,
     SWING_VERTICAL,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
@@ -47,6 +49,16 @@ from homeassistant.components.modbus.const import (
     CONF_FAN_MODE_REGISTER,
     CONF_FAN_MODE_TOP,
     CONF_FAN_MODE_VALUES,
+    CONF_HVAC_ACTION_COOLING,
+    CONF_HVAC_ACTION_DEFROSTING,
+    CONF_HVAC_ACTION_DRYING,
+    CONF_HVAC_ACTION_FAN,
+    CONF_HVAC_ACTION_HEATING,
+    CONF_HVAC_ACTION_IDLE,
+    CONF_HVAC_ACTION_OFF,
+    CONF_HVAC_ACTION_PREHEATING,
+    CONF_HVAC_ACTION_REGISTER,
+    CONF_HVAC_ACTION_VALUES,
     CONF_HVAC_MODE_AUTO,
     CONF_HVAC_MODE_COOL,
     CONF_HVAC_MODE_DRY,
@@ -221,6 +233,43 @@ ENTITY_ID = f"{CLIMATE_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
                     CONF_SLAVE: 10,
                     CONF_MIN_TEMP: -57,
                     CONF_MAX_TEMP: -23,
+                }
+            ],
+        },
+        {
+            CONF_CLIMATES: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_TARGET_TEMP: 117,
+                    CONF_ADDRESS: 117,
+                    CONF_SLAVE: 10,
+                    CONF_HVAC_ONOFF_REGISTER: 12,
+                    CONF_HVAC_MODE_REGISTER: {
+                        CONF_ADDRESS: 11,
+                        CONF_WRITE_REGISTERS: True,
+                        CONF_HVAC_MODE_VALUES: {
+                            CONF_HVAC_MODE_OFF: 0,
+                            CONF_HVAC_MODE_HEAT: 1,
+                            CONF_HVAC_MODE_COOL: 2,
+                            CONF_HVAC_MODE_HEAT_COOL: 3,
+                            CONF_HVAC_MODE_DRY: 4,
+                            CONF_HVAC_MODE_FAN_ONLY: 5,
+                            CONF_HVAC_MODE_AUTO: 6,
+                        },
+                    },
+                    CONF_HVAC_ACTION_REGISTER: {
+                        CONF_ADDRESS: 14,
+                        CONF_HVAC_ACTION_VALUES: {
+                            CONF_HVAC_ACTION_COOLING: 0,
+                            CONF_HVAC_ACTION_DEFROSTING: 1,
+                            CONF_HVAC_ACTION_DRYING: 2,
+                            CONF_HVAC_ACTION_FAN: 3,
+                            CONF_HVAC_ACTION_HEATING: 4,
+                            CONF_HVAC_ACTION_IDLE: 5,
+                            CONF_HVAC_ACTION_OFF: 6,
+                            CONF_HVAC_ACTION_PREHEATING: 7,
+                        },
+                    },
                 }
             ],
         },
@@ -743,6 +792,95 @@ async def test_hvac_onoff_coil_update(
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == result
+
+
+@pytest.mark.parametrize(
+    ("do_config", "result", "register_words"),
+    [
+        (
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 116,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_SCAN_INTERVAL: 0,
+                        CONF_DATA_TYPE: DataType.INT32,
+                        CONF_HVAC_ACTION_REGISTER: {
+                            CONF_ADDRESS: 118,
+                            CONF_HVAC_ACTION_VALUES: {
+                                CONF_HVAC_ACTION_IDLE: 0,
+                                CONF_HVAC_ACTION_HEATING: 1,
+                            },
+                        },
+                    },
+                ]
+            },
+            HVACAction.HEATING,
+            [0x01],
+        ),
+        (
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 116,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_SCAN_INTERVAL: 0,
+                        CONF_DATA_TYPE: DataType.INT32,
+                        CONF_HVAC_ACTION_REGISTER: {
+                            CONF_ADDRESS: 118,
+                            CONF_HVAC_ACTION_VALUES: {
+                                CONF_HVAC_ACTION_COOLING: 0,
+                                CONF_HVAC_ACTION_HEATING: 1,
+                            },
+                        },
+                    },
+                ]
+            },
+            HVACAction.COOLING,
+            [0x00],
+        ),
+        (
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 116,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_SCAN_INTERVAL: 0,
+                        CONF_DATA_TYPE: DataType.INT32,
+                        CONF_HVAC_ACTION_REGISTER: {
+                            CONF_ADDRESS: 118,
+                            CONF_HVAC_ACTION_VALUES: {
+                                CONF_HVAC_ACTION_OFF: 0,
+                                CONF_HVAC_ACTION_DRYING: 1,
+                            },
+                        },
+                    },
+                ]
+            },
+            HVACAction.DRYING,
+            [0x01],
+        ),
+    ],
+)
+async def test_service_climate_action_update(
+    hass: HomeAssistant, mock_modbus_ha, result, register_words
+) -> None:
+    """Test HVAC action updates."""
+    mock_modbus_ha.read_holding_registers.return_value = ReadResult(register_words)
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_HVAC_ACTION] == result
 
 
 @pytest.mark.parametrize(

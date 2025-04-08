@@ -54,10 +54,10 @@
   "services": {
     "get_gas_prices": {
       "name": "Get gas prices",
-      "description": "Request gas prices from EnergyZero.",
+      "description": "Requests gas prices from EnergyZero.",
       "fields": {
         "config_entry": {
-          "name": "Config Entry",
+          "name": "Config entry",
           "description": "The config entry to use for this action."
         },
         "incl_vat": {
@@ -76,7 +76,7 @@
     },
     "get_energy_prices": {
       "name": "Get energy prices",
-      "description": "Request energy prices from EnergyZero.",
+      "description": "Requests energy prices from EnergyZero.",
       "fields": {
         "config_entry": {
           "name": "[%key:component::energyzero::services::get_gas_prices::fields::config_entry::name%]",

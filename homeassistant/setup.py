@@ -202,28 +202,40 @@ async def _async_process_dependencies(
     """
     setup_futures = hass.data.setdefault(DATA_SETUP, {})
 
-    dependencies_tasks = {
-        dep: setup_futures.get(dep)
-        or create_eager_task(
-            async_setup_component(hass, dep, config),
-            name=f"setup {dep} as dependency of {integration.domain}",
-            loop=hass.loop,
-        )
-        for dep in integration.dependencies
-        if dep not in hass.config.components
-    }
+    dependencies_tasks: dict[str, asyncio.Future[bool]] = {}
 
-    after_dependencies_tasks: dict[str, asyncio.Future[bool]] = {}
+    for dep in integration.dependencies:
+        fut = setup_futures.get(dep)
+        if fut is None:
+            if dep in hass.config.components:
+                continue
+            fut = create_eager_task(
+                async_setup_component(hass, dep, config),
+                name=f"setup {dep} as dependency of {integration.domain}",
+                loop=hass.loop,
+            )
+        dependencies_tasks[dep] = fut
+
     to_be_loaded = hass.data.get(DATA_SETUP_DONE, {})
+    # We don't want to just wait for the futures from `to_be_loaded` here.
+    # We want to ensure that our after_dependencies are always actually
+    # scheduled to be set up, as if for whatever reason they had not been,
+    # we would deadlock waiting for them here.
     for dep in integration.after_dependencies:
-        if (
-            dep not in dependencies_tasks
-            and dep in to_be_loaded
-            and dep not in hass.config.components
-        ):
-            after_dependencies_tasks[dep] = to_be_loaded[dep]
+        if dep not in to_be_loaded or dep in dependencies_tasks:
+            continue
+        fut = setup_futures.get(dep)
+        if fut is None:
+            if dep in hass.config.components:
+                continue
+            fut = create_eager_task(
+                async_setup_component(hass, dep, config),
+                name=f"setup {dep} as after dependency of {integration.domain}",
+                loop=hass.loop,
+            )
+        dependencies_tasks[dep] = fut
 
-    if not dependencies_tasks and not after_dependencies_tasks:
+    if not dependencies_tasks:
         return []
 
     if dependencies_tasks:
@@ -232,17 +244,9 @@ async def _async_process_dependencies(
             integration.domain,
             dependencies_tasks.keys(),
         )
-    if after_dependencies_tasks:
-        _LOGGER.debug(
-            "Dependency %s will wait for after dependencies %s",
-            integration.domain,
-            after_dependencies_tasks.keys(),
-        )
 
     async with hass.timeout.async_freeze(integration.domain):
-        results = await asyncio.gather(
-            *dependencies_tasks.values(), *after_dependencies_tasks.values()
-        )
+        results = await asyncio.gather(*dependencies_tasks.values())
 
     failed = [
         domain for idx, domain in enumerate(dependencies_tasks) if not results[idx]
@@ -323,7 +327,7 @@ async def _async_setup_component(
             translation.async_load_integrations(hass, integration_set), loop=hass.loop
         )
     # Validate all dependencies exist and there are no circular dependencies
-    if not await integration.resolve_dependencies():
+    if await integration.resolve_dependencies() is None:
         return False
 
     # Process requirements as soon as possible, so we can import the component

@@ -26,7 +26,7 @@
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'Round Trip Time Average',
+    'original_name': 'Round-trip time average',
     'platform': 'ping',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -38,7 +38,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': '10.10.10.10 Round Trip Time Average',
+      'friendly_name': '10.10.10.10 Round-trip time average',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
@@ -77,7 +77,7 @@
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'Round Trip Time Maximum',
+    'original_name': 'Round-trip time maximum',
     'platform': 'ping',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -89,7 +89,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': '10.10.10.10 Round Trip Time Maximum',
+      'friendly_name': '10.10.10.10 Round-trip time maximum',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
@@ -134,7 +134,7 @@
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'Round Trip Time Minimum',
+    'original_name': 'Round-trip time minimum',
     'platform': 'ping',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -146,7 +146,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': '10.10.10.10 Round Trip Time Minimum',
+      'friendly_name': '10.10.10.10 Round-trip time minimum',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
