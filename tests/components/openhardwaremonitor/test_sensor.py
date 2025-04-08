@@ -2,10 +2,12 @@
 
 import requests_mock
 
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.setup import async_setup_component
+from homeassistant.components.openhardwaremonitor.const import DOMAIN
 
-from tests.common import load_fixture
+from tests.common import load_fixture, MockConfigEntry
 
 from .const import HOST, PORT
 
@@ -30,6 +32,33 @@ async def test_setup_via_yaml(
     await async_setup_component(hass, "sensor", config)
     await hass.async_block_till_done()
 
+    await assert_fixture(hass)
+
+
+async def test_async_setup_entry(
+    hass: HomeAssistant, requests_mock: requests_mock.Mocker
+) -> None:
+    """Test async_setup_entry."""
+    assert hass.state is CoreState.running
+
+    requests_mock.get(
+        f"http://{HOST}:{PORT}/data.json",
+        text=load_fixture("openhardwaremonitor.json", "openhardwaremonitor"),
+    )
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: HOST, CONF_PORT: PORT},
+        unique_id=f"{HOST}:{PORT}",
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await assert_fixture(hass)
+
+
+async def assert_fixture(hass: HomeAssistant):
     entities = hass.states.async_entity_ids("sensor")
     assert len(entities) == 38
 
