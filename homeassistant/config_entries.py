@@ -30,7 +30,6 @@ from propcache.api import cached_property
 import voluptuous as vol
 
 from . import data_entry_flow, loader
-from .components import persistent_notification
 from .const import (
     CONF_NAME,
     EVENT_HOMEASSISTANT_STARTED,
@@ -178,7 +177,6 @@ class ConfigEntryState(Enum):
 
 
 DEFAULT_DISCOVERY_UNIQUE_ID = "default_discovery_unique_id"
-DISCOVERY_NOTIFICATION_ID = "config_entry_discovery"
 DISCOVERY_SOURCES = {
     SOURCE_BLUETOOTH,
     SOURCE_DHCP,
@@ -1369,12 +1367,12 @@ class ConfigEntriesFlowManager(
         self._initialize_futures: defaultdict[str, set[asyncio.Future[None]]] = (
             defaultdict(set)
         )
-        self._discovery_debouncer = Debouncer[None](
+        self._discovery_event_debouncer = Debouncer[None](
             hass,
             _LOGGER,
             cooldown=DISCOVERY_COOLDOWN,
             immediate=True,
-            function=self._async_discovery,
+            function=self._async_fire_discovery_event,
             background=True,
         )
 
@@ -1384,14 +1382,6 @@ class ConfigEntriesFlowManager(
             return
 
         await asyncio.wait(current.values())
-
-    @callback
-    def _async_has_other_discovery_flows(self, flow_id: str) -> bool:
-        """Check if there are any other discovery flows in progress."""
-        for flow in self._progress.values():
-            if flow.flow_id != flow_id and flow.context["source"] in DISCOVERY_SOURCES:
-                return True
-        return False
 
     async def async_init(
         self,
@@ -1464,8 +1454,12 @@ class ConfigEntriesFlowManager(
                 if not self._pending_import_flows[handler]:
                     del self._pending_import_flows[handler]
 
-        if result["type"] != data_entry_flow.FlowResultType.ABORT:
-            await self.async_post_init(flow, result)
+        if (
+            result["type"] != data_entry_flow.FlowResultType.ABORT
+            and source in DISCOVERY_SOURCES
+        ):
+            # Fire discovery event
+            await self._discovery_event_debouncer.async_call()
 
         return result
 
@@ -1507,7 +1501,7 @@ class ConfigEntriesFlowManager(
         for future_list in self._initialize_futures.values():
             for future in future_list:
                 future.set_result(None)
-        self._discovery_debouncer.async_shutdown()
+        self._discovery_event_debouncer.async_shutdown()
 
     async def async_finish_flow(
         self,
@@ -1527,10 +1521,6 @@ class ConfigEntriesFlowManager(
         # init to be done.
         self._set_pending_import_done(flow)
 
-        # Remove notification if no other discovery config entries in progress
-        if not self._async_has_other_discovery_flows(flow.flow_id):
-            persistent_notification.async_dismiss(self.hass, DISCOVERY_NOTIFICATION_ID)
-
         # Clean up issue if this is a reauth flow
         if flow.context["source"] == SOURCE_REAUTH:
             if (entry_id := flow.context.get("entry_id")) is not None and (
@@ -1540,7 +1530,7 @@ class ConfigEntriesFlowManager(
                 ir.async_delete_issue(self.hass, HOMEASSISTANT_DOMAIN, issue_id)
 
         if result["type"] != data_entry_flow.FlowResultType.CREATE_ENTRY:
-            # If there's an ignored config entry with a matching unique ID,
+            # If there's a config entry with a matching unique ID,
             # update the discovery key.
             if (
                 (discovery_key := flow.context.get("discovery_key"))
@@ -1626,7 +1616,11 @@ class ConfigEntriesFlowManager(
                 result["handler"], flow.unique_id
             )
 
-        if existing_entry is not None and flow.handler != "mobile_app":
+        if (
+            existing_entry is not None
+            and flow.handler != "mobile_app"
+            and existing_entry.source != SOURCE_IGNORE
+        ):
             # This causes the old entry to be removed and replaced, when the flow
             # should instead be aborted.
             # In case of manual flows, integrations should implement options, reauth,
@@ -1701,33 +1695,12 @@ class ConfigEntriesFlowManager(
         flow.init_step = context["source"]
         return flow
 
-    async def async_post_init(
-        self,
-        flow: data_entry_flow.FlowHandler[ConfigFlowContext, ConfigFlowResult],
-        result: ConfigFlowResult,
-    ) -> None:
-        """After a flow is initialised trigger new flow notifications."""
-        source = flow.context["source"]
-
-        # Create notification.
-        if source in DISCOVERY_SOURCES:
-            await self._discovery_debouncer.async_call()
-
     @callback
-    def _async_discovery(self) -> None:
-        """Handle discovery."""
+    def _async_fire_discovery_event(self) -> None:
+        """Fire discovery event."""
         # async_fire_internal is used here because this is only
         # called from the Debouncer so we know the usage is safe
         self.hass.bus.async_fire_internal(EVENT_FLOW_DISCOVERED)
-        persistent_notification.async_create(
-            self.hass,
-            title="New devices discovered",
-            message=(
-                "We have discovered new devices on your network. "
-                "[Check it out](/config/integrations)."
-            ),
-            notification_id=DISCOVERY_NOTIFICATION_ID,
-        )
 
     @callback
     def async_has_matching_discovery_flow(

@@ -54,6 +54,14 @@ from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
+INITIAL_FETCH_CLIENT_METHODS = [
+    "get_settings",
+    "get_status",
+    "get_all_programs",
+    "get_available_commands",
+    "get_available_program",
+]
+
 
 @pytest.fixture
 def platforms() -> list[str]:
@@ -215,14 +223,31 @@ async def test_coordinator_failure_refresh_and_stream(
 
 
 @pytest.mark.parametrize(
+    "appliance",
+    ["Dishwasher"],
+    indirect=True,
+)
+async def test_coordinator_not_fetching_on_disconnected_appliance(
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    setup_credentials: None,
+    client: MagicMock,
+    appliance: HomeAppliance,
+) -> None:
+    """Test that the coordinator does not fetch anything on disconnected appliance."""
+    appliance.connected = False
+
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    await integration_setup(client)
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    for method in INITIAL_FETCH_CLIENT_METHODS:
+        assert getattr(client, method).call_count == 0
+
+
+@pytest.mark.parametrize(
     "mock_method",
-    [
-        "get_settings",
-        "get_status",
-        "get_all_programs",
-        "get_available_commands",
-        "get_available_program",
-    ],
+    INITIAL_FETCH_CLIENT_METHODS,
 )
 async def test_coordinator_update_failing(
     mock_method: str,
@@ -552,3 +577,35 @@ async def test_devices_updated_on_refresh(
     assert not device_registry.async_get_device({(DOMAIN, appliances[0].ha_id)})
     for appliance in appliances[2:3]:
         assert device_registry.async_get_device({(DOMAIN, appliance.ha_id)})
+
+
+@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+async def test_paired_disconnected_devices_not_fetching(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    setup_credentials: None,
+    client: MagicMock,
+    appliance: HomeAppliance,
+) -> None:
+    """Test that Home Connect API is not fetched after pairing a disconnected device."""
+    client.get_home_appliances = AsyncMock(return_value=ArrayOfHomeAppliances([]))
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert await integration_setup(client)
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    appliance.connected = False
+    await client.add_events(
+        [
+            EventMessage(
+                appliance.ha_id,
+                EventType.PAIRED,
+                data=ArrayOfEvents([]),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    client.get_specific_appliance.assert_awaited_once_with(appliance.ha_id)
+    for method in INITIAL_FETCH_CLIENT_METHODS:
+        assert getattr(client, method).call_count == 0
