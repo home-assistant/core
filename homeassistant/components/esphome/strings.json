@@ -145,7 +145,7 @@
           },
           "manual": {
             "title": "Remove or rename device {name}",
-            "description": "To resolve the conflict, either remove the device with MAC address `{mac}` from the network or re-flash it with a different name than `{name}`, and submit when done."
+            "description": "To resolve the conflict, either remove the device with MAC address {mac} from the network and restart the one with {stored_mac}, or re-flash the device with MAC address {mac} using a different name than {name}. Submit again once done."
           }
         }
       }
