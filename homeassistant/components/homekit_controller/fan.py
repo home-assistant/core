@@ -313,7 +313,7 @@ class HomeKitAirPurifer(HomeKitFanV2):
                 percentage_to_ranged_value(self._speed_range, percentage)
             )
             if FanEntityFeature.PRESET_MODE in self.supported_features:
-                characteristics[CharacteristicsTypes.FAN_STATE_TARGET] = (
+                characteristics[CharacteristicsTypes.AIR_PURIFIER_STATE_TARGET] = (
                     TargetAirPurifierStateValues.MANUAL
                 )
 
