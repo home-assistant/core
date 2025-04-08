@@ -123,7 +123,7 @@ PARALLEL_UPDATES = 0
 
 
 class BoschAreaSensor(SensorEntity, BoschAlarmAreaEntity):
-    """A faults sensor entity for a bosch alarm panel."""
+    """An area sensor entity for a bosch alarm panel."""
 
     entity_description: BoschAlarmSensorEntityDescription
 
@@ -134,7 +134,7 @@ class BoschAreaSensor(SensorEntity, BoschAlarmAreaEntity):
         unique_id: str,
         entity_description: BoschAlarmSensorEntityDescription,
     ) -> None:
-        """Set up a faults sensor entity for a bosch alarm panel."""
+        """Set up an area sensor entity for a bosch alarm panel."""
         super().__init__(panel, area_id, unique_id, entity_description)
 
     @property
