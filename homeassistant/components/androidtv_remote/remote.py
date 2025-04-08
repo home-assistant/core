@@ -103,12 +103,11 @@ class AndroidTVRemoteEntity(AndroidTVRemoteBaseEntity, RemoteEntity):
         delay_secs = kwargs.get(ATTR_DELAY_SECS, DEFAULT_DELAY_SECS)
         hold_secs = kwargs.get(ATTR_HOLD_SECS, DEFAULT_HOLD_SECS)
         device = kwargs.get(ATTR_DEVICE)
-        if device:
-            if device != "keyboard":
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="send_command_invalid_device",
-                )
+        if device and device != "keyboard":
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="send_command_invalid_device",
+            )
 
         for _ in range(num_repeats):
             for single_command in command:
