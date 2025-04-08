@@ -259,17 +259,21 @@ class ShoppingData:
         self, name: str, context: Context | None = None
     ) -> dict[str, JsonValueType]:
         """Mark a shopping list item as complete."""
-        item = next(
-            (itm for itm in self.items if itm["name"] == name and not itm["complete"]),
-            None,
-        )
+        complete_item = None
 
-        if item is None:
+        for item in self.items:
+            if item["name"] == name and not item["complete"]:
+                complete_item = item
+                break
+            if item["name"] == name:
+                complete_item = item
+
+        if complete_item is None:
             raise NoMatchingShoppingListItem
 
-        item_id = cast(str, item["id"])
+        item_id = cast(str, complete_item["id"])
 
-        return await self.async_update(item_id, {"name": name, "complete": True})
+        return await self.async_update(item_id, {"complete": True}, context=context)
 
     async def async_update(
         self, item_id: str | None, info: dict[str, Any], context: Context | None = None

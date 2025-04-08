@@ -30,7 +30,11 @@ async def test_complete_item_intent_not_found(hass: HomeAssistant, sl_setup) -> 
         )
     assert str(excinfo.value) == "Item beer not found on your shopping list"
 
-    # Item is on list, but is already completed
+
+async def test_complete_item_intent_already_completed(
+    hass: HomeAssistant, sl_setup
+) -> None:
+    """Test item is already completed."""
     await intent.async_handle(
         hass, "test", "HassShoppingListAddItem", {"item": {"value": "beer"}}
     )
@@ -39,12 +43,39 @@ async def test_complete_item_intent_not_found(hass: HomeAssistant, sl_setup) -> 
         hass, "test", "HassShoppingListCompleteItem", {"item": {"value": "beer"}}
     )
 
-    with pytest.raises(IntentHandleError) as excinfo:
-        await intent.async_handle(
-            hass, "test", "HassShoppingListCompleteItem", {"item": {"value": "beer"}}
-        )
+    assert hass.data["shopping_list"].items[0]["complete"]
 
-    assert str(excinfo.value) == "Item beer not found on your shopping list"
+    response = await intent.async_handle(
+        hass, "test", "HassShoppingListCompleteItem", {"item": {"value": "beer"}}
+    )
+
+    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+
+
+async def test_prefer_completing_non_complete_items(
+    hass: HomeAssistant, sl_setup
+) -> None:
+    """Test completing non-complete items."""
+    await intent.async_handle(
+        hass, "test", "HassShoppingListAddItem", {"item": {"value": "beer"}}
+    )
+
+    await intent.async_handle(
+        hass, "test", "HassShoppingListCompleteItem", {"item": {"value": "beer"}}
+    )
+
+    assert hass.data["shopping_list"].items[0]["complete"]
+
+    await intent.async_handle(
+        hass, "test", "HassShoppingListAddItem", {"item": {"value": "beer"}}
+    )
+
+    response = await intent.async_handle(
+        hass, "test", "HassShoppingListCompleteItem", {"item": {"value": "beer"}}
+    )
+
+    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert hass.data["shopping_list"].items[1]["complete"]
 
 
 async def test_recent_items_intent(hass: HomeAssistant, sl_setup) -> None:
