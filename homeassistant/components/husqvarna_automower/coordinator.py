@@ -136,6 +136,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
         # Process new device
         new_devices = current_devices - self._devices_last_update
         if new_devices:
+            self.data = data
             _LOGGER.debug("New devices found: %s", ", ".join(map(str, new_devices)))
             self._add_new_devices(new_devices)
 
