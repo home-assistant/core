@@ -24,6 +24,7 @@ from ..const import (
     DEPRECATED_URLS,
     DOMAIN,
     LOGIN_INVALID_AUTH_CODE,
+    LOGIN_LOCKED_CODE,
 )
 from .inverter import INVERTER_SENSOR_TYPES
 from .mix import MIX_SENSOR_TYPES
@@ -49,6 +50,11 @@ def get_device_list(api, config):
         and login_response["msg"] == LOGIN_INVALID_AUTH_CODE
     ):
         raise ConfigEntryError("Username, Password or URL may be incorrect!")
+    if (
+        not login_response["success"]
+        and login_response["msg"] == LOGIN_LOCKED_CODE
+    ):
+        raise ConfigEntryError(login_response["error"] + "; lockDuration=" +  login_response["lockDuration"])
     user_id = login_response["user"]["id"]
     if plant_id == DEFAULT_PLANT_ID:
         plant_info = api.plant_list(user_id)
