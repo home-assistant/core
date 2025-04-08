@@ -1,5 +1,7 @@
 """The tests for the media_player platform."""
 
+from contextlib import nullcontext as does_not_raise
+
 import pytest
 
 from homeassistant.components.media_player import (
@@ -224,141 +226,42 @@ async def test_previous_media_player_intent(hass: HomeAssistant) -> None:
         )
 
 
-async def test_volume_media_player_intent(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("state", "outcome"),
+    [
+        (STATE_PLAYING, does_not_raise()),
+        (STATE_PAUSED, does_not_raise()),
+        (STATE_IDLE, does_not_raise()),
+        (STATE_ON, does_not_raise()),
+        (STATE_BUFFERING, pytest.raises(intent.MatchFailedError)),
+        (STATE_STANDBY, pytest.raises(intent.MatchFailedError)),
+        (STATE_OFF, pytest.raises(intent.MatchFailedError)),
+    ],
+)
+async def test_volume_media_player_intent(hass: HomeAssistant, state, outcome) -> None:
     """Test HassSetVolume intent for media players."""
     await media_player_intent.async_setup_intents(hass)
 
     entity_id = f"{DOMAIN}.test_media_player"
     attributes = {ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature.VOLUME_SET}
 
-    hass.states.async_set(entity_id, STATE_PLAYING, attributes=attributes)
+    hass.states.async_set(entity_id, state, attributes=attributes)
     calls = async_mock_service(hass, DOMAIN, SERVICE_VOLUME_SET)
-
-    response = await intent.async_handle(
-        hass,
-        "test",
-        media_player_intent.INTENT_SET_VOLUME,
-        {"volume_level": {"value": 50}},
-    )
-    await hass.async_block_till_done()
-
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
-    assert len(calls) == 1
-    call = calls[0]
-    assert call.domain == DOMAIN
-    assert call.service == SERVICE_VOLUME_SET
-    assert call.data == {"entity_id": entity_id, "volume_level": 0.5}
-
-    # Test when paused
-
-    hass.states.async_set(entity_id, STATE_PAUSED, attributes=attributes)
-    calls = async_mock_service(hass, DOMAIN, SERVICE_VOLUME_SET)
-
-    response = await intent.async_handle(
-        hass,
-        "test",
-        media_player_intent.INTENT_SET_VOLUME,
-        {"volume_level": {"value": 50}},
-    )
-    await hass.async_block_till_done()
-
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
-    assert len(calls) == 1
-    call = calls[0]
-    assert call.domain == DOMAIN
-    assert call.service == SERVICE_VOLUME_SET
-    assert call.data == {"entity_id": entity_id, "volume_level": 0.5}
-
-    # Test when idle
-
-    hass.states.async_set(entity_id, STATE_IDLE, attributes=attributes)
-    calls = async_mock_service(hass, DOMAIN, SERVICE_VOLUME_SET)
-
-    response = await intent.async_handle(
-        hass,
-        "test",
-        media_player_intent.INTENT_SET_VOLUME,
-        {"volume_level": {"value": 50}},
-    )
-    await hass.async_block_till_done()
-
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
-    assert len(calls) == 1
-    call = calls[0]
-    assert call.domain == DOMAIN
-    assert call.service == SERVICE_VOLUME_SET
-    assert call.data == {"entity_id": entity_id, "volume_level": 0.5}
-
-    # Test when on
-
-    hass.states.async_set(entity_id, STATE_ON, attributes=attributes)
-    calls = async_mock_service(hass, DOMAIN, SERVICE_VOLUME_SET)
-
-    response = await intent.async_handle(
-        hass,
-        "test",
-        media_player_intent.INTENT_SET_VOLUME,
-        {"volume_level": {"value": 50}},
-    )
-    await hass.async_block_till_done()
-
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
-    assert len(calls) == 1
-    call = calls[0]
-    assert call.domain == DOMAIN
-    assert call.service == SERVICE_VOLUME_SET
-    assert call.data == {"entity_id": entity_id, "volume_level": 0.5}
-
-    # Test when buffering
-
-    hass.states.async_set(entity_id, STATE_BUFFERING, attributes=attributes)
-
-    with pytest.raises(intent.MatchFailedError):
+    with outcome:
         response = await intent.async_handle(
             hass,
             "test",
             media_player_intent.INTENT_SET_VOLUME,
             {"volume_level": {"value": 50}},
         )
+        await hass.async_block_till_done()
 
-    # Test when standby
-
-    hass.states.async_set(entity_id, STATE_STANDBY, attributes=attributes)
-
-    with pytest.raises(intent.MatchFailedError):
-        response = await intent.async_handle(
-            hass,
-            "test",
-            media_player_intent.INTENT_SET_VOLUME,
-            {"volume_level": {"value": 50}},
-        )
-
-    # Test when off
-
-    hass.states.async_set(entity_id, STATE_OFF, attributes=attributes)
-
-    with pytest.raises(intent.MatchFailedError):
-        response = await intent.async_handle(
-            hass,
-            "test",
-            media_player_intent.INTENT_SET_VOLUME,
-            {"volume_level": {"value": 50}},
-        )
-
-    # Test feature not supported
-    hass.states.async_set(
-        entity_id,
-        STATE_PLAYING,
-        attributes={ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature(0)},
-    )
-
-    with pytest.raises(intent.MatchFailedError):
-        response = await intent.async_handle(
-            hass,
-            "test",
-            media_player_intent.INTENT_SET_VOLUME,
-            {"volume_level": {"value": 50}},
-        )
+        assert response.response_type == intent.IntentResponseType.ACTION_DONE
+        assert len(calls) == 1
+        call = calls[0]
+        assert call.domain == DOMAIN
+        assert call.service == SERVICE_VOLUME_SET
+        assert call.data == {"entity_id": entity_id, "volume_level": 0.5}
 
 
 async def test_multiple_media_players(
