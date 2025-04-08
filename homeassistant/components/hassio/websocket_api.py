@@ -191,10 +191,10 @@ async def websocket_update_core(
     connection.send_result(msg[WS_ID])
 
 
+@callback
 @websocket_api.require_admin
 @websocket_api.websocket_command({vol.Required("type"): "hassio/update/config/info"})
-@websocket_api.async_response
-async def websocket_update_config_info(
+def websocket_update_config_info(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
