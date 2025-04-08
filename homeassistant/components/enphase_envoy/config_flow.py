@@ -46,6 +46,13 @@ CONF_SERIAL = "serial"
 
 INSTALLER_AUTH_USERNAME = "installer"
 
+AVOID_REFLECT_KEYS = {CONF_PASSWORD, CONF_TOKEN}
+
+
+def without_avoid_reflect_keys(dictionary: Mapping[str, Any]) -> dict[str, Any]:
+    """Return a dictionary without AVOID_REFLECT_KEYS."""
+    return {k: v for k, v in dictionary.items() if k not in AVOID_REFLECT_KEYS}
+
 
 async def validate_input(
     hass: HomeAssistant,
@@ -208,16 +215,12 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_SERIAL: serial,
             CONF_HOST: reauth_entry.data[CONF_HOST],
         }
-        suggested_values: Mapping[str, Any] = {
-            k: v
-            for k, v in (user_input or reauth_entry.data).items()
-            if k not in {CONF_PASSWORD, CONF_TOKEN}
-        }
         description_placeholders["serial"] = serial
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=self.add_suggested_values_to_schema(
-                self._async_generate_schema(), suggested_values
+                self._async_generate_schema(),
+                without_avoid_reflect_keys(user_input or reauth_entry.data),
             ),
             description_placeholders=description_placeholders,
             errors=errors,
@@ -272,20 +275,11 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_SERIAL: self.unique_id,
                 CONF_HOST: host,
             }
-        suggested_values: Mapping[str, Any] = (
-            {
-                k: v
-                for k, v in user_input.items()
-                if k not in {CONF_PASSWORD, CONF_TOKEN}
-            }
-            if user_input
-            else {}
-        )
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
                 self._async_generate_schema(),
-                suggested_values,
+                without_avoid_reflect_keys(user_input or {}),
             ),
             description_placeholders=description_placeholders,
             errors=errors,
@@ -330,16 +324,11 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         description_placeholders["serial"] = serial
 
-        suggested_values: Mapping[str, Any] = {
-            k: v
-            for k, v in (user_input or reconfigure_entry.data).items()
-            if k not in {CONF_PASSWORD, CONF_TOKEN}
-        }
-
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                self._async_generate_schema(), suggested_values
+                self._async_generate_schema(),
+                without_avoid_reflect_keys(user_input or reconfigure_entry.data),
             ),
             description_placeholders=description_placeholders,
             errors=errors,
