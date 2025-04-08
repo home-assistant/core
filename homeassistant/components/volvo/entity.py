@@ -2,13 +2,14 @@
 
 from dataclasses import dataclass
 
+from volvocarsapi.models import VolvoCarsApiBaseModel
+
 from homeassistant.core import callback
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_VIN, DOMAIN
 from .coordinator import VolvoDataCoordinator
-from .volvo_connected.models import VolvoCarsApiBaseModel
 
 
 def get_unique_id(vin: str, key: str) -> str:

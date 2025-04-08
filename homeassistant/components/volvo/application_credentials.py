@@ -1,5 +1,7 @@
 """Application credentials platform for the Volvo integration."""
 
+from volvocarsapi.auth import AUTHORIZE_URL, TOKEN_URL
+
 from homeassistant.components.application_credentials import (
     AuthorizationServer,
     ClientCredential,
@@ -11,7 +13,6 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 
 from .const import SCOPES
-from .volvo_connected.auth import AUTHORIZE_URL, TOKEN_URL
 
 
 async def async_get_auth_implementation(

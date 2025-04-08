@@ -7,6 +7,8 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
+from volvocarsapi.api import VolvoCarsApi
+from volvocarsapi.models import VolvoApiException
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -32,8 +34,6 @@ from .const import (
     OPT_FUEL_UNIT_MPG_US,
 )
 from .coordinator import VolvoConfigEntry, VolvoData
-from .volvo_connected.api import VolvoCarsApi
-from .volvo_connected.models import VolvoApiException
 
 _LOGGER = logging.getLogger(__name__)
 

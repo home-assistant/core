@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from volvocarsapi.auth import AUTHORIZE_URL
 from yarl import URL
 
 from homeassistant import config_entries
@@ -12,7 +13,6 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.volvo.const import CONF_VIN, DOMAIN, SCOPES
-from homeassistant.components.volvo.volvo_connected.auth import AUTHORIZE_URL
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_API_KEY, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow

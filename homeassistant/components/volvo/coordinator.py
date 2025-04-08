@@ -9,6 +9,15 @@ from datetime import timedelta
 import logging
 from typing import Any, cast
 
+from volvocarsapi.api import VolvoCarsApi
+from volvocarsapi.models import (
+    VolvoApiException,
+    VolvoAuthException,
+    VolvoCarsApiBaseModel,
+    VolvoCarsValueField,
+    VolvoCarsVehicle,
+)
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
@@ -16,14 +25,6 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_VIN, DATA_BATTERY_CAPACITY, DOMAIN, MANUFACTURER
-from .volvo_connected.api import VolvoCarsApi
-from .volvo_connected.models import (
-    VolvoApiException,
-    VolvoAuthException,
-    VolvoCarsApiBaseModel,
-    VolvoCarsValueField,
-    VolvoCarsVehicle,
-)
 
 _LOGGER = logging.getLogger(__name__)
 

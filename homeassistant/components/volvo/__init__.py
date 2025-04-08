@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import logging
 
+from volvocarsapi.api import VolvoCarsApi
+
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
@@ -11,7 +13,6 @@ from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 from .api import VolvoAuth
 from .const import CONF_VIN, PLATFORMS
 from .coordinator import VolvoConfigEntry, VolvoData, VolvoDataCoordinator
-from .volvo_connected.api import VolvoCarsApi
 
 _LOGGER = logging.getLogger(__name__)
 

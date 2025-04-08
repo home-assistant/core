@@ -7,6 +7,13 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import Any
 
+from volvocarsapi.models import (
+    VolvoCarsApiBaseModel,
+    VolvoCarsValue,
+    VolvoCarsValueField,
+    VolvoCarsVehicle,
+)
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -36,12 +43,6 @@ from .const import (
 )
 from .coordinator import VolvoConfigEntry, VolvoDataCoordinator
 from .entity import VolvoEntity, VolvoEntityDescription, value_to_translation_key
-from .volvo_connected.models import (
-    VolvoCarsApiBaseModel,
-    VolvoCarsValue,
-    VolvoCarsValueField,
-    VolvoCarsVehicle,
-)
 
 PARALLEL_UPDATES = 0
 

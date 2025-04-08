@@ -18,18 +18,18 @@
           "api_key": "API key"
         },
         "data_description": {
-          "api_key": "API key"
+          "api_key": "The Volvo developers API key (https://developer.volvocars.com/)"
         },
-        "description": "Enter the Volvo developers API key (https://developer.volvocars.com/)."
+        "description": "API"
       },
       "vin": {
         "data": {
-          "vin": "Vehicle Identification Number"
+          "vin": "VIN"
         },
         "data_description": {
-          "vin": "Vehicle Identification Number"
+          "vin": "The Vehicle Identification Number of the vehicle you want to add"
         },
-        "description": "Choose the VIN of the vehicle you want to add."
+        "description": "Vehicle"
       }
     },
     "abort": {
@@ -62,6 +62,9 @@
       "init": {
         "data": {
           "fuel_consumption_unit": "Fuel consumption unit"
+        },
+        "data_description": {
+          "fuel_consumption_unit": "Choose the preferred unit"
         }
       }
     }

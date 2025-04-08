@@ -3,10 +3,9 @@
 from typing import cast
 
 from aiohttp import ClientSession
+from volvocarsapi.auth import AccessTokenManager
 
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
-
-from .volvo_connected.auth import AccessTokenManager
 
 
 # For more info see the docs at https://developers.home-assistant.io/docs/api_lib_auth/#oauth2.

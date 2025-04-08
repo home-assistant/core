@@ -3,6 +3,9 @@
 from unittest.mock import AsyncMock, Mock
 
 import pytest
+from volvocarsapi.api import _API_CONNECTED_ENDPOINT, _API_URL
+from volvocarsapi.auth import TOKEN_URL
+from volvocarsapi.models import VolvoApiException
 
 from homeassistant.components.volvo.const import (
     CONF_VIN,
@@ -12,12 +15,6 @@ from homeassistant.components.volvo.const import (
     OPT_FUEL_UNIT_MPG_UK,
     OPT_FUEL_UNIT_MPG_US,
 )
-from homeassistant.components.volvo.volvo_connected.api import (
-    _API_CONNECTED_ENDPOINT,
-    _API_URL,
-)
-from homeassistant.components.volvo.volvo_connected.auth import TOKEN_URL
-from homeassistant.components.volvo.volvo_connected.models import VolvoApiException
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
