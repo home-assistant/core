@@ -78,11 +78,9 @@ def setup_platform(
         _LOGGER.error("Fail to get zones")
         return
 
-    allZones = [
+    add_entities(
         EphEmberThermostat(ember, zone) for home in homes for zone in home["zones"]
-    ]
-
-    add_entities(allZones)
+    )
 
 
 class EphEmberThermostat(ClimateEntity):
