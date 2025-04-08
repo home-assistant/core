@@ -140,7 +140,6 @@ async def test_dhcp_discovery(hass: HomeAssistant) -> None:
             result["flow_id"],
             MOCK_DHCP_DISCOVERY_INPUT,
         )
-        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_DHCP_DISCOVERY["host"]
