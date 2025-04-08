@@ -439,11 +439,11 @@ class AirPurifier(Fan):
 
         # Automatic mode is represented in HASS by a preset called Auto or auto
         attributes = new_state.attributes
-        current_preset_mode = attributes.get(ATTR_PRESET_MODE)
-        if current_preset_mode is not None:
+        if ATTR_PRESET_MODE in attributes:
+            current_preset_mode = attributes.get(ATTR_PRESET_MODE)
             self.char_target_air_purifier_state.set_value(
                 TARGET_STATE_AUTO
-                if current_preset_mode.lower() == "auto"
+                if current_preset_mode and current_preset_mode.lower() == "auto"
                 else TARGET_STATE_MANUAL
             )
 

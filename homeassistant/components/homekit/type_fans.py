@@ -104,7 +104,12 @@ class Fan(HomeAccessory):
                 properties={PROP_MIN_STEP: percentage_step},
             )
 
-        if self.preset_modes and len(self.preset_modes) == 1:
+        if (
+            self.preset_modes
+            and len(self.preset_modes) == 1
+            # NOTE: This would be missing for air purifiers
+            and CHAR_TARGET_FAN_STATE in self.chars
+        ):
             self.char_target_fan_state = serv_fan.configure_char(
                 CHAR_TARGET_FAN_STATE,
                 value=0,
