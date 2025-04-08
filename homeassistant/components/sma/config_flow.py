@@ -7,6 +7,7 @@ from typing import Any
 
 import pysma
 import voluptuous as vol
+from yarl import URL
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -37,13 +38,11 @@ async def validate_input(
     session = async_get_clientsession(hass, verify_ssl=user_input[CONF_VERIFY_SSL])
 
     protocol = "https" if user_input[CONF_SSL] else "http"
-    # If data is set, it means the data comes from discovery
-    url = (
-        f"{protocol}://{data[CONF_HOST] if data is not None else user_input[CONF_HOST]}"
-    )
+    host = data[CONF_HOST] if data is not None else user_input[CONF_HOST]
+    url = URL.build(scheme=protocol, host=host)
 
     sma = pysma.SMA(
-        session, url, user_input[CONF_PASSWORD], group=user_input[CONF_GROUP]
+        session, str(url), user_input[CONF_PASSWORD], group=user_input[CONF_GROUP]
     )
 
     # new_session raises SmaAuthenticationException on failure
@@ -111,7 +110,9 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
             errors, device_info = await self._handle_user_input(user_input=user_input)
 
             if not errors:
-                await self.async_set_unique_id(str(device_info["serial"]), raise_on_progress=False)
+                await self.async_set_unique_id(
+                    str(device_info["serial"]), raise_on_progress=False
+                )
                 self._abort_if_unique_id_configured(updates=self._data)
 
                 return self.async_create_entry(
@@ -146,7 +147,7 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
         self._data[CONF_HOST] = discovery_info.ip
         self._data[CONF_MAC] = format_mac(self._discovery_data[CONF_MAC])
 
-        await self.async_set_unique_id(str(discovery_info.hostname.replace("SMA", "")))
+        await self.async_set_unique_id(discovery_info.hostname.replace("SMA", ""))
         self._abort_if_unique_id_configured()
 
         return await self.async_step_discovery_confirm()
@@ -162,9 +163,6 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
             if not errors:
-                await self.async_set_unique_id(str(device_info["serial"]))
-                self._abort_if_unique_id_configured(updates=self._data)
-
                 return self.async_create_entry(
                     title=self._data[CONF_HOST], data=self._data
                 )

@@ -27,7 +27,7 @@ from tests.conftest import MockConfigEntry
 
 DHCP_DISCOVERY = DhcpServiceInfo(
     ip="1.1.1.1",
-    hostname="SMA_INVERTER_123456",
+    hostname="SMAINVERTER_123456",
     macaddress="0015BB00abcd",
 )
 
@@ -83,7 +83,9 @@ async def test_form_exceptions(
     )
 
     with (
-        patch("pysma.SMA.new_session", side_effect=exception),
+        patch(
+            "homeassistant.components.sma.pysma.SMA.new_session", side_effect=exception
+        ),
         _patch_async_setup_entry() as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -105,9 +107,14 @@ async def test_form_already_configured(
     )
 
     with (
-        patch("pysma.SMA.new_session", return_value=True),
-        patch("pysma.SMA.device_info", return_value=MOCK_DEVICE),
-        patch("pysma.SMA.close_session", return_value=True),
+        patch("homeassistant.components.sma.pysma.SMA.new_session", return_value=True),
+        patch(
+            "homeassistant.components.sma.pysma.SMA.device_info",
+            return_value=MOCK_DEVICE,
+        ),
+        patch(
+            "homeassistant.components.sma.pysma.SMA.close_session", return_value=True
+        ),
         _patch_async_setup_entry() as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -132,8 +139,11 @@ async def test_dhcp_discovery(hass: HomeAssistant) -> None:
     assert result["step_id"] == "discovery_confirm"
 
     with (
-        patch("pysma.SMA.new_session", return_value=True),
-        patch("pysma.SMA.device_info", return_value=MOCK_DEVICE),
+        patch("homeassistant.components.sma.pysma.SMA.new_session", return_value=True),
+        patch(
+            "homeassistant.components.sma.pysma.SMA.device_info",
+            return_value=MOCK_DEVICE,
+        ),
         _patch_async_setup_entry() as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -144,6 +154,7 @@ async def test_dhcp_discovery(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_DHCP_DISCOVERY["host"]
     assert result["data"] == MOCK_DHCP_DISCOVERY
+    assert result["result"].unique_id == DHCP_DISCOVERY.hostname.replace("SMA", "")
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -179,9 +190,8 @@ async def test_dhcp_exceptions(
         data=DHCP_DISCOVERY,
     )
 
-    with (
-        patch("pysma.SMA.new_session", side_effect=exception),
-        _patch_async_setup_entry() as mock_setup_entry,
+    with patch(
+        "homeassistant.components.sma.pysma.SMA.new_session", side_effect=exception
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -190,4 +200,24 @@ async def test_dhcp_exceptions(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
-    assert len(mock_setup_entry.mock_calls) == 0
+
+    with (
+        patch("homeassistant.components.sma.pysma.SMA.new_session", return_value=True),
+        patch(
+            "homeassistant.components.sma.pysma.SMA.device_info",
+            return_value=MOCK_DEVICE,
+        ),
+        patch(
+            "homeassistant.components.sma.pysma.SMA.close_session", return_value=True
+        ),
+        _patch_async_setup_entry(),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            MOCK_DHCP_DISCOVERY_INPUT,
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == MOCK_DHCP_DISCOVERY["host"]
+    assert result["data"] == MOCK_DHCP_DISCOVERY
+    assert result["result"].unique_id == DHCP_DISCOVERY.hostname.replace("SMA", "")
