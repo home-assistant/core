@@ -55,5 +55,13 @@
     "authentication_failed": {
       "message": "Incorrect credentials for panel."
     }
+  },
+  "entity": {
+    "sensor": {
+      "faulting_points": {
+        "name": "Faulting points",
+        "unit_of_measurement": "points"
+      }
+    }
   }
 }
