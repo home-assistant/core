@@ -67,12 +67,13 @@ class AirPurifier(Fan):
     def __init__(self, *args: Any) -> None:
         """Initialize a new AirPurifier accessory object."""
         super().__init__(*args, category=CATEGORY_AIR_PURIFIER)
-        if self.preset_modes is None:
-            self.auto_preset = None
-        else:
-            self.auto_preset = next(
-                filter(lambda x: ("" + x).lower() == "auto", self.preset_modes), None
-            )
+
+        self.auto_preset: str | None = None
+        if self.preset_modes is not None:
+            for preset in self.preset_modes:
+                if str(preset).lower() == "auto":
+                    self.auto_preset = preset
+                    break
 
     def create_services(self) -> Service:
         """Create and configure the primary service for this accessory."""
