@@ -31,10 +31,9 @@ async def test_setup_config(
 ) -> None:
     """Setup config entry."""
     with patch(
-        "homeassistant.components.gentex_homelink.Provider", autospec=True
+        "homeassistant.components.gentex_homelink.MQTTProvider", autospec=True
     ) as MockProvider:
         instance = MockProvider.return_value
-        instance.get_state.return_value = (None, {})
         instance.discover.return_value = [MockDevice()]
         config_entry = MockConfigEntry(
             domain=DOMAIN,

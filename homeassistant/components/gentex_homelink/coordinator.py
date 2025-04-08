@@ -97,6 +97,6 @@ def on_message(coordinator: HomeLinkCoordinator, _topic, message):
     "MQTT Callback function."
 
     if message["type"] == "state":
-        coordinator.hass.add_job(coordinator.async_set_updated_data, message["data"])
+        coordinator.async_set_updated_data(message["data"])
     if message["type"] == "requestSync":
-        coordinator.hass.add_job(coordinator.async_set_updated_data, message["data"])
+        coordinator.async_set_updated_data(message["data"])

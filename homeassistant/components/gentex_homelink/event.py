@@ -69,11 +69,9 @@ class HomeLinkEventEntity(CoordinatorEntity["HomeLinkCoordinator"], EventEntity)
     @callback
     def _handle_coordinator_update(self) -> None:
         """Update this button."""
-
         if self.id not in self.coordinator.data:
             # Not for us
             return
-
         # Handles debounce case - if we're pressed again, and we have an active stop timer, cancel the previous timer and restart it
         if (
             self.state_attributes["event_type"] == EVENT_PRESSED
@@ -84,6 +82,7 @@ class HomeLinkEventEntity(CoordinatorEntity["HomeLinkCoordinator"], EventEntity)
             return
 
         # If this is the first press, set to off before setting pressed
+
         if self.last_request_id is None:
             self._trigger_event(EVENT_OFF)
 
