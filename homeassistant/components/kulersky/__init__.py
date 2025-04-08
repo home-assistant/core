@@ -1,18 +1,13 @@
 """Kuler Sky lights integration."""
 
 import logging
-from types import MappingProxyType
 
-from homeassistant.components.bluetooth import (
-    DOMAIN as BLUETOOTH_DOMAIN,
-    async_ble_device_from_address,
-)
+from homeassistant.components.bluetooth import async_ble_device_from_address
 from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY, ConfigEntry
 from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.discovery_flow import DiscoveryKey
 
 from .const import DOMAIN
 

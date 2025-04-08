@@ -6,7 +6,11 @@ import pykulersky
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.kulersky.config_flow import DOMAIN
-from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_USER
+from homeassistant.config_entries import (
+    SOURCE_BLUETOOTH,
+    SOURCE_INTEGRATION_DISCOVERY,
+    SOURCE_USER,
+)
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -53,6 +57,40 @@ async def test_bluetooth_discovery(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "KulerLight (EEFF)"
+    assert result["data"] == {
+        CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
+    }
+
+
+async def test_integration_discovery(hass: HomeAssistant) -> None:
+    """Test discovery via bluetooth with a valid device."""
+    with patch(
+        "homeassistant.components.kulersky.config_flow.async_last_service_info",
+        return_value=KULERSKY_SERVICE_INFO,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_INTEGRATION_DISCOVERY},
+            data={CONF_ADDRESS: "AA:BB:CC:DD:EE:FF"},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "KulerLight (EEFF)"
+    assert result["data"] == {
+        CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
+    }
+
+
+async def test_integration_discovery_no_last_service_info(hass: HomeAssistant) -> None:
+    """Test discovery via bluetooth with a valid device."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_INTEGRATION_DISCOVERY},
+        data={CONF_ADDRESS: "AA:BB:CC:DD:EE:FF"},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "AA:BB:CC:DD:EE:FF"
     assert result["data"] == {
         CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
     }
