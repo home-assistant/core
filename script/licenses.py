@@ -191,6 +191,7 @@ EXCEPTIONS = {
     "enocean",  # https://github.com/kipe/enocean/pull/142
     "imutils",  # https://github.com/PyImageSearch/imutils/pull/292
     "iso4217",  # Public domain
+    "jaraco.itertools",  # MIT - https://github.com/jaraco/jaraco.itertools/issues/21
     "kiwiki_client",  # https://github.com/c7h/kiwiki_client/pull/6
     "ld2410-ble",  # https://github.com/930913/ld2410-ble/pull/7
     "maxcube-api",  # https://github.com/uebelack/python-maxcube-api/pull/48
