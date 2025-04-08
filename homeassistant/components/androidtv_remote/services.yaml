@@ -1,9 +1,10 @@
 send_text:
-  target:
-    entity:
-      integration: androidtv_remote
-      domain: remote
   fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: androidtv_remote
     text:
       required: true
       example: "hello world"

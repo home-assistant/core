@@ -55,11 +55,23 @@
       }
     }
   },
+  "exceptions": {
+    "connection_closed": {
+      "message": "Connection to the Android TV device is closed"
+    },
+    "integration_not_found": {
+      "message": "Integration \"{target}\" not found in registry."
+    }
+  },
   "services": {
     "send_text": {
       "name": "Send text",
       "description": "Sends text to an Android TV device.",
       "fields": {
+        "config_entry_id": {
+          "name": "Integration ID",
+          "description": "The Android TV Remote integration ID."
+        },
         "text": {
           "name": "Text",
           "description": "Text to send as input to device."
