@@ -70,10 +70,7 @@ class PanelDoorEntity(SwitchEntity):
             identifiers={(DOMAIN, door_unique_id)},
             name=self._door.name,
             manufacturer="Bosch Security Systems",
-            via_device=(
-                DOMAIN,
-                unique_id,
-            ),
+            via_device=(DOMAIN, unique_id),
         )
         self._door_id = door_id
 
@@ -185,12 +182,7 @@ class PanelOutputEntity(SwitchEntity):
             identifiers={(DOMAIN, self._attr_unique_id)},
             name=self._output.name,
             manufacturer="Bosch Security Systems",
-            model=panel.model,
-            sw_version=panel.firmware_version,
-            via_device=(
-                DOMAIN,
-                unique_id,
-            ),
+            via_device=(DOMAIN, unique_id),
         )
 
     async def async_added_to_hass(self) -> None:
