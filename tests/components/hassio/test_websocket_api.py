@@ -470,13 +470,15 @@ async def test_update_addon_with_backup(
 
 
 @pytest.mark.parametrize(
-    ("backups", "removed_backups"),
+    ("ws_commands", "backups", "removed_backups"),
     [
         (
+            [],
             {},
             [],
         ),
         (
+            [],
             {
                 "backup-1": MagicMock(
                     agents={"hassio.local": MagicMock(spec=AgentBackupStatus)},
@@ -521,6 +523,52 @@ async def test_update_addon_with_backup(
             },
             ["backup-5"],
         ),
+        (
+            [{"type": "hassio/update/config/update", "add_on_backup_retain_copies": 2}],
+            {
+                "backup-1": MagicMock(
+                    agents={"hassio.local": MagicMock(spec=AgentBackupStatus)},
+                    date="2024-11-10T04:45:00+01:00",
+                    with_automatic_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-2": MagicMock(
+                    agents={"hassio.local": MagicMock(spec=AgentBackupStatus)},
+                    date="2024-11-11T04:45:00+01:00",
+                    with_automatic_settings=False,
+                    spec=ManagerBackup,
+                ),
+                "backup-3": MagicMock(
+                    agents={"hassio.local": MagicMock(spec=AgentBackupStatus)},
+                    date="2024-11-11T04:45:00+01:00",
+                    extra_metadata={"supervisor.addon_update": "other"},
+                    with_automatic_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-4": MagicMock(
+                    agents={"hassio.local": MagicMock(spec=AgentBackupStatus)},
+                    date="2024-11-11T04:45:00+01:00",
+                    extra_metadata={"supervisor.addon_update": "other"},
+                    with_automatic_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-5": MagicMock(
+                    agents={"hassio.local": MagicMock(spec=AgentBackupStatus)},
+                    date="2024-11-11T04:45:00+01:00",
+                    extra_metadata={"supervisor.addon_update": "test"},
+                    with_automatic_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-6": MagicMock(
+                    agents={"hassio.local": MagicMock(spec=AgentBackupStatus)},
+                    date="2024-11-12T04:45:00+01:00",
+                    extra_metadata={"supervisor.addon_update": "test"},
+                    with_automatic_settings=True,
+                    spec=ManagerBackup,
+                ),
+            },
+            [],
+        ),
     ],
 )
 async def test_update_addon_with_backup_removes_old_backups(
@@ -528,6 +576,7 @@ async def test_update_addon_with_backup_removes_old_backups(
     hass_ws_client: WebSocketGenerator,
     supervisor_client: AsyncMock,
     update_addon: AsyncMock,
+    ws_commands: list[dict[str, Any]],
     backups: dict[str, ManagerBackup],
     removed_backups: list[str],
 ) -> None:
@@ -545,6 +594,12 @@ async def test_update_addon_with_backup_removes_old_backups(
     await setup_backup_integration(hass)
 
     client = await hass_ws_client(hass)
+
+    for command in ws_commands:
+        await client.send_json_auto_id(command)
+        result = await client.receive_json()
+        assert result["success"]
+
     supervisor_client.mounts.info.return_value.default_backup_mount = None
     with (
         patch(
