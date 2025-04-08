@@ -7,7 +7,6 @@ import logging
 
 from fyta_cli.fyta_connector import FytaConnector
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_PASSWORD,
@@ -19,15 +18,15 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.dt import async_get_time_zone
 
 from .const import CONF_EXPIRATION
-from .coordinator import FytaCoordinator
+from .coordinator import FytaConfigEntry, FytaCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.IMAGE,
     Platform.SENSOR,
 ]
-type FytaConfigEntry = ConfigEntry[FytaCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: FytaConfigEntry) -> bool:
@@ -45,7 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FytaConfigEntry) -> bool
         username, password, access_token, expiration, tz, async_get_clientsession(hass)
     )
 
-    coordinator = FytaCoordinator(hass, fyta)
+    coordinator = FytaCoordinator(hass, entry, fyta)
 
     await coordinator.async_config_entry_first_refresh()
 

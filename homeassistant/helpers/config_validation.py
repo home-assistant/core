@@ -107,8 +107,11 @@ from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.generated import currencies
 from homeassistant.generated.countries import COUNTRIES
 from homeassistant.generated.languages import LANGUAGES
-from homeassistant.util import raise_if_invalid_path, slugify as util_slugify
-import homeassistant.util.dt as dt_util
+from homeassistant.util import (
+    dt as dt_util,
+    raise_if_invalid_path,
+    slugify as util_slugify,
+)
 from homeassistant.util.yaml.objects import NodeStrClass
 
 from . import script_variables as script_variables_helper, template as template_helper
@@ -1150,41 +1153,6 @@ def _custom_serializer(schema: Any, *, allow_section: bool) -> Any:
     return voluptuous_serialize.UNSUPPORTED
 
 
-def expand_condition_shorthand(value: Any | None) -> Any:
-    """Expand boolean condition shorthand notations."""
-
-    if not isinstance(value, dict) or CONF_CONDITIONS in value:
-        return value
-
-    for key, schema in (
-        ("and", AND_CONDITION_SHORTHAND_SCHEMA),
-        ("or", OR_CONDITION_SHORTHAND_SCHEMA),
-        ("not", NOT_CONDITION_SHORTHAND_SCHEMA),
-    ):
-        try:
-            schema(value)
-            return {
-                CONF_CONDITION: key,
-                CONF_CONDITIONS: value[key],
-                **{k: value[k] for k in value if k != key},
-            }
-        except vol.MultipleInvalid:
-            pass
-
-    if isinstance(value.get(CONF_CONDITION), list):
-        try:
-            CONDITION_SHORTHAND_SCHEMA(value)
-            return {
-                CONF_CONDITION: "and",
-                CONF_CONDITIONS: value[CONF_CONDITION],
-                **{k: value[k] for k in value if k != CONF_CONDITION},
-            }
-        except vol.MultipleInvalid:
-            pass
-
-    return value
-
-
 # Schemas
 def empty_config_schema(domain: str) -> Callable[[dict], dict]:
     """Return a config schema which logs if there are configuration parameters."""
@@ -1680,7 +1648,43 @@ DEVICE_CONDITION_BASE_SCHEMA = vol.Schema(
 
 DEVICE_CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
 
-dynamic_template_condition_action = vol.All(
+
+def expand_condition_shorthand(value: Any | None) -> Any:
+    """Expand boolean condition shorthand notations."""
+
+    if not isinstance(value, dict) or CONF_CONDITIONS in value:
+        return value
+
+    for key, schema in (
+        ("and", AND_CONDITION_SHORTHAND_SCHEMA),
+        ("or", OR_CONDITION_SHORTHAND_SCHEMA),
+        ("not", NOT_CONDITION_SHORTHAND_SCHEMA),
+    ):
+        try:
+            schema(value)
+            return {
+                CONF_CONDITION: key,
+                CONF_CONDITIONS: value[key],
+                **{k: value[k] for k in value if k != key},
+            }
+        except vol.MultipleInvalid:
+            pass
+
+    if isinstance(value.get(CONF_CONDITION), list):
+        try:
+            CONDITION_SHORTHAND_SCHEMA(value)
+            return {
+                CONF_CONDITION: "and",
+                CONF_CONDITIONS: value[CONF_CONDITION],
+                **{k: value[k] for k in value if k != CONF_CONDITION},
+            }
+        except vol.MultipleInvalid:
+            pass
+
+    return value
+
+
+dynamic_template_condition = vol.All(
     # Wrap a shorthand template condition in a template condition
     dynamic_template,
     lambda config: {
@@ -1721,7 +1725,7 @@ CONDITION_SCHEMA: vol.Schema = vol.Schema(
                 },
             ),
         ),
-        dynamic_template_condition_action,
+        dynamic_template_condition,
     )
 )
 
@@ -1870,12 +1874,8 @@ _SCRIPT_REPEAT_SCHEMA = vol.Schema(
                 vol.Exclusive(CONF_FOR_EACH, "repeat"): vol.Any(
                     dynamic_template, vol.All(list, template_complex)
                 ),
-                vol.Exclusive(CONF_WHILE, "repeat"): vol.All(
-                    ensure_list, [CONDITION_SCHEMA]
-                ),
-                vol.Exclusive(CONF_UNTIL, "repeat"): vol.All(
-                    ensure_list, [CONDITION_SCHEMA]
-                ),
+                vol.Exclusive(CONF_WHILE, "repeat"): CONDITIONS_SCHEMA,
+                vol.Exclusive(CONF_UNTIL, "repeat"): CONDITIONS_SCHEMA,
                 vol.Required(CONF_SEQUENCE): SCRIPT_SCHEMA,
             },
             has_at_least_one_key(CONF_COUNT, CONF_FOR_EACH, CONF_WHILE, CONF_UNTIL),
@@ -1891,9 +1891,7 @@ _SCRIPT_CHOOSE_SCHEMA = vol.Schema(
             [
                 {
                     vol.Optional(CONF_ALIAS): string,
-                    vol.Required(CONF_CONDITIONS): vol.All(
-                        ensure_list, [CONDITION_SCHEMA]
-                    ),
+                    vol.Required(CONF_CONDITIONS): CONDITIONS_SCHEMA,
                     vol.Required(CONF_SEQUENCE): SCRIPT_SCHEMA,
                 }
             ],
@@ -1914,7 +1912,7 @@ _SCRIPT_WAIT_FOR_TRIGGER_SCHEMA = vol.Schema(
 _SCRIPT_IF_SCHEMA = vol.Schema(
     {
         **SCRIPT_ACTION_BASE_SCHEMA,
-        vol.Required(CONF_IF): vol.All(ensure_list, [CONDITION_SCHEMA]),
+        vol.Required(CONF_IF): CONDITIONS_SCHEMA,
         vol.Required(CONF_THEN): SCRIPT_SCHEMA,
         vol.Optional(CONF_ELSE): SCRIPT_SCHEMA,
     }

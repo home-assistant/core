@@ -73,6 +73,9 @@
       },
       "power_limit": {
         "default": "mdi:flash-alert"
+      },
+      "hall_effect_sleep_time": {
+        "default": "mdi:timer-sand"
       }
     },
     "select": {
@@ -105,6 +108,9 @@
       },
       "usb_pd_mode": {
         "default": "mdi:meter-electric-outline"
+      },
+      "tip_type": {
+        "default": "mdi:pencil-outline"
       }
     },
     "sensor": {
@@ -154,7 +160,16 @@
           "soldering": "mdi:soldering-iron",
           "sleeping": "mdi:sleep",
           "settings": "mdi:menu-open",
-          "debug": "mdi:bug-play"
+          "debug": "mdi:bug-play",
+          "soldering_profile": "mdi:chart-box-outline",
+          "temperature_adjust": "mdi:thermostat-box",
+          "usb_pd_debug": "mdi:bug-play",
+          "thermal_runaway": "mdi:fire-alert",
+          "startup_logo": "mdi:dots-circle",
+          "cjc_calibration": "mdi:tune-vertical",
+          "startup_warnings": "mdi:alert",
+          "initialisation_done": "mdi:check-circle",
+          "hibernating": "mdi:sleep"
         }
       },
       "estimated_power": {

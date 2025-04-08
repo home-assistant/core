@@ -12,12 +12,11 @@ from homeassistant.components.todo import (
     TodoListEntityFeature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from .coordinator import TaskUpdateCoordinator
-from .types import GoogleTasksConfigEntry
+from .coordinator import GoogleTasksConfigEntry, TaskUpdateCoordinator
 
 PARALLEL_UPDATES = 0
 
@@ -69,7 +68,7 @@ def _convert_api_item(item: dict[str, str]) -> TodoItem:
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: GoogleTasksConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Google Tasks todo platform."""
     async_add_entities(

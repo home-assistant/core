@@ -186,12 +186,12 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
 
         pattern = re.compile(search)
         return (
-            hasattr(vevent, "summary")
-            and pattern.match(vevent.summary.value)
-            or hasattr(vevent, "location")
-            and pattern.match(vevent.location.value)
-            or hasattr(vevent, "description")
-            and pattern.match(vevent.description.value)
+            (hasattr(vevent, "summary") and pattern.match(vevent.summary.value))
+            or (hasattr(vevent, "location") and pattern.match(vevent.location.value))
+            or (
+                hasattr(vevent, "description")
+                and pattern.match(vevent.description.value)
+            )
         )
 
     @staticmethod

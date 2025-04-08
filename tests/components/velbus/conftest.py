@@ -96,7 +96,7 @@ def mock_module_subdevices() -> AsyncMock:
     """Mock a velbus module."""
     module = AsyncMock(spec=Module)
     module.get_type_name.return_value = "VMB2BLE"
-    module.get_addresses.return_value = [99]
+    module.get_addresses.return_value = [88]
     module.get_name.return_value = "Kitchen"
     module.get_sw_version.return_value = "2.0.0"
     module.is_loaded.return_value = True

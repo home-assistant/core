@@ -9,6 +9,7 @@ from aiohttp import ClientError
 from awesomeversion import AwesomeVersion
 from ttls.client import Twinkly, TwinklyError
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -16,6 +17,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import DEV_NAME, DOMAIN, MIN_EFFECT_VERSION
 
 _LOGGER = logging.getLogger(__name__)
+
+type TwinklyConfigEntry = ConfigEntry[TwinklyCoordinator]
 
 
 @dataclass
@@ -33,15 +36,19 @@ class TwinklyData:
 class TwinklyCoordinator(DataUpdateCoordinator[TwinklyData]):
     """Class to manage fetching Twinkly data from API."""
 
+    config_entry: TwinklyConfigEntry
     software_version: str
     supports_effects: bool
     device_name: str
 
-    def __init__(self, hass: HomeAssistant, client: Twinkly) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: TwinklyConfigEntry, client: Twinkly
+    ) -> None:
         """Initialize global Twinkly data updater."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=30),
         )

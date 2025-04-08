@@ -73,13 +73,13 @@ class PlaatoEntity(entity.Entity):
         return None
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return if sensor is available."""
         if self._coordinator is not None:
             return self._coordinator.last_update_success
         return True
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         if self._coordinator is not None:
             self.async_on_remove(

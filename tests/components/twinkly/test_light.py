@@ -140,7 +140,7 @@ async def test_turn_on_with_color_rgbw(
     )
 
     mock_twinkly_client.interview.assert_called_once_with()
-    mock_twinkly_client.set_static_colour.assert_called_once_with((128, 64, 32))
+    mock_twinkly_client.set_static_colour.assert_called_once_with((0, 128, 64, 32))
     mock_twinkly_client.set_mode.assert_called_once_with("color")
     assert mock_twinkly_client.default_mode == "color"
 

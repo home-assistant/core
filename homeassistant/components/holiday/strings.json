@@ -8,7 +8,7 @@
     "step": {
       "user": {
         "data": {
-          "country": "Country"
+          "country": "[%key:common::config_flow::data::country%]"
         }
       },
       "options": {

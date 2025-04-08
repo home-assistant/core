@@ -17,13 +17,13 @@ from homeassistant.components.recorder.queries import select_event_type_ids
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.core import Event, EventOrigin, State
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .common import async_wait_recording_done
 from .conftest import instrument_migration
 
 from tests.common import async_test_home_assistant
-from tests.typing import RecorderInstanceGenerator
+from tests.typing import RecorderInstanceContextManager
 
 CREATE_ENGINE_TARGET = "homeassistant.components.recorder.core.create_engine"
 SCHEMA_MODULE_30 = "tests.components.recorder.db_schema_30"
@@ -73,7 +73,7 @@ def _create_engine_test(
 @pytest.mark.parametrize("persistent_database", [True])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_migrate_times(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test we can migrate times in the events and states tables.
@@ -240,7 +240,7 @@ async def test_migrate_times(
 @pytest.mark.parametrize("persistent_database", [True])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_migrate_can_resume_entity_id_post_migration(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
     caplog: pytest.LogCaptureFixture,
     recorder_db_url: str,
 ) -> None:
@@ -351,7 +351,7 @@ async def test_migrate_can_resume_entity_id_post_migration(
 @pytest.mark.parametrize("persistent_database", [True])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_migrate_can_resume_ix_states_event_id_removed(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
     caplog: pytest.LogCaptureFixture,
     recorder_db_url: str,
 ) -> None:
@@ -490,7 +490,7 @@ async def test_migrate_can_resume_ix_states_event_id_removed(
 @pytest.mark.parametrize("persistent_database", [True])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_out_of_disk_space_while_rebuild_states_table(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
     caplog: pytest.LogCaptureFixture,
     recorder_db_url: str,
 ) -> None:
@@ -670,7 +670,7 @@ async def test_out_of_disk_space_while_rebuild_states_table(
 @pytest.mark.parametrize("persistent_database", [True])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_out_of_disk_space_while_removing_foreign_key(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
     caplog: pytest.LogCaptureFixture,
     recorder_db_url: str,
 ) -> None:

@@ -33,6 +33,3 @@ RUSSIA_URL = "apirus.ezvizru.com"
 DEFAULT_CAMERA_USERNAME = "admin"
 DEFAULT_TIMEOUT = 25
 DEFAULT_FFMPEG_ARGUMENTS = ""
-
-# Data
-DATA_COORDINATOR = "coordinator"

@@ -88,9 +88,6 @@ rules:
       While unlikely to happen. Check if it is easily integrated.
 
   # Platinum
-  async-dependency:
-    status: todo
-    comment: |
-      Dependency uses asyncio.to_thread, but this is not real async.
-  inject-websession: todo
+  async-dependency: done
+  inject-websession: done
   strict-typing: todo

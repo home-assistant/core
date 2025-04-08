@@ -9,7 +9,7 @@ from lektricowifi import Device
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import ATTR_SERIAL_NUMBER, CONF_TYPE, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import LektricoConfigEntry, LektricoDeviceDataUpdateCoordinator
 from .entity import LektricoEntity
@@ -46,7 +46,7 @@ SELECTS: tuple[LektricoSelectEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: LektricoConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Lektrico select entities based on a config entry."""
 

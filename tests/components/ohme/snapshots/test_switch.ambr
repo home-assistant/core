@@ -6,6 +6,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -45,6 +46,53 @@
     'state': 'on',
   })
 # ---
+# name: test_switches[switch.ohme_home_pro_price_cap-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.ohme_home_pro_price_cap',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Price cap',
+    'platform': 'ohme',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'price_cap',
+    'unique_id': 'chargerid_price_cap',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[switch.ohme_home_pro_price_cap-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Ohme Home Pro Price cap',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.ohme_home_pro_price_cap',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_switches[switch.ohme_home_pro_require_approval-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -52,6 +100,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -98,6 +147,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,

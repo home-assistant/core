@@ -3,8 +3,8 @@
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import BraviaTVCoordinator
 from .const import ATTR_MANUFACTURER, DOMAIN
+from .coordinator import BraviaTVCoordinator
 
 
 class BraviaTVEntity(CoordinatorEntity[BraviaTVCoordinator]):

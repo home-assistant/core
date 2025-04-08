@@ -26,6 +26,9 @@
     },
     "effect_stop": {
       "service": "mdi:stop"
+    },
+    "paint_theme": {
+      "service": "mdi:palette"
     }
   }
 }

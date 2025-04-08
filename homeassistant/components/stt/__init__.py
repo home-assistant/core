@@ -49,20 +49,20 @@ from .legacy import (
 from .models import SpeechMetadata, SpeechResult
 
 __all__ = [
-    "async_get_provider",
-    "async_get_speech_to_text_engine",
-    "async_get_speech_to_text_entity",
+    "DOMAIN",
     "AudioBitRates",
     "AudioChannels",
     "AudioCodecs",
     "AudioFormats",
     "AudioSampleRates",
-    "DOMAIN",
     "Provider",
-    "SpeechToTextEntity",
     "SpeechMetadata",
     "SpeechResult",
     "SpeechResultState",
+    "SpeechToTextEntity",
+    "async_get_provider",
+    "async_get_speech_to_text_engine",
+    "async_get_speech_to_text_entity",
 ]
 
 _LOGGER = logging.getLogger(__name__)

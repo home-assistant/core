@@ -14,7 +14,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import CONF_LIGHTS
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 

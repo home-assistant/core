@@ -17,6 +17,11 @@
       "subscription_expiration": "Subscription expiration"
     }
   },
+  "exceptions": {
+    "backup_size_too_large": {
+      "message": "The backup size of {size}GB is too large to be uploaded to Home Assistant Cloud."
+    }
+  },
   "issues": {
     "deprecated_gender": {
       "title": "The {deprecated_option} text-to-speech option is deprecated",

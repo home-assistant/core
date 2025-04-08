@@ -6,8 +6,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from homeassistant import config as hass_config
-from homeassistant.components.group import DOMAIN, SERVICE_RELOAD
-import homeassistant.components.group.light as group
+from homeassistant.components.group import DOMAIN, SERVICE_RELOAD, light as group
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,

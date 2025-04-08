@@ -21,9 +21,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
-from homeassistant.helpers import frame
 from homeassistant.setup import async_setup_component
-import homeassistant.util.color as color_util
+from homeassistant.util import color as color_util
 
 from .common import MockLight
 
@@ -2626,7 +2625,9 @@ def test_filter_supported_color_modes() -> None:
     assert light.filter_supported_color_modes(supported) == {light.ColorMode.BRIGHTNESS}
 
 
-def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) -> None:
+def test_deprecated_supported_features_ints(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test deprecated supported features ints."""
 
     class MockLightEntityEntity(light.LightEntity):
@@ -2636,6 +2637,8 @@ def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) ->
             return 1
 
     entity = MockLightEntityEntity()
+    entity.hass = hass
+    entity.platform = MockEntityPlatform(hass, domain="test", platform_name="test")
     assert entity.supported_features_compat is light.LightEntityFeature(1)
     assert "MockLightEntityEntity" in caplog.text
     assert "is using deprecated supported features values" in caplog.text
@@ -2654,7 +2657,7 @@ def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) ->
         (light.ColorMode.ONOFF, {light.ColorMode.ONOFF}, False),
     ],
 )
-def test_report_no_color_mode(
+async def test_report_no_color_mode(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     color_mode: str,
@@ -2670,6 +2673,8 @@ def test_report_no_color_mode(
         _attr_supported_color_modes = supported_color_modes
 
     entity = MockLightEntityEntity()
+    platform = MockEntityPlatform(hass, domain="test", platform_name="test")
+    await platform.async_add_entities([entity])
     entity._async_calculate_state()
     expected_warning = "does not report a color mode"
     assert (expected_warning in caplog.text) is warning_expected
@@ -2682,7 +2687,7 @@ def test_report_no_color_mode(
         (light.ColorMode.ONOFF, {light.ColorMode.ONOFF}, False),
     ],
 )
-def test_report_no_color_modes(
+async def test_report_no_color_modes(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     color_mode: str,
@@ -2698,6 +2703,8 @@ def test_report_no_color_modes(
         _attr_supported_color_modes = supported_color_modes
 
     entity = MockLightEntityEntity()
+    platform = MockEntityPlatform(hass, domain="test", platform_name="test")
+    await platform.async_add_entities([entity])
     entity._async_calculate_state()
     expected_warning = "does not set supported color modes"
     assert (expected_warning in caplog.text) is warning_expected
@@ -2728,7 +2735,7 @@ def test_report_no_color_modes(
         (light.ColorMode.HS, {light.ColorMode.BRIGHTNESS}, "effect", True),
     ],
 )
-def test_report_invalid_color_mode(
+async def test_report_invalid_color_mode(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     color_mode: str,
@@ -2746,6 +2753,8 @@ def test_report_invalid_color_mode(
         _attr_supported_color_modes = supported_color_modes
 
     entity = MockLightEntityEntity()
+    platform = MockEntityPlatform(hass, domain="test", platform_name="test")
+    await platform.async_add_entities([entity])
     entity._async_calculate_state()
     expected_warning = f"set to unsupported color mode {color_mode}"
     assert (expected_warning in caplog.text) is warning_expected
@@ -2836,7 +2845,6 @@ def test_report_invalid_color_modes(
     ],
     ids=["with_kelvin", "with_mired_values", "with_mired_defaults"],
 )
-@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 def test_missing_kelvin_property_warnings(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,

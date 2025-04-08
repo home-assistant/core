@@ -20,18 +20,23 @@ type StookwijzerConfigEntry = ConfigEntry[StookwijzerCoordinator]
 class StookwijzerCoordinator(DataUpdateCoordinator[None]):
     """Stookwijzer update coordinator."""
 
-    def __init__(self, hass: HomeAssistant, entry: StookwijzerConfigEntry) -> None:
+    config_entry: StookwijzerConfigEntry
+
+    def __init__(
+        self, hass: HomeAssistant, config_entry: StookwijzerConfigEntry
+    ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
             LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
         )
         self.client = Stookwijzer(
             async_get_clientsession(hass),
-            entry.data[CONF_LATITUDE],
-            entry.data[CONF_LONGITUDE],
+            config_entry.data[CONF_LATITUDE],
+            config_entry.data[CONF_LONGITUDE],
         )
 
     async def _async_update_data(self) -> None:

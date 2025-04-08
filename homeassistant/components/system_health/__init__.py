@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable
+from collections.abc import AsyncGenerator, Awaitable, Callable
 import dataclasses
 from datetime import datetime
 import logging
@@ -101,6 +101,57 @@ async def get_integration_info(
     return result
 
 
+async def _registered_domain_data(
+    hass: HomeAssistant,
+) -> AsyncGenerator[tuple[str, dict[str, Any]]]:
+    registrations: dict[str, SystemHealthRegistration] = hass.data[DOMAIN]
+    for domain, domain_data in zip(
+        registrations,
+        await asyncio.gather(
+            *(
+                get_integration_info(hass, registration)
+                for registration in registrations.values()
+            )
+        ),
+        strict=False,
+    ):
+        yield domain, domain_data
+
+
+async def get_info(hass: HomeAssistant) -> dict[str, dict[str, str]]:
+    """Get the full set of system health information."""
+    domains: dict[str, dict[str, Any]] = {}
+
+    async def _get_info_value(value: Any) -> Any:
+        if not asyncio.iscoroutine(value):
+            return value
+        try:
+            return await value
+        except Exception as exception:
+            _LOGGER.exception("Error fetching system info for %s - %s", domain, key)
+            return f"Exception: {exception}"
+
+    async for domain, domain_data in _registered_domain_data(hass):
+        domain_info: dict[str, Any] = {}
+        for key, value in domain_data["info"].items():
+            info_value = await _get_info_value(value)
+
+            if isinstance(info_value, datetime):
+                domain_info[key] = info_value.isoformat()
+            elif (
+                isinstance(info_value, dict)
+                and "type" in info_value
+                and info_value["type"] == "failed"
+            ):
+                domain_info[key] = f"Failed: {info_value.get('error', 'unknown')}"
+            else:
+                domain_info[key] = info_value
+
+        domains[domain] = domain_info
+
+    return domains
+
+
 @callback
 def _format_value(val: Any) -> Any:
     """Format a system health value."""
@@ -115,20 +166,10 @@ async def handle_info(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle an info request via a subscription."""
-    registrations: dict[str, SystemHealthRegistration] = hass.data[DOMAIN]
     data = {}
     pending_info: dict[tuple[str, str], asyncio.Task] = {}
 
-    for domain, domain_data in zip(
-        registrations,
-        await asyncio.gather(
-            *(
-                get_integration_info(hass, registration)
-                for registration in registrations.values()
-            )
-        ),
-        strict=False,
-    ):
+    async for domain, domain_data in _registered_domain_data(hass):
         for key, value in domain_data["info"].items():
             if asyncio.iscoroutine(value):
                 value = asyncio.create_task(value)
@@ -179,7 +220,7 @@ async def handle_info(
         # Update subscription of all finished tasks
         for result in done:
             domain, key = pending_lookup[result]
-            event_msg = {
+            event_msg: dict[str, Any] = {
                 "type": "update",
                 "domain": domain,
                 "key": key,

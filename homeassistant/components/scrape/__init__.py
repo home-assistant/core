@@ -19,8 +19,11 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import discovery, entity_registry as er
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import (
+    config_validation as cv,
+    discovery,
+    entity_registry as er,
+)
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.trigger_template_entity import (
     CONF_AVAILABILITY,

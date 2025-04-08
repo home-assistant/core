@@ -1,4 +1,4 @@
-"""Tests for the diagnostics data provided by LG webOS Smart TV."""
+"""Tests for the diagnostics data provided by LG webOS TV."""
 
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props

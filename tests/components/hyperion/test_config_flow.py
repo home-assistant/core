@@ -10,7 +10,6 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from hyperion import const
 
-from homeassistant.components import ssdp
 from homeassistant.components.hyperion.const import (
     CONF_AUTH_ID,
     CONF_CREATE_TOKEN,
@@ -30,6 +29,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult, FlowResultType
+from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
 from . import (
     TEST_AUTH_REQUIRED_RESP,
@@ -67,7 +67,7 @@ TEST_REQUEST_TOKEN_FAIL = {
     "error": "Token request timeout or denied",
 }
 
-TEST_SSDP_SERVICE_INFO = ssdp.SsdpServiceInfo(
+TEST_SSDP_SERVICE_INFO = SsdpServiceInfo(
     ssdp_st="upnp:rootdevice",
     ssdp_location=f"http://{TEST_HOST}:{TEST_PORT_UI}/description.xml",
     ssdp_usn=f"uuid:{TEST_SYSINFO_ID}",
