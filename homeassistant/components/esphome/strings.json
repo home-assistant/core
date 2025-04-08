@@ -137,7 +137,7 @@
         "step": {
           "start": {
             "title": "Device conflict for {name}",
-            "description": "**The ESPHome device `{name}` (`{model}`) at `{ip}` has reported a MAC address change from `{stored_mac}` to `{mac}`.**\n\nIf you have multiple devices with the same name, please rename or remove the one with MAC address `{mac}` to avoid conflicts.\n\nIf this is a hardware replacement, please confirm that you would like to migrate the Home Assistant configuration to the new device."
+            "description": "**The ESPHome device `{name}` (`{model}`) at `{ip}` has reported a MAC address change from `{stored_mac}` to `{mac}`.**\n\nIf you have multiple devices with the same name, please rename or remove the one with MAC address `{mac}` to avoid conflicts.\n\nIf this is a hardware replacement, please confirm that you would like to migrate the Home Assistant configuration to the new device with MAC address `{mac}`."
           },
           "migrate": {
             "title": "Confirm device replacement for {name}",
@@ -145,7 +145,7 @@
           },
           "manual": {
             "title": "Remove or rename device {name}",
-            "description": "To resolve the conflict, either remove the device with MAC address {mac} from the network or re-flash it with a different name than {name}, and confirm when done."
+            "description": "To resolve the conflict, either remove the device with MAC address `{mac}` from the network or re-flash it with a different name than `{name}`, and submit when done."
           }
         }
       }
