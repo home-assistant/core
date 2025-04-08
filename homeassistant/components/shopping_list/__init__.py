@@ -262,11 +262,10 @@ class ShoppingData:
         complete_item = None
 
         for item in self.items:
-            if item["name"] == name and not item["complete"]:
-                complete_item = item
-                break
             if item["name"] == name:
                 complete_item = item
+            if not item["complete"]:
+                break
 
         if complete_item is None:
             raise NoMatchingShoppingListItem
