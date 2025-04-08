@@ -3151,7 +3151,7 @@ async def test_websocket_config(
     assert msg["error"]["code"] == "not_found"
 
 
-async def test_websocket_describe_all(
+async def test_websocket_all_descriptions(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test describe_all command."""
@@ -3168,7 +3168,7 @@ async def test_websocket_describe_all(
     await client.send_json(
         {
             "id": 5,
-            "type": "automation/describe_all",
+            "type": "automation/description/all",
         }
     )
 

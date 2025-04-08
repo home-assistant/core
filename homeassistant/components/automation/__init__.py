@@ -318,7 +318,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     websocket_api.async_register_command(hass, websocket_config)
-    websocket_api.async_register_command(hass, websocket_describe_all_automations)
+    websocket_api.async_register_command(hass, websocket_all_automation_descriptions)
 
     return True
 
@@ -1198,10 +1198,10 @@ def websocket_config(
 
 @websocket_api.websocket_command(
     {
-        "type": "automation/describe_all",
+        "type": "automation/description/all",
     }
 )
-def websocket_describe_all_automations(
+def websocket_all_automation_descriptions(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
