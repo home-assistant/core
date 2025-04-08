@@ -166,6 +166,7 @@ SENSORS = [
     WeHeatSensorEntityDescription(
         translation_key="central_heating_flow_volume",
         key="central_heating_flow_volume",
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=DISPLAY_PRECISION_FLOW,
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
@@ -195,6 +196,7 @@ DHW_SENSORS = [
     WeHeatSensorEntityDescription(
         translation_key="dhw_flow_volume",
         key="dhw_flow_volume",
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=DISPLAY_PRECISION_FLOW,
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
