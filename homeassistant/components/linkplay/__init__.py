@@ -46,9 +46,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: LinkPlayConfigEntry) -> 
     hass.data.setdefault(DOMAIN, {})
     if SHARED_DATA not in hass.data[DOMAIN]:
         controller = LinkPlayController(session)
-        hass.data[SHARED_DATA_KEY] = LinkPlaySharedData(controller, {})
+        hass.data[DOMAIN][SHARED_DATA_KEY] = LinkPlaySharedData(controller, {})
     else:
-        controller = hass.data[SHARED_DATA_KEY].controller
+        controller = hass.data[DOMAIN][SHARED_DATA_KEY].controller
 
     await controller.add_bridge(bridge)
     await controller.discover_multirooms()
