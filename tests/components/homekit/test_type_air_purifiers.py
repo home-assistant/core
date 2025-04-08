@@ -1,5 +1,7 @@
 """Test different accessory types: Air Purifiers."""
 
+from unittest.mock import MagicMock
+
 from pyhap.const import HAP_REPR_AID, HAP_REPR_CHARS, HAP_REPR_IID, HAP_REPR_VALUE
 import pytest
 
@@ -316,17 +318,70 @@ async def test_expose_linked_sensors(
     assert acc.char_air_quality.value == 2
     assert acc.char_current_temperature.value == 25
 
+    # Updated humidity should reflect in HomeKit
+    broker = MagicMock()
+    acc.char_current_humidity.broker = broker
     hass.states.async_set(humidity_entity_id, 60)
     await hass.async_block_till_done()
     assert acc.char_current_humidity.value == 60
+    assert len(broker.mock_calls) == 2
+    broker.reset_mock()
 
+    # Change to same state should not trigger update in HomeKit
+    hass.states.async_set(humidity_entity_id, 60, force_update=True)
+    await hass.async_block_till_done()
+    assert acc.char_current_humidity.value == 60
+    assert len(broker.mock_calls) == 0
+
+    # Updated PM2.5 should reflect in HomeKit
+    broker = MagicMock()
+    acc.char_pm25_density.broker = broker
+    acc.char_air_quality.broker = broker
     hass.states.async_set(pm25_entity_id, 5)
     await hass.async_block_till_done()
     assert acc.char_pm25_density.value == 5
     assert acc.char_air_quality.value == 1
+    assert len(broker.mock_calls) == 4
+    broker.reset_mock()
 
+    # Change to same state should not trigger update in HomeKit
+    hass.states.async_set(pm25_entity_id, 5, force_update=True)
+    await hass.async_block_till_done()
+    assert acc.char_pm25_density.value == 5
+    assert acc.char_air_quality.value == 1
+    assert len(broker.mock_calls) == 0
+
+    # Updated temperature should reflect in HomeKit
+    broker = MagicMock()
+    acc.char_current_temperature.broker = broker
     hass.states.async_set(temperature_entity_id, 30)
     await hass.async_block_till_done()
+    assert acc.char_current_temperature.value == 30
+    assert len(broker.mock_calls) == 2
+    broker.reset_mock()
+
+    # Change to same state should not trigger update in HomeKit
+    hass.states.async_set(temperature_entity_id, 30, force_update=True)
+    await hass.async_block_till_done()
+    assert acc.char_current_temperature.value == 30
+    assert len(broker.mock_calls) == 0
+
+    # Check that all goes well if we remove the linked sensors
+    hass.states.async_remove(humidity_entity_id)
+    hass.states.async_remove(pm25_entity_id)
+    hass.states.async_remove(temperature_entity_id)
+    await hass.async_block_till_done()
+    acc.run()
+    await hass.async_block_till_done()
+    assert len(acc.char_current_humidity.broker.mock_calls) == 0
+    assert len(acc.char_pm25_density.broker.mock_calls) == 0
+    assert len(acc.char_air_quality.broker.mock_calls) == 0
+    assert len(acc.char_current_temperature.broker.mock_calls) == 0
+
+    # HomeKit will show the last known values
+    assert acc.char_current_humidity.value == 60
+    assert acc.char_pm25_density.value == 5
+    assert acc.char_air_quality.value == 1
     assert acc.char_current_temperature.value == 30
 
 
@@ -374,12 +429,49 @@ async def test_filter_maintenance_linked_sensors(
     assert acc.char_filter_change_indication.value == FILTER_OK
     assert acc.char_filter_life_level.value == 50
 
+    # Updated filter change indicator should reflect in HomeKit
+    broker = MagicMock()
+    acc.char_filter_change_indication.broker = broker
     hass.states.async_set(filter_change_indicator_entity_id, STATE_ON)
     await hass.async_block_till_done()
     assert acc.char_filter_change_indication.value == FILTER_CHANGE_FILTER
+    assert len(broker.mock_calls) == 2
+    broker.reset_mock()
 
+    # Change to same state should not trigger update in HomeKit
+    hass.states.async_set(
+        filter_change_indicator_entity_id, STATE_ON, force_update=True
+    )
+    await hass.async_block_till_done()
+    assert acc.char_filter_change_indication.value == FILTER_CHANGE_FILTER
+    assert len(broker.mock_calls) == 0
+
+    # Updated filter life level should reflect in HomeKit
+    broker = MagicMock()
+    acc.char_filter_life_level.broker = broker
     hass.states.async_set(filter_life_level_entity_id, 25)
     await hass.async_block_till_done()
+    assert acc.char_filter_life_level.value == 25
+    assert len(broker.mock_calls) == 2
+    broker.reset_mock()
+
+    # Change to same state should not trigger update in HomeKit
+    hass.states.async_set(filter_life_level_entity_id, 25, force_update=True)
+    await hass.async_block_till_done()
+    assert acc.char_filter_life_level.value == 25
+    assert len(broker.mock_calls) == 0
+
+    # Check that all goes well if we remove the linked sensors
+    hass.states.async_remove(filter_change_indicator_entity_id)
+    hass.states.async_remove(filter_life_level_entity_id)
+    await hass.async_block_till_done()
+    acc.run()
+    await hass.async_block_till_done()
+    assert len(acc.char_filter_change_indication.broker.mock_calls) == 0
+    assert len(acc.char_filter_life_level.broker.mock_calls) == 0
+
+    # HomeKit will show the last known values
+    assert acc.char_filter_change_indication.value == FILTER_CHANGE_FILTER
     assert acc.char_filter_life_level.value == 25
 
 
