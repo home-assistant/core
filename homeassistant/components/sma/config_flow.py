@@ -111,7 +111,7 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
             errors, device_info = await self._handle_user_input(user_input=user_input)
 
             if not errors:
-                await self.async_set_unique_id(str(device_info["serial"]))
+                await self.async_set_unique_id(str(device_info["serial"]), raise_on_progress=False)
                 self._abort_if_unique_id_configured(updates=self._data)
 
                 return self.async_create_entry(
