@@ -344,7 +344,7 @@
     },
     "repeat": {
       "options": {
-        "off": "Off",
+        "off": "[%key:common::state::off%]",
         "all": "Repeat all",
         "one": "Repeat one"
       }
