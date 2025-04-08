@@ -7,19 +7,23 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import load_fixture
 
+from .const import HOST, PORT
 
-async def test_setup(hass: HomeAssistant, requests_mock: requests_mock.Mocker) -> None:
+
+async def test_setup_via_yaml(
+    hass: HomeAssistant, requests_mock: requests_mock.Mocker
+) -> None:
     """Test for successfully setting up the platform."""
     config = {
         "sensor": {
             "platform": "openhardwaremonitor",
-            "host": "localhost",
-            "port": 8085,
+            "host": HOST,
+            "port": PORT,
         }
     }
 
     requests_mock.get(
-        "http://localhost:8085/data.json",
+        f"http://{HOST}:{PORT}/data.json",
         text=load_fixture("openhardwaremonitor.json", "openhardwaremonitor"),
     )
 
