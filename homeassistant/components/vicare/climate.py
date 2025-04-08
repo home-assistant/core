@@ -180,6 +180,10 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
                 self._attributes["active_vicare_program"] = self._current_program = (
                     self._api.getActiveProgram()
                 )
+            with suppress(PyViCareNotSupportedFeatureError):
+                self._attr_min_temp = self._api.getProgramMinTemperature()
+            with suppress(PyViCareNotSupportedFeatureError):
+                self._attr_max_temp = self._api.getProgramMaxTemperature()
 
             with suppress(PyViCareNotSupportedFeatureError):
                 self._attr_target_temperature = self._api.getCurrentDesiredTemperature()
