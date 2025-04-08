@@ -18,21 +18,17 @@ from .entity import BoschAlarmAreaEntity
 
 priority_types = {
     "burglary": {
-        "alarm": ALARM_MEMORY_PRIORITIES.BURGLARY_ALARM,
-        "supervisory": ALARM_MEMORY_PRIORITIES.BURGLARY_SUPERVISORY,
-        "trouble": ALARM_MEMORY_PRIORITIES.BURGLARY_TROUBLE,
+        ALARM_MEMORY_PRIORITIES.BURGLARY_SUPERVISORY: "supervisory",
+        ALARM_MEMORY_PRIORITIES.BURGLARY_TROUBLE: "trouble",
     },
     "gas": {
-        "alarm": ALARM_MEMORY_PRIORITIES.GAS_ALARM,
-        "supervisory": ALARM_MEMORY_PRIORITIES.GAS_SUPERVISORY,
-        "trouble": ALARM_MEMORY_PRIORITIES.GAS_TROUBLE,
+        ALARM_MEMORY_PRIORITIES.GAS_SUPERVISORY: "supervisory",
+        ALARM_MEMORY_PRIORITIES.GAS_TROUBLE: "trouble",
     },
     "fire": {
-        "alarm": ALARM_MEMORY_PRIORITIES.FIRE_ALARM,
-        "supervisory": ALARM_MEMORY_PRIORITIES.FIRE_SUPERVISORY,
-        "trouble": ALARM_MEMORY_PRIORITIES.FIRE_TROUBLE,
+        ALARM_MEMORY_PRIORITIES.FIRE_SUPERVISORY: "supervisory",
+        ALARM_MEMORY_PRIORITIES.FIRE_TROUBLE: "trouble",
     },
-    "personal_emergency": {"alarm": ALARM_MEMORY_PRIORITIES.PERSONAL_EMERGENCY},
 }
 
 
@@ -43,55 +39,23 @@ class BoschAlarmSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[Area], str]
 
 
-SENSOR_TYPES: tuple[BoschAlarmSensorEntityDescription, ...] = (
+def priority_value_fn(priority_info: dict[int, str]) -> Callable[[Area], str]:
+    """Build a value_fn for a given priority type."""
+    return lambda area: next(
+        (key for priority, key in priority_info.items() if priority in area.alarms_ids),
+        "no_issues",
+    )
+
+
+SENSOR_TYPES: list[BoschAlarmSensorEntityDescription] = [
     BoschAlarmSensorEntityDescription(
-        key="alarms_burglary",
-        translation_key="alarms_burglary",
-        value_fn=lambda area: next(
-            (
-                key
-                for key, priority in priority_types["burglary"].items()
-                if priority in area.alarms_ids
-            ),
-            "no_alarms",
-        ),
-    ),
-    BoschAlarmSensorEntityDescription(
-        key="alarms_gas",
-        translation_key="alarms_gas",
-        value_fn=lambda area: next(
-            (
-                key
-                for key, priority in priority_types["gas"].items()
-                if priority in area.alarms_ids
-            ),
-            "no_alarms",
-        ),
-    ),
-    BoschAlarmSensorEntityDescription(
-        key="alarms_fire",
-        translation_key="alarms_fire",
-        value_fn=lambda area: next(
-            (
-                key
-                for key, priority in priority_types["fire"].items()
-                if priority in area.alarms_ids
-            ),
-            "no_alarms",
-        ),
-    ),
-    BoschAlarmSensorEntityDescription(
-        key="alarms_personal_emergency",
-        translation_key="alarms_personal_emergency",
-        value_fn=lambda area: next(
-            (
-                key
-                for key, priority in priority_types["personal_emergency"].items()
-                if priority in area.alarms_ids
-            ),
-            "no_alarms",
-        ),
-    ),
+        key=f"alarms_{key}",
+        translation_key=f"alarms_{key}",
+        value_fn=priority_value_fn(priority_type),
+    )
+    for key, priority_type in priority_types.items()
+]
+SENSOR_TYPES.append(
     BoschAlarmSensorEntityDescription(
         key="faulting_points",
         translation_key="faulting_points",
@@ -135,7 +99,8 @@ class BoschAreaSensor(SensorEntity, BoschAlarmAreaEntity):
         entity_description: BoschAlarmSensorEntityDescription,
     ) -> None:
         """Set up an area sensor entity for a bosch alarm panel."""
-        super().__init__(panel, area_id, unique_id, entity_description)
+        super().__init__(panel, area_id, unique_id, entity_description.key)
+        self.entity_description = entity_description
 
     @property
     def native_value(self) -> str:

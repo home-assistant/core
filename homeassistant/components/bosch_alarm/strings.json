@@ -59,37 +59,27 @@
   "entity": {
     "sensor": {
       "alarms_gas": {
-        "name": "Gas Alarm Status",
+        "name": "Gas Alarm Issues",
         "state": {
-          "alarm": "Alarm",
           "supervisory": "Supervisory",
           "trouble": "Trouble",
-          "no_alarms": "No Alarms"
+          "no_issues": "No Issues"
         }
       },
       "alarms_fire": {
-        "name": "Fire Alarm Status",
+        "name": "Fire Alarm Issues",
         "state": {
-          "alarm": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::alarm%]",
           "supervisory": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::supervisory%]",
           "trouble": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::trouble%]",
-          "no_alarms": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::no_alarms%]"
+          "no_issues": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::no_issues%]"
         }
       },
       "alarms_burglary": {
-        "name": "Burglary Alarm Status",
+        "name": "Burglary Alarm Issues",
         "state": {
-          "alarm": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::alarm%]",
           "supervisory": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::supervisory%]",
           "trouble": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::trouble%]",
-          "no_alarms": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::no_alarms%]"
-        }
-      },
-      "alarms_personal_emergency": {
-        "name": "Personal Emergency Alarm Status",
-        "state": {
-          "alarm": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::alarm%]",
-          "no_alarms": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::no_alarms%]"
+          "no_issues": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::no_issues%]"
         }
       },
       "faulting_points": {

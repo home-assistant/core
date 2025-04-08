@@ -45,9 +45,9 @@ async def test_alarm_faults(
     """Test that alarm state changes after arming the panel."""
     await setup_integration(hass, mock_config_entry)
     entity_id = "sensor.area1_fire_alarm_status"
-    assert hass.states.get(entity_id).state == "no_alarms"
+    assert hass.states.get(entity_id).state == "no_issues"
 
-    area.alarms_ids = [ALARM_MEMORY_PRIORITIES.FIRE_ALARM]
+    area.alarms_ids = [ALARM_MEMORY_PRIORITIES.FIRE_TROUBLE]
     await call_observable(hass, area.alarm_observer)
 
-    assert hass.states.get(entity_id).state == "alarm"
+    assert hass.states.get(entity_id).state == "trouble"

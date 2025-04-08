@@ -6,7 +6,6 @@ from bosch_alarm_mode2 import Panel
 
 from homeassistant.components.sensor import Entity
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import EntityDescription
 
 from .const import DOMAIN
 
@@ -18,13 +17,9 @@ class BoschAlarmEntity(Entity):
 
     _attr_has_entity_name = True
 
-    def __init__(
-        self, panel: Panel, unique_id: str, entity_description: EntityDescription
-    ) -> None:
+    def __init__(self, panel: Panel, unique_id: str) -> None:
         """Set up a entity for a bosch alarm panel."""
         self.panel = panel
-        self.entity_description = entity_description
-        self._attr_unique_id = f"{unique_id}_{entity_description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
             name=f"Bosch {panel.model}",
@@ -53,14 +48,14 @@ class BoschAlarmAreaEntity(BoschAlarmEntity):
         panel: Panel,
         area_id: int,
         unique_id: str,
-        entity_description: EntityDescription,
+        key: str,
     ) -> None:
         """Set up a area related entity for a bosch alarm panel."""
-        super().__init__(panel, unique_id, entity_description)
+        super().__init__(panel, unique_id)
         area_unique_id = f"{unique_id}_area_{area_id}"
         self.panel = panel
         self._area = panel.areas[area_id]
-        self._attr_unique_id = f"{area_unique_id}_{entity_description.key}"
+        self._attr_unique_id = f"{area_unique_id}_{key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, area_unique_id)},
             name=self._area.name,
