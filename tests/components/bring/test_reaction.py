@@ -28,10 +28,10 @@ from tests.common import MockConfigEntry
 @pytest.mark.parametrize(
     ("reaction", "call_arg"),
     [
-        ("DROOLING", ReactionType.DROOLING),
-        ("HEART", ReactionType.HEART),
-        ("MONOCLE", ReactionType.MONOCLE),
-        ("THUMBS_UP", ReactionType.THUMBS_UP),
+        ("drooling", ReactionType.DROOLING),
+        ("heart", ReactionType.HEART),
+        ("monocle", ReactionType.MONOCLE),
+        ("thumbs_up", ReactionType.THUMBS_UP),
     ],
 )
 async def test_send_reaction(
@@ -91,7 +91,7 @@ async def test_send_reaction_exception(
             SERVICE_ACTIVITY_STREAM_REACTION,
             service_data={
                 ATTR_ENTITY_ID: "event.einkauf_activities",
-                ATTR_REACTION: "HEART",
+                ATTR_REACTION: "heart",
             },
             blocking=True,
         )
@@ -121,7 +121,7 @@ async def test_send_reaction_config_entry_not_loaded(
             SERVICE_ACTIVITY_STREAM_REACTION,
             service_data={
                 ATTR_ENTITY_ID: "event.einkauf_activities",
-                ATTR_REACTION: "HEART",
+                ATTR_REACTION: "heart",
             },
             blocking=True,
         )
@@ -153,7 +153,7 @@ async def test_send_reaction_unknown_entity(
             SERVICE_ACTIVITY_STREAM_REACTION,
             service_data={
                 ATTR_ENTITY_ID: "event.einkauf_activities",
-                ATTR_REACTION: "HEART",
+                ATTR_REACTION: "heart",
             },
             blocking=True,
         )
@@ -184,7 +184,7 @@ async def test_send_reaction_not_found(
             SERVICE_ACTIVITY_STREAM_REACTION,
             service_data={
                 ATTR_ENTITY_ID: "event.einkauf_activities",
-                ATTR_REACTION: "HEART",
+                ATTR_REACTION: "heart",
             },
             blocking=True,
         )
