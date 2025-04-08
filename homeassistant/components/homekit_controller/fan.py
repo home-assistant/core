@@ -190,13 +190,18 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
             await self.async_turn_off()
             return
 
-        await self.async_put_characteristics(
-            {
-                CharacteristicsTypes.ROTATION_SPEED: round(
-                    percentage_to_ranged_value(self._speed_range, percentage)
-                )
-            }
-        )
+        characteristics = {
+            CharacteristicsTypes.ROTATION_SPEED: round(
+                percentage_to_ranged_value(self._speed_range, percentage)
+            )
+        }
+
+        if FanEntityFeature.PRESET_MODE in self.supported_features:
+            characteristics[CharacteristicsTypes.FAN_STATE_TARGET] = (
+                TargetFanStateValues.MANUAL
+            )
+
+        await self.async_put_characteristics(characteristics)
 
     async def async_oscillate(self, oscillating: bool) -> None:
         """Oscillate the fan."""
@@ -285,6 +290,25 @@ class HomeKitAirPurifer(HomeKitFanV2):
             == TargetAirPurifierStateValues.AUTOMATIC
             else None
         )
+
+    async def async_set_percentage(self, percentage: int) -> None:
+        """Set the speed of the fan."""
+        if percentage == 0:
+            await self.async_turn_off()
+            return
+
+        characteristics = {
+            CharacteristicsTypes.ROTATION_SPEED: round(
+                percentage_to_ranged_value(self._speed_range, percentage)
+            )
+        }
+
+        if FanEntityFeature.PRESET_MODE in self.supported_features:
+            characteristics[CharacteristicsTypes.AIR_PURIFIER_STATE_TARGET] = (
+                TargetAirPurifierStateValues.MANUAL
+            )
+
+        await self.async_put_characteristics(characteristics)
 
     async def async_turn_on(
         self,
