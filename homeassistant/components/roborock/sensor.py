@@ -381,7 +381,10 @@ class RoborockCurrentRoom(RoborockCoordinatedEntityV1, SensorEntity):
     @property
     def options(self) -> list[str]:
         """Return the currently valid rooms."""
-        if self.coordinator.current_map is not None:
+        if (
+            self.coordinator.current_map is not None
+            and self.coordinator.current_map in self.coordinator.maps
+        ):
             return list(
                 self.coordinator.maps[self.coordinator.current_map].rooms.values()
             )
@@ -390,7 +393,10 @@ class RoborockCurrentRoom(RoborockCoordinatedEntityV1, SensorEntity):
     @property
     def native_value(self) -> str | None:
         """Return the value reported by the sensor."""
-        if self.coordinator.current_map is not None:
+        if (
+            self.coordinator.current_map is not None
+            and self.coordinator.current_map in self.coordinator.maps
+        ):
             return self.coordinator.maps[self.coordinator.current_map].current_room
         return None
 

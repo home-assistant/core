@@ -976,13 +976,7 @@ async def websocket_validate_dsk_and_enter_pin(
     {
         vol.Required(TYPE): "zwave_js/provision_smart_start_node",
         vol.Required(ENTRY_ID): str,
-        vol.Exclusive(
-            PLANNED_PROVISIONING_ENTRY, "options"
-        ): PLANNED_PROVISIONING_ENTRY_SCHEMA,
-        vol.Exclusive(
-            QR_PROVISIONING_INFORMATION, "options"
-        ): QR_PROVISIONING_INFORMATION_SCHEMA,
-        vol.Exclusive(QR_CODE_STRING, "options"): QR_CODE_STRING_SCHEMA,
+        vol.Required(QR_PROVISIONING_INFORMATION): QR_PROVISIONING_INFORMATION_SCHEMA,
     }
 )
 @websocket_api.async_response
@@ -997,28 +991,10 @@ async def websocket_provision_smart_start_node(
     driver: Driver,
 ) -> None:
     """Pre-provision a smart start node."""
-    try:
-        cv.has_at_least_one_key(
-            PLANNED_PROVISIONING_ENTRY, QR_PROVISIONING_INFORMATION, QR_CODE_STRING
-        )(msg)
-    except vol.Invalid as err:
-        connection.send_error(
-            msg[ID],
-            ERR_INVALID_FORMAT,
-            err.args[0],
-        )
-        return
 
-    provisioning_info = (
-        msg.get(PLANNED_PROVISIONING_ENTRY)
-        or msg.get(QR_PROVISIONING_INFORMATION)
-        or msg[QR_CODE_STRING]
-    )
+    provisioning_info = msg[QR_PROVISIONING_INFORMATION]
 
-    if (
-        QR_PROVISIONING_INFORMATION in msg
-        and provisioning_info.version == QRCodeVersion.S2
-    ):
+    if provisioning_info.version == QRCodeVersion.S2:
         connection.send_error(
             msg[ID],
             ERR_INVALID_FORMAT,
