@@ -23,6 +23,7 @@ class BoschAlarmSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[Area], int]
     observe_alarms: bool = False
     observe_ready: bool = False
+    observe_status: bool = False
 
 
 SENSOR_TYPES: list[BoschAlarmSensorEntityDescription] = [
@@ -74,6 +75,7 @@ class BoschAreaSensor(BoschAlarmAreaEntity, SensorEntity):
             unique_id,
             entity_description.observe_alarms,
             entity_description.observe_ready,
+            entity_description.observe_status,
         )
         self.entity_description = entity_description
         self._attr_unique_id = f"{self._area_unique_id}_{entity_description.key}"

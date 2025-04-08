@@ -50,6 +50,7 @@ class BoschAlarmAreaEntity(BoschAlarmEntity):
         unique_id: str,
         observe_alarms: bool,
         observe_ready: bool,
+        observe_status: bool,
     ) -> None:
         """Set up a area related entity for a bosch alarm panel."""
         super().__init__(panel, unique_id)
@@ -57,6 +58,7 @@ class BoschAlarmAreaEntity(BoschAlarmEntity):
         self._area_unique_id = f"{unique_id}_area_{area_id}"
         self._observe_alarms = observe_alarms
         self._observe_ready = observe_ready
+        self._observe_status = observe_status
         self._area = panel.areas[area_id]
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._area_unique_id)},
@@ -72,6 +74,8 @@ class BoschAlarmAreaEntity(BoschAlarmEntity):
             self._area.alarm_observer.attach(self.schedule_update_ha_state)
         if self._observe_ready:
             self._area.ready_observer.attach(self.schedule_update_ha_state)
+        if self._observe_status:
+            self._area.status_observer.attach(self.schedule_update_ha_state)
 
     async def async_will_remove_from_hass(self) -> None:
         """Stop observing state changes."""
@@ -80,3 +84,5 @@ class BoschAlarmAreaEntity(BoschAlarmEntity):
             self._area.alarm_observer.detach(self.schedule_update_ha_state)
         if self._observe_ready:
             self._area.ready_observer.detach(self.schedule_update_ha_state)
+        if self._observe_status:
+            self._area.status_observer.detach(self.schedule_update_ha_state)
