@@ -54,5 +54,10 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "send_command_invalid_device": {
+      "message": "Only keyboard device is supported"
+    }
   }
 }

@@ -9,6 +9,7 @@ from typing import Any
 from homeassistant.components.remote import (
     ATTR_ACTIVITY,
     ATTR_DELAY_SECS,
+    ATTR_DEVICE,
     ATTR_HOLD_SECS,
     ATTR_NUM_REPEATS,
     DEFAULT_DELAY_SECS,
@@ -18,14 +19,14 @@ from homeassistant.components.remote import (
     RemoteEntityFeature,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AndroidTVRemoteConfigEntry
-from .const import CONF_APP_NAME
+from .const import CONF_APP_NAME, DOMAIN
 from .entity import AndroidTVRemoteBaseEntity
 
 PARALLEL_UPDATES = 0
-_INPUT_TEXT_PREFIX = "input text: "
 
 
 async def async_setup_entry(
@@ -99,11 +100,18 @@ class AndroidTVRemoteEntity(AndroidTVRemoteBaseEntity, RemoteEntity):
         num_repeats = kwargs.get(ATTR_NUM_REPEATS, DEFAULT_NUM_REPEATS)
         delay_secs = kwargs.get(ATTR_DELAY_SECS, DEFAULT_DELAY_SECS)
         hold_secs = kwargs.get(ATTR_HOLD_SECS, DEFAULT_HOLD_SECS)
+        device = kwargs.get(ATTR_DEVICE)
+        if device:
+            if device != "keyboard":
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="send_command_invalid_device",
+                )
 
         for _ in range(num_repeats):
             for single_command in command:
-                if single_command.startswith(_INPUT_TEXT_PREFIX):
-                    self._api.send_text(single_command[len(_INPUT_TEXT_PREFIX) :])
+                if device:
+                    self._api.send_text(single_command)
                 elif hold_secs:
                     self._send_key_command(single_command, "START_LONG")
                     await asyncio.sleep(hold_secs)

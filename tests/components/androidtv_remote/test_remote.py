@@ -174,10 +174,10 @@ async def test_remote_send_command_with_hold_secs(
     ]
 
 
-async def test_remote_send_command_with_text(
+async def test_remote_send_command_with_keyboard_device(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: MagicMock
 ) -> None:
-    """Test remote.send_command service with text."""
+    """Test remote.send_command service with keyboard device."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.LOADED
@@ -187,11 +187,34 @@ async def test_remote_send_command_with_text(
         "send_command",
         {
             "entity_id": REMOTE_ENTITY,
-            "command": "input text: Hello World",
+            "command": "Hello World",
+            "device": "keyboard",
         },
         blocking=True,
     )
     assert mock_api.send_text.mock_calls == [call("Hello World")]
+
+
+async def test_remote_send_command_with_invalid_device(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: MagicMock
+) -> None:
+    """Test remote.send_command service with invalid device."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    with pytest.raises(HomeAssistantError, match="Only keyboard device is supported"):
+        await hass.services.async_call(
+            "remote",
+            "send_command",
+            {
+                "entity_id": REMOTE_ENTITY,
+                "command": "Hello World",
+                "device": "invalid",
+            },
+            blocking=True,
+        )
+    assert mock_api.send_text.call_count == 0
 
 
 async def test_remote_connection_closed(
