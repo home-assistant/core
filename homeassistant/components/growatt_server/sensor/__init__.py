@@ -295,6 +295,7 @@ class GrowattData:
                     noah_device_sn = is_noah["obj"]["deviceSn"]
                     noah_system = self.api.noah_system_status(noah_device_sn)
                     noah_system["obj"]["deviceType"] = "noah"
+                    noah_system["obj"]["deviceAilas"] = noah_system["obj"]["alias"]
                     self.data = noah_system["obj"]
             _LOGGER.debug(
                 "Finished updating data for %s (%s)",
