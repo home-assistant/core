@@ -811,6 +811,8 @@ build.json @home-assistant/supervisor
 /tests/components/kulersky/ @emlove
 /homeassistant/components/lacrosse_view/ @IceBotYT
 /tests/components/lacrosse_view/ @IceBotYT
+/homeassistant/components/laith_switch/ @LaithAbusada
+/tests/components/laith_switch/ @LaithAbusada
 /homeassistant/components/lamarzocco/ @zweckj
 /tests/components/lamarzocco/ @zweckj
 /homeassistant/components/lametric/ @robbiet480 @frenck @bachya
