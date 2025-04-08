@@ -16,7 +16,13 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_TOKEN,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -202,7 +208,11 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_SERIAL: serial,
             CONF_HOST: reauth_entry.data[CONF_HOST],
         }
-        suggested_values = user_input or reauth_entry.data
+        suggested_values: Mapping[str, Any] = {
+            k: v
+            for k, v in (user_input or reauth_entry.data).items()
+            if k not in {CONF_PASSWORD, CONF_TOKEN}
+        }
         description_placeholders["serial"] = serial
         return self.async_show_form(
             step_id="reauth_confirm",
@@ -262,11 +272,20 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_SERIAL: self.unique_id,
                 CONF_HOST: host,
             }
-
+        suggested_values: Mapping[str, Any] = (
+            {
+                k: v
+                for k, v in user_input.items()
+                if k not in {CONF_PASSWORD, CONF_TOKEN}
+            }
+            if user_input
+            else {}
+        )
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                self._async_generate_schema(), user_input
+                self._async_generate_schema(),
+                suggested_values,
             ),
             description_placeholders=description_placeholders,
             errors=errors,
@@ -311,7 +330,12 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         description_placeholders["serial"] = serial
 
-        suggested_values: Mapping[str, Any] = user_input or reconfigure_entry.data
+        suggested_values: Mapping[str, Any] = {
+            k: v
+            for k, v in (user_input or reconfigure_entry.data).items()
+            if k not in {CONF_PASSWORD, CONF_TOKEN}
+        }
+
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
