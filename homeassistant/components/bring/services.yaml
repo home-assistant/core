@@ -30,18 +30,19 @@ send_reaction:
           filter:
             - integration: bring
               domain: event
+      example: event.shopping_list
     reaction:
       required: true
       selector:
         select:
           options:
             - label: 👍🏼
-              value: THUMBS_UP
+              value: thumbs_up
             - label: 🧐
-              value: MONOCLE
+              value: monocle
             - label: 🤤
-              value: DROOLING
+              value: drooling
             - label: ❤️
-              value: HEART
+              value: heart
           mode: dropdown
-      example: THUMBS_UP
+      example: thumbs_up

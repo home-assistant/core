@@ -26,7 +26,7 @@ from .const import (
     DOMAIN,
     SERVICE_ACTIVITY_STREAM_REACTION,
 )
-from .coordinator import BringConfigEntry, BringDataUpdateCoordinator
+from .coordinator import BringConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,11 +60,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async def async_send_activity_stream_reaction(call: ServiceCall) -> None:
         """Send a reaction in response to recent activity of a list member."""
 
-        entity = er.async_get(hass).async_get(call.data[ATTR_ENTITY_ID])
-        if TYPE_CHECKING:
-            assert entity
-            assert entity.config_entry_id
-        if not (state := hass.states.get(call.data[ATTR_ENTITY_ID])):
+        if (
+            not (state := hass.states.get(call.data[ATTR_ENTITY_ID]))
+            or not (entity := er.async_get(hass).async_get(call.data[ATTR_ENTITY_ID]))
+            or not entity.config_entry_id
+        ):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="entity_not_found",
@@ -74,7 +74,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
             )
         config_entry = get_config_entry(hass, entity.config_entry_id)
 
-        coordinator: BringDataUpdateCoordinator = config_entry.runtime_data
+        coordinator = config_entry.runtime_data.data
 
         list_uuid = entity.unique_id.split("_")[1]
 
