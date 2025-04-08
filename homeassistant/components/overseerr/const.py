@@ -8,6 +8,7 @@ DOMAIN = "overseerr"
 LOGGER = logging.getLogger(__package__)
 
 REQUESTS = "requests"
+ISSUES = "issues"
 
 ATTR_CONFIG_ENTRY_ID = "config_entry_id"
 ATTR_STATUS = "status"
@@ -16,6 +17,21 @@ ATTR_REQUESTED_BY = "requested_by"
 
 EVENT_KEY = f"{DOMAIN}_event"
 
+MEDIA_EVENT_TYPES = {
+    "pending": "pending",
+    "approved": "approved",
+    "available": "available",
+    "failed": "failed",
+    "declined": "declined",
+    "auto_approved": "auto_approved",
+}
+ISSUE_EVENT_TYPES = {
+    "reported": "reported",
+    "commented": "comment",  # The notification type is ISSUE_COMMENT, but it looks better as "commented"
+    "resolved": "resolved",
+    "reopened": "reopened",
+}
+
 REGISTERED_NOTIFICATIONS = (
     NotificationType.REQUEST_PENDING_APPROVAL
     | NotificationType.REQUEST_APPROVED
@@ -23,6 +39,10 @@ REGISTERED_NOTIFICATIONS = (
     | NotificationType.REQUEST_AVAILABLE
     | NotificationType.REQUEST_PROCESSING_FAILED
     | NotificationType.REQUEST_AUTOMATICALLY_APPROVED
+    | NotificationType.ISSUE_REPORTED
+    | NotificationType.ISSUE_COMMENTED
+    | NotificationType.ISSUE_RESOLVED
+    | NotificationType.ISSUE_REOPENED
 )
 JSON_PAYLOAD = (
     '"{\\"notification_type\\":\\"{{notification_type}}\\",\\"subject\\":\\"{{subject}'
