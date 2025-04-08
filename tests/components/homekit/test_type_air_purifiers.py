@@ -1,6 +1,7 @@
 """Test different accessory types: Air Purifiers."""
 
 from pyhap.const import HAP_REPR_AID, HAP_REPR_CHARS, HAP_REPR_IID, HAP_REPR_VALUE
+import pytest
 
 from homeassistant.components.fan import (
     ATTR_PRESET_MODE,
@@ -38,35 +39,55 @@ from homeassistant.core import Event, HomeAssistant
 from tests.common import async_mock_service
 
 
+@pytest.mark.parametrize(
+    "auto_preset",
+    [
+        None,
+        "auto",
+        "Auto",
+    ],
+)
 async def test_fan_auto_manual(
-    hass: HomeAssistant, hk_driver, events: list[Event]
+    hass: HomeAssistant, hk_driver, events: list[Event], auto_preset: str | None
 ) -> None:
     """Test switching between Auto and Manual."""
     entity_id = "fan.demo"
 
+    preset_modes = ["sleep", "smart"]
+    if auto_preset:
+        preset_modes.append(auto_preset)
     hass.states.async_set(
         entity_id,
         STATE_ON,
         {
             ATTR_SUPPORTED_FEATURES: FanEntityFeature.PRESET_MODE
             | FanEntityFeature.SET_SPEED,
-            ATTR_PRESET_MODE: "auto",
-            ATTR_PRESET_MODES: ["auto", "smart"],
+            ATTR_PRESET_MODE: auto_preset or "smart",
+            ATTR_PRESET_MODES: preset_modes,
         },
     )
     await hass.async_block_till_done()
     acc = AirPurifier(hass, hk_driver, "Air Purifier", entity_id, 1, None)
     hk_driver.add_accessory(acc)
 
-    assert acc.preset_mode_chars["auto"].value == 1
-    assert acc.preset_mode_chars["smart"].value == 0
+    if auto_preset:
+        assert acc.preset_mode_chars[auto_preset].value == 1
+        assert acc.preset_mode_chars["smart"].value == 0
+    else:
+        assert acc.preset_mode_chars["smart"].value == 1
+    assert acc.preset_mode_chars["sleep"].value == 0
 
-    assert acc.auto_preset is not None
+    if auto_preset:
+        assert acc.auto_preset is not None
+    else:
+        assert acc.auto_preset is None
 
     acc.run()
     await hass.async_block_till_done()
 
-    assert acc.char_target_air_purifier_state.value == TARGET_STATE_AUTO
+    assert acc.char_target_air_purifier_state.value == (
+        TARGET_STATE_AUTO if auto_preset else TARGET_STATE_MANUAL
+    )
 
     hass.states.async_set(
         entity_id,
@@ -75,19 +96,23 @@ async def test_fan_auto_manual(
             ATTR_SUPPORTED_FEATURES: FanEntityFeature.PRESET_MODE
             | FanEntityFeature.SET_SPEED,
             ATTR_PRESET_MODE: "smart",
-            ATTR_PRESET_MODES: ["auto", "smart"],
+            ATTR_PRESET_MODES: preset_modes,
         },
     )
     await hass.async_block_till_done()
 
-    assert acc.preset_mode_chars["auto"].value == 0
+    if auto_preset:
+        assert acc.preset_mode_chars[auto_preset].value == 0
     assert acc.preset_mode_chars["smart"].value == 1
     assert acc.char_target_air_purifier_state.value == TARGET_STATE_MANUAL
+
+    if not auto_preset:
+        # Don't need to test toggling auto mode from HomeKit if not set
+        return
 
     # Set from HomeKit
     call_set_preset_mode = async_mock_service(hass, FAN_DOMAIN, "set_preset_mode")
     call_set_percentage = async_mock_service(hass, FAN_DOMAIN, "set_percentage")
-
     char_auto_iid = acc.char_target_air_purifier_state.to_HAP()[HAP_REPR_IID]
 
     hk_driver.set_characteristics(
@@ -107,7 +132,7 @@ async def test_fan_auto_manual(
     assert acc.char_target_air_purifier_state.value == TARGET_STATE_AUTO
     assert call_set_preset_mode[0]
     assert call_set_preset_mode[0].data[ATTR_ENTITY_ID] == entity_id
-    assert call_set_preset_mode[0].data[ATTR_PRESET_MODE] == "auto"
+    assert call_set_preset_mode[0].data[ATTR_PRESET_MODE] == auto_preset
     assert len(events) == 1
     assert events[-1].data["service"] == "set_preset_mode"
 
