@@ -1,10 +1,31 @@
 # serializer version: 1
-# name: test_sensor_states[sensor.freezer_status-entry]
+# name: test_sensor_states[sensor.freezer-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'off',
+        'on',
+        'programmed',
+        'waiting_to_start',
+        'running',
+        'pause',
+        'program_ended',
+        'failure',
+        'program_interrupted',
+        'idle',
+        'rinse_hold',
+        'service',
+        'superfreezing',
+        'supercooling',
+        'superheating',
+        'supercooling_superfreezing',
+        'autocleaning',
+        'not_connected',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -12,7 +33,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.freezer_status',
+    'entity_id': 'sensor.freezer',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -22,9 +43,9 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': 'mdi:fridge-industrial-outline',
-    'original_name': 'Status',
+    'original_name': None,
     'platform': 'miele',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -33,14 +54,35 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_states[sensor.freezer_status-state]
+# name: test_sensor_states[sensor.freezer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Freezer Status',
+      'device_class': 'enum',
+      'friendly_name': 'Freezer',
       'icon': 'mdi:fridge-industrial-outline',
+      'options': list([
+        'off',
+        'on',
+        'programmed',
+        'waiting_to_start',
+        'running',
+        'pause',
+        'program_ended',
+        'failure',
+        'program_interrupted',
+        'idle',
+        'rinse_hold',
+        'service',
+        'superfreezing',
+        'supercooling',
+        'superheating',
+        'supercooling_superfreezing',
+        'autocleaning',
+        'not_connected',
+      ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.freezer_status',
+    'entity_id': 'sensor.freezer',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -78,7 +120,7 @@
     'platform': 'miele',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'temperature',
+    'translation_key': None,
     'unique_id': 'Appliance_1-state_temperature_1',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
@@ -99,12 +141,33 @@
     'state': '-18.0',
   })
 # ---
-# name: test_sensor_states[sensor.refrigerator_status-entry]
+# name: test_sensor_states[sensor.refrigerator-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'off',
+        'on',
+        'programmed',
+        'waiting_to_start',
+        'running',
+        'pause',
+        'program_ended',
+        'failure',
+        'program_interrupted',
+        'idle',
+        'rinse_hold',
+        'service',
+        'superfreezing',
+        'supercooling',
+        'superheating',
+        'supercooling_superfreezing',
+        'autocleaning',
+        'not_connected',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -112,7 +175,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.refrigerator_status',
+    'entity_id': 'sensor.refrigerator',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -122,9 +185,9 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': 'mdi:fridge-industrial-outline',
-    'original_name': 'Status',
+    'original_name': None,
     'platform': 'miele',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -133,14 +196,35 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_states[sensor.refrigerator_status-state]
+# name: test_sensor_states[sensor.refrigerator-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Refrigerator Status',
+      'device_class': 'enum',
+      'friendly_name': 'Refrigerator',
       'icon': 'mdi:fridge-industrial-outline',
+      'options': list([
+        'off',
+        'on',
+        'programmed',
+        'waiting_to_start',
+        'running',
+        'pause',
+        'program_ended',
+        'failure',
+        'program_interrupted',
+        'idle',
+        'rinse_hold',
+        'service',
+        'superfreezing',
+        'supercooling',
+        'superheating',
+        'supercooling_superfreezing',
+        'autocleaning',
+        'not_connected',
+      ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.refrigerator_status',
+    'entity_id': 'sensor.refrigerator',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -178,7 +262,7 @@
     'platform': 'miele',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'temperature',
+    'translation_key': None,
     'unique_id': 'Appliance_2-state_temperature_1',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
@@ -199,12 +283,33 @@
     'state': '4.0',
   })
 # ---
-# name: test_sensor_states[sensor.washing_machine_status-entry]
+# name: test_sensor_states[sensor.washing_machine-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'off',
+        'on',
+        'programmed',
+        'waiting_to_start',
+        'running',
+        'pause',
+        'program_ended',
+        'failure',
+        'program_interrupted',
+        'idle',
+        'rinse_hold',
+        'service',
+        'superfreezing',
+        'supercooling',
+        'superheating',
+        'supercooling_superfreezing',
+        'autocleaning',
+        'not_connected',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -212,7 +317,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.washing_machine_status',
+    'entity_id': 'sensor.washing_machine',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -222,9 +327,9 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': 'mdi:washing-machine',
-    'original_name': 'Status',
+    'original_name': None,
     'platform': 'miele',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -233,14 +338,35 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_states[sensor.washing_machine_status-state]
+# name: test_sensor_states[sensor.washing_machine-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Washing machine Status',
+      'device_class': 'enum',
+      'friendly_name': 'Washing machine',
       'icon': 'mdi:washing-machine',
+      'options': list([
+        'off',
+        'on',
+        'programmed',
+        'waiting_to_start',
+        'running',
+        'pause',
+        'program_ended',
+        'failure',
+        'program_interrupted',
+        'idle',
+        'rinse_hold',
+        'service',
+        'superfreezing',
+        'supercooling',
+        'superheating',
+        'supercooling_superfreezing',
+        'autocleaning',
+        'not_connected',
+      ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.washing_machine_status',
+    'entity_id': 'sensor.washing_machine',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

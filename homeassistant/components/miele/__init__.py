@@ -7,7 +7,11 @@ from aiohttp import ClientError, ClientResponseError
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    OAuth2Session,
+    async_get_config_entry_implementation,
+)
 
 from .api import AsyncConfigEntryAuth
 from .const import DOMAIN
@@ -20,14 +24,10 @@ PLATFORMS: list[Platform] = [
 
 async def async_setup_entry(hass: HomeAssistant, entry: MieleConfigEntry) -> bool:
     """Set up Miele from a config entry."""
-    implementation = (
-        await config_entry_oauth2_flow.async_get_config_entry_implementation(
-            hass, entry
-        )
-    )
+    implementation = await async_get_config_entry_implementation(hass, entry)
 
-    session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
-    auth = AsyncConfigEntryAuth(aiohttp_client.async_get_clientsession(hass), session)
+    session = OAuth2Session(hass, entry, implementation)
+    auth = AsyncConfigEntryAuth(async_get_clientsession(hass), session)
     try:
         await auth.async_get_access_token()
     except ClientResponseError as err:

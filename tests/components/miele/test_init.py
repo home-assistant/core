@@ -73,23 +73,11 @@ async def test_expired_token_refresh_failure(
     assert mock_config_entry.state is expected_state
 
 
-@pytest.mark.parametrize(
-    ("expires_at", "expected_state"),
-    [
-        (
-            time.time() - 3600,
-            ConfigEntryState.SETUP_RETRY,
-        ),
-    ],
-    ids=[
-        "client_connection_error",
-    ],
-)
+@pytest.mark.parametrize("expires_at", [time.time() - 3600], ids=["expired"])
 async def test_expired_token_refresh_connection_failure(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
-    expected_state: ConfigEntryState,
 ) -> None:
     """Test failure while refreshing token with a ClientError."""
 
@@ -101,7 +89,7 @@ async def test_expired_token_refresh_connection_failure(
 
     await setup_integration(hass, mock_config_entry)
 
-    assert mock_config_entry.state is expected_state
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_devices_multiple_created_count(

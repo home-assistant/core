@@ -6,6 +6,13 @@
     "step": {
       "confirm": {
         "description": "[%key:common::config_flow::description::confirm_setup%]"
+      },
+      "pick_implementation": {
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The Miele integration needs to re-authenticate your account"
       }
     },
     "abort": {
@@ -24,6 +31,9 @@
       "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+    },
+    "create_entry": {
+      "default": "[%key:common::config_flow::create_entry::authenticated%]"
     }
   },
   "entity": {
@@ -33,10 +43,10 @@
         "state": {
           "autocleaning": "Automatic cleaning",
           "failure": "Failure",
-          "idle": "Idle",
+          "idle": "[%key:common::state::idle%]",
           "not_connected": "Not connected",
-          "off": "Off",
-          "on": "On",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]",
           "pause": "Pause",
           "program_ended": "Program ended",
           "program_interrupted": "Program interrupted",

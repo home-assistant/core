@@ -23,17 +23,14 @@ class MieleEntity(CoordinatorEntity[MieleDataUpdateCoordinator]):
         super().__init__(coordinator)
         self._device_id = device_id
         self.entity_description = description
-        self._attr_unique_id = f"{self._device_id}-{self.entity_description.key}"
+        self._attr_unique_id = f"{device_id}-{description.key}"
 
         device = self.coordinator.data.devices[self._device_id]
         appliance_type = device.device_type_localized
-        if appliance_type == "":
-            appliance_type = device.tech_type
-
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device_id)},
             serial_number=self._device_id,
-            name=appliance_type,
+            name=appliance_type or device.tech_type,
             manufacturer=MANUFACTURER,
             model=device.tech_type,
             hw_version=device.xkm_tech_type,
@@ -44,10 +41,7 @@ class MieleEntity(CoordinatorEntity[MieleDataUpdateCoordinator]):
     def available(self) -> bool:
         """Return the availability of the entity."""
 
-        if not self.coordinator.last_update_success:
-            return False
-
         return (
             self.coordinator.data.devices[self._device_id].state_status
             != StateStatus.NOT_CONNECTED
-        )
+        ) and super().available

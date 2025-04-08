@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import STATE_STATUS_TAGS, MieleAppliance
+from .const import STATE_STATUS_TAGS, MieleAppliance, StateStatus
 from .coordinator import MieleConfigEntry, MieleDataUpdateCoordinator
 from .entity import MieleEntity
 
@@ -78,7 +78,8 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             key="state_status",
             translation_key="status",
             data_tag="state_status",
-            convert=lambda x: STATE_STATUS_TAGS.get(x, x),
+            device_class=SensorDeviceClass.ENUM,
+            options=list(STATE_STATUS_TAGS.values()),
         ),
     ),
     MieleSensorDefinition(
@@ -106,7 +107,6 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             data_tag="state_temperature_1",
             zone=1,
             device_class=SensorDeviceClass.TEMPERATURE,
-            translation_key="temperature",
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             state_class=SensorStateClass.MEASUREMENT,
             convert=lambda x: x / 100.0,
@@ -198,7 +198,7 @@ class MieleSensor(MieleEntity, SensorEntity):
 
 
 class MieleStatusSensor(MieleSensor):
-    """Representation of a status sensor."""
+    """Representation of the status sensor."""
 
     def __init__(
         self,
@@ -208,9 +208,17 @@ class MieleStatusSensor(MieleSensor):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, device_id, description)
+        self._attr_name = None
         self._attr_icon = APPLIANCE_ICONS.get(
             MieleAppliance(coordinator.data.devices[self._device_id].device_type),
             "mdi:state-machine",
+        )
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the sensor."""
+        return STATE_STATUS_TAGS.get(
+            StateStatus(self.coordinator.data.devices[self._device_id].state_status)
         )
 
     @property

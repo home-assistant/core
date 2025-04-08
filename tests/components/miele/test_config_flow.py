@@ -6,17 +6,12 @@ from pymiele import OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.application_credentials import (
-    ClientCredential,
-    async_import_client_credential,
-)
 from homeassistant.components.miele.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
-from homeassistant.setup import async_setup_component
 
-from .const import CLIENT_ID, CLIENT_SECRET
+from .const import CLIENT_ID
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -25,23 +20,12 @@ from tests.typing import ClientSessionGenerator
 REDIRECT_URL = "https://example.com/auth/external/callback"
 
 
-@pytest.fixture
-async def setup_credentials(hass: HomeAssistant) -> None:
-    """Fixture to setup credentials."""
-    assert await async_setup_component(hass, "application_credentials", {})
-    await async_import_client_credential(
-        hass,
-        DOMAIN,
-        ClientCredential(CLIENT_ID, CLIENT_SECRET),
-    )
-
-
 @pytest.mark.usefixtures("current_request_with_host")
 async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    setup_credentials,
+    setup_credentials: None,
 ) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(
