@@ -420,17 +420,20 @@ class ZWaveJSConfigFlow(BaseZwaveJSFlow, ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
         dev_path = discovery_info.device
         self.usb_path = dev_path
-        self._title = usb.human_readable_device_name(
-            dev_path,
-            serial_number,
-            manufacturer,
-            description,
-            vid,
-            pid,
-        )
-        self.context["title_placeholders"] = {
-            CONF_NAME: self._title.split(" - ")[0].strip()
-        }
+        if manufacturer == "Nabu Casa" and description == "ZWA-2 - Nabu Casa ZWA-2":
+            title = "Home Assistant Connect ZWA-2"
+        else:
+            human_name = usb.human_readable_device_name(
+                dev_path,
+                serial_number,
+                manufacturer,
+                description,
+                vid,
+                pid,
+            )
+            title = human_name.split(" - ")[0].strip()
+        self.context["title_placeholders"] = {CONF_NAME: title}
+        self._title = title
         return await self.async_step_usb_confirm()
 
     async def async_step_usb_confirm(
