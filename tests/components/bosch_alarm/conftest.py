@@ -131,6 +131,7 @@ def area() -> Generator[Area]:
     mock.alarm_observer = AsyncMock(spec=Observable)
     mock.ready_observer = AsyncMock(spec=Observable)
     mock.alarms = []
+    mock.alarms_ids = []
     mock.faults = []
     mock.all_ready = True
     mock.part_ready = True

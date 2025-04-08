@@ -3,6 +3,7 @@
 from collections.abc import AsyncGenerator
 from unittest.mock import AsyncMock, patch
 
+from bosch_alarm_mode2.const import ALARM_MEMORY_PRIORITIES
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -10,7 +11,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import setup_integration
+from . import call_observable, setup_integration
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -33,3 +34,20 @@ async def test_sensor(
     await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+async def test_alarm_faults(
+    hass: HomeAssistant,
+    mock_panel: AsyncMock,
+    area: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that alarm state changes after arming the panel."""
+    await setup_integration(hass, mock_config_entry)
+    entity_id = "sensor.area1_fire_alarm_status"
+    assert hass.states.get(entity_id).state == "no_alarms"
+
+    area.alarms_ids = [ALARM_MEMORY_PRIORITIES.FIRE_ALARM]
+    await call_observable(hass, area.alarm_observer)
+
+    assert hass.states.get(entity_id).state == "alarm"

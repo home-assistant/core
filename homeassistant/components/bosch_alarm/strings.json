@@ -85,6 +85,13 @@
           "no_alarms": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::no_alarms%]"
         }
       },
+      "alarms_personal": {
+        "name": "Personal Emergency Alarm Status",
+        "state": {
+          "emergency": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::alarm%]",
+          "no_alarms": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::no_alarms%]"
+        }
+      },
       "faulting_points": {
         "name": "Faulting points"
       }

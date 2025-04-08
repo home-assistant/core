@@ -85,6 +85,7 @@ class AreaSensor(SensorEntity):
         """Set up a faults sensor entity for a bosch alarm panel."""
         self.panel = panel
         area_unique_id = f"{unique_id}_area_{area_id}"
+        self._attr_translation_key = type
         self._area = panel.areas[area_id]
         self._attr_unique_id = f"{area_unique_id}_{type}"
         self._attr_device_info = DeviceInfo(
@@ -107,11 +108,9 @@ class AreaSensor(SensorEntity):
 class FaultingPointsSensor(AreaSensor):
     """A faults sensor entity for a bosch alarm panel."""
 
-    _attr_translation_key = "faulting_points"
-
     def __init__(self, panel: Panel, area_id: int, unique_id: str) -> None:
         """Set up a faults sensor entity for a bosch alarm panel."""
-        super().__init__(panel, area_id, unique_id, "faults")
+        super().__init__(panel, area_id, unique_id, "faulting_points")
 
     @property
     def native_value(self) -> str:
@@ -124,8 +123,7 @@ class AreaAlarmsSensor(AreaSensor):
 
     def __init__(self, panel: Panel, area_id: int, unique_id: str, type: str) -> None:
         """Set up a faults sensor entity for a bosch alarm panel."""
-        super().__init__(panel, area_id, unique_id, "alarms")
-        self._attr_translation_key = f"alarms_{type}"
+        super().__init__(panel, area_id, unique_id, f"alarms_{type}")
         self.type = type
 
     @property
