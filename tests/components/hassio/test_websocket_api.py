@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import HomeAssistantUpdateOptions, StoreAddonUpdate
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.backup import BackupManagerError, ManagerBackup
 
@@ -858,3 +859,31 @@ async def test_update_core_with_backup_and_error(
         "code": "home_assistant_error",
         "message": "Error creating backup: ",
     }
+
+
+@pytest.mark.usefixtures("hassio_env")
+async def test_read_update_config(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    supervisor_client: AsyncMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test read and update config."""
+    assert await async_setup_component(hass, "hassio", {})
+    websocket_client = await hass_ws_client(hass)
+
+    await websocket_client.send_json_auto_id({"type": "hassio/update/config/info"})
+    assert await websocket_client.receive_json() == snapshot
+
+    await websocket_client.send_json_auto_id(
+        {
+            "type": "hassio/update/config/update",
+            "add_on_backup_before_update": True,
+            "add_on_backup_retain_copies": 2,
+            "core_backup_before_update": True,
+        }
+    )
+    assert await websocket_client.receive_json() == snapshot
+
+    await websocket_client.send_json_auto_id({"type": "hassio/update/config/info"})
+    assert await websocket_client.receive_json() == snapshot
