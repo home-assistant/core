@@ -42,3 +42,19 @@ class OpenHardwareMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
             title=f"{host}:{port}",
             data=user_input,
         )
+
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
+        """Import config from configuration.yaml."""
+        host = import_data[CONF_HOST]
+        port = import_data[CONF_PORT]
+        if import_data.get(GROUP_DEVICES_PER_DEPTH_LEVEL) is None:
+            import_data[GROUP_DEVICES_PER_DEPTH_LEVEL] = 0
+
+        await self.async_set_unique_id(f"{host}:{port}")
+        self._abort_if_unique_id_configured()
+
+        title = f"{host}:{port}"
+        return self.async_create_entry(
+            title=title,
+            data=import_data,
+        )

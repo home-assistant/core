@@ -12,10 +12,12 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -23,6 +25,7 @@ from .coordinator import (
     OpenHardwareMonitorConfigEntry,
     OpenHardwareMonitorDataCoordinator,
 )
+from .const import DOMAIN
 
 STATE_MIN_VALUE = "minimal_value"
 STATE_MAX_VALUE = "maximum_value"
@@ -40,6 +43,20 @@ OHM_ID = "id"
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_HOST): cv.string, vol.Optional(CONF_PORT, default=8085): cv.port}
 )
+
+
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities,
+    discovery_info = None,
+) -> None:
+    """Set up the Open Hardware Monitor platform."""
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=dict(config)
+        )
+    )
 
 
 async def async_setup_entry(
