@@ -14,6 +14,7 @@ from .const import (
     DEFAULT_URL,
     DOMAIN,
     LOGIN_INVALID_AUTH_CODE,
+    LOGIN_LOCKED_CODE,
     SERVER_URLS,
 )
 
@@ -63,11 +64,17 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if (
             not login_response["success"]
-            and login_response["msg"] == LOGIN_INVALID_AUTH_CODE
         ):
-            return self._async_show_user_form({"base": "invalid_auth"})
+            if login_response["msg"] == LOGIN_INVALID_AUTH_CODE:
+                # Invalid auth code
+                return self._async_show_user_form({"base": "invalid_auth"})
+            if login_response["msg"] == LOGIN_LOCKED_CODE:
+                # Account locked
+                return self._async_show_user_form({"base": login_response["error"]
+                + "; lockDuration="
+                + login_response["lockDuration"]})
+            return self._async_show_user_form({"base": "unknown auth error"})
         self.user_id = login_response["user"]["id"]
-
         self.data = user_input
         return await self.async_step_plant()
 
