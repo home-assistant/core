@@ -9,7 +9,6 @@ if TYPE_CHECKING:
     # Import keeps mypy happy but is a circular reference otherwise
     from .coordinator import HomeLinkCoordinator  # noqa: F401
 
-import logging
 
 from homeassistant.components.event import EventDeviceClass, EventEntity
 from homeassistant.config_entries import ConfigEntry
@@ -21,8 +20,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, EVENT_OFF, EVENT_PRESSED, EVENT_TIMEOUT
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
