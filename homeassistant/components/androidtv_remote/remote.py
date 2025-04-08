@@ -6,6 +6,8 @@ import asyncio
 from collections.abc import Iterable
 from typing import Any
 
+from androidtvremote2 import ConnectionClosed
+
 from homeassistant.components.remote import (
     ATTR_ACTIVITY,
     ATTR_DELAY_SECS,
@@ -111,7 +113,13 @@ class AndroidTVRemoteEntity(AndroidTVRemoteBaseEntity, RemoteEntity):
         for _ in range(num_repeats):
             for single_command in command:
                 if device:
-                    self._api.send_text(single_command)
+                    try:
+                        self._api.send_text(single_command)
+                    except ConnectionClosed as exc:
+                        raise HomeAssistantError(
+                            translation_domain=DOMAIN,
+                            translation_key="connection_closed",
+                        ) from exc
                 elif hold_secs:
                     self._send_key_command(single_command, "START_LONG")
                     await asyncio.sleep(hold_secs)

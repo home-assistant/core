@@ -56,6 +56,9 @@
     }
   },
   "exceptions": {
+    "connection_closed": {
+      "message": "Connection to the Android TV device is closed"
+    },
     "send_command_invalid_device": {
       "message": "Only keyboard device is supported"
     }
