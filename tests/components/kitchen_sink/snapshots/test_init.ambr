@@ -1,0 +1,62 @@
+# serializer version: 1
+# name: test_statistics_issues
+  dict({
+    'sensor.statistics_issues_issue_1': list([
+      dict({
+        'data': dict({
+          'metadata_unit': 'm³',
+          'state_unit': 'W',
+          'statistic_id': 'sensor.statistics_issues_issue_1',
+          'supported_unit': 'CCF, L, fl. oz., ft³, gal, mL, m³',
+        }),
+        'type': 'units_changed',
+      }),
+    ]),
+    'sensor.statistics_issues_issue_2': list([
+      dict({
+        'data': dict({
+          'metadata_unit': 'cats',
+          'state_unit': 'dogs',
+          'statistic_id': 'sensor.statistics_issues_issue_2',
+          'supported_unit': 'cats',
+        }),
+        'type': 'units_changed',
+      }),
+    ]),
+    'sensor.statistics_issues_issue_3': list([
+      dict({
+        'data': dict({
+          'statistic_id': 'sensor.statistics_issues_issue_3',
+        }),
+        'type': 'state_class_removed',
+      }),
+      dict({
+        'data': dict({
+          'metadata_unit': 'm³',
+          'state_unit': 'W',
+          'statistic_id': 'sensor.statistics_issues_issue_3',
+          'supported_unit': 'CCF, L, fl. oz., ft³, gal, mL, m³',
+        }),
+        'type': 'units_changed',
+      }),
+    ]),
+    'sensor.statistics_issues_issue_4': list([
+      dict({
+        'data': dict({
+          'statistic_id': 'sensor.statistics_issues_issue_4',
+        }),
+        'type': 'no_state',
+      }),
+    ]),
+    'sensor.statistics_issues_issue_5': list([
+      dict({
+        'data': dict({
+          'metadata_mean_type': 1,
+          'state_mean_type': 2,
+          'statistic_id': 'sensor.statistics_issues_issue_5',
+        }),
+        'type': 'mean_type_changed',
+      }),
+    ]),
+  })
+# ---
