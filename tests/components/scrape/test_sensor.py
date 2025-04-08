@@ -594,6 +594,8 @@ async def test_templates_with_yaml(hass: HomeAssistant) -> None:
                     CONF_INDEX: 0,
                     CONF_UNIQUE_ID: "3699ef88-69e6-11ed-a1eb-0242ac120002",
                     CONF_AVAILABILITY: '{{ states("sensor.input1")=="on" }}',
+                    CONF_ICON: 'mdi:o{{ "n" if states("sensor.input1")=="on" else "ff" }}',
+                    CONF_PICTURE: 'o{{ "n" if states("sensor.input1")=="on" else "ff" }}.jpg',
                 }
             ],
         }
@@ -613,6 +615,8 @@ async def test_availability(
 
     state = hass.states.get("sensor.current_version")
     assert state.state == "2021.12.10"
+    assert state.attributes["icon"] == "mdi:on"
+    assert state.attributes["entity_picture"] == "on.jpg"
 
     hass.states.async_set("sensor.input1", "off")
     await hass.async_block_till_done()
@@ -623,6 +627,8 @@ async def test_availability(
 
     state = hass.states.get("sensor.current_version")
     assert state.state == STATE_UNAVAILABLE
+    assert state.attributes.get("icon") is None
+    assert state.attributes.get("entity_picture") is None
 
 
 async def test_template_render_with_availability_syntax_error(

@@ -776,6 +776,7 @@ async def test_template_not_error_when_data_is_none(
                         "device_class": "date",
                         "value_template": "{{ strptime(value, '%B %d, %Y').strftime('%Y-%m-%d') }}",
                         "availability": '{{ states("sensor.input1")=="on" }}',
+                        "icon": "mdi:o{{ 'n' if states('sensor.input1')=='on' else 'ff' }}",
                     }
                 }
             ]
@@ -797,6 +798,7 @@ async def test_availability(
     entity_state = hass.states.get("sensor.test")
     assert entity_state
     assert entity_state.state == "2022-01-17"
+    assert entity_state.attributes["icon"] == "mdi:on"
 
     hass.states.async_set("sensor.input1", "off")
     await hass.async_block_till_done()
@@ -808,6 +810,7 @@ async def test_availability(
     entity_state = hass.states.get("sensor.test")
     assert entity_state
     assert entity_state.state == STATE_UNAVAILABLE
+    assert entity_state.attributes.get("icon") is None
 
 
 async def test_template_render_with_availability_syntax_error(
