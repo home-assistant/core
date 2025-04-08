@@ -65,23 +65,26 @@ class DeviceConflictRepair(ESPHomeRepair):
                 data_schema=vol.Schema(
                     {
                         vol.Required("action"): vol.In(
-                            {"replace": "Replace", "ignore": "Ignore"}
+                            {
+                                "migrate": "Migrate to new hardware",
+                                "manual": "Remove or rename the device",
+                            }
                         )
                     }
                 ),
                 description_placeholders=self._async_get_placeholders(),
             )
-        if user_input["action"] == "replace":
-            return await self.async_step_confirm()
-        return await self.async_step_ignored()
+        if user_input["action"] == "migrate":
+            return await self.async_step_migrate()
+        return await self.async_step_manual()
 
-    async def async_step_confirm(
+    async def async_step_migrate(
         self, user_input: dict[str, str] | None = None
     ) -> data_entry_flow.FlowResult:
-        """Handle the confirm step of a fix flow."""
+        """Handle the migrate step of a fix flow."""
         if user_input is None:
             return self.async_show_form(
-                step_id="confirm",
+                step_id="migrate",
                 data_schema=vol.Schema({}),
                 description_placeholders=self._async_get_placeholders(),
             )
@@ -90,13 +93,13 @@ class DeviceConflictRepair(ESPHomeRepair):
         self.hass.config_entries.async_schedule_reload(entry_id)
         return self.async_create_entry(data={})
 
-    async def async_step_ignored(
+    async def async_step_manual(
         self, user_input: dict[str, str] | None = None
     ) -> data_entry_flow.FlowResult:
-        """Handle the ignored step of a fix flow."""
+        """Handle the manual step of a fix flow."""
         if user_input is None:
             return self.async_show_form(
-                step_id="ignored",
+                step_id="manual",
                 data_schema=vol.Schema({}),
                 description_placeholders=self._async_get_placeholders(),
             )
