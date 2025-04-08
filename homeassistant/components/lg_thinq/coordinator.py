@@ -37,7 +37,7 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             name=f"{DOMAIN}_{ha_bridge.device.device_id}",
         )
 
-        self.data = {}
+        self.data = ha_bridge.update_status(None)
         self.api = ha_bridge
         self.device_id = ha_bridge.device.device_id
         self.sub_id = ha_bridge.sub_id
