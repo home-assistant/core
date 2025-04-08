@@ -15,6 +15,7 @@ from pyhap.service import Service
 from pyhap.util import callback as pyhap_callback
 
 from homeassistant.components.cover import CoverDeviceClass, CoverEntityFeature
+from homeassistant.components.lawn_mower import LawnMowerEntityFeature
 from homeassistant.components.media_player import MediaPlayerDeviceClass
 from homeassistant.components.remote import RemoteEntityFeature
 from homeassistant.components.sensor import SensorDeviceClass
@@ -249,6 +250,13 @@ def get_accessory(  # noqa: C901
 
     elif state.domain == "vacuum":
         a_type = "Vacuum"
+
+    elif (
+        state.domain == "lawn_mower"
+        and features & LawnMowerEntityFeature.DOCK
+        and features & LawnMowerEntityFeature.START_MOWING
+    ):
+        a_type = "LawnMower"
 
     elif state.domain == "remote" and features & RemoteEntityFeature.ACTIVITY:
         a_type = "ActivityRemote"

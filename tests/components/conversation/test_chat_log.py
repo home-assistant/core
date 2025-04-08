@@ -14,6 +14,7 @@ from homeassistant.components.conversation import (
     ConversationInput,
     ConverseError,
     ToolResultContent,
+    UserContent,
     async_get_chat_log,
 )
 from homeassistant.components.conversation.chat_log import DATA_CHAT_LOGS
@@ -590,7 +591,7 @@ async def test_add_delta_content_stream_errors(
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
     ):
         # Stream content without LLM API set
-        with pytest.raises(ValueError):  # noqa: PT012
+        with pytest.raises(ValueError):
             async for _tool_result_content in chat_log.async_add_delta_content_stream(
                 "mock-agent-id",
                 stream(
@@ -612,7 +613,7 @@ async def test_add_delta_content_stream_errors(
 
         # Non assistant role
         for role in "system", "user":
-            with pytest.raises(ValueError):  # noqa: PT012
+            with pytest.raises(ValueError):
                 async for (
                     _tool_result_content
                 ) in chat_log.async_add_delta_content_stream(
@@ -643,3 +644,30 @@ async def test_chat_log_reuse(
             assert len(chat_log.content) == 2
             assert chat_log.content[1].role == "user"
             assert chat_log.content[1].content == mock_conversation_input.text
+
+
+async def test_chat_log_continue_conversation(
+    hass: HomeAssistant,
+    mock_conversation_input: ConversationInput,
+) -> None:
+    """Test continue conversation."""
+    with (
+        chat_session.async_get_chat_session(hass) as session,
+        async_get_chat_log(hass, session) as chat_log,
+    ):
+        assert chat_log.continue_conversation is False
+        chat_log.async_add_user_content(UserContent(mock_conversation_input.text))
+        assert chat_log.continue_conversation is False
+        chat_log.async_add_assistant_content_without_tools(
+            AssistantContent(
+                agent_id="mock-agent-id",
+                content="Hey? ",
+            )
+        )
+        chat_log.async_add_assistant_content_without_tools(
+            AssistantContent(
+                agent_id="mock-agent-id",
+                content="Ποιο είναι το αγαπημένο σου χρώμα στα ελληνικά;",
+            )
+        )
+        assert chat_log.continue_conversation is True

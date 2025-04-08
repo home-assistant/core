@@ -281,7 +281,7 @@ class CachedProperties(type):
     """
 
     def __new__(
-        mcs,  # noqa: N804  ruff bug, ruff does not understand this is a metaclass
+        mcs,
         name: str,
         bases: tuple[type, ...],
         namespace: dict[Any, Any],

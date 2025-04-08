@@ -26,10 +26,20 @@
         "state": {
           "good": "Good",
           "hazardous": "Hazardous",
-          "high": "High",
-          "low": "Low",
           "moderate": "Moderate",
-          "unhealthy": "Unhealthy"
+          "unhealthy": "Unhealthy",
+          "very_unhealthy": "Very unhealthy"
+        },
+        "state_attributes": {
+          "options": {
+            "state": {
+              "good": "[%key:component::accuweather::entity::sensor::air_quality::state::good%]",
+              "hazardous": "[%key:component::accuweather::entity::sensor::air_quality::state::hazardous%]",
+              "moderate": "[%key:component::accuweather::entity::sensor::air_quality::state::moderate%]",
+              "unhealthy": "[%key:component::accuweather::entity::sensor::air_quality::state::unhealthy%]",
+              "very_unhealthy": "[%key:component::accuweather::entity::sensor::air_quality::state::very_unhealthy%]"
+            }
+          }
         }
       },
       "apparent_temperature": {
@@ -62,12 +72,10 @@
           "level": {
             "name": "Level",
             "state": {
-              "good": "[%key:component::accuweather::entity::sensor::air_quality::state::good%]",
-              "hazardous": "[%key:component::accuweather::entity::sensor::air_quality::state::hazardous%]",
-              "high": "[%key:component::accuweather::entity::sensor::air_quality::state::high%]",
-              "low": "[%key:component::accuweather::entity::sensor::air_quality::state::low%]",
-              "moderate": "[%key:component::accuweather::entity::sensor::air_quality::state::moderate%]",
-              "unhealthy": "[%key:component::accuweather::entity::sensor::air_quality::state::unhealthy%]"
+              "high": "[%key:common::state::high%]",
+              "low": "[%key:common::state::low%]",
+              "moderate": "Moderate",
+              "very_high": "[%key:common::state::very_high%]"
             }
           }
         }
@@ -81,12 +89,10 @@
           "level": {
             "name": "[%key:component::accuweather::entity::sensor::grass_pollen::state_attributes::level::name%]",
             "state": {
-              "good": "[%key:component::accuweather::entity::sensor::air_quality::state::good%]",
-              "hazardous": "[%key:component::accuweather::entity::sensor::air_quality::state::hazardous%]",
-              "high": "[%key:component::accuweather::entity::sensor::air_quality::state::high%]",
-              "low": "[%key:component::accuweather::entity::sensor::air_quality::state::low%]",
-              "moderate": "[%key:component::accuweather::entity::sensor::air_quality::state::moderate%]",
-              "unhealthy": "[%key:component::accuweather::entity::sensor::air_quality::state::unhealthy%]"
+              "high": "[%key:common::state::high%]",
+              "low": "[%key:common::state::low%]",
+              "moderate": "[%key:component::accuweather::entity::sensor::grass_pollen::state_attributes::level::state::moderate%]",
+              "very_high": "[%key:common::state::very_high%]"
             }
           }
         }
@@ -100,6 +106,15 @@
           "steady": "Steady",
           "rising": "Rising",
           "falling": "Falling"
+        },
+        "state_attributes": {
+          "options": {
+            "state": {
+              "falling": "[%key:component::accuweather::entity::sensor::pressure_tendency::state::falling%]",
+              "rising": "[%key:component::accuweather::entity::sensor::pressure_tendency::state::rising%]",
+              "steady": "[%key:component::accuweather::entity::sensor::pressure_tendency::state::steady%]"
+            }
+          }
         }
       },
       "ragweed_pollen": {
@@ -108,12 +123,10 @@
           "level": {
             "name": "[%key:component::accuweather::entity::sensor::grass_pollen::state_attributes::level::name%]",
             "state": {
-              "good": "[%key:component::accuweather::entity::sensor::air_quality::state::good%]",
-              "hazardous": "[%key:component::accuweather::entity::sensor::air_quality::state::hazardous%]",
-              "high": "[%key:component::accuweather::entity::sensor::air_quality::state::high%]",
-              "low": "[%key:component::accuweather::entity::sensor::air_quality::state::low%]",
-              "moderate": "[%key:component::accuweather::entity::sensor::air_quality::state::moderate%]",
-              "unhealthy": "[%key:component::accuweather::entity::sensor::air_quality::state::unhealthy%]"
+              "high": "[%key:common::state::high%]",
+              "low": "[%key:common::state::low%]",
+              "moderate": "[%key:component::accuweather::entity::sensor::grass_pollen::state_attributes::level::state::moderate%]",
+              "very_high": "[%key:common::state::very_high%]"
             }
           }
         }
@@ -154,12 +167,10 @@
           "level": {
             "name": "[%key:component::accuweather::entity::sensor::grass_pollen::state_attributes::level::name%]",
             "state": {
-              "good": "[%key:component::accuweather::entity::sensor::air_quality::state::good%]",
-              "hazardous": "[%key:component::accuweather::entity::sensor::air_quality::state::hazardous%]",
-              "high": "[%key:component::accuweather::entity::sensor::air_quality::state::high%]",
-              "low": "[%key:component::accuweather::entity::sensor::air_quality::state::low%]",
-              "moderate": "[%key:component::accuweather::entity::sensor::air_quality::state::moderate%]",
-              "unhealthy": "[%key:component::accuweather::entity::sensor::air_quality::state::unhealthy%]"
+              "high": "[%key:common::state::high%]",
+              "low": "[%key:common::state::low%]",
+              "moderate": "[%key:component::accuweather::entity::sensor::grass_pollen::state_attributes::level::state::moderate%]",
+              "very_high": "[%key:common::state::very_high%]"
             }
           }
         }
@@ -170,12 +181,10 @@
           "level": {
             "name": "[%key:component::accuweather::entity::sensor::grass_pollen::state_attributes::level::name%]",
             "state": {
-              "good": "[%key:component::accuweather::entity::sensor::air_quality::state::good%]",
-              "hazardous": "[%key:component::accuweather::entity::sensor::air_quality::state::hazardous%]",
-              "high": "[%key:component::accuweather::entity::sensor::air_quality::state::high%]",
-              "low": "[%key:component::accuweather::entity::sensor::air_quality::state::low%]",
-              "moderate": "[%key:component::accuweather::entity::sensor::air_quality::state::moderate%]",
-              "unhealthy": "[%key:component::accuweather::entity::sensor::air_quality::state::unhealthy%]"
+              "high": "[%key:common::state::high%]",
+              "low": "[%key:common::state::low%]",
+              "moderate": "[%key:component::accuweather::entity::sensor::grass_pollen::state_attributes::level::state::moderate%]",
+              "very_high": "[%key:common::state::very_high%]"
             }
           }
         }
@@ -186,12 +195,10 @@
           "level": {
             "name": "[%key:component::accuweather::entity::sensor::grass_pollen::state_attributes::level::name%]",
             "state": {
-              "good": "[%key:component::accuweather::entity::sensor::air_quality::state::good%]",
-              "hazardous": "[%key:component::accuweather::entity::sensor::air_quality::state::hazardous%]",
-              "high": "[%key:component::accuweather::entity::sensor::air_quality::state::high%]",
-              "low": "[%key:component::accuweather::entity::sensor::air_quality::state::low%]",
-              "moderate": "[%key:component::accuweather::entity::sensor::air_quality::state::moderate%]",
-              "unhealthy": "[%key:component::accuweather::entity::sensor::air_quality::state::unhealthy%]"
+              "high": "[%key:common::state::high%]",
+              "low": "[%key:common::state::low%]",
+              "moderate": "[%key:component::accuweather::entity::sensor::grass_pollen::state_attributes::level::state::moderate%]",
+              "very_high": "[%key:common::state::very_high%]"
             }
           }
         }
@@ -220,6 +227,14 @@
       "wind_speed_night": {
         "name": "Wind speed night {forecast_day}"
       }
+    }
+  },
+  "exceptions": {
+    "current_conditions_update_error": {
+      "message": "An error occurred while retrieving weather current conditions data from the AccuWeather API: {error}"
+    },
+    "forecast_update_error": {
+      "message": "An error occurred while retrieving weather forecast data from the AccuWeather API: {error}"
     }
   },
   "system_health": {

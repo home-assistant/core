@@ -1909,6 +1909,7 @@ async def test_group_media_control(
     )
 
 
+@pytest.mark.usefixtures("mock_tts_cache_dir")
 async def test_failed_cast_on_idle(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -1939,6 +1940,7 @@ async def test_failed_cast_on_idle(
     assert "Failed to cast media http://example.com:8123/tts.mp3." in caplog.text
 
 
+@pytest.mark.usefixtures("mock_tts_cache_dir")
 async def test_failed_cast_other_url(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -1963,6 +1965,7 @@ async def test_failed_cast_other_url(
     assert "Failed to cast media http://example.com:8123/tts.mp3." in caplog.text
 
 
+@pytest.mark.usefixtures("mock_tts_cache_dir")
 async def test_failed_cast_internal_url(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -1992,6 +1995,7 @@ async def test_failed_cast_internal_url(
     )
 
 
+@pytest.mark.usefixtures("mock_tts_cache_dir")
 async def test_failed_cast_external_url(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
