@@ -13,7 +13,7 @@ _PLATFORMS: list[Platform] = [Platform.SWITCH]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Laith Switch from a config entry."""
+    """Set up Laith Switch from a config entry. changing it to be clear for testing purposes."""
     # Initialize domain data (in case it's needed later)
     hass.data.setdefault(DOMAIN, {})
 
