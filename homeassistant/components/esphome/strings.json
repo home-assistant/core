@@ -141,7 +141,7 @@
           },
           "confirm": {
             "title": "Confirm device replacement for {name}",
-            "description": "Are you sure you want to migrate `{name}` (`{model}`) at `{ip}` from `{stored_mac}` to `{mac}`?"
+            "description": "Are you sure you want to migrate the Home Assistant configuration for `{name}` (`{model}`) at `{ip}` from `{stored_mac}` to `{mac}`?"
           },
           "ignored": {
             "title": "Device conflict for {name} ignored",
