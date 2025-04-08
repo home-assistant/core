@@ -79,7 +79,9 @@ class PterodactylAPI:
 
             raise PterodactylConnectionError(error) from error
         else:
-            game_servers = paginated_response.collect()
+            game_servers = await self.hass.async_add_executor_job(
+                paginated_response.collect
+            )
             for game_server in game_servers:
                 self.identifiers.append(game_server["attributes"]["identifier"])
 
