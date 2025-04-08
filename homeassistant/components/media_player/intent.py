@@ -226,13 +226,9 @@ class MediaNextHandler(intent.ServiceIntentHandler):
                     return await super().async_handle_states(
                         intent_obj, match_result, match_constraints
                     )
-
-                resp = intent.IntentResponse(intent_obj.language, intent_obj)
-                resp.async_set_error(
-                    intent.IntentResponseErrorCode.NO_VALID_TARGETS,
-                    "Too many possible targets",
+                raise intent.MatchFailedError(
+                    match_result, match_constraints, match_preferences
                 )
-                return resp
 
         return await super().async_handle_states(
             intent_obj, match_result, match_constraints
@@ -251,7 +247,7 @@ class MediaPreviousHandler(intent.ServiceIntentHandler):
             required_domains={DOMAIN},
             required_features=MediaPlayerEntityFeature.PREVIOUS_TRACK,
             required_states={MediaPlayerState.PLAYING, MediaPlayerState.PAUSED},
-            description="Replays the previous item for a media player",
+            description="Plays the previous item for a media player",
             platforms={DOMAIN},
             device_classes={MediaPlayerDeviceClass},
         )
@@ -263,7 +259,7 @@ class MediaPreviousHandler(intent.ServiceIntentHandler):
         match_constraints: intent.MatchTargetsConstraints,
         match_preferences: intent.MatchTargetsPreferences | None = None,
     ) -> intent.IntentResponse:
-        """Replay previous media item."""
+        """Play previous media item."""
         if match_result.is_match and (not match_constraints.name):
             if len(match_result.states) == 1:
                 return await super().async_handle_states(
@@ -280,13 +276,9 @@ class MediaPreviousHandler(intent.ServiceIntentHandler):
                     return await super().async_handle_states(
                         intent_obj, match_result, match_constraints
                     )
-
-                resp = intent.IntentResponse(intent_obj.language, intent_obj)
-                resp.async_set_error(
-                    intent.IntentResponseErrorCode.NO_VALID_TARGETS,
-                    "Too many possible targets",
+                raise intent.MatchFailedError(
+                    match_result, match_constraints, match_preferences
                 )
-                return resp
 
         return await super().async_handle_states(
             intent_obj, match_result, match_constraints

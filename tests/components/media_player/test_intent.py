@@ -1,5 +1,7 @@
 """The tests for the media_player platform."""
 
+from contextlib import nullcontext as does_not_raise
+
 import pytest
 
 from homeassistant.components.media_player import (
@@ -14,9 +16,13 @@ from homeassistant.components.media_player import (
 from homeassistant.components.media_player.const import MediaPlayerEntityFeature
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
+    STATE_BUFFERING,
     STATE_IDLE,
+    STATE_OFF,
+    STATE_ON,
     STATE_PAUSED,
     STATE_PLAYING,
+    STATE_STANDBY,
 )
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import (
@@ -118,332 +124,186 @@ async def test_unpause_media_player_intent(hass: HomeAssistant) -> None:
         )
 
 
-async def test_next_media_player_intent(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("state", "outcome"),
+    [
+        (STATE_PLAYING, does_not_raise()),
+        (STATE_PAUSED, does_not_raise()),
+        (STATE_IDLE, pytest.raises(intent.MatchFailedError)),
+        (STATE_ON, pytest.raises(intent.MatchFailedError)),
+        (STATE_BUFFERING, pytest.raises(intent.MatchFailedError)),
+        (STATE_STANDBY, pytest.raises(intent.MatchFailedError)),
+        (STATE_OFF, pytest.raises(intent.MatchFailedError)),
+    ],
+)
+async def test_next_media_player_intent(hass: HomeAssistant, state, outcome) -> None:
     """Test HassMediaNext intent for media players."""
-    await media_player_intent.async_setup_intents(hass)
+    with outcome:
+        await media_player_intent.async_setup_intents(hass)
+        entity_id = f"{DOMAIN}.test_media_player"
+        attributes = {ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature.NEXT_TRACK}
+        hass.states.async_set(entity_id, state, attributes=attributes)
 
-    entity_id = f"{DOMAIN}.test_media_player"
-    attributes = {ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature.NEXT_TRACK}
+        calls = async_mock_service(hass, DOMAIN, SERVICE_MEDIA_NEXT_TRACK)
 
-    # Test when playing
-    hass.states.async_set(entity_id, STATE_PLAYING, attributes=attributes)
-
-    calls = async_mock_service(hass, DOMAIN, SERVICE_MEDIA_NEXT_TRACK)
-
-    response = await intent.async_handle(
-        hass,
-        "test",
-        media_player_intent.INTENT_MEDIA_NEXT,
-    )
-    await hass.async_block_till_done()
-
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
-    assert len(calls) == 1
-    call = calls[0]
-    assert call.domain == DOMAIN
-    assert call.service == SERVICE_MEDIA_NEXT_TRACK
-    assert call.data == {"entity_id": entity_id}
-
-    # Test when paused
-
-    hass.states.async_set(entity_id, STATE_PAUSED, attributes=attributes)
-    calls = async_mock_service(hass, DOMAIN, SERVICE_MEDIA_NEXT_TRACK)
-
-    response = await intent.async_handle(
-        hass,
-        "test",
-        media_player_intent.INTENT_MEDIA_NEXT,
-    )
-    await hass.async_block_till_done()
-
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
-    assert len(calls) == 1
-    call = calls[0]
-    assert call.domain == DOMAIN
-    assert call.service == SERVICE_MEDIA_NEXT_TRACK
-    assert call.data == {"entity_id": entity_id}
-
-    # Test when idle
-    hass.states.async_set(entity_id, STATE_IDLE, attributes=attributes)
-
-    with pytest.raises(intent.MatchFailedError):
         response = await intent.async_handle(
             hass,
             "test",
             media_player_intent.INTENT_MEDIA_NEXT,
         )
+        await hass.async_block_till_done()
 
-    # Test feature not supported
-    hass.states.async_set(
-        entity_id,
-        STATE_PLAYING,
-        attributes={ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature(0)},
-    )
-
-    with pytest.raises(intent.MatchFailedError):
-        response = await intent.async_handle(
-            hass,
-            "test",
-            media_player_intent.INTENT_MEDIA_NEXT,
-            {"name": {"value": "test media player"}},
-        )
+        assert response.response_type == intent.IntentResponseType.ACTION_DONE
+        assert len(calls) == 1
+        call = calls[0]
+        assert call.domain == DOMAIN
+        assert call.service == SERVICE_MEDIA_NEXT_TRACK
+        assert call.data == {"entity_id": entity_id}
 
 
+@pytest.mark.parametrize(
+    ("state_combination", "outcome"),
+    [
+        ((STATE_PLAYING, STATE_PLAYING), pytest.raises(intent.MatchFailedError)),
+        ((STATE_PLAYING, STATE_PAUSED), does_not_raise()),
+        ((STATE_PAUSED, STATE_PAUSED), pytest.raises(intent.MatchFailedError)),
+    ],
+)
 async def test_next_media_player_intent_multiple(
     hass: HomeAssistant,
     area_registry: ar.AreaRegistry,
     entity_registry: er.EntityRegistry,
+    state_combination,
+    outcome,
 ) -> None:
     """Test HassMediaNext intent for multiple media players."""
-    await media_player_intent.async_setup_intents(hass)
+    with outcome:
+        await media_player_intent.async_setup_intents(hass)
 
-    attributes = {ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature.NEXT_TRACK}
+        attributes = {ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature.NEXT_TRACK}
 
-    # Layout:
-    #   - Living room
-    #     - TV
-    #     - Smart speaker
+        # Living room
+        #   - TV
+        #   - Smart speaker
 
-    area_living_room = area_registry.async_get_or_create("living room")
+        living_room = area_registry.async_get_or_create("living room")
 
-    living_room_smart_speaker = entity_registry.async_get_or_create(
-        "media_player", "test", "living_room_smart_speaker"
-    )
-    living_room_smart_speaker = entity_registry.async_update_entity(
-        living_room_smart_speaker.entity_id,
-        name="smart speaker",
-        area_id=area_living_room.id,
-    )
+        avr = entity_registry.async_get_or_create("media_player", "test", "avr")
+        avr = entity_registry.async_update_entity(
+            avr.entity_id,
+            area_id=living_room.id,
+        )
 
-    living_room_tv = entity_registry.async_get_or_create(
-        "media_player", "test", "living_room_tv"
-    )
-    living_room_tv = entity_registry.async_update_entity(
-        living_room_tv.entity_id, name="TV", area_id=area_living_room.id
-    )
+        tv = entity_registry.async_get_or_create("media_player", "test", "tv")
+        tv = entity_registry.async_update_entity(tv.entity_id, area_id=living_room.id)
 
-    # Test one is paused and one is playing
+        hass.states.async_set(
+            avr.entity_id, state_combination[0], attributes=attributes
+        )
+        hass.states.async_set(tv.entity_id, state_combination[1], attributes=attributes)
 
-    hass.states.async_set(
-        living_room_smart_speaker.entity_id, STATE_PAUSED, attributes=attributes
-    )
-    hass.states.async_set(
-        living_room_tv.entity_id, STATE_PLAYING, attributes=attributes
-    )
-
-    calls = async_mock_service(hass, DOMAIN, SERVICE_MEDIA_NEXT_TRACK)
-    response = await intent.async_handle(
-        hass,
-        "test",
-        media_player_intent.INTENT_MEDIA_NEXT,
-        {"area": {"value": area_living_room.name}},
-    )
-    await hass.async_block_till_done()
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
-    assert len(calls) == 1
-    assert calls[0].data == {"entity_id": living_room_tv.entity_id}
-
-    # Test two are paused
-    hass.states.async_set(
-        living_room_smart_speaker.entity_id, STATE_PAUSED, attributes=attributes
-    )
-    hass.states.async_set(living_room_tv.entity_id, STATE_PAUSED, attributes=attributes)
-
-    calls = async_mock_service(hass, DOMAIN, SERVICE_MEDIA_NEXT_TRACK)
-    response = await intent.async_handle(
-        hass,
-        "test",
-        media_player_intent.INTENT_MEDIA_NEXT,
-        {"area": {"value": area_living_room.name}},
-    )
-    await hass.async_block_till_done()
-    assert response.response_type == intent.IntentResponseType.ERROR
-    assert response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
-    assert len(calls) == 0
-
-    # Test two are playing
-    hass.states.async_set(
-        living_room_smart_speaker.entity_id, STATE_PLAYING, attributes=attributes
-    )
-    hass.states.async_set(
-        living_room_tv.entity_id, STATE_PLAYING, attributes=attributes
-    )
-
-    calls = async_mock_service(hass, DOMAIN, SERVICE_MEDIA_NEXT_TRACK)
-    response = await intent.async_handle(
-        hass,
-        "test",
-        media_player_intent.INTENT_MEDIA_NEXT,
-        {"area": {"value": area_living_room.name}},
-    )
-    await hass.async_block_till_done()
-    assert response.response_type == intent.IntentResponseType.ERROR
-    assert response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
-    assert len(calls) == 0
+        calls = async_mock_service(hass, DOMAIN, SERVICE_MEDIA_NEXT_TRACK)
+        response = await intent.async_handle(
+            hass,
+            "test",
+            media_player_intent.INTENT_MEDIA_NEXT,
+            {"area": {"value": living_room.name}},
+        )
+        await hass.async_block_till_done()
+        assert response.response_type == intent.IntentResponseType.ACTION_DONE
+        assert len(calls) == 1
 
 
-async def test_previous_media_player_intent(hass: HomeAssistant) -> None:
-    """Test HassMediaPrevious intent for media players."""
-    await media_player_intent.async_setup_intents(hass)
+@pytest.mark.parametrize(
+    ("state", "outcome"),
+    [
+        (STATE_PLAYING, does_not_raise()),
+        (STATE_PAUSED, does_not_raise()),
+        (STATE_IDLE, pytest.raises(intent.MatchFailedError)),
+        (STATE_ON, pytest.raises(intent.MatchFailedError)),
+        (STATE_BUFFERING, pytest.raises(intent.MatchFailedError)),
+        (STATE_STANDBY, pytest.raises(intent.MatchFailedError)),
+        (STATE_OFF, pytest.raises(intent.MatchFailedError)),
+    ],
+)
+async def test_previous_media_player_intent(
+    hass: HomeAssistant, state, outcome
+) -> None:
+    """Test HassMediaNext intent for media players."""
+    with outcome:
+        await media_player_intent.async_setup_intents(hass)
+        entity_id = f"{DOMAIN}.test_media_player"
+        attributes = {ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature.PREVIOUS_TRACK}
+        hass.states.async_set(entity_id, state, attributes=attributes)
 
-    entity_id = f"{DOMAIN}.test_media_player"
-    attributes = {ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature.PREVIOUS_TRACK}
+        calls = async_mock_service(hass, DOMAIN, SERVICE_MEDIA_PREVIOUS_TRACK)
 
-    # Test when playing
-    hass.states.async_set(entity_id, STATE_PLAYING, attributes=attributes)
-
-    calls = async_mock_service(hass, DOMAIN, SERVICE_MEDIA_PREVIOUS_TRACK)
-
-    response = await intent.async_handle(
-        hass,
-        "test",
-        media_player_intent.INTENT_MEDIA_PREVIOUS,
-    )
-    await hass.async_block_till_done()
-
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
-    assert len(calls) == 1
-    call = calls[0]
-    assert call.domain == DOMAIN
-    assert call.service == SERVICE_MEDIA_PREVIOUS_TRACK
-    assert call.data == {"entity_id": entity_id}
-
-    # Test when paused
-
-    hass.states.async_set(entity_id, STATE_PAUSED, attributes=attributes)
-    calls = async_mock_service(hass, DOMAIN, SERVICE_MEDIA_PREVIOUS_TRACK)
-
-    response = await intent.async_handle(
-        hass,
-        "test",
-        media_player_intent.INTENT_MEDIA_PREVIOUS,
-    )
-    await hass.async_block_till_done()
-
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
-    assert len(calls) == 1
-    call = calls[0]
-    assert call.domain == DOMAIN
-    assert call.service == SERVICE_MEDIA_PREVIOUS_TRACK
-    assert call.data == {"entity_id": entity_id}
-
-    # Test if idle
-    hass.states.async_set(entity_id, STATE_IDLE, attributes=attributes)
-
-    with pytest.raises(intent.MatchFailedError):
         response = await intent.async_handle(
             hass,
             "test",
             media_player_intent.INTENT_MEDIA_PREVIOUS,
         )
+        await hass.async_block_till_done()
 
-    # Test feature not supported
-    hass.states.async_set(
-        entity_id,
-        STATE_PLAYING,
-        attributes={ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature(0)},
-    )
-
-    with pytest.raises(intent.MatchFailedError):
-        response = await intent.async_handle(
-            hass,
-            "test",
-            media_player_intent.INTENT_MEDIA_PREVIOUS,
-            {"name": {"value": "test media player"}},
-        )
+        assert response.response_type == intent.IntentResponseType.ACTION_DONE
+        assert len(calls) == 1
+        call = calls[0]
+        assert call.domain == DOMAIN
+        assert call.service == SERVICE_MEDIA_PREVIOUS_TRACK
+        assert call.data == {"entity_id": entity_id}
 
 
+@pytest.mark.parametrize(
+    ("state_combination", "outcome"),
+    [
+        ((STATE_PLAYING, STATE_PLAYING), pytest.raises(intent.MatchFailedError)),
+        ((STATE_PLAYING, STATE_PAUSED), does_not_raise()),
+        ((STATE_PAUSED, STATE_PAUSED), pytest.raises(intent.MatchFailedError)),
+    ],
+)
 async def test_previous_media_player_intent_multiple(
     hass: HomeAssistant,
     area_registry: ar.AreaRegistry,
     entity_registry: er.EntityRegistry,
+    state_combination,
+    outcome,
 ) -> None:
     """Test HassMediaPrevious intent for multiple media players."""
-    await media_player_intent.async_setup_intents(hass)
+    with outcome:
+        await media_player_intent.async_setup_intents(hass)
 
-    attributes = {ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature.PREVIOUS_TRACK}
+        attributes = {ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature.PREVIOUS_TRACK}
 
-    # Layout:
-    #   - Living room
-    #     - TV
-    #     - Smart speaker
+        # Living room
+        #   - TV
+        #   - Smart speaker
 
-    area_living_room = area_registry.async_get_or_create("living room")
+        living_room = area_registry.async_get_or_create("living room")
 
-    living_room_smart_speaker = entity_registry.async_get_or_create(
-        "media_player", "test", "living_room_smart_speaker"
-    )
-    living_room_smart_speaker = entity_registry.async_update_entity(
-        living_room_smart_speaker.entity_id,
-        name="smart speaker",
-        area_id=area_living_room.id,
-    )
+        avr = entity_registry.async_get_or_create("media_player", "test", "avr")
+        avr = entity_registry.async_update_entity(
+            avr.entity_id,
+            area_id=living_room.id,
+        )
 
-    living_room_tv = entity_registry.async_get_or_create(
-        "media_player", "test", "living_room_tv"
-    )
-    living_room_tv = entity_registry.async_update_entity(
-        living_room_tv.entity_id, name="TV", area_id=area_living_room.id
-    )
+        tv = entity_registry.async_get_or_create("media_player", "test", "tv")
+        tv = entity_registry.async_update_entity(tv.entity_id, area_id=living_room.id)
 
-    # Test one is paused and one is playing
+        hass.states.async_set(
+            avr.entity_id, state_combination[0], attributes=attributes
+        )
+        hass.states.async_set(tv.entity_id, state_combination[1], attributes=attributes)
 
-    hass.states.async_set(
-        living_room_smart_speaker.entity_id, STATE_PAUSED, attributes=attributes
-    )
-    hass.states.async_set(
-        living_room_tv.entity_id, STATE_PLAYING, attributes=attributes
-    )
-
-    calls = async_mock_service(hass, DOMAIN, SERVICE_MEDIA_PREVIOUS_TRACK)
-    response = await intent.async_handle(
-        hass,
-        "test",
-        media_player_intent.INTENT_MEDIA_PREVIOUS,
-        {"area": {"value": area_living_room.name}},
-    )
-    await hass.async_block_till_done()
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
-    assert len(calls) == 1
-    assert calls[0].data == {"entity_id": living_room_tv.entity_id}
-
-    # Test two are paused
-    hass.states.async_set(
-        living_room_smart_speaker.entity_id, STATE_PAUSED, attributes=attributes
-    )
-    hass.states.async_set(living_room_tv.entity_id, STATE_PAUSED, attributes=attributes)
-
-    calls = async_mock_service(hass, DOMAIN, SERVICE_MEDIA_PREVIOUS_TRACK)
-    response = await intent.async_handle(
-        hass,
-        "test",
-        media_player_intent.INTENT_MEDIA_PREVIOUS,
-        {"area": {"value": area_living_room.name}},
-    )
-    await hass.async_block_till_done()
-    assert response.response_type == intent.IntentResponseType.ERROR
-    assert response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
-    assert len(calls) == 0
-
-    # Test two are playing
-    hass.states.async_set(
-        living_room_smart_speaker.entity_id, STATE_PLAYING, attributes=attributes
-    )
-    hass.states.async_set(
-        living_room_tv.entity_id, STATE_PLAYING, attributes=attributes
-    )
-
-    calls = async_mock_service(hass, DOMAIN, SERVICE_MEDIA_PREVIOUS_TRACK)
-    response = await intent.async_handle(
-        hass,
-        "test",
-        media_player_intent.INTENT_MEDIA_PREVIOUS,
-        {"area": {"value": area_living_room.name}},
-    )
-    await hass.async_block_till_done()
-    assert response.response_type == intent.IntentResponseType.ERROR
-    assert response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
-    assert len(calls) == 0
+        calls = async_mock_service(hass, DOMAIN, SERVICE_MEDIA_PREVIOUS_TRACK)
+        response = await intent.async_handle(
+            hass,
+            "test",
+            media_player_intent.INTENT_MEDIA_PREVIOUS,
+            {"area": {"value": living_room.name}},
+        )
+        await hass.async_block_till_done()
+        assert response.response_type == intent.IntentResponseType.ACTION_DONE
+        assert len(calls) == 1
 
 
 async def test_volume_media_player_intent(hass: HomeAssistant) -> None:
