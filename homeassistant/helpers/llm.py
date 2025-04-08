@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass, field as dc_field
 from datetime import timedelta
@@ -351,9 +350,11 @@ class MergedAPI(API):
 
     async def async_get_api_instance(self, llm_context: LLMContext) -> APIInstance:
         """Return the instance of the API."""
-        llm_apis = await asyncio.gather(
-            *(llm_api.async_get_api_instance(llm_context) for llm_api in self.llm_apis)
-        )
+        # These usually don't do I/O and execute right away
+        llm_apis = [
+            await llm_api.async_get_api_instance(llm_context)
+            for llm_api in self.llm_apis
+        ]
         prompt_parts = []
         tools: list[Tool] = []
         for api_instance in llm_apis:
