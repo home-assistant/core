@@ -62,8 +62,8 @@
         "name": "Gas Alarm Status",
         "state": {
           "alarm": "Alarm",
-          "supervisory": "Supervisory (requires maintenance or functioning suboptimally)",
-          "trouble": "Trouble (device malfunction)",
+          "supervisory": "Supervisory",
+          "trouble": "Trouble",
           "no_alarms": "No Alarms"
         }
       },

@@ -52,23 +52,12 @@ async def async_setup_entry(
         for area_id in panel.areas
     ]
 
-    entities.extend(
-        AreaAlarmsSensor(panel, area_id, unique_id, "burglary")
-        for area_id in panel.areas
-    )
+    for priority_type in priority_types:
+        entities.extend(
+            AreaAlarmsSensor(panel, area_id, unique_id, priority_type)
+            for area_id in panel.areas
+        )
 
-    entities.extend(
-        AreaAlarmsSensor(panel, area_id, unique_id, "gas") for area_id in panel.areas
-    )
-
-    entities.extend(
-        AreaAlarmsSensor(panel, area_id, unique_id, "fire") for area_id in panel.areas
-    )
-
-    entities.extend(
-        AreaAlarmsSensor(panel, area_id, unique_id, "personal")
-        for area_id in panel.areas
-    )
     async_add_entities(entities)
 
 
