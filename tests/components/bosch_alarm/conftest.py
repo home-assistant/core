@@ -4,7 +4,7 @@ from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from bosch_alarm_mode2.panel import Area
+from bosch_alarm_mode2.panel import Area, Door, Output, Point
 from bosch_alarm_mode2.utils import Observable
 import pytest
 
@@ -79,13 +79,65 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
+def points() -> Generator[dict[int, Point]]:
+    """Define a mocked door."""
+    names = [
+        "Window",
+        "Door",
+        "Motion Detector",
+        "CO Detector",
+        "Smoke Detector",
+        "Glassbreak Sensor",
+        "Bedroom",
+    ]
+    points = {}
+    for i, name in enumerate(names):
+        mock = AsyncMock(spec=Point)
+        mock.name = name
+        mock.status_observer = AsyncMock(spec=Observable)
+        mock.is_open.return_value = False
+        mock.is_normal.return_value = True
+        points[i] = mock
+    return points
+
+
+@pytest.fixture
+def output() -> Generator[Output]:
+    """Define a mocked output."""
+    mock = AsyncMock(spec=Output)
+    mock.name = "Output A"
+    mock.status_observer = AsyncMock(spec=Observable)
+    mock.is_active.return_value = False
+    return mock
+
+
+@pytest.fixture
+def door() -> Generator[Door]:
+    """Define a mocked door."""
+    mock = AsyncMock(spec=Door)
+    mock.name = "Main Door"
+    mock.status_observer = AsyncMock(spec=Observable)
+    mock.is_open.return_value = False
+    mock.is_locked.return_value = True
+    return mock
+
+
+@pytest.fixture
 def area() -> Generator[Area]:
     """Define a mocked area."""
     mock = AsyncMock(spec=Area)
     mock.name = "Area1"
     mock.status_observer = AsyncMock(spec=Observable)
+    mock.alarm_observer = AsyncMock(spec=Observable)
+    mock.ready_observer = AsyncMock(spec=Observable)
+    mock.alarms = []
+    mock.alarms_ids = []
+    mock.faults = 0
+    mock.all_ready = True
+    mock.part_ready = True
     mock.is_triggered.return_value = False
     mock.is_disarmed.return_value = True
+    mock.is_armed.return_value = False
     mock.is_arming.return_value = False
     mock.is_pending.return_value = False
     mock.is_part_armed.return_value = False
@@ -95,7 +147,12 @@ def area() -> Generator[Area]:
 
 @pytest.fixture
 def mock_panel(
-    area: AsyncMock, model_name: str, serial_number: str | None
+    area: AsyncMock,
+    door: AsyncMock,
+    output: AsyncMock,
+    points: dict[int, AsyncMock],
+    model_name: str,
+    serial_number: str | None,
 ) -> Generator[AsyncMock]:
     """Define a fixture to set up Bosch Alarm."""
     with (
@@ -106,10 +163,18 @@ def mock_panel(
     ):
         client = mock_panel.return_value
         client.areas = {1: area}
+        client.doors = {1: door}
+        client.outputs = {1: output}
+        client.points = points
         client.model = model_name
+        client.faults = []
+        client.events = []
         client.firmware_version = "1.0.0"
+        client.protocol_version = "1.0.0"
         client.serial_number = serial_number
         client.connection_status_observer = AsyncMock(spec=Observable)
+        client.faults_observer = AsyncMock(spec=Observable)
+        client.history_observer = AsyncMock(spec=Observable)
         yield client
 
 

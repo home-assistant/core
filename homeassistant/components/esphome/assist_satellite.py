@@ -310,12 +310,13 @@ class EsphomeAssistSatellite(
                         self.entry_data.api_version
                     )
                 )
-                if feature_flags & VoiceAssistantFeature.SPEAKER:
-                    media_id = tts_output["media_id"]
+                if feature_flags & VoiceAssistantFeature.SPEAKER and (
+                    stream := tts.async_get_stream(self.hass, tts_output["token"])
+                ):
                     self._tts_streaming_task = (
                         self.config_entry.async_create_background_task(
                             self.hass,
-                            self._stream_tts_audio(media_id),
+                            self._stream_tts_audio(stream),
                             "esphome_voice_assistant_tts",
                         )
                     )
@@ -564,7 +565,7 @@ class EsphomeAssistSatellite(
 
     async def _stream_tts_audio(
         self,
-        media_id: str,
+        tts_result: tts.ResultStream,
         sample_rate: int = 16000,
         sample_width: int = 2,
         sample_channels: int = 1,
@@ -579,14 +580,13 @@ class EsphomeAssistSatellite(
             if not self._is_running:
                 return
 
-            extension, data = await tts.async_get_media_source_audio(
-                self.hass,
-                media_id,
-            )
-
-            if extension != "wav":
-                _LOGGER.error("Only WAV audio can be streamed, got %s", extension)
+            if tts_result.extension != "wav":
+                _LOGGER.error(
+                    "Only WAV audio can be streamed, got %s", tts_result.extension
+                )
                 return
+
+            data = b"".join([chunk async for chunk in tts_result.async_stream_result()])
 
             with io.BytesIO(data) as wav_io, wave.open(wav_io, "rb") as wav_file:
                 if (
