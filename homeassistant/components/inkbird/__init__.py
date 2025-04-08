@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
-
 from inkbird_ble import INKBIRDBluetoothDeviceData
 
 from homeassistant.config_entries import ConfigEntry
@@ -14,9 +12,6 @@ from .const import CONF_DEVICE_TYPE, DOMAIN
 from .coordinator import INKBIRDActiveBluetoothProcessorCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
-
-
-FALLBACK_POLL_INTERVAL = timedelta(seconds=180)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
