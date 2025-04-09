@@ -658,8 +658,10 @@ async def test_update_entity_delay(
 
     assert len(client.async_send_command.call_args_list) == 2
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
-    await hass.async_block_till_done(wait_background_tasks=True)
+    update_interval = timedelta(minutes=5)
+    freezer.tick(update_interval)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     nodes: set[int] = set()
 
@@ -668,8 +670,9 @@ async def test_update_entity_delay(
     assert args["command"] == "controller.get_available_firmware_updates"
     nodes.add(args["nodeId"])
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
-    await hass.async_block_till_done(wait_background_tasks=True)
+    freezer.tick(update_interval)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     assert len(client.async_send_command.call_args_list) == 4
     args = client.async_send_command.call_args_list[3][0][0]

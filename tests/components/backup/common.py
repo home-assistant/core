@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator, Callable, Coroutine, Iterable
+from collections.abc import AsyncIterator, Buffer, Callable, Coroutine, Iterable
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 from unittest.mock import AsyncMock, Mock, patch
 
 from homeassistant.components.backup import (
@@ -16,8 +16,10 @@ from homeassistant.components.backup import (
     BackupNotFound,
     Folder,
 )
+from homeassistant.components.backup.backup import CoreLocalBackupAgent
 from homeassistant.components.backup.const import DATA_MANAGER
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.backup import async_initialize_backup
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_platform
@@ -66,15 +68,20 @@ async def aiter_from_iter(iterable: Iterable) -> AsyncIterator:
 def mock_backup_agent(name: str, backups: list[AgentBackup] | None = None) -> Mock:
     """Create a mock backup agent."""
 
+    async def delete_backup(backup_id: str, **kwargs: Any) -> None:
+        """Mock delete."""
+        await get_backup(backup_id)
+
     async def download_backup(backup_id: str, **kwargs: Any) -> AsyncIterator[bytes]:
         """Mock download."""
-        if not await get_backup(backup_id):
-            raise BackupNotFound
         return aiter_from_iter((backups_data.get(backup_id, b"backup data"),))
 
-    async def get_backup(backup_id: str, **kwargs: Any) -> AgentBackup | None:
+    async def get_backup(backup_id: str, **kwargs: Any) -> AgentBackup:
         """Get a backup."""
-        return next((b for b in backups if b.backup_id == backup_id), None)
+        backup = next((b for b in _backups if b.backup_id == backup_id), None)
+        if backup is None:
+            raise BackupNotFound
+        return backup
 
     async def upload_backup(
         *,
@@ -83,22 +90,22 @@ def mock_backup_agent(name: str, backups: list[AgentBackup] | None = None) -> Mo
         **kwargs: Any,
     ) -> None:
         """Upload a backup."""
-        backups.append(backup)
+        _backups.append(backup)
         backup_stream = await open_stream()
         backup_data = bytearray()
         async for chunk in backup_stream:
             backup_data += chunk
         backups_data[backup.backup_id] = backup_data
 
-    backups = backups or []
-    backups_data: dict[str, bytes] = {}
+    _backups = backups or []
+    backups_data: dict[str, Buffer] = {}
     mock_agent = Mock(spec=BackupAgent)
     mock_agent.domain = TEST_DOMAIN
     mock_agent.name = name
     mock_agent.unique_id = name
     type(mock_agent).agent_id = BackupAgent.agent_id
     mock_agent.async_delete_backup = AsyncMock(
-        spec_set=[BackupAgent.async_delete_backup]
+        side_effect=delete_backup, spec_set=[BackupAgent.async_delete_backup]
     )
     mock_agent.async_download_backup = AsyncMock(
         side_effect=download_backup, spec_set=[BackupAgent.async_download_backup]
@@ -107,7 +114,7 @@ def mock_backup_agent(name: str, backups: list[AgentBackup] | None = None) -> Mo
         side_effect=get_backup, spec_set=[BackupAgent.async_get_backup]
     )
     mock_agent.async_list_backups = AsyncMock(
-        return_value=backups, spec_set=[BackupAgent.async_list_backups]
+        return_value=_backups, spec_set=[BackupAgent.async_list_backups]
     )
     mock_agent.async_upload_backup = AsyncMock(
         side_effect=upload_backup,
@@ -125,6 +132,7 @@ async def setup_backup_integration(
 ) -> dict[str, Mock]:
     """Set up the Backup integration."""
     backups = backups or {}
+    async_initialize_backup(hass)
     with (
         patch("homeassistant.components.backup.is_hassio", return_value=with_hassio),
         patch(
@@ -153,11 +161,18 @@ async def setup_backup_integration(
         if LOCAL_AGENT_ID not in backups or with_hassio:
             return remote_agents_dict
 
-        agent = hass.data[DATA_MANAGER].backup_agents[LOCAL_AGENT_ID]
+        local_agent = cast(
+            CoreLocalBackupAgent, hass.data[DATA_MANAGER].backup_agents[LOCAL_AGENT_ID]
+        )
 
         for backup in backups[LOCAL_AGENT_ID]:
-            await agent.async_upload_backup(open_stream=None, backup=backup)
-        agent._loaded_backups = True
+            await local_agent.async_upload_backup(
+                open_stream=AsyncMock(
+                    side_effect=RuntimeError("Local agent does not open stream")
+                ),
+                backup=backup,
+            )
+        local_agent._loaded_backups = True
 
         return remote_agents_dict
 

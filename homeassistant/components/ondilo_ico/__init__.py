@@ -1,27 +1,37 @@
 """The Ondilo ICO integration."""
 
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .api import OndiloClient
-from .config_flow import OndiloIcoOAuth2FlowHandler
-from .const import DOMAIN
+from .const import DOMAIN, OAUTH2_CLIENT_ID, OAUTH2_CLIENT_SECRET
 from .coordinator import OndiloIcoPoolsCoordinator
-from .oauth_impl import OndiloOauth2Implementation
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = [Platform.SENSOR]
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Ondilo ICO integration."""
+    # Import the default client credential.
+    await async_import_client_credential(
+        hass,
+        DOMAIN,
+        ClientCredential(OAUTH2_CLIENT_ID, OAUTH2_CLIENT_SECRET, name="Ondilo ICO"),
+    )
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Ondilo ICO from a config entry."""
-
-    OndiloIcoOAuth2FlowHandler.async_register_implementation(
-        hass,
-        OndiloOauth2Implementation(hass),
-    )
-
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
             hass, entry

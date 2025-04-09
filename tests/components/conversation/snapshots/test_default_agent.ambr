@@ -1,6 +1,7 @@
 # serializer version: 1
 # name: test_custom_sentences
   dict({
+    'continue_conversation': False,
     'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
@@ -26,6 +27,7 @@
 # ---
 # name: test_custom_sentences.1
   dict({
+    'continue_conversation': False,
     'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
@@ -51,6 +53,7 @@
 # ---
 # name: test_custom_sentences_config
   dict({
+    'continue_conversation': False,
     'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
@@ -76,6 +79,7 @@
 # ---
 # name: test_intent_alias_added_removed
   dict({
+    'continue_conversation': False,
     'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
@@ -106,6 +110,7 @@
 # ---
 # name: test_intent_alias_added_removed.1
   dict({
+    'continue_conversation': False,
     'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
@@ -136,6 +141,7 @@
 # ---
 # name: test_intent_alias_added_removed.2
   dict({
+    'continue_conversation': False,
     'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
@@ -156,6 +162,7 @@
 # ---
 # name: test_intent_conversion_not_expose_new
   dict({
+    'continue_conversation': False,
     'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
@@ -176,6 +183,7 @@
 # ---
 # name: test_intent_conversion_not_expose_new.1
   dict({
+    'continue_conversation': False,
     'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
@@ -206,6 +214,7 @@
 # ---
 # name: test_intent_entity_added_removed
   dict({
+    'continue_conversation': False,
     'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
@@ -236,6 +245,7 @@
 # ---
 # name: test_intent_entity_added_removed.1
   dict({
+    'continue_conversation': False,
     'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
@@ -266,6 +276,7 @@
 # ---
 # name: test_intent_entity_added_removed.2
   dict({
+    'continue_conversation': False,
     'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
@@ -296,6 +307,7 @@
 # ---
 # name: test_intent_entity_added_removed.3
   dict({
+    'continue_conversation': False,
     'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
@@ -316,6 +328,7 @@
 # ---
 # name: test_intent_entity_exposed
   dict({
+    'continue_conversation': False,
     'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
@@ -346,6 +359,7 @@
 # ---
 # name: test_intent_entity_fail_if_unexposed
   dict({
+    'continue_conversation': False,
     'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
@@ -366,6 +380,7 @@
 # ---
 # name: test_intent_entity_remove_custom_name
   dict({
+    'continue_conversation': False,
     'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
@@ -386,6 +401,7 @@
 # ---
 # name: test_intent_entity_remove_custom_name.1
   dict({
+    'continue_conversation': False,
     'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
@@ -416,6 +432,7 @@
 # ---
 # name: test_intent_entity_remove_custom_name.2
   dict({
+    'continue_conversation': False,
     'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
@@ -436,6 +453,7 @@
 # ---
 # name: test_intent_entity_renamed
   dict({
+    'continue_conversation': False,
     'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
@@ -466,6 +484,7 @@
 # ---
 # name: test_intent_entity_renamed.1
   dict({
+    'continue_conversation': False,
     'conversation_id': <ANY>,
     'response': dict({
       'card': dict({

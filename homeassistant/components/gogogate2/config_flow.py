@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import dataclasses
+import logging
 import re
 from typing import Any, Self
 
@@ -26,6 +27,8 @@ from homeassistant.helpers.service_info.zeroconf import (
 
 from .common import get_api
 from .const import DEVICE_TYPE_GOGOGATE2, DEVICE_TYPE_ISMARTGATE, DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 DEVICE_NAMES = {
     DEVICE_TYPE_GOGOGATE2: "Gogogate2",
@@ -115,7 +118,8 @@ class Gogogate2FlowHandler(ConfigFlow, domain=DOMAIN):
                 else:
                     errors["base"] = "cannot_connect"
 
-            except Exception:  # noqa: BLE001
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
                 errors["base"] = "cannot_connect"
 
         if self._ip_address and self._device_type:

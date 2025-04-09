@@ -60,3 +60,8 @@ class RenaultDataEntity(
     def _get_data_attr(self, key: str) -> StateType:
         """Return the attribute value from the coordinator data."""
         return cast(StateType, getattr(self.coordinator.data, key))
+
+    @property
+    def assumed_state(self) -> bool:
+        """Return True if unable to access real state of the entity."""
+        return self.coordinator.assumed_state
