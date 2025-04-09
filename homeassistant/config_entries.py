@@ -1511,12 +1511,6 @@ class ConfigEntriesFlowManager(
     ) -> None:
         """Clean up after a config flow."""
 
-        # Mark the step as done.
-        # We do this to avoid a circular dependency where async_finish_flow sets up a
-        # new entry, which needs the integration to be set up, which is waiting for
-        # init to be done.
-        self._set_pending_import_done(flow)
-
         # Clean up issue if this is a reauth flow
         if flow.context["source"] == SOURCE_REAUTH:
             if (entry_id := flow.context.get("entry_id")) is not None and (
@@ -1587,6 +1581,12 @@ class ConfigEntriesFlowManager(
 
         if result["type"] != data_entry_flow.FlowResultType.CREATE_ENTRY:
             return result
+
+        # Mark the step as done.
+        # We do this to avoid a circular dependency where async_finish_flow sets up a
+        # new entry, which needs the integration to be set up, which is waiting for
+        # init to be done.
+        self._set_pending_import_done(flow)
 
         # Avoid adding a config entry for a integration
         # that only supports a single config entry, but already has an entry
