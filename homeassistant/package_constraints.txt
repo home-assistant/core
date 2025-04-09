@@ -212,3 +212,8 @@ async-timeout==4.0.3
 # https://github.com/home-assistant/core/issues/122508
 # https://github.com/home-assistant/core/issues/118004
 aiofiles>=24.1.0
+
+# multidict < 6.4.0 has memory leaks
+# https://github.com/aio-libs/multidict/issues/1134
+# https://github.com/aio-libs/multidict/issues/1131
+multidict>=6.4.1
