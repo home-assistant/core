@@ -2008,7 +2008,7 @@ pygti==0.9.4
 pyhaversion==22.8.0
 
 # homeassistant.components.heos
-pyheos==1.0.4
+pyheos==1.0.5
 
 # homeassistant.components.hive
 pyhive-integration==1.0.2
@@ -3067,7 +3067,7 @@ webio-api==0.1.11
 webmin-xmlrpc==0.0.2
 
 # homeassistant.components.weheat
-weheat==2025.2.26
+weheat==2025.3.7
 
 # homeassistant.components.whirlpool
 whirlpool-sixth-sense==0.20.0

@@ -12,8 +12,8 @@ from inkbird_ble import (
 )
 from sensor_state_data import SensorDeviceClass
 
-from homeassistant.components.inkbird import FALLBACK_POLL_INTERVAL
 from homeassistant.components.inkbird.const import CONF_DEVICE_TYPE, DOMAIN
+from homeassistant.components.inkbird.coordinator import FALLBACK_POLL_INTERVAL
 from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant
