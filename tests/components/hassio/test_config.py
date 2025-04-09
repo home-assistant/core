@@ -143,7 +143,7 @@ async def test_load_config_store(
     storage_data: dict[str, dict[str, Any]],
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test read and update config."""
+    """Test loading the config store."""
     hass_storage.update(storage_data)
 
     user = MockUser(id="00112233445566778899aabbccddeeff", system_generated=True)
@@ -170,7 +170,7 @@ async def test_save_config_store(
     hass_storage: dict[str, Any],
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test read and update config."""
+    """Test saving the config store."""
     with (
         patch("homeassistant.components.hassio.config.STORE_DELAY_SAVE", 0),
         patch("uuid.uuid4", return_value=UUID(bytes=b"very_very_random", version=4)),
