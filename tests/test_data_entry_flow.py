@@ -305,13 +305,7 @@ async def test_create_saves_data(manager: MockFlowManager) -> None:
 
 
 async def test_create_aborted_flow(manager: MockFlowManager) -> None:
-    """Test return create_entry from aborted flow.
-
-    Note: The entry is created even if the flow is already aborted, then the
-    flow raises an UnknownFlow exception. This behavior is not logical, and
-    we should consider changing it to not create the entry if the flow is
-    aborted.
-    """
+    """Test return create_entry from aborted flow."""
 
     @manager.mock_reg_handler("test")
     class TestFlow(data_entry_flow.FlowHandler):
@@ -325,14 +319,8 @@ async def test_create_aborted_flow(manager: MockFlowManager) -> None:
         await manager.async_init("test")
     assert len(manager.async_progress()) == 0
 
-    # The entry is created even if the flow is aborted
-    assert len(manager.mock_created_entries) == 1
-
-    entry = manager.mock_created_entries[0]
-    assert entry["handler"] == "test"
-    assert entry["title"] == "Test Title"
-    assert entry["data"] == "Test Data"
-    assert entry["source"] is None
+    # No entry should be created if the flow is aborted
+    assert len(manager.mock_created_entries) == 0
 
 
 async def test_create_calls_async_flow_removed(manager: MockFlowManager) -> None:
