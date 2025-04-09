@@ -32,6 +32,7 @@ from homeassistant.helpers.trigger_template_entity import (
     CONF_AVAILABILITY,
     CONF_PICTURE,
     ManualTriggerEntity,
+    ValueTemplate,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -132,7 +133,7 @@ class RestBinarySensor(ManualTriggerEntity, RestEntity, BinarySensorEntity):
             config[CONF_FORCE_UPDATE],
         )
         self._previous_data = None
-        self._value_template: Template | None = config.get(CONF_VALUE_TEMPLATE)
+        self._value_template: ValueTemplate | None = config.get(CONF_VALUE_TEMPLATE)
 
     @property
     def available(self) -> bool:
@@ -156,14 +157,14 @@ class RestBinarySensor(ManualTriggerEntity, RestEntity, BinarySensorEntity):
             )
             return
 
-        variables = self._render_template_variables_with_value(response)
+        variables = self._template_variables_with_value(response)
         if not self._render_availability_template(variables):
             self.async_write_ha_state()
             return
 
         if response is not None and self._value_template is not None:
             response = self._value_template.async_render_as_value_template(
-                variables, False
+                self.entity_id, variables, False
             )
 
         try:

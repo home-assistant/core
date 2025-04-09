@@ -19,7 +19,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.trigger_template_entity import ManualTriggerEntity
+from homeassistant.helpers.trigger_template_entity import (
+    ManualTriggerEntity,
+    ValueTemplate,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util, slugify
 
@@ -78,7 +81,7 @@ class CommandSwitch(ManualTriggerEntity, SwitchEntity):
         command_on: str,
         command_off: str,
         command_state: str | None,
-        value_template: Template | None,
+        value_template: ValueTemplate | None,
         timeout: int,
         scan_interval: timedelta,
     ) -> None:
@@ -167,14 +170,14 @@ class CommandSwitch(ManualTriggerEntity, SwitchEntity):
         if self._command_state:
             payload = str(await self._async_query_state())
 
-            variables = self._render_template_variables_with_value(payload)
+            variables = self._template_variables_with_value(payload)
             if not self._render_availability_template(variables):
                 return
 
             value = None
             if self._value_template:
                 value = self._value_template.async_render_as_value_template(
-                    variables, None
+                    self.entity_id, variables, None
                 )
             self._attr_is_on = None
             if payload or value:

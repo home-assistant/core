@@ -55,9 +55,7 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
     def _process_data(self) -> None:
         """Process new data."""
 
-        variables = self._render_template_variables(
-            self.coordinator.data["run_variables"]
-        )
+        variables = self._template_variables(self.coordinator.data["run_variables"])
         if self._render_availability_template(variables):
             self._render_templates(variables)
 

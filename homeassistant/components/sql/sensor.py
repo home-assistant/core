@@ -45,6 +45,7 @@ from homeassistant.helpers.trigger_template_entity import (
     CONF_AVAILABILITY,
     CONF_PICTURE,
     ManualTriggerSensorEntity,
+    ValueTemplate,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -79,7 +80,7 @@ async def async_setup_platform(
 
     name: Template = conf[CONF_NAME]
     query_str: str = conf[CONF_QUERY]
-    value_template: Template | None = conf.get(CONF_VALUE_TEMPLATE)
+    value_template: ValueTemplate | None = conf.get(CONF_VALUE_TEMPLATE)
     column_name: str = conf[CONF_COLUMN_NAME]
     unique_id: str | None = conf.get(CONF_UNIQUE_ID)
     db_url: str = resolve_db_url(hass, conf.get(CONF_DB_URL))
@@ -116,10 +117,10 @@ async def async_setup_entry(
     template: str | None = entry.options.get(CONF_VALUE_TEMPLATE)
     column_name: str = entry.options[CONF_COLUMN_NAME]
 
-    value_template: Template | None = None
+    value_template: ValueTemplate | None = None
     if template is not None:
         try:
-            value_template = Template(template, hass)
+            value_template = ValueTemplate(template, hass)
             value_template.ensure_valid()
         except TemplateError:
             value_template = None
@@ -179,7 +180,7 @@ async def async_setup_sensor(
     trigger_entity_config: ConfigType,
     query_str: str,
     column_name: str,
-    value_template: Template | None,
+    value_template: ValueTemplate | None,
     unique_id: str | None,
     db_url: str,
     yaml: bool,
@@ -316,7 +317,7 @@ class SQLSensor(ManualTriggerSensorEntity):
         sessmaker: scoped_session,
         query: str,
         column: str,
-        value_template: Template | None,
+        value_template: ValueTemplate | None,
         yaml: bool,
         use_database_executor: bool,
     ) -> None:
@@ -398,10 +399,10 @@ class SQLSensor(ManualTriggerSensorEntity):
             data = f"0x{data.hex()}"
 
         if data is not None and self._template is not None:
-            variables = self._render_template_variables_with_value(data)
+            variables = self._template_variables_with_value(data)
             if self._render_availability_template(variables):
                 self._attr_native_value = self._template.async_render_as_value_template(
-                    variables, None
+                    self.entity_id, variables, None
                 )
                 self._process_manual_data(variables)
         else:

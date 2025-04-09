@@ -38,6 +38,7 @@ from homeassistant.helpers.trigger_template_entity import (
     CONF_PICTURE,
     TEMPLATE_ENTITY_BASE_SCHEMA,
     ManualTriggerEntity,
+    ValueTemplate,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -73,7 +74,9 @@ PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_PARAMS): {cv.string: cv.template},
         vol.Optional(CONF_BODY_OFF, default=DEFAULT_BODY_OFF): cv.template,
         vol.Optional(CONF_BODY_ON, default=DEFAULT_BODY_ON): cv.template,
-        vol.Optional(CONF_IS_ON_TEMPLATE): cv.template,
+        vol.Optional(CONF_IS_ON_TEMPLATE): vol.All(
+            cv.template, ValueTemplate.from_template
+        ),
         vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): vol.All(
             vol.Lower, vol.In(SUPPORT_REST_METHODS)
         ),
@@ -147,7 +150,7 @@ class RestSwitch(ManualTriggerEntity, SwitchEntity):
         self._auth = auth
         self._body_on: template.Template = config[CONF_BODY_ON]
         self._body_off: template.Template = config[CONF_BODY_OFF]
-        self._is_on_template: template.Template | None = config.get(CONF_IS_ON_TEMPLATE)
+        self._is_on_template: ValueTemplate | None = config.get(CONF_IS_ON_TEMPLATE)
         self._timeout: int = config[CONF_TIMEOUT]
         self._verify_ssl: bool = config[CONF_VERIFY_SSL]
 
@@ -235,14 +238,14 @@ class RestSwitch(ManualTriggerEntity, SwitchEntity):
     def _async_update(self, text: str) -> None:
         """Get the latest data from REST API and update the state."""
 
-        variables = self._render_template_variables_with_value(text)
+        variables = self._template_variables_with_value(text)
         if not self._render_availability_template(variables):
             self.async_write_ha_state()
             return
 
         if self._is_on_template is not None:
             text = self._is_on_template.async_render_as_value_template(
-                variables, "None"
+                self.entity_id, variables, "None"
             )
             text = text.lower()
             if text == "true":

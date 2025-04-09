@@ -23,7 +23,10 @@ from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.trigger_template_entity import ManualTriggerSensorEntity
+from homeassistant.helpers.trigger_template_entity import (
+    ManualTriggerSensorEntity,
+    ValueTemplate,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
@@ -57,7 +60,7 @@ async def async_setup_platform(
     json_attributes: list[str] | None = sensor_config.get(CONF_JSON_ATTRIBUTES)
     json_attributes_path: str | None = sensor_config.get(CONF_JSON_ATTRIBUTES_PATH)
     scan_interval: timedelta = sensor_config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
-    value_template: Template | None = sensor_config.get(CONF_VALUE_TEMPLATE)
+    value_template: ValueTemplate | None = sensor_config.get(CONF_VALUE_TEMPLATE)
     data = CommandSensorData(hass, command, command_timeout)
 
     trigger_entity_config = {
@@ -88,7 +91,7 @@ class CommandSensor(ManualTriggerSensorEntity):
         self,
         data: CommandSensorData,
         config: ConfigType,
-        value_template: Template | None,
+        value_template: ValueTemplate | None,
         json_attributes: list[str] | None,
         json_attributes_path: str | None,
         scan_interval: timedelta,
@@ -171,20 +174,22 @@ class CommandSensor(ManualTriggerSensorEntity):
 
             if self._value_template is None:
                 self._attr_native_value = None
-                variables = self._render_template_variables_with_value(value)
+                variables = self._template_variables_with_value(value)
                 if self._render_availability_template(variables):
                     self._attr_extra_state_attributes = extra_state_attributes
                     self._process_manual_data(variables)
                 return
 
         self._attr_native_value = None
-        variables = self._render_template_variables_with_value(value)
+        variables = self._template_variables_with_value(value)
         if not self._render_availability_template(variables):
             return
 
         self._attr_extra_state_attributes = extra_state_attributes
         if self._value_template is not None and value is not None:
-            value = self._value_template.async_render_as_value_template(variables, None)
+            value = self._value_template.async_render_as_value_template(
+                self.entity_id, variables, None
+            )
 
         if self.device_class not in {
             SensorDeviceClass.DATE,

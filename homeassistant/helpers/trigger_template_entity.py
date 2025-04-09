@@ -6,6 +6,7 @@ import itertools
 import logging
 from typing import Any
 
+import jinja2
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -31,7 +32,13 @@ from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
 from . import config_validation as cv
 from .entity import Entity
-from .template import _SENTINEL, TemplateStateFromEntityId, render_complex
+from .template import (
+    _SENTINEL,
+    Template,
+    TemplateStateFromEntityId,
+    _render_with_context,
+    render_complex,
+)
 from .typing import ConfigType
 
 CONF_AVAILABILITY = "availability"
@@ -94,6 +101,52 @@ TEMPLATE_SENSOR_BASE_SCHEMA = vol.Schema(
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     }
 ).extend(TEMPLATE_ENTITY_BASE_SCHEMA.schema)
+
+
+class ValueTemplate(Template):
+    """Class to hold a value_template and manage caching and rendering it with 'value' in variables."""
+
+    @classmethod
+    def from_template(cls, template: Template) -> ValueTemplate:
+        """Create a ValueTemplate object from a Template object."""
+        return cls(template.template, template.hass)
+
+    @callback
+    def async_render_as_value_template(
+        self,
+        entity_id: str,
+        variables: dict[str, Any],
+        error_value: Any = _SENTINEL,
+    ) -> Any:
+        """Render template that requires 'value' and optionally 'value_json'.
+
+        Template errors will be supprested when an error_value is supplied.
+
+        This method must be run in the event loop.
+        """
+        self._renders += 1
+
+        if self.is_static:
+            return self.template
+
+        compiled = self._compiled or self._ensure_compiled()
+
+        try:
+            render_result = _render_with_context(
+                self.template, compiled, **variables
+            ).strip()
+        except jinja2.TemplateError as ex:
+            if error_value is _SENTINEL:
+                logging.getLogger(f"{__package__}.{entity_id.split('.')[0]}").error(
+                    "Error parsing value for %s: %s (value: %s, template: %s)",
+                    entity_id,
+                    ex,
+                    variables["value"],
+                    self.template,
+                )
+            return variables["value"] if error_value is _SENTINEL else error_value
+
+        return render_result
 
 
 class TriggerBaseEntity(Entity):
@@ -196,9 +249,7 @@ class TriggerBaseEntity(Entity):
                 extra_state_attributes[attr] = last_state.attributes[attr]
             self._rendered[CONF_ATTRIBUTES] = extra_state_attributes
 
-    def _render_template_variables(
-        self, run_variables: dict[str, Any] | None = None
-    ) -> dict:
+    def _template_variables(self, run_variables: dict[str, Any] | None = None) -> dict:
         """Render template variables."""
         return {
             "this": TemplateStateFromEntityId(self.hass, self.entity_id),
@@ -302,7 +353,7 @@ class ManualTriggerEntity(TriggerBaseEntity):
             parse_result=CONF_NAME in self._parse_result,
         )
 
-    def _render_template_variables_with_value(
+    def _template_variables_with_value(
         self, value: str | None = None
     ) -> dict[str, Any]:
         """Render template variables.
@@ -318,7 +369,7 @@ class ManualTriggerEntity(TriggerBaseEntity):
         except JSON_DECODE_EXCEPTIONS:
             pass
 
-        return self._render_template_variables(run_variables)
+        return self._template_variables(run_variables)
 
     @callback
     def _process_manual_data(self, variables: dict[str, Any]) -> None:
