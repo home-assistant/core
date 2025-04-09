@@ -1,0 +1,27 @@
+{
+  "entity": {
+    "event": {
+      "alarm_clock": {
+        "default": "mdi:alarm"
+      },
+      "sleep_phase": {
+        "default": "mdi:bed"
+      },
+      "sound_event": {
+        "default": "mdi:chat-sleep-outline"
+      },
+      "sleep_tracking": {
+        "default": "mdi:record-rec"
+      },
+      "lullaby": {
+        "default": "mdi:cradle-outline"
+      },
+      "antisnoring": {
+        "default": "mdi:ear-hearing-off"
+      },
+      "apnea_alarm": {
+        "default": "mdi:heart-pulse"
+      }
+    }
+  }
+}

@@ -1,0 +1,114 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up the Sleep as Android",
+        "description": "Are you sure you want to set up the Sleep as Android integration?"
+      }
+    },
+    "abort": {
+      "cloud_not_connected": "[%key:common::config_flow::abort::cloud_not_connected%]",
+      "webhook_not_internet_accessible": "[%key:common::config_flow::abort::webhook_not_internet_accessible%]"
+    },
+    "create_entry": {
+      "default": "To send events to Home Assistant, you will need to set up a Webhook.\n\nOpen Sleep as Android and go to *Settings → Services → Automation → Webhooks*\n\nEnable Webhooks and fill in the following Webhook in the URL field:\n\n`{webhook_url}`\n\nSee [the documentation]({docs_url}) for further details."
+    }
+  },
+  "entity": {
+    "event": {
+      "sleep_tracking": {
+        "name": "Sleep tracking",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "sleep_tracking_paused": "Paused",
+              "sleep_tracking_resumed": "Resumed",
+              "sleep_tracking_started": "Started",
+              "sleep_tracking_stopped": "Stopped"
+            }
+          }
+        }
+      },
+      "alarm_clock": {
+        "name": "Alarm clock",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "alarm_alert_dismiss": "Alarm stopped",
+              "alarm_alert_start": "Alarm started",
+              "alarm_rescheduled": "Alarm rescheduled",
+              "alarm_skip_next": "Alarm skipped",
+              "alarm_snooze_canceled": "Snooze canceled",
+              "alarm_snooze_clicked": "Snoozing",
+              "alarm_wake_up_check": "Wake-up check notification",
+              "before_smart_period": "45m before smart wakeup",
+              "show_skip_next_alarm": "1h before alarm",
+              "smart_period": "Smart wakeup started",
+              "time_to_bed_alarm_alert": "Time to bed"
+            }
+          }
+        }
+      },
+      "sleep_phase": {
+        "name": "Sleep phase",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "awake": "Woke up",
+              "deep_sleep": "Deep sleep",
+              "light_sleep": "Light sleep",
+              "not_awake": "Fell asleep",
+              "rem": "REM sleep"
+            }
+          }
+        }
+      },
+      "sound_event": {
+        "name": "Sound recognition",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "sound_event_baby": "Baby crying",
+              "sound_event_cough": "Coughing or sneezing",
+              "sound_event_laugh": "Laughter",
+              "sound_event_snore": "Snoring",
+              "sound_event_talk": "Talking"
+            }
+          }
+        }
+      },
+      "lullaby": {
+        "name": "Lullaby",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "lullaby_start": "Started",
+              "lullaby_stop": "Stopped",
+              "lullaby_volume_down": "Lowering volume"
+            }
+          }
+        }
+      },
+      "antisnoring": {
+        "name": "Anti-snoring",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "antisnoring": "Anti-snoring triggered"
+            }
+          }
+        }
+      },
+      "apnea_alarm": {
+        "name": "Sleep apnea",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "apnea_alarm": "Sleep apnea detected"
+            }
+          }
+        }
+      }
+    }
+  }
+}
