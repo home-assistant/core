@@ -25,13 +25,17 @@ async def async_get_config_entry_diagnostics(
     diag["config"] = config_entry.as_dict()
 
     entry_data = config_entry.runtime_data
+    device_info = entry_data.device_info
 
     if (storage_data := await entry_data.store.async_load()) is not None:
         diag["storage_data"] = storage_data
 
     if (
-        config_entry.unique_id
-        and (scanner := async_scanner_by_source(hass, config_entry.unique_id.upper()))
+        device_info
+        and (
+            scanner_mac := device_info.bluetooth_mac_address or device_info.mac_address
+        )
+        and (scanner := async_scanner_by_source(hass, scanner_mac.upper()))
         and (bluetooth_device := entry_data.bluetooth_device)
     ):
         diag["bluetooth"] = {

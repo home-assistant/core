@@ -293,7 +293,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryBinarySensorEntityDescription, ...] = (
     ),
     TeslemetryBinarySensorEntityDescription(
         key="dc_dc_enable",
-        streaming_key=Signal.DC_DC_ENABLE,
+        streaming_key=Signal.DCDC_ENABLE,
         entity_registry_enabled_default=False,
     ),
     TeslemetryBinarySensorEntityDescription(

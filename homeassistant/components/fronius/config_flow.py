@@ -149,7 +149,7 @@ class FroniusConfigFlow(ConfigFlow, domain=DOMAIN):
                 unique_id, info = await validate_host(self.hass, user_input[CONF_HOST])
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:

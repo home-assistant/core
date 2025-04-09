@@ -57,7 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Fetch data from API endpoint."""
         assert isinstance(department, str)
         return await hass.async_add_executor_job(
-            client.get_warning_current_phenomenoms, department, 0, True
+            client.get_warning_current_phenomenons, department, 0, True
         )
 
     coordinator_forecast = DataUpdateCoordinator(
