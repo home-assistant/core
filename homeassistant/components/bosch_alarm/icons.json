@@ -3,5 +3,12 @@
     "set_date_time": {
       "service": "mdi:clock-edit"
     }
+  },
+  "entity": {
+    "sensor": {
+      "faulting_points": {
+        "default": "mdi:alert-circle-outline"
+      }
+    }
   }
 }

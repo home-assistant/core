@@ -8,7 +8,6 @@ from typing import Any
 from whirlpool.aircon import Aircon, FanSpeed as AirconFanSpeed, Mode as AirconMode
 
 from homeassistant.components.climate import (
-    ENTITY_ID_FORMAT,
     FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
@@ -22,12 +21,10 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import WhirlpoolConfigEntry
-from .const import DOMAIN
+from .entity import WhirlpoolEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,10 +68,10 @@ async def async_setup_entry(
     """Set up entry."""
     appliances_manager = config_entry.runtime_data
     aircons = [AirConEntity(hass, aircon) for aircon in appliances_manager.aircons]
-    async_add_entities(aircons, True)
+    async_add_entities(aircons)
 
 
-class AirConEntity(ClimateEntity):
+class AirConEntity(WhirlpoolEntity, ClimateEntity):
     """Representation of an air conditioner."""
 
     _attr_fan_modes = SUPPORTED_FAN_MODES
@@ -97,29 +94,8 @@ class AirConEntity(ClimateEntity):
 
     def __init__(self, hass: HomeAssistant, aircon: Aircon) -> None:
         """Initialize the entity."""
+        super().__init__(aircon)
         self._aircon = aircon
-        self.entity_id = generate_entity_id(ENTITY_ID_FORMAT, aircon.said, hass=hass)
-        self._attr_unique_id = aircon.said
-
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, aircon.said)},
-            name=aircon.name if aircon.name is not None else aircon.said,
-            manufacturer="Whirlpool",
-            model="Sixth Sense",
-        )
-
-    async def async_added_to_hass(self) -> None:
-        """Register updates callback."""
-        self._aircon.register_attr_callback(self.async_write_ha_state)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Unregister updates callback."""
-        self._aircon.unregister_attr_callback(self.async_write_ha_state)
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._aircon.get_online()
 
     @property
     def current_temperature(self) -> float:

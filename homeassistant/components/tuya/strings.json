@@ -321,9 +321,9 @@
       "vacuum_cistern": {
         "name": "Water tank adjustment",
         "state": {
-          "low": "Low",
+          "low": "[%key:common::state::low%]",
           "middle": "Middle",
-          "high": "High",
+          "high": "[%key:common::state::high%]",
           "closed": "[%key:common::state::closed%]"
         }
       },
