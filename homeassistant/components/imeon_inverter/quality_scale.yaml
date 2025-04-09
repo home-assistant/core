@@ -49,7 +49,9 @@ rules:
   docs-supported-functions: todo
   docs-troubleshooting: todo
   docs-use-cases: todo
-  dynamic-devices: todo
+  dynamic-devices:
+    status: exempt
+    comment: Device type integration.
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: todo
@@ -57,8 +59,12 @@ rules:
   exception-translations: done
   icon-translations: done
   reconfiguration-flow: todo
-  repair-issues: todo
-  stale-devices: todo
+  repair-issues:
+    status: exempt
+    comment: Currently no issues.
+  stale-devices:
+    status: exempt
+    comment: Device type integration.
   # Platinum
   async-dependency: todo
   inject-websession: todo
