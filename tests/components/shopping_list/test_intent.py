@@ -23,7 +23,7 @@ async def test_complete_item_intent(hass: HomeAssistant, sl_setup) -> None:
 
 
 async def test_complete_item_intent_not_found(hass: HomeAssistant, sl_setup) -> None:
-    """Test complete item."""
+    """Test completing a missing item."""
     with pytest.raises(IntentHandleError) as excinfo:
         await intent.async_handle(
             hass, "test", "HassShoppingListCompleteItem", {"item": {"value": "beer"}}
