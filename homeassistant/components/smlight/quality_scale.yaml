@@ -77,7 +77,7 @@ rules:
   stale-devices:
     status: exempt
     comment: |
-      This integration is not a hub, each instance connects to a single device.
+      Device type integration.
 
   # Platinum
   async-dependency: done
