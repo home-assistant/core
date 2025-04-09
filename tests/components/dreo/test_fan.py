@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from homeassistant.components.dreo.fan import DreoFanHA
+from homeassistant.components.dreo.fan import DreoFan
 
 from tests.common import MockConfigEntry
 
@@ -34,7 +34,7 @@ def mock_config_entry():
 @pytest.fixture
 def fan_entity(mock_device, mock_config_entry):
     """Return a configured fan entity."""
-    entity = DreoFanHA(mock_device, mock_config_entry)
+    entity = DreoFan(mock_device, mock_config_entry)
     entity._fan_props = {
         "state": False,
         "preset_mode": None,

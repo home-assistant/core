@@ -26,7 +26,6 @@ async def test_form(hass: HomeAssistant) -> None:
         "homeassistant.components.dreo.config_flow.HsCloud.login",
         return_value=None,
     ):
-        # 模拟用户输入用户名和密码
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
