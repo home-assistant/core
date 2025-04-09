@@ -832,6 +832,43 @@ class Template:
 
         return self._parse_result(render_result)
 
+    @callback
+    def async_render_as_value_template(
+        self,
+        variables: dict[str, Any],
+        error_value: Any = _SENTINEL,
+    ) -> Any:
+        """Render value_json template.
+
+        Template errors will be supprestd
+
+        This method must be run in the event loop.
+        """
+        assert "value" in variables
+
+        self._renders += 1
+
+        if self.is_static:
+            return self.template
+
+        compiled = self._compiled or self._ensure_compiled()
+
+        try:
+            render_result = _render_with_context(
+                self.template, compiled, **variables
+            ).strip()
+        except jinja2.TemplateError as ex:
+            if error_value is _SENTINEL:
+                _LOGGER.error(
+                    "Error parsing value: %s (value: %s, template: %s)",
+                    ex,
+                    variables["value"],
+                    self.template,
+                )
+            return variables["value"] if error_value is _SENTINEL else error_value
+
+        return render_result
+
     def _ensure_compiled(
         self,
         limited: bool = False,

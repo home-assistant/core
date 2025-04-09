@@ -156,11 +156,14 @@ class RestBinarySensor(ManualTriggerEntity, RestEntity, BinarySensorEntity):
             )
             return
 
-        raw_value = response
+        variables = self._render_template_variables_with_value(response)
+        if not self._render_availability_template(variables):
+            self.async_write_ha_state()
+            return
 
         if response is not None and self._value_template is not None:
-            response = self._value_template.async_render_with_possible_json_value(
-                response, False
+            response = self._value_template.async_render_as_value_template(
+                variables, False
             )
 
         try:
@@ -173,5 +176,5 @@ class RestBinarySensor(ManualTriggerEntity, RestEntity, BinarySensorEntity):
                 "yes": True,
             }.get(str(response).lower(), False)
 
-        self._process_manual_data(raw_value)
+        self._process_manual_data(variables)
         self.async_write_ha_state()

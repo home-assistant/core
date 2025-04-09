@@ -206,17 +206,16 @@ class SnmpSensor(ManualTriggerSensorEntity):
         """Get the latest data and updates the states."""
         await self.data.async_update()
 
-        raw_value = self.data.value
-
+        variables = self._render_template_variables_with_value(self.data.value)
         if (value := self.data.value) is None:
             value = STATE_UNKNOWN
         elif self._value_template is not None:
-            value = self._value_template.async_render_with_possible_json_value(
-                value, STATE_UNKNOWN
+            value = self._value_template.async_render_as_value_template(
+                variables, STATE_UNKNOWN
             )
 
         self._attr_native_value = value
-        self._process_manual_data(raw_value)
+        self._process_manual_data(variables)
 
 
 class SnmpData:

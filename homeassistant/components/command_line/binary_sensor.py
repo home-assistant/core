@@ -133,17 +133,19 @@ class CommandBinarySensor(ManualTriggerEntity, BinarySensorEntity):
         await self.data.async_update()
         value = self.data.value
 
+        variables = self._render_template_variables_with_value(value)
+        if not self._render_availability_template(variables):
+            return
+
         if self._value_template is not None:
-            value = self._value_template.async_render_with_possible_json_value(
-                value, None
-            )
+            value = self._value_template.async_render_as_value_template(variables, None)
         self._attr_is_on = None
         if value == self._payload_on:
             self._attr_is_on = True
         elif value == self._payload_off:
             self._attr_is_on = False
 
-        self._process_manual_data(value)
+        self._process_manual_data(variables)
         self.async_write_ha_state()
 
     async def async_update(self) -> None:

@@ -145,7 +145,7 @@ class CommandSensor(ManualTriggerSensorEntity):
         value = self.data.value
 
         if self._json_attributes:
-            self._attr_extra_state_attributes = {}
+            extra_state_attributes = {}
             if value:
                 try:
                     json_dict = json.loads(value)
@@ -157,7 +157,7 @@ class CommandSensor(ManualTriggerSensorEntity):
                     if isinstance(json_dict, list):
                         json_dict = json_dict[0]
                     if isinstance(json_dict, Mapping):
-                        self._attr_extra_state_attributes = {
+                        extra_state_attributes = {
                             k: json_dict[k]
                             for k in self._json_attributes
                             if k in json_dict
@@ -168,17 +168,23 @@ class CommandSensor(ManualTriggerSensorEntity):
                     LOGGER.warning("Unable to parse output as JSON: %s", value)
             else:
                 LOGGER.warning("Empty reply found when expecting JSON data")
+
             if self._value_template is None:
                 self._attr_native_value = None
-                self._process_manual_data(value)
+                variables = self._render_template_variables_with_value(value)
+                if self._render_availability_template(variables):
+                    self._attr_extra_state_attributes = extra_state_attributes
+                    self._process_manual_data(variables)
                 return
 
         self._attr_native_value = None
+        variables = self._render_template_variables_with_value(value)
+        if not self._render_availability_template(variables):
+            return
+
+        self._attr_extra_state_attributes = extra_state_attributes
         if self._value_template is not None and value is not None:
-            value = self._value_template.async_render_with_possible_json_value(
-                value,
-                None,
-            )
+            value = self._value_template.async_render_as_value_template(variables, None)
 
         if self.device_class not in {
             SensorDeviceClass.DATE,
@@ -190,7 +196,7 @@ class CommandSensor(ManualTriggerSensorEntity):
                 value, self.entity_id, self.device_class
             )
 
-        self._process_manual_data(value)
+        self._process_manual_data(variables)
         self.async_write_ha_state()
 
     async def async_update(self) -> None:

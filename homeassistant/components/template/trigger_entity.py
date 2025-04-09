@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.template import TemplateStateFromEntityId
 from homeassistant.helpers.trigger_template_entity import TriggerBaseEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -56,13 +55,11 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
     def _process_data(self) -> None:
         """Process new data."""
 
-        run_variables = self.coordinator.data["run_variables"]
-        variables = {
-            "this": TemplateStateFromEntityId(self.hass, self.entity_id),
-            **(run_variables or {}),
-        }
-
-        self._render_templates(variables)
+        variables = self._render_template_variables(
+            self.coordinator.data["run_variables"]
+        )
+        if self._render_availability_template(variables):
+            self._render_templates(variables)
 
         self.async_set_context(self.coordinator.data["context"])
 

@@ -359,14 +359,14 @@ class SQLSensor(ManualTriggerSensorEntity):
     async def async_update(self) -> None:
         """Retrieve sensor data from the query using the right executor."""
         if self._use_database_executor:
-            data = await get_instance(self.hass).async_add_executor_job(self._update)
+            await get_instance(self.hass).async_add_executor_job(self._update)
         else:
-            data = await self.hass.async_add_executor_job(self._update)
-        self._process_manual_data(data)
+            await self.hass.async_add_executor_job(self._update)
 
     def _update(self) -> Any:
         """Retrieve sensor data from the query."""
         data = None
+        extra_state_attributes = {}
         self._attr_extra_state_attributes = {}
         sess: scoped_session = self.sessionmaker()
         try:
@@ -391,15 +391,19 @@ class SQLSensor(ManualTriggerSensorEntity):
                     value = value.isoformat()
                 elif isinstance(value, (bytes, bytearray)):
                     value = f"0x{value.hex()}"
+                extra_state_attributes[key] = value
                 self._attr_extra_state_attributes[key] = value
 
         if data is not None and isinstance(data, (bytes, bytearray)):
             data = f"0x{data.hex()}"
 
         if data is not None and self._template is not None:
-            self._attr_native_value = (
-                self._template.async_render_with_possible_json_value(data, None)
-            )
+            variables = self._render_template_variables_with_value(data)
+            if self._render_availability_template(variables):
+                self._attr_native_value = self._template.async_render_as_value_template(
+                    variables, None
+                )
+                self._process_manual_data(variables)
         else:
             self._attr_native_value = data
 
@@ -407,4 +411,3 @@ class SQLSensor(ManualTriggerSensorEntity):
             _LOGGER.warning("%s returned no results", self._query)
 
         sess.close()
-        return data
