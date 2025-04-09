@@ -1,0 +1,1160 @@
+# serializer version: 1
+# name: test_setup[event.sleep_as_android_alarm_clock-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'alarm_alert_dismiss',
+        'alarm_alert_start',
+        'alarm_rescheduled',
+        'alarm_skip_next',
+        'alarm_snooze_canceled',
+        'alarm_snooze_clicked',
+        'alarm_wake_up_check',
+        'before_smart_period',
+        'show_skip_next_alarm',
+        'smart_period',
+        'time_to_bed_alarm_alert',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.sleep_as_android_alarm_clock',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Alarm clock',
+    'platform': 'sleep_as_android',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <SleepAsAndroidEvent.ALARM_CLOCK: 'alarm_clock'>,
+    'unique_id': '01JRD840SAZ55DGXBD78PTQ4EF_alarm_clock',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[event.sleep_as_android_alarm_clock-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event_type': None,
+      'event_types': list([
+        'alarm_alert_dismiss',
+        'alarm_alert_start',
+        'alarm_rescheduled',
+        'alarm_skip_next',
+        'alarm_snooze_canceled',
+        'alarm_snooze_clicked',
+        'alarm_wake_up_check',
+        'before_smart_period',
+        'show_skip_next_alarm',
+        'smart_period',
+        'time_to_bed_alarm_alert',
+      ]),
+      'friendly_name': 'Sleep as Android Alarm clock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.sleep_as_android_alarm_clock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[event.sleep_as_android_anti_snoring-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'antisnoring',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.sleep_as_android_anti_snoring',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Anti-snoring',
+    'platform': 'sleep_as_android',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <SleepAsAndroidEvent.ANTI_SNORING: 'antisnoring'>,
+    'unique_id': '01JRD840SAZ55DGXBD78PTQ4EF_antisnoring',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[event.sleep_as_android_anti_snoring-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event_type': None,
+      'event_types': list([
+        'antisnoring',
+      ]),
+      'friendly_name': 'Sleep as Android Anti-snoring',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.sleep_as_android_anti_snoring',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[event.sleep_as_android_lullaby-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'lullaby_start',
+        'lullaby_stop',
+        'lullaby_volume_down',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.sleep_as_android_lullaby',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Lullaby',
+    'platform': 'sleep_as_android',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <SleepAsAndroidEvent.LULLABY: 'lullaby'>,
+    'unique_id': '01JRD840SAZ55DGXBD78PTQ4EF_lullaby',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[event.sleep_as_android_lullaby-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event_type': None,
+      'event_types': list([
+        'lullaby_start',
+        'lullaby_stop',
+        'lullaby_volume_down',
+      ]),
+      'friendly_name': 'Sleep as Android Lullaby',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.sleep_as_android_lullaby',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[event.sleep_as_android_sleep_apnea-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'apnea_alarm',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.sleep_as_android_sleep_apnea',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sleep apnea',
+    'platform': 'sleep_as_android',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <SleepAsAndroidEvent.APNEA_ALARM: 'apnea_alarm'>,
+    'unique_id': '01JRD840SAZ55DGXBD78PTQ4EF_apnea_alarm',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[event.sleep_as_android_sleep_apnea-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event_type': None,
+      'event_types': list([
+        'apnea_alarm',
+      ]),
+      'friendly_name': 'Sleep as Android Sleep apnea',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.sleep_as_android_sleep_apnea',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[event.sleep_as_android_sleep_phase-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'awake',
+        'deep_sleep',
+        'light_sleep',
+        'not_awake',
+        'rem',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.sleep_as_android_sleep_phase',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sleep phase',
+    'platform': 'sleep_as_android',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <SleepAsAndroidEvent.SLEEP_PHASE: 'sleep_phase'>,
+    'unique_id': '01JRD840SAZ55DGXBD78PTQ4EF_sleep_phase',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[event.sleep_as_android_sleep_phase-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event_type': None,
+      'event_types': list([
+        'awake',
+        'deep_sleep',
+        'light_sleep',
+        'not_awake',
+        'rem',
+      ]),
+      'friendly_name': 'Sleep as Android Sleep phase',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.sleep_as_android_sleep_phase',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[event.sleep_as_android_sleep_tracking-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'sleep_tracking_paused',
+        'sleep_tracking_resumed',
+        'sleep_tracking_started',
+        'sleep_tracking_stopped',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.sleep_as_android_sleep_tracking',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
+    'original_icon': None,
+    'original_name': 'Sleep tracking',
+    'platform': 'sleep_as_android',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <SleepAsAndroidEvent.SLEEP_TRACKING: 'sleep_tracking'>,
+    'unique_id': '01JRD840SAZ55DGXBD78PTQ4EF_sleep_tracking',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[event.sleep_as_android_sleep_tracking-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'button',
+      'event_type': None,
+      'event_types': list([
+        'sleep_tracking_paused',
+        'sleep_tracking_resumed',
+        'sleep_tracking_started',
+        'sleep_tracking_stopped',
+      ]),
+      'friendly_name': 'Sleep as Android Sleep tracking',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.sleep_as_android_sleep_tracking',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[event.sleep_as_android_sound_recognition-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'sound_event_baby',
+        'sound_event_cough',
+        'sound_event_laugh',
+        'sound_event_snore',
+        'sound_event_talk',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.sleep_as_android_sound_recognition',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sound recognition',
+    'platform': 'sleep_as_android',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <SleepAsAndroidEvent.SOUND_EVENT: 'sound_event'>,
+    'unique_id': '01JRD840SAZ55DGXBD78PTQ4EF_sound_event',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[event.sleep_as_android_sound_recognition-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event_type': None,
+      'event_types': list([
+        'sound_event_baby',
+        'sound_event_cough',
+        'sound_event_laugh',
+        'sound_event_snore',
+        'sound_event_talk',
+      ]),
+      'friendly_name': 'Sleep as Android Sound recognition',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.sleep_as_android_sound_recognition',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_webhook_event[alarm_clock-alarm_alert_dismiss-1582719660934-label-None]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event': 'alarm_alert_dismiss',
+      'event_type': 'alarm_alert_dismiss',
+      'event_types': list([
+        'alarm_alert_dismiss',
+        'alarm_alert_start',
+        'alarm_rescheduled',
+        'alarm_skip_next',
+        'alarm_snooze_canceled',
+        'alarm_snooze_clicked',
+        'alarm_wake_up_check',
+        'before_smart_period',
+        'show_skip_next_alarm',
+        'smart_period',
+        'time_to_bed_alarm_alert',
+      ]),
+      'friendly_name': 'Sleep as Android Alarm clock',
+      'value1': '1582719660934',
+      'value2': 'label',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.sleep_as_android_alarm_clock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-01-01T03:30:00.000+00:00',
+  })
+# ---
+# name: test_webhook_event[alarm_clock-alarm_alert_start-1582719660934-label-None]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event': 'alarm_alert_start',
+      'event_type': 'alarm_alert_start',
+      'event_types': list([
+        'alarm_alert_dismiss',
+        'alarm_alert_start',
+        'alarm_rescheduled',
+        'alarm_skip_next',
+        'alarm_snooze_canceled',
+        'alarm_snooze_clicked',
+        'alarm_wake_up_check',
+        'before_smart_period',
+        'show_skip_next_alarm',
+        'smart_period',
+        'time_to_bed_alarm_alert',
+      ]),
+      'friendly_name': 'Sleep as Android Alarm clock',
+      'value1': '1582719660934',
+      'value2': 'label',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.sleep_as_android_alarm_clock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-01-01T03:30:00.000+00:00',
+  })
+# ---
+# name: test_webhook_event[alarm_clock-alarm_rescheduled-None-None-None]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event': 'alarm_rescheduled',
+      'event_type': 'alarm_rescheduled',
+      'event_types': list([
+        'alarm_alert_dismiss',
+        'alarm_alert_start',
+        'alarm_rescheduled',
+        'alarm_skip_next',
+        'alarm_snooze_canceled',
+        'alarm_snooze_clicked',
+        'alarm_wake_up_check',
+        'before_smart_period',
+        'show_skip_next_alarm',
+        'smart_period',
+        'time_to_bed_alarm_alert',
+      ]),
+      'friendly_name': 'Sleep as Android Alarm clock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.sleep_as_android_alarm_clock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-01-01T03:30:00.000+00:00',
+  })
+# ---
+# name: test_webhook_event[alarm_clock-alarm_skip_next-1582719660934-label-None]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event': 'alarm_skip_next',
+      'event_type': 'alarm_skip_next',
+      'event_types': list([
+        'alarm_alert_dismiss',
+        'alarm_alert_start',
+        'alarm_rescheduled',
+        'alarm_skip_next',
+        'alarm_snooze_canceled',
+        'alarm_snooze_clicked',
+        'alarm_wake_up_check',
+        'before_smart_period',
+        'show_skip_next_alarm',
+        'smart_period',
+        'time_to_bed_alarm_alert',
+      ]),
+      'friendly_name': 'Sleep as Android Alarm clock',
+      'value1': '1582719660934',
+      'value2': 'label',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.sleep_as_android_alarm_clock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-01-01T03:30:00.000+00:00',
+  })
+# ---
+# name: test_webhook_event[alarm_clock-alarm_snooze_canceled-1582719660934-label-None]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event': 'alarm_snooze_canceled',
+      'event_type': 'alarm_snooze_canceled',
+      'event_types': list([
+        'alarm_alert_dismiss',
+        'alarm_alert_start',
+        'alarm_rescheduled',
+        'alarm_skip_next',
+        'alarm_snooze_canceled',
+        'alarm_snooze_clicked',
+        'alarm_wake_up_check',
+        'before_smart_period',
+        'show_skip_next_alarm',
+        'smart_period',
+        'time_to_bed_alarm_alert',
+      ]),
+      'friendly_name': 'Sleep as Android Alarm clock',
+      'value1': '1582719660934',
+      'value2': 'label',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.sleep_as_android_alarm_clock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-01-01T03:30:00.000+00:00',
+  })
+# ---
+# name: test_webhook_event[alarm_clock-alarm_snooze_clicked-1582719660934-label-None]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event': 'alarm_snooze_clicked',
+      'event_type': 'alarm_snooze_clicked',
+      'event_types': list([
+        'alarm_alert_dismiss',
+        'alarm_alert_start',
+        'alarm_rescheduled',
+        'alarm_skip_next',
+        'alarm_snooze_canceled',
+        'alarm_snooze_clicked',
+        'alarm_wake_up_check',
+        'before_smart_period',
+        'show_skip_next_alarm',
+        'smart_period',
+        'time_to_bed_alarm_alert',
+      ]),
+      'friendly_name': 'Sleep as Android Alarm clock',
+      'value1': '1582719660934',
+      'value2': 'label',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.sleep_as_android_alarm_clock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-01-01T03:30:00.000+00:00',
+  })
+# ---
+# name: test_webhook_event[alarm_clock-alarm_wake_up_check-None-None-None]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event': 'alarm_wake_up_check',
+      'event_type': 'alarm_wake_up_check',
+      'event_types': list([
+        'alarm_alert_dismiss',
+        'alarm_alert_start',
+        'alarm_rescheduled',
+        'alarm_skip_next',
+        'alarm_snooze_canceled',
+        'alarm_snooze_clicked',
+        'alarm_wake_up_check',
+        'before_smart_period',
+        'show_skip_next_alarm',
+        'smart_period',
+        'time_to_bed_alarm_alert',
+      ]),
+      'friendly_name': 'Sleep as Android Alarm clock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.sleep_as_android_alarm_clock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-01-01T03:30:00.000+00:00',
+  })
+# ---
+# name: test_webhook_event[alarm_clock-before_smart_period-label-None-None]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event': 'before_smart_period',
+      'event_type': 'before_smart_period',
+      'event_types': list([
+        'alarm_alert_dismiss',
+        'alarm_alert_start',
+        'alarm_rescheduled',
+        'alarm_skip_next',
+        'alarm_snooze_canceled',
+        'alarm_snooze_clicked',
+        'alarm_wake_up_check',
+        'before_smart_period',
+        'show_skip_next_alarm',
+        'smart_period',
+        'time_to_bed_alarm_alert',
+      ]),
+      'friendly_name': 'Sleep as Android Alarm clock',
+      'value1': 'label',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.sleep_as_android_alarm_clock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-01-01T03:30:00.000+00:00',
+  })
+# ---
+# name: test_webhook_event[alarm_clock-show_skip_next_alarm-1582719660934-label-None]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event': 'show_skip_next_alarm',
+      'event_type': 'show_skip_next_alarm',
+      'event_types': list([
+        'alarm_alert_dismiss',
+        'alarm_alert_start',
+        'alarm_rescheduled',
+        'alarm_skip_next',
+        'alarm_snooze_canceled',
+        'alarm_snooze_clicked',
+        'alarm_wake_up_check',
+        'before_smart_period',
+        'show_skip_next_alarm',
+        'smart_period',
+        'time_to_bed_alarm_alert',
+      ]),
+      'friendly_name': 'Sleep as Android Alarm clock',
+      'value1': '1582719660934',
+      'value2': 'label',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.sleep_as_android_alarm_clock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-01-01T03:30:00.000+00:00',
+  })
+# ---
+# name: test_webhook_event[alarm_clock-smart_period-None-None-None]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event': 'smart_period',
+      'event_type': 'smart_period',
+      'event_types': list([
+        'alarm_alert_dismiss',
+        'alarm_alert_start',
+        'alarm_rescheduled',
+        'alarm_skip_next',
+        'alarm_snooze_canceled',
+        'alarm_snooze_clicked',
+        'alarm_wake_up_check',
+        'before_smart_period',
+        'show_skip_next_alarm',
+        'smart_period',
+        'time_to_bed_alarm_alert',
+      ]),
+      'friendly_name': 'Sleep as Android Alarm clock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.sleep_as_android_alarm_clock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-01-01T03:30:00.000+00:00',
+  })
+# ---
+# name: test_webhook_event[alarm_clock-time_to_bed_alarm_alert-1582719660934-label-None]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event': 'time_to_bed_alarm_alert',
+      'event_type': 'time_to_bed_alarm_alert',
+      'event_types': list([
+        'alarm_alert_dismiss',
+        'alarm_alert_start',
+        'alarm_rescheduled',
+        'alarm_skip_next',
+        'alarm_snooze_canceled',
+        'alarm_snooze_clicked',
+        'alarm_wake_up_check',
+        'before_smart_period',
+        'show_skip_next_alarm',
+        'smart_period',
+        'time_to_bed_alarm_alert',
+      ]),
+      'friendly_name': 'Sleep as Android Alarm clock',
+      'value1': '1582719660934',
+      'value2': 'label',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.sleep_as_android_alarm_clock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-01-01T03:30:00.000+00:00',
+  })
+# ---
+# name: test_webhook_event[anti_snoring-antisnoring-None-None-None]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event': 'antisnoring',
+      'event_type': 'antisnoring',
+      'event_types': list([
+        'antisnoring',
+      ]),
+      'friendly_name': 'Sleep as Android Anti-snoring',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.sleep_as_android_anti_snoring',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-01-01T03:30:00.000+00:00',
+  })
+# ---
+# name: test_webhook_event[lullaby-lullaby_start-None-None-None]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event': 'lullaby_start',
+      'event_type': 'lullaby_start',
+      'event_types': list([
+        'lullaby_start',
+        'lullaby_stop',
+        'lullaby_volume_down',
+      ]),
+      'friendly_name': 'Sleep as Android Lullaby',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.sleep_as_android_lullaby',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-01-01T03:30:00.000+00:00',
+  })
+# ---
+# name: test_webhook_event[lullaby-lullaby_stop-None-None-None]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event': 'lullaby_stop',
+      'event_type': 'lullaby_stop',
+      'event_types': list([
+        'lullaby_start',
+        'lullaby_stop',
+        'lullaby_volume_down',
+      ]),
+      'friendly_name': 'Sleep as Android Lullaby',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.sleep_as_android_lullaby',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-01-01T03:30:00.000+00:00',
+  })
+# ---
+# name: test_webhook_event[lullaby-lullaby_volume_down-None-None-None]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event': 'lullaby_volume_down',
+      'event_type': 'lullaby_volume_down',
+      'event_types': list([
+        'lullaby_start',
+        'lullaby_stop',
+        'lullaby_volume_down',
+      ]),
+      'friendly_name': 'Sleep as Android Lullaby',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.sleep_as_android_lullaby',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-01-01T03:30:00.000+00:00',
+  })
+# ---
+# name: test_webhook_event[sleep_apnea-apnea_alarm-None-None-None]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event': 'apnea_alarm',
+      'event_type': 'apnea_alarm',
+      'event_types': list([
+        'apnea_alarm',
+      ]),
+      'friendly_name': 'Sleep as Android Sleep apnea',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.sleep_as_android_sleep_apnea',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-01-01T03:30:00.000+00:00',
+  })
+# ---
+# name: test_webhook_event[sleep_phase-awake-None-None-None]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event': 'awake',
+      'event_type': 'awake',
+      'event_types': list([
+        'awake',
+        'deep_sleep',
+        'light_sleep',
+        'not_awake',
+        'rem',
+      ]),
+      'friendly_name': 'Sleep as Android Sleep phase',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.sleep_as_android_sleep_phase',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-01-01T03:30:00.000+00:00',
+  })
+# ---
+# name: test_webhook_event[sleep_phase-deep_sleep-None-None-None]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event': 'deep_sleep',
+      'event_type': 'deep_sleep',
+      'event_types': list([
+        'awake',
+        'deep_sleep',
+        'light_sleep',
+        'not_awake',
+        'rem',
+      ]),
+      'friendly_name': 'Sleep as Android Sleep phase',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.sleep_as_android_sleep_phase',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-01-01T03:30:00.000+00:00',
+  })
+# ---
+# name: test_webhook_event[sleep_phase-light_sleep-None-None-None]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event': 'light_sleep',
+      'event_type': 'light_sleep',
+      'event_types': list([
+        'awake',
+        'deep_sleep',
+        'light_sleep',
+        'not_awake',
+        'rem',
+      ]),
+      'friendly_name': 'Sleep as Android Sleep phase',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.sleep_as_android_sleep_phase',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-01-01T03:30:00.000+00:00',
+  })
+# ---
+# name: test_webhook_event[sleep_phase-not_awake-None-None-None]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event': 'not_awake',
+      'event_type': 'not_awake',
+      'event_types': list([
+        'awake',
+        'deep_sleep',
+        'light_sleep',
+        'not_awake',
+        'rem',
+      ]),
+      'friendly_name': 'Sleep as Android Sleep phase',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.sleep_as_android_sleep_phase',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-01-01T03:30:00.000+00:00',
+  })
+# ---
+# name: test_webhook_event[sleep_phase-rem-None-None-None]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event': 'rem',
+      'event_type': 'rem',
+      'event_types': list([
+        'awake',
+        'deep_sleep',
+        'light_sleep',
+        'not_awake',
+        'rem',
+      ]),
+      'friendly_name': 'Sleep as Android Sleep phase',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.sleep_as_android_sleep_phase',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-01-01T03:30:00.000+00:00',
+  })
+# ---
+# name: test_webhook_event[sleep_tracking-sleep_tracking_paused-None-None-None]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'button',
+      'event': 'sleep_tracking_paused',
+      'event_type': 'sleep_tracking_paused',
+      'event_types': list([
+        'sleep_tracking_paused',
+        'sleep_tracking_resumed',
+        'sleep_tracking_started',
+        'sleep_tracking_stopped',
+      ]),
+      'friendly_name': 'Sleep as Android Sleep tracking',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.sleep_as_android_sleep_tracking',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-01-01T03:30:00.000+00:00',
+  })
+# ---
+# name: test_webhook_event[sleep_tracking-sleep_tracking_resumed-None-None-None]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'button',
+      'event': 'sleep_tracking_resumed',
+      'event_type': 'sleep_tracking_resumed',
+      'event_types': list([
+        'sleep_tracking_paused',
+        'sleep_tracking_resumed',
+        'sleep_tracking_started',
+        'sleep_tracking_stopped',
+      ]),
+      'friendly_name': 'Sleep as Android Sleep tracking',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.sleep_as_android_sleep_tracking',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-01-01T03:30:00.000+00:00',
+  })
+# ---
+# name: test_webhook_event[sleep_tracking-sleep_tracking_started-None-None-None]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'button',
+      'event': 'sleep_tracking_started',
+      'event_type': 'sleep_tracking_started',
+      'event_types': list([
+        'sleep_tracking_paused',
+        'sleep_tracking_resumed',
+        'sleep_tracking_started',
+        'sleep_tracking_stopped',
+      ]),
+      'friendly_name': 'Sleep as Android Sleep tracking',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.sleep_as_android_sleep_tracking',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-01-01T03:30:00.000+00:00',
+  })
+# ---
+# name: test_webhook_event[sleep_tracking-sleep_tracking_stopped-None-None-None]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'button',
+      'event': 'sleep_tracking_stopped',
+      'event_type': 'sleep_tracking_stopped',
+      'event_types': list([
+        'sleep_tracking_paused',
+        'sleep_tracking_resumed',
+        'sleep_tracking_started',
+        'sleep_tracking_stopped',
+      ]),
+      'friendly_name': 'Sleep as Android Sleep tracking',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.sleep_as_android_sleep_tracking',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-01-01T03:30:00.000+00:00',
+  })
+# ---
+# name: test_webhook_event[sound_recognition-sound_event_baby-None-None-None]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event': 'sound_event_baby',
+      'event_type': 'sound_event_baby',
+      'event_types': list([
+        'sound_event_baby',
+        'sound_event_cough',
+        'sound_event_laugh',
+        'sound_event_snore',
+        'sound_event_talk',
+      ]),
+      'friendly_name': 'Sleep as Android Sound recognition',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.sleep_as_android_sound_recognition',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-01-01T03:30:00.000+00:00',
+  })
+# ---
+# name: test_webhook_event[sound_recognition-sound_event_cough-None-None-None]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event': 'sound_event_cough',
+      'event_type': 'sound_event_cough',
+      'event_types': list([
+        'sound_event_baby',
+        'sound_event_cough',
+        'sound_event_laugh',
+        'sound_event_snore',
+        'sound_event_talk',
+      ]),
+      'friendly_name': 'Sleep as Android Sound recognition',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.sleep_as_android_sound_recognition',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-01-01T03:30:00.000+00:00',
+  })
+# ---
+# name: test_webhook_event[sound_recognition-sound_event_laugh-None-None-None]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event': 'sound_event_laugh',
+      'event_type': 'sound_event_laugh',
+      'event_types': list([
+        'sound_event_baby',
+        'sound_event_cough',
+        'sound_event_laugh',
+        'sound_event_snore',
+        'sound_event_talk',
+      ]),
+      'friendly_name': 'Sleep as Android Sound recognition',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.sleep_as_android_sound_recognition',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-01-01T03:30:00.000+00:00',
+  })
+# ---
+# name: test_webhook_event[sound_recognition-sound_event_snore-None-None-None]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event': 'sound_event_snore',
+      'event_type': 'sound_event_snore',
+      'event_types': list([
+        'sound_event_baby',
+        'sound_event_cough',
+        'sound_event_laugh',
+        'sound_event_snore',
+        'sound_event_talk',
+      ]),
+      'friendly_name': 'Sleep as Android Sound recognition',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.sleep_as_android_sound_recognition',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-01-01T03:30:00.000+00:00',
+  })
+# ---
+# name: test_webhook_event[sound_recognition-sound_event_talk-None-None-None]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event': 'sound_event_talk',
+      'event_type': 'sound_event_talk',
+      'event_types': list([
+        'sound_event_baby',
+        'sound_event_cough',
+        'sound_event_laugh',
+        'sound_event_snore',
+        'sound_event_talk',
+      ]),
+      'friendly_name': 'Sleep as Android Sound recognition',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.sleep_as_android_sound_recognition',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-01-01T03:30:00.000+00:00',
+  })
+# ---

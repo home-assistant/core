@@ -1,0 +1,106 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: has no actions
+  appropriate-polling:
+    status: exempt
+    comment: does not poll
+  brands: done
+  common-modules:
+    status: exempt
+    comment: has no coordinator, only 1 platform
+  config-flow-test-coverage:
+    status: done
+    comment: uses webhook flow helper, already covered
+  config-flow: done
+  dependency-transparency:
+    status: exempt
+    comment: no dependencies
+  docs-actions:
+    status: exempt
+    comment: no actions
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data:
+    status: exempt
+    comment: nothing to store in runtime data
+  test-before-configure:
+    status: exempt
+    comment: nothing to test
+  test-before-setup:
+    status: exempt
+    comment: nothing to test
+  unique-config-entry:
+    status: exempt
+    comment: only 1 webhook can be configured per device. It's not possible to prevent different devices from using the same webhook
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: no actions
+  config-entry-unloading: done
+  docs-configuration-parameters: todo
+  docs-installation-parameters: todo
+  entity-unavailable:
+    status: exempt
+    comment: only state-less entities
+  integration-owner: done
+  log-when-unavailable:
+    status: exempt
+    comment: only state-less entities
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: no authentication required
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery-update-info:
+    status: exempt
+    comment: no discovery
+  discovery:
+    status: exempt
+    comment: cannot be discovered
+  docs-data-update:
+    status: exempt
+    comment: does not poll
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices:
+    status: exempt
+    comment: has no devices
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations:
+    status: exempt
+    comment: does not raise exceptions
+  icon-translations: done
+  reconfiguration-flow: todo
+  repair-issues:
+    status: exempt
+    comment: has no repairs
+  stale-devices:
+    status: exempt
+    comment: has no stale devices
+
+  # Platinum
+  async-dependency:
+    status: exempt
+    comment: has no external dependencies
+  inject-websession:
+    status: exempt
+    comment: does not do http requests
+  strict-typing: done
