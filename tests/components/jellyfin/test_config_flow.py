@@ -512,20 +512,44 @@ async def test_reconfigure_successful(
     assert mock_config_entry.data[CONF_URL] == "http://new_url:8096"
 
 
-async def test_reconfigure_flow_exception_cannot_connect(
+@pytest.mark.parametrize(
+    ("connect_fixture", "login_fixture", "url", "password", "expected_error"),
+    [
+        (
+            "auth-connect-address-failure.json",
+            "auth-login.json",
+            "http://invalid_new_url:8096",
+            "new_password",
+            "cannot_connect",
+        ),
+        (
+            "auth-connect-address.json",
+            "auth-login-failure.json",
+            "http://new_url:8096",
+            "invalid_new_password",
+            "invalid_auth",
+        ),
+    ],
+)
+async def test_reconfigure_flow_failure(
     hass: HomeAssistant,
     mock_jellyfin: MagicMock,
     mock_config_entry: MockConfigEntry,
     mock_client: MagicMock,
+    connect_fixture: str,
+    login_fixture: str,
+    url: str,
+    password: str,
+    expected_error: str,
 ) -> None:
     """Test reconfigure flow connection failure."""
     mock_config_entry.add_to_hass(hass)
 
     mock_client.auth.connect_to_address.return_value = await async_load_json_fixture(
-        hass, "auth-connect-address-failure.json"
+        hass, connect_fixture
     )
     mock_client.auth.login.return_value = await async_load_json_fixture(
-        hass, "auth-login.json"
+        hass, login_fixture
     )
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
@@ -536,42 +560,10 @@ async def test_reconfigure_flow_exception_cannot_connect(
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_URL: "http://invalid_new_url:8096",
+            CONF_URL: url,
             CONF_USERNAME: "new_user",
-            CONF_PASSWORD: "new_password",
+            CONF_PASSWORD: password,
         },
     )
     assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
-
-
-async def test_reconfigure_flow_exception_invalid_credentials(
-    hass: HomeAssistant,
-    mock_jellyfin: MagicMock,
-    mock_config_entry: MockConfigEntry,
-    mock_client: MagicMock,
-) -> None:
-    """Test reconfigure flow authentication failure ."""
-    mock_config_entry.add_to_hass(hass)
-
-    mock_client.auth.connect_to_address.return_value = await async_load_json_fixture(
-        hass, "auth-connect-address.json"
-    )
-    mock_client.auth.login.return_value = await async_load_json_fixture(
-        hass, "auth-login-failure.json"
-    )
-    result = await mock_config_entry.start_reconfigure_flow(hass)
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
-
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_URL: "http://new_url:8096",
-            CONF_USERNAME: "new_user",
-            CONF_PASSWORD: "invalid_new_password",
-        },
-    )
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "invalid_auth"}
+    assert result2["errors"] == {"base": expected_error}
