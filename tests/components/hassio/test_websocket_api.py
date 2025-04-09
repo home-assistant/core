@@ -42,6 +42,7 @@ def mock_all(
     aioclient_mock: AiohttpClientMocker,
     supervisor_is_connected: AsyncMock,
     resolution_info: AsyncMock,
+    addon_info: AsyncMock,
 ) -> None:
     """Mock all setup requests."""
     aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
@@ -848,9 +849,7 @@ async def test_update_core_with_backup_and_error(
             side_effect=BackupManagerError,
         ),
     ):
-        await client.send_json_auto_id(
-            {"type": "hassio/update/addon", "addon": "test", "backup": True}
-        )
+        await client.send_json_auto_id({"type": "hassio/update/core", "backup": True})
         result = await client.receive_json()
     assert not result["success"]
     assert result["error"] == {

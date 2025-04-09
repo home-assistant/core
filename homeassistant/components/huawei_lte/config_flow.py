@@ -178,8 +178,8 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         except Timeout:
             _LOGGER.warning("Connection timeout", exc_info=True)
             errors[CONF_URL] = "connection_timeout"
-        except Exception:  # noqa: BLE001
-            _LOGGER.warning("Unknown error connecting to device", exc_info=True)
+        except Exception:
+            _LOGGER.exception("Unknown error connecting to device")
             errors[CONF_URL] = "unknown"
         return conn
 
@@ -188,8 +188,8 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         try:
             conn.close()
             conn.requests_session.close()
-        except Exception:  # noqa: BLE001
-            _LOGGER.debug("Disconnect error", exc_info=True)
+        except Exception:
+            _LOGGER.exception("Disconnect error")
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
