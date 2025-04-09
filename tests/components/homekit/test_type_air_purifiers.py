@@ -36,6 +36,7 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import Event, HomeAssistant
 
@@ -334,14 +335,27 @@ async def test_expose_linked_sensors(
     # Updated humidity should reflect in HomeKit
     broker = MagicMock()
     acc.char_current_humidity.broker = broker
-    hass.states.async_set(humidity_entity_id, 60)
+    hass.states.async_set(
+        humidity_entity_id,
+        60,
+        {
+            ATTR_DEVICE_CLASS: SensorDeviceClass.HUMIDITY,
+        },
+    )
     await hass.async_block_till_done()
     assert acc.char_current_humidity.value == 60
     assert len(broker.mock_calls) == 2
     broker.reset_mock()
 
     # Change to same state should not trigger update in HomeKit
-    hass.states.async_set(humidity_entity_id, 60, force_update=True)
+    hass.states.async_set(
+        humidity_entity_id,
+        60,
+        {
+            ATTR_DEVICE_CLASS: SensorDeviceClass.HUMIDITY,
+        },
+        force_update=True,
+    )
     await hass.async_block_till_done()
     assert acc.char_current_humidity.value == 60
     assert len(broker.mock_calls) == 0
@@ -350,7 +364,13 @@ async def test_expose_linked_sensors(
     broker = MagicMock()
     acc.char_pm25_density.broker = broker
     acc.char_air_quality.broker = broker
-    hass.states.async_set(pm25_entity_id, 5)
+    hass.states.async_set(
+        pm25_entity_id,
+        5,
+        {
+            ATTR_DEVICE_CLASS: SensorDeviceClass.PM25,
+        },
+    )
     await hass.async_block_till_done()
     assert acc.char_pm25_density.value == 5
     assert acc.char_air_quality.value == 1
@@ -358,7 +378,14 @@ async def test_expose_linked_sensors(
     broker.reset_mock()
 
     # Change to same state should not trigger update in HomeKit
-    hass.states.async_set(pm25_entity_id, 5, force_update=True)
+    hass.states.async_set(
+        pm25_entity_id,
+        5,
+        {
+            ATTR_DEVICE_CLASS: SensorDeviceClass.PM25,
+        },
+        force_update=True,
+    )
     await hass.async_block_till_done()
     assert acc.char_pm25_density.value == 5
     assert acc.char_air_quality.value == 1
@@ -367,17 +394,58 @@ async def test_expose_linked_sensors(
     # Updated temperature should reflect in HomeKit
     broker = MagicMock()
     acc.char_current_temperature.broker = broker
-    hass.states.async_set(temperature_entity_id, 30)
+    hass.states.async_set(
+        temperature_entity_id,
+        30,
+        {
+            ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
+        },
+    )
     await hass.async_block_till_done()
     assert acc.char_current_temperature.value == 30
     assert len(broker.mock_calls) == 2
     broker.reset_mock()
 
     # Change to same state should not trigger update in HomeKit
-    hass.states.async_set(temperature_entity_id, 30, force_update=True)
+    hass.states.async_set(
+        temperature_entity_id,
+        30,
+        {
+            ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
+        },
+        force_update=True,
+    )
     await hass.async_block_till_done()
     assert acc.char_current_temperature.value == 30
     assert len(broker.mock_calls) == 0
+
+    # Should handle unavailable state, show last known value
+    hass.states.async_set(
+        humidity_entity_id,
+        STATE_UNAVAILABLE,
+        {
+            ATTR_DEVICE_CLASS: SensorDeviceClass.HUMIDITY,
+        },
+    )
+    hass.states.async_set(
+        pm25_entity_id,
+        STATE_UNAVAILABLE,
+        {
+            ATTR_DEVICE_CLASS: SensorDeviceClass.PM25,
+        },
+    )
+    hass.states.async_set(
+        temperature_entity_id,
+        STATE_UNAVAILABLE,
+        {
+            ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
+        },
+    )
+    await hass.async_block_till_done()
+    assert acc.char_current_humidity.value == 60
+    assert acc.char_pm25_density.value == 5
+    assert acc.char_air_quality.value == 1
+    assert acc.char_current_temperature.value == 30
 
     # Check that all goes well if we remove the linked sensors
     hass.states.async_remove(humidity_entity_id)
@@ -473,6 +541,13 @@ async def test_filter_maintenance_linked_sensors(
     await hass.async_block_till_done()
     assert acc.char_filter_life_level.value == 25
     assert len(broker.mock_calls) == 0
+
+    # Should handle unavailable state, show last known value
+    hass.states.async_set(filter_change_indicator_entity_id, STATE_UNAVAILABLE)
+    hass.states.async_set(filter_life_level_entity_id, STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+    assert acc.char_filter_change_indication.value == FILTER_CHANGE_FILTER
+    assert acc.char_filter_life_level.value == 25
 
     # Check that all goes well if we remove the linked sensors
     hass.states.async_remove(filter_change_indicator_entity_id)

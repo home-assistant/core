@@ -8,7 +8,7 @@ from pyhap.const import CATEGORY_AIR_PURIFIER
 from pyhap.service import Service
 from pyhap.util import callback as pyhap_callback
 
-from homeassistant.const import STATE_ON
+from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import (
     Event,
     EventStateChangedData,
@@ -43,7 +43,7 @@ from .const import (
     THRESHOLD_FILTER_CHANGE_NEEDED,
 )
 from .type_fans import ATTR_PRESET_MODE, CHAR_ROTATION_SPEED, Fan
-from .util import cleanup_name_for_homekit, density_to_air_quality
+from .util import cleanup_name_for_homekit, convert_to_float, density_to_air_quality
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -277,9 +277,9 @@ class AirPurifier(Fan):
         if not new_state:
             return
 
-        current_humidity = float(new_state.state)
         if (
-            not self.char_current_humidity
+            (current_humidity := convert_to_float(new_state.state)) is None
+            or not self.char_current_humidity
             or self.char_current_humidity.value == current_humidity
         ):
             return
@@ -305,8 +305,11 @@ class AirPurifier(Fan):
         if not new_state:
             return
 
-        current_pm25 = float(new_state.state)
-        if not self.char_pm25_density or self.char_pm25_density.value == current_pm25:
+        if (
+            (current_pm25 := convert_to_float(new_state.state)) is None
+            or not self.char_pm25_density
+            or self.char_pm25_density.value == current_pm25
+        ):
             return
 
         _LOGGER.debug(
@@ -333,9 +336,9 @@ class AirPurifier(Fan):
         if not new_state:
             return
 
-        current_temperature = float(new_state.state)
         if (
-            not self.char_current_temperature
+            (current_temperature := convert_to_float(new_state.state)) is None
+            or not self.char_current_temperature
             or self.char_current_temperature.value == current_temperature
         ):
             return
@@ -358,7 +361,7 @@ class AirPurifier(Fan):
     @callback
     def _async_update_filter_change_indicator(self, new_state: State | None) -> None:
         """Handle linked filter change indicator binary sensor state change to update HomeKit value."""
-        if new_state is None:
+        if new_state is None or new_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
             return
 
         current_change_indicator = (
@@ -391,9 +394,9 @@ class AirPurifier(Fan):
         if new_state is None:
             return
 
-        current_life_level = float(new_state.state)
         if (
-            self.char_filter_life_level
+            (current_life_level := convert_to_float(new_state.state)) is not None
+            and self.char_filter_life_level
             and self.char_filter_life_level.value != current_life_level
         ):
             _LOGGER.debug(
@@ -404,7 +407,7 @@ class AirPurifier(Fan):
             )
             self.char_filter_life_level.set_value(current_life_level)
 
-        if self.linked_filter_change_indicator_binary_sensor:
+        if self.linked_filter_change_indicator_binary_sensor or not current_life_level:
             # Handled by its own event listener
             return
 
