@@ -7,6 +7,7 @@ from dataclasses import dataclass
 
 from yolink.client_request import ClientRequest
 from yolink.const import (
+    ATTR_DEVICE_MODEL_A,
     ATTR_DEVICE_MULTI_WATER_METER_CONTROLLER,
     ATTR_DEVICE_WATER_METER_CONTROLLER,
 )
@@ -22,7 +23,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DEV_MODEL_LEAK_STOP_YS5009, DEV_MODEL_WATER_METER_YS5007, DOMAIN
+from .const import DEV_MODEL_WATER_METER_YS5007, DOMAIN
 from .coordinator import YoLinkCoordinator
 from .entity import YoLinkEntity
 
@@ -107,14 +108,9 @@ class YoLinkValveEntity(YoLinkEntity, ValveEntity):
     ) -> None:
         """Init YoLink valve."""
         super().__init__(config_entry, coordinator)
-        device_mode = self.coordinator.device.device_model_name
-        # YS5009 running in Class A model if valve is open, can't be closed.
-        if device_mode.startswith(DEV_MODEL_LEAK_STOP_YS5009):
-            self._attr_supported_features = ValveEntityFeature.OPEN
-        else:
-            self._attr_supported_features = (
-                ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE
-            )
+        self._attr_supported_features = (
+            ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE
+        )
         self.entity_description = description
         self._attr_unique_id = (
             f"{coordinator.device.device_id} {self.entity_description.key}"
@@ -155,3 +151,11 @@ class YoLinkValveEntity(YoLinkEntity, ValveEntity):
     async def async_close_valve(self) -> None:
         """Close valve."""
         await self._async_invoke_device("close")
+
+    @property
+    def available(self) -> bool:
+        """Return true is device is available."""
+        if self.coordinator.dev_net_type is not None:
+            # When the device operates in Class A mode, it cannot be controlled.
+            return self.coordinator.dev_net_type != ATTR_DEVICE_MODEL_A
+        return super().available

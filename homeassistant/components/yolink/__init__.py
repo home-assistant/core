@@ -72,6 +72,8 @@ class YoLinkHomeMessageListener(MessageListener):
         if device_coordinator is None:
             return
         device_coordinator.dev_online = True
+        if (loraInfo := msg_data.get("loraInfo")) is not None:
+            device_coordinator.dev_net_type = loraInfo.get("devNetType")
         device_coordinator.async_set_updated_data(msg_data)
         # handling events
         if (

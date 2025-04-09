@@ -38,6 +38,7 @@ class YoLinkBinarySensorEntityDescription(BinarySensorEntityDescription):
     exists_fn: Callable[[YoLinkDevice], bool] = lambda _: True
     state_key: str = "state"
     value: Callable[[Any], bool | None] = lambda _: None
+    should_update_entity: Callable = lambda state: True
 
 
 SENSOR_DEVICE_TYPE = [
@@ -93,6 +94,8 @@ SENSOR_TYPES: tuple[YoLinkBinarySensorEntityDescription, ...] = (
         state_key="alarm",
         device_class=BinarySensorDeviceClass.MOISTURE,
         value=lambda state: state.get("leak") if state is not None else None,
+        # This property will be lost during valve operation.
+        should_update_entity=lambda value: value is not None,
         exists_fn=lambda device: (
             device.device_type
             in [
@@ -147,9 +150,13 @@ class YoLinkBinarySensorEntity(YoLinkEntity, BinarySensorEntity):
     @callback
     def update_entity_state(self, state: dict[str, Any]) -> None:
         """Update HA Entity State."""
-        self._attr_is_on = self.entity_description.value(
-            state.get(self.entity_description.state_key)
-        )
+        if (
+            attr_val := self.entity_description.value(
+                state.get(self.entity_description.state_key)
+            )
+        ) is None and self.entity_description.should_update_entity(attr_val) is False:
+            return
+        self._attr_is_on = attr_val
         self.async_write_ha_state()
 
     @property
