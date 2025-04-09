@@ -4,7 +4,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, MANUFACTURER, StateStatus
+from .const import DEVICE_TYPE_TAGS, DOMAIN, MANUFACTURER, MieleAppliance, StateStatus
 from .coordinator import MieleDataUpdateCoordinator
 
 
@@ -26,11 +26,12 @@ class MieleEntity(CoordinatorEntity[MieleDataUpdateCoordinator]):
         self._attr_unique_id = f"{device_id}-{description.key}"
 
         device = self.coordinator.data.devices[self._device_id]
-        appliance_type = device.device_type_localized
+        appliance_type = DEVICE_TYPE_TAGS.get(MieleAppliance(device.device_type))
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device_id)},
             serial_number=self._device_id,
             name=appliance_type or device.tech_type,
+            translation_key=appliance_type,
             manufacturer=MANUFACTURER,
             model=device.tech_type,
             hw_version=device.xkm_tech_type,

@@ -48,6 +48,42 @@ class MieleAppliance(IntEnum):
     HOB_INDUCT_EXTR = 74
 
 
+DEVICE_TYPE_TAGS = {
+    MieleAppliance.WASHING_MACHINE: "washing_machine",
+    MieleAppliance.TUMBLE_DRYER: "tumble_dryer",
+    MieleAppliance.WASHING_MACHINE_SEMI_PROFESSIONAL: "washing_machine",
+    MieleAppliance.TUMBLE_DRYER_SEMI_PROFESSIONAL: "tumble_dryer",
+    MieleAppliance.WASHING_MACHINE_PROFESSIONAL: "washing_machine",
+    MieleAppliance.DRYER_PROFESSIONAL: "tumble_dryer",
+    MieleAppliance.DISHWASHER: "dishwasher",
+    MieleAppliance.DISHWASHER_SEMI_PROFESSIONAL: "dishwasher",
+    MieleAppliance.DISHWASHER_PROFESSIONAL: "dishwasher",
+    MieleAppliance.OVEN: "oven",
+    MieleAppliance.OVEN_MICROWAVE: "oven_microwave",
+    MieleAppliance.HOB_HIGHLIGHT: "hob",
+    MieleAppliance.STEAM_OVEN: "steam_oven",
+    MieleAppliance.MICROWAVE: "microwave",
+    MieleAppliance.COFFEE_SYSTEM: "coffee_system",
+    MieleAppliance.HOOD: "hood",
+    MieleAppliance.FRIDGE: "refrigerator",
+    MieleAppliance.FREEZER: "freezer",
+    MieleAppliance.FRIDGE_FREEZER: "fridge_freezer",
+    MieleAppliance.ROBOT_VACUUM_CLEANER: "robot_vacuum_cleaner",
+    MieleAppliance.WASHER_DRYER: "washer_dryer",
+    MieleAppliance.DISH_WARMER: "warming_drawer",
+    MieleAppliance.HOB_INDUCTION: "hob",
+    MieleAppliance.STEAM_OVEN_COMBI: "steam_oven_combi",
+    MieleAppliance.WINE_CABINET: "wine_cabinet",
+    MieleAppliance.WINE_CONDITIONING_UNIT: "wine_conditioning_unit",
+    MieleAppliance.WINE_STORAGE_CONDITIONING_UNIT: "wine_unit",
+    MieleAppliance.STEAM_OVEN_MICRO: "steam_oven_micro",
+    MieleAppliance.DIALOG_OVEN: "dialog_oven",
+    MieleAppliance.WINE_CABINET_FREEZER: "wine_cabinet_freezer",
+    MieleAppliance.STEAM_OVEN_MK2: "steam_oven",
+    MieleAppliance.HOB_INDUCT_EXTR: "hob_extraction",
+}
+
+
 class StateStatus(IntEnum):
     """Define appliance states."""
 

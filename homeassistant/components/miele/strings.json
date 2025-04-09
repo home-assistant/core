@@ -36,6 +36,83 @@
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
     }
   },
+  "device": {
+    "coffee_system": {
+      "name": "Coffee system"
+    },
+    "dishwasher": {
+      "name": "Dishwasher"
+    },
+    "tumble_dryer": {
+      "name": "Tumble dryer"
+    },
+    "fridge_freezer": {
+      "name": "Fridge freezer"
+    },
+    "induction_hob": {
+      "name": "Induction hob"
+    },
+    "oven": {
+      "name": "Oven"
+    },
+    "oven_microwave": {
+      "name": "Oven microwave"
+    },
+    "hob_highlight": {
+      "name": "Hob highlight"
+    },
+    "steam_oven": {
+      "name": "Steam oven"
+    },
+    "microwave": {
+      "name": "Microwave"
+    },
+    "hood": {
+      "name": "Hood"
+    },
+    "warming_drawer": {
+      "name": "Warming drawer"
+    },
+    "steam_oven_combi": {
+      "name": "Steam oven combi"
+    },
+    "wine_cabinet": {
+      "name": "Wine cabinet"
+    },
+    "wine_conditioning_unit": {
+      "name": "Wine conditioning unit"
+    },
+    "wine_unit": {
+      "name": "Wine unit"
+    },
+    "refrigerator": {
+      "name": "Refrigerator"
+    },
+    "freezer": {
+      "name": "Freezer"
+    },
+    "robot_vacuum_cleander": {
+      "name": "Robot vacuum cleaner"
+    },
+    "steam_oven_microwave": {
+      "name": "Steam oven micro"
+    },
+    "dialog_oven": {
+      "name": "Dialog oven"
+    },
+    "wine_cabinet_freezer": {
+      "name": "Wine cabinet freezer"
+    },
+    "hob_extraction": {
+      "name": "How with extraction"
+    },
+    "washer_dryer": {
+      "name": "Washer dryer"
+    },
+    "washing_machine": {
+      "name": "Washing machine"
+    }
+  },
   "entity": {
     "sensor": {
       "status": {
