@@ -6,6 +6,7 @@ import pytest
 from voluptuous.error import Invalid
 
 from homeassistant import config_entries
+from homeassistant.components.jellyfin.client_wrapper import CannotConnect, InvalidAuth
 from homeassistant.components.jellyfin.const import (
     CONF_AUDIO_CODEC,
     CONF_CLIENT_DEVICE_ID,
@@ -518,15 +519,11 @@ async def test_reconfigure_successful(
         (
             "auth-connect-address-failure.json",
             "auth-login.json",
-            "http://invalid_new_url:8096",
-            "new_password",
             "cannot_connect",
         ),
         (
             "auth-connect-address.json",
             "auth-login-failure.json",
-            "http://new_url:8096",
-            "invalid_new_password",
             "invalid_auth",
         ),
     ],
@@ -538,8 +535,6 @@ async def test_reconfigure_flow_failure(
     mock_client: MagicMock,
     connect_fixture: str,
     login_fixture: str,
-    url: str,
-    password: str,
     expected_error: str,
 ) -> None:
     """Test reconfigure flow connection failure."""
@@ -560,10 +555,58 @@ async def test_reconfigure_flow_failure(
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_URL: url,
-            CONF_USERNAME: "new_user",
-            CONF_PASSWORD: password,
+            CONF_URL: "dummy-url",
+            CONF_USERNAME: "dummy-user",
+            CONF_PASSWORD: "dummy-pass",
         },
     )
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": expected_error}
+
+    # A failed reconfigure should not modify the config entry
+    assert mock_config_entry.data[CONF_USERNAME] == "test-username"
+    assert mock_config_entry.data[CONF_PASSWORD] == "test-password"
+    assert mock_config_entry.data[CONF_URL] == "https://example.com"
+
+
+@pytest.mark.parametrize(
+    ("exception", "expected_error"),
+    [
+        (CannotConnect, "cannot_connect"),
+        (InvalidAuth, "invalid_auth"),
+        (Exception, "unknown"),
+    ],
+)
+async def test_reconfigure_flow_exceptions(
+    hass: HomeAssistant,
+    mock_jellyfin: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+    exception: type,
+    expected_error: str,
+) -> None:
+    """Test reconfigure flow connection failure."""
+    mock_config_entry.add_to_hass(hass)
+
+    # Directly force a specific exception to occur
+    mock_client.auth.connect_to_address.side_effect = exception
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_URL: "dummy-url",
+            CONF_USERNAME: "dummy-user",
+            CONF_PASSWORD: "dummy-pass",
+        },
+    )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": expected_error}
+
+    # A failed reconfigure should not modify the config entry
+    assert mock_config_entry.data[CONF_USERNAME] == "test-username"
+    assert mock_config_entry.data[CONF_PASSWORD] == "test-password"
+    assert mock_config_entry.data[CONF_URL] == "https://example.com"
