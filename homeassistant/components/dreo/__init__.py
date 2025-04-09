@@ -37,9 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: DreoConfigEntry) 
         client.login()
         return client.get_devices()
 
-    devices = await hass.async_add_executor_job(
-        lambda: handle_api_exceptions(setup_client)
-    )
+    devices = await hass.async_add_executor_job(handle_api_exceptions, setup_client)
 
     config_entry.runtime_data = DreoData(client, devices)
 

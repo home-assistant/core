@@ -37,7 +37,6 @@ class DreoEntity(Entity):
             device: Device information dictionary
             config_entry: The config entry
             unique_id_suffix: Optional suffix for unique_id to differentiate multiple entities from same device
-            name_suffix: Optional suffix for name to differentiate multiple entities from same device
 
         """
         super().__init__()
@@ -48,9 +47,9 @@ class DreoEntity(Entity):
         self._attr_name = device.get("deviceName")
 
         if unique_id_suffix:
-            self._attr_unique_id = f"{device.get('deviceSn')}_{unique_id_suffix}"
+            self._attr_unique_id = f"{self._device_id}_{unique_id_suffix}"
         else:
-            self._attr_unique_id = device.get("deviceSn")
+            self._attr_unique_id = self._device_id
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, str(self._device_id))},
@@ -70,17 +69,13 @@ class DreoEntity(Entity):
             )
 
         except HsCloudException as ex:
-            _LOGGER.error(error_message)
             raise HomeAssistantError(error_message) from ex
 
         except HsCloudBusinessException as ex:
-            _LOGGER.error(error_message)
             raise HomeAssistantError(error_message) from ex
 
         except HsCloudAccessDeniedException as ex:
-            _LOGGER.error(error_message)
             raise HomeAssistantError(error_message) from ex
 
         except HsCloudFlowControlException as ex:
-            _LOGGER.error(error_message)
             raise HomeAssistantError(error_message) from ex

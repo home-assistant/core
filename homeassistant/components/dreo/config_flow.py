@@ -25,9 +25,6 @@ class DreoFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self) -> None:
-        """Initialize the Dreo flow."""
-
     @staticmethod
     def _hash_password(password: str) -> str:
         """Hash password using MD5."""
@@ -55,7 +52,7 @@ class DreoFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
 
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input:
             username = user_input[CONF_USERNAME]
             hashed_password = self._hash_password(user_input[CONF_PASSWORD])
