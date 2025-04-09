@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import asyncio
+from datetime import datetime
 import logging
 from typing import Any
 
@@ -726,6 +727,8 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
         self.original_addon_config: dict[str, Any] | None = None
         self.revert_reason: str | None = None
         self.backup_task: asyncio.Task | None = None
+        self.restore_backup_task: asyncio.Task | None = None
+        self.backup_data: bytes | None = None
         self.error: str | None = None
 
     @callback
@@ -757,16 +760,19 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
     async def async_step_intent_migrate(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Manage the options."""
+        """Confirm the user wants to reset their current radio."""
         if not self.config_entry.data.get(CONF_USE_ADDON):
             return self.async_abort(reason="addon_required")
 
-        return await self.async_step_backup_nvm()
+        if user_input is not None:
+            return await self.async_step_backup_nvm()
+
+        return self.async_show_form(step_id="intent_migrate")
 
     async def async_step_backup_nvm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Backup the current network and reset the radio."""
+        """Backup the current network."""
         if self.backup_task is None:
             self.backup_task = self.hass.async_create_task(self._async_backup_network())
 
@@ -786,31 +792,48 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
         finally:
             self.backup_task = None
 
-        return self.async_show_progress_done(next_step_id="reset_radio")
+        return self.async_show_progress_done(next_step_id="instruct_unplug")
 
-    async def async_step_reset_radio(
+    async def async_step_restore_nvm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Confirm the user wants to reset their current radio."""
+        """Restore the backup."""
+        if self.restore_backup_task is None:
+            self.restore_backup_task = self.hass.async_create_task(
+                self._async_restore_network_backup()
+            )
 
-        if user_input is not None:
-            client: Client = self.config_entry.runtime_data[DATA_CLIENT]
-            if client.driver is None:
-                return self.async_abort(reason="driver_not_ready")
-            await client.driver.async_hard_reset()
+        if not self.restore_backup_task.done():
+            return self.async_show_progress(
+                step_id="restore_nvm",
+                progress_action="restore_nvm",
+                progress_task=self.restore_backup_task,
+            )
 
-            return await self.async_step_instruct_unplug()
+        try:
+            await self.restore_backup_task
+        except (FailedCommand, OSError, AbortFlow) as err:
+            _LOGGER.error(err)
+            self.error = f"Failed to restore network: {err}"
+            return self.async_show_progress_done(next_step_id="migration_failed")
+        finally:
+            self.restore_backup_task = None
 
-        return self.async_show_form(step_id="reset_radio")
+        return self.async_show_progress_done(next_step_id="migration_done")
 
     async def async_step_instruct_unplug(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Instruct the user to unplug the current radio, if possible."""
+        """Reset the current radio, and instruct the user to unplug it."""
 
-        # if user_input is not None:
-        #     # Now that the old radio is gone, we can scan for serial ports again
-        #     return await self.async_step_choose_serial_port()
+        if user_input is not None:
+            # Now that the old radio is gone, we can scan for serial ports again
+            return await self.async_step_choose_serial_port()
+
+        client: Client = self.config_entry.runtime_data[DATA_CLIENT]
+        if client.driver is None:
+            return self.async_abort(reason="driver_not_ready")
+        await client.driver.async_hard_reset()
 
         return self.async_show_form(step_id="instruct_unplug")
 
@@ -982,6 +1005,37 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
 
         return self.async_show_form(step_id="configure_addon", data_schema=data_schema)
 
+    async def async_step_choose_serial_port(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Choose a serial port."""
+        if user_input is not None:
+            addon_info = await self._async_get_addon_info()
+            addon_config = addon_info.options
+            self.usb_path = user_input[CONF_USB_PATH]
+            new_addon_config = {
+                **addon_config,
+                CONF_ADDON_DEVICE: self.usb_path,
+            }
+            if addon_info.state == AddonState.RUNNING:
+                self.restart_addon = True
+            # Copy the add-on config to keep the objects separate.
+            self.original_addon_config = dict(addon_config)
+            # Remove legacy network_key
+            new_addon_config.pop(CONF_ADDON_NETWORK_KEY, None)
+            await self._async_set_addon_config(new_addon_config)
+            return await self.async_step_start_addon()
+
+        ports = await async_get_usb_ports(self.hass)
+        data_schema = vol.Schema(
+            {
+                vol.Required(CONF_USB_PATH): vol.In(ports),
+            }
+        )
+        return self.async_show_form(
+            step_id="choose_serial_port", data_schema=data_schema
+        )
+
     async def async_step_start_failed(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -993,6 +1047,12 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
     ) -> ConfigFlowResult:
         """Migration failed."""
         return self.async_abort(reason=self.error or "unknown")
+
+    async def async_step_migration_done(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Migration done."""
+        return self.async_create_entry(title=TITLE, data={})
 
     async def async_step_finish_addon_setup(
         self, user_input: dict[str, Any] | None = None
@@ -1020,12 +1080,16 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
             except CannotConnect:
                 return await self.async_revert_addon_config(reason="cannot_connect")
 
-        if self.config_entry.unique_id != str(self.version_info.home_id):
+        if self.backup_data is None and self.config_entry.unique_id != str(
+            self.version_info.home_id
+        ):
             return await self.async_revert_addon_config(reason="different_device")
 
         self._async_update_entry(
             {
                 **self.config_entry.data,
+                # this will only be different in a migration flow
+                "unique_id": str(self.version_info.home_id),
                 CONF_URL: self.ws_address,
                 CONF_USB_PATH: self.usb_path,
                 CONF_S0_LEGACY_KEY: self.s0_legacy_key,
@@ -1038,6 +1102,9 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
                 CONF_INTEGRATION_CREATED_ADDON: self.integration_created_addon,
             }
         )
+        if self.backup_data:
+            return await self.async_step_restore_nvm()
+
         # Always reload entry since we may have disconnected the client.
         self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
         return self.async_create_entry(title=TITLE, data={})
@@ -1073,11 +1140,31 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
         if client.driver is None:
             raise AbortFlow("Driver not ready")
         controller = client.driver.controller
-        result = await controller.async_backup_nvm_raw()
-        # save the backup to a file
-        file_path = self.hass.config.path("zwavejs_nvm_backup.bin")
+        self.backup_data = await controller.async_backup_nvm_raw()
+
+        # save the backup to a file just in case
+        file_path = self.hass.config.path(
+            f"zwavejs_nvm_backup_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.bin"
+        )
         async with aiofiles.open(file_path, "wb") as backup_file:
-            await backup_file.write(result)
+            await backup_file.write(self.backup_data)
+
+    async def _async_restore_network_backup(self) -> None:
+        """Restore the backup."""
+        if self.backup_data is None:
+            raise AbortFlow("No backup data")
+
+        # Reload the config entry to reconnect the client after the addon restart
+        await self.hass.config_entries.async_reload(self.config_entry.entry_id)
+        if self.config_entry.state != ConfigEntryState.LOADED:
+            raise AbortFlow("Could not reload config entry")
+
+        client: Client = self.config_entry.runtime_data[DATA_CLIENT]
+        if client.driver is None:
+            raise AbortFlow("Driver not ready")
+        controller = client.driver.controller
+
+        await controller.async_restore_nvm(self.backup_data)
 
 
 class CannotConnect(HomeAssistantError):

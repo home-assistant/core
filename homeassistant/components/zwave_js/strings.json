@@ -241,9 +241,9 @@
           "intent_reconfigure": "Re-configure the current radio"
         }
       },
-      "reset_radio": {
+      "intent_migrate": {
         "title": "[%key:component::zwave_js::options::step::init::menu_options::intent_migrate%]",
-        "description": "Backup complete. Before plugging in your new radio, your old radio needs to be reset.\n\nDo you wish to continue?"
+        "description": "Before plugging in your new radio, your old radio needs to be reset. A backup will be performed first.\n\nDo you wish to continue?"
       },
       "instruct_unplug": {
         "title": "Unplug your old radio",
@@ -261,6 +261,12 @@
         },
         "description": "[%key:component::zwave_js::config::step::configure_addon::description%]",
         "title": "[%key:component::zwave_js::config::step::configure_addon::title%]"
+      },
+      "choose_serial_port": {
+        "data": {
+          "usb_path": "[%key:common::config_flow::data::usb_path%]"
+        },
+        "title": "Select your Z-Wave device"
       },
       "install_addon": {
         "title": "[%key:component::zwave_js::config::step::install_addon::title%]"
