@@ -60,9 +60,9 @@ from homeassistant.loader import (
     async_get_integrations,
 )
 from homeassistant.setup import (
-    DATA_SETUP_DONE,
     async_get_loaded_integrations,
     async_get_setup_timings,
+    async_wait_component,
 )
 from homeassistant.util.json import format_unserializable_data
 
@@ -943,12 +943,6 @@ async def handle_integration_wait(
     """Handle wait for integration command."""
 
     domain: str = msg["domain"]
-    setup_done = hass.data.get(DATA_SETUP_DONE, {})
-
-    # Wait for the integration to be set up
-    if setup_future := setup_done.get(domain):
-        await setup_future
-
     connection.send_result(
-        msg["id"], {"integration_loaded": domain in hass.config.components}
+        msg["id"], {"integration_loaded": await async_wait_component(hass, domain)}
     )
