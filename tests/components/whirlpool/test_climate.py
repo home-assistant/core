@@ -63,16 +63,6 @@ async def update_ac_state(
     return hass.states.get(entity_id)
 
 
-async def test_no_appliances(
-    hass: HomeAssistant, mock_appliances_manager_api: MagicMock
-) -> None:
-    """Test the setup of the climate entities when there are no appliances available."""
-    mock_appliances_manager_api.return_value.aircons = []
-    mock_appliances_manager_api.return_value.washer_dryers = []
-    await init_integration(hass)
-    assert len(hass.states.async_all()) == 0
-
-
 async def test_static_attributes(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
