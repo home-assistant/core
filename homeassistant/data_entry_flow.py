@@ -494,8 +494,11 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             )
 
         if flow.flow_id not in self._progress:
-            # The flow was removed during the step
-            raise UnknownFlow
+            # The flow was removed during the step, raise UnknownFlow
+            # unless the result is an abort
+            if result["type"] != FlowResultType.ABORT:
+                raise UnknownFlow
+            return result
 
         # Setup the flow handler's preview if needed
         if result.get("preview") is not None:
@@ -548,12 +551,7 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             return result
 
         # Abort and Success results both finish the flow.
-        # Suppress UnknownFlow in case the flow is already aborted
-        try:
-            self._async_remove_flow_progress(flow.flow_id)
-        except UnknownFlow:
-            if result["type"] != FlowResultType.ABORT:
-                raise
+        self._async_remove_flow_progress(flow.flow_id)
 
         return result
 

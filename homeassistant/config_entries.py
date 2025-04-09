@@ -1513,10 +1513,10 @@ class ConfigEntriesFlowManager(
 
         # Clean up issue if this is a reauth flow
         if flow.context["source"] == SOURCE_REAUTH:
-            if (entry_id := flow.context.get("entry_id")) is not None and (
-                entry := self.config_entries.async_get_entry(entry_id)
-            ) is not None:
-                _remove_reauth_issue(self.hass, entry.domain, entry_id)
+            if (entry_id := flow.context.get("entry_id")) is not None:
+                # The config entry's domain is flow.handler
+                issue_id = f"config_entry_reauth_{flow.handler}_{entry_id}"
+                ir.async_delete_issue(self.hass, HOMEASSISTANT_DOMAIN, issue_id)
 
     async def async_finish_flow(
         self,
@@ -2097,7 +2097,6 @@ class ConfigEntries:
         # abort any reauth flow that is active for the removed entry and
         # linked issues.
         _abort_reauth_flows(self.hass, entry.domain, entry_id)
-        _remove_reauth_issue(self.hass, entry.domain, entry_id)
 
         self._async_dispatch(ConfigEntryChange.REMOVED, entry)
 
@@ -2231,7 +2230,6 @@ class ConfigEntries:
 
         # Abort any in-progress reauth flow and linked issues
         _abort_reauth_flows(self.hass, entry.domain, entry_id)
-        _remove_reauth_issue(self.hass, entry.domain, entry_id)
 
         if entry.domain not in self.hass.config.components:
             # If the component is not loaded, just load it as
@@ -3774,10 +3772,3 @@ def _abort_reauth_flows(hass: HomeAssistant, domain: str, entry_id: str) -> None
     ):
         if "flow_id" in progress_flow:
             hass.config_entries.flow.async_abort(progress_flow["flow_id"])
-
-
-@callback
-def _remove_reauth_issue(hass: HomeAssistant, domain: str, entry_id: str) -> None:
-    """Remove reauth issue."""
-    issue_id = f"config_entry_reauth_{domain}_{entry_id}"
-    ir.async_delete_issue(hass, HOMEASSISTANT_DOMAIN, issue_id)
