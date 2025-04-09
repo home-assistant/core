@@ -1139,8 +1139,18 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
         client: Client = self.config_entry.runtime_data[DATA_CLIENT]
         if client.driver is None:
             raise AbortFlow("Driver not ready")
+
+        @callback
+        def forward_progress(event: dict) -> None:
+            """Forward progress events to frontend."""
+            self.async_update_progress(event["bytesRead"] / event["total"])
+
         controller = client.driver.controller
-        self.backup_data = await controller.async_backup_nvm_raw()
+        unsub = controller.on("nvm backup progress", forward_progress)
+        try:
+            self.backup_data = await controller.async_backup_nvm_raw()
+        finally:
+            unsub()
 
         # save the backup to a file just in case
         file_path = self.hass.config.path(
@@ -1162,9 +1172,29 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
         client: Client = self.config_entry.runtime_data[DATA_CLIENT]
         if client.driver is None:
             raise AbortFlow("Driver not ready")
-        controller = client.driver.controller
 
-        await controller.async_restore_nvm(self.backup_data)
+        @callback
+        def forward_progress(event: dict) -> None:
+            """Forward progress events to frontend."""
+            if event["event"] == "nvm convert progress":
+                # assume convert is 50% of the total progress
+                self.async_update_progress(event["bytesRead"] / event["total"] * 0.5)
+            elif event["event"] == "nvm restore progress":
+                # assume restore is the rest of the progress
+                self.async_update_progress(
+                    event["bytesWritten"] / event["total"] * 0.5 + 0.5
+                )
+
+        controller = client.driver.controller
+        unsubs = [
+            controller.on("nvm convert progress", forward_progress),
+            controller.on("nvm restore progress", forward_progress),
+        ]
+        try:
+            await controller.async_restore_nvm(self.backup_data)
+        finally:
+            for unsub in unsubs:
+                unsub()
 
 
 class CannotConnect(HomeAssistantError):
