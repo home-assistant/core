@@ -7,7 +7,7 @@ from bosch_alarm_mode2.const import ALARM_PANEL_FAULTS
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import Platform
+from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -49,10 +49,10 @@ async def test_panel_faults(
     """Test that fault sensor state changes after inducing a fault."""
     await setup_integration(hass, mock_config_entry)
     entity_id = "binary_sensor.bosch_b5512_us1b_fault_battery_low"
-    assert hass.states.get(entity_id).state == "off"
+    assert hass.states.get(entity_id).state == STATE_OFF
     mock_panel.panel_faults_ids = [ALARM_PANEL_FAULTS.BATTERY_LOW]
     await call_observable(hass, mock_panel.faults_observer)
-    assert hass.states.get(entity_id).state == "on"
+    assert hass.states.get(entity_id).state == STATE_ON
 
 
 @pytest.mark.parametrize("model", ["b5512"])
@@ -66,13 +66,13 @@ async def test_area_ready_to_arm(
     await setup_integration(hass, mock_config_entry)
     entity_id = "binary_sensor.area1_area_ready_to_arm_away"
     entity_id_2 = "binary_sensor.area1_area_ready_to_arm_home"
-    assert hass.states.get(entity_id).state == "on"
-    assert hass.states.get(entity_id_2).state == "on"
+    assert hass.states.get(entity_id).state == STATE_ON
+    assert hass.states.get(entity_id_2).state == STATE_ON
     area.all_ready = False
     await call_observable(hass, area.status_observer)
-    assert hass.states.get(entity_id).state == "off"
-    assert hass.states.get(entity_id_2).state == "on"
+    assert hass.states.get(entity_id).state == STATE_OFF
+    assert hass.states.get(entity_id_2).state == STATE_ON
     area.part_ready = False
     await call_observable(hass, area.status_observer)
-    assert hass.states.get(entity_id).state == "off"
-    assert hass.states.get(entity_id_2).state == "off"
+    assert hass.states.get(entity_id).state == STATE_OFF
+    assert hass.states.get(entity_id_2).state == STATE_OFF
