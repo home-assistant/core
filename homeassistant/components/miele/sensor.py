@@ -31,7 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 class MieleSensorDescription(SensorEntityDescription):
     """Class describing Miele sensor entities."""
 
-    value_fn: Callable[[MieleDevice], StateType] | None = None
+    value_fn: Callable[[MieleDevice], StateType]
     zone: int | None = None
 
 
@@ -178,11 +178,7 @@ class MieleSensor(MieleEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return (
-            self.entity_description.value_fn(self.device)
-            if self.entity_description.value_fn is not None
-            else None
-        )
+        return self.entity_description.value_fn(self.device)
 
 
 class MieleStatusSensor(MieleSensor):
