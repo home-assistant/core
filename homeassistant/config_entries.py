@@ -1525,42 +1525,44 @@ class ConfigEntriesFlowManager(
                 issue_id = f"config_entry_reauth_{entry.domain}_{entry.entry_id}"
                 ir.async_delete_issue(self.hass, HOMEASSISTANT_DOMAIN, issue_id)
 
-        if result["type"] != data_entry_flow.FlowResultType.CREATE_ENTRY:
-            # If there's a config entry with a matching unique ID,
-            # update the discovery key.
-            if (
-                (discovery_key := flow.context.get("discovery_key"))
-                and (unique_id := flow.unique_id) is not None
-                and (
-                    entry := self.config_entries.async_entry_for_domain_unique_id(
-                        result["handler"], unique_id
+        if result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY:
+            return
+
+        # If there's a config entry with a matching unique ID,
+        # update the discovery key.
+        if (
+            (discovery_key := flow.context.get("discovery_key"))
+            and (unique_id := flow.unique_id) is not None
+            and (
+                entry := self.config_entries.async_entry_for_domain_unique_id(
+                    result["handler"], unique_id
+                )
+            )
+            and discovery_key
+            not in (
+                known_discovery_keys := entry.discovery_keys.get(
+                    discovery_key.domain, ()
+                )
+            )
+        ):
+            new_discovery_keys = MappingProxyType(
+                entry.discovery_keys
+                | {
+                    discovery_key.domain: tuple(
+                        [*known_discovery_keys, discovery_key][-10:]
                     )
-                )
-                and discovery_key
-                not in (
-                    known_discovery_keys := entry.discovery_keys.get(
-                        discovery_key.domain, ()
-                    )
-                )
-            ):
-                new_discovery_keys = MappingProxyType(
-                    entry.discovery_keys
-                    | {
-                        discovery_key.domain: tuple(
-                            [*known_discovery_keys, discovery_key][-10:]
-                        )
-                    }
-                )
-                _LOGGER.debug(
-                    "Updating discovery keys for %s entry %s %s -> %s",
-                    entry.domain,
-                    unique_id,
-                    entry.discovery_keys,
-                    new_discovery_keys,
-                )
-                self.config_entries.async_update_entry(
-                    entry, discovery_keys=new_discovery_keys
-                )
+                }
+            )
+            _LOGGER.debug(
+                "Updating discovery keys for %s entry %s %s -> %s",
+                entry.domain,
+                unique_id,
+                entry.discovery_keys,
+                new_discovery_keys,
+            )
+            self.config_entries.async_update_entry(
+                entry, discovery_keys=new_discovery_keys
+            )
 
     async def async_flow_aborted(
         self,
