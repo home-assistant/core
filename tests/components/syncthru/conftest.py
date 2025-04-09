@@ -13,6 +13,16 @@ from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.syncthru.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        yield mock_setup_entry
+
+
+@pytest.fixture
 def mock_syncthru() -> Generator[AsyncMock]:
     """Mock the SyncThru class."""
     with (
