@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Set up the Sleep as Android",
+        "title": "Set up Sleep as Android",
         "description": "Are you sure you want to set up the Sleep as Android integration?"
       }
     },
@@ -11,7 +11,7 @@
       "webhook_not_internet_accessible": "[%key:common::config_flow::abort::webhook_not_internet_accessible%]"
     },
     "create_entry": {
-      "default": "To send events to Home Assistant, you will need to set up a Webhook.\n\nOpen Sleep as Android and go to *Settings → Services → Automation → Webhooks*\n\nEnable Webhooks and fill in the following Webhook in the URL field:\n\n`{webhook_url}`\n\nSee [the documentation]({docs_url}) for further details."
+      "default": "To send events to Home Assistant, you will need to set up a webhook.\n\nOpen Sleep as Android and go to *Settings → Services → Automation → Webhooks*\n\nEnable *Webhooks* and fill in the following webhook in the URL field:\n\n`{webhook_url}`\n\nSee [the documentation]({docs_url}) for further details."
     }
   },
   "entity": {
@@ -21,10 +21,10 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "sleep_tracking_paused": "Paused",
+              "sleep_tracking_paused": "[%key:common::state::paused%]",
               "sleep_tracking_resumed": "Resumed",
               "sleep_tracking_started": "Started",
-              "sleep_tracking_stopped": "Stopped"
+              "sleep_tracking_stopped": "[%key:common::state::stopped%]"
             }
           }
         }
@@ -41,9 +41,9 @@
               "alarm_snooze_canceled": "Snooze canceled",
               "alarm_snooze_clicked": "Snoozing",
               "alarm_wake_up_check": "Wake-up check notification",
-              "before_smart_period": "45m before smart wakeup",
+              "before_smart_period": "45min before smart wake-up",
               "show_skip_next_alarm": "1h before alarm",
-              "smart_period": "Smart wakeup started",
+              "smart_period": "Smart wake-up started",
               "time_to_bed_alarm_alert": "Time to bed"
             }
           }
@@ -83,7 +83,7 @@
           "event_type": {
             "state": {
               "lullaby_start": "Started",
-              "lullaby_stop": "Stopped",
+              "lullaby_stop": "[%key:common::state::stopped%]",
               "lullaby_volume_down": "Lowering volume"
             }
           }
