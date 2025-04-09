@@ -154,9 +154,7 @@ class JellyfinConfigFlow(ConfigFlow, domain=DOMAIN):
             new_input = entry.data | user_input
 
             if self.client_device_id is None:
-                self.client_device_id = new_input.get(
-                    CONF_CLIENT_DEVICE_ID, _generate_client_device_id()
-                )
+                self.client_device_id = _generate_client_device_id()
 
             client = create_client(device_id=self.client_device_id)
             try:
