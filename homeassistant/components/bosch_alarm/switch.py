@@ -129,7 +129,6 @@ class PanelDoorEntity(BoschAlarmDoorEntity, SwitchEntity):
 class PanelOutputEntity(BoschAlarmOutputEntity, SwitchEntity):
     """An output entity for a bosch alarm panel."""
 
-    _attr_has_entity_name = True
     _attr_name = None
 
     def __init__(self, panel: Panel, output_id: int, unique_id: str) -> None:
