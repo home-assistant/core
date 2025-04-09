@@ -245,7 +245,7 @@ aiofiles>=24.1.0
 # multidict < 6.4.0 has memory leaks
 # https://github.com/aio-libs/multidict/issues/1134
 # https://github.com/aio-libs/multidict/issues/1131
-multidict>=6.4.1
+multidict>=6.4.2
 """
 
 GENERATED_MESSAGE = (
