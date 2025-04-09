@@ -46,7 +46,7 @@ PLATFORMS = [
 ]
 
 # This can be lowered in the future if we do not receive rate limiting issues.
-IMAGE_CACHE_INTERVAL = 30
+IMAGE_CACHE_INTERVAL = timedelta(seconds=30)
 
 MAP_SLEEP = 3
 

@@ -270,6 +270,14 @@
         "repeat_weekly_options": "mdi:calendar-refresh",
         "repeat_monthly_options": "mdi:calendar-refresh"
       }
+    },
+    "create_daily": {
+      "service": "mdi:calendar-month",
+      "sections": {
+        "developer_options": "mdi:test-tube",
+        "repeat_weekly_options": "mdi:calendar-refresh",
+        "repeat_monthly_options": "mdi:calendar-refresh"
+      }
     }
   }
 }

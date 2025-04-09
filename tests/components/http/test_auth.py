@@ -18,7 +18,6 @@ from homeassistant.auth.models import User
 from homeassistant.auth.providers import trusted_networks
 from homeassistant.auth.providers.homeassistant import HassAuthProvider
 from homeassistant.components import websocket_api
-from homeassistant.components.http import KEY_HASS
 from homeassistant.components.http.auth import (
     CONTENT_USER_NAME,
     DATA_SIGN_SECRET,
@@ -28,13 +27,13 @@ from homeassistant.components.http.auth import (
     async_sign_path,
     async_user_not_allowed_do_auth,
 )
-from homeassistant.components.http.const import KEY_AUTHENTICATED
 from homeassistant.components.http.forwarded import async_setup_forwarded
 from homeassistant.components.http.request_context import (
     current_request,
     setup_request_context,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.http import KEY_AUTHENTICATED, KEY_HASS
 from homeassistant.setup import async_setup_component
 
 from . import HTTP_HEADER_HA_AUTH

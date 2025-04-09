@@ -219,13 +219,6 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         FlowResultType.CREATE_ENTRY.
         """
 
-    async def async_post_init(
-        self,
-        flow: FlowHandler[_FlowContextT, _FlowResultT, _HandlerT],
-        result: _FlowResultT,
-    ) -> None:
-        """Entry has finished executing its first step asynchronously."""
-
     @callback
     def async_get(self, flow_id: str) -> _FlowResultT:
         """Return a flow in progress as a partial FlowResult."""
@@ -312,12 +305,7 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         flow.init_data = data
         self._async_add_flow_progress(flow)
 
-        result = await self._async_handle_step(flow, flow.init_step, data)
-
-        if result["type"] != FlowResultType.ABORT:
-            await self.async_post_init(flow, result)
-
-        return result
+        return await self._async_handle_step(flow, flow.init_step, data)
 
     async def async_configure(
         self, flow_id: str, user_input: dict | None = None
@@ -661,6 +649,19 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
                     and not self.show_advanced_options
                 ):
                     continue
+
+            # Process the section schema options
+            if (
+                suggested_values is not None
+                and isinstance(val, section)
+                and key in suggested_values
+            ):
+                new_section_key = copy.copy(key)
+                schema[new_section_key] = val
+                val.schema = self.add_suggested_values_to_schema(
+                    val.schema, suggested_values[key]
+                )
+                continue
 
             new_key = key
             if (
