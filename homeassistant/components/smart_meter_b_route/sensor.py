@@ -26,12 +26,11 @@ from .const import (
 from .coordinator import BRouteData, BRouteUpdateCoordinator
 
 
-class SensorEntityDescriptionWithValueAccessor(
-    SensorEntityDescription, frozen_or_thawed=True
-):
+@dataclass(frozen=True, kw_only=True)
+class SensorEntityDescriptionWithValueAccessor(SensorEntityDescription):
     """Sensor entity description with data accessor."""
 
-    value_accessor: Callable[[BRouteData], StateType] | None = None
+    value_accessor: Callable[[BRouteData], StateType]
 
 
 SENSOR_DESCRIPTIONS = (
