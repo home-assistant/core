@@ -55,6 +55,8 @@ TARGET_STATE_AUTO = 1
 FILTER_CHANGE_FILTER = 1
 FILTER_OK = 0
 
+IGNORED_STATES = (STATE_UNAVAILABLE, STATE_UNKNOWN)
+
 
 @TYPES.register("AirPurifier")
 class AirPurifier(Fan):
@@ -274,7 +276,7 @@ class AirPurifier(Fan):
     @callback
     def _async_update_current_humidity(self, new_state: State | None) -> None:
         """Handle linked humidity sensor state change to update HomeKit value."""
-        if new_state is None or new_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+        if new_state is None or new_state.state in IGNORED_STATES:
             return
 
         if (
@@ -302,7 +304,7 @@ class AirPurifier(Fan):
     @callback
     def _async_update_current_pm25(self, new_state: State | None) -> None:
         """Handle linked pm25 sensor state change to update HomeKit value."""
-        if new_state is None or new_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+        if new_state is None or new_state.state in IGNORED_STATES:
             return
 
         if (
@@ -333,7 +335,7 @@ class AirPurifier(Fan):
     @callback
     def _async_update_current_temperature(self, new_state: State | None) -> None:
         """Handle linked temperature sensor state change to update HomeKit value."""
-        if new_state is None or new_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+        if new_state is None or new_state.state in IGNORED_STATES:
             return
 
         if (
@@ -361,7 +363,7 @@ class AirPurifier(Fan):
     @callback
     def _async_update_filter_change_indicator(self, new_state: State | None) -> None:
         """Handle linked filter change indicator binary sensor state change to update HomeKit value."""
-        if new_state is None or new_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+        if new_state is None or new_state.state in IGNORED_STATES:
             return
 
         current_change_indicator = (
@@ -391,7 +393,7 @@ class AirPurifier(Fan):
     @callback
     def _async_update_filter_life_level(self, new_state: State | None) -> None:
         """Handle linked filter life level sensor state change to update HomeKit value."""
-        if new_state is None or new_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+        if new_state is None or new_state.state in IGNORED_STATES:
             return
 
         if (
