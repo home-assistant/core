@@ -105,7 +105,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._config = data
                 if self.source == SOURCE_REAUTH:
                     return self.async_update_reload_and_abort(
-                        self._get_reauth_entry(), data=data
+                        self._get_reauth_entry(), data_updates=data
                     )
                 if self._discovered:
                     if self._discovered[CONF_MACHINE] not in self._things:
@@ -176,10 +176,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
                         return await self.async_step_bluetooth_selection()
                     return self.async_update_reload_and_abort(
                         self._get_reconfigure_entry(),
-                        data={
-                            **self._get_reconfigure_entry().data,
-                            **self._config,
-                        },
+                        data_updates=self._config,
                     )
 
                 return self.async_create_entry(
@@ -225,9 +222,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return self.async_update_reload_and_abort(
                 self._get_reconfigure_entry(),
-                data={
-                    **self._get_reconfigure_entry().data,
-                    **self._config,
+                data_updates={
                     CONF_MAC: user_input[CONF_MAC],
                 },
             )
