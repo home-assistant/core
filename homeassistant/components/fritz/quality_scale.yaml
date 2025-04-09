@@ -7,9 +7,7 @@ rules:
   config-flow-test-coverage:
     status: todo
     comment: one coverage miss in line 110
-  config-flow:
-    status: todo
-    comment: data_description are missing
+  config-flow: done
   dependency-transparency: done
   docs-actions: done
   docs-high-level-description: done
