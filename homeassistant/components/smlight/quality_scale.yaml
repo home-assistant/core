@@ -3,11 +3,8 @@ rules:
   action-setup:
     status: exempt
     comment: |
-      No custom actions defined
-  appropriate-polling:
-    status: exempt
-    comment: |
-      No polling
+      This integration does not provide additional actions.
+  appropriate-polling: done
   brands: done
   common-modules: done
   config-flow-test-coverage: done
@@ -16,69 +13,73 @@ rules:
   docs-actions:
     status: exempt
     comment: |
-      No custom actions are defined.
+      This integration does not provide additional actions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
-  entity-event-setup: done
+  entity-event-setup:
+    status: done
+    comment: |
+      Entities subscribe to SSE events from pysmlight library.
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
   test-before-configure: done
-  test-before-setup: done
+  test-before-setup:
+    status: done
+    comment: Handled implicitly within coordinator
   unique-config-entry: done
 
   # Silver
   action-exceptions:
     status: exempt
     comment: |
-      No custom actions are defined.
+      This integration does not provide actions.
   config-entry-unloading: done
-  docs-configuration-parameters: todo
-  docs-installation-parameters: todo
-  entity-unavailable: todo
+  docs-configuration-parameters:
+    status: exempt
+    comment: |
+      This integration does not provide an option flow.
+  docs-installation-parameters: done
+  entity-unavailable: done
   integration-owner: done
-  log-when-unavailable: todo
-  parallel-updates: todo
+  log-when-unavailable:
+    status: done
+    comment: Handled by coordinator
+  parallel-updates: done
   reauthentication-flow: done
   test-coverage: done
 
   # Gold
   devices: done
-  diagnostics: todo
-  discovery-update-info: todo
-  discovery: todo
-  docs-data-update: todo
+  diagnostics: done
+  discovery-update-info: done
+  discovery: done
+  docs-data-update: done
   docs-examples: todo
   docs-known-limitations: todo
-  docs-supported-devices: todo
-  docs-supported-functions: todo
+  docs-supported-devices: done
+  docs-supported-functions: done
   docs-troubleshooting: todo
   docs-use-cases: todo
   dynamic-devices:
     status: exempt
     comment: |
-      Device type integration
-  entity-category: todo
-  entity-device-class: todo
-  entity-disabled-by-default: todo
+      Device type integration.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
   entity-translations: done
   exception-translations: todo
   icon-translations: done
   reconfiguration-flow: todo
-  repair-issues:
-    status: exempt
-    comment: |
-      No repairs
+  repair-issues: done
   stale-devices:
     status: exempt
     comment: |
-      Device type integration
+      Device type integration.
 
   # Platinum
   async-dependency: done
-  inject-websession:
-    status: exempt
-    comment: |
-      Integration does not make any HTTP requests.
+  inject-websession: done
   strict-typing: done

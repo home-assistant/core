@@ -15,7 +15,7 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
 from .const import CONF_INSTALLER_CODE, CONF_USER_CODE, DOMAIN
 
-PLATFORMS: list[Platform] = [Platform.ALARM_CONTROL_PANEL]
+PLATFORMS: list[Platform] = [Platform.ALARM_CONTROL_PANEL, Platform.SENSOR]
 
 type BoschAlarmConfigEntry = ConfigEntry[Panel]
 

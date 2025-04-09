@@ -3,23 +3,26 @@ rules:
   action-setup:
     status: exempt
     comment: |
-      No custom actions defined
+      This integration does not provide additional actions.
   appropriate-polling:
     status: exempt
     comment: |
-      No polling
+      This integration does not require polling.
   brands: done
   common-modules: done
   config-flow-test-coverage: done
-  config-flow: done
+  config-flow:
+    status: todo
+    comment: |
+      Be more specific in the config flow with catching exceptions.
   dependency-transparency: done
   docs-actions:
     status: exempt
     comment: |
-      No custom actions are defined.
-  docs-high-level-description: done
+      This integration does not provide additional actions.
+  docs-high-level-description: todo
   docs-installation-instructions: done
-  docs-removal-instructions: done
+  docs-removal-instructions: todo
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
@@ -32,17 +35,23 @@ rules:
   action-exceptions:
     status: exempt
     comment: |
-      No custom actions are defined.
+      This integration does not provide additional actions.
   config-entry-unloading: done
-  docs-configuration-parameters: todo
-  docs-installation-parameters: todo
+  docs-configuration-parameters:
+    status: exempt
+    comment: No options to configure
+  docs-installation-parameters:
+    status: exempt
+    comment: No options to configure
   entity-unavailable: todo
   integration-owner: done
   log-when-unavailable: todo
   parallel-updates: todo
-  reauthentication-flow: done
-  test-coverage: done
-
+  reauthentication-flow:
+    status: exempt
+    comment: |
+      This integration does not require authentication.
+  test-coverage: todo
   # Gold
   devices: done
   diagnostics: todo
@@ -55,30 +64,21 @@ rules:
   docs-supported-functions: todo
   docs-troubleshooting: todo
   docs-use-cases: todo
-  dynamic-devices:
-    status: exempt
-    comment: |
-      Device type integration
+  dynamic-devices: todo
   entity-category: todo
-  entity-device-class: todo
+  entity-device-class: done
   entity-disabled-by-default: todo
-  entity-translations: done
+  entity-translations: todo
   exception-translations: todo
-  icon-translations: done
+  icon-translations: todo
   reconfiguration-flow: todo
-  repair-issues:
-    status: exempt
-    comment: |
-      No repairs
-  stale-devices:
-    status: exempt
-    comment: |
-      Device type integration
+  repair-issues: done
+  stale-devices: todo
 
   # Platinum
   async-dependency: done
   inject-websession:
     status: exempt
     comment: |
-      Integration does not make any HTTP requests.
-  strict-typing: done
+      This integration does not require a websession.
+  strict-typing: todo
