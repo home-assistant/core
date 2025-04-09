@@ -88,7 +88,6 @@ PARALLEL_UPDATES = 0
 class PanelDoorEntity(BoschAlarmDoorEntity, SwitchEntity):
     """A switch entity for a door on a bosch alarm panel."""
 
-    _attr_has_entity_name = True
     entity_description: BoschAlarmSwitchEntityDescription
 
     def __init__(
