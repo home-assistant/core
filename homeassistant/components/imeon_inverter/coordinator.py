@@ -11,7 +11,7 @@ from imeon_inverter_api.inverter import Inverter
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import TIMEOUT
 
@@ -57,13 +57,12 @@ class InverterCoordinator(DataUpdateCoordinator[dict[str, str | float | int]]):
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
         async with timeout(TIMEOUT):
-            if self.config_entry is not None:
-                await self._api.login(
-                    self.config_entry.data[CONF_USERNAME],
-                    self.config_entry.data[CONF_PASSWORD],
-                )
+            await self._api.login(
+                self.config_entry.data[CONF_USERNAME],
+                self.config_entry.data[CONF_PASSWORD],
+            )
 
-                await self._api.init()
+            await self._api.init()
 
     async def _async_update_data(self) -> dict[str, str | float | int]:
         """Fetch and store newest data from API.
@@ -81,7 +80,10 @@ class InverterCoordinator(DataUpdateCoordinator[dict[str, str | float | int]]):
             )
 
             # Fetch data using distant API
-            await self._api.update()
+            try:
+                await self._api.update()
+            except TimeoutError as e:
+                raise UpdateFailed(e) from e
 
         # Store data
         for key, val in self._api.storage.items():
