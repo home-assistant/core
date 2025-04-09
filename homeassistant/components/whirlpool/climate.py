@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from whirlpool.aircon import Aircon, FanSpeed as AirconFanSpeed, Mode as AirconMode
@@ -25,9 +24,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import WhirlpoolConfigEntry
 from .entity import WhirlpoolEntity
-
-_LOGGER = logging.getLogger(__name__)
-
 
 AIRCON_MODE_MAP = {
     AirconMode.Cool: HVACMode.COOL,
@@ -75,7 +71,6 @@ class AirConEntity(WhirlpoolEntity, ClimateEntity):
     """Representation of an air conditioner."""
 
     _attr_fan_modes = SUPPORTED_FAN_MODES
-    _attr_has_entity_name = True
     _attr_name = None
     _attr_hvac_modes = SUPPORTED_HVAC_MODES
     _attr_max_temp = SUPPORTED_MAX_TEMP
