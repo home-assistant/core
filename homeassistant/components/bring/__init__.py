@@ -10,7 +10,12 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .coordinator import BringConfigEntry, BringDataUpdateCoordinator
+from .coordinator import (
+    BringActivityCoordinator,
+    BringConfigEntry,
+    BringCoordinators,
+    BringDataUpdateCoordinator,
+)
 
 PLATFORMS: list[Platform] = [Platform.EVENT, Platform.SENSOR, Platform.TODO]
 
@@ -26,7 +31,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: BringConfigEntry) -> boo
     coordinator = BringDataUpdateCoordinator(hass, entry, bring)
     await coordinator.async_config_entry_first_refresh()
 
-    entry.runtime_data = coordinator
+    activity_coordinator = BringActivityCoordinator(hass, entry, coordinator)
+    await activity_coordinator.async_config_entry_first_refresh()
+
+    entry.runtime_data = BringCoordinators(coordinator, activity_coordinator)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

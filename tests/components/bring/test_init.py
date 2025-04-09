@@ -142,6 +142,31 @@ async def test_config_entry_not_ready_udpdate_failed(
 @pytest.mark.parametrize(
     ("exception", "state"),
     [
+        (BringRequestException, ConfigEntryState.SETUP_RETRY),
+        (BringParseException, ConfigEntryState.SETUP_RETRY),
+        (BringAuthException, ConfigEntryState.SETUP_ERROR),
+    ],
+)
+async def test_activity_coordinator_errors(
+    hass: HomeAssistant,
+    bring_config_entry: MockConfigEntry,
+    mock_bring_client: AsyncMock,
+    exception: Exception,
+    state: ConfigEntryState,
+) -> None:
+    """Test config entry not ready from update failed in _async_update_data."""
+    mock_bring_client.get_activity.side_effect = exception
+
+    bring_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(bring_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert bring_config_entry.state is state
+
+
+@pytest.mark.parametrize(
+    ("exception", "state"),
+    [
         (BringAuthException, ConfigEntryState.SETUP_ERROR),
         (BringRequestException, ConfigEntryState.SETUP_RETRY),
         (BringParseException, ConfigEntryState.SETUP_RETRY),
