@@ -6,5 +6,5 @@
   "dependencies": ["webhook"],
   "documentation": "https://www.home-assistant.io/integrations/sleep_as_android",
   "iot_class": "cloud_push",
-  "quality_scale": "bronze"
+  "quality_scale": "silver"
 }
