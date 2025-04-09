@@ -66,6 +66,9 @@
       },
       "one_time_charge": {
         "name": "One-time charge"
+      },
+      "device_error": {
+        "name": "Fehler"
       }
     },
     "button": {
