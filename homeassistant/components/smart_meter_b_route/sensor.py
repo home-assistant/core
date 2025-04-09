@@ -71,11 +71,11 @@ SENSOR_DESCRIPTIONS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: BRouteConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Smart Meter B-route entry."""
-    coordinator: BRouteUpdateCoordinator = entry.runtime_data
+    coordinator = entry.runtime_data
 
     async_add_entities(
         SmartMeterBRouteSensor(coordinator, description)
