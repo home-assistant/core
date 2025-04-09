@@ -1,7 +1,7 @@
 {
   "common": {
     "data_description_host": "The hostname or IP address of your FRITZ!Box router.",
-    "data_description_port": "Leave it empty to use the default port.",
+    "data_description_port": "Leave empty to use the default port.",
     "data_description_username": "Username for the FRITZ!Box.",
     "data_description_password": "Password for the FRITZ!Box.",
     "data_description_ssl": "Use SSL to connect to the FRITZ!Box."
