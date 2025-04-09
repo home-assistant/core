@@ -514,7 +514,7 @@ async def test_reconfigure_successful(
 
 
 @pytest.mark.parametrize(
-    ("connect_fixture", "login_fixture", "url", "password", "expected_error"),
+    ("connect_fixture", "login_fixture", "expected_error"),
     [
         (
             "auth-connect-address-failure.json",
