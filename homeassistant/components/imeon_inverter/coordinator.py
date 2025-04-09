@@ -82,7 +82,7 @@ class InverterCoordinator(DataUpdateCoordinator[dict[str, str | float | int]]):
             # Fetch data using distant API
             try:
                 await self._api.update()
-            except TimeoutError as e:
+            except Exception as e:
                 raise UpdateFailed(e) from e
 
         # Store data
