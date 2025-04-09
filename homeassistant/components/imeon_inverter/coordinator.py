@@ -6,6 +6,7 @@ from asyncio import timeout
 from datetime import timedelta
 import logging
 
+from aiohttp import ClientError
 from imeon_inverter_api.inverter import Inverter
 
 from homeassistant.config_entries import ConfigEntry
@@ -82,7 +83,7 @@ class InverterCoordinator(DataUpdateCoordinator[dict[str, str | float | int]]):
             # Fetch data using distant API
             try:
                 await self._api.update()
-            except Exception as e:
+            except (ValueError, ClientError) as e:
                 raise UpdateFailed(e) from e
 
         # Store data
