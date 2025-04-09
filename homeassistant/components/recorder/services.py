@@ -8,7 +8,13 @@ from typing import cast
 import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+    callback,
+)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entityfilter import generate_filter
 from homeassistant.helpers.service import (
@@ -19,12 +25,14 @@ from homeassistant.util import dt as dt_util
 
 from .const import ATTR_APPLY_FILTER, ATTR_KEEP_DAYS, ATTR_REPACK, DOMAIN
 from .core import Recorder
+from .statistics import statistics_during_period
 from .tasks import PurgeEntitiesTask, PurgeTask
 
 SERVICE_PURGE = "purge"
 SERVICE_PURGE_ENTITIES = "purge_entities"
 SERVICE_ENABLE = "enable"
 SERVICE_DISABLE = "disable"
+SERVICE_GET_STATISTICS = "get_statistics"
 
 SERVICE_PURGE_SCHEMA = vol.Schema(
     {
@@ -62,6 +70,20 @@ SERVICE_PURGE_ENTITIES_SCHEMA = vol.All(
 
 SERVICE_ENABLE_SCHEMA = vol.Schema({})
 SERVICE_DISABLE_SCHEMA = vol.Schema({})
+
+SERVICE_GET_STATISTICS_SCHEMA = vol.Schema(
+    {
+        vol.Required("start_time"): cv.datetime,
+        vol.Optional("end_time"): cv.datetime,
+        vol.Optional("statistic_ids"): vol.All(cv.ensure_list, [cv.string]),
+        vol.Required("period"): vol.In(["5minute", "hour", "day", "week", "month"]),
+        vol.Optional("units"): vol.Schema({cv.string: cv.string}),
+        vol.Optional("types"): vol.All(
+            cv.ensure_list,
+            [vol.In(["change", "last_reset", "max", "mean", "min", "state", "sum"])],
+        ),
+    }
+)
 
 
 @callback
@@ -136,9 +158,78 @@ def _async_register_disable_service(hass: HomeAssistant, instance: Recorder) -> 
 
 
 @callback
+def _async_register_get_statistics_service(
+    hass: HomeAssistant, instance: Recorder
+) -> None:
+    async def async_handle_get_statistics_service(
+        service: ServiceCall,
+    ) -> ServiceResponse:
+        """Handle calls to the get_statistics service."""
+        start_time = dt_util.as_utc(service.data["start_time"])
+        end_time = (
+            dt_util.as_utc(service.data["end_time"])
+            if "end_time" in service.data
+            else None
+        )
+
+        statistic_ids = service.data.get("statistic_ids")
+        statistic_ids_set = set(statistic_ids) if statistic_ids else None
+
+        period = service.data["period"]
+        units = service.data.get("units")
+
+        if (types := service.data.get("types")) is None:
+            types = {"change", "last_reset", "max", "mean", "min", "state", "sum"}
+        else:
+            types = set(types)
+
+        result = await instance.async_add_executor_job(
+            statistics_during_period,
+            hass,
+            start_time,
+            end_time,
+            statistic_ids_set,
+            period,
+            units,
+            types,
+        )
+
+        formatted_result = {}
+        for statistic_id, statistic_rows in result.items():
+            formatted_statistic_rows = []
+
+            for row in statistic_rows:
+                formatted_row = {
+                    **row,
+                    "start": dt_util.utc_from_timestamp(row["start"]).isoformat(),
+                    "end": dt_util.utc_from_timestamp(row["end"]).isoformat(),
+                }
+
+                if last_reset := row.get("last_reset") is not None:
+                    formatted_row["last_reset"] = dt_util.utc_from_timestamp(
+                        last_reset
+                    ).isoformat()
+
+                formatted_statistic_rows.append(formatted_row)
+
+            formatted_result[statistic_id] = formatted_statistic_rows
+
+        return cast(ServiceResponse, formatted_result)
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_GET_STATISTICS,
+        async_handle_get_statistics_service,
+        schema=SERVICE_GET_STATISTICS_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
+
+
+@callback
 def async_register_services(hass: HomeAssistant, instance: Recorder) -> None:
     """Register recorder services."""
     _async_register_purge_service(hass, instance)
     _async_register_purge_entities_service(hass, instance)
     _async_register_enable_service(hass, instance)
     _async_register_disable_service(hass, instance)
+    _async_register_get_statistics_service(hass, instance)
