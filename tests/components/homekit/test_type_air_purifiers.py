@@ -44,29 +44,32 @@ from tests.common import async_mock_service
 
 
 @pytest.mark.parametrize(
-    "auto_preset",
+    ("auto_preset", "preset_modes", "current_preset", "expected_switch_accessories"),
     [
-        None,
-        "auto",
-        "Auto",
+        (None, ["sleep", "smart"], "smart", ["sleep", "smart"]),
+        ("auto", ["sleep", "smart", "auto"], "auto", ["sleep", "smart"]),
+        ("Auto", ["sleep", "smart", "Auto"], "Auto", ["sleep", "smart"]),
     ],
 )
 async def test_fan_auto_manual(
-    hass: HomeAssistant, hk_driver, events: list[Event], auto_preset: str | None
+    hass: HomeAssistant,
+    hk_driver,
+    events: list[Event],
+    auto_preset: str | None,
+    preset_modes: list[str],
+    current_preset: str,
+    expected_switch_accessories: list[str],
 ) -> None:
     """Test switching between Auto and Manual."""
     entity_id = "fan.demo"
 
-    preset_modes = ["sleep", "smart"]
-    if auto_preset:
-        preset_modes.append(auto_preset)
     hass.states.async_set(
         entity_id,
         STATE_ON,
         {
             ATTR_SUPPORTED_FEATURES: FanEntityFeature.PRESET_MODE
             | FanEntityFeature.SET_SPEED,
-            ATTR_PRESET_MODE: auto_preset or "smart",
+            ATTR_PRESET_MODE: current_preset,
             ATTR_PRESET_MODES: preset_modes,
         },
     )
@@ -74,10 +77,7 @@ async def test_fan_auto_manual(
     acc = AirPurifier(hass, hk_driver, "Air Purifier", entity_id, 1, None)
     hk_driver.add_accessory(acc)
 
-    if auto_preset:
-        assert acc.preset_mode_chars["smart"].value == 0
-    else:
-        assert acc.preset_mode_chars["smart"].value == 1
+    assert acc.preset_mode_chars["smart"].value == (current_preset == "smart")
     assert acc.preset_mode_chars["sleep"].value == 0
 
     if auto_preset:
@@ -92,14 +92,9 @@ async def test_fan_auto_manual(
         if service.display_name == "Switch":
             switches.add(service.unique_id)
 
-    if auto_preset:
-        assert len(switches) == len(preset_modes) - 1
-    else:
-        assert len(switches) == len(preset_modes)
-    assert "smart" in switches
-    assert "sleep" in switches
-    if auto_preset:
-        assert auto_preset not in switches
+    assert len(switches) == len(expected_switch_accessories)
+    for switch in expected_switch_accessories:
+        assert switch in switches
 
     acc.run()
     await hass.async_block_till_done()
