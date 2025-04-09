@@ -159,12 +159,12 @@ async def test_fan_auto_manual(
     assert len(events) == 2
 
 
-async def test_fan_presets_no_auto(
+async def test_presets_no_auto(
     hass: HomeAssistant,
     hk_driver,
     events: list[Event],
 ) -> None:
-    """Test switching between Auto and Manual."""
+    """Test preset without an auto mode."""
     entity_id = "fan.demo"
 
     preset_modes = ["sleep", "smart"]
