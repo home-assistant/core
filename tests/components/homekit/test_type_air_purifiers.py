@@ -44,21 +44,18 @@ from tests.common import async_mock_service
 
 
 @pytest.mark.parametrize(
-    ("auto_preset", "preset_modes", "current_preset", "expected_switch_accessories"),
+    ("auto_preset", "preset_modes"),
     [
-        (None, ["sleep", "smart"], "smart", ["sleep", "smart"]),
-        ("auto", ["sleep", "smart", "auto"], "auto", ["sleep", "smart"]),
-        ("Auto", ["sleep", "smart", "Auto"], "Auto", ["sleep", "smart"]),
+        ("auto", ["sleep", "smart", "auto"]),
+        ("Auto", ["sleep", "smart", "Auto"]),
     ],
 )
 async def test_fan_auto_manual(
     hass: HomeAssistant,
     hk_driver,
     events: list[Event],
-    auto_preset: str | None,
+    auto_preset: str,
     preset_modes: list[str],
-    current_preset: str,
-    expected_switch_accessories: list[str],
 ) -> None:
     """Test switching between Auto and Manual."""
     entity_id = "fan.demo"
@@ -69,7 +66,7 @@ async def test_fan_auto_manual(
         {
             ATTR_SUPPORTED_FEATURES: FanEntityFeature.PRESET_MODE
             | FanEntityFeature.SET_SPEED,
-            ATTR_PRESET_MODE: current_preset,
+            ATTR_PRESET_MODE: auto_preset,
             ATTR_PRESET_MODES: preset_modes,
         },
     )
@@ -77,13 +74,9 @@ async def test_fan_auto_manual(
     acc = AirPurifier(hass, hk_driver, "Air Purifier", entity_id, 1, None)
     hk_driver.add_accessory(acc)
 
-    assert acc.preset_mode_chars["smart"].value == (current_preset == "smart")
+    assert acc.preset_mode_chars["smart"].value == 0
     assert acc.preset_mode_chars["sleep"].value == 0
-
-    if auto_preset:
-        assert acc.auto_preset is not None
-    else:
-        assert acc.auto_preset is None
+    assert acc.auto_preset is not None
 
     # Auto presets are handled as the target air purifier state, so
     # not supposed to be exposed as a separate switch
@@ -92,16 +85,18 @@ async def test_fan_auto_manual(
         if service.display_name == "Switch":
             switches.add(service.unique_id)
 
-    assert len(switches) == len(expected_switch_accessories)
-    for switch in expected_switch_accessories:
-        assert switch in switches
+    assert len(switches) == len(preset_modes) - 1
+    for preset in preset_modes:
+        if preset != auto_preset:
+            assert preset in switches
+        else:
+            # Auto preset should not be in switches
+            assert preset not in switches
 
     acc.run()
     await hass.async_block_till_done()
 
-    assert acc.char_target_air_purifier_state.value == (
-        TARGET_STATE_AUTO if auto_preset else TARGET_STATE_MANUAL
-    )
+    assert acc.char_target_air_purifier_state.value == TARGET_STATE_AUTO
 
     hass.states.async_set(
         entity_id,
@@ -117,10 +112,6 @@ async def test_fan_auto_manual(
 
     assert acc.preset_mode_chars["smart"].value == 1
     assert acc.char_target_air_purifier_state.value == TARGET_STATE_MANUAL
-
-    if not auto_preset:
-        # Don't need to test toggling auto mode from HomeKit if not set
-        return
 
     # Set from HomeKit
     call_set_preset_mode = async_mock_service(hass, FAN_DOMAIN, "set_preset_mode")
@@ -166,6 +157,66 @@ async def test_fan_auto_manual(
     assert call_set_percentage[0].data[ATTR_ENTITY_ID] == entity_id
     assert events[-1].data["service"] == "set_percentage"
     assert len(events) == 2
+
+
+async def test_fan_presets_no_auto(
+    hass: HomeAssistant,
+    hk_driver,
+    events: list[Event],
+) -> None:
+    """Test switching between Auto and Manual."""
+    entity_id = "fan.demo"
+
+    preset_modes = ["sleep", "smart"]
+    hass.states.async_set(
+        entity_id,
+        STATE_ON,
+        {
+            ATTR_SUPPORTED_FEATURES: FanEntityFeature.PRESET_MODE
+            | FanEntityFeature.SET_SPEED,
+            ATTR_PRESET_MODE: "smart",
+            ATTR_PRESET_MODES: preset_modes,
+        },
+    )
+    await hass.async_block_till_done()
+    acc = AirPurifier(hass, hk_driver, "Air Purifier", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+
+    assert acc.preset_mode_chars["smart"].value == 1
+    assert acc.preset_mode_chars["sleep"].value == 0
+    assert acc.auto_preset is None
+
+    # Auto presets are handled as the target air purifier state, so
+    # not supposed to be exposed as a separate switch
+    switches = set()
+    for service in acc.services:
+        if service.display_name == "Switch":
+            switches.add(service.unique_id)
+
+    assert len(switches) == len(preset_modes)
+    for preset in preset_modes:
+        assert preset in switches
+
+    acc.run()
+    await hass.async_block_till_done()
+
+    assert acc.char_target_air_purifier_state.value == TARGET_STATE_MANUAL
+
+    hass.states.async_set(
+        entity_id,
+        STATE_ON,
+        {
+            ATTR_SUPPORTED_FEATURES: FanEntityFeature.PRESET_MODE
+            | FanEntityFeature.SET_SPEED,
+            ATTR_PRESET_MODE: "sleep",
+            ATTR_PRESET_MODES: preset_modes,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert acc.preset_mode_chars["smart"].value == 0
+    assert acc.preset_mode_chars["sleep"].value == 1
+    assert acc.char_target_air_purifier_state.value == TARGET_STATE_MANUAL
 
 
 async def test_air_purifier_single_preset_mode(
