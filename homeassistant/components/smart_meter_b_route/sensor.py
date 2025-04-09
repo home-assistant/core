@@ -105,6 +105,4 @@ class SmartMeterBRouteSensor(CoordinatorEntity[BRouteUpdateCoordinator], SensorE
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        if self.entity_description.value_accessor is None:
-            return None
         return self.entity_description.value_accessor(self.coordinator.data)
