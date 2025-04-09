@@ -490,8 +490,6 @@ async def test_reconfigure_successful(
             CONF_PASSWORD: "new_password",
         },
     )
-    await hass.async_block_till_done()
-
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reconfigure_successful"
     assert mock_config_entry.data[CONF_USERNAME] == "new_user"
@@ -528,8 +526,6 @@ async def test_reconfigure_flow_exception_cannot_connect(
             CONF_PASSWORD: "new_password",
         },
     )
-    await hass.async_block_till_done()
-
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
@@ -562,7 +558,5 @@ async def test_reconfigure_flow_exception_invalid_credentials(
             CONF_PASSWORD: "invalid_new_password",
         },
     )
-    await hass.async_block_till_done()
-
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
