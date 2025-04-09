@@ -7,7 +7,14 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -35,7 +42,7 @@ async def test_update_switch_device(
     assert hass.states.get(entity_id).state == STATE_OFF
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        "turn_on",
+        SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
@@ -56,7 +63,7 @@ async def test_unlock_door(
     assert hass.states.get(entity_id).state == STATE_ON
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        "turn_off",
+        SERVICE_TURN_OFF,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
@@ -66,7 +73,7 @@ async def test_unlock_door(
     assert hass.states.get(entity_id).state == STATE_OFF
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        "turn_on",
+        SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
@@ -88,7 +95,7 @@ async def test_secure_door(
     assert hass.states.get(entity_id).state == STATE_OFF
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        "turn_on",
+        SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
@@ -97,7 +104,7 @@ async def test_secure_door(
     assert hass.states.get(entity_id).state == STATE_ON
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        "turn_off",
+        SERVICE_TURN_OFF,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
@@ -118,7 +125,7 @@ async def test_cycle_door(
     assert hass.states.get(entity_id).state == STATE_OFF
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        "turn_on",
+        SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
