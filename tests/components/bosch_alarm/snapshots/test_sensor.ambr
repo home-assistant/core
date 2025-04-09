@@ -24,7 +24,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Burglary Alarm Issues',
+    'original_name': 'Burglary alarm issues',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -36,7 +36,7 @@
 # name: test_sensor[amax_3000][sensor.area1_burglary_alarm_issues-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Area1 Burglary Alarm Issues',
+      'friendly_name': 'Area1 Burglary alarm issues',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.area1_burglary_alarm_issues',
@@ -119,7 +119,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Fire Alarm Issues',
+    'original_name': 'Fire alarm issues',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -131,7 +131,7 @@
 # name: test_sensor[amax_3000][sensor.area1_fire_alarm_issues-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Area1 Fire Alarm Issues',
+      'friendly_name': 'Area1 Fire alarm issues',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.area1_fire_alarm_issues',
@@ -166,7 +166,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Gas Alarm Issues',
+    'original_name': 'Gas alarm issues',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -178,7 +178,7 @@
 # name: test_sensor[amax_3000][sensor.area1_gas_alarm_issues-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Area1 Gas Alarm Issues',
+      'friendly_name': 'Area1 Gas alarm issues',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.area1_gas_alarm_issues',
@@ -213,7 +213,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Burglary Alarm Issues',
+    'original_name': 'Burglary alarm issues',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -225,7 +225,7 @@
 # name: test_sensor[b5512][sensor.area1_burglary_alarm_issues-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Area1 Burglary Alarm Issues',
+      'friendly_name': 'Area1 Burglary alarm issues',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.area1_burglary_alarm_issues',
@@ -308,7 +308,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Fire Alarm Issues',
+    'original_name': 'Fire alarm issues',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -320,7 +320,7 @@
 # name: test_sensor[b5512][sensor.area1_fire_alarm_issues-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Area1 Fire Alarm Issues',
+      'friendly_name': 'Area1 Fire alarm issues',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.area1_fire_alarm_issues',
@@ -355,7 +355,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Gas Alarm Issues',
+    'original_name': 'Gas alarm issues',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -367,7 +367,7 @@
 # name: test_sensor[b5512][sensor.area1_gas_alarm_issues-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Area1 Gas Alarm Issues',
+      'friendly_name': 'Area1 Gas alarm issues',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.area1_gas_alarm_issues',
@@ -402,7 +402,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Burglary Alarm Issues',
+    'original_name': 'Burglary alarm issues',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -414,7 +414,7 @@
 # name: test_sensor[solution_3000][sensor.area1_burglary_alarm_issues-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Area1 Burglary Alarm Issues',
+      'friendly_name': 'Area1 Burglary alarm issues',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.area1_burglary_alarm_issues',
@@ -497,7 +497,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Fire Alarm Issues',
+    'original_name': 'Fire alarm issues',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -509,7 +509,7 @@
 # name: test_sensor[solution_3000][sensor.area1_fire_alarm_issues-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Area1 Fire Alarm Issues',
+      'friendly_name': 'Area1 Fire alarm issues',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.area1_fire_alarm_issues',
@@ -544,7 +544,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Gas Alarm Issues',
+    'original_name': 'Gas alarm issues',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -556,7 +556,7 @@
 # name: test_sensor[solution_3000][sensor.area1_gas_alarm_issues-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Area1 Gas Alarm Issues',
+      'friendly_name': 'Area1 Gas alarm issues',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.area1_gas_alarm_issues',
