@@ -2,13 +2,13 @@
   "entity": {
     "sensor": {
       "alarms_gas": {
-        "default": "mdi:alert-circle-outline"
+        "default": "mdi:alert-circle"
       },
       "alarms_fire": {
-        "default": "mdi:alert-circle-outline"
+        "default": "mdi:alert-circle"
       },
       "alarms_personal": {
-        "default": "mdi:alert-circle-outline"
+        "default": "mdi:alert-circle"
       },
       "faulting_points": {
         "default": "mdi:alert-circle-outline"
