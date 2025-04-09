@@ -170,7 +170,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'panel_fault_ac_fail',
-    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_ac_fail',
+    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_panel_fault_ac_fail',
     'unit_of_measurement': None,
   })
 # ---
@@ -218,7 +218,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'panel_fault_battery_low',
-    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_battery_low',
+    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_panel_fault_battery_low',
     'unit_of_measurement': None,
   })
 # ---
@@ -266,7 +266,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'panel_fault_battery_mising',
-    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_battery_mising',
+    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_panel_fault_battery_mising',
     'unit_of_measurement': None,
   })
 # ---
@@ -314,7 +314,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'panel_fault_parameter_crc_fail_in_pif',
-    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_parameter_crc_fail_in_pif',
+    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_panel_fault_parameter_crc_fail_in_pif',
     'unit_of_measurement': None,
   })
 # ---
@@ -361,7 +361,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'panel_fault_fail_to_call_rps_since_rps_hang_up',
-    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_fail_to_call_rps_since_rps_hang_up',
+    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_panel_fault_fail_to_call_rps_since_rps_hang_up',
     'unit_of_measurement': None,
   })
 # ---
@@ -408,7 +408,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'panel_fault_log_overflow',
-    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_log_overflow',
+    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_panel_fault_log_overflow',
     'unit_of_measurement': None,
   })
 # ---
@@ -455,7 +455,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'panel_fault_log_threshold',
-    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_log_threshold',
+    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_panel_fault_log_threshold',
     'unit_of_measurement': None,
   })
 # ---
@@ -502,7 +502,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'panel_fault_phone_line_failure',
-    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_phone_line_failure',
+    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_panel_fault_phone_line_failure',
     'unit_of_measurement': None,
   })
 # ---
@@ -550,7 +550,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'panel_fault_point_bus_fail_since_rps_hang_up',
-    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_point_bus_fail_since_rps_hang_up',
+    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_panel_fault_point_bus_fail_since_rps_hang_up',
     'unit_of_measurement': None,
   })
 # ---
@@ -597,7 +597,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'panel_fault_sdi_fail_since_rps_hang_up',
-    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_sdi_fail_since_rps_hang_up',
+    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_panel_fault_sdi_fail_since_rps_hang_up',
     'unit_of_measurement': None,
   })
 # ---
@@ -644,7 +644,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'panel_fault_user_code_tamper_since_rps_hang_up',
-    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_user_code_tamper_since_rps_hang_up',
+    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_panel_fault_user_code_tamper_since_rps_hang_up',
     'unit_of_measurement': None,
   })
 # ---
@@ -691,7 +691,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'panel_fault_communication_fail_since_rps_hang_up',
-    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_communication_fail_since_rps_hang_up',
+    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_panel_fault_communication_fail_since_rps_hang_up',
     'unit_of_measurement': None,
   })
 # ---
@@ -1161,7 +1161,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'panel_fault_ac_fail',
-    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_ac_fail',
+    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_panel_fault_ac_fail',
     'unit_of_measurement': None,
   })
 # ---
@@ -1209,7 +1209,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'panel_fault_battery_low',
-    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_battery_low',
+    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_panel_fault_battery_low',
     'unit_of_measurement': None,
   })
 # ---
@@ -1257,7 +1257,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'panel_fault_battery_mising',
-    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_battery_mising',
+    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_panel_fault_battery_mising',
     'unit_of_measurement': None,
   })
 # ---
@@ -1305,7 +1305,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'panel_fault_parameter_crc_fail_in_pif',
-    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_parameter_crc_fail_in_pif',
+    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_panel_fault_parameter_crc_fail_in_pif',
     'unit_of_measurement': None,
   })
 # ---
@@ -1352,7 +1352,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'panel_fault_fail_to_call_rps_since_rps_hang_up',
-    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_fail_to_call_rps_since_rps_hang_up',
+    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_panel_fault_fail_to_call_rps_since_rps_hang_up',
     'unit_of_measurement': None,
   })
 # ---
@@ -1399,7 +1399,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'panel_fault_log_overflow',
-    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_log_overflow',
+    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_panel_fault_log_overflow',
     'unit_of_measurement': None,
   })
 # ---
@@ -1446,7 +1446,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'panel_fault_log_threshold',
-    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_log_threshold',
+    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_panel_fault_log_threshold',
     'unit_of_measurement': None,
   })
 # ---
@@ -1493,7 +1493,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'panel_fault_phone_line_failure',
-    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_phone_line_failure',
+    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_panel_fault_phone_line_failure',
     'unit_of_measurement': None,
   })
 # ---
@@ -1541,7 +1541,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'panel_fault_point_bus_fail_since_rps_hang_up',
-    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_point_bus_fail_since_rps_hang_up',
+    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_panel_fault_point_bus_fail_since_rps_hang_up',
     'unit_of_measurement': None,
   })
 # ---
@@ -1588,7 +1588,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'panel_fault_sdi_fail_since_rps_hang_up',
-    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_sdi_fail_since_rps_hang_up',
+    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_panel_fault_sdi_fail_since_rps_hang_up',
     'unit_of_measurement': None,
   })
 # ---
@@ -1635,7 +1635,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'panel_fault_user_code_tamper_since_rps_hang_up',
-    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_user_code_tamper_since_rps_hang_up',
+    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_panel_fault_user_code_tamper_since_rps_hang_up',
     'unit_of_measurement': None,
   })
 # ---
@@ -1682,7 +1682,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'panel_fault_communication_fail_since_rps_hang_up',
-    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_communication_fail_since_rps_hang_up',
+    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_fault_panel_fault_communication_fail_since_rps_hang_up',
     'unit_of_measurement': None,
   })
 # ---
@@ -2152,7 +2152,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'panel_fault_ac_fail',
-    'unique_id': '1234567890_fault_ac_fail',
+    'unique_id': '1234567890_fault_panel_fault_ac_fail',
     'unit_of_measurement': None,
   })
 # ---
@@ -2200,7 +2200,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'panel_fault_battery_low',
-    'unique_id': '1234567890_fault_battery_low',
+    'unique_id': '1234567890_fault_panel_fault_battery_low',
     'unit_of_measurement': None,
   })
 # ---
@@ -2248,7 +2248,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'panel_fault_battery_mising',
-    'unique_id': '1234567890_fault_battery_mising',
+    'unique_id': '1234567890_fault_panel_fault_battery_mising',
     'unit_of_measurement': None,
   })
 # ---
@@ -2296,7 +2296,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'panel_fault_parameter_crc_fail_in_pif',
-    'unique_id': '1234567890_fault_parameter_crc_fail_in_pif',
+    'unique_id': '1234567890_fault_panel_fault_parameter_crc_fail_in_pif',
     'unit_of_measurement': None,
   })
 # ---
@@ -2343,7 +2343,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'panel_fault_fail_to_call_rps_since_rps_hang_up',
-    'unique_id': '1234567890_fault_fail_to_call_rps_since_rps_hang_up',
+    'unique_id': '1234567890_fault_panel_fault_fail_to_call_rps_since_rps_hang_up',
     'unit_of_measurement': None,
   })
 # ---
@@ -2390,7 +2390,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'panel_fault_log_overflow',
-    'unique_id': '1234567890_fault_log_overflow',
+    'unique_id': '1234567890_fault_panel_fault_log_overflow',
     'unit_of_measurement': None,
   })
 # ---
@@ -2437,7 +2437,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'panel_fault_log_threshold',
-    'unique_id': '1234567890_fault_log_threshold',
+    'unique_id': '1234567890_fault_panel_fault_log_threshold',
     'unit_of_measurement': None,
   })
 # ---
@@ -2484,7 +2484,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'panel_fault_phone_line_failure',
-    'unique_id': '1234567890_fault_phone_line_failure',
+    'unique_id': '1234567890_fault_panel_fault_phone_line_failure',
     'unit_of_measurement': None,
   })
 # ---
@@ -2532,7 +2532,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'panel_fault_point_bus_fail_since_rps_hang_up',
-    'unique_id': '1234567890_fault_point_bus_fail_since_rps_hang_up',
+    'unique_id': '1234567890_fault_panel_fault_point_bus_fail_since_rps_hang_up',
     'unit_of_measurement': None,
   })
 # ---
@@ -2579,7 +2579,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'panel_fault_sdi_fail_since_rps_hang_up',
-    'unique_id': '1234567890_fault_sdi_fail_since_rps_hang_up',
+    'unique_id': '1234567890_fault_panel_fault_sdi_fail_since_rps_hang_up',
     'unit_of_measurement': None,
   })
 # ---
@@ -2626,7 +2626,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'panel_fault_user_code_tamper_since_rps_hang_up',
-    'unique_id': '1234567890_fault_user_code_tamper_since_rps_hang_up',
+    'unique_id': '1234567890_fault_panel_fault_user_code_tamper_since_rps_hang_up',
     'unit_of_measurement': None,
   })
 # ---
@@ -2673,7 +2673,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'panel_fault_communication_fail_since_rps_hang_up',
-    'unique_id': '1234567890_fault_communication_fail_since_rps_hang_up',
+    'unique_id': '1234567890_fault_panel_fault_communication_fail_since_rps_hang_up',
     'unit_of_measurement': None,
   })
 # ---
