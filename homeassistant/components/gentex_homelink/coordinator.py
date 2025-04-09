@@ -4,6 +4,7 @@ from dataclasses import dataclass
 import functools
 import logging
 from typing import Any
+import asyncio
 
 from homelink.mqtt_provider import MQTTProvider
 
@@ -99,4 +100,10 @@ def on_message(coordinator: HomeLinkCoordinator, _topic, message):
     if message["type"] == "state":
         coordinator.async_set_updated_data(message["data"])
     if message["type"] == "requestSync":
-        coordinator.async_set_updated_data(message["data"])
+        coordinator.hass.add_job(
+            coordinator.hass.config_entries.async_reload(
+                coordinator.config_entry.entry_id
+            )
+        )
+
+        # coordinator.async_set_updated_data(message["data"])
