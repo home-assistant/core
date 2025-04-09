@@ -210,6 +210,21 @@ async def test_abort_removes_instance(manager: MockFlowManager) -> None:
     assert len(manager.mock_created_entries) == 0
 
 
+async def test_abort_aborted_flow(manager: MockFlowManager) -> None:
+    """Test return abort from aborted flow."""
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            manager.async_abort(self.flow_id)
+            return self.async_abort(reason="blah")
+
+    with pytest.raises(data_entry_flow.UnknownFlow):
+        await manager.async_init("test")
+    assert len(manager.async_progress()) == 0
+    assert len(manager.mock_created_entries) == 0
+
+
 async def test_abort_calls_async_remove(manager: MockFlowManager) -> None:
     """Test abort calling the async_remove FlowHandler method."""
 
@@ -263,6 +278,37 @@ async def test_create_saves_data(manager: MockFlowManager) -> None:
 
     await manager.async_init("test")
     assert len(manager.async_progress()) == 0
+    assert len(manager.mock_created_entries) == 1
+
+    entry = manager.mock_created_entries[0]
+    assert entry["handler"] == "test"
+    assert entry["title"] == "Test Title"
+    assert entry["data"] == "Test Data"
+    assert entry["source"] is None
+
+
+async def test_create_aborted_flow(manager: MockFlowManager) -> None:
+    """Test return create_entry from aborted flow.
+
+    Note: The entry is created even if the flow is already aborted, then the
+    flow raises an UnknownFlow exception. This behavior is not logical, and
+    we should consider changing it to not create the entry if the flow is
+    aborted.
+    """
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        VERSION = 5
+
+        async def async_step_init(self, user_input=None):
+            manager.async_abort(self.flow_id)
+            return self.async_create_entry(title="Test Title", data="Test Data")
+
+    with pytest.raises(data_entry_flow.UnknownFlow):
+        await manager.async_init("test")
+    assert len(manager.async_progress()) == 0
+
+    # The entry is created even if the flow is aborted
     assert len(manager.mock_created_entries) == 1
 
     entry = manager.mock_created_entries[0]
