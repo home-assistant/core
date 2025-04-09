@@ -206,8 +206,7 @@ class ViCareFan(ViCareEntity, FanEntity):
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        if VentilationQuickmode.STANDBY in self._attributes["vicare_quickmodes"]:
-            self._api.activateVentilationQuickmode(str(VentilationQuickmode.STANDBY))
+        self._api.activateVentilationQuickmode(str(VentilationQuickmode.STANDBY))
 
     @property
     def icon(self) -> str | None:
