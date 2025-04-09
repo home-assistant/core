@@ -1504,12 +1504,12 @@ class ConfigEntriesFlowManager(
         self._discovery_event_debouncer.async_shutdown()
 
     @callback
-    def _cleanup_flow(
+    def async_flow_removed(
         self,
-        flow: ConfigFlow,
-        result: ConfigFlowResult,
+        flow: data_entry_flow.FlowHandler[ConfigFlowContext, ConfigFlowResult],
     ) -> None:
-        """Clean up after a config flow."""
+        """Handle a removed config flow."""
+        flow = cast(ConfigFlow, flow)
 
         # Clean up issue if this is a reauth flow
         if flow.context["source"] == SOURCE_REAUTH:
@@ -1518,53 +1518,6 @@ class ConfigEntriesFlowManager(
             ) is not None:
                 issue_id = f"config_entry_reauth_{entry.domain}_{entry.entry_id}"
                 ir.async_delete_issue(self.hass, HOMEASSISTANT_DOMAIN, issue_id)
-
-        if result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY:
-            return
-
-        # If there's a config entry with a matching unique ID,
-        # update the discovery key.
-        if (
-            (discovery_key := flow.context.get("discovery_key"))
-            and (unique_id := flow.unique_id) is not None
-            and (
-                entry := self.config_entries.async_entry_for_domain_unique_id(
-                    result["handler"], unique_id
-                )
-            )
-            and discovery_key
-            not in (
-                known_discovery_keys := entry.discovery_keys.get(
-                    discovery_key.domain, ()
-                )
-            )
-        ):
-            new_discovery_keys = MappingProxyType(
-                entry.discovery_keys
-                | {
-                    discovery_key.domain: tuple(
-                        [*known_discovery_keys, discovery_key][-10:]
-                    )
-                }
-            )
-            _LOGGER.debug(
-                "Updating discovery keys for %s entry %s %s -> %s",
-                entry.domain,
-                unique_id,
-                entry.discovery_keys,
-                new_discovery_keys,
-            )
-            self.config_entries.async_update_entry(
-                entry, discovery_keys=new_discovery_keys
-            )
-
-    async def async_flow_aborted(
-        self,
-        flow: data_entry_flow.FlowHandler[ConfigFlowContext, ConfigFlowResult],
-        result: ConfigFlowResult,
-    ) -> None:
-        """Handle an aborted config flow."""
-        self._cleanup_flow(cast(ConfigFlow, flow), result)
 
     async def async_finish_flow(
         self,
@@ -1577,9 +1530,43 @@ class ConfigEntriesFlowManager(
         FlowResultType.CREATE_ENTRY.
         """
         flow = cast(ConfigFlow, flow)
-        self._cleanup_flow(flow, result)
 
         if result["type"] != data_entry_flow.FlowResultType.CREATE_ENTRY:
+            # If there's a config entry with a matching unique ID,
+            # update the discovery key.
+            if (
+                (discovery_key := flow.context.get("discovery_key"))
+                and (unique_id := flow.unique_id) is not None
+                and (
+                    entry := self.config_entries.async_entry_for_domain_unique_id(
+                        result["handler"], unique_id
+                    )
+                )
+                and discovery_key
+                not in (
+                    known_discovery_keys := entry.discovery_keys.get(
+                        discovery_key.domain, ()
+                    )
+                )
+            ):
+                new_discovery_keys = MappingProxyType(
+                    entry.discovery_keys
+                    | {
+                        discovery_key.domain: tuple(
+                            [*known_discovery_keys, discovery_key][-10:]
+                        )
+                    }
+                )
+                _LOGGER.debug(
+                    "Updating discovery keys for %s entry %s %s -> %s",
+                    entry.domain,
+                    unique_id,
+                    entry.discovery_keys,
+                    new_discovery_keys,
+                )
+                self.config_entries.async_update_entry(
+                    entry, discovery_keys=new_discovery_keys
+                )
             return result
 
         # Mark the step as done.
