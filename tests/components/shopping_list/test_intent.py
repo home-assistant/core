@@ -18,7 +18,14 @@ async def test_complete_item_intent(hass: HomeAssistant, sl_setup) -> None:
     )
 
     assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert hass.data["shopping_list"].items[0]["complete"]
 
+    # Complete again
+    response = await intent.async_handle(
+        hass, "test", "HassShoppingListCompleteItem", {"item": {"value": "beer"}}
+    )
+
+    assert response.response_type == intent.IntentResponseType.ACTION_DONE
     assert hass.data["shopping_list"].items[0]["complete"]
 
 
@@ -29,28 +36,6 @@ async def test_complete_item_intent_not_found(hass: HomeAssistant, sl_setup) -> 
             hass, "test", "HassShoppingListCompleteItem", {"item": {"value": "beer"}}
         )
     assert str(excinfo.value) == "Item beer not found on your shopping list"
-
-
-async def test_complete_item_intent_already_completed(
-    hass: HomeAssistant, sl_setup
-) -> None:
-    """Test item is already completed."""
-    await intent.async_handle(
-        hass, "test", "HassShoppingListAddItem", {"item": {"value": "beer"}}
-    )
-
-    await intent.async_handle(
-        hass, "test", "HassShoppingListCompleteItem", {"item": {"value": "beer"}}
-    )
-
-    assert hass.data["shopping_list"].items[0]["complete"]
-
-    response = await intent.async_handle(
-        hass, "test", "HassShoppingListCompleteItem", {"item": {"value": "beer"}}
-    )
-
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
-    assert hass.data["shopping_list"].items[0]["complete"]
 
 
 async def test_prefer_completing_non_complete_items(
