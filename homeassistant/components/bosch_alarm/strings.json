@@ -97,6 +97,12 @@
       "area_ready_to_arm_home": {
         "name": "Area ready to arm home"
       }
+    },
+    "sensor": {
+      "faulting_points": {
+        "name": "Faulting points",
+        "unit_of_measurement": "points"
+      }
     }
   }
 }
