@@ -2,17 +2,53 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable, Coroutine
+from dataclasses import dataclass
 from typing import Any
 
 from bosch_alarm_mode2 import Panel
+from bosch_alarm_mode2.panel import Door
 
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BoschAlarmConfigEntry
-from .const import DOMAIN
+from .entity import BoschAlarmDoorEntity, BoschAlarmOutputEntity
+
+
+@dataclass(kw_only=True, frozen=True)
+class BoschAlarmSwitchEntityDescription(SwitchEntityDescription):
+    """Describes Bosch Alarm door entity."""
+
+    value_fn: Callable[[Door], bool]
+    on_fn: Callable[[Panel, int], Coroutine[Any, Any, None]]
+    off_fn: Callable[[Panel, int], Coroutine[Any, Any, None]]
+
+
+DOOR_TYPES: list[BoschAlarmSwitchEntityDescription] = [
+    BoschAlarmSwitchEntityDescription(
+        key="locked",
+        translation_key="locked",
+        value_fn=lambda door: door.is_locked(),
+        on_fn=lambda panel, door_id: panel.door_relock(door_id),
+        off_fn=lambda panel, door_id: panel.door_unlock(door_id),
+    ),
+    BoschAlarmSwitchEntityDescription(
+        key="secured",
+        translation_key="secured",
+        value_fn=lambda door: door.is_secured(),
+        on_fn=lambda panel, door_id: panel.door_secure(door_id),
+        off_fn=lambda panel, door_id: panel.door_unsecure(door_id),
+    ),
+    BoschAlarmSwitchEntityDescription(
+        key="cycling",
+        translation_key="cycling",
+        value_fn=lambda door: door.is_cycling(),
+        on_fn=lambda panel, door_id: panel.door_cycle(door_id),
+        off_fn=lambda panel, door_id: panel.door_relock(door_id),
+    ),
+]
 
 
 async def async_setup_entry(
@@ -31,30 +67,14 @@ async def async_setup_entry(
     ]
 
     entities.extend(
-        PanelDoorLockedEntity(
+        PanelDoorEntity(
             panel,
             door_id,
             config_entry.unique_id or config_entry.entry_id,
+            entity_description,
         )
         for door_id in panel.doors
-    )
-
-    entities.extend(
-        PanelDoorSecuredEntity(
-            panel,
-            door_id,
-            config_entry.unique_id or config_entry.entry_id,
-        )
-        for door_id in panel.doors
-    )
-
-    entities.extend(
-        PanelDoorCyclingEntity(
-            panel,
-            door_id,
-            config_entry.unique_id or config_entry.entry_id,
-        )
-        for door_id in panel.doors
+        for entity_description in DOOR_TYPES
     )
 
     async_add_entities(entities)
@@ -63,118 +83,39 @@ async def async_setup_entry(
 PARALLEL_UPDATES = 0
 
 
-class PanelDoorEntity(SwitchEntity):
+class PanelDoorEntity(BoschAlarmDoorEntity, SwitchEntity):
     """A switch entity for a door on a bosch alarm panel."""
 
     _attr_has_entity_name = True
+    entity_description: BoschAlarmSwitchEntityDescription
 
-    def __init__(self, panel: Panel, door_id: int, unique_id: str, type: str) -> None:
+    def __init__(
+        self,
+        panel: Panel,
+        door_id: int,
+        unique_id: str,
+        entity_description: BoschAlarmSwitchEntityDescription,
+    ) -> None:
         """Set up a switch entity for a door on a bosch alarm panel."""
-        self.panel = panel
-        self._door = panel.doors[door_id]
-        door_unique_id = f"{unique_id}_door_{door_id}"
-        self._attr_unique_id = f"{door_unique_id}_{type}"
-        self._attr_translation_key = type
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, door_unique_id)},
-            name=self._door.name,
-            manufacturer="Bosch Security Systems",
-            via_device=(DOMAIN, unique_id),
-        )
-        self._door_id = door_id
-
-    @property
-    def available(self) -> bool:
-        """Return if the door is available."""
-        return (
-            self._door.is_open()
-            or self._door.is_locked()
-            or self._door.is_secured()
-            or self._door.is_cycling()
-        )
-
-    async def async_added_to_hass(self) -> None:
-        """Observe state changes."""
-        await super().async_added_to_hass()
-        self._door.status_observer.attach(self.schedule_update_ha_state)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Stop observing state changes."""
-        self._door.status_observer.detach(self.schedule_update_ha_state)
-
-
-class PanelDoorLockedEntity(PanelDoorEntity):
-    """A switch entity for a door on a bosch alarm panel."""
-
-    def __init__(self, panel: Panel, door_id: int, unique_id: str) -> None:
-        """Set up a switch entity for a door on a bosch alarm panel."""
-        super().__init__(panel, door_id, unique_id, "locked")
-        self._attr_name = "Locked"
+        super().__init__(panel, door_id, unique_id)
+        self.entity_description = entity_description
+        self._attr_unique_id = f"{self._door_unique_id}_{entity_description.key}"
 
     @property
     def is_on(self) -> bool:
-        """Return if the door is locked."""
-        return self._door.is_locked()
-
-    @property
-    def available(self) -> bool:
-        """Return if the door is available."""
-        return self._door.is_open() or self._door.is_locked()
+        """Return the value function."""
+        return self.entity_description.value_fn(self._door)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Lock the door."""
-        await self.panel.door_relock(self._door_id)
+        """Run the on function."""
+        await self.entity_description.on_fn(self.panel, self._door_id)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Unlock the door."""
-        await self.panel.door_unlock(self._door_id)
+        """Run the off function."""
+        await self.entity_description.off_fn(self.panel, self._door_id)
 
 
-class PanelDoorSecuredEntity(PanelDoorEntity):
-    """A switch entity for a doors secured state on a bosch alarm panel."""
-
-    def __init__(self, panel: Panel, door_id: int, unique_id: str) -> None:
-        """Set up a switch entity for a door on a bosch alarm panel."""
-        super().__init__(panel, door_id, unique_id, "secured")
-        self._attr_name = "Secured"
-
-    @property
-    def is_on(self) -> bool:
-        """Return if the door is secured."""
-        return self._door.is_secured()
-
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Lock the door."""
-        await self.panel.door_secure(self._door_id)
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Unlock the door."""
-        await self.panel.door_unsecure(self._door_id)
-
-
-class PanelDoorCyclingEntity(PanelDoorEntity):
-    """A switch entity for a doors cycling state on a bosch alarm panel."""
-
-    def __init__(self, panel: Panel, door_id: int, unique_id: str) -> None:
-        """Set up a switch entity for a door on a bosch alarm panel."""
-        super().__init__(panel, door_id, unique_id, "cycling")
-        self._attr_name = "Cycling"
-
-    @property
-    def is_on(self) -> bool:
-        """Return if the door is cycling."""
-        return self._door.is_cycling()
-
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Lock the door."""
-        await self.panel.door_cycle(self._door_id)
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Unlock the door."""
-        await self.panel.door_relock(self._door_id)
-
-
-class PanelOutputEntity(SwitchEntity):
+class PanelOutputEntity(BoschAlarmOutputEntity, SwitchEntity):
     """An output entity for a bosch alarm panel."""
 
     _attr_has_entity_name = True
@@ -182,26 +123,8 @@ class PanelOutputEntity(SwitchEntity):
 
     def __init__(self, panel: Panel, output_id: int, unique_id: str) -> None:
         """Set up an output entity for a bosch alarm panel."""
-        self.panel = panel
-        self._output = panel.outputs[output_id]
-        self._output_id = output_id
-        self._observer = self._output.status_observer
-        self._attr_unique_id = f"{unique_id}_output_{output_id}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._attr_unique_id)},
-            name=self._output.name,
-            manufacturer="Bosch Security Systems",
-            via_device=(DOMAIN, unique_id),
-        )
-
-    async def async_added_to_hass(self) -> None:
-        """Observe state changes."""
-        await super().async_added_to_hass()
-        self._observer.attach(self.schedule_update_ha_state)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Stop observing state changes."""
-        self._observer.detach(self.schedule_update_ha_state)
+        super().__init__(panel, output_id, unique_id)
+        self._attr_unique_id = self._output_unique_id
 
     @property
     def is_on(self) -> bool:
