@@ -16,7 +16,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import BoschAlarmConfigEntry
 from .entity import BoschAlarmAreaEntity
 
-priority_types = {
+PRIORITY_TYPES = {
     "burglary": {
         ALARM_MEMORY_PRIORITIES.BURGLARY_SUPERVISORY: "supervisory",
         ALARM_MEMORY_PRIORITIES.BURGLARY_TROUBLE: "trouble",
@@ -57,7 +57,7 @@ SENSOR_TYPES: list[BoschAlarmSensorEntityDescription] = [
         value_fn=priority_value_fn(priority_type),
         observe_alarms=True,
     )
-    for key, priority_type in priority_types.items()
+    for key, priority_type in PRIORITY_TYPES.items()
 ]
 SENSOR_TYPES.append(
     BoschAlarmSensorEntityDescription(
