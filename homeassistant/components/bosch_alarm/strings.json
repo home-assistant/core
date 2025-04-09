@@ -92,10 +92,18 @@
         "name": "Fault: Log threshold reached"
       },
       "area_ready_to_arm_away": {
-        "name": "Area ready to arm away"
+        "name": "Area ready to arm away",
+        "state": {
+          "on": "Ready",
+          "off": "Not ready"
+        }
       },
       "area_ready_to_arm_home": {
-        "name": "Area ready to arm home"
+        "name": "Area ready to arm home",
+        "state": {
+          "on": "Ready",
+          "off": "Not ready"
+        }
       }
     },
     "sensor": {
