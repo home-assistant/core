@@ -59,15 +59,15 @@
   "entity": {
     "sensor": {
       "alarms_gas": {
-        "name": "Gas Alarm Issues",
+        "name": "Gas alarm issues",
         "state": {
           "supervisory": "Supervisory",
           "trouble": "Trouble",
-          "no_issues": "No Issues"
+          "no_issues": "No issues"
         }
       },
       "alarms_fire": {
-        "name": "Fire Alarm Issues",
+        "name": "Fire alarm issues",
         "state": {
           "supervisory": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::supervisory%]",
           "trouble": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::trouble%]",
@@ -75,7 +75,7 @@
         }
       },
       "alarms_burglary": {
-        "name": "Burglary Alarm Issues",
+        "name": "Burglary alarm issues",
         "state": {
           "supervisory": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::supervisory%]",
           "trouble": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::trouble%]",
