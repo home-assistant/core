@@ -11,9 +11,11 @@ from bosch_alarm_mode2.panel import Door
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BoschAlarmConfigEntry
+from .const import DOMAIN
 from .entity import BoschAlarmDoorEntity, BoschAlarmOutputEntity
 
 
@@ -108,10 +110,20 @@ class PanelDoorEntity(BoschAlarmDoorEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Run the on function."""
+        # If the door is currently cycling, we can't send it any other commands until it is done
+        if self._door.is_cycling():
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="incorrect_door_state"
+            )
         await self.entity_description.on_fn(self.panel, self._door_id)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Run the off function."""
+        # If the door is currently cycling, we can't send it any other commands until it is done
+        if self._door.is_cycling():
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="incorrect_door_state"
+            )
         await self.entity_description.off_fn(self.panel, self._door_id)
 
 
