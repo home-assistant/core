@@ -26,7 +26,7 @@ class BoschAlarmSwitchEntityDescription(SwitchEntityDescription):
     off_fn: Callable[[Panel, int], Coroutine[Any, Any, None]]
 
 
-DOOR_TYPES: list[BoschAlarmSwitchEntityDescription] = [
+DOOR_SWITCH_TYPES: list[BoschAlarmSwitchEntityDescription] = [
     BoschAlarmSwitchEntityDescription(
         key="locked",
         translation_key="locked",
@@ -74,7 +74,7 @@ async def async_setup_entry(
             entity_description,
         )
         for door_id in panel.doors
-        for entity_description in DOOR_TYPES
+        for entity_description in DOOR_SWITCH_TYPES
     )
 
     async_add_entities(entities)
