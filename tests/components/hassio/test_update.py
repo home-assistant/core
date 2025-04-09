@@ -886,7 +886,7 @@ async def test_update_os_with_backup_and_error(
         ),
         pytest.raises(HomeAssistantError, match=r"^Error creating backup:"),
     ):
-        assert not await hass.services.async_call(
+        await hass.services.async_call(
             "update",
             "install",
             {
