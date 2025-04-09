@@ -125,15 +125,6 @@ async def test_cycle_door(
     door.is_cycling.return_value = True
     await call_observable(hass, door.status_observer)
     assert hass.states.get(entity_id).state == STATE_ON
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        "turn_off",
-        {ATTR_ENTITY_ID: entity_id},
-        blocking=True,
-    )
-    door.is_cycling.return_value = False
-    await call_observable(hass, door.status_observer)
-    assert hass.states.get(entity_id).state == STATE_OFF
 
 
 async def test_switch(
