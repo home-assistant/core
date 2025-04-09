@@ -97,9 +97,6 @@ class SwitchBotCloudAirConditioner(SwitchBotCloudEntity, ClimateEntity, RestoreE
             return
         _LOGGER.debug("Last state attributes: %s", last_state.attributes)
         self._attr_hvac_mode = HVACMode(last_state.state)
-        self._attr_preset_mode = last_state.attributes.get(
-            "preset_mode", self._attr_preset_mode
-        )
         self._attr_fan_mode = last_state.attributes.get("fan_mode", self._attr_fan_mode)
         self._attr_target_temperature = last_state.attributes.get(
             "temperature", self._attr_target_temperature

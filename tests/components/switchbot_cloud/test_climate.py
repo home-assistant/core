@@ -12,9 +12,10 @@ from homeassistant.components.climate import (
     SERVICE_SET_TEMPERATURE,
 )
 from homeassistant.components.switchbot_cloud import SwitchBotAPI
+from homeassistant.components.switchbot_cloud.climate import RestoreEntity
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 
 from . import configure_integration
 
@@ -121,3 +122,67 @@ async def test_air_conditioner_set_temperature(
         assert "25,4,1,on" in str(mock_send_command.call_args)
 
     assert hass.states.get(entity_id).attributes["temperature"] == 25
+
+
+async def test_air_conditioner_restore_state(
+    hass: HomeAssistant, mock_list_devices, mock_get_status
+) -> None:
+    """Test restoring state for air conditioner."""
+    mock_list_devices.return_value = [
+        Remote(
+            deviceId="ac-device-id-1",
+            deviceName="climate-1",
+            remoteType="Air Conditioner",
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+
+    mock_state = State(
+        "climate.climate_1",
+        "cool",
+        {
+            "fan_mode": "high",
+            "temperature": 25,
+        },
+    )
+
+    with patch.object(
+        RestoreEntity,
+        "async_get_last_state",
+        return_value=mock_state,
+    ):
+        entry = await configure_integration(hass)
+        assert entry.state is ConfigEntryState.LOADED
+        entity_id = "climate.climate_1"
+        state = hass.states.get(entity_id)
+        assert state.state == "cool"
+        assert state.attributes["fan_mode"] == "high"
+        assert state.attributes["temperature"] == 25
+
+
+async def test_air_conditioner_no_last_state(
+    hass: HomeAssistant, mock_list_devices, mock_get_status
+) -> None:
+    """Test behavior when no previous state exists."""
+    mock_list_devices.return_value = [
+        Remote(
+            deviceId="ac-device-id-1",
+            deviceName="climate-1",
+            remoteType="Air Conditioner",
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+
+    with patch.object(
+        RestoreEntity,
+        "async_get_last_state",
+        return_value=None,
+    ):
+        entry = await configure_integration(hass)
+        assert entry.state is ConfigEntryState.LOADED
+
+        entity_id = "climate.climate_1"
+        state = hass.states.get(entity_id)
+        assert state.state == "fan_only"
+        assert state.attributes["fan_mode"] == "auto"
+        assert state.attributes["temperature"] == 21
