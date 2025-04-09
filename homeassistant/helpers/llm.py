@@ -304,7 +304,7 @@ class NamespacedTool(Tool):
     """A tool that wraps another tool, prepending a namespace.
 
     This is used to support tools from multiple API. This tool dispatches
-    the original took with the original non-namespaced name.
+    the original tool with the original non-namespaced name.
     """
 
     def __init__(self, namespace: str, tool: Tool) -> None:
