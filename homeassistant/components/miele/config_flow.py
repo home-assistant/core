@@ -48,9 +48,6 @@ class OAuth2FlowHandler(
         if user_input is None:
             return self.async_show_form(
                 step_id="reauth_confirm",
-                description_placeholders={
-                    "account": self._get_reauth_entry().data["auth_implementation"]
-                },
             )
 
         return await self.async_step_user()

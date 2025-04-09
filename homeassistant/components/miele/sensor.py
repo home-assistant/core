@@ -5,7 +5,9 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any, Final
+from typing import Final
+
+from pymiele import MieleDevice
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -29,8 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 class MieleSensorDescription(SensorEntityDescription):
     """Class describing Miele sensor entities."""
 
-    data_tag: str
-    convert: Callable[[Any], Any] | None = None
+    value_fn: Callable[[MieleDevice], StateType] | None = None
     zone: int | None = None
 
 
@@ -77,7 +78,7 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
         description=MieleSensorDescription(
             key="state_status",
             translation_key="status",
-            data_tag="state_status",
+            value_fn=lambda value: value.state_status,
             device_class=SensorDeviceClass.ENUM,
             options=list(STATE_STATUS_TAGS.values()),
         ),
@@ -104,12 +105,11 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
         ),
         description=MieleSensorDescription(
             key="state_temperature_1",
-            data_tag="state_temperature_1",
             zone=1,
             device_class=SensorDeviceClass.TEMPERATURE,
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             state_class=SensorStateClass.MEASUREMENT,
-            convert=lambda x: x / 100.0,
+            value_fn=lambda value: value.state_temperature_1 / 100.0,
         ),
     ),
 )
@@ -133,8 +133,8 @@ async def async_setup_entry(
                         entity_class = MieleStatusSensor
                     case _:
                         entity_class = MieleSensor
-                entities.extend(
-                    [entity_class(coordinator, device_id, definition.description)]
+                entities.append(
+                    entity_class(coordinator, device_id, definition.description)
                 )
 
     async_add_entities(entities)
@@ -175,26 +175,14 @@ class MieleSensor(MieleEntity, SensorEntity):
 
     entity_description: MieleSensorDescription
 
-    def __init__(
-        self,
-        coordinator: MieleDataUpdateCoordinator,
-        device_id: str,
-        description: MieleSensorDescription,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator, device_id, description)
-
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        value = getattr(
-            self.coordinator.data.devices[self._device_id],
-            self.entity_description.data_tag,
-            None,
+        return (
+            self.entity_description.value_fn(self.device)
+            if self.entity_description.value_fn is not None
+            else None
         )
-        if self.entity_description.convert is not None:
-            value = self.entity_description.convert(value)
-        return value
 
 
 class MieleStatusSensor(MieleSensor):
@@ -210,16 +198,14 @@ class MieleStatusSensor(MieleSensor):
         super().__init__(coordinator, device_id, description)
         self._attr_name = None
         self._attr_icon = APPLIANCE_ICONS.get(
-            MieleAppliance(coordinator.data.devices[self._device_id].device_type),
+            MieleAppliance(self.device.device_type),
             "mdi:state-machine",
         )
 
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return STATE_STATUS_TAGS.get(
-            StateStatus(self.coordinator.data.devices[self._device_id].state_status)
-        )
+        return STATE_STATUS_TAGS.get(StateStatus(self.device.state_status))
 
     @property
     def available(self) -> bool:
