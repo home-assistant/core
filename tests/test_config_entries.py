@@ -1395,9 +1395,7 @@ async def test_reauth_issue_flow_aborted(
     issue = await _test_reauth_issue(hass, manager, issue_registry)
 
     manager.flow.async_abort(issue.data["flow_id"])
-    # This can be considered a bug, we should make sure the issue is always
-    # removed when the reauth flow is aborted.
-    assert len(issue_registry.issues) == 1
+    assert len(issue_registry.issues) == 0
 
 
 async def _test_reauth_issue(
