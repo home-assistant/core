@@ -71,7 +71,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Postpone loading the config entry if the device is missing
     device_path = entry.data[DEVICE]
     if not await hass.async_add_executor_job(os.path.exists, device_path):
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="device_disconnected",
+        )
 
     await hass.config_entries.async_forward_entry_setups(entry, ["update"])
 

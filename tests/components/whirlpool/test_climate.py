@@ -81,7 +81,7 @@ async def test_static_attributes(
     await init_integration(hass)
 
     for said in ("said1", "said2"):
-        entity_id = f"climate.{said}"
+        entity_id = f"climate.aircon_{said}"
         entry = entity_registry.async_get(entity_id)
         assert entry
         assert entry.unique_id == said
@@ -138,8 +138,8 @@ async def test_dynamic_attributes(
         mock_instance_idx: int
 
     for clim_test_instance in (
-        ClimateTestInstance("climate.said1", mock_aircon1_api, 0),
-        ClimateTestInstance("climate.said2", mock_aircon2_api, 1),
+        ClimateTestInstance("climate.aircon_said1", mock_aircon1_api, 0),
+        ClimateTestInstance("climate.aircon_said2", mock_aircon2_api, 1),
     ):
         entity_id = clim_test_instance.entity_id
         mock_instance = clim_test_instance.mock_instance
@@ -225,8 +225,8 @@ async def test_service_calls(
         mock_instance: MagicMock
 
     for clim_test_instance in (
-        ClimateInstancesData("climate.said1", mock_aircon1_api),
-        ClimateInstancesData("climate.said2", mock_aircon2_api),
+        ClimateInstancesData("climate.aircon_said1", mock_aircon1_api),
+        ClimateInstancesData("climate.aircon_said2", mock_aircon2_api),
     ):
         mock_instance = clim_test_instance.mock_instance
         entity_id = clim_test_instance.entity_id

@@ -72,12 +72,12 @@ from .helpers.json import json_bytes, json_bytes_sorted, json_fragment
 from .helpers.typing import UNDEFINED, ConfigType, DiscoveryInfoType, UndefinedType
 from .loader import async_suggest_report_issue
 from .setup import (
-    DATA_SETUP_DONE,
     SetupPhases,
     async_pause_setup,
     async_process_deps_reqs,
     async_setup_component,
     async_start_setup,
+    async_wait_component,
 )
 from .util import ulid as ulid_util
 from .util.async_ import create_eager_task
@@ -1367,12 +1367,12 @@ class ConfigEntriesFlowManager(
         self._initialize_futures: defaultdict[str, set[asyncio.Future[None]]] = (
             defaultdict(set)
         )
-        self._discovery_debouncer = Debouncer[None](
+        self._discovery_event_debouncer = Debouncer[None](
             hass,
             _LOGGER,
             cooldown=DISCOVERY_COOLDOWN,
             immediate=True,
-            function=self._async_discovery,
+            function=self._async_fire_discovery_event,
             background=True,
         )
 
@@ -1454,8 +1454,12 @@ class ConfigEntriesFlowManager(
                 if not self._pending_import_flows[handler]:
                     del self._pending_import_flows[handler]
 
-        if result["type"] != data_entry_flow.FlowResultType.ABORT:
-            await self.async_post_init(flow, result)
+        if (
+            result["type"] != data_entry_flow.FlowResultType.ABORT
+            and source in DISCOVERY_SOURCES
+        ):
+            # Fire discovery event
+            await self._discovery_event_debouncer.async_call()
 
         return result
 
@@ -1497,7 +1501,7 @@ class ConfigEntriesFlowManager(
         for future_list in self._initialize_futures.values():
             for future in future_list:
                 future.set_result(None)
-        self._discovery_debouncer.async_shutdown()
+        self._discovery_event_debouncer.async_shutdown()
 
     async def async_finish_flow(
         self,
@@ -1526,7 +1530,7 @@ class ConfigEntriesFlowManager(
                 ir.async_delete_issue(self.hass, HOMEASSISTANT_DOMAIN, issue_id)
 
         if result["type"] != data_entry_flow.FlowResultType.CREATE_ENTRY:
-            # If there's an ignored config entry with a matching unique ID,
+            # If there's a config entry with a matching unique ID,
             # update the discovery key.
             if (
                 (discovery_key := flow.context.get("discovery_key"))
@@ -1612,7 +1616,11 @@ class ConfigEntriesFlowManager(
                 result["handler"], flow.unique_id
             )
 
-        if existing_entry is not None and flow.handler != "mobile_app":
+        if (
+            existing_entry is not None
+            and flow.handler != "mobile_app"
+            and existing_entry.source != SOURCE_IGNORE
+        ):
             # This causes the old entry to be removed and replaced, when the flow
             # should instead be aborted.
             # In case of manual flows, integrations should implement options, reauth,
@@ -1687,21 +1695,9 @@ class ConfigEntriesFlowManager(
         flow.init_step = context["source"]
         return flow
 
-    async def async_post_init(
-        self,
-        flow: data_entry_flow.FlowHandler[ConfigFlowContext, ConfigFlowResult],
-        result: ConfigFlowResult,
-    ) -> None:
-        """After a flow is initialised trigger new flow notifications."""
-        source = flow.context["source"]
-
-        # Create notification.
-        if source in DISCOVERY_SOURCES:
-            await self._discovery_debouncer.async_call()
-
     @callback
-    def _async_discovery(self) -> None:
-        """Handle discovery."""
+    def _async_fire_discovery_event(self) -> None:
+        """Fire discovery event."""
         # async_fire_internal is used here because this is only
         # called from the Debouncer so we know the usage is safe
         self.hass.bus.async_fire_internal(EVENT_FLOW_DISCOVERED)
@@ -2705,11 +2701,7 @@ class ConfigEntries:
         Config entries which are created after Home Assistant is started can't be waited
         for, the function will just return if the config entry is loaded or not.
         """
-        setup_done = self.hass.data.get(DATA_SETUP_DONE, {})
-        if setup_future := setup_done.get(entry.domain):
-            await setup_future
-        # The component was not loaded.
-        if entry.domain not in self.hass.config.components:
+        if not await async_wait_component(self.hass, entry.domain):
             return False
         return entry.state is ConfigEntryState.LOADED
 

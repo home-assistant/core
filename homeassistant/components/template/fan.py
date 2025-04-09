@@ -157,7 +157,8 @@ class TemplateFan(TemplateEntity, FanEntity):
             CONF_SET_OSCILLATING_ACTION,
             CONF_SET_DIRECTION_ACTION,
         ):
-            if action_config := config.get(action_id):
+            # Scripts can be an empty list, therefore we need to check for None
+            if (action_config := config.get(action_id)) is not None:
                 self.add_script(action_id, action_config, name, DOMAIN)
 
         self._state: bool | None = False
