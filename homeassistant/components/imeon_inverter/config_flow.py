@@ -24,8 +24,6 @@ _LOGGER = logging.getLogger(__name__)
 class ImeonInverterConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle the initial setup flow for Imeon Inverters."""
 
-    VERSION = 1
-
     _host: str | None = None
 
     async def async_step_user(

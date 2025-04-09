@@ -1,5 +1,6 @@
 """Test the Imeon Inverter config flow."""
 
+from copy import deepcopy
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -9,6 +10,7 @@ from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.ssdp import ATTR_UPNP_SERIAL
 
 from .conftest import TEST_DISCOVER, TEST_SERIAL, TEST_USER_INPUT
 
@@ -186,3 +188,18 @@ async def test_ssdp_already_exist(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_ssdp_abort(hass: HomeAssistant) -> None:
+    """Test that a ssdp discovery aborts if serial is unknown."""
+    data = deepcopy(TEST_DISCOVER)
+    data.upnp.pop(ATTR_UPNP_SERIAL, None)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_SSDP},
+        data=data,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
