@@ -31,7 +31,12 @@ from homeassistant.helpers import area_registry as ar
 from homeassistant.helpers.backup import async_get_manager as async_get_backup_manager
 from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.helpers.translation import async_get_translations
-from homeassistant.setup import SetupPhases, async_pause_setup, async_setup_component
+from homeassistant.setup import (
+    SetupPhases,
+    async_pause_setup,
+    async_setup_component,
+    async_wait_component,
+)
 
 if TYPE_CHECKING:
     from . import OnboardingData, OnboardingStorage, OnboardingStoreData
@@ -60,6 +65,7 @@ async def async_setup(
     hass.http.register_view(BackupInfoView(data))
     hass.http.register_view(RestoreBackupView(data))
     hass.http.register_view(UploadBackupView(data))
+    hass.http.register_view(WaitIntegrationOnboardingView(data))
     await setup_cloud_views(hass, data)
 
 
@@ -296,6 +302,30 @@ class IntegrationOnboardingView(_BaseOnboardingStepView):
                 hass, data["client_id"], refresh_token.credential
             )
             return self.json({"auth_code": auth_code})
+
+
+class WaitIntegrationOnboardingView(_NoAuthBaseOnboardingView):
+    """Get backup info view."""
+
+    url = "/api/onboarding/integration/wait"
+    name = "api:onboarding:integration:wait"
+
+    @RequestDataValidator(
+        vol.Schema(
+            {
+                vol.Required("domain"): str,
+            }
+        )
+    )
+    async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
+        """Handle wait for integration command."""
+        hass = request.app[KEY_HASS]
+        domain = data["domain"]
+        return self.json(
+            {
+                "integration_loaded": await async_wait_component(hass, domain),
+            }
+        )
 
 
 class AnalyticsOnboardingView(_BaseOnboardingStepView):
