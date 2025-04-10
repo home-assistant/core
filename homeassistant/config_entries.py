@@ -1375,6 +1375,7 @@ class ConfigEntriesFlowManager(
             function=self._async_fire_discovery_event,
             background=True,
         )
+        self._flow_subscriptions: list[Callable[[str, str], None]] = []
 
     async def async_wait_import_flow_initialized(self, handler: str) -> None:
         """Wait till all import flows in progress are initialized."""
@@ -1460,6 +1461,13 @@ class ConfigEntriesFlowManager(
         ):
             # Fire discovery event
             await self._discovery_event_debouncer.async_call()
+
+        if result["type"] != data_entry_flow.FlowResultType.ABORT and source in (
+            DISCOVERY_SOURCES | {SOURCE_REAUTH}
+        ):
+            # Notify listeners that a flow is created
+            for subscription in self._flow_subscriptions:
+                subscription("added", flow.flow_id)
 
         return result
 
@@ -1738,6 +1746,29 @@ class ConfigEntriesFlowManager(
             if other_flow is not flow and flow.is_matching(other_flow):  # type: ignore[arg-type]
                 return True
         return False
+
+    @callback
+    def async_subscribe_flow(
+        self, listener: Callable[[str, str], None]
+    ) -> CALLBACK_TYPE:
+        """Subscribe to non user initiated flow init or remove."""
+        self._flow_subscriptions.append(listener)
+        return lambda: self._flow_subscriptions.remove(listener)
+
+    @callback
+    def _async_remove_flow_progress(self, flow_id: str) -> None:
+        """Remove a flow from in progress."""
+        flow = self._progress.get(flow_id)
+        super()._async_remove_flow_progress(flow_id)
+        # Fire remove event for initialized non user initiated flows
+        if (
+            not flow
+            or flow.cur_step is None
+            or flow.source not in (DISCOVERY_SOURCES | {SOURCE_REAUTH})
+        ):
+            return
+        for listeners in self._flow_subscriptions:
+            listeners("removed", flow_id)
 
 
 class ConfigEntryItems(UserDict[str, ConfigEntry]):
@@ -2357,12 +2388,7 @@ class ConfigEntries:
         if unique_id is not UNDEFINED and entry.unique_id != unique_id:
             # Deprecated in 2024.11, should fail in 2025.11
             if (
-                # flipr creates duplicates during migration, and asks users to
-                # remove the duplicate. We don't need warn about it here too.
-                # We should remove the special case for "flipr" in HA Core 2025.4,
-                # when the flipr migration period ends
-                entry.domain != "flipr"
-                and unique_id is not None
+                unique_id is not None
                 and self.async_entry_for_domain_unique_id(entry.domain, unique_id)
                 is not None
             ):
@@ -2729,12 +2755,6 @@ class ConfigEntries:
             issues.add(issue.issue_id)
 
         for domain, unique_ids in self._entries._domain_unique_id_index.items():  # noqa: SLF001
-            # flipr creates duplicates during migration, and asks users to
-            # remove the duplicate. We don't need warn about it here too.
-            # We should remove the special case for "flipr" in HA Core 2025.4,
-            # when the flipr migration period ends
-            if domain == "flipr":
-                continue
             for unique_id, entries in unique_ids.items():
                 # We might mutate the list of entries, so we need a copy to not mess up
                 # the index

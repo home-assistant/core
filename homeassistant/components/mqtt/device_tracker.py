@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -28,8 +28,8 @@ from homeassistant.helpers.typing import ConfigType, VolSchemaType
 
 from . import subscription
 from .config import MQTT_BASE_SCHEMA
-from .const import CONF_PAYLOAD_RESET, CONF_STATE_TOPIC
-from .entity import CONF_JSON_ATTRS_TOPIC, MqttEntity, async_setup_entity_entry_helper
+from .const import CONF_JSON_ATTRS_TOPIC, CONF_PAYLOAD_RESET, CONF_STATE_TOPIC
+from .entity import MqttEntity, async_setup_entity_entry_helper
 from .models import MqttValueTemplate, ReceiveMessage
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_subscribe_topic
@@ -111,6 +111,7 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
         self._value_template = MqttValueTemplate(
             config.get(CONF_VALUE_TEMPLATE), entity=self
         ).async_render_with_possible_json_value
+        self._attr_source_type = self._config[CONF_SOURCE_TYPE]
 
     @callback
     def _tracker_message_received(self, msg: ReceiveMessage) -> None:
@@ -124,72 +125,44 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
             )
             return
         if payload == self._config[CONF_PAYLOAD_HOME]:
-            self._location_name = STATE_HOME
+            self._attr_location_name = STATE_HOME
         elif payload == self._config[CONF_PAYLOAD_NOT_HOME]:
-            self._location_name = STATE_NOT_HOME
+            self._attr_location_name = STATE_NOT_HOME
         elif payload == self._config[CONF_PAYLOAD_RESET]:
-            self._location_name = None
+            self._attr_location_name = None
         else:
             if TYPE_CHECKING:
                 assert isinstance(msg.payload, str)
-            self._location_name = msg.payload
+            self._attr_location_name = msg.payload
 
     @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         self.add_subscription(
-            CONF_STATE_TOPIC, self._tracker_message_received, {"_location_name"}
+            CONF_STATE_TOPIC, self._tracker_message_received, {"_attr_location_name"}
         )
-
-    @property
-    def force_update(self) -> bool:
-        """Do not force updates if the state is the same."""
-        return False
 
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
 
-    @property
-    def latitude(self) -> float | None:
-        """Return latitude if provided in extra_state_attributes or None."""
+    @callback
+    def _process_update_extra_state_attributes(
+        self, extra_state_attributes: dict[str, Any]
+    ) -> None:
+        """Extract the location from the extra state attributes."""
+        self._attr_latitude = extra_state_attributes.get(ATTR_LATITUDE)
+        self._attr_longitude = extra_state_attributes.get(ATTR_LONGITUDE)
         if (
-            self.extra_state_attributes is not None
-            and ATTR_LATITUDE in self.extra_state_attributes
+            ATTR_LATITUDE in extra_state_attributes
+            or ATTR_LONGITUDE in extra_state_attributes
         ):
-            latitude: float = self.extra_state_attributes[ATTR_LATITUDE]
-            return latitude
-        return None
+            # Reset manual set location
+            self._attr_location_name = None
 
-    @property
-    def location_accuracy(self) -> int:
-        """Return location accuracy if provided in extra_state_attributes or None."""
-        if (
-            self.extra_state_attributes is not None
-            and ATTR_GPS_ACCURACY in self.extra_state_attributes
-        ):
-            accuracy: int = self.extra_state_attributes[ATTR_GPS_ACCURACY]
-            return accuracy
-        return 0
-
-    @property
-    def longitude(self) -> float | None:
-        """Return longitude if provided in extra_state_attributes or None."""
-        if (
-            self.extra_state_attributes is not None
-            and ATTR_LONGITUDE in self.extra_state_attributes
-        ):
-            longitude: float = self.extra_state_attributes[ATTR_LONGITUDE]
-            return longitude
-        return None
-
-    @property
-    def location_name(self) -> str | None:
-        """Return a location name for the current location of the device."""
-        return self._location_name
-
-    @property
-    def source_type(self) -> SourceType:
-        """Return the source type, eg gps or router, of the device."""
-        source_type: SourceType = self._config[CONF_SOURCE_TYPE]
-        return source_type
+        self._attr_location_accuracy = extra_state_attributes.get(ATTR_GPS_ACCURACY, 0)
+        self._attr_extra_state_attributes = {
+            attribute: value
+            for attribute, value in extra_state_attributes.items()
+            if attribute not in {ATTR_GPS_ACCURACY, ATTR_LATITUDE, ATTR_LONGITUDE}
+        }
