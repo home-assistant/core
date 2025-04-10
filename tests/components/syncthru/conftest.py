@@ -27,7 +27,7 @@ def mock_syncthru() -> Generator[AsyncMock]:
     """Mock the SyncThru class."""
     with (
         patch(
-            "homeassistant.components.syncthru.SyncThru",
+            "homeassistant.components.syncthru.coordinator.SyncThru",
             autospec=True,
         ) as mock_syncthru,
         patch(
