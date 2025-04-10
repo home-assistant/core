@@ -44,6 +44,7 @@
   "entity": {
     "sensor": {
       "washer_state": {
+        "name": "State",
         "state": {
           "standby": "[%key:common::state::standby%]",
           "setting": "Setting",
@@ -74,6 +75,7 @@
         }
       },
       "dryer_state": {
+        "name": "[%key:component::whirlpool::entity::sensor::washer_state::name%]",
         "state": {
           "standby": "[%key:common::state::standby%]",
           "setting": "[%key:component::whirlpool::entity::sensor::washer_state::state::setting%]",
