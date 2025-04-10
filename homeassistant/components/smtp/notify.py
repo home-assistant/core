@@ -86,6 +86,7 @@ def get_service(
 ) -> MailNotificationService | None:
     """Get the mail notification service."""
     setup_reload_service(hass, DOMAIN, PLATFORMS)
+    ssl_context = create_client_context() if config[CONF_VERIFY_SSL] else None
     mail_service = MailNotificationService(
         config[CONF_SERVER],
         config[CONF_PORT],
@@ -98,6 +99,7 @@ def get_service(
         config.get(CONF_SENDER_NAME),
         config[CONF_DEBUG],
         config[CONF_VERIFY_SSL],
+        ssl_context,
     )
 
     if mail_service.connection_is_valid():
@@ -122,6 +124,7 @@ class MailNotificationService(BaseNotificationService):
         sender_name,
         debug,
         verify_ssl,
+        ssl_context,
     ):
         """Initialize the SMTP service."""
         self._server = server
@@ -136,7 +139,7 @@ class MailNotificationService(BaseNotificationService):
         self.debug = debug
         self._verify_ssl = verify_ssl
         self.tries = 2
-        self._ssl_context = create_client_context() if self._verify_ssl else None
+        self._ssl_context = ssl_context
 
     def connect(self):
         """Connect/authenticate to SMTP Server."""
