@@ -168,7 +168,7 @@ class ModbusLight(BaseSwitch, LightEntity):
         """Convert Modbus scale (0-100) to the brightness (0-255)."""
         return round(percent / MODBUS_SCALE_MAX * MAX_BRIGHTNESS)
 
-    async def _percent_to_temperature(self, percent: int) -> int:
+    async def _convert_modbus_to_color_temp(self, percent: int) -> int:
         """Convert Modbus scale (0-100) to the color temperature in Kelvin (2000-7000 К)."""
         return round(
             self._attr_min_color_temp_kelvin
