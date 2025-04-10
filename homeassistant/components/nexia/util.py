@@ -6,7 +6,6 @@ from datetime import timedelta
 from http import HTTPStatus
 from typing import Any
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HassJob, HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later
 
@@ -30,6 +29,7 @@ class SingleShot:
     """Provides a single shot timer that can be reset.
 
     Fires a while following the *last* call to `reset_delayed_action_trigger`.
+    Caller should use `async_shutdown` to clean up when done.
     """
 
     def __init__(
@@ -49,7 +49,6 @@ class SingleShot:
             self._delayed_action,
             f"resettable single shot action {self._delay}",
         )
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_shutdown)
 
     async def _delayed_action(self, now: Any) -> None:
         """Perform the action now that the delay has completed."""
@@ -78,8 +77,8 @@ class SingleShot:
         )
 
     @callback
-    def _async_shutdown(self, event: Any) -> None:
-        """Handle Home Assistant stopping."""
+    def async_shutdown(self) -> None:
+        """Clean up."""
         self._shutting_down = True
         if self._cancel_delayed_action:
             self._cancel_delayed_action()

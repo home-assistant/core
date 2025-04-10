@@ -49,7 +49,10 @@ async def test_resettable_single_shot(hass: HomeAssistant) -> None:
     assert len(calls) == 1
     assert single_shot._cancel_delayed_action is None
 
-    # Fire again, then exit to exercise shutdown path.
+    # Fire again, then exercise shutdown path.
     single_shot.reset_delayed_action_trigger()
     assert len(calls) == 1
     assert single_shot._cancel_delayed_action is not None
+    single_shot.async_shutdown()
+    assert len(calls) == 1
+    assert single_shot._cancel_delayed_action is None
