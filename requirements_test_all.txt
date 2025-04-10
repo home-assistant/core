@@ -612,7 +612,7 @@ coinbase-advanced-py==1.2.2
 coinbase==2.1.0
 
 # homeassistant.scripts.check_config
-colorlog==6.8.2
+colorlog==6.9.0
 
 # homeassistant.components.color_extractor
 colorthief==0.2.1
