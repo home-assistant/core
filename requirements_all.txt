@@ -1084,7 +1084,7 @@ greenwavereality==0.5.1
 gridnet==5.0.1
 
 # homeassistant.components.growatt_server
-growattServer==1.5.0
+growattServer==1.6.0
 
 # homeassistant.components.google_sheets
 gspread==5.5.0
@@ -1219,6 +1219,9 @@ igloohome-api==0.1.0
 # homeassistant.components.ihc
 ihcsdk==2.8.5
 
+# homeassistant.components.imeon_inverter
+imeon_inverter_api==0.3.12
+
 # homeassistant.components.imgw_pib
 imgw_pib==1.0.10
 
@@ -1314,7 +1317,7 @@ ld2410-ble==0.1.1
 leaone-ble==0.1.0
 
 # homeassistant.components.led_ble
-led-ble==1.1.6
+led-ble==1.1.7
 
 # homeassistant.components.lektrico
 lektricowifi==0.0.43
@@ -1350,7 +1353,7 @@ linear-garage-door==0.2.9
 linode-api==4.1.9b1
 
 # homeassistant.components.livisi
-livisi==0.0.24
+livisi==0.0.25
 
 # homeassistant.components.google_maps
 locationsharinglib==5.0.1
@@ -2005,7 +2008,7 @@ pygti==0.9.4
 pyhaversion==22.8.0
 
 # homeassistant.components.heos
-pyheos==1.0.4
+pyheos==1.0.5
 
 # homeassistant.components.hive
 pyhive-integration==1.0.2
