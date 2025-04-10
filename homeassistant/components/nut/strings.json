@@ -136,7 +136,7 @@
           "resting": "Resting",
           "unknown": "Unknown",
           "disabled": "[%key:common::state::disabled%]",
-          "off": "Off"
+          "off": "[%key:common::state::off%]"
         }
       },
       "battery_current": { "name": "Battery current" },
