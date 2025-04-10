@@ -1,6 +1,5 @@
 """Test cors for the HTTP component."""
 
-from asyncio import AbstractEventLoop
 from http import HTTPStatus
 from pathlib import Path
 from unittest.mock import patch
@@ -18,9 +17,8 @@ from aiohttp.test_utils import TestClient
 import pytest
 
 from homeassistant.components.http.cors import setup_cors
-from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.http import KEY_ALLOW_CONFIGURED_CORS
+from homeassistant.helpers.http import KEY_ALLOW_CONFIGURED_CORS, HomeAssistantView
 from homeassistant.setup import async_setup_component
 
 from . import HTTP_HEADER_HA_AUTH
@@ -56,14 +54,12 @@ async def mock_handler(request):
 
 
 @pytest.fixture
-def client(
-    event_loop: AbstractEventLoop, aiohttp_client: ClientSessionGenerator
-) -> TestClient:
+async def client(aiohttp_client: ClientSessionGenerator) -> TestClient:
     """Fixture to set up a web.Application."""
     app = web.Application()
     setup_cors(app, [TRUSTED_ORIGIN])
     app[KEY_ALLOW_CONFIGURED_CORS](app.router.add_get("/", mock_handler))
-    return event_loop.run_until_complete(aiohttp_client(app))
+    return await aiohttp_client(app)
 
 
 async def test_cors_requests(client) -> None:

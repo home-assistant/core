@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
+    from .config import HassioConfig
     from .handler import HassIO
 
 
@@ -74,6 +75,7 @@ ADDONS_COORDINATOR = "hassio_addons_coordinator"
 
 
 DATA_COMPONENT: HassKey[HassIO] = HassKey(DOMAIN)
+DATA_CONFIG_STORE: HassKey[HassioConfig] = HassKey("hassio_config_store")
 DATA_CORE_INFO = "hassio_core_info"
 DATA_CORE_STATS = "hassio_core_stats"
 DATA_HOST_INFO = "hassio_host_info"
