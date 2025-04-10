@@ -11,7 +11,6 @@ from zcc.device import ControlPointDevice
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.core import HomeAssistant
 
-# Import the device class from the component that you want to support
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import ZimiConfigEntry
