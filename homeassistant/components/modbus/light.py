@@ -45,7 +45,7 @@ async def async_setup_platform(
 
 
 class ModbusLight(BaseSwitch, LightEntity):
-    """Class representing a Modbus light with dimming support."""
+    """Class representing a Modbus light."""
 
     def __init__(
         self, hass: HomeAssistant, hub: ModbusHub, config: dict[str, Any]
