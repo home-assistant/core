@@ -75,7 +75,7 @@
         }
       },
       "dryer_state": {
-        "name": "State",
+        "name": "[%key:component::whirlpool::entity::sensor::washer_state::name%]",
         "state": {
           "standby": "[%key:common::state::standby%]",
           "setting": "[%key:component::whirlpool::entity::sensor::washer_state::state::setting%]",
