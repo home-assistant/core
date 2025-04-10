@@ -147,19 +147,18 @@ COOLDOWN_TIME = 60
 CORE_INTEGRATIONS = {"homeassistant", "persistent_notification"}
 
 # Integrations that are loaded right after the core is set up
-LOGGING_AND_HTTP_DEPS_INTEGRATIONS = {
-    # isal is loaded right away before `http` to ensure if its
-    # enabled, that `isal` is up to date.
-    "isal",
+LOGGING_INTEGRATIONS = {
     # Set log levels
     "logger",
+    # Error logging
+    "system_log",
+    "sentry",
+}
+NETWORK_INTEGRATIONS = {
     # Ensure network config is available
     # before hassio or any other integration is
     # loaded that might create an aiohttp client session
     "network",
-    # Error logging
-    "system_log",
-    "sentry",
 }
 FRONTEND_INTEGRATIONS = {
     # Get the frontend up and running as soon as possible so problem
@@ -174,11 +173,13 @@ FRONTEND_INTEGRATIONS = {
 # is not accidentally promoted as a dependency of any of the integrations in them.
 # If we add timeouts to the frontend substages, we should make sure they don't apply in recovery mode.
 STAGE_0_INTEGRATIONS = (
-    # Load logging and http deps as soon as possible
-    ("logging, http deps", LOGGING_AND_HTTP_DEPS_INTEGRATIONS, None),
-    # Setup frontend
+    # Load logging integrations as soon as possible
+    ("logging", LOGGING_INTEGRATIONS, None),
+    # Set up network
+    ("network", NETWORK_INTEGRATIONS, None),
+    # Set up frontend
     ("frontend", FRONTEND_INTEGRATIONS, None),
-    # Setup recorder
+    # Set up recorder
     ("recorder", {"recorder"}, None),
     # Start up debuggers. Start these first in case they want to wait.
     ("debugger", {"debugpy"}, STAGE_0_SUBSTAGE_TIMEOUT),
