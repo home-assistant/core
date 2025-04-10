@@ -1367,11 +1367,42 @@ async def test_async_forward_entry_setup_deprecated(
     ) in caplog.text
 
 
-async def test_reauth_issue(
+async def test_reauth_issue_flow_returns_abort(
     hass: HomeAssistant,
     manager: config_entries.ConfigEntries,
     issue_registry: ir.IssueRegistry,
 ) -> None:
+    """Test that we create/delete an issue when source is reauth.
+
+    In this test, the reauth flow returns abort.
+    """
+    issue = await _test_reauth_issue(hass, manager, issue_registry)
+
+    result = await manager.flow.async_configure(issue.data["flow_id"], {})
+    assert result["type"] == FlowResultType.ABORT
+    assert len(issue_registry.issues) == 0
+
+
+async def test_reauth_issue_flow_aborted(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test that we create/delete an issue when source is reauth.
+
+    In this test, the reauth flow is aborted.
+    """
+    issue = await _test_reauth_issue(hass, manager, issue_registry)
+
+    manager.flow.async_abort(issue.data["flow_id"])
+    assert len(issue_registry.issues) == 0
+
+
+async def _test_reauth_issue(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    issue_registry: ir.IssueRegistry,
+) -> ir.IssueEntry:
     """Test that we create/delete an issue when source is reauth."""
     assert len(issue_registry.issues) == 0
 
@@ -1407,10 +1438,7 @@ async def test_reauth_issue(
         translation_key="config_entry_reauth",
         translation_placeholders={"name": "test_title"},
     )
-
-    result = await hass.config_entries.flow.async_configure(issue.data["flow_id"], {})
-    assert result["type"] == FlowResultType.ABORT
-    assert len(issue_registry.issues) == 0
+    return issue
 
 
 async def test_loading_default_config(hass: HomeAssistant) -> None:
@@ -8797,15 +8825,17 @@ async def test_add_description_placeholder_automatically_not_overwrites(
 
 
 @pytest.mark.parametrize(
-    ("domain", "expected_log"),
+    ("domain", "source", "expected_log"),
     [
-        ("some_integration", True),
-        ("mobile_app", False),
+        ("some_integration", config_entries.SOURCE_USER, True),
+        ("some_integration", config_entries.SOURCE_IGNORE, False),
+        ("mobile_app", config_entries.SOURCE_USER, False),
     ],
 )
 async def test_create_entry_existing_unique_id(
     hass: HomeAssistant,
     domain: str,
+    source: str,
     expected_log: bool,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -8816,6 +8846,7 @@ async def test_create_entry_existing_unique_id(
         entry_id="01J915Q6T9F6G5V0QJX6HBC94T",
         data={"host": "any", "port": 123},
         unique_id="mock-unique-id",
+        source=source,
     )
     entry.add_to_hass(hass)
 
