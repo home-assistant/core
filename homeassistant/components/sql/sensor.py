@@ -364,7 +364,7 @@ class SQLSensor(ManualTriggerSensorEntity):
         else:
             await self.hass.async_add_executor_job(self._update)
 
-    def _update(self) -> Any:
+    def _update(self) -> None:
         """Retrieve sensor data from the query."""
         data = None
         extra_state_attributes = {}
@@ -380,7 +380,7 @@ class SQLSensor(ManualTriggerSensorEntity):
             )
             sess.rollback()
             sess.close()
-            return None
+            return
 
         for res in result.mappings():
             _LOGGER.debug("Query %s result in %s", self._query, res.items())
