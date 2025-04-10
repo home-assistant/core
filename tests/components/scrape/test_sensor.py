@@ -670,8 +670,6 @@ async def test_template_render_with_availability_syntax_error(
 
 async def test_availability_blocks_value_template(
     hass: HomeAssistant,
-    load_yaml_integration: None,
-    freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test availability blocks value_template from rendering."""
