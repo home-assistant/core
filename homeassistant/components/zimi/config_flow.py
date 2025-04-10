@@ -70,7 +70,7 @@ class ZimiConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             self.api_descriptions = await ControlPointDiscoveryService().discovers()
-        except ControlPointError as _:
+        except ControlPointError:
             # ControlPointError is expected if no zcc are found on LAN
             return await self.async_step_manual()
 
