@@ -317,7 +317,7 @@
             "light_brightness_settings": {
               "name": "Brightness settings",
               "data": {
-                "brightness": "Brightness",
+                "brightness": "Separate brightness",
                 "brightness_command_template": "Brightness command template",
                 "brightness_command_topic": "Brightness command topic",
                 "brightness_scale": "Brightness scale",
