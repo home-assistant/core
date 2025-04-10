@@ -666,3 +666,44 @@ async def test_template_render_with_availability_syntax_error(
         "Error rendering availability template for sensor.current_version: UndefinedError: 'what_the_heck' is undefined"
         in caplog.text
     )
+
+
+async def test_availability_blocks_value_template(
+    hass: HomeAssistant,
+    load_yaml_integration: None,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test availability blocks value_template from rendering."""
+    config = {
+        DOMAIN: [
+            return_integration_config(
+                sensors=[
+                    {
+                        "select": ".current-version h1",
+                        "name": "Current version",
+                        "unique_id": "ha_version_unique_id",
+                        CONF_VALUE_TEMPLATE: "{{ x - 1 }}",
+                        CONF_AVAILABILITY: "{{ x is defined }}",
+                    }
+                ]
+            )
+        ]
+    }
+
+    mocker = MockRestData("test_scrape_sensor")
+    with patch(
+        "homeassistant.components.rest.RestData",
+        return_value=mocker,
+    ):
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+
+    assert (
+        "Error parsing value for binary_sensor.test: 'x' is undefined"
+        not in caplog.text
+    )
+
+    state = hass.states.get("sensor.current_version")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
