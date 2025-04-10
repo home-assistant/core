@@ -729,6 +729,7 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
         self.backup_task: asyncio.Task | None = None
         self.restore_backup_task: asyncio.Task | None = None
         self.backup_data: bytes | None = None
+        self.backup_filepath: str | None = None
         self.error: str | None = None
 
     @callback
@@ -833,9 +834,15 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
         client: Client = self.config_entry.runtime_data[DATA_CLIENT]
         if client.driver is None:
             return self.async_abort(reason="driver_not_ready")
+        # reset the old radio
         await client.driver.async_hard_reset()
 
-        return self.async_show_form(step_id="instruct_unplug")
+        return self.async_show_form(
+            step_id="instruct_unplug",
+            description_placeholders={
+                "file_path": str(self.backup_filepath),
+            },
+        )
 
     async def async_step_manual(
         self, user_input: dict[str, Any] | None = None
@@ -1153,10 +1160,10 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
             unsub()
 
         # save the backup to a file just in case
-        file_path = self.hass.config.path(
+        self.backup_filepath = self.hass.config.path(
             f"zwavejs_nvm_backup_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.bin"
         )
-        async with aiofiles.open(file_path, "wb") as backup_file:
+        async with aiofiles.open(self.backup_filepath, "wb") as backup_file:
             await backup_file.write(self.backup_data)
 
     async def _async_restore_network_backup(self) -> None:
