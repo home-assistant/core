@@ -10,6 +10,7 @@ from homeassistant.components.climate import (
     ATTR_CURRENT_HUMIDITY,
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
+    ATTR_HUMIDITY,
     ATTR_HVAC_MODE,
     ATTR_SWING_MODE,
     DOMAIN as CLIMATE_DOMAIN,
@@ -20,6 +21,7 @@ from homeassistant.components.climate import (
     FAN_MIDDLE,
     FAN_OFF,
     SERVICE_SET_FAN_MODE,
+    SERVICE_SET_HUMIDITY,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
@@ -136,21 +138,25 @@ async def test_dynamic_attributes(
     mock_instance.get_current_temp.return_value = 15
     mock_instance.get_temp.return_value = 20
     mock_instance.get_current_humidity.return_value = 80
+    mock_instance.get_humidity.return_value = 30
     mock_instance.get_h_louver_swing.return_value = True
     attributes = (await update_ac_state(hass, entity_id, mock_instance)).attributes
     assert attributes[ATTR_CURRENT_TEMPERATURE] == 15
     assert attributes[ATTR_TEMPERATURE] == 20
     assert attributes[ATTR_CURRENT_HUMIDITY] == 80
+    assert attributes[ATTR_HUMIDITY] == 30
     assert attributes[ATTR_SWING_MODE] == SWING_HORIZONTAL
 
     mock_instance.get_current_temp.return_value = 16
     mock_instance.get_temp.return_value = 21
     mock_instance.get_current_humidity.return_value = 70
+    mock_instance.get_humidity.return_value = 40
     mock_instance.get_h_louver_swing.return_value = False
     attributes = (await update_ac_state(hass, entity_id, mock_instance)).attributes
     assert attributes[ATTR_CURRENT_TEMPERATURE] == 16
     assert attributes[ATTR_TEMPERATURE] == 21
     assert attributes[ATTR_CURRENT_HUMIDITY] == 70
+    assert attributes[ATTR_HUMIDITY] == 40
     assert attributes[ATTR_SWING_MODE] == SWING_OFF
 
 
@@ -184,6 +190,7 @@ async def test_dynamic_attributes(
             [False],
         ),
         (SERVICE_SET_TEMPERATURE, {ATTR_TEMPERATURE: 20}, "set_temp", [20]),
+        (SERVICE_SET_HUMIDITY, {ATTR_HUMIDITY: 30}, "set_humidity", [30]),
         (
             SERVICE_SET_FAN_MODE,
             {ATTR_FAN_MODE: FAN_AUTO},
