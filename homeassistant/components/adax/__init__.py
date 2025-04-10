@@ -2,16 +2,13 @@
 
 from __future__ import annotations
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .const import CONNECTION_TYPE, LOCAL
-from .coordinator import AdaxCloudCoordinator, AdaxLocalCoordinator
+from .coordinator import AdaxCloudCoordinator, AdaxLocalCoordinator, AdaxConfigEntry
 
 PLATFORMS = [Platform.CLIMATE]
-
-type AdaxConfigEntry = ConfigEntry[AdaxCloudCoordinator | AdaxLocalCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AdaxConfigEntry) -> bool:
@@ -29,12 +26,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: AdaxConfigEntry) -> bool
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AdaxConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: AdaxConfigEntry
+) -> bool:
     """Migrate old entry."""
     # convert title and unique_id to string
     if config_entry.version == 1:

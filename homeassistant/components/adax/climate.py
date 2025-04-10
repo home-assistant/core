@@ -38,13 +38,11 @@ async def async_setup_entry(
         local_coordinator = cast(AdaxLocalCoordinator, entry.runtime_data)
         async_add_entities(
             [LocalAdaxDevice(local_coordinator, entry.data[CONF_UNIQUE_ID])],
-            True,
         )
     else:
         cloud_coordinator = cast(AdaxCloudCoordinator, entry.runtime_data)
         async_add_entities(
-            (AdaxDevice(room, cloud_coordinator) for room in cloud_coordinator.data),
-            True,
+            (AdaxDevice(cloud_coordinator, room) for room in cloud_coordinator.data),
         )
 
 
@@ -52,8 +50,6 @@ class AdaxDevice(CoordinatorEntity[AdaxCloudCoordinator], ClimateEntity):
     """Representation of a heater."""
 
     _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
-    _attr_hvac_mode = HVACMode.OFF
-    _attr_icon = "mdi:radiator-off"
     _attr_max_temp = 35
     _attr_min_temp = 5
     _attr_supported_features = (
@@ -65,13 +61,16 @@ class AdaxDevice(CoordinatorEntity[AdaxCloudCoordinator], ClimateEntity):
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(
-        self, heater_data: dict[str, Any], coordinator: AdaxCloudCoordinator
+        self,
+        coordinator: AdaxCloudCoordinator,
+        heater_data: dict[str, Any],
     ) -> None:
         """Initialize the heater."""
-        super().__init__(coordinator=coordinator)
+        super().__init__(coordinator)
         self._adax_data_handler: Adax = coordinator.adax_data_handler
         self._device_id = heater_data["id"]
 
+        self._attr_name = heater_data["name"]
         self._attr_unique_id = f"{heater_data['homeId']}_{heater_data['id']}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, heater_data["id"])},
@@ -82,6 +81,16 @@ class AdaxDevice(CoordinatorEntity[AdaxCloudCoordinator], ClimateEntity):
             manufacturer="Adax",
         )
         self._apply_data(heater_data)
+
+    @property
+    def available(self) -> bool:
+        """Whether the entity is available or not."""
+        return super().available and self._device_id in self.coordinator.data
+
+    @property
+    def room(self) -> dict[str, Any]:
+        """Gets the data for this particular device."""
+        return self.coordinator.data[self._device_id]
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
@@ -108,20 +117,15 @@ class AdaxDevice(CoordinatorEntity[AdaxCloudCoordinator], ClimateEntity):
             self._device_id, temperature, True
         )
 
-    async def async_update(self) -> None:
-        """Get the latest data."""
-        await self.coordinator.async_request_refresh()
-
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        if room := self.coordinator.get_room(self._device_id):
+        if room := self.room:
             self._apply_data(room)
         super()._handle_coordinator_update()
 
     def _apply_data(self, room: dict[str, Any]) -> None:
         """Update the appropriate attributues based on received data."""
-        self._attr_name = room["name"]
         self._attr_current_temperature = room.get("temperature")
         self._attr_target_temperature = room.get("targetTemperature")
         if room["heatingEnabled"]:
@@ -150,7 +154,7 @@ class LocalAdaxDevice(CoordinatorEntity[AdaxLocalCoordinator], ClimateEntity):
 
     def __init__(self, coordinator: AdaxLocalCoordinator, unique_id: str) -> None:
         """Initialize the heater."""
-        super().__init__(coordinator=coordinator)
+        super().__init__(coordinator)
         self._adax_data_handler: AdaxLocal = coordinator.adax_data_handler
         self._attr_unique_id = unique_id
         self._attr_device_info = DeviceInfo(
@@ -171,10 +175,6 @@ class LocalAdaxDevice(CoordinatorEntity[AdaxLocalCoordinator], ClimateEntity):
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
         await self._adax_data_handler.set_target_temperature(temperature)
-
-    async def async_update(self) -> None:
-        """Get the latest data."""
-        await self.coordinator.async_request_refresh()
 
     @callback
     def _handle_coordinator_update(self) -> None:
