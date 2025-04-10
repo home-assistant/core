@@ -48,7 +48,7 @@
     'state': '2025-05-04T12:59:00+00:00',
   })
 # ---
-# name: test_all_entities[sensor.dryer_none-entry]
+# name: test_all_entities[sensor.dryer_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -90,7 +90,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.dryer_none',
+    'entity_id': 'sensor.dryer_state',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -102,7 +102,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'State',
     'platform': 'whirlpool',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -111,11 +111,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.dryer_none-state]
+# name: test_all_entities[sensor.dryer_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Dryer None',
+      'friendly_name': 'Dryer State',
       'options': list([
         'standby',
         'setting',
@@ -146,7 +146,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.dryer_none',
+    'entity_id': 'sensor.dryer_state',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -267,7 +267,7 @@
     'state': '2025-05-04T12:59:00+00:00',
   })
 # ---
-# name: test_all_entities[sensor.washer_none-entry]
+# name: test_all_entities[sensor.washer_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -309,7 +309,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.washer_none',
+    'entity_id': 'sensor.washer_state',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -321,7 +321,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'State',
     'platform': 'whirlpool',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -330,11 +330,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.washer_none-state]
+# name: test_all_entities[sensor.washer_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Washer None',
+      'friendly_name': 'Washer State',
       'options': list([
         'standby',
         'setting',
@@ -365,7 +365,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.washer_none',
+    'entity_id': 'sensor.washer_state',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

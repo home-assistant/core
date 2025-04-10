@@ -173,8 +173,8 @@ async def test_washer_dryer_time_sensor_no_restore(
 @pytest.mark.parametrize(
     ("entity_id", "mock_fixture"),
     [
-        ("sensor.washer_none", "mock_washer_api"),
-        ("sensor.dryer_none", "mock_dryer_api"),
+        ("sensor.washer_state", "mock_washer_api"),
+        ("sensor.dryer_state", "mock_dryer_api"),
     ],
 )
 @pytest.mark.parametrize(
@@ -223,8 +223,8 @@ async def test_washer_dryer_machine_states(
 @pytest.mark.parametrize(
     ("entity_id", "mock_fixture"),
     [
-        ("sensor.washer_none", "mock_washer_api"),
-        ("sensor.dryer_none", "mock_dryer_api"),
+        ("sensor.washer_state", "mock_washer_api"),
+        ("sensor.dryer_state", "mock_dryer_api"),
     ],
 )
 @pytest.mark.parametrize(
@@ -280,8 +280,8 @@ async def test_washer_dryer_running_states(
 @pytest.mark.parametrize(
     ("entity_id", "mock_fixture"),
     [
-        ("sensor.washer_none", "mock_washer_api"),
-        ("sensor.dryer_none", "mock_dryer_api"),
+        ("sensor.washer_state", "mock_washer_api"),
+        ("sensor.dryer_state", "mock_dryer_api"),
     ],
 )
 async def test_washer_dryer_door_open_state(
