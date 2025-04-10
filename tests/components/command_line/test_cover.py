@@ -496,7 +496,7 @@ async def test_availability_blocks_value_template(
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test availability."""
+    """Test availability blocks value_template from rendering."""
     await hass.async_block_till_done()
     with mock_asyncio_subprocess_run(b"50\n"):
         freezer.tick(timedelta(minutes=1))

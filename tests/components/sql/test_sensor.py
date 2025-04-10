@@ -668,7 +668,7 @@ async def test_availability_blocks_value_template(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test availability."""
+    """Test availability blocks value_template from rendering."""
     config = YAML_CONFIG
     config["sql"]["value_template"] = "{{ x - 0 }}"
     config["sql"]["availability"] = "{{ x is defined }}"
