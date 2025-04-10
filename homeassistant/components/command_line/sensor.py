@@ -147,8 +147,13 @@ class CommandSensor(ManualTriggerSensorEntity):
         await self.data.async_update()
         value = self.data.value
 
+        variables = self._template_variables_with_value(self.data.value)
+        if not self._render_availability_template(variables):
+            self.async_write_ha_state()
+            return
+
         if self._json_attributes:
-            extra_state_attributes = {}
+            self._attr_extra_state_attributes = {}
             if value:
                 try:
                     json_dict = json.loads(value)
@@ -160,7 +165,7 @@ class CommandSensor(ManualTriggerSensorEntity):
                     if isinstance(json_dict, list):
                         json_dict = json_dict[0]
                     if isinstance(json_dict, Mapping):
-                        extra_state_attributes = {
+                        self._attr_extra_state_attributes = {
                             k: json_dict[k]
                             for k in self._json_attributes
                             if k in json_dict
@@ -174,18 +179,11 @@ class CommandSensor(ManualTriggerSensorEntity):
 
             if self._value_template is None:
                 self._attr_native_value = None
-                variables = self._template_variables_with_value(value)
-                if self._render_availability_template(variables):
-                    self._attr_extra_state_attributes = extra_state_attributes
-                    self._process_manual_data(variables)
+                self._process_manual_data(variables)
+                self.async_write_ha_state()
                 return
 
         self._attr_native_value = None
-        variables = self._template_variables_with_value(value)
-        if not self._render_availability_template(variables):
-            return
-
-        self._attr_extra_state_attributes = extra_state_attributes
         if self._value_template is not None and value is not None:
             value = self._value_template.async_render_as_value_template(
                 self.entity_id, variables, None

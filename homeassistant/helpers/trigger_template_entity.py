@@ -136,14 +136,12 @@ class ValueTemplate(Template):
                 self.template, compiled, **variables
             ).strip()
         except jinja2.TemplateError as ex:
+            message = f"Error parsing value for {entity_id}: {ex} (value: {variables['value']}, template: {self.template})"
+            logger = logging.getLogger(f"{__package__}.{entity_id.split('.')[0]}")
             if error_value is _SENTINEL:
-                logging.getLogger(f"{__package__}.{entity_id.split('.')[0]}").error(
-                    "Error parsing value for %s: %s (value: %s, template: %s)",
-                    entity_id,
-                    ex,
-                    variables["value"],
-                    self.template,
-                )
+                logger.error(message)
+            else:
+                logger.debug(message)
             return variables["value"] if error_value is _SENTINEL else error_value
 
         return render_result

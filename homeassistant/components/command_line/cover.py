@@ -170,6 +170,7 @@ class CommandCover(ManualTriggerEntity, CoverEntity):
 
             variables = self._template_variables_with_value(payload)
             if not self._render_availability_template(variables):
+                self.async_write_ha_state()
                 return
 
             if self._value_template:
