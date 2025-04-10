@@ -21,19 +21,19 @@ class ZimiEntity(Entity):
     _attr_should_poll = False
     _attr_has_entity_name = False
 
-    def __init__(self, entity: ControlPointDevice, api: ControlPoint) -> None:
+    def __init__(self, device: ControlPointDevice, api: ControlPoint) -> None:
         """Initialize an HA Entity which is a ZimiDevice."""
 
-        self._entity = entity
+        self._entity = device
         self._attr_unique_id = self._entity.identifier
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._entity.manufacture_info.identifier)},
             manufacturer=self._entity.manufacture_info.manufacturer,
             model=self._entity.manufacture_info.model,
             name=self._entity.manufacture_info.model,
-            hw_version=entity.manufacture_info.hwVersion,
-            sw_version=entity.manufacture_info.firmwareVersion,
-            suggested_area=entity.room,
+            hw_version=device.manufacture_info.hwVersion,
+            sw_version=device.manufacture_info.firmwareVersion,
+            suggested_area=device.room,
             via_device=(DOMAIN, api.mac),
         )
         self._attr_name = self._entity.name.strip()
