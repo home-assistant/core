@@ -13,7 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_connect_to_controller(
     host: str, port: int, fast: bool = False
-) -> ControlPoint | None:
+) -> ControlPoint:
     """Connect to Zimi Cloud Controller with defined parameters."""
 
     _LOGGER.debug("Connecting to %s:%d", host, port)
