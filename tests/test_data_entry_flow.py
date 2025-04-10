@@ -219,8 +219,8 @@ async def test_abort_aborted_flow(manager: MockFlowManager) -> None:
             manager.async_abort(self.flow_id)
             return self.async_abort(reason="blah")
 
-    with pytest.raises(data_entry_flow.UnknownFlow):
-        await manager.async_init("test")
+    form = await manager.async_init("test")
+    assert form["reason"] == "blah"
     assert len(manager.async_progress()) == 0
     assert len(manager.mock_created_entries) == 0
 
