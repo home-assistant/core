@@ -8,12 +8,11 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, PERCENTAGE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import SyncthruCoordinator, device_identifiers
+from . import SyncthruCoordinator
 from .const import DOMAIN
+from .entity import SyncthruEntity
 
 COLORS = ["black", "cyan", "magenta", "yellow"]
 DRUM_COLORS = COLORS
@@ -70,7 +69,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class SyncThruSensor(CoordinatorEntity[SyncthruCoordinator], SensorEntity):
+class SyncThruSensor(SyncthruEntity, SensorEntity):
     """Implementation of an abstract Samsung Printer sensor platform."""
 
     _attr_icon = "mdi:printer"
@@ -87,15 +86,6 @@ class SyncThruSensor(CoordinatorEntity[SyncthruCoordinator], SensorEntity):
         """Return unique ID for the sensor."""
         serial = self.syncthru.serial_number()
         return f"{serial}{self._id_suffix}" if serial else None
-
-    @property
-    def device_info(self) -> DeviceInfo | None:
-        """Return device information."""
-        if (identifiers := device_identifiers(self.syncthru)) is None:
-            return None
-        return DeviceInfo(
-            identifiers=identifiers,
-        )
 
 
 class SyncThruMainSensor(SyncThruSensor):
