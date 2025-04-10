@@ -16,6 +16,7 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import (
     PRECISION_TENTHS,
+    PRECISION_WHOLE,
     EntityCategory,
     UnitOfTemperature,
     UnitOfTime,
@@ -63,14 +64,16 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
         translation_key="smart_standby_time",
         device_class=NumberDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
-        native_step=1,
+        native_step=PRECISION_WHOLE,
         native_min_value=0,
         native_max_value=240,
         entity_category=EntityCategory.CONFIG,
-        set_value_fn=lambda machine, value: machine.set_smart_standby(
-            enabled=machine.schedule.smart_wake_up_sleep.smart_stand_by_enabled,
-            mode=machine.schedule.smart_wake_up_sleep.smart_stand_by_after,
-            minutes=int(value),
+        set_value_fn=(
+            lambda machine, value: machine.set_smart_standby(
+                enabled=machine.schedule.smart_wake_up_sleep.smart_stand_by_enabled,
+                mode=machine.schedule.smart_wake_up_sleep.smart_stand_by_after,
+                minutes=int(value),
+            )
         ),
         native_value_fn=lambda machine: machine.schedule.smart_wake_up_sleep.smart_stand_by_minutes,
     ),
