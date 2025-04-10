@@ -75,10 +75,12 @@ def _get_status_type(status: str | None) -> str | None:
         return None
 
     # If the status is not in the STATUS_TYPES, return the status as is.
-    for key, value in STATUS_TYPES.items():
-        if key in status:
-            return value
-    return status
+    for icann_status, hass_status in STATUS_TYPES.items():
+        if icann_status in status:
+            return hass_status
+
+    # If the status is not in the STATUS_TYPES, return None.
+    return None
 
 
 SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
