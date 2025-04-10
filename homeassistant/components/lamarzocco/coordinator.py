@@ -20,7 +20,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import DOMAIN
 
 SCAN_INTERVAL = timedelta(seconds=30)
-FIRMWARE_UPDATE_INTERVAL = timedelta(hours=1)
+SETTINGS_UPDATE_INTERVAL = timedelta(hours=1)
 SCHEDULE_UPDATE_INTERVAL = timedelta(minutes=5)
 _LOGGER = logging.getLogger(__name__)
 
@@ -116,7 +116,7 @@ class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
 class LaMarzoccoSettingsUpdateCoordinator(LaMarzoccoUpdateCoordinator):
     """Coordinator for La Marzocco settings."""
 
-    _default_update_interval = FIRMWARE_UPDATE_INTERVAL
+    _default_update_interval = SETTINGS_UPDATE_INTERVAL
 
     async def _internal_async_update_data(self) -> None:
         """Fetch data from API endpoint."""
