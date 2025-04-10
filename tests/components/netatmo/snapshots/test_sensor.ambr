@@ -499,7 +499,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_entity[sensor.baby_bedroom_wi_fi-entry]
+# name: test_entity[sensor.baby_bedroom_wi_fi_strength-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -512,7 +512,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.baby_bedroom_wi_fi',
+    'entity_id': 'sensor.baby_bedroom_wi_fi_strength',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -524,7 +524,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Wi-Fi',
+    'original_name': 'Wi-Fi strength',
     'platform': 'netatmo',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -533,16 +533,16 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity[sensor.baby_bedroom_wi_fi-state]
+# name: test_entity[sensor.baby_bedroom_wi_fi_strength-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Baby Bedroom Wi-Fi',
+      'friendly_name': 'Baby Bedroom Wi-Fi strength',
       'latitude': 13.377726,
       'longitude': 52.516263,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.baby_bedroom_wi_fi',
+    'entity_id': 'sensor.baby_bedroom_wi_fi_strength',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1033,7 +1033,7 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_entity[sensor.bedroom_wi_fi-entry]
+# name: test_entity[sensor.bedroom_wi_fi_strength-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1046,7 +1046,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.bedroom_wi_fi',
+    'entity_id': 'sensor.bedroom_wi_fi_strength',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1058,7 +1058,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Wi-Fi',
+    'original_name': 'Wi-Fi strength',
     'platform': 'netatmo',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1067,16 +1067,16 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity[sensor.bedroom_wi_fi-state]
+# name: test_entity[sensor.bedroom_wi_fi_strength-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Bedroom Wi-Fi',
+      'friendly_name': 'Bedroom Wi-Fi strength',
       'latitude': 13.377726,
       'longitude': 52.516263,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.bedroom_wi_fi',
+    'entity_id': 'sensor.bedroom_wi_fi_strength',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -3668,7 +3668,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_entity[sensor.kitchen_wi_fi-entry]
+# name: test_entity[sensor.kitchen_wi_fi_strength-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3681,7 +3681,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.kitchen_wi_fi',
+    'entity_id': 'sensor.kitchen_wi_fi_strength',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3693,7 +3693,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Wi-Fi',
+    'original_name': 'Wi-Fi strength',
     'platform': 'netatmo',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -3702,16 +3702,16 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity[sensor.kitchen_wi_fi-state]
+# name: test_entity[sensor.kitchen_wi_fi_strength-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Kitchen Wi-Fi',
+      'friendly_name': 'Kitchen Wi-Fi strength',
       'latitude': 13.377726,
       'longitude': 52.516263,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.kitchen_wi_fi',
+    'entity_id': 'sensor.kitchen_wi_fi_strength',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -4511,7 +4511,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_entity[sensor.livingroom_wi_fi-entry]
+# name: test_entity[sensor.livingroom_wi_fi_strength-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4524,7 +4524,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.livingroom_wi_fi',
+    'entity_id': 'sensor.livingroom_wi_fi_strength',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4536,7 +4536,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Wi-Fi',
+    'original_name': 'Wi-Fi strength',
     'platform': 'netatmo',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -4545,16 +4545,16 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity[sensor.livingroom_wi_fi-state]
+# name: test_entity[sensor.livingroom_wi_fi_strength-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Livingroom Wi-Fi',
+      'friendly_name': 'Livingroom Wi-Fi strength',
       'latitude': 13.377726,
       'longitude': 52.516263,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.livingroom_wi_fi',
+    'entity_id': 'sensor.livingroom_wi_fi_strength',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -5061,7 +5061,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_entity[sensor.parents_bedroom_wi_fi-entry]
+# name: test_entity[sensor.parents_bedroom_wi_fi_strength-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5074,7 +5074,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.parents_bedroom_wi_fi',
+    'entity_id': 'sensor.parents_bedroom_wi_fi_strength',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -5086,7 +5086,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Wi-Fi',
+    'original_name': 'Wi-Fi strength',
     'platform': 'netatmo',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -5095,16 +5095,16 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity[sensor.parents_bedroom_wi_fi-state]
+# name: test_entity[sensor.parents_bedroom_wi_fi_strength-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Parents Bedroom Wi-Fi',
+      'friendly_name': 'Parents Bedroom Wi-Fi strength',
       'latitude': 13.377726,
       'longitude': 52.516263,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.parents_bedroom_wi_fi',
+    'entity_id': 'sensor.parents_bedroom_wi_fi_strength',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -5586,7 +5586,7 @@
     'state': '55',
   })
 # ---
-# name: test_entity[sensor.villa_bathroom_radio-entry]
+# name: test_entity[sensor.villa_bathroom_rf_strength-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5599,7 +5599,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.villa_bathroom_radio',
+    'entity_id': 'sensor.villa_bathroom_rf_strength',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -5611,7 +5611,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Radio',
+    'original_name': 'RF strength',
     'platform': 'netatmo',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -5620,14 +5620,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity[sensor.villa_bathroom_radio-state]
+# name: test_entity[sensor.villa_bathroom_rf_strength-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Villa Bathroom Radio',
+      'friendly_name': 'Villa Bathroom RF strength',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.villa_bathroom_radio',
+    'entity_id': 'sensor.villa_bathroom_rf_strength',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -5945,7 +5945,7 @@
     'state': '53',
   })
 # ---
-# name: test_entity[sensor.villa_bedroom_radio-entry]
+# name: test_entity[sensor.villa_bedroom_rf_strength-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5958,7 +5958,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.villa_bedroom_radio',
+    'entity_id': 'sensor.villa_bedroom_rf_strength',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -5970,7 +5970,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Radio',
+    'original_name': 'RF strength',
     'platform': 'netatmo',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -5979,14 +5979,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity[sensor.villa_bedroom_radio-state]
+# name: test_entity[sensor.villa_bedroom_rf_strength-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Villa Bedroom Radio',
+      'friendly_name': 'Villa Bedroom RF strength',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.villa_bedroom_radio',
+    'entity_id': 'sensor.villa_bedroom_rf_strength',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -6429,7 +6429,7 @@
     'state': '9',
   })
 # ---
-# name: test_entity[sensor.villa_garden_radio-entry]
+# name: test_entity[sensor.villa_garden_rf_strength-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6442,7 +6442,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.villa_garden_radio',
+    'entity_id': 'sensor.villa_garden_rf_strength',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -6454,7 +6454,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Radio',
+    'original_name': 'RF strength',
     'platform': 'netatmo',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -6463,14 +6463,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity[sensor.villa_garden_radio-state]
+# name: test_entity[sensor.villa_garden_rf_strength-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Villa Garden Radio',
+      'friendly_name': 'Villa Garden RF strength',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.villa_garden_radio',
+    'entity_id': 'sensor.villa_garden_rf_strength',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -6917,7 +6917,7 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_entity[sensor.villa_outdoor_radio-entry]
+# name: test_entity[sensor.villa_outdoor_rf_strength-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6930,7 +6930,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.villa_outdoor_radio',
+    'entity_id': 'sensor.villa_outdoor_rf_strength',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -6942,7 +6942,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Radio',
+    'original_name': 'RF strength',
     'platform': 'netatmo',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -6951,14 +6951,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity[sensor.villa_outdoor_radio-state]
+# name: test_entity[sensor.villa_outdoor_rf_strength-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Villa Outdoor Radio',
+      'friendly_name': 'Villa Outdoor RF strength',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.villa_outdoor_radio',
+    'entity_id': 'sensor.villa_outdoor_rf_strength',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -7382,7 +7382,7 @@
     'state': '6.9',
   })
 # ---
-# name: test_entity[sensor.villa_rain_radio-entry]
+# name: test_entity[sensor.villa_rain_rf_strength-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7395,7 +7395,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.villa_rain_radio',
+    'entity_id': 'sensor.villa_rain_rf_strength',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -7407,7 +7407,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Radio',
+    'original_name': 'RF strength',
     'platform': 'netatmo',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -7416,14 +7416,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity[sensor.villa_rain_radio-state]
+# name: test_entity[sensor.villa_rain_rf_strength-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Villa Rain Radio',
+      'friendly_name': 'Villa Rain RF strength',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.villa_rain_radio',
+    'entity_id': 'sensor.villa_rain_rf_strength',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -7636,7 +7636,7 @@
     'state': 'stable',
   })
 # ---
-# name: test_entity[sensor.villa_wi_fi-entry]
+# name: test_entity[sensor.villa_wi_fi_strength-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7649,7 +7649,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.villa_wi_fi',
+    'entity_id': 'sensor.villa_wi_fi_strength',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -7661,7 +7661,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Wi-Fi',
+    'original_name': 'Wi-Fi strength',
     'platform': 'netatmo',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -7670,16 +7670,16 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity[sensor.villa_wi_fi-state]
+# name: test_entity[sensor.villa_wi_fi_strength-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Villa Wi-Fi',
+      'friendly_name': 'Villa Wi-Fi strength',
       'latitude': 46.123456,
       'longitude': 6.1234567,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.villa_wi_fi',
+    'entity_id': 'sensor.villa_wi_fi_strength',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

@@ -207,6 +207,13 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         Handler key is the domain of the component that we want to set up.
         """
 
+    @callback
+    def async_flow_removed(
+        self,
+        flow: FlowHandler[_FlowContextT, _FlowResultT, _HandlerT],
+    ) -> None:
+        """Handle a removed data entry flow."""
+
     @abc.abstractmethod
     async def async_finish_flow(
         self,
@@ -218,13 +225,6 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         This method is called when a flow step returns FlowResultType.ABORT or
         FlowResultType.CREATE_ENTRY.
         """
-
-    async def async_post_init(
-        self,
-        flow: FlowHandler[_FlowContextT, _FlowResultT, _HandlerT],
-        result: _FlowResultT,
-    ) -> None:
-        """Entry has finished executing its first step asynchronously."""
 
     @callback
     def async_get(self, flow_id: str) -> _FlowResultT:
@@ -312,12 +312,7 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         flow.init_data = data
         self._async_add_flow_progress(flow)
 
-        result = await self._async_handle_step(flow, flow.init_step, data)
-
-        if result["type"] != FlowResultType.ABORT:
-            await self.async_post_init(flow, result)
-
-        return result
+        return await self._async_handle_step(flow, flow.init_step, data)
 
     async def async_configure(
         self, flow_id: str, user_input: dict | None = None
@@ -469,6 +464,7 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         """Remove a flow from in progress."""
         if (flow := self._progress.pop(flow_id, None)) is None:
             raise UnknownFlow
+        self.async_flow_removed(flow)
         self._async_remove_flow_from_index(flow)
         flow.async_cancel_progress_task()
         try:
@@ -496,6 +492,10 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
                 reason=err.reason,
                 description_placeholders=err.description_placeholders,
             )
+
+        if flow.flow_id not in self._progress:
+            # The flow was removed during the step
+            raise UnknownFlow
 
         # Setup the flow handler's preview if needed
         if result.get("preview") is not None:
