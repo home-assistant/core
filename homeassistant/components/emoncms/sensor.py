@@ -191,7 +191,6 @@ ATTR_SIZE = "Size"
 ATTR_TAG = "Tag"
 ATTR_USERID = "UserId"
 DECIMALS = 2
-DEFAULT_UNIT = UnitOfPower.WATT
 
 
 async def async_setup_entry(
