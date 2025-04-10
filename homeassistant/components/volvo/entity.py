@@ -1,14 +1,15 @@
 """Volvo entity classes."""
 
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
-from volvocarsapi.models import VolvoCarsApiBaseModel
+from volvocarsapi.models import VolvoCarsApiBaseModel, VolvoCarsValueField
 
 from homeassistant.core import callback
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_VIN, DOMAIN
+from .const import ATTR_API_TIMESTAMP, CONF_VIN, DOMAIN
 from .coordinator import VolvoDataCoordinator
 
 
@@ -29,7 +30,7 @@ class VolvoEntityDescription(EntityDescription):
     api_field: str
 
 
-class VolvoEntity(CoordinatorEntity[VolvoDataCoordinator]):
+class VolvoEntity(ABC, CoordinatorEntity[VolvoDataCoordinator]):
     """Volvo base entity."""
 
     _attr_has_entity_name = True
@@ -43,12 +44,11 @@ class VolvoEntity(CoordinatorEntity[VolvoDataCoordinator]):
         super().__init__(coordinator)
 
         self.entity_description: VolvoEntityDescription = description
-
         self._attr_unique_id = get_unique_id(
             coordinator.config_entry.data[CONF_VIN], description.key
         )
-
         self._attr_device_info = coordinator.device
+        self._attr_extra_state_attributes = {}
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
@@ -61,9 +61,13 @@ class VolvoEntity(CoordinatorEntity[VolvoDataCoordinator]):
         api_field = self.coordinator.get_api_field(self.entity_description.api_field)
 
         self._attr_available = super().available and api_field is not None
-        self._update_state(api_field)
 
+        if isinstance(api_field, VolvoCarsValueField):
+            self._attr_extra_state_attributes[ATTR_API_TIMESTAMP] = api_field.timestamp
+
+        self._update_state(api_field)
         super()._handle_coordinator_update()
 
+    @abstractmethod
     def _update_state(self, api_field: VolvoCarsApiBaseModel | None) -> None:
-        pass
+        raise NotImplementedError

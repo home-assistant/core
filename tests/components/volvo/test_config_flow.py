@@ -1,9 +1,9 @@
 """Test the Volvo config flow."""
 
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock
 
 import pytest
-from volvocarsapi.api import _API_CONNECTED_ENDPOINT, _API_URL
+from volvocarsapi.api import _API_CONNECTED_ENDPOINT, _API_URL, VolvoCarsApi
 from volvocarsapi.auth import TOKEN_URL
 from volvocarsapi.models import VolvoApiException
 
@@ -15,6 +15,7 @@ from homeassistant.components.volvo.const import (
     OPT_FUEL_UNIT_MPG_UK,
     OPT_FUEL_UNIT_MPG_US,
 )
+from homeassistant.components.volvo.coordinator import VolvoData
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
@@ -22,6 +23,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM, UnitSystem
 
+from .conftest import model
 from .const import REDIRECT_URI
 
 from tests.common import METRIC_SYSTEM, MockConfigEntry
@@ -85,7 +87,7 @@ async def test_single_vin_flow(
     aioclient_mock.get(
         f"{_API_URL}{_API_CONNECTED_ENDPOINT}",
         json={
-            "data": [{"vin": "YV123456789"}],
+            "data": [{"vin": "YV1ABCDEFG1234567"}],
         },
     )
 
@@ -101,7 +103,7 @@ async def test_single_vin_flow(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.usefixtures("current_request_with_host", "setup_credentials")
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_reauth_flow(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -148,7 +150,7 @@ async def test_reconfigure_flow(
     aioclient_mock.get(
         f"{_API_URL}{_API_CONNECTED_ENDPOINT}",
         json={
-            "data": [{"vin": "YV123456789"}, {"vin": "YV198765432"}],
+            "data": [{"vin": "YV1ABCDEFG1234567"}, {"vin": "YV10000000AAAAAAA"}],
         },
     )
 
@@ -222,8 +224,6 @@ async def test_options_flow(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, fuel_unit: str
 ) -> None:
     """Test options flow."""
-    mock_config_entry.runtime_data = AsyncMock()
-
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
@@ -235,16 +235,13 @@ async def test_options_flow(
     assert mock_config_entry.options[OPT_FUEL_CONSUMPTION_UNIT] == fuel_unit
 
 
+@model("xc40_electric_2024")
 async def test_no_options_flow(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: VolvoCarsApi
 ) -> None:
     """Test options flow where no options are available."""
-    mock_config_entry.runtime_data = AsyncMock()
-    mock_config_entry.runtime_data.coordinator = AsyncMock()
-    mock_config_entry.runtime_data.coordinator.vehicle = AsyncMock()
-    mock_config_entry.runtime_data.coordinator.vehicle.has_combustion_engine = Mock(
-        return_value=False
-    )
+    volvo_data: VolvoData = mock_config_entry.runtime_data
+    volvo_data.coordinator.vehicle = await mock_api.async_get_vehicle_details()
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
     assert result["type"] is FlowResultType.ABORT
@@ -271,7 +268,7 @@ async def _async_run_flow_to_completion(
     aioclient_mock.get(
         f"{_API_URL}{_API_CONNECTED_ENDPOINT}",
         json={
-            "data": [{"vin": "YV123456789"}, {"vin": "YV198765432"}],
+            "data": [{"vin": "YV1ABCDEFG1234567"}, {"vin": "YV10000000AAAAAAA"}],
         },
     )
 
@@ -288,7 +285,7 @@ async def _async_run_flow_to_completion(
         assert config_flow["step_id"] == "vin"
 
         config_flow = await hass.config_entries.flow.async_configure(
-            config_flow["flow_id"], {CONF_VIN: "YV123456789"}
+            config_flow["flow_id"], {CONF_VIN: "YV1ABCDEFG1234567"}
         )
 
     return config_flow

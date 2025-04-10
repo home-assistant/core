@@ -389,8 +389,7 @@ class VolvoSensor(VolvoEntity, SensorEntity):
             )
 
     def _update_state(self, api_field: VolvoCarsApiBaseModel | None) -> None:
-        if not isinstance(api_field, VolvoCarsValue):
-            return
+        assert isinstance(api_field, VolvoCarsValue)
 
         native_value = (
             api_field.value
