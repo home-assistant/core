@@ -215,7 +215,7 @@ class HomeConnectCoordinator(
                             events = self.data[event_message_ha_id].events
                             for event in event_message.data.items:
                                 event_key = event.key
-                                if event_key in SettingKey:
+                                if event_key in SettingKey.__members__.values():  # type: ignore[comparison-overlap]
                                     setting_key = SettingKey(event_key)
                                     if setting_key in settings:
                                         settings[setting_key].value = event.value
