@@ -58,5 +58,6 @@ class SmartThingsButtonEvent(SmartThingsEntity, EventEntity):
         )
 
     def _update_handler(self, event: DeviceEvent) -> None:
-        self._trigger_event(cast(str, event.value))
-        self.async_write_ha_state()
+        if event.attribute is Attribute.BUTTON:
+            self._trigger_event(cast(str, event.value))
+        super()._update_handler(event)
