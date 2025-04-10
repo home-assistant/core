@@ -288,3 +288,44 @@ async def test_create_devices(
     assert device_registry.async_get_device(
         {(DOMAIN, f"{bring_config_entry.unique_id}_{list_uuid}")}
     )
+
+
+@pytest.mark.usefixtures("mock_bring_client")
+async def test_coordinator_update_intervals(
+    hass: HomeAssistant,
+    bring_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    mock_bring_client: AsyncMock,
+) -> None:
+    """Test the coordinator updates at the specified intervals."""
+    await setup_integration(hass, bring_config_entry)
+
+    assert bring_config_entry.state is ConfigEntryState.LOADED
+
+    # fetch 2 lists on first refresh
+    assert mock_bring_client.load_lists.await_count == 2
+    assert mock_bring_client.get_activity.await_count == 2
+
+    mock_bring_client.load_lists.reset_mock()
+    mock_bring_client.get_activity.reset_mock()
+
+    mock_bring_client.load_lists.return_value = BringListResponse.from_json(
+        load_fixture("lists2.json", DOMAIN)
+    )
+    freezer.tick(timedelta(seconds=90))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # main coordinator refreshes, activity does not
+    assert mock_bring_client.load_lists.await_count == 1
+    assert mock_bring_client.get_activity.await_count == 0
+
+    mock_bring_client.load_lists.reset_mock()
+    mock_bring_client.get_activity.reset_mock()
+
+    freezer.tick(timedelta(seconds=510))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # assert activity refreshes after 10min and has up-to-date lists data
+    assert mock_bring_client.get_activity.await_count == 1
