@@ -192,7 +192,7 @@ async def test_arm_home_instant_failure(hass: HomeAssistant) -> None:
                 DOMAIN, SERVICE_ALARM_ARM_HOME_INSTANT, DATA, blocking=True
             )
         await hass.async_block_till_done()
-        assert f"{err.value}" == "Usercode is invalid, did not arm home instant"
+        assert str(err.value) == "Usercode is invalid, did not arm home instant"
         assert hass.states.get(ENTITY_ID).state == AlarmControlPanelState.DISARMED
         # should have started a re-auth flow
         assert len(hass.config_entries.flow.async_progress_by_handler(DOMAIN)) == 1
