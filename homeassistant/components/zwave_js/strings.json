@@ -247,7 +247,7 @@
       },
       "instruct_unplug": {
         "title": "Unplug your old radio",
-        "description": "Backup saved to \"{file_path}\"\n\nYour old radio has been reset. If the hardware is no longer needed, you can now unplug it.\n\nYou can now plug in your new radio."
+        "description": "Backup saved to \"{file_path}\"\n\nYour old radio has been reset. If the hardware is no longer needed, you can now unplug it.\n\nPlease make sure your new radio is plugged in before continuing."
       },
       "configure_addon": {
         "data": {
