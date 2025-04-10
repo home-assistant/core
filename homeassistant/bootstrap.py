@@ -171,8 +171,6 @@ FRONTEND_INTEGRATIONS = {
 # Stage 0 is divided into substages. Each substage has a name, a set of integrations and a timeout.
 # The substage containing recorder should have no timeout, as it could cancel a database migration.
 # Recorder freezes "recorder" timeout during a migration, but it does not freeze other timeouts.
-# The substages preceding it should also have no timeout, until we ensure that the recorder
-# is not accidentally promoted as a dependency of any of the integrations in them.
 # If we add timeouts to the frontend substages, we should make sure they don't apply in recovery mode.
 STAGE_0_INTEGRATIONS = (
     # Load logging and http deps as soon as possible
