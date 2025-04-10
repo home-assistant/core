@@ -89,6 +89,11 @@ class LaMarzoccoUpdateEntity(LaMarzoccoEntity, UpdateEntity):
             return available_update.build_version
         return self.installed_version
 
+    @property
+    def release_url(self) -> str | None:
+        """Return the release notes URL."""
+        return "https://support-iot.lamarzocco.com/firmware-updates/"
+
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
