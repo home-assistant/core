@@ -7,14 +7,16 @@ import logging
 from zcc import ControlPoint, ControlPointError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
-from .const import DOMAIN, PLATFORMS
+from .const import DOMAIN
 from .helpers import async_connect_to_controller
+
+PLATFORMS = [Platform.LIGHT]
 
 _LOGGER = logging.getLogger(__name__)
 
