@@ -245,12 +245,12 @@ class HomeConnectCoordinator(
                             self._call_event_listener(event_message)
 
                         case EventType.CONNECTED | EventType.PAIRED:
+                            if self.refreshed_too_often_recently(event_message_ha_id):
+                                continue
+
                             appliance_info = await self.client.get_specific_appliance(
                                 event_message_ha_id
                             )
-
-                            if self.refreshed_too_often_recently(event_message_ha_id):
-                                continue
 
                             appliance_data = await self._get_appliance_data(
                                 appliance_info, self.data.get(appliance_info.ha_id)
