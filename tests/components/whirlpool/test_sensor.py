@@ -1,8 +1,6 @@
 """Test the Whirlpool Sensor domain."""
 
-from collections.abc import Generator
 from datetime import UTC, datetime, timedelta
-from unittest import mock
 from unittest.mock import MagicMock
 
 import pytest
@@ -21,16 +19,6 @@ from tests.common import async_fire_time_changed, mock_restore_cache_with_extra_
 
 WASHER_ENTITY_ID_BASE = "sensor.washer"
 DRYER_ENTITY_ID_BASE = "sensor.dryer"
-
-
-@pytest.fixture
-def entity_registry_enabled_by_default() -> Generator[None]:
-    """Test fixture that ensures entities are enabled in the registry."""
-    with mock.patch(
-        "homeassistant.components.whirlpool.sensor.WhirlpoolSensor.entity_registry_enabled_default",
-        return_value=True,
-    ):
-        yield
 
 
 async def trigger_attr_callback(
