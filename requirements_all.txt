@@ -1222,6 +1222,9 @@ igloohome-api==0.1.0
 # homeassistant.components.ihc
 ihcsdk==2.8.5
 
+# homeassistant.components.imeon_inverter
+imeon_inverter_api==0.3.12
+
 # homeassistant.components.imgw_pib
 imgw_pib==1.0.10
 
@@ -1317,7 +1320,7 @@ ld2410-ble==0.1.1
 leaone-ble==0.1.0
 
 # homeassistant.components.led_ble
-led-ble==1.1.6
+led-ble==1.1.7
 
 # homeassistant.components.lektrico
 lektricowifi==0.0.43
@@ -1353,7 +1356,7 @@ linear-garage-door==0.2.9
 linode-api==4.1.9b1
 
 # homeassistant.components.livisi
-livisi==0.0.24
+livisi==0.0.25
 
 # homeassistant.components.google_maps
 locationsharinglib==5.0.1
