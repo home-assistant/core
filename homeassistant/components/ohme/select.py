@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any, Final
 
@@ -24,7 +24,7 @@ PARALLEL_UPDATES = 1
 class OhmeSelectDescription(OhmeEntityDescription, SelectEntityDescription):
     """Class to describe an Ohme select entity."""
 
-    select_fn: Callable[[OhmeApiClient, Any], Awaitable[None]]
+    select_fn: Callable[[OhmeApiClient, Any], Coroutine[Any, Any, bool | None]]
     options: list[str] | None = None
     options_fn: Callable[[OhmeApiClient], list[str]] | None = None
     current_option_fn: Callable[[OhmeApiClient], str | None]

@@ -66,28 +66,28 @@
         "name": "Upload"
       },
       "load_avg_1m": {
-        "name": "Average load (1m)"
+        "name": "Average load (1 min)"
       },
       "load_avg_5m": {
-        "name": "Average load (5m)"
+        "name": "Average load (5 min)"
       },
       "load_avg_15m": {
-        "name": "Average load (15m)"
+        "name": "Average load (15 min)"
       },
       "24ghz_temperature": {
-        "name": "2.4GHz Temperature"
+        "name": "2.4GHz temperature"
       },
       "5ghz_temperature": {
-        "name": "5GHz Temperature"
+        "name": "5GHz temperature"
       },
       "cpu_temperature": {
-        "name": "CPU Temperature"
+        "name": "CPU temperature"
       },
       "5ghz_2_temperature": {
-        "name": "5GHz Temperature (Radio 2)"
+        "name": "5GHz temperature (Radio 2)"
       },
       "6ghz_temperature": {
-        "name": "6GHz Temperature"
+        "name": "6GHz temperature"
       },
       "cpu_usage": {
         "name": "CPU usage"

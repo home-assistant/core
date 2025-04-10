@@ -445,6 +445,7 @@ async def test_connection_test(
 
     assert len(entity.announcements) == 1
     assert entity.announcements[0].message == ""
+    assert entity.announcements[0].preannounce_media_id is None
     announcement_media_id = entity.announcements[0].media_id
     hass_url = "http://10.10.10.10:8123"
     assert announcement_media_id.startswith(

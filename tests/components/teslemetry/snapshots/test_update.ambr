@@ -41,7 +41,7 @@
       'entity_picture': 'https://brands.home-assistant.io/_/teslemetry/icon.png',
       'friendly_name': 'Test Update',
       'in_progress': False,
-      'installed_version': '2024.44.25',
+      'installed_version': '2026.0.0',
       'latest_version': '2024.12.0.0',
       'release_summary': None,
       'release_url': None,

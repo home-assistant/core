@@ -115,6 +115,7 @@ SENSOR_TYPES: tuple[NWSSensorEntityDescription, ...] = (
         native_unit_of_measurement=DEGREE,
         unit_convert=DEGREE,
         device_class=SensorDeviceClass.WIND_DIRECTION,
+        state_class=SensorStateClass.MEASUREMENT_ANGLE,
     ),
     NWSSensorEntityDescription(
         key="barometricPressure",
