@@ -1,12 +1,13 @@
 """Test the Miele config flow."""
 
-from unittest.mock import patch
+from collections.abc import Generator
+from unittest.mock import AsyncMock
 
 from pymiele import OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components.miele.const import DOMAIN
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -19,17 +20,19 @@ from tests.typing import ClientSessionGenerator
 
 REDIRECT_URL = "https://example.com/auth/external/callback"
 
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
+
 
 @pytest.mark.usefixtures("current_request_with_host")
 async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    setup_credentials: None,
+    mock_setup_entry: Generator[AsyncMock],
 ) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -61,13 +64,11 @@ async def test_full_flow(
         },
     )
 
-    with patch(
-        "homeassistant.components.miele.async_setup_entry", return_value=True
-    ) as mock_setup:
-        await hass.config_entries.flow.async_configure(result["flow_id"])
+    await hass.config_entries.flow.async_configure(result["flow_id"])
 
+    assert result.get("type") is FlowResultType.EXTERNAL_STEP
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -75,12 +76,11 @@ async def test_flow_reauth_abort(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    setup_credentials: None,
     mock_config_entry: MockConfigEntry,
     access_token: str,
     expires_at: float,
 ) -> None:
-    """Test reauth step with correct params and mismatches."""
+    """Test reauth step with correct params."""
 
     CURRENT_TOKEN = {
         "auth_implementation": DOMAIN,
@@ -136,11 +136,8 @@ async def test_flow_reauth_abort(
         },
     )
 
-    with patch(
-        f"homeassistant.components.{DOMAIN}.async_setup_entry", return_value=True
-    ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    await hass.async_block_till_done()
 
     assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "reauth_successful"
@@ -153,7 +150,6 @@ async def test_flow_reconfigure_abort(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    setup_credentials: None,
     mock_config_entry: MockConfigEntry,
     access_token: str,
     expires_at: float,
@@ -209,11 +205,8 @@ async def test_flow_reconfigure_abort(
         },
     )
 
-    with patch(
-        f"homeassistant.components.{DOMAIN}.async_setup_entry", return_value=True
-    ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    await hass.async_block_till_done()
 
     assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "reconfigure_successful"

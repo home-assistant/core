@@ -2,7 +2,7 @@
 
 from collections.abc import AsyncGenerator, Generator
 import time
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from pymiele import MieleAction, MieleDevices
 import pytest
@@ -13,11 +13,10 @@ from homeassistant.components.application_credentials import (
 )
 from homeassistant.components.miele.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 from homeassistant.util.json import json_loads
 
-from .const import CLIENT_ID, CLIENT_SECRET, UNIQUE_ID
+from .const import CLIENT_ID, CLIENT_SECRET
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -46,7 +45,6 @@ def mock_config_entry(hass: HomeAssistant, expires_at: float) -> MockConfigEntry
             },
         },
         entry_id="miele_test",
-        unique_id=UNIQUE_ID,
     )
     config_entry.add_to_hass(hass)
     return config_entry
@@ -114,21 +112,6 @@ def mock_miele_client(
 
 
 @pytest.fixture
-async def init_integration(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_miele_client: MagicMock,
-) -> MockConfigEntry:
-    """Set up the miele integration for testing."""
-    mock_config_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    return mock_config_entry
-
-
-@pytest.fixture
 def platforms() -> list[str]:
     """Fixture for platforms."""
     return []
@@ -151,12 +134,13 @@ async def setup_platform(
 @pytest.fixture
 async def access_token(hass: HomeAssistant) -> str:
     """Return a valid access token."""
-    return config_entry_oauth2_flow._encode_jwt(
-        hass,
-        {
-            "sub": UNIQUE_ID,
-            "aud": [],
-            "scp": [],
-            "ou_code": "NA",
-        },
-    )
+    return "mock-access-token"
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.miele.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry

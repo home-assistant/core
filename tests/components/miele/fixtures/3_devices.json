@@ -1,5 +1,5 @@
 {
-  "Appliance_1": {
+  "Dummy_Appliance_1": {
     "ident": {
       "type": {
         "key_localized": "Device type",
@@ -9,7 +9,7 @@
       "deviceName": "",
       "protocolVersion": 201,
       "deviceIdentLabel": {
-        "fabNumber": "Appliance_1",
+        "fabNumber": "Dummy_Appliance_1",
         "fabIndex": "21",
         "techType": "FNS 28463 E ed/",
         "matNumber": "10805070",
@@ -111,7 +111,7 @@
       "batteryLevel": null
     }
   },
-  "Appliance_2": {
+  "Dummy_Appliance_2": {
     "ident": {
       "type": {
         "key_localized": "Device type",
@@ -121,7 +121,7 @@
       "deviceName": "",
       "protocolVersion": 201,
       "deviceIdentLabel": {
-        "fabNumber": "Appliance_2",
+        "fabNumber": "Dummy_Appliance_2",
         "fabIndex": "17",
         "techType": "KS 28423 D ed/c",
         "matNumber": "10804770",
@@ -223,7 +223,7 @@
       "batteryLevel": null
     }
   },
-  "000186528088": {
+  "Dummy_Appliance_3": {
     "ident": {
       "type": {
         "key_localized": "Device type",
@@ -233,7 +233,7 @@
       "deviceName": "",
       "protocolVersion": 4,
       "deviceIdentLabel": {
-        "fabNumber": "000186528088",
+        "fabNumber": "Dummy_Appliance_3",
         "fabIndex": "44",
         "techType": "WCI870",
         "matNumber": "11387290",

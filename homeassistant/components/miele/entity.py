@@ -27,7 +27,7 @@ class MieleEntity(CoordinatorEntity[MieleDataUpdateCoordinator]):
         self.entity_description = description
         self._attr_unique_id = f"{device_id}-{description.key}"
 
-        device = self.coordinator.data.devices[device_id]
+        device = self.device
         appliance_type = DEVICE_TYPE_TAGS.get(MieleAppliance(device.device_type))
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device_id)},

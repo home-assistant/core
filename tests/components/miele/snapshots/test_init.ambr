@@ -14,7 +14,7 @@
     'identifiers': set({
       tuple(
         'miele',
-        'Appliance_1',
+        'Dummy_Appliance_1',
       ),
     }),
     'is_new': False,
@@ -26,7 +26,7 @@
     'name': 'Freezer',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': 'Appliance_1',
+    'serial_number': 'Dummy_Appliance_1',
     'suggested_area': None,
     'sw_version': '31.17',
     'via_device_id': None,

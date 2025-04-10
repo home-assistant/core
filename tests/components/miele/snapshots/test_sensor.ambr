@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensor_states[sensor.freezer-entry]
+# name: test_sensor_states[platforms0][sensor.freezer-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -50,11 +50,11 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'status',
-    'unique_id': 'Appliance_1-state_status',
+    'unique_id': 'Dummy_Appliance_1-state_status',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_states[sensor.freezer-state]
+# name: test_sensor_states[platforms0][sensor.freezer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -89,7 +89,7 @@
     'state': 'running',
   })
 # ---
-# name: test_sensor_states[sensor.freezer_temperature-entry]
+# name: test_sensor_states[platforms0][sensor.freezer_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -121,11 +121,11 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'Appliance_1-state_temperature_1',
+    'unique_id': 'Dummy_Appliance_1-state_temperature_1',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensor_states[sensor.freezer_temperature-state]
+# name: test_sensor_states[platforms0][sensor.freezer_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -141,7 +141,7 @@
     'state': '-18.0',
   })
 # ---
-# name: test_sensor_states[sensor.refrigerator-entry]
+# name: test_sensor_states[platforms0][sensor.refrigerator-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -192,11 +192,11 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'status',
-    'unique_id': 'Appliance_2-state_status',
+    'unique_id': 'Dummy_Appliance_2-state_status',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_states[sensor.refrigerator-state]
+# name: test_sensor_states[platforms0][sensor.refrigerator-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -231,7 +231,7 @@
     'state': 'running',
   })
 # ---
-# name: test_sensor_states[sensor.refrigerator_temperature-entry]
+# name: test_sensor_states[platforms0][sensor.refrigerator_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -263,11 +263,11 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'Appliance_2-state_temperature_1',
+    'unique_id': 'Dummy_Appliance_2-state_temperature_1',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensor_states[sensor.refrigerator_temperature-state]
+# name: test_sensor_states[platforms0][sensor.refrigerator_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -283,7 +283,7 @@
     'state': '4.0',
   })
 # ---
-# name: test_sensor_states[sensor.washing_machine-entry]
+# name: test_sensor_states[platforms0][sensor.washing_machine-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -334,11 +334,11 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'status',
-    'unique_id': '000186528088-state_status',
+    'unique_id': 'Dummy_Appliance_3-state_status',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_states[sensor.washing_machine-state]
+# name: test_sensor_states[platforms0][sensor.washing_machine-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
