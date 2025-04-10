@@ -935,10 +935,11 @@ async def test_get_progress_subscribe(
             assert self._get_reconfigure_entry() is entry
             return await self.async_step_account()
 
-    await ws_client.send_json_auto_id({"type": "config_entries/flow/subscribe"})
+    await ws_client.send_json({"id": 1, "type": "config_entries/flow/subscribe"})
     response = await ws_client.receive_json()
-    assert response == {"id": ANY, "result": None, "success": True, "type": "result"}
-    subscription = response["id"]
+    assert response == {"id": 1, "event": [], "type": "event"}
+    response = await ws_client.receive_json()
+    assert response == {"id": 1, "result": None, "success": True, "type": "result"}
 
     flow_context = {
         "bluetooth": {"source": core_ce.SOURCE_BLUETOOTH},
@@ -968,26 +969,30 @@ async def test_get_progress_subscribe(
     for key in ("hassio", "reauth"):
         response = await ws_client.receive_json()
         assert response == {
-            "event": {
-                "flow": {
+            "event": [
+                {
+                    "flow": {
+                        "flow_id": forms[key]["flow_id"],
+                        "handler": "test",
+                        "step_id": "account",
+                        "context": flow_context[key],
+                    },
                     "flow_id": forms[key]["flow_id"],
-                    "handler": "test",
-                    "step_id": "account",
-                    "context": flow_context[key],
-                },
-                "flow_id": forms[key]["flow_id"],
-                "type": "init",
-            },
-            "id": subscription,
+                    "type": "added",
+                }
+            ],
+            "id": 1,
             "type": "event",
         }
     for key in ("hassio", "reauth"):
         response = await ws_client.receive_json()
         assert response == {
-            "event": {
-                "flow_id": forms[key]["flow_id"],
-                "type": "remove",
-            },
+            "event": [
+                {
+                    "flow_id": forms[key]["flow_id"],
+                    "type": "removed",
+                }
+            ],
             "id": 1,
             "type": "event",
         }
@@ -1071,26 +1076,27 @@ async def test_get_progress_subscribe_in_progress(
     # should be filtered out
     responses = []
     responses.append(await ws_client.receive_json())
-    responses.append(await ws_client.receive_json())
-    assert responses == unordered(
-        [
-            {
-                "event": {
-                    "flow": {
+    assert responses == [
+        {
+            "event": unordered(
+                [
+                    {
+                        "flow": {
+                            "flow_id": forms[key]["flow_id"],
+                            "handler": "test",
+                            "step_id": "account",
+                            "context": flow_context[key],
+                        },
                         "flow_id": forms[key]["flow_id"],
-                        "handler": "test",
-                        "step_id": "account",
-                        "context": flow_context[key],
-                    },
-                    "flow_id": forms[key]["flow_id"],
-                    "type": "init",
-                },
-                "id": 1,
-                "type": "event",
-            }
-            for key in ("hassio", "reauth")
-        ]
-    )
+                        "type": None,
+                    }
+                    for key in ("hassio", "reauth")
+                ]
+            ),
+            "id": 1,
+            "type": "event",
+        }
+    ]
 
     response = await ws_client.receive_json()
     assert response == {"id": ANY, "result": None, "success": True, "type": "result"}
@@ -1101,10 +1107,12 @@ async def test_get_progress_subscribe_in_progress(
     for key in ("hassio", "reauth"):
         response = await ws_client.receive_json()
         assert response == {
-            "event": {
-                "flow_id": forms[key]["flow_id"],
-                "type": "remove",
-            },
+            "event": [
+                {
+                    "flow_id": forms[key]["flow_id"],
+                    "type": "removed",
+                }
+            ],
             "id": 1,
             "type": "event",
         }

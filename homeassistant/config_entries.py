@@ -1467,7 +1467,7 @@ class ConfigEntriesFlowManager(
         ):
             # Notify listeners that a flow is created
             for subscription in self._flow_subscriptions:
-                subscription("init", flow.flow_id)
+                subscription("added", flow.flow_id)
 
         return result
 
@@ -1768,7 +1768,7 @@ class ConfigEntriesFlowManager(
         ):
             return
         for listeners in self._flow_subscriptions:
-            listeners("remove", flow_id)
+            listeners("removed", flow_id)
 
 
 class ConfigEntryItems(UserDict[str, ConfigEntry]):

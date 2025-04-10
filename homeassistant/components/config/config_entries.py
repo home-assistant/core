@@ -397,41 +397,45 @@ def config_entries_flow_subscribe(
     @callback
     def async_on_flow_init_remove(change_type: str, flow_id: str) -> None:
         """Forward config entry state events to websocket."""
-        if change_type == "remove":
+        if change_type == "removed":
             connection.send_message(
                 websocket_api.event_message(
                     msg["id"],
-                    {"type": change_type, "flow_id": flow_id},
+                    [{"type": change_type, "flow_id": flow_id}],
                 )
             )
             return
-        # change_type == "init"
+        # change_type == "added"
         connection.send_message(
             websocket_api.event_message(
                 msg["id"],
-                {
-                    "type": change_type,
-                    "flow_id": flow_id,
-                    "flow": hass.config_entries.flow.async_get(flow_id),
-                },
+                [
+                    {
+                        "type": change_type,
+                        "flow_id": flow_id,
+                        "flow": hass.config_entries.flow.async_get(flow_id),
+                    }
+                ],
             )
         )
 
     connection.subscriptions[msg["id"]] = hass.config_entries.flow.async_subscribe_flow(
         async_on_flow_init_remove
     )
-    for flw in hass.config_entries.flow.async_progress():
-        if flw["context"]["source"] in (
-            config_entries.SOURCE_RECONFIGURE,
-            config_entries.SOURCE_USER,
-        ):
-            continue
-        connection.send_message(
-            websocket_api.event_message(
-                msg["id"],
-                {"type": "init", "flow_id": flw["flow_id"], "flow": flw},
-            )
+    connection.send_message(
+        websocket_api.event_message(
+            msg["id"],
+            [
+                {"type": None, "flow_id": flw["flow_id"], "flow": flw}
+                for flw in hass.config_entries.flow.async_progress()
+                if flw["context"]["source"]
+                not in (
+                    config_entries.SOURCE_RECONFIGURE,
+                    config_entries.SOURCE_USER,
+                )
+            ],
         )
+    )
     connection.send_result(msg["id"])
 
 
