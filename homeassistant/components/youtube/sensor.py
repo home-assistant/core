@@ -6,7 +6,11 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription, SensorStateClass
+from homeassistant.components.sensor import (
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ICON
 from homeassistant.core import HomeAssistant
