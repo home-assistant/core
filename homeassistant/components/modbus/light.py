@@ -164,7 +164,7 @@ class ModbusLight(BaseSwitch, LightEntity):
                 )
 
     @staticmethod
-    async def _percent_to_brightness(percent: int) -> int:
+    async def _convert_modbus_to_brightness(percent: int) -> int:
         """Convert Modbus scale (0-100) to the brightness (0-255)."""
         return round(percent / MODBUS_SCALE_MAX * MAX_BRIGHTNESS)
 
