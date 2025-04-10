@@ -174,7 +174,7 @@
     "mode": {
       "options": {
         "normal": "[%key:common::state::normal%]",
-        "color_flow": "Color Flow",
+        "color_flow": "Color flow",
         "hsv": "HSV",
         "last": "Last",
         "moonlight": "Moonlight",
