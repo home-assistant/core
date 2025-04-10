@@ -10,7 +10,16 @@ from homeassistant.helpers.intent import IntentHandleError
 async def test_complete_item_intent(hass: HomeAssistant, sl_setup) -> None:
     """Test complete item."""
     await intent.async_handle(
+        hass, "test", "HassShoppingListAddItem", {"item": {"value": "soda"}}
+    )
+    await intent.async_handle(
         hass, "test", "HassShoppingListAddItem", {"item": {"value": "beer"}}
+    )
+    await intent.async_handle(
+        hass, "test", "HassShoppingListAddItem", {"item": {"value": "beer"}}
+    )
+    await intent.async_handle(
+        hass, "test", "HassShoppingListAddItem", {"item": {"value": "wine"}}
     )
 
     response = await intent.async_handle(
@@ -18,7 +27,8 @@ async def test_complete_item_intent(hass: HomeAssistant, sl_setup) -> None:
     )
 
     assert response.response_type == intent.IntentResponseType.ACTION_DONE
-    assert hass.data["shopping_list"].items[0]["complete"]
+    assert hass.data["shopping_list"].items[1]["complete"]
+    assert hass.data["shopping_list"].items[2]["complete"]
 
     # Complete again
     response = await intent.async_handle(
@@ -26,7 +36,8 @@ async def test_complete_item_intent(hass: HomeAssistant, sl_setup) -> None:
     )
 
     assert response.response_type == intent.IntentResponseType.ACTION_DONE
-    assert hass.data["shopping_list"].items[0]["complete"]
+    assert hass.data["shopping_list"].items[1]["complete"]
+    assert hass.data["shopping_list"].items[2]["complete"]
 
 
 async def test_complete_item_intent_not_found(hass: HomeAssistant, sl_setup) -> None:
@@ -36,34 +47,6 @@ async def test_complete_item_intent_not_found(hass: HomeAssistant, sl_setup) -> 
             hass, "test", "HassShoppingListCompleteItem", {"item": {"value": "beer"}}
         )
     assert str(excinfo.value) == "Item beer not found on your shopping list"
-
-
-async def test_prefer_completing_non_complete_items(
-    hass: HomeAssistant, sl_setup
-) -> None:
-    """Test completing non-complete items."""
-    # Complete first item
-    await intent.async_handle(
-        hass, "test", "HassShoppingListAddItem", {"item": {"value": "beer"}}
-    )
-
-    await intent.async_handle(
-        hass, "test", "HassShoppingListCompleteItem", {"item": {"value": "beer"}}
-    )
-
-    assert hass.data["shopping_list"].items[0]["complete"]
-
-    # Complete second item with same name
-    await intent.async_handle(
-        hass, "test", "HassShoppingListAddItem", {"item": {"value": "beer"}}
-    )
-
-    response = await intent.async_handle(
-        hass, "test", "HassShoppingListCompleteItem", {"item": {"value": "beer"}}
-    )
-
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
-    assert all(item["complete"] for item in hass.data["shopping_list"].items)
 
 
 async def test_recent_items_intent(hass: HomeAssistant, sl_setup) -> None:
