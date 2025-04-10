@@ -34,9 +34,6 @@
       "dose": {
         "default": "mdi:cup-water"
       },
-      "preinfusion_off": {
-        "default": "mdi:water"
-      },
       "smart_standby_time": {
         "default": "mdi:timer"
       }
