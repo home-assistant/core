@@ -1414,7 +1414,7 @@ def device_id(hass: HomeAssistant, entity_id_or_device_name: str) -> str | None:
 
 
 def device_name(hass: HomeAssistant, lookup_value: str) -> str | None:
-    """Get the area name from an area id, device id, or entity id."""
+    """Get the device name from an device id, or entity id."""
     device_reg = device_registry.async_get(hass)
     if device := device_reg.async_get(lookup_value):
         return device.name_by_user or device.name
