@@ -55,10 +55,6 @@ class ZimiLight(ZimiEntity, LightEntity):
         self._attr_color_mode = ColorMode.ONOFF
         self._attr_supported_color_modes = {ColorMode.ONOFF}
 
-        _LOGGER.debug(
-            "Initialising ZimiLight %s in %s", self._entity.name, self._entity.room
-        )
-
     @property
     def is_on(self) -> bool:
         """Return true if light is on."""
@@ -93,10 +89,6 @@ class ZimiDimmer(ZimiLight):
         self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
         if self._entity.type != "dimmer":
             raise ValueError("ZimiDimmer needs a dimmable light")
-
-        _LOGGER.debug(
-            "Initialising ZimiDimmer %s in %s", self._entity.name, self._entity.room
-        )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on (with optional brightness)."""
