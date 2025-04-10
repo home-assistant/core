@@ -217,7 +217,7 @@ def _get_item_thumbnail(
             item_thumbnail = player.generate_image_url_from_track_id(artwork_track_id)
         elif item_type is not None:
             item_thumbnail = entity.get_browse_image_url(
-                item_type, item.get("id", ""), artwork_track_id
+                item_type, str(item.get("id", "")), artwork_track_id
             )
 
     elif search_type in ["Apps", "Radios"]:
