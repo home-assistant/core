@@ -95,10 +95,6 @@ def mock_thinq_mqtt_client(mock_thinq_api: AsyncMock) -> Generator[AsyncMock]:
     """Mock a thinq api."""
     with (
         patch("homeassistant.components.lg_thinq.ThinQMQTT", autospec=True) as mock_api,
-        patch(
-            "homeassistant.components.lg_thinq.ThinQMQTT",
-            new=mock_api,
-        ),
     ):
         mqtt_client = mock_api.return_value
         mqtt_client.async_connect.return_value = True

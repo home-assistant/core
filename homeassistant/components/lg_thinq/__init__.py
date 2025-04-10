@@ -22,7 +22,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import CONF_CONNECT_CLIENT_ID, MQTT_SUBSCRIPTION_INTERVAL
+from .const import CONF_CONNECT_CLIENT_ID, DOMAIN, MQTT_SUBSCRIPTION_INTERVAL
 from .coordinator import DeviceDataUpdateCoordinator, async_setup_device_coordinator
 from .mqtt import ThinQMQTT
 
@@ -139,10 +139,12 @@ async def async_setup_mqtt(
     # Try to connect.
     try:
         result = await mqtt_client.async_connect()
-    except ThinQAPIException as exc:
-        raise ConfigEntryNotReady(exc.message) from exc
-    except (AttributeError, TypeError, ValueError) as exc:
-        raise ConfigEntryNotReady("Failed to connect MQTT") from exc
+    except (AttributeError, ThinQAPIException, TypeError, ValueError) as exc:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="failed_to_connect_mqtt",
+            translation_placeholders={"error": str(exc)},
+        ) from exc
 
     if not result:
         _LOGGER.error("Failed to set up mqtt connection")
