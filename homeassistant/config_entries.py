@@ -72,12 +72,12 @@ from .helpers.json import json_bytes, json_bytes_sorted, json_fragment
 from .helpers.typing import UNDEFINED, ConfigType, DiscoveryInfoType, UndefinedType
 from .loader import async_suggest_report_issue
 from .setup import (
-    DATA_SETUP_DONE,
     SetupPhases,
     async_pause_setup,
     async_process_deps_reqs,
     async_setup_component,
     async_start_setup,
+    async_wait_component,
 )
 from .util import ulid as ulid_util
 from .util.async_ import create_eager_task
@@ -1511,6 +1511,22 @@ class ConfigEntriesFlowManager(
                 future.set_result(None)
         self._discovery_event_debouncer.async_shutdown()
 
+    @callback
+    def async_flow_removed(
+        self,
+        flow: data_entry_flow.FlowHandler[ConfigFlowContext, ConfigFlowResult],
+    ) -> None:
+        """Handle a removed config flow."""
+        flow = cast(ConfigFlow, flow)
+
+        # Clean up issue if this is a reauth flow
+        if flow.context["source"] == SOURCE_REAUTH:
+            if (entry_id := flow.context.get("entry_id")) is not None and (
+                entry := self.config_entries.async_get_entry(entry_id)
+            ) is not None:
+                issue_id = f"config_entry_reauth_{entry.domain}_{entry.entry_id}"
+                ir.async_delete_issue(self.hass, HOMEASSISTANT_DOMAIN, issue_id)
+
     async def async_finish_flow(
         self,
         flow: data_entry_flow.FlowHandler[ConfigFlowContext, ConfigFlowResult],
@@ -1522,20 +1538,6 @@ class ConfigEntriesFlowManager(
         FlowResultType.CREATE_ENTRY.
         """
         flow = cast(ConfigFlow, flow)
-
-        # Mark the step as done.
-        # We do this to avoid a circular dependency where async_finish_flow sets up a
-        # new entry, which needs the integration to be set up, which is waiting for
-        # init to be done.
-        self._set_pending_import_done(flow)
-
-        # Clean up issue if this is a reauth flow
-        if flow.context["source"] == SOURCE_REAUTH:
-            if (entry_id := flow.context.get("entry_id")) is not None and (
-                entry := self.config_entries.async_get_entry(entry_id)
-            ) is not None:
-                issue_id = f"config_entry_reauth_{entry.domain}_{entry.entry_id}"
-                ir.async_delete_issue(self.hass, HOMEASSISTANT_DOMAIN, issue_id)
 
         if result["type"] != data_entry_flow.FlowResultType.CREATE_ENTRY:
             # If there's a config entry with a matching unique ID,
@@ -1574,6 +1576,12 @@ class ConfigEntriesFlowManager(
                     entry, discovery_keys=new_discovery_keys
                 )
             return result
+
+        # Mark the step as done.
+        # We do this to avoid a circular dependency where async_finish_flow sets up a
+        # new entry, which needs the integration to be set up, which is waiting for
+        # init to be done.
+        self._set_pending_import_done(flow)
 
         # Avoid adding a config entry for a integration
         # that only supports a single config entry, but already has an entry
@@ -2732,11 +2740,7 @@ class ConfigEntries:
         Config entries which are created after Home Assistant is started can't be waited
         for, the function will just return if the config entry is loaded or not.
         """
-        setup_done = self.hass.data.get(DATA_SETUP_DONE, {})
-        if setup_future := setup_done.get(entry.domain):
-            await setup_future
-        # The component was not loaded.
-        if entry.domain not in self.hass.config.components:
+        if not await async_wait_component(self.hass, entry.domain):
             return False
         return entry.state is ConfigEntryState.LOADED
 
