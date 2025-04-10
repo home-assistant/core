@@ -319,7 +319,6 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
             if bridge
             in [multiroom.leader.device.uuid]
             + [follower.device.uuid for follower in multiroom.followers]
-            and entity_id != self.entity_id
         ]
 
     @exception_wrap
