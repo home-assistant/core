@@ -1,6 +1,5 @@
 """Test cors for the HTTP component."""
 
-from asyncio import AbstractEventLoop
 from http import HTTPStatus
 from pathlib import Path
 from unittest.mock import patch
@@ -55,14 +54,12 @@ async def mock_handler(request):
 
 
 @pytest.fixture
-def client(
-    event_loop: AbstractEventLoop, aiohttp_client: ClientSessionGenerator
-) -> TestClient:
+async def client(aiohttp_client: ClientSessionGenerator) -> TestClient:
     """Fixture to set up a web.Application."""
     app = web.Application()
     setup_cors(app, [TRUSTED_ORIGIN])
     app[KEY_ALLOW_CONFIGURED_CORS](app.router.add_get("/", mock_handler))
-    return event_loop.run_until_complete(aiohttp_client(app))
+    return await aiohttp_client(app)
 
 
 async def test_cors_requests(client) -> None:
