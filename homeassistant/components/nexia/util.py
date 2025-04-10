@@ -41,7 +41,9 @@ class SingleShot:
         """Initialize this single shot timer."""
         self._hass = hass
         self._delay = delay
-        self._delayed_call = delayed_call
+        self._delayed_call: Callable[[], Coroutine[Any, Any, None]] | None = (
+            delayed_call
+        )
         self._cancel_delayed_action: Callable[[], None] | None = None
         self._execute_lock = asyncio.Lock()
         self._shutting_down = False
