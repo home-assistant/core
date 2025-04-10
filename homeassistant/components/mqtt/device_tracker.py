@@ -184,15 +184,25 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
                     extra_state_attributes,
                 )
 
-            self._attr_location_accuracy = (
-                gps_accuracy
-                if ATTR_GPS_ACCURACY in extra_state_attributes
-                and isinstance(
+            if ATTR_GPS_ACCURACY in extra_state_attributes:
+                if isinstance(
                     gps_accuracy := extra_state_attributes[ATTR_GPS_ACCURACY],
                     (int, float),
-                )
-                else 0
-            )
+                ):
+                    self._attr_location_accuracy = gps_accuracy
+                else:
+                    _LOGGER.warning(
+                        "Extra state attributes received at % and template %s "
+                        "contain invalid GPS accuracy setting, "
+                        "gps_accuracy was set to 0 as the default. Got %s",
+                        self._config.get(CONF_JSON_ATTRS_TEMPLATE),
+                        self._config.get(CONF_JSON_ATTRS_TOPIC),
+                        extra_state_attributes,
+                    )
+                    self._attr_location_accuracy = 0
+
+            else:
+                self._attr_location_accuracy = 0
 
         self._attr_extra_state_attributes = {
             attribute: value
