@@ -20,14 +20,17 @@ ALARM_TYPES = {
     "burglary": {
         ALARM_MEMORY_PRIORITIES.BURGLARY_SUPERVISORY: "supervisory",
         ALARM_MEMORY_PRIORITIES.BURGLARY_TROUBLE: "trouble",
+        ALARM_MEMORY_PRIORITIES.BURGLARY_ALARM: "alarm",
     },
     "gas": {
         ALARM_MEMORY_PRIORITIES.GAS_SUPERVISORY: "supervisory",
         ALARM_MEMORY_PRIORITIES.GAS_TROUBLE: "trouble",
+        ALARM_MEMORY_PRIORITIES.GAS_ALARM: "alarm",
     },
     "fire": {
         ALARM_MEMORY_PRIORITIES.FIRE_SUPERVISORY: "supervisory",
         ALARM_MEMORY_PRIORITIES.FIRE_TROUBLE: "trouble",
+        ALARM_MEMORY_PRIORITIES.FIRE_ALARM: "alarm",
     },
 }
 

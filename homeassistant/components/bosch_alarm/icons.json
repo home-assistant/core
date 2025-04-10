@@ -7,7 +7,7 @@
       "alarms_fire": {
         "default": "mdi:alert-circle"
       },
-      "alarms_personal": {
+      "alarms_burglary": {
         "default": "mdi:alert-circle"
       },
       "faulting_points": {

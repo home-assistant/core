@@ -63,6 +63,7 @@
         "state": {
           "supervisory": "Supervisory",
           "trouble": "Trouble",
+          "alarm": "Alarm",
           "no_issues": "No issues"
         }
       },
@@ -71,6 +72,7 @@
         "state": {
           "supervisory": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::supervisory%]",
           "trouble": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::trouble%]",
+          "alarm": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::alarm%]",
           "no_issues": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::no_issues%]"
         }
       },
@@ -79,6 +81,7 @@
         "state": {
           "supervisory": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::supervisory%]",
           "trouble": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::trouble%]",
+          "alarm": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::alarm%]",
           "no_issues": "[%key:component::bosch_alarm::entity::sensor::alarms_gas::state::no_issues%]"
         }
       },
