@@ -1350,7 +1350,7 @@ linear-garage-door==0.2.9
 linode-api==4.1.9b1
 
 # homeassistant.components.livisi
-livisi==0.0.24
+livisi==0.0.25
 
 # homeassistant.components.google_maps
 locationsharinglib==5.0.1
