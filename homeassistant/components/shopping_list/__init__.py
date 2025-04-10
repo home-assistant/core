@@ -257,22 +257,24 @@ class ShoppingData:
 
     async def async_complete(
         self, name: str, context: Context | None = None
-    ) -> dict[str, JsonValueType]:
-        """Mark a shopping list item as complete."""
-        complete_item = None
+    ) -> list[dict[str, JsonValueType]]:
+        """Mark all shopping list items with the given name as complete."""
+        complete_items = [item for item in self.items if item["name"] == name]
 
-        for item in self.items:
-            if item["name"] == name:
-                complete_item = item
-            if not item["complete"]:
-                break
-
-        if complete_item is None:
+        if len(complete_items) == 0:
             raise NoMatchingShoppingListItem
 
-        item_id = cast(str, complete_item["id"])
-
-        return await self.async_update(item_id, {"complete": True}, context=context)
+        for item in complete_items:
+            _LOGGER.debug("Completing %s", item)
+            item["complete"] = True
+        await self.hass.async_add_executor_job(self.save)
+        self._async_notify()
+        self.hass.bus.async_fire(
+            EVENT_SHOPPING_LIST_UPDATED,
+            {"action": "complete", "item": complete_items},
+            context=context,
+        )
+        return complete_items
 
     async def async_update(
         self, item_id: str | None, info: dict[str, Any], context: Context | None = None
