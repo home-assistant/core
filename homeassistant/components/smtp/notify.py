@@ -38,7 +38,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.reload import setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
-from homeassistant.util.ssl import client_context
+from homeassistant.util.ssl import create_client_context
 
 from .const import (
     ATTR_HTML,
@@ -136,24 +136,23 @@ class MailNotificationService(BaseNotificationService):
         self.debug = debug
         self._verify_ssl = verify_ssl
         self.tries = 2
+        self._ssl_context = create_client_context() if self._verify_ssl else None
 
     def connect(self):
         """Connect/authenticate to SMTP Server."""
-        ssl_context = client_context() if self._verify_ssl else None
         if self.encryption == "tls":
-            ssl_context.set_alpn_protocols([])
             mail = smtplib.SMTP_SSL(
                 self._server,
                 self._port,
                 timeout=self._timeout,
-                context=ssl_context,
+                context=self._ssl_context,
             )
         else:
             mail = smtplib.SMTP(self._server, self._port, timeout=self._timeout)
         mail.set_debuglevel(self.debug)
         mail.ehlo_or_helo_if_needed()
         if self.encryption == "starttls":
-            mail.starttls(context=ssl_context)
+            mail.starttls(context=self._ssl_context)
             mail.ehlo()
         if self.username and self.password:
             mail.login(self.username, self.password)
