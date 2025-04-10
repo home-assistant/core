@@ -10,12 +10,9 @@ from homeassistant.const import CONF_NAME, PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import device_identifiers
+from . import SyncthruCoordinator, device_identifiers
 from .const import DOMAIN
 
 COLORS = ["black", "cyan", "magenta", "yellow"]
@@ -47,9 +44,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up from config entry."""
 
-    coordinator: DataUpdateCoordinator[SyncThru] = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
+    coordinator: SyncthruCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     printer: SyncThru = coordinator.data
 
     supp_toner = printer.toner_status(filter_supported=True)
@@ -75,12 +70,12 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class SyncThruSensor(CoordinatorEntity[DataUpdateCoordinator[SyncThru]], SensorEntity):
+class SyncThruSensor(CoordinatorEntity[SyncthruCoordinator], SensorEntity):
     """Implementation of an abstract Samsung Printer sensor platform."""
 
     _attr_icon = "mdi:printer"
 
-    def __init__(self, coordinator: DataUpdateCoordinator[SyncThru], name: str) -> None:
+    def __init__(self, coordinator: SyncthruCoordinator, name: str) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.syncthru = coordinator.data
@@ -112,7 +107,7 @@ class SyncThruMainSensor(SyncThruSensor):
 
     _attr_entity_registry_enabled_default = False
 
-    def __init__(self, coordinator: DataUpdateCoordinator[SyncThru], name: str) -> None:
+    def __init__(self, coordinator: SyncthruCoordinator, name: str) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, name)
         self._id_suffix = "_main"
@@ -135,9 +130,7 @@ class SyncThruTonerSensor(SyncThruSensor):
 
     _attr_native_unit_of_measurement = PERCENTAGE
 
-    def __init__(
-        self, coordinator: DataUpdateCoordinator[SyncThru], name: str, color: str
-    ) -> None:
+    def __init__(self, coordinator: SyncthruCoordinator, name: str, color: str) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, name)
         self._attr_name = f"{name} Toner {color}"
@@ -160,9 +153,7 @@ class SyncThruDrumSensor(SyncThruSensor):
 
     _attr_native_unit_of_measurement = PERCENTAGE
 
-    def __init__(
-        self, coordinator: DataUpdateCoordinator[SyncThru], name: str, color: str
-    ) -> None:
+    def __init__(self, coordinator: SyncthruCoordinator, name: str, color: str) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, name)
         self._attr_name = f"{name} Drum {color}"
@@ -184,7 +175,7 @@ class SyncThruInputTraySensor(SyncThruSensor):
     """Implementation of a Samsung Printer input tray sensor platform."""
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator[SyncThru], name: str, number: str
+        self, coordinator: SyncthruCoordinator, name: str, number: str
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, name)
@@ -212,7 +203,7 @@ class SyncThruOutputTraySensor(SyncThruSensor):
     """Implementation of a Samsung Printer output tray sensor platform."""
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator[SyncThru], name: str, number: int
+        self, coordinator: SyncthruCoordinator, name: str, number: int
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, name)
@@ -239,7 +230,7 @@ class SyncThruOutputTraySensor(SyncThruSensor):
 class SyncThruActiveAlertSensor(SyncThruSensor):
     """Implementation of a Samsung Printer active alerts sensor platform."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator[SyncThru], name: str) -> None:
+    def __init__(self, coordinator: SyncthruCoordinator, name: str) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, name)
         self._attr_name = f"{name} Active Alerts"
