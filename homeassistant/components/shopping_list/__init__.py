@@ -269,11 +269,12 @@ class ShoppingData:
             item["complete"] = True
         await self.hass.async_add_executor_job(self.save)
         self._async_notify()
-        self.hass.bus.async_fire(
-            EVENT_SHOPPING_LIST_UPDATED,
-            {"action": "complete", "item": complete_items},
-            context=context,
-        )
+        for item in complete_items:
+            self.hass.bus.async_fire(
+                EVENT_SHOPPING_LIST_UPDATED,
+                {"action": "complete", "item": item},
+                context=context,
+            )
         return complete_items
 
     async def async_update(
