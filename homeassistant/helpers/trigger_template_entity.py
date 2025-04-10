@@ -197,6 +197,7 @@ class TriggerBaseEntity(Entity):
         self._parse_result = {CONF_AVAILABILITY}
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
 
+        self._state_render_error = False
         self._availability_template = config.get(CONF_AVAILABILITY)
         self._available = True
 
@@ -223,6 +224,9 @@ class TriggerBaseEntity(Entity):
     @property
     def available(self) -> bool:
         """Return availability of the entity."""
+        if self._state_render_error:
+            return False
+
         if self._availability_template is None:
             return True
 
@@ -301,6 +305,7 @@ class TriggerBaseEntity(Entity):
 
     def _render_templates(self, variables: dict[str, Any]) -> None:
         """Render templates."""
+        self._state_render_error = False
         rendered = dict(self._static_rendered)
 
         # If state fails to render, the entity should go unavailable.  Render the
@@ -310,6 +315,7 @@ class TriggerBaseEntity(Entity):
                 result := self._render_single_template(CONF_STATE, variables)
             ) is _SENTINEL:
                 self._rendered = self._static_rendered
+                self._state_render_error = True
                 return
 
             rendered[CONF_STATE] = result

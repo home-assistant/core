@@ -259,6 +259,46 @@ async def test_template_state(hass: HomeAssistant) -> None:
     assert entity.entity_picture == "/local/picture_off"
 
 
+async def test_bad_template_state(hass: HomeAssistant) -> None:
+    """Test manual trigger template entity with a state."""
+    config = {
+        CONF_NAME: template.Template("test_entity", hass),
+        CONF_ICON: template.Template(_ICON_TEMPLATE, hass),
+        CONF_PICTURE: template.Template(_PICTURE_TEMPLATE, hass),
+        CONF_STATE: template.Template("{{ x - 1 }}", hass),
+    }
+
+    class TestEntity(ManualTriggerEntity):
+        """Test entity class."""
+
+        extra_template_keys = (CONF_STATE,)
+
+        @property
+        def state(self) -> bool | None:
+            """Return extra attributes."""
+            return self._rendered.get(CONF_STATE)
+
+    entity = TestEntity(hass, config)
+    entity.entity_id = "test.entity"
+    variables = entity._template_variables({"x": 1})
+    entity._process_manual_data(variables)
+    await hass.async_block_till_done()
+
+    assert entity.available is True
+    assert entity.state == "0"
+    assert entity.icon == "mdi:off"
+    assert entity.entity_picture == "/local/picture_off"
+
+    variables = entity._template_variables_with_value(STATE_OFF)
+    entity._process_manual_data(variables)
+    await hass.async_block_till_done()
+
+    assert entity.available is False
+    assert entity.state is None
+    assert entity.icon is None
+    assert entity.entity_picture is None
+
+
 async def test_template_state_syntax_error(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
