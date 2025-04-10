@@ -19,7 +19,6 @@ ATTR_EXPIRES = "expires"
 ATTR_NAME_SERVERS = "name_servers"
 ATTR_REGISTRAR = "registrar"
 ATTR_UPDATED = "updated"
-ATTR_STATUS = "status"
 
 # From https://www.icann.org/resources/pages/epp-status-codes-2014-06-16-en
 STATUS_TYPES = {

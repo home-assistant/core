@@ -29,7 +29,6 @@ from .const import (
     ATTR_EXPIRES,
     ATTR_NAME_SERVERS,
     ATTR_REGISTRAR,
-    ATTR_STATUS,
     ATTR_UPDATED,
     DOMAIN,
     STATUS_TYPES,
@@ -149,6 +148,8 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
         key="status",
         translation_key="status",
         entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.ENUM,
+        options=list(STATUS_TYPES.values()),
         entity_registry_enabled_default=False,
         value_fn=lambda domain: _get_status_type(domain.status),
     ),
@@ -231,9 +232,6 @@ class WhoisSensorEntity(
 
         if registrar := self.coordinator.data.registrar:
             attrs[ATTR_REGISTRAR] = registrar
-
-        if status := self.coordinator.data.status:
-            attrs[ATTR_STATUS] = status
 
         if not attrs:
             return None
