@@ -223,6 +223,9 @@ class TriggerBaseEntity(Entity):
     @property
     def available(self) -> bool:
         """Return availability of the entity."""
+        if self._availability_template is None:
+            return True
+
         return self._available
 
     @property
