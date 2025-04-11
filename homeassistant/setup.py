@@ -45,36 +45,36 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_COMPONENT: Final = "component"
 
 
-# DATA_SETUP is a dict, indicating domains which are currently
+# _DATA_SETUP is a dict, indicating domains which are currently
 # being setup or which failed to setup:
-# - Tasks are added to DATA_SETUP by `async_setup_component`, the key is the domain
+# - Tasks are added to _DATA_SETUP by `async_setup_component`, the key is the domain
 #   being setup and the Task is the `_async_setup_component` helper.
-# - Tasks are removed from DATA_SETUP if setup was successful, that is,
+# - Tasks are removed from _DATA_SETUP if setup was successful, that is,
 #   the task returned True.
-DATA_SETUP: HassKey[dict[str, asyncio.Future[bool]]] = HassKey("setup_tasks")
+_DATA_SETUP: HassKey[dict[str, asyncio.Future[bool]]] = HassKey("setup_tasks")
 
-# DATA_SETUP_DONE is a dict, indicating components which will be setup:
-# - Events are added to DATA_SETUP_DONE during bootstrap by
+# _DATA_SETUP_DONE is a dict, indicating components which will be setup:
+# - Events are added to _DATA_SETUP_DONE during bootstrap by
 #   async_set_domains_to_be_loaded, the key is the domain which will be loaded.
-# - Events are set and removed from DATA_SETUP_DONE when async_setup_component
+# - Events are set and removed from _DATA_SETUP_DONE when async_setup_component
 #   is finished, regardless of if the setup was successful or not.
-DATA_SETUP_DONE: HassKey[dict[str, asyncio.Future[bool]]] = HassKey("setup_done")
+_DATA_SETUP_DONE: HassKey[dict[str, asyncio.Future[bool]]] = HassKey("setup_done")
 
-# DATA_SETUP_STARTED is a dict, indicating when an attempt
+# _DATA_SETUP_STARTED is a dict, indicating when an attempt
 # to setup a component started.
-DATA_SETUP_STARTED: HassKey[dict[tuple[str, str | None], float]] = HassKey(
+_DATA_SETUP_STARTED: HassKey[dict[tuple[str, str | None], float]] = HassKey(
     "setup_started"
 )
 
-# DATA_SETUP_TIME is a defaultdict, indicating how time was spent
+# _DATA_SETUP_TIME is a defaultdict, indicating how time was spent
 # setting up a component.
-DATA_SETUP_TIME: HassKey[
+_DATA_SETUP_TIME: HassKey[
     defaultdict[str, defaultdict[str | None, defaultdict[SetupPhases, float]]]
 ] = HassKey("setup_time")
 
-DATA_DEPS_REQS: HassKey[set[str]] = HassKey("deps_reqs_processed")
+_DATA_DEPS_REQS: HassKey[set[str]] = HassKey("deps_reqs_processed")
 
-DATA_PERSISTENT_ERRORS: HassKey[dict[str, str | None]] = HassKey(
+_DATA_PERSISTENT_ERRORS: HassKey[dict[str, str | None]] = HassKey(
     "bootstrap_persistent_errors"
 )
 
@@ -104,8 +104,8 @@ def async_notify_setup_error(
     # pylint: disable-next=import-outside-toplevel
     from .components import persistent_notification
 
-    if (errors := hass.data.get(DATA_PERSISTENT_ERRORS)) is None:
-        errors = hass.data[DATA_PERSISTENT_ERRORS] = {}
+    if (errors := hass.data.get(_DATA_PERSISTENT_ERRORS)) is None:
+        errors = hass.data[_DATA_PERSISTENT_ERRORS] = {}
 
     errors[component] = errors.get(component) or display_link
 
@@ -131,8 +131,8 @@ def async_set_domains_to_be_loaded(hass: core.HomeAssistant, domains: set[str]) 
      - Properly handle after_dependencies.
      - Keep track of domains which will load but have not yet finished loading
     """
-    setup_done_futures = hass.data.setdefault(DATA_SETUP_DONE, {})
-    setup_futures = hass.data.setdefault(DATA_SETUP, {})
+    setup_done_futures = hass.data.setdefault(_DATA_SETUP_DONE, {})
+    setup_futures = hass.data.setdefault(_DATA_SETUP, {})
     old_domains = set(setup_futures) | set(setup_done_futures) | hass.config.components
     if overlap := old_domains & domains:
         _LOGGER.debug("Domains to be loaded %s already loaded or pending", overlap)
@@ -158,8 +158,8 @@ async def async_setup_component(
     if domain in hass.config.components:
         return True
 
-    setup_futures = hass.data.setdefault(DATA_SETUP, {})
-    setup_done_futures = hass.data.setdefault(DATA_SETUP_DONE, {})
+    setup_futures = hass.data.setdefault(_DATA_SETUP, {})
+    setup_done_futures = hass.data.setdefault(_DATA_SETUP_DONE, {})
 
     if existing_setup_future := setup_futures.get(domain):
         return await existing_setup_future
@@ -200,7 +200,7 @@ async def _async_process_dependencies(
 
     Returns a list of dependencies which failed to set up.
     """
-    setup_futures = hass.data.setdefault(DATA_SETUP, {})
+    setup_futures = hass.data.setdefault(_DATA_SETUP, {})
 
     dependencies_tasks: dict[str, asyncio.Future[bool]] = {}
 
@@ -216,7 +216,7 @@ async def _async_process_dependencies(
             )
         dependencies_tasks[dep] = fut
 
-    to_be_loaded = hass.data.get(DATA_SETUP_DONE, {})
+    to_be_loaded = hass.data.get(_DATA_SETUP_DONE, {})
     # We don't want to just wait for the futures from `to_be_loaded` here.
     # We want to ensure that our after_dependencies are always actually
     # scheduled to be set up, as if for whatever reason they had not been,
@@ -483,7 +483,7 @@ async def _async_setup_component(
         )
 
     # Cleanup
-    hass.data[DATA_SETUP].pop(domain, None)
+    hass.data[_DATA_SETUP].pop(domain, None)
 
     hass.bus.async_fire_internal(
         EVENT_COMPONENT_LOADED, EventComponentLoaded(component=domain)
@@ -573,8 +573,8 @@ async def async_process_deps_reqs(
 
     Module is a Python module of either a component or platform.
     """
-    if (processed := hass.data.get(DATA_DEPS_REQS)) is None:
-        processed = hass.data[DATA_DEPS_REQS] = set()
+    if (processed := hass.data.get(_DATA_DEPS_REQS)) is None:
+        processed = hass.data[_DATA_DEPS_REQS] = set()
     elif integration.domain in processed:
         return
 
@@ -689,7 +689,7 @@ class SetupPhases(StrEnum):
     """Wait time for the packages to import."""
 
 
-@singleton.singleton(DATA_SETUP_STARTED)
+@singleton.singleton(_DATA_SETUP_STARTED)
 def _setup_started(
     hass: core.HomeAssistant,
 ) -> dict[tuple[str, str | None], float]:
@@ -732,7 +732,7 @@ def async_pause_setup(hass: core.HomeAssistant, phase: SetupPhases) -> Generator
         )
 
 
-@singleton.singleton(DATA_SETUP_TIME)
+@singleton.singleton(_DATA_SETUP_TIME)
 def _setup_times(
     hass: core.HomeAssistant,
 ) -> defaultdict[str, defaultdict[str | None, defaultdict[SetupPhases, float]]]:
@@ -832,3 +832,11 @@ def async_get_domain_setup_times(
 ) -> Mapping[str | None, dict[SetupPhases, float]]:
     """Return timing data for each integration."""
     return _setup_times(hass).get(domain, {})
+
+
+async def async_wait_component(hass: HomeAssistant, domain: str) -> bool:
+    """Wait until a component is set up if pending, then return if it is set up."""
+    setup_done = hass.data.get(_DATA_SETUP_DONE, {})
+    if setup_future := setup_done.get(domain):
+        await setup_future
+    return domain in hass.config.components
