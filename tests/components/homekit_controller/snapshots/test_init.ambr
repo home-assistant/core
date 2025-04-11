@@ -87,7 +87,7 @@
             'area_id': None,
             'capabilities': dict({
               'preset_modes': list([
-                'Auto',
+                'auto',
               ]),
             }),
             'categories': dict({
@@ -122,9 +122,9 @@
               'friendly_name': 'Airversa AP2 1808 AirPurifier',
               'percentage': 0,
               'percentage_step': 20.0,
-              'preset_mode': 'Auto',
+              'preset_mode': 'auto',
               'preset_modes': list([
-                'Auto',
+                'auto',
               ]),
               'supported_features': <FanEntityFeature: 57>,
             }),
@@ -11666,7 +11666,7 @@
             'area_id': None,
             'capabilities': dict({
               'preset_modes': list([
-                'Auto',
+                'auto',
               ]),
             }),
             'categories': dict({
@@ -11704,7 +11704,7 @@
               'percentage_step': 33.333333333333336,
               'preset_mode': None,
               'preset_modes': list([
-                'Auto',
+                'auto',
               ]),
               'supported_features': <FanEntityFeature: 59>,
             }),
@@ -13357,7 +13357,7 @@
             'area_id': None,
             'capabilities': dict({
               'preset_modes': list([
-                'Auto',
+                'auto',
               ]),
             }),
             'categories': dict({
@@ -13395,7 +13395,7 @@
               'percentage_step': 33.333333333333336,
               'preset_mode': None,
               'preset_modes': list([
-                'Auto',
+                'auto',
               ]),
               'supported_features': <FanEntityFeature: 59>,
             }),

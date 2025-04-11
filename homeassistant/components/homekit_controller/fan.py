@@ -39,7 +39,7 @@ DIRECTION_TO_HK = {
 }
 HK_DIRECTION_TO_HA = {v: k for (k, v) in DIRECTION_TO_HK.items()}
 
-PRESET_AUTO = "Auto"
+PRESET_AUTO = "auto"
 
 
 class BaseHomeKitFan(HomeKitEntity, FanEntity):
