@@ -16,7 +16,7 @@ from serial.tools.list_ports_common import ListPortInfo
 from zwave_js_server.exceptions import FailedCommand
 from zwave_js_server.version import VersionInfo
 
-from homeassistant import config_entries
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.zwave_js.config_flow import SERVER_VERSION_TIMEOUT, TITLE
 from homeassistant.components.zwave_js.const import ADDON_SLUG, CONF_USB_PATH, DOMAIN
 from homeassistant.core import HomeAssistant
@@ -3113,12 +3113,25 @@ async def test_options_migrate_with_addon(
 
     async def mock_backup_nvm_raw():
         await asyncio.sleep(0)
+        client.driver.controller.emit(
+            "nvm backup progress", {"bytesRead": 100, "total": 200}
+        )
         return b"test_nvm_data"
 
     client.driver.controller.async_backup_nvm_raw = AsyncMock(
         side_effect=mock_backup_nvm_raw
     )
     client.driver.controller.async_restore_nvm = AsyncMock()
+
+    events = []
+
+    def capture_events(event):
+        events.append(event)
+
+    hass.bus.async_listen(
+        data_entry_flow.EVENT_DATA_ENTRY_FLOW_PROGRESS_UPDATE,
+        capture_events,
+    )
 
     result = await hass.config_entries.options.async_init(integration.entry_id)
 
@@ -3141,6 +3154,9 @@ async def test_options_migrate_with_addon(
         await hass.async_block_till_done()
         assert client.driver.controller.async_backup_nvm_raw.call_count == 1
         assert mock_file.call_count == 1
+        assert len(events) == 1
+        assert events[0].data["progress"] == 0.5
+        events.clear()
 
     result = await hass.config_entries.options.async_configure(result["flow_id"])
 
