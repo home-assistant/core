@@ -39,12 +39,6 @@ class AdaxCloudCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
             websession=async_get_clientsession(hass),
         )
 
-    def get_room(self, room_id: int) -> dict[str, Any] | None:
-        """Get a specific room from the loaded Adax data."""
-        for room in filter(lambda r: r["id"] == room_id, self.data):
-            return room
-        return None
-
     async def _async_update_data(self) -> dict[str, dict[str, Any]]:
         """Fetch data from the Adax."""
         rooms = await self.adax_data_handler.get_rooms() or []
