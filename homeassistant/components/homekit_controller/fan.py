@@ -150,22 +150,20 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
     @cached_property
     def preset_modes(self) -> list[str]:
         """Return the preset modes."""
-        return (
-            [PRESET_AUTO]
-            if self.service.has(CharacteristicsTypes.FAN_STATE_TARGET)
-            else []
-        )
+        if self.service.has(CharacteristicsTypes.FAN_STATE_TARGET):
+            return [PRESET_AUTO]
+        return []
 
     @property
     def preset_mode(self) -> str | None:
         """Return the current preset mode."""
-        return (
-            PRESET_AUTO
-            if self.service.has(CharacteristicsTypes.FAN_STATE_TARGET)
+        if (
+            self.service.has(CharacteristicsTypes.FAN_STATE_TARGET)
             and self.service.value(CharacteristicsTypes.FAN_STATE_TARGET)
             == TargetFanStateValues.AUTOMATIC
-            else None
-        )
+        ):
+            return PRESET_AUTO
+        return None
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
@@ -222,11 +220,14 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
             characteristics[self.on_characteristic] = True
 
         if preset_mode is not None:
-            characteristics[CharacteristicsTypes.FAN_STATE_TARGET] = (
-                TargetFanStateValues.AUTOMATIC
-                if preset_mode == PRESET_AUTO
-                else TargetFanStateValues.MANUAL
-            )
+            if preset_mode == PRESET_AUTO:
+                characteristics[CharacteristicsTypes.FAN_STATE_TARGET] = (
+                    TargetFanStateValues.AUTOMATIC
+                )
+            else:
+                characteristics[CharacteristicsTypes.FAN_STATE_TARGET] = (
+                    TargetFanStateValues.MANUAL
+                )
 
         elif (
             percentage is not None
@@ -323,11 +324,14 @@ class HomeKitAirPurifer(HomeKitFanV2):
             characteristics[self.on_characteristic] = True
 
         if preset_mode is not None:
-            characteristics[CharacteristicsTypes.AIR_PURIFIER_STATE_TARGET] = (
-                TargetAirPurifierStateValues.AUTOMATIC
-                if preset_mode == PRESET_AUTO
-                else TargetAirPurifierStateValues.MANUAL
-            )
+            if preset_mode == PRESET_AUTO:
+                characteristics[CharacteristicsTypes.AIR_PURIFIER_STATE_TARGET] = (
+                    TargetAirPurifierStateValues.AUTOMATIC
+                )
+            else:
+                characteristics[CharacteristicsTypes.AIR_PURIFIER_STATE_TARGET] = (
+                    TargetAirPurifierStateValues.MANUAL
+                )
 
         elif (
             percentage is not None
