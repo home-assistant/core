@@ -100,7 +100,7 @@ PyTransportNSW==0.1.1
 PyTurboJPEG==1.7.5
 
 # homeassistant.components.vicare
-PyViCare==2.43.1
+PyViCare==2.44.0
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.14.3
@@ -261,7 +261,7 @@ aioguardian==2022.07.0
 aioharmony==0.5.2
 
 # homeassistant.components.hassio
-aiohasupervisor==0.3.0
+aiohasupervisor==0.3.1b1
 
 # homeassistant.components.home_connect
 aiohomeconnect==0.17.0
@@ -1084,7 +1084,7 @@ greenwavereality==0.5.1
 gridnet==5.0.1
 
 # homeassistant.components.growatt_server
-growattServer==1.5.0
+growattServer==1.6.0
 
 # homeassistant.components.google_sheets
 gspread==5.5.0
@@ -1157,7 +1157,7 @@ hole==0.8.0
 holidays==0.69
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250404.0
+home-assistant-frontend==20250411.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.3.28
@@ -1218,6 +1218,9 @@ igloohome-api==0.1.0
 
 # homeassistant.components.ihc
 ihcsdk==2.8.5
+
+# homeassistant.components.imeon_inverter
+imeon_inverter_api==0.3.12
 
 # homeassistant.components.imgw_pib
 imgw_pib==1.0.10
@@ -1314,7 +1317,7 @@ ld2410-ble==0.1.1
 leaone-ble==0.1.0
 
 # homeassistant.components.led_ble
-led-ble==1.1.6
+led-ble==1.1.7
 
 # homeassistant.components.lektrico
 lektricowifi==0.0.43
@@ -1350,7 +1353,7 @@ linear-garage-door==0.2.9
 linode-api==4.1.9b1
 
 # homeassistant.components.livisi
-livisi==0.0.24
+livisi==0.0.25
 
 # homeassistant.components.google_maps
 locationsharinglib==5.0.1
@@ -2319,7 +2322,7 @@ pysma==0.7.5
 pysmappee==0.2.29
 
 # homeassistant.components.smartthings
-pysmartthings==3.0.2
+pysmartthings==3.0.4
 
 # homeassistant.components.smarty
 pysmarty2==0.10.2
@@ -2627,7 +2630,7 @@ renault-api==0.2.9
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.13.0
+reolink-aio==0.13.1
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
@@ -2730,7 +2733,7 @@ sentry-sdk==1.45.1
 sfrbox-api==0.0.11
 
 # homeassistant.components.sharkiq
-sharkiq==1.0.2
+sharkiq==1.1.0
 
 # homeassistant.components.aquostv
 sharp_aquos_rc==0.3.2
