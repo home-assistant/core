@@ -651,6 +651,16 @@ async def test_filter_maintenance_only_change_indicator_sensor(
     await hass.async_block_till_done()
     assert acc.char_filter_change_indication.value == FILTER_CHANGE_FILTER
 
+    # Should handle unavailable state, show last known value
+    hass.states.async_set(filter_change_indicator_entity_id, STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+    assert acc.char_filter_change_indication.value == FILTER_CHANGE_FILTER
+
+    # Ignore invalid state, show last known valid value
+    hass.states.async_set(filter_change_indicator_entity_id, "invalid_state")
+    await hass.async_block_till_done()
+    assert acc.char_filter_change_indication.value == FILTER_CHANGE_FILTER
+
 
 async def test_filter_life_level_linked_sensors(
     hass: HomeAssistant, hk_driver, events: list[Event]
