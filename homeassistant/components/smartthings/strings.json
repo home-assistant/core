@@ -63,7 +63,7 @@
         "name": "Reset water filter"
       },
       "toggle_tv_ambient_mode": {
-        "name": "Toggle TV Ambient Mode"
+        "name": "Toggle TV ambient mode"
       },
       "stop": {
         "name": "[%key:common::action::stop%]"
