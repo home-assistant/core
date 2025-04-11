@@ -1498,8 +1498,7 @@ async def test_addon_installed_start_failure(
     start_addon,
     get_addon_discovery_info,
 ) -> None:
-    """Test usb discovery when add-on is installed but not running."""
-    addon_options["device"] = "/dev/incorrect_device"
+    """Test add-on start failure when add-on is installed."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
