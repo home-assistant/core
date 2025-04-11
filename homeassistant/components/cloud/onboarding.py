@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from functools import wraps
-from http import HTTPStatus
 from typing import TYPE_CHECKING, Any, Concatenate
 
 from aiohttp import web
@@ -33,7 +32,7 @@ async def async_setup_views(hass: HomeAssistant, data: OnboardingStoreData) -> N
     hass.http.register_view(CloudStatusView(data))
 
 
-def with_cloud[_ViewT: BaseOnboardingView, **_P](
+def ensure_not_done[_ViewT: BaseOnboardingView, **_P](
     func: Callable[
         Concatenate[_ViewT, web.Request, _P],
         Coroutine[Any, Any, web.Response],
@@ -42,7 +41,7 @@ def with_cloud[_ViewT: BaseOnboardingView, **_P](
     """Home Assistant API decorator to check onboarding and cloud."""
 
     @wraps(func)
-    async def _with_cloud(
+    async def _ensure_not_done(
         self: _ViewT,
         request: web.Request,
         *args: _P.args,
@@ -54,16 +53,9 @@ def with_cloud[_ViewT: BaseOnboardingView, **_P](
             # the cloud onboarding views.
             raise HTTPUnauthorized
 
-        hass = request.app[KEY_HASS]
-        if DATA_CLOUD not in hass.data:
-            return self.json(
-                {"code": "cloud_disabled"},
-                status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-            )
-
         return await func(self, request, *args, **kwargs)
 
-    return _with_cloud
+    return _ensure_not_done
 
 
 class CloudForgotPasswordView(
@@ -74,7 +66,7 @@ class CloudForgotPasswordView(
     url = "/api/onboarding/cloud/forgot_password"
     name = "api:onboarding:cloud:forgot_password"
 
-    @with_cloud
+    @ensure_not_done
     async def post(self, request: web.Request) -> web.Response:
         """Handle forgot password request."""
         return await super()._post(request)
@@ -86,7 +78,7 @@ class CloudLoginView(NoAuthBaseOnboardingView, cloud_http.CloudLoginView):
     url = "/api/onboarding/cloud/login"
     name = "api:onboarding:cloud:login"
 
-    @with_cloud
+    @ensure_not_done
     async def post(self, request: web.Request) -> web.Response:
         """Handle login request."""
         return await super()._post(request)
@@ -98,7 +90,7 @@ class CloudLogoutView(NoAuthBaseOnboardingView, cloud_http.CloudLogoutView):
     url = "/api/onboarding/cloud/logout"
     name = "api:onboarding:cloud:logout"
 
-    @with_cloud
+    @ensure_not_done
     async def post(self, request: web.Request) -> web.Response:
         """Handle logout request."""
         return await super()._post(request)
@@ -110,7 +102,7 @@ class CloudStatusView(NoAuthBaseOnboardingView):
     url = "/api/onboarding/cloud/status"
     name = "api:onboarding:cloud:status"
 
-    @with_cloud
+    @ensure_not_done
     async def get(self, request: web.Request) -> web.Response:
         """Return cloud status."""
         hass = request.app[KEY_HASS]
