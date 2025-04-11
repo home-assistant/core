@@ -4,17 +4,16 @@ from __future__ import annotations
 
 from pysyncthru import SyncThruAPINotSupported
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
-from .coordinator import SyncthruCoordinator
+from .coordinator import SyncThruConfigEntry, SyncthruCoordinator
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SyncThruConfigEntry) -> bool:
     """Set up config entry."""
 
     coordinator = SyncthruCoordinator(hass, entry)
@@ -29,7 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SyncThruConfigEntry) -> bool:
     """Unload the config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     hass.data[DOMAIN].pop(entry.entry_id, None)
