@@ -166,6 +166,12 @@ def create_tool_use_block(
     ]
 
 
+# DEBUG    RawContentBlockStopEvent(index=0, type='content_block_stop')
+# DEBUG    RawContentBlockStartEvent(content_block=ToolUseBlock(id='toolu_011EhVxV5tV2R4CMZn2N51yr', input={}, name='get_home_state', type='tool_use'), index=1, type='content_block_start')
+# DEBUG    RawContentBlockDeltaEvent(delta=InputJSONDelta(partial_json='', type='input_json_delta'), index=1, type='content_block_delta')
+# DEBUG    RawContentBlockStopEvent(index=1, type='content_block_stop')
+
+
 async def test_entity(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
