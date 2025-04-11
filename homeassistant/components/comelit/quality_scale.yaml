@@ -35,9 +35,7 @@ rules:
   log-when-unavailable: done
   parallel-updates: done
   reauthentication-flow: done
-  test-coverage:
-    status: todo
-    comment: 79%, 130 lines missing
+  test-coverage: done
 
   # Gold
   devices: done
@@ -49,9 +47,7 @@ rules:
     status: exempt
     comment: device not discoverable
   docs-data-update: done
-  docs-examples:
-    status: todo
-    comment: add some automation example
+  docs-examples: done
   docs-known-limitations:
     status: exempt
     comment: no known limitations, yet
