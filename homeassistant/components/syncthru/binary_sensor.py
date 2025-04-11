@@ -82,11 +82,8 @@ class SyncThruBinarySensor(SyncthruEntity, BinarySensorEntity):
         entity_description: SyncThruBinarySensorDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, entity_description.key)
         self.entity_description = entity_description
-        serial_number = coordinator.data.serial_number()
-        assert serial_number is not None
-        self._attr_unique_id = f"{serial_number}_{entity_description.key}"
         self._attr_name = name
 
     @property

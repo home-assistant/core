@@ -10,11 +10,12 @@ from . import DOMAIN, SyncthruCoordinator
 class SyncthruEntity(CoordinatorEntity[SyncthruCoordinator]):
     """Base class for Syncthru entities."""
 
-    def __init__(self, coordinator: SyncthruCoordinator) -> None:
+    def __init__(self, coordinator: SyncthruCoordinator, key: str) -> None:
         """Initialize the Syncthru entity."""
         super().__init__(coordinator)
         serial_number = coordinator.syncthru.serial_number()
         assert serial_number is not None
+        self._attr_unique_id = f"{serial_number}_{key}"
         connections = set()
         if mac := coordinator.syncthru.raw().get("identity", {}).get("mac_addr"):
             connections.add((dr.CONNECTION_NETWORK_MAC, mac))

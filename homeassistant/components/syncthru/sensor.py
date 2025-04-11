@@ -150,22 +150,20 @@ class SyncThruSensor(SyncthruEntity, SensorEntity):
         entity_description: SyncThruSensorDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, entity_description.key)
         self.entity_description = entity_description
-        self.syncthru = coordinator.data
         self._attr_name = f"{name} {entity_description.name}".strip()
-        serial_number = coordinator.data.serial_number()
-        assert serial_number is not None
-        self._attr_unique_id = f"{serial_number}_{entity_description.key}"
 
     @property
     def native_value(self) -> str | int | None:
         """Return the state of the sensor."""
-        return self.entity_description.value_fn(self.syncthru)
+        return self.entity_description.value_fn(self.coordinator.data)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         if self.entity_description.extra_state_attributes_fn:
-            return self.entity_description.extra_state_attributes_fn(self.syncthru)
+            return self.entity_description.extra_state_attributes_fn(
+                self.coordinator.data
+            )
         return None
