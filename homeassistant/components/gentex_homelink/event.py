@@ -69,14 +69,13 @@ class HomeLinkEventEntity(CoordinatorEntity["HomeLinkCoordinator"], EventEntity)
         if self.id not in self.coordinator.data:
             # Not for us
             return
-        loop = self.coordinator.hass.loop
         # Handles debounce case - if we're pressed again, and we have an active stop timer, cancel the previous timer and restart it
         if (
             self.state_attributes["event_type"] == EVENT_PRESSED
             and self.button_off_task
         ):
             self.button_off_task.cancel()
-            self.button_off_task = loop.create_task(self.button_off())
+            self.button_off_task = asyncio.create_task(self.button_off())
             return
 
         # If this is the first press, set to off before setting pressed
@@ -89,7 +88,7 @@ class HomeLinkEventEntity(CoordinatorEntity["HomeLinkCoordinator"], EventEntity)
         if latest_update["requestId"] != self.last_request_id:
             self._trigger_event(EVENT_PRESSED)
             self.last_request_id = latest_update["requestId"]
-            self.button_off_task = loop.create_task(self.button_off())
+            self.button_off_task = asyncio.create_task(self.button_off())
 
         self.async_write_ha_state()
 

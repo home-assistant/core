@@ -4,7 +4,6 @@ from dataclasses import dataclass
 import functools
 import logging
 from typing import Any
-import asyncio
 
 from homelink.mqtt_provider import MQTTProvider
 
@@ -48,7 +47,6 @@ class HomeLinkCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.provider = provider
         self.last_sync_timestamp = None
         self.last_sync_id = None
-        self.config_entry = config_entry
         self.buttons: list[HomeLinkEventEntity] = []
 
     async def async_on_unload(self, _event):
@@ -98,12 +96,10 @@ def on_message(coordinator: HomeLinkCoordinator, _topic, message):
     "MQTT Callback function."
 
     if message["type"] == "state":
-        coordinator.async_set_updated_data(message["data"])
+        coordinator.hass.add_job(coordinator.async_set_updated_data, message["data"])
     if message["type"] == "requestSync":
-        coordinator.hass.add_job(
-            coordinator.hass.config_entries.async_reload(
-                coordinator.config_entry.entry_id
+        if coordinator.config_entry:
+            coordinator.hass.add_job(
+                coordinator.hass.config_entries.async_reload,
+                coordinator.config_entry.entry_id,
             )
-        )
-
-        # coordinator.async_set_updated_data(message["data"])
