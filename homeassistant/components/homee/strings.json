@@ -26,6 +26,11 @@
     }
   },
   "entity": {
+    "alarm_control_panel": {
+      "homee_mode": {
+        "name": "Status"
+      }
+    },
     "binary_sensor": {
       "blackout_alarm": {
         "name": "Blackout"
