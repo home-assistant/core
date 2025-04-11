@@ -111,7 +111,8 @@ class AdaxDevice(ClimateEntity):
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
         if temperature == 0:
-            await self.async_set_hvac_mode(HVACMode.OFF)
+            # Temp value of 0 should be treated as a 'turn-off' command
+            await self.async_turn_off()
         else:
             await self._adax_data_handler.set_room_target_temperature(
                 self._device_id, temperature, True
