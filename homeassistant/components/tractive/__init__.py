@@ -278,7 +278,7 @@ class TractiveClient:
         payload = {
             ATTR_BATTERY_LEVEL: event["hardware"]["battery_level"],
             ATTR_TRACKER_STATE: event["tracker_state"].lower(),
-            ATTR_POWER_SAVING: event["tracker_state_reason"] == "POWER_SAVING",
+            ATTR_POWER_SAVING: event.get("tracker_state_reason") == "POWER_SAVING",
             ATTR_BATTERY_CHARGING: event["charging_state"] == "CHARGING",
         }
         self._dispatch_tracker_event(
