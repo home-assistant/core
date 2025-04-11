@@ -1157,7 +1157,7 @@ hole==0.8.0
 holidays==0.69
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250404.0
+home-assistant-frontend==20250411.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.3.28
@@ -2322,7 +2322,7 @@ pysma==0.7.5
 pysmappee==0.2.29
 
 # homeassistant.components.smartthings
-pysmartthings==3.0.2
+pysmartthings==3.0.4
 
 # homeassistant.components.smarty
 pysmarty2==0.10.2
@@ -2733,7 +2733,7 @@ sentry-sdk==1.45.1
 sfrbox-api==0.0.11
 
 # homeassistant.components.sharkiq
-sharkiq==1.0.2
+sharkiq==1.1.0
 
 # homeassistant.components.aquostv
 sharp_aquos_rc==0.3.2
@@ -2968,7 +2968,7 @@ typedmonarchmoney==0.4.4
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==7.5.1
+uiprotect==7.5.3
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
