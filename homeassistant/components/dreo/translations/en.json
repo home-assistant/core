@@ -22,5 +22,22 @@
                 "title": "Connect to Dreo"
             }
         }
+    },
+    "exceptions": {
+        "set_oscillate_failed": {
+            "message": "Failed to set oscillation"
+        },
+        "set_preset_mode_failed": {
+            "message": "Failed to set preset mode"
+        },
+        "set_speed_failed": {
+            "message": "Failed to set speed"
+        },
+        "turn_off_failed": {
+            "message": "Failed to turn off device"
+        },
+        "turn_on_failed": {
+            "message": "Failed to turn on device"
+        }
     }
 }
