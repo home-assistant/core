@@ -235,19 +235,19 @@
     "step": {
       "init": {
         "title": "Migrate or re-configure",
-        "description": "Are you migrating to a new radio or re-configuring the current radio?",
+        "description": "Are you migrating to a new controller or re-configuring the current controller?",
         "menu_options": {
-          "intent_migrate": "Migrate to a new radio",
-          "intent_reconfigure": "Re-configure the current radio"
+          "intent_migrate": "Migrate to a new controller",
+          "intent_reconfigure": "Re-configure the current controller"
         }
       },
       "intent_migrate": {
         "title": "[%key:component::zwave_js::options::step::init::menu_options::intent_migrate%]",
-        "description": "Before plugging in your new radio, your old radio needs to be reset. A backup will be performed first.\n\nDo you wish to continue?"
+        "description": "Before plugging in your new controller, your old controller needs to be reset. A backup will be performed first.\n\nDo you wish to continue?"
       },
       "instruct_unplug": {
-        "title": "Unplug your old radio",
-        "description": "Backup saved to \"{file_path}\"\n\nYour old radio has been reset. If the hardware is no longer needed, you can now unplug it.\n\nPlease make sure your new radio is plugged in before continuing."
+        "title": "Unplug your old controller",
+        "description": "Backup saved to \"{file_path}\"\n\nYour old controller has been reset. If the hardware is no longer needed, you can now unplug it.\n\nPlease make sure your new controller is plugged in before continuing."
       },
       "configure_addon": {
         "data": {
