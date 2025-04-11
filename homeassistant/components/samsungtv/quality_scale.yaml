@@ -47,10 +47,8 @@ rules:
   docs-known-limitations: done
   docs-supported-devices: done
   docs-supported-functions: done
-  docs-troubleshooting:
-    status: todo
-  docs-use-cases:
-    status: todo
+  docs-troubleshooting: done
+  docs-use-cases: done
   dynamic-devices: done
   entity-category: done
   entity-device-class: done
