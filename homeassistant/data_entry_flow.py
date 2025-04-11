@@ -208,6 +208,13 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         Handler key is the domain of the component that we want to set up.
         """
 
+    @callback
+    def async_flow_removed(
+        self,
+        flow: FlowHandler[_FlowContextT, _FlowResultT, _HandlerT],
+    ) -> None:
+        """Handle a removed data entry flow."""
+
     @abc.abstractmethod
     async def async_finish_flow(
         self,
@@ -458,6 +465,7 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         """Remove a flow from in progress."""
         if (flow := self._progress.pop(flow_id, None)) is None:
             raise UnknownFlow
+        self.async_flow_removed(flow)
         self._async_remove_flow_from_index(flow)
         flow.async_cancel_progress_task()
         try:
@@ -485,6 +493,13 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
                 reason=err.reason,
                 description_placeholders=err.description_placeholders,
             )
+
+        if flow.flow_id not in self._progress:
+            # The flow was removed during the step, raise UnknownFlow
+            # unless the result is an abort
+            if result["type"] != FlowResultType.ABORT:
+                raise UnknownFlow
+            return result
 
         # Setup the flow handler's preview if needed
         if result.get("preview") is not None:
@@ -536,7 +551,7 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             flow.cur_step = result
             return result
 
-        # Abort and Success results both finish the flow
+        # Abort and Success results both finish the flow.
         self._async_remove_flow_progress(flow.flow_id)
 
         return result
