@@ -55,7 +55,6 @@ def test_not_supported(caplog: pytest.LogCaptureFixture) -> None:
 
 def test_not_supported_sensor(caplog: pytest.LogCaptureFixture) -> None:
     """Test if none is returned if entity isn't supported."""
-    # not supported entity
     assert get_accessory(None, None, State("sensor.xyz", "on"), 2, {}) is None
     assert "Unsupported sensor type (device_class=None)" in caplog.text
 
