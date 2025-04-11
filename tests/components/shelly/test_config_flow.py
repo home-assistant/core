@@ -11,6 +11,7 @@ from aioshelly.exceptions import (
     CustomPortNotSupported,
     DeviceConnectionError,
     InvalidAuthError,
+    InvalidHostError,
 )
 import pytest
 
@@ -308,6 +309,7 @@ async def test_form_auth(
     ("exc", "base_error"),
     [
         (DeviceConnectionError, "cannot_connect"),
+        (InvalidHostError, "invalid_host"),
         (ValueError, "unknown"),
     ],
 )

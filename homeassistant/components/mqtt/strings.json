@@ -43,8 +43,8 @@
         "data_description": {
           "broker": "The hostname or IP address of your MQTT broker.",
           "port": "The port your MQTT broker listens to. For example 1883.",
-          "username": "The username to login to your MQTT broker.",
-          "password": "The password to login to your MQTT broker.",
+          "username": "The username to log in to your MQTT broker.",
+          "password": "The password to log in to your MQTT broker.",
           "advanced_options": "Enable and select **Next** to set advanced options.",
           "certificate": "The custom CA certificate file to validate your MQTT brokers certificate.",
           "client_id": "The unique ID to identify the Home Assistant MQTT API as MQTT client. It is recommended to leave this option blank.",

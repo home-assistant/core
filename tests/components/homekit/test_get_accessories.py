@@ -6,11 +6,13 @@ import pytest
 
 from homeassistant.components.climate import ClimateEntityFeature
 from homeassistant.components.cover import CoverEntityFeature
+from homeassistant.components.homekit import TYPE_AIR_PURIFIER
 from homeassistant.components.homekit.accessories import TYPES, get_accessory
 from homeassistant.components.homekit.const import (
     ATTR_INTEGRATION,
     CONF_FEATURE_LIST,
     FEATURE_ON_OFF,
+    TYPE_FAN,
     TYPE_FAUCET,
     TYPE_OUTLET,
     TYPE_SHOWER,
@@ -342,6 +344,23 @@ def test_type_sensors(type_name, entity_id, state, attrs) -> None:
     ],
 )
 def test_type_switches(type_name, entity_id, state, attrs, config) -> None:
+    """Test if switch types are associated correctly."""
+    mock_type = Mock()
+    with patch.dict(TYPES, {type_name: mock_type}):
+        entity_state = State(entity_id, state, attrs)
+        get_accessory(None, None, entity_state, 2, config)
+    assert mock_type.called
+
+
+@pytest.mark.parametrize(
+    ("type_name", "entity_id", "state", "attrs", "config"),
+    [
+        ("Fan", "fan.test", "on", {}, {}),
+        ("Fan", "fan.test", "on", {}, {CONF_TYPE: TYPE_FAN}),
+        ("AirPurifier", "fan.test", "on", {}, {CONF_TYPE: TYPE_AIR_PURIFIER}),
+    ],
+)
+def test_type_fans(type_name, entity_id, state, attrs, config) -> None:
     """Test if switch types are associated correctly."""
     mock_type = Mock()
     with patch.dict(TYPES, {type_name: mock_type}):

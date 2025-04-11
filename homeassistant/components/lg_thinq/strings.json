@@ -303,7 +303,7 @@
         "state": {
           "invalid": "Invalid",
           "weak": "Weak",
-          "normal": "Normal",
+          "normal": "[%key:common::state::normal%]",
           "strong": "Strong",
           "very_strong": "Very strong"
         }
@@ -607,7 +607,7 @@
           "intensive_dry": "Spot",
           "macro": "Custom mode",
           "mop": "Mop",
-          "normal": "Normal",
+          "normal": "[%key:common::state::normal%]",
           "off": "[%key:common::state::off%]",
           "quiet_humidity": "Silent",
           "rapid_humidity": "Jet",
@@ -626,7 +626,7 @@
           "auto": "Low power",
           "high": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::high%]",
           "mop": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::mop%]",
-          "normal": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::normal%]",
+          "normal": "[%key:common::state::normal%]",
           "off": "[%key:common::state::off%]",
           "turbo": "[%key:component::lg_thinq::entity::select::wind_strength::state::power%]"
         }
@@ -653,7 +653,7 @@
           "heavy": "Intensive",
           "delicate": "Delicate",
           "turbo": "[%key:component::lg_thinq::entity::select::wind_strength::state::power%]",
-          "normal": "Normal",
+          "normal": "[%key:common::state::normal%]",
           "rinse": "Rinse",
           "refresh": "Refresh",
           "express": "Express",

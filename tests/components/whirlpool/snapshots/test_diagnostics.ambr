@@ -17,14 +17,14 @@
       'ovens': dict({
       }),
       'washer_dryers': dict({
-        'WasherDryer said3': dict({
-          'category': 'washer_dryer',
-          'data_model': 'washer',
-          'model_number': '12345',
-        }),
-        'WasherDryer said4': dict({
+        'Dryer': dict({
           'category': 'washer_dryer',
           'data_model': 'dryer',
+          'model_number': '12345',
+        }),
+        'Washer': dict({
+          'category': 'washer_dryer',
+          'data_model': 'washer',
           'model_number': '12345',
         }),
       }),

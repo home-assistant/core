@@ -703,8 +703,8 @@ async def test_setup_hass_takes_longer_than_log_slow_startup(
         return True
 
     with (
-        patch.object(bootstrap, "LOG_SLOW_STARTUP_INTERVAL", 0.1),
-        patch.object(bootstrap, "SLOW_STARTUP_CHECK_INTERVAL", 0.05),
+        patch.object(bootstrap, "LOG_SLOW_STARTUP_INTERVAL", 0.005),
+        patch.object(bootstrap, "SLOW_STARTUP_CHECK_INTERVAL", 0.005),
         patch(
             "homeassistant.components.frontend.async_setup",
             side_effect=_async_setup_that_blocks_startup,

@@ -277,3 +277,7 @@ ROLE_TO_DEVICE_CLASS_MAP = {
     "current_humidity": SensorDeviceClass.HUMIDITY,
     "current_temperature": SensorDeviceClass.TEMPERATURE,
 }
+
+# We want to check only the first 5 KB of the script if it contains emitEvent()
+# so that the integration startup remains fast.
+MAX_SCRIPT_SIZE = 5120

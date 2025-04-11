@@ -199,7 +199,7 @@ turn_on:
       example: "[255, 100, 100]"
       selector:
         color_rgb:
-    kelvin: &kelvin
+    color_temp_kelvin: &color_temp_kelvin
       filter: *color_temp_support
       selector:
         color_temp:
@@ -316,7 +316,7 @@ toggle:
   fields:
     transition: *transition
     rgb_color: *rgb_color
-    kelvin: *kelvin
+    color_temp_kelvin: *color_temp_kelvin
     brightness_pct: *brightness_pct
     effect: *effect
     advanced_fields:

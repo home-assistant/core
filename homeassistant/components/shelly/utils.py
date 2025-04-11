@@ -58,6 +58,7 @@ from .const import (
     GEN2_BETA_RELEASE_URL,
     GEN2_RELEASE_URL,
     LOGGER,
+    MAX_SCRIPT_SIZE,
     RPC_INPUTS_EVENTS_TYPES,
     SHAIR_MAX_WORK_HOURS,
     SHBTN_INPUTS_EVENTS_TYPES,
@@ -642,7 +643,7 @@ def get_rpc_ws_url(hass: HomeAssistant) -> str | None:
 
 async def get_rpc_script_event_types(device: RpcDevice, id: int) -> list[str]:
     """Return a list of event types for a specific script."""
-    code_response = await device.script_getcode(id)
+    code_response = await device.script_getcode(id, bytes_to_read=MAX_SCRIPT_SIZE)
     matches = SHELLY_EMIT_EVENT_PATTERN.finditer(code_response["data"])
     return sorted([*{str(event_type.group(1)) for event_type in matches}])
 

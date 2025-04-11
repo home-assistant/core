@@ -85,6 +85,8 @@ from .const import (
     SERV_ACCESSORY_INFO,
     SERV_BATTERY_SERVICE,
     SIGNAL_RELOAD_ENTITIES,
+    TYPE_AIR_PURIFIER,
+    TYPE_FAN,
     TYPE_FAUCET,
     TYPE_OUTLET,
     TYPE_SHOWER,
@@ -111,6 +113,10 @@ SWITCH_TYPES = {
     TYPE_SPRINKLER: "ValveSwitch",
     TYPE_SWITCH: "Switch",
     TYPE_VALVE: "ValveSwitch",
+}
+FAN_TYPES = {
+    TYPE_AIR_PURIFIER: "AirPurifier",
+    TYPE_FAN: "Fan",
 }
 TYPES: Registry[str, type[HomeAccessory]] = Registry()
 
@@ -178,7 +184,10 @@ def get_accessory(  # noqa: C901
             a_type = "WindowCovering"
 
     elif state.domain == "fan":
-        a_type = "Fan"
+        if fan_type := config.get(CONF_TYPE):
+            a_type = FAN_TYPES[fan_type]
+        else:
+            a_type = "Fan"
 
     elif state.domain == "humidifier":
         a_type = "HumidifierDehumidifier"

@@ -73,7 +73,7 @@
       "fields": {
         "rgb_color": {
           "name": "RGB color",
-          "description": "Color for the light in RGB-format."
+          "description": "Color for the light in RGB format."
         },
         "brightness": {
           "name": "Brightness",
@@ -173,11 +173,11 @@
   "selector": {
     "mode": {
       "options": {
-        "color_flow": "Color Flow",
+        "normal": "[%key:common::state::normal%]",
+        "color_flow": "Color flow",
         "hsv": "HSV",
         "last": "Last",
         "moonlight": "Moonlight",
-        "normal": "Normal",
         "rgb": "RGB"
       }
     },

@@ -111,7 +111,11 @@ class SmBaseDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
             raise ConfigEntryAuthFailed from err
 
         except SmlightConnectionError as err:
-            raise UpdateFailed(err) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect_device",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
     @abstractmethod
     async def _internal_update_data(self) -> _DataT:

@@ -283,3 +283,85 @@ async def test_reauth_flow_error(
     assert result["reason"] == "reauth_successful"
     compare = {**mock_config_entry.data, **config_flow_data}
     assert compare == mock_config_entry.data
+
+
+async def test_reconfig_flow(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_panel: AsyncMock,
+    model_name: str,
+    serial_number: str,
+    config_flow_data: dict[str, Any],
+) -> None:
+    """Test reconfig auth."""
+    await setup_integration(hass, mock_config_entry)
+
+    config_flow_data = {k: f"{v}2" for k, v in config_flow_data.items()}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": mock_config_entry.entry_id,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "1.1.1.1", CONF_PORT: 7700},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "auth"
+    assert result["errors"] == {}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        config_flow_data,
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {
+        CONF_HOST: "1.1.1.1",
+        CONF_PORT: 7700,
+        CONF_MODEL: model_name,
+        **config_flow_data,
+    }
+
+
+@pytest.mark.parametrize("model", ["b5512"])
+async def test_reconfig_flow_incorrect_model(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_panel: AsyncMock,
+    model_name: str,
+    serial_number: str,
+    config_flow_data: dict[str, Any],
+) -> None:
+    """Test reconfig fails with a different device."""
+    await setup_integration(hass, mock_config_entry)
+
+    config_flow_data = {k: f"{v}2" for k, v in config_flow_data.items()}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": mock_config_entry.entry_id,
+        },
+    )
+
+    mock_panel.model = "Solution 3000"
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "0.0.0.0", CONF_PORT: 7700},
+    )
+
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "device_mismatch"
