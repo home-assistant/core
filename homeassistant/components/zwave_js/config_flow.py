@@ -785,7 +785,7 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
 
         try:
             await self.backup_task
-        except (FailedCommand, OSError, AbortFlow) as err:
+        except AbortFlow as err:
             _LOGGER.error(err)
             self.error = f"Failed to backup network: {err}"
             return self.async_show_progress_done(next_step_id="migration_failed")
@@ -812,7 +812,7 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
 
         try:
             await self.restore_backup_task
-        except (FailedCommand, OSError, AbortFlow) as err:
+        except AbortFlow as err:
             _LOGGER.error(err)
             self.error = f"Failed to restore network: {err}"
             return self.async_show_progress_done(next_step_id="migration_failed")
@@ -1155,6 +1155,8 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
         unsub = controller.on("nvm backup progress", forward_progress)
         try:
             self.backup_data = await controller.async_backup_nvm_raw()
+        except FailedCommand as err:
+            raise AbortFlow(f"Failed to backup network: {err}") from err
         finally:
             unsub()
 
@@ -1162,7 +1164,10 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
         self.backup_filepath = self.hass.config.path(
             f"zwavejs_nvm_backup_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.bin"
         )
-        self._write_backup_file(self.backup_filepath, self.backup_data)
+        try:
+            self._write_backup_file(self.backup_filepath, self.backup_data)
+        except OSError as err:
+            raise AbortFlow(f"Failed to save backup file: {err}") from err
 
     def _write_backup_file(self, path: str, data: bytes) -> None:
         with open(path, "wb") as backup_file:
@@ -1201,6 +1206,8 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
         ]
         try:
             await controller.async_restore_nvm(self.backup_data)
+        except FailedCommand as err:
+            raise AbortFlow(f"Failed to restore network: {err}") from err
         finally:
             for unsub in unsubs:
                 unsub()
