@@ -23,16 +23,20 @@ async def async_setup_entry(
     tado = entry.runtime_data.coordinator
     entities: list[TadoChildLockSwitchEntity] = []
     for zone in tado.zones:
-        zoneChildLockSupported = (
-            len(zone["devices"]) > 0 and "childLockEnabled" in zone["devices"][0]
+        zone_child_lock_supported_devices = filter_child_lock_enabled_devices_in_zone(
+            zone
         )
 
-        if not zoneChildLockSupported:
+        has_any_supported_child_lock_devices = (
+            len(zone_child_lock_supported_devices) > 0
+        )
+
+        if not has_any_supported_child_lock_devices:
             continue
 
         entities.append(
             TadoChildLockSwitchEntity(
-                tado, zone["name"], zone["id"], zone["devices"][0]
+                tado, zone["name"], zone["id"], zone_child_lock_supported_devices
             )
         )
     async_add_entities(entities, True)
@@ -48,24 +52,33 @@ class TadoChildLockSwitchEntity(TadoZoneEntity, SwitchEntity):
         coordinator: TadoDataUpdateCoordinator,
         zone_name: str,
         zone_id: int,
-        device_info: dict[str, Any],
+        device_infos: list[dict[str, Any],],
     ) -> None:
         """Initialize the Tado child lock switch entity."""
         super().__init__(zone_name, coordinator.home_id, zone_id, coordinator)
-
-        self._device_info = device_info
+        self._device_infos = device_infos
+        self._device_info = device_infos[0]
         self._device_id = self._device_info["shortSerialNo"]
         self._attr_unique_id = f"{zone_id} {coordinator.home_id} child-lock"
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        await self.coordinator.set_child_lock(self._device_id, True)
+        for device in self._device_infos:
+            await self.coordinator.set_child_lock(device["shortSerialNo"], True)
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        await self.coordinator.set_child_lock(self._device_id, False)
+        for device in self._device_infos:
+            await self.coordinator.set_child_lock(device["shortSerialNo"], False)
         await self.coordinator.async_request_refresh()
+
+    def get_aggregated_state(self) -> bool:
+        """Return the active child lock state by all supported devices in zone."""
+        return all(
+            device_info.get("childLockEnabled", False) is True
+            for device_info in self._device_infos
+        )
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -77,7 +90,10 @@ class TadoChildLockSwitchEntity(TadoZoneEntity, SwitchEntity):
     def _async_update_callback(self) -> None:
         """Handle update callbacks."""
         try:
-            self._device_info = self.coordinator.data["device"][self._device_id]
+            zone = next(
+                zone for zone in self.coordinator.zones if zone["id"] == self.zone_id
+            )
+            self._device_infos = filter_child_lock_enabled_devices_in_zone(zone)
         except KeyError:
             _LOGGER.error(
                 "Could not update child lock info for device %s in zone %s",
@@ -85,4 +101,10 @@ class TadoChildLockSwitchEntity(TadoZoneEntity, SwitchEntity):
                 self.zone_name,
             )
         else:
-            self._attr_is_on = self._device_info.get("childLockEnabled", False) is True
+            self._attr_is_on = self.get_aggregated_state()
+
+
+def filter_child_lock_enabled_devices_in_zone(zone):
+    """Return child lock enabled devices in given zone."""
+
+    return [device for device in zone["devices"] if "childLockEnabled" in device]
