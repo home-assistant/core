@@ -166,6 +166,12 @@ def create_tool_use_block(
     ]
 
 
+# DEBUG    RawContentBlockStopEvent(index=0, type='content_block_stop')
+# DEBUG    RawContentBlockStartEvent(content_block=ToolUseBlock(id='toolu_011EhVxV5tV2R4CMZn2N51yr', input={}, name='get_home_state', type='tool_use'), index=1, type='content_block_start')
+# DEBUG    RawContentBlockDeltaEvent(delta=InputJSONDelta(partial_json='', type='input_json_delta'), index=1, type='content_block_delta')
+# DEBUG    RawContentBlockStopEvent(index=1, type='content_block_stop')
+
+
 async def test_entity(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -303,11 +309,27 @@ async def test_conversation_agent(
 
 
 @patch("homeassistant.components.anthropic.conversation.llm.AssistAPI._async_get_tools")
+@pytest.mark.parametrize(
+    ("tool_call_json_parts", "expected_call_tool_args"),
+    [
+        (
+            ['{"param1": "test_value"}'],
+            {"param1": "test_value"},
+        ),
+        (
+            ['{"para', 'm1": "test_valu', 'e"}'],
+            {"param1": "test_value"},
+        ),
+        ([""], {}),
+    ],
+)
 async def test_function_call(
     mock_get_tools,
     hass: HomeAssistant,
     mock_config_entry_with_assist: MockConfigEntry,
     mock_init_component,
+    tool_call_json_parts: list[str],
+    expected_call_tool_args: dict[str, Any],
 ) -> None:
     """Test function call from the assistant."""
     agent_id = "conversation.claude"
@@ -343,7 +365,7 @@ async def test_function_call(
                         1,
                         "toolu_0123456789AbCdEfGhIjKlM",
                         "test_tool",
-                        ['{"para', 'm1": "test_valu', 'e"}'],
+                        tool_call_json_parts,
                     ),
                 ]
             )
@@ -387,7 +409,7 @@ async def test_function_call(
         llm.ToolInput(
             id="toolu_0123456789AbCdEfGhIjKlM",
             tool_name="test_tool",
-            tool_args={"param1": "test_value"},
+            tool_args=expected_call_tool_args,
         ),
         llm.LLMContext(
             platform="anthropic",
