@@ -1,15 +1,21 @@
 """Test Adax climate entity."""
 
 from homeassistant.components.climate.const import ATTR_CURRENT_TEMPERATURE, HVACMode
-from homeassistant.const import ATTR_TEMPERATURE, Platform
+from homeassistant.components.adax.const import SCAN_INTERVAL
+from homeassistant.const import ATTR_TEMPERATURE, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
+
+from tests.common import AsyncMock, async_fire_time_changed
+from tests.test_setup import FrozenDateTimeFactory
 
 from . import CLOUD_CONFIG, LOCAL_CONFIG, init_integration
 from .conftest import CLOUD_DEVICE_DATA, LOCAL_DEVICE_DATA
 
 
-async def test_climate_cloud(hass: HomeAssistant, mock_adax_cloud) -> None:
+async def test_climate_cloud(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_adax_cloud: AsyncMock
+) -> None:
     """Test states of the (cloud) Climate entity."""
     await init_integration(
         hass,
@@ -32,8 +38,19 @@ async def test_climate_cloud(hass: HomeAssistant, mock_adax_cloud) -> None:
         == CLOUD_DEVICE_DATA[0]["temperature"]
     )
 
+    mock_adax_cloud.side_effect = Exception()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-async def test_climate_local(hass: HomeAssistant, mock_adax_local) -> None:
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_climate_local(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_adax_local: AsyncMock
+) -> None:
     """Test states of the (local) Climate entity."""
     await init_integration(
         hass,
@@ -56,3 +73,12 @@ async def test_climate_local(hass: HomeAssistant, mock_adax_local) -> None:
         state.attributes[ATTR_CURRENT_TEMPERATURE]
         == (LOCAL_DEVICE_DATA["current_temperature"])
     )
+
+    mock_adax_local.side_effect = Exception()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_UNAVAILABLE

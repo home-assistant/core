@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import ACCOUNT_ID, CLOUD, CONNECTION_TYPE, LOCAL, SCAN_INTERVAL
+from .const import ACCOUNT_ID, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 

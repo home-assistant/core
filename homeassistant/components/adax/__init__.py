@@ -6,7 +6,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .const import CONNECTION_TYPE, LOCAL
-from .coordinator import AdaxCloudCoordinator, AdaxLocalCoordinator, AdaxConfigEntry
+from .coordinator import AdaxCloudCoordinator, AdaxConfigEntry, AdaxLocalCoordinator
 
 PLATFORMS = [Platform.CLIMATE]
 
