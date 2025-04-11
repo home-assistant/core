@@ -16,6 +16,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.components.sensor import SensorStateClass
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
@@ -29,6 +30,7 @@ CONNECTION_SENSORS: tuple[SensorEntityDescription, ...] = (
         key="rate_down",
         name="Freebox download speed",
         device_class=SensorDeviceClass.DATA_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfDataRate.KILOBYTES_PER_SECOND,
         icon="mdi:download-network",
     ),
@@ -36,6 +38,7 @@ CONNECTION_SENSORS: tuple[SensorEntityDescription, ...] = (
         key="rate_up",
         name="Freebox upload speed",
         device_class=SensorDeviceClass.DATA_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfDataRate.KILOBYTES_PER_SECOND,
         icon="mdi:upload-network",
     ),
