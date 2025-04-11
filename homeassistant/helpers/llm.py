@@ -9,6 +9,7 @@ from datetime import timedelta
 from decimal import Decimal
 from enum import Enum
 from functools import cache, partial
+from operator import attrgetter
 from typing import Any, cast
 
 import slugify as unicode_slug
@@ -496,7 +497,7 @@ def _get_exposed_entities(
         CALENDAR_DOMAIN: {},
     }
 
-    for state in hass.states.async_all():
+    for state in sorted(hass.states.async_all(), key=attrgetter("name")):
         if not async_should_expose(hass, assistant, state.entity_id):
             continue
 

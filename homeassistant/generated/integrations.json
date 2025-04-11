@@ -1825,6 +1825,12 @@
         }
       }
     },
+    "eve": {
+      "name": "Eve",
+      "iot_standards": [
+        "matter"
+      ]
+    },
     "evergy": {
       "name": "Evergy",
       "integration_type": "virtual",
@@ -2928,6 +2934,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_push"
+    },
+    "imeon_inverter": {
+      "name": "Imeon Inverter",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "imgw_pib": {
       "name": "IMGW-PIB",
