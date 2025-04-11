@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_entry_diagnostics[dpi_group_payload0-dpi_app_payload0-device_payload0-client_payload0-config_entry_options0]
+# name: test_entry_diagnostics[wlan_payload0-dpi_group_payload0-dpi_app_payload0-device_payload0-client_payload0-config_entry_options0]
   dict({
     'clients': dict({
       '00:00:00:00:00:00': dict({
