@@ -1,0 +1,396 @@
+{
+  "components": {
+    "main": {
+      "mediaPlayback": {
+        "supportedPlaybackCommands": {
+          "value": ["play", "pause", "stop", "fastForward", "rewind"],
+          "timestamp": "2025-04-07T03:11:33.475Z"
+        },
+        "playbackStatus": {
+          "value": null
+        }
+      },
+      "samsungim.fixedFindNode": {},
+      "samsungvd.supportsPowerOnByOcf": {
+        "supportsPowerOnByOcf": {
+          "value": "true",
+          "timestamp": "2025-04-11T01:04:35.229Z"
+        }
+      },
+      "sec.deviceConnectionState": {
+        "deviceConnectionState": {
+          "value": null
+        }
+      },
+      "mediaInputSource": {
+        "supportedInputSources": {
+          "value": [],
+          "timestamp": "2025-04-07T03:11:33.475Z"
+        },
+        "inputSource": {
+          "value": null
+        }
+      },
+      "samsungvd.deviceCategory": {
+        "category": {
+          "value": "frametv",
+          "timestamp": "2025-04-07T03:11:34.491Z"
+        }
+      },
+      "switch": {
+        "switch": {
+          "value": "on",
+          "timestamp": "2025-04-11T01:23:07.035Z"
+        }
+      },
+      "samsungvd.pictureMode": {
+        "pictureMode": {
+          "value": "Optimized",
+          "timestamp": "2025-03-28T03:26:15.489Z"
+        },
+        "supportedPictureModes": {
+          "value": ["Dynamic", "Eco", "Movie", "Standard"],
+          "timestamp": "2025-04-07T03:11:34.841Z"
+        },
+        "supportedPictureModesMap": {
+          "value": [
+            {
+              "id": "modeDynamic",
+              "name": "Dynamic"
+            },
+            {
+              "id": "modeGen_65552",
+              "name": "Eco"
+            },
+            {
+              "id": "modeMovie",
+              "name": "Movie"
+            },
+            {
+              "id": "modeStandard",
+              "name": "Standard"
+            }
+          ],
+          "timestamp": "2025-04-07T03:11:34.841Z"
+        }
+      },
+      "ocf": {
+        "st": {
+          "value": "2025-04-07T03:09:56Z",
+          "timestamp": "2025-04-07T03:11:33.997Z"
+        },
+        "mndt": {
+          "value": "2024-01-01",
+          "timestamp": "2025-04-07T03:11:33.997Z"
+        },
+        "mnfv": {
+          "value": "T-PTMDAKUC-1310.1|ST_ENERGY",
+          "timestamp": "2025-04-07T03:11:33.997Z"
+        },
+        "mnhw": {
+          "value": "",
+          "timestamp": "2025-04-07T03:11:33.997Z"
+        },
+        "di": {
+          "value": "d8af1824-16ae-40f4-9a0b-ed5dfbaccda1",
+          "timestamp": "2025-04-07T03:11:33.997Z"
+        },
+        "mnsl": {
+          "value": "",
+          "timestamp": "2025-04-07T03:11:33.997Z"
+        },
+        "dmv": {
+          "value": "res.1.1.0,sh.1.1.0",
+          "timestamp": "2025-04-07T03:11:33.997Z"
+        },
+        "n": {
+          "value": "[TV] Samsung The Frame (55)",
+          "timestamp": "2025-04-07T03:11:33.997Z"
+        },
+        "mnmo": {
+          "value": "QN55LS03DAFXZA",
+          "timestamp": "2025-04-07T03:11:33.997Z"
+        },
+        "vid": {
+          "value": "VD-FRAME-2024",
+          "timestamp": "2025-04-07T03:11:33.997Z"
+        },
+        "mnmn": {
+          "value": "Samsung Electronics",
+          "timestamp": "2025-04-07T03:11:33.997Z"
+        },
+        "mnml": {
+          "value": "",
+          "timestamp": "2025-04-07T03:11:33.997Z"
+        },
+        "mnpv": {
+          "value": "8.0",
+          "timestamp": "2025-04-07T03:11:33.997Z"
+        },
+        "mnos": {
+          "value": "Tizen",
+          "timestamp": "2025-04-07T03:11:33.997Z"
+        },
+        "pi": {
+          "value": "d8af1824-16ae-40f4-9a0b-ed5dfbaccda1",
+          "timestamp": "2025-04-07T03:11:33.997Z"
+        },
+        "icv": {
+          "value": "core.1.1.0",
+          "timestamp": "2025-04-07T03:11:33.997Z"
+        }
+      },
+      "samsungvd.supportsFeatures": {
+        "mediaOutputSupported": {
+          "value": true,
+          "timestamp": "2025-04-07T03:11:34.740Z"
+        },
+        "imeAdvSupported": {
+          "value": true,
+          "timestamp": "2025-04-07T03:11:34.740Z"
+        },
+        "wifiUpdateSupport": {
+          "value": null
+        },
+        "executableServiceList": {
+          "value": null
+        },
+        "remotelessSupported": {
+          "value": null
+        },
+        "artSupported": {
+          "value": null
+        },
+        "mobileCamSupported": {
+          "value": true,
+          "timestamp": "2025-04-07T03:11:34.740Z"
+        }
+      },
+      "custom.accessibility": {},
+      "custom.disabledCapabilities": {
+        "disabledCapabilities": {
+          "value": ["samsungvd.ambientContent", "sec.wifiConfiguration"],
+          "timestamp": "2025-04-11T01:04:35.144Z"
+        }
+      },
+      "samsungvd.remoteControl": {},
+      "samsungvd.lightControl": {
+        "supportedModeMap": {
+          "value": [
+            {
+              "id": "",
+              "name": ""
+            }
+          ],
+          "timestamp": "2025-03-28T03:25:58.462Z"
+        },
+        "requestId": {
+          "value": "",
+          "timestamp": "2025-03-28T03:25:58.462Z"
+        },
+        "selectedMode": {
+          "value": "",
+          "timestamp": "2025-03-28T03:25:58.462Z"
+        },
+        "streamControl": {
+          "value": false,
+          "timestamp": "2025-03-28T03:25:58.462Z"
+        },
+        "selectedAppId": {
+          "value": "",
+          "timestamp": "2025-03-28T03:25:58.462Z"
+        },
+        "errorCode": {
+          "value": "",
+          "timestamp": "2025-03-28T03:25:58.462Z"
+        },
+        "supportedModes": {
+          "value": [""],
+          "timestamp": "2025-03-28T03:25:58.462Z"
+        }
+      },
+      "samsungvd.soundMode": {
+        "supportedSoundModesMap": {
+          "value": [
+            {
+              "id": "modeAmplify",
+              "name": "Amplify"
+            },
+            {
+              "id": "modeStandard",
+              "name": "Standard"
+            }
+          ],
+          "timestamp": "2025-04-07T03:11:34.088Z"
+        },
+        "soundMode": {
+          "value": "Standard",
+          "timestamp": "2025-04-07T03:11:34.088Z"
+        },
+        "supportedSoundModes": {
+          "value": ["Amplify", "Standard"],
+          "timestamp": "2025-04-07T03:11:34.088Z"
+        }
+      },
+      "custom.launchapp": {},
+      "samsungvd.firmwareVersion": {
+        "firmwareVersion": {
+          "value": "3.5.1",
+          "timestamp": "2025-04-07T03:11:34.491Z"
+        }
+      },
+      "samsungvd.thingStatus": {
+        "updatedTime": {
+          "value": 1744334328,
+          "timestamp": "2025-04-11T01:18:47.823Z"
+        },
+        "status": {
+          "value": "Idle",
+          "timestamp": "2025-04-11T01:18:47.823Z"
+        }
+      },
+      "demandResponseLoadControl": {
+        "drlcStatus": {
+          "value": {
+            "drlcType": 1,
+            "drlcLevel": 0,
+            "start": "2025-04-11T01:18:42Z",
+            "duration": 99999999,
+            "override": false
+          },
+          "timestamp": "2025-04-11T01:18:49.188Z"
+        }
+      },
+      "audioVolume": {
+        "volume": {
+          "value": 8,
+          "unit": "%",
+          "timestamp": "2025-04-07T03:11:34.118Z"
+        }
+      },
+      "powerConsumptionReport": {
+        "powerConsumption": {
+          "value": {
+            "energy": 0,
+            "deltaEnergy": 0,
+            "power": 0,
+            "powerEnergy": 0,
+            "persistedEnergy": 0,
+            "energySaved": 0,
+            "persistedSavedEnergy": 0,
+            "start": "1970-01-01T00:00:00Z",
+            "end": "2025-04-11T01:18:49Z"
+          },
+          "timestamp": "2025-04-11T01:18:49.302Z"
+        }
+      },
+      "samsungvd.mediaInputSource": {
+        "supportedInputSourcesMap": {
+          "value": [
+            {
+              "id": "dtv",
+              "name": "TV"
+            }
+          ],
+          "timestamp": "2025-04-11T01:18:48.525Z"
+        },
+        "inputSource": {
+          "value": "dtv",
+          "timestamp": "2025-04-11T01:18:48.525Z"
+        }
+      },
+      "custom.tvsearch": {},
+      "samsungvd.ambient": {
+        "info": {
+          "value": null
+        }
+      },
+      "refresh": {},
+      "custom.error": {
+        "error": {
+          "value": null
+        }
+      },
+      "execute": {
+        "data": {
+          "value": null
+        }
+      },
+      "tvChannel": {
+        "tvChannel": {
+          "value": "",
+          "timestamp": "2025-04-10T22:55:38.917Z"
+        },
+        "tvChannelName": {
+          "value": "art",
+          "timestamp": "2025-04-10T22:55:38.917Z"
+        }
+      },
+      "samsungvd.ambientContent": {
+        "supportedAmbientApps": {
+          "value": [],
+          "timestamp": "2025-04-07T03:11:33.475Z"
+        }
+      },
+      "samsungvd.aiAction": {
+        "curationSupport": {
+          "value": true,
+          "timestamp": "2025-04-07T03:11:34.491Z"
+        },
+        "imageSupport": {
+          "value": true,
+          "timestamp": "2025-04-07T03:11:34.491Z"
+        }
+      },
+      "custom.recording": {},
+      "custom.energyType": {
+        "energyType": {
+          "value": "2.0",
+          "timestamp": "2025-04-11T01:18:49.837Z"
+        },
+        "energySavingSupport": {
+          "value": true,
+          "timestamp": "2025-04-11T01:18:49.837Z"
+        },
+        "drMaxDuration": {
+          "value": 99999999,
+          "unit": "min",
+          "timestamp": "2025-04-11T01:18:49.837Z"
+        },
+        "energySavingLevel": {
+          "value": 1,
+          "timestamp": "2025-04-11T01:18:49.837Z"
+        },
+        "energySavingInfo": {
+          "value": null
+        },
+        "supportedEnergySavingLevels": {
+          "value": [1],
+          "timestamp": "2025-04-11T01:18:49.837Z"
+        },
+        "energySavingOperation": {
+          "value": false,
+          "timestamp": "2025-04-11T01:18:49.837Z"
+        },
+        "notificationTemplateID": {
+          "value": null
+        },
+        "energySavingOperationSupport": {
+          "value": true,
+          "timestamp": "2025-04-11T01:18:49.837Z"
+        }
+      },
+      "audioMute": {
+        "mute": {
+          "value": "muted",
+          "timestamp": "2025-04-07T03:11:34.118Z"
+        }
+      },
+      "mediaTrackControl": {
+        "supportedTrackControlCommands": {
+          "value": null
+        }
+      }
+    }
+  }
+}
