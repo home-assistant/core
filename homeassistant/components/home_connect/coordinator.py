@@ -7,7 +7,6 @@ from collections import defaultdict
 from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
-from datetime import datetime, timedelta
 import logging
 from typing import Any, cast
 
@@ -48,7 +47,7 @@ from .utils import get_dict_from_home_connect_error
 
 _LOGGER = logging.getLogger(__name__)
 
-MAX_EXECUTIONS_TIME_WINDOW = timedelta(minutes=15)
+MAX_EXECUTIONS_TIME_WINDOW = 15 * 60  # 15 minutes
 MAX_EXECUTIONS = 5
 
 type HomeConnectConfigEntry = ConfigEntry[HomeConnectCoordinator]
@@ -118,9 +117,7 @@ class HomeConnectCoordinator(
         ] = {}
         self.device_registry = dr.async_get(self.hass)
         self.data = {}
-        self._execution_tracker: dict[
-            str, list[datetime]
-        ] = {}  # Track executions per ha_id
+        self._execution_tracker: dict[str, list[float]] = defaultdict(list)
 
     @cached_property
     def context_listeners(self) -> dict[tuple[str, EventKey], list[CALLBACK_TYPE]]:
@@ -606,10 +603,8 @@ class HomeConnectCoordinator(
     def refreshed_too_often_recently(self, appliance_ha_id: str) -> bool:
         """Check if the appliance data hasn't been refreshed too often recently."""
 
-        now = datetime.now()
-        if appliance_ha_id not in self._execution_tracker:
-            self._execution_tracker[appliance_ha_id] = []
-        elif len(self._execution_tracker[appliance_ha_id]) >= MAX_EXECUTIONS:
+        now = self.hass.loop.time()
+        if len(self._execution_tracker[appliance_ha_id]) >= MAX_EXECUTIONS:
             return True
 
         execution_tracker = self._execution_tracker[appliance_ha_id] = [
@@ -636,7 +631,7 @@ class HomeConnectCoordinator(
                 translation_placeholders={
                     "appliance_name": self.data[appliance_ha_id].info.name,
                     "times": str(MAX_EXECUTIONS),
-                    "time_window": str(MAX_EXECUTIONS_TIME_WINDOW.seconds // 60),
+                    "time_window": str(MAX_EXECUTIONS_TIME_WINDOW // 60),
                     "home_connect_resource_url": "https://www.home-connect.com/global/help-support/error-codes#/Togglebox=15362315-13320636-1/",
                     "home_assistant_core_new_issue_url": (
                         "https://github.com/home-assistant/core/issues/new?template=bug_report.yml"

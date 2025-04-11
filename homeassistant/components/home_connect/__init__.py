@@ -90,11 +90,17 @@ async def async_unload_entry(
 ) -> bool:
     """Unload a config entry."""
     issue_registry = ir.async_get(hass)
-    issue_registry.async_delete(DOMAIN, "deprecated_set_program_and_option_actions")
-    issue_registry.async_delete(DOMAIN, "deprecated_command_actions")
-    for _, issue_id in issue_registry.issues.copy():
-        if issue_id.startswith("home_connect_too_many_connected_paired_events"):
-            issue_registry.async_delete(DOMAIN, issue_id)
+    issues_to_delete = [
+        "deprecated_set_program_and_option_actions",
+        "deprecated_command_actions",
+    ] + [
+        issue_id
+        for (issue_domain, issue_id) in issue_registry.issues
+        if issue_domain == DOMAIN
+        and issue_id.startswith("home_connect_too_many_connected_paired_events")
+    ]
+    for issue_id in issues_to_delete:
+        issue_registry.async_delete(DOMAIN, issue_id)
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 

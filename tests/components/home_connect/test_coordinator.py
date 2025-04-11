@@ -630,9 +630,10 @@ async def test_coordinator_disabling_updates_for_appliance(
     issue_registry: ir.IssueRegistry,
     hass_client: ClientSessionGenerator,
 ) -> None:
-    """Test that the coordinator disables updates for an appliance when it has been refreshed too often and raises an issue.
+    """Test coordinator disables appliance updates on frequent connect/paired events.
 
-    Also that the updates are back when the user confirms the issue
+    A repair issue should be created when the updates are disabled.
+    When the user confirms the issue the updates should be enabled again.
     """
     appliance_ha_id = "SIEMENS-HCS02DWH1-6BE58C26DCC1"
     issue_id = f"home_connect_too_many_connected_paired_events_{appliance_ha_id}"
@@ -723,7 +724,10 @@ async def test_coordinator_disabling_updates_for_appliance_is_gone_after_entry_r
     issue_registry: ir.IssueRegistry,
     hass_client: ClientSessionGenerator,
 ) -> None:
-    """Test above issue is deleted after unloading the entry and that the updates are back."""
+    """Test that updates are enabled again after unloading the entry.
+
+    The repair issue should also be deleted.
+    """
     appliance_ha_id = "SIEMENS-HCS02DWH1-6BE58C26DCC1"
     issue_id = f"home_connect_too_many_connected_paired_events_{appliance_ha_id}"
 
