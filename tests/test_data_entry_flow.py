@@ -486,6 +486,7 @@ async def test_show_progress(hass: HomeAssistant, manager: MockFlowManager) -> N
                 await task_one_evt.wait()
 
             async def long_running_job_two() -> None:
+                self.async_update_progress(0.5)
                 await task_two_evt.wait()
                 self.data = {"title": "Hello"}
 

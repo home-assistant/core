@@ -3101,9 +3101,8 @@ async def test_options_migrate_with_addon(
     get_addon_discovery_info,
 ) -> None:
     """Test migration flow with add-on."""
-    entry = integration
     hass.config_entries.async_update_entry(
-        entry,
+        integration,
         unique_id="1234",
         data={
             "url": "ws://localhost:3000",
@@ -3121,7 +3120,7 @@ async def test_options_migrate_with_addon(
     )
     client.driver.controller.async_restore_nvm = AsyncMock()
 
-    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_init(integration.entry_id)
 
     assert result["type"] == FlowResultType.MENU
     assert result["step_id"] == "init"
@@ -3139,7 +3138,6 @@ async def test_options_migrate_with_addon(
     assert result["step_id"] == "backup_nvm"
 
     with patch("builtins.open", mock_open()) as mock_file:
-        # Make sure the flow continues when the progress task is done
         await hass.async_block_till_done()
         assert client.driver.controller.async_backup_nvm_raw.call_count == 1
         assert mock_file.call_count == 1
@@ -3184,9 +3182,9 @@ async def test_options_migrate_with_addon(
     result = await hass.config_entries.options.async_configure(result["flow_id"])
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert entry.data["url"] == "ws://host1:3001"
-    assert entry.data["usb_path"] == "/test"
-    assert entry.data["use_addon"] is True
+    assert integration.data["url"] == "ws://host1:3001"
+    assert integration.data["usb_path"] == "/test"
+    assert integration.data["use_addon"] is True
 
 
 async def test_options_migrate_backup_failure(
@@ -3198,11 +3196,8 @@ async def test_options_migrate_backup_failure(
         entry, unique_id="1234", data={**entry.data, "use_addon": True}
     )
 
-    async def mock_backup_nvm_raw():
-        raise FailedCommand("test_error", "unknown_error")
-
     client.driver.controller.async_backup_nvm_raw = AsyncMock(
-        side_effect=mock_backup_nvm_raw
+        side_effect=FailedCommand("test_error", "unknown_error")
     )
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
@@ -3221,3 +3216,100 @@ async def test_options_migrate_backup_failure(
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "backup_failed"
+
+
+@pytest.mark.parametrize(
+    "discovery_info",
+    [
+        [
+            Discovery(
+                addon="core_zwave_js",
+                service="zwave_js",
+                uuid=uuid4(),
+                config=ADDON_DISCOVERY_INFO,
+            )
+        ]
+    ],
+)
+async def test_options_migrate_restore_failure(
+    hass: HomeAssistant,
+    client,
+    supervisor,
+    integration,
+    addon_running,
+    restart_addon,
+    set_addon_options,
+    get_addon_discovery_info,
+) -> None:
+    """Test restore failure."""
+    hass.config_entries.async_update_entry(
+        integration, unique_id="1234", data={**integration.data, "use_addon": True}
+    )
+
+    async def mock_backup_nvm_raw():
+        await asyncio.sleep(0)
+        return b"test_nvm_data"
+
+    client.driver.controller.async_backup_nvm_raw = AsyncMock(
+        side_effect=mock_backup_nvm_raw
+    )
+    client.driver.controller.async_restore_nvm = AsyncMock(
+        side_effect=FailedCommand("test_error", "unknown_error")
+    )
+
+    result = await hass.config_entries.options.async_init(integration.entry_id)
+
+    assert result["type"] == FlowResultType.MENU
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"next_step_id": "intent_migrate"}
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "intent_migrate"
+
+    result = await hass.config_entries.options.async_configure(result["flow_id"], {})
+
+    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "backup_nvm"
+
+    with patch("builtins.open", mock_open()) as mock_file:
+        await hass.async_block_till_done()
+        assert client.driver.controller.async_backup_nvm_raw.call_count == 1
+        assert mock_file.call_count == 1
+
+    result = await hass.config_entries.options.async_configure(result["flow_id"])
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "instruct_unplug"
+
+    result = await hass.config_entries.options.async_configure(result["flow_id"], {})
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "choose_serial_port"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USB_PATH: "/test",
+        },
+    )
+
+    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "start_addon"
+
+    await hass.async_block_till_done()
+    result = await hass.config_entries.options.async_configure(result["flow_id"])
+
+    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "restore_nvm"
+
+    await hass.async_block_till_done()
+
+    assert client.driver.controller.async_restore_nvm.call_count == 1
+
+    result = await hass.config_entries.options.async_configure(result["flow_id"])
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "restore_failed"
