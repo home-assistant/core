@@ -105,7 +105,6 @@ class DreoFan(DreoEntity, FanEntity):
             command_params["mode"] = preset_mode
 
         self._send_command(ERROR_TURN_ON_FAILED, **command_params)
-        self._attr_is_on = True
         self.schedule_update_ha_state(force_refresh=True)
 
     def turn_off(self, **kwargs: Any) -> None:
