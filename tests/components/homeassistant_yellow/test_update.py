@@ -17,7 +17,7 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
-UPDATE_ENTITY_ID = "update.home_assistant_yellow_firmware"
+UPDATE_ENTITY_ID = "update.home_assistant_yellow_radio_firmware"
 
 
 async def test_yellow_update_entity(hass: HomeAssistant) -> None:

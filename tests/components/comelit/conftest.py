@@ -104,4 +104,5 @@ def mock_vedo_config_entry() -> Generator[MockConfigEntry]:
             CONF_PIN: VEDO_PIN,
             CONF_TYPE: VEDO,
         },
+        entry_id="vedo_config_entry_id",
     )
