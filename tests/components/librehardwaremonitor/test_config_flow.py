@@ -32,7 +32,7 @@ async def test_connection_error(
     hass: HomeAssistant, mock_lhm_client: AsyncMock
 ) -> None:
     """Test that the no connection error is shown."""
-    mock_lhm_client.get_hardware_device_names.side_effect = (
+    mock_lhm_client.get_main_hardware_devices.side_effect = (
         LibreHardwareMonitorConnectionError()
     )
 
@@ -48,7 +48,7 @@ async def test_no_devices_error(
     hass: HomeAssistant, mock_lhm_client: AsyncMock
 ) -> None:
     """Test that the no devices error is shown."""
-    mock_lhm_client.get_hardware_device_names.side_effect = (
+    mock_lhm_client.get_main_hardware_devices.side_effect = (
         LibreHardwareMonitorNoDevicesError()
     )
 
@@ -107,7 +107,9 @@ async def test_full_flow_with_device_selection(
     assert result["step_id"] == "select_devices"
     assert result.get("errors") is None
 
-    selected_devices = {"devices": ["AMD Ryzen 7 7800X3D", "Samsung SSD 970 EVO 1TB"]}
+    selected_devices = {
+        "devices": ["AMD Ryzen 7 7800X3D", "NVIDIA GeForce RTX 4080 SUPER"]
+    }
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=selected_devices
@@ -124,7 +126,7 @@ async def test_full_flow_with_device_selection(
         CONF_SCAN_INTERVAL: VALID_CONFIG[CONF_SCAN_INTERVAL],
     }
     assert config_entry.options == {
-        CONF_DEVICES: ["AMD Ryzen 7 7800X3D", "Samsung SSD 970 EVO 1TB"]
+        CONF_DEVICES: ["AMD Ryzen 7 7800X3D", "NVIDIA GeForce RTX 4080 SUPER"]
     }
 
 
@@ -151,7 +153,9 @@ async def test_reconfiguration_flow(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "select_devices"
 
-    selected_devices = {"devices": ["AMD Ryzen 7 7800X3D", "Samsung SSD 970 EVO 1TB"]}
+    selected_devices = {
+        "devices": ["AMD Ryzen 7 7800X3D", "NVIDIA GeForce RTX 4080 SUPER"]
+    }
 
     device_registry = dr.async_get(hass)
     orphaned_device = device_registry.async_get_or_create(
@@ -175,7 +179,7 @@ async def test_reconfiguration_flow(
     assert mock_entry.data == updated_config
     assert mock_entry.options[CONF_DEVICES] == [
         "AMD Ryzen 7 7800X3D",
-        "Samsung SSD 970 EVO 1TB",
+        "NVIDIA GeForce RTX 4080 SUPER",
     ]
 
     await hass.config_entries.async_unload(mock_entry.entry_id)
