@@ -33,7 +33,7 @@ async def test_all_entities(
     await snapshot_platform(
         hass,
         entity_registry,
-        snapshot(),
+        snapshot,
         mock_vedo_config_entry.entry_id,
     )
 
