@@ -27,28 +27,28 @@
   "entity": {
     "sensor": {
       "toner_black": {
-        "name": "Black toner"
+        "name": "Black toner level"
       },
       "toner_cyan": {
-        "name": "Cyan toner"
+        "name": "Cyan toner level"
       },
       "toner_magenta": {
-        "name": "Magenta toner"
+        "name": "Magenta toner level"
       },
       "toner_yellow": {
-        "name": "Yellow toner"
+        "name": "Yellow toner level"
       },
       "drum_black": {
-        "name": "Black drum"
+        "name": "Black drum level"
       },
       "drum_cyan": {
-        "name": "Cyan drum"
+        "name": "Cyan drum level"
       },
       "drum_magenta": {
-        "name": "Magenta drum"
+        "name": "Magenta drum level"
       },
       "drum_yellow": {
-        "name": "Yellow drum"
+        "name": "Yellow drum level"
       },
       "tray_mp": {
         "name": "Multi-purpose tray"
