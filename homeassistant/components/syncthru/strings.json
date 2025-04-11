@@ -23,5 +23,46 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "toner_black": {
+        "name": "Black toner"
+      },
+      "toner_cyan": {
+        "name": "Cyan toner"
+      },
+      "toner_magenta": {
+        "name": "Magenta toner"
+      },
+      "toner_yellow": {
+        "name": "Yellow toner"
+      },
+      "drum_black": {
+        "name": "Black drum"
+      },
+      "drum_cyan": {
+        "name": "Cyan drum"
+      },
+      "drum_magenta": {
+        "name": "Magenta drum"
+      },
+      "drum_yellow": {
+        "name": "Yellow drum"
+      },
+      "tray_mp": {
+        "name": "Multi-purpose tray"
+      },
+      "tray_manual": {
+        "name": "Manual feed tray"
+      },
+      "tray": {
+        "name": "Input tray {tray_number}"
+      },
+      "active_alerts": {
+        "name": "Active alerts",
+        "unit_of_measurement": "alerts"
+      }
+    }
   }
 }
