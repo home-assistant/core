@@ -5,7 +5,7 @@ from collections.abc import Generator
 from copy import copy
 from ipaddress import ip_address
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, call, mock_open, patch
+from unittest.mock import AsyncMock, MagicMock, call, patch
 from uuid import uuid4
 
 from aiohasupervisor import SupervisorError
@@ -3150,7 +3150,7 @@ async def test_options_migrate_with_addon(
     assert result["type"] == FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "backup_nvm"
 
-    with patch("builtins.open", mock_open()) as mock_file:
+    with patch("anyio.Path.write_bytes", AsyncMock()) as mock_file:
         await hass.async_block_till_done()
         assert client.driver.controller.async_backup_nvm_raw.call_count == 1
         assert mock_file.call_count == 1
@@ -3290,7 +3290,7 @@ async def test_options_migrate_restore_failure(
     assert result["type"] == FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "backup_nvm"
 
-    with patch("builtins.open", mock_open()) as mock_file:
+    with patch("anyio.Path.write_bytes", AsyncMock()) as mock_file:
         await hass.async_block_till_done()
         assert client.driver.controller.async_backup_nvm_raw.call_count == 1
         assert mock_file.call_count == 1

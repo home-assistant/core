@@ -9,9 +9,9 @@ import logging
 from typing import Any
 
 import aiohttp
+from anyio import Path
 from serial.tools import list_ports
 import voluptuous as vol
-from zwave_js_server.client import Client
 from zwave_js_server.exceptions import FailedCommand
 from zwave_js_server.version import VersionInfo, get_server_version
 
@@ -644,7 +644,12 @@ class ZWaveJSConfigFlow(BaseZwaveJSFlow, ConfigFlow, domain=DOMAIN):
         }
 
         if not self._usb_discovery:
-            ports = await async_get_usb_ports(self.hass)
+            try:
+                ports = await async_get_usb_ports(self.hass)
+            except OSError as err:
+                _LOGGER.error("Failed to get USB ports: %s", err)
+                return self.async_abort(reason="usb_ports_failed")
+
             schema = {
                 vol.Required(CONF_USB_PATH, default=usb_path): vol.In(ports),
                 **schema,
@@ -759,7 +764,7 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
     async def async_step_intent_migrate(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Confirm the user wants to reset their current radio."""
+        """Confirm the user wants to reset their current controller."""
         if not self.config_entry.data.get(CONF_USE_ADDON):
             return self.async_abort(reason="addon_required")
 
@@ -821,17 +826,24 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
     async def async_step_instruct_unplug(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Reset the current radio, and instruct the user to unplug it."""
+        """Reset the current controller, and instruct the user to unplug it."""
 
         if user_input is not None:
-            # Now that the old radio is gone, we can scan for serial ports again
+            # Now that the old controller is gone, we can scan for serial ports again
             return await self.async_step_choose_serial_port()
 
-        client: Client = self.config_entry.runtime_data[DATA_CLIENT]
-        if client.driver is None:
-            return self.async_abort(reason="driver_not_ready")
-        # reset the old radio
-        await client.driver.async_hard_reset()
+        if (
+            self.config_entry.state != ConfigEntryState.LOADED
+            or not (client := self.config_entry.runtime_data[DATA_CLIENT]).driver
+        ):
+            raise AbortFlow("Driver not ready")
+
+        # reset the old controller
+        try:
+            await client.driver.async_hard_reset()
+        except FailedCommand as err:
+            _LOGGER.error("Failed to reset controller: %s", err)
+            return self.async_abort(reason="reset_failed")
 
         return self.async_show_form(
             step_id="instruct_unplug",
@@ -978,7 +990,11 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
         log_level = addon_config.get(CONF_ADDON_LOG_LEVEL, "info")
         emulate_hardware = addon_config.get(CONF_ADDON_EMULATE_HARDWARE, False)
 
-        ports = await async_get_usb_ports(self.hass)
+        try:
+            ports = await async_get_usb_ports(self.hass)
+        except OSError as err:
+            _LOGGER.error("Failed to get USB ports: %s", err)
+            return self.async_abort(reason="usb_ports_failed")
 
         data_schema = vol.Schema(
             {
@@ -1024,12 +1040,15 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
                 self.restart_addon = True
             # Copy the add-on config to keep the objects separate.
             self.original_addon_config = dict(addon_config)
-            # Remove legacy network_key
-            new_addon_config.pop(CONF_ADDON_NETWORK_KEY, None)
             await self._async_set_addon_config(new_addon_config)
             return await self.async_step_start_addon()
 
-        ports = await async_get_usb_ports(self.hass)
+        try:
+            ports = await async_get_usb_ports(self.hass)
+        except OSError as err:
+            _LOGGER.error("Failed to get USB ports: %s", err)
+            return self.async_abort(reason="usb_ports_failed")
+
         data_schema = vol.Schema(
             {
                 vol.Required(CONF_USB_PATH): vol.In(ports),
@@ -1145,8 +1164,10 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
 
     async def _async_backup_network(self) -> None:
         """Backup the current network."""
-        client: Client = self.config_entry.runtime_data[DATA_CLIENT]
-        if client.driver is None:
+        if (
+            self.config_entry.state != ConfigEntryState.LOADED
+            or not (client := self.config_entry.runtime_data[DATA_CLIENT]).driver
+        ):
             raise AbortFlow("Driver not ready")
 
         @callback
@@ -1168,13 +1189,9 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
             f"zwavejs_nvm_backup_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.bin"
         )
         try:
-            self._write_backup_file(self.backup_filepath, self.backup_data)
+            await Path(self.backup_filepath).write_bytes(self.backup_data)
         except OSError as err:
             raise AbortFlow(f"Failed to save backup file: {err}") from err
-
-    def _write_backup_file(self, path: str, data: bytes) -> None:
-        with open(path, "wb") as backup_file:
-            backup_file.write(data)
 
     async def _async_restore_network_backup(self) -> None:
         """Restore the backup."""
@@ -1183,11 +1200,10 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
 
         # Reload the config entry to reconnect the client after the addon restart
         await self.hass.config_entries.async_reload(self.config_entry.entry_id)
-        if self.config_entry.state != ConfigEntryState.LOADED:
-            raise AbortFlow("Could not reload config entry")
-
-        client: Client = self.config_entry.runtime_data[DATA_CLIENT]
-        if client.driver is None:
+        if (
+            self.config_entry.state != ConfigEntryState.LOADED
+            or not (client := self.config_entry.runtime_data[DATA_CLIENT]).driver
+        ):
             raise AbortFlow("Driver not ready")
 
         @callback
