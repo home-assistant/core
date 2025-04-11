@@ -66,23 +66,39 @@ rules:
 
   # Gold
   docs-examples: done
-  discovery-update-info: exempt
+  discovery-update-info:
+    status: exempt
+    comment: Google calendar does not support discovery
   entity-device-class: todo
   entity-translations: todo
   docs-data-update: todo
   entity-disabled-by-default: done
-  discovery: exempt
+  discovery:
+    status: exempt
+    comment: Google calendar does not support discovery
   exception-translations: todo
   devices: todo
   docs-supported-devices: done
-  icon-translations: exempt
+  icon-translations:
+    status: exempt
+    comment: Google calendar does not have any icons
   docs-known-limitations: todo
-  stale-devices: exempt
+  stale-devices:
+    status: exempt
+    comment: Google calendar does not have devices
   docs-supported-functions: done
-  repair-issues: exempt
-  reconfiguration-flow: exempt
-  entity-category: exempt
-  dynamic-devices: exempt
+  repair-issues:
+    status: todo
+    comment: There are some warnings/deprecations that should be repair issues
+  reconfiguration-flow:
+    status: exempt
+    comment: There is nothing to configure in the configuration flow
+  entity-category:
+    status: exempt
+    comment: The entities in google calendar do not support categories
+  dynamic-devices:
+    status: exempt
+    comment: Google calendar does not have devices
   docs-troubleshooting: todo
   diagnostics: todo
   docs-use-cases: todo
@@ -97,5 +113,7 @@ rules:
       configuration flow, which is no longer recommended or described in the
       documentation for new users. This legacy config flow uses oauth2client
       which is not natively async.
-  strict-typing: done
+  strict-typing:
+    status: todo
+    comment: Dependency oauth2client does not confirm to PEP 561
   inject-websession: done
