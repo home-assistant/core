@@ -59,8 +59,20 @@
       }
     },
     "button": {
+      "estimate_operation_time": {
+        "name": "Estimate operation time"
+      },
       "reset_water_filter": {
         "name": "Reset water filter"
+      },
+      "state_start": {
+        "name": "State start"
+      },
+      "state_cancel": {
+        "name": "State cancel"
+      },
+      "state_pause_resume": {
+        "name": "State pause-resume"
       },
       "stop": {
         "name": "[%key:common::action::stop%]"

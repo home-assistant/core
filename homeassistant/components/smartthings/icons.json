@@ -21,8 +21,20 @@
       }
     },
     "button": {
+      "estimate_operation_time": {
+        "default": "mdi:clock-end"
+      },
       "reset_water_filter": {
         "default": "mdi:reload"
+      },
+      "state_cancel": {
+        "default": "mdi:stop-circle"
+      },
+      "state_pause_resume": {
+        "default": "mdi:pause-circle"
+      },
+      "state_start": {
+        "default": "mdi:play-circle"
       },
       "stop": {
         "default": "mdi:stop"
