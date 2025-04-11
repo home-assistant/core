@@ -145,6 +145,14 @@
       }
     }
   },
+  "exceptions": {
+    "firmware_update_failed": {
+      "message": "Firmware update failed for {device_name}."
+    },
+    "cannot_connect_device": {
+      "message": "An error occurred while connecting to the SMLIGHT device: {error}."
+    }
+  },
   "issues": {
     "unsupported_firmware": {
       "title": "SLZB core firmware update required",
