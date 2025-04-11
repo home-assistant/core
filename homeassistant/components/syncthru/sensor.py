@@ -12,12 +12,11 @@ from homeassistant.components.sensor import SensorEntity, SensorEntityDescriptio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, PERCENTAGE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import SyncthruCoordinator, device_identifiers
+from . import SyncthruCoordinator
 from .const import DOMAIN
+from .entity import SyncthruEntity
 
 SYNCTHRU_STATE_HUMAN = {
     SyncthruState.INVALID: "invalid",
@@ -138,7 +137,7 @@ async def async_setup_entry(
     )
 
 
-class SyncThruSensor(CoordinatorEntity[SyncthruCoordinator], SensorEntity):
+class SyncThruSensor(SyncthruEntity, SensorEntity):
     """Implementation of an abstract Samsung Printer sensor platform."""
 
     _attr_icon = "mdi:printer"
@@ -158,15 +157,6 @@ class SyncThruSensor(CoordinatorEntity[SyncthruCoordinator], SensorEntity):
         serial_number = coordinator.data.serial_number()
         assert serial_number is not None
         self._attr_unique_id = f"{serial_number}_{entity_description.key}"
-
-    @property
-    def device_info(self) -> DeviceInfo | None:
-        """Return device information."""
-        if (identifiers := device_identifiers(self.syncthru)) is None:
-            return None
-        return DeviceInfo(
-            identifiers=identifiers,
-        )
 
     @property
     def native_value(self) -> str | int | None:
