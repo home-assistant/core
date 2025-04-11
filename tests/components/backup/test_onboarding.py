@@ -45,6 +45,41 @@ def auth_active(hass: HomeAssistant) -> None:
         ("post", "backup/upload", {}),
     ],
 )
+async def test_onboarding_view_after_done(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_client: ClientSessionGenerator,
+    method: str,
+    view: str,
+    kwargs: dict[str, Any],
+) -> None:
+    """Test raising after onboarding."""
+    mock_onboarding_storage(hass_storage, {"done": [onboarding.const.STEP_USER]})
+
+    assert await async_setup_component(hass, "onboarding", {})
+    async_initialize_backup(hass)
+    assert await async_setup_component(hass, "backup", {})
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+
+    resp = await client.request(method, f"/api/onboarding/{view}", **kwargs)
+
+    assert resp.status == 401
+
+
+@pytest.mark.parametrize(
+    ("method", "view", "kwargs"),
+    [
+        ("get", "backup/info", {}),
+        (
+            "post",
+            "backup/restore",
+            {"json": {"backup_id": "abc123", "agent_id": "test"}},
+        ),
+        ("post", "backup/upload", {}),
+    ],
+)
 async def test_onboarding_backup_view_without_backup(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],

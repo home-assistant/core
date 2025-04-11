@@ -632,13 +632,6 @@ async def test_onboarding_installation_type(
     ("method", "view", "kwargs"),
     [
         ("get", "installation_type", {}),
-        ("get", "backup/info", {}),
-        (
-            "post",
-            "backup/restore",
-            {"json": {"backup_id": "abc123", "agent_id": "test"}},
-        ),
-        ("post", "backup/upload", {}),
     ],
 )
 async def test_onboarding_view_after_done(
