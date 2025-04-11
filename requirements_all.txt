@@ -1157,7 +1157,7 @@ hole==0.8.0
 holidays==0.69
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250404.0
+home-assistant-frontend==20250411.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.3.28
@@ -2733,7 +2733,7 @@ sentry-sdk==1.45.1
 sfrbox-api==0.0.11
 
 # homeassistant.components.sharkiq
-sharkiq==1.0.2
+sharkiq==1.1.0
 
 # homeassistant.components.aquostv
 sharp_aquos_rc==0.3.2
