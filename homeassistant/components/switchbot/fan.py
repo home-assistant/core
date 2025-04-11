@@ -9,7 +9,6 @@ import switchbot
 from switchbot import FanMode
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
-from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -71,21 +70,13 @@ class SwitchBotFanEntity(SwitchbotEntity, FanEntity, RestoreEntity):
         """Return the current preset mode."""
         return self._device.get_current_mode()
 
-    async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added."""
-        await super().async_added_to_hass()
-        if not (last_state := await self.async_get_last_state()):
-            return
-        self._attr_is_on = last_state.state == STATE_ON
-        self._last_run_success = last_state.attributes.get("last_run_success")
-
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
 
         _LOGGER.debug(
             "Switchbot fan to set preset mode %s %s", preset_mode, self._address
         )
-        self._last_run_success = bool(await self._device.set_preset_mdoe(preset_mode))
+        self._last_run_success = bool(await self._device.set_preset_mode(preset_mode))
         self.async_write_ha_state()
 
     async def async_set_percentage(self, percentage: int) -> None:
