@@ -129,7 +129,7 @@ EVENT_TYPES = {
         "button_left",
         "button_mid_left",
         "button_mid_right",
-        "button_right"
+        "button_right",
     ],
     ERROR: ["error"],
     FINGERPRINT: ["fingerprint"],
