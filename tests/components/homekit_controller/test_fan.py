@@ -114,7 +114,7 @@ def create_fanv2_service_without_rotation_speed(accessory: Accessory) -> None:
 
 
 def create_air_purifier_service(accessory: Accessory) -> None:
-    """Define fan v2 characteristics as per HAP spec."""
+    """Define air purifier characteristics as per HAP spec."""
     service = accessory.add_service(ServicesTypes.AIR_PURIFIER)
 
     target_state = service.add_char(CharacteristicsTypes.AIR_PURIFIER_STATE_TARGET)
