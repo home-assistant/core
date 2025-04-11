@@ -37,6 +37,45 @@ async def setup_cloud_fixture(hass: HomeAssistant, cloud: MagicMock) -> None:
     await hass.async_block_till_done()
 
 
+@pytest.mark.parametrize(
+    ("method", "view", "kwargs"),
+    [
+        (
+            "post",
+            "cloud/forgot_password",
+            {"json": {"email": "hello@bla.com"}},
+        ),
+        (
+            "post",
+            "cloud/login",
+            {"json": {"email": "my_username", "password": "my_password"}},
+        ),
+        ("post", "cloud/logout", {}),
+        ("get", "cloud/status", {}),
+    ],
+)
+async def test_onboarding_view_after_done(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_client: ClientSessionGenerator,
+    cloud: MagicMock,
+    method: str,
+    view: str,
+    kwargs: dict[str, Any],
+) -> None:
+    """Test raising after onboarding."""
+    mock_onboarding_storage(hass_storage, {"done": [onboarding.const.STEP_USER]})
+
+    assert await async_setup_component(hass, "onboarding", {})
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+
+    resp = await client.request(method, f"/api/onboarding/{view}", **kwargs)
+
+    assert resp.status == 401
+
+
 async def test_onboarding_cloud_forgot_password(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
