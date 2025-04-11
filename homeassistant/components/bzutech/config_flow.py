@@ -8,8 +8,7 @@ from typing import Any
 from bzutech import BzuTech
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.helpers.selector import (
     SelectOptionDict,
@@ -26,8 +25,7 @@ STEP_USER_LOGIN_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_EMAIL): str,
         vol.Required(CONF_PASSWORD): str,
-    },
-    True,
+    }
 )
 
 
@@ -42,7 +40,7 @@ def get_ports(api: BzuTech, chipid: str) -> list[str]:
     return [f"Port {i} {api.get_endpoint_on(chipid, i)}" for i in range(1, 5)]
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class BzuTechConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for BZUTech."""
 
     VERSION = 1
@@ -106,8 +104,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_EMAIL: self.email,
                 CONF_CHIPID: self.selecteddevice,
             }
+            identifier = f"BZUGW-{self.selecteddevice}-{user_input[CONF_SENSORPORT]}"
+            await self.async_set_unique_id(identifier)
+            self._abort_if_unique_id_configured()
+
             return self.async_create_entry(
-                title=f"BZUGW-{self.selecteddevice}-{user_input[CONF_SENSORPORT]}",
+                title=identifier,
                 data=user_input,
             )
 

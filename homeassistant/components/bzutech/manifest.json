@@ -5,5 +5,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/bzutech",
   "iot_class": "cloud_push",
+  "quality_scale": "bronze",
   "requirements": ["bzutech==2.3.2"]
 }

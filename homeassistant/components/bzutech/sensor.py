@@ -25,8 +25,8 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import CONF_CHIPID, CONF_ENDPOINT, CONF_SENSORPORT, DOMAIN
@@ -78,15 +78,15 @@ SENSOR_TYPE: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="DOOR",
-        translation_key="door",
-        device_class=SensorDeviceClass.AQI,
+        translation_key="door open sensor",
+        device_class=SensorDeviceClass.ENUM,
         native_unit_of_measurement=None,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="DOR",
-        translation_key="door",
-        device_class=SensorDeviceClass.AQI,
+        translation_key="door open sensor",
+        device_class=SensorDeviceClass.ENUM,
         native_unit_of_measurement=None,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -282,10 +282,10 @@ ENDPOINT_SENSORS = {
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Do entry Setup."""
-    bzu_api = hass.data[DOMAIN][entry.entry_id]
+    bzu_api = entry.runtime_data
     sensors = [
         BzuSensorEntity(
             bzu_api, f"{sensor}-{entry.data[CONF_SENSORPORT]}", entry, description
@@ -301,7 +301,7 @@ async def async_setup_entry(
 class BzuSensorEntity(SensorEntity):
     """Setup sensor entity."""
 
-    has_entity_name = True
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -325,7 +325,6 @@ class BzuSensorEntity(SensorEntity):
         self._attr_device_info = DeviceInfo(
             name=f"{self.chipid}-{entry.data[CONF_SENSORPORT]}",
             identifiers={(DOMAIN, f"ESP-{self.chipid}")},
-            entry_type=DeviceEntryType("service"),
             manufacturer="Bzu Tech",
             model=f"ESP-{self.chipid}-{entry.data[CONF_SENSORPORT]}",
             serial_number=f"{self.chipid}P{entry.data[CONF_SENSORPORT]}",
