@@ -94,7 +94,7 @@ PyTransportNSW==0.1.1
 PyTurboJPEG==1.7.5
 
 # homeassistant.components.vicare
-PyViCare==2.43.1
+PyViCare==2.44.0
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.14.3
@@ -246,7 +246,7 @@ aioguardian==2022.07.0
 aioharmony==0.5.2
 
 # homeassistant.components.hassio
-aiohasupervisor==0.3.0
+aiohasupervisor==0.3.1b1
 
 # homeassistant.components.home_connect
 aiohomeconnect==0.17.0
@@ -2134,7 +2134,7 @@ renault-api==0.2.9
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.13.0
+reolink-aio==0.13.1
 
 # homeassistant.components.rflink
 rflink==0.0.66
