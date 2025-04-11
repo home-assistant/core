@@ -69,7 +69,7 @@ class MatterEventEntity(MatterEntity, EventEntity):
             max_presses_supported = self.get_matter_attribute_value(
                 clusters.Switch.Attributes.MultiPressMax
             )
-            max_presses_supported = min(max_presses_supported or 1, 8)
+            max_presses_supported = min(max_presses_supported or 2, 8)
             for i in range(max_presses_supported):
                 event_types.append(f"multi_press_{i + 1}")  # noqa: PERF401
         elif feature_map & SwitchFeature.kMomentarySwitch:

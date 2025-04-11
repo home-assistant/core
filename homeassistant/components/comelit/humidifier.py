@@ -162,7 +162,7 @@ class ComelitHumidifierEntity(CoordinatorEntity[ComelitSerialBridge], Humidifier
 
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
-        if self.mode == HumidifierComelitMode.OFF:
+        if not self._attr_is_on:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="humidity_while_off",
@@ -190,9 +190,13 @@ class ComelitHumidifierEntity(CoordinatorEntity[ComelitSerialBridge], Humidifier
         await self.coordinator.api.set_humidity_status(
             self._device.index, self._set_command
         )
+        self._attr_is_on = True
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off."""
         await self.coordinator.api.set_humidity_status(
             self._device.index, HumidifierComelitCommand.OFF
         )
+        self._attr_is_on = False
+        self.async_write_ha_state()
