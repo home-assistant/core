@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from librehardwaremonitor_api.model import LibreHardwareMonitorSensorData
+
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -9,6 +11,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import LibreHardwareMonitorCoordinator
 from .const import DOMAIN
 
 STATE_MIN_VALUE = "min_value"
@@ -21,27 +24,31 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the LibreHardwareMonitor platform."""
-    lhm_coordinator = config_entry.runtime_data
+    lhm_coordinator: LibreHardwareMonitorCoordinator = config_entry.runtime_data
 
     sensor_entities = [
         LibreHardwareMonitorSensor(lhm_coordinator, sensor_data)
-        for sensor_data in lhm_coordinator.data.values()
+        for sensor_data in lhm_coordinator.data.sensor_data.values()
     ]
 
     async_add_entities(sensor_entities)
 
 
-class LibreHardwareMonitorSensor(CoordinatorEntity, SensorEntity):
+class LibreHardwareMonitorSensor(
+    CoordinatorEntity[LibreHardwareMonitorCoordinator], SensorEntity
+):
     """Sensor to display information from LibreHardwareMonitor."""
 
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator, sensor_data):
+    def __init__(
+        self,
+        coordinator: LibreHardwareMonitorCoordinator,
+        sensor_data: LibreHardwareMonitorSensorData,
+    ) -> None:
         """Initialize an LibreHardwareMonitor sensor."""
         super().__init__(coordinator)
-
-        self._coordinator = coordinator
 
         self._attr_name = sensor_data.name
         self.value = sensor_data.value
@@ -65,7 +72,7 @@ class LibreHardwareMonitorSensor(CoordinatorEntity, SensorEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        if sensor_data := self._coordinator.data.get(self._sensor_id):
+        if sensor_data := self.coordinator.data.sensor_data.get(self._sensor_id):
             self.value = sensor_data.value
             self.attributes = {
                 STATE_MIN_VALUE: self._format_number_value(sensor_data.min),
