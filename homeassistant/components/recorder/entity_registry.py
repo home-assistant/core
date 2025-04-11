@@ -4,6 +4,7 @@ import logging
 from typing import TYPE_CHECKING
 
 from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .core import Recorder
@@ -38,6 +39,13 @@ def async_setup(hass: HomeAssistant) -> None:
     ) -> bool:
         """Handle entity_id changed filter."""
         return event_data["action"] == "update" and "old_entity_id" in event_data
+
+    if er.EVENT_ENTITY_REGISTRY_UPDATED in hass.bus.async_listeners():
+        raise HomeAssistantError(
+            "The recorder entity registry listener must be installed"
+            " before any other entity registry listener is set up to"
+            " ensure the recorder is the first to process the event."
+        )
 
     hass.bus.async_listen(
         er.EVENT_ENTITY_REGISTRY_UPDATED,
