@@ -42,7 +42,10 @@ async def async_setup_entry(
     else:
         cloud_coordinator = cast(AdaxCloudCoordinator, entry.runtime_data)
         async_add_entities(
-            (AdaxDevice(cloud_coordinator, room) for room in cloud_coordinator.data),
+            (
+                AdaxDevice(cloud_coordinator, device_id)
+                for device_id in cloud_coordinator.data
+            ),
         )
 
 
@@ -63,24 +66,24 @@ class AdaxDevice(CoordinatorEntity[AdaxCloudCoordinator], ClimateEntity):
     def __init__(
         self,
         coordinator: AdaxCloudCoordinator,
-        heater_data: dict[str, Any],
+        device_id: str,
     ) -> None:
         """Initialize the heater."""
         super().__init__(coordinator)
         self._adax_data_handler: Adax = coordinator.adax_data_handler
-        self._device_id = heater_data["id"]
+        self._device_id = device_id
 
-        self._attr_name = heater_data["name"]
-        self._attr_unique_id = f"{heater_data['homeId']}_{heater_data['id']}"
+        self._attr_name = self.room["name"]
+        self._attr_unique_id = f"{self.room['homeId']}_{self._device_id}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, heater_data["id"])},
+            identifiers={(DOMAIN, self._device_id)},
             # Instead of setting the device name to the entity name, adax
             # should be updated to set has_entity_name = True, and set the entity
             # name to None
             name=cast(str | None, self.name),
             manufacturer="Adax",
         )
-        self._apply_data(heater_data)
+        self._apply_data(self.room)
 
     @property
     def available(self) -> bool:

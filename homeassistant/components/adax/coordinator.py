@@ -19,6 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 type AdaxConfigEntry = ConfigEntry[AdaxCloudCoordinator | AdaxLocalCoordinator]
 
+
 class AdaxCloudCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
     """Coordinator for updating data to and from Adax (cloud)."""
 
