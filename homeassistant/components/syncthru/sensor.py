@@ -14,7 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SyncthruCoordinator
-from .const import DOMAIN
 from .coordinator import SyncThruConfigEntry
 from .entity import SyncthruEntity
 
@@ -115,7 +114,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up from config entry."""
 
-    coordinator: SyncthruCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     printer = coordinator.data
 
     supp_toner = printer.toner_status(filter_supported=True)
