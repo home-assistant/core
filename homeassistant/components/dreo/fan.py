@@ -19,6 +19,13 @@ from homeassistant.util.percentage import (
 from homeassistant.util.scaling import int_states_in_range
 
 from . import DreoConfigEntry
+from .const import (
+    ERROR_SET_OSCILLATE_FAILED,
+    ERROR_SET_PRESET_MODE_FAILED,
+    ERROR_SET_SPEED_FAILED,
+    ERROR_TURN_OFF_FAILED,
+    ERROR_TURN_ON_FAILED,
+)
 from .entity import DreoEntity
 from .util import handle_api_exceptions
 
@@ -47,7 +54,6 @@ async def async_setup_entry(
 class DreoFan(DreoEntity, FanEntity):
     """Dreo fan."""
 
-    _attr_should_poll = True
     _attr_supported_features = (
         FanEntityFeature.PRESET_MODE
         | FanEntityFeature.SET_SPEED
@@ -63,15 +69,14 @@ class DreoFan(DreoEntity, FanEntity):
     ) -> None:
         """Initialize the Dreo fan."""
 
-        super().__init__(device, config_entry, FAN_SUFFIX)
-        self._attr_name = None
+        super().__init__(device, config_entry, FAN_SUFFIX, None)
 
         model_config = FAN_DEVICE.get("config", {}).get(self._model, {})
         speed_range = model_config.get("speed_range")
 
         self._attr_preset_modes = model_config.get("preset_modes")
         self._attr_preset_mode = None
-        self._attr_low_high_range = speed_range
+        self._low_high_range = speed_range
         self._attr_speed_count = int_states_in_range(speed_range)
         self._attr_percentage = None
         self._attr_oscillating = None
@@ -79,32 +84,8 @@ class DreoFan(DreoEntity, FanEntity):
 
     @property
     def is_on(self) -> bool | None:
-        """Return device is state."""
+        """Return True if device is on."""
         return self._attr_is_on
-
-    @property
-    def preset_modes(self) -> list[str] | None:
-        """Return a list of available preset modes."""
-        return self._attr_preset_modes
-
-    @property
-    def preset_mode(self) -> str | None:
-        """Return the preset mode of the fan."""
-        return self._attr_preset_mode
-
-    @property
-    def speed_count(self) -> int:
-        """Return the number of speeds the fan supports."""
-        return self._attr_speed_count
-
-    @property
-    def oscillating(self) -> bool | None:
-        """Return the oscillate of the fan."""
-        return self._attr_oscillating
-
-    def set_direction(self, direction: str) -> None:
-        """Set the direction of the fan."""
-        return
 
     def turn_on(
         self,
@@ -113,32 +94,45 @@ class DreoFan(DreoEntity, FanEntity):
         **kwargs: Any,
     ) -> None:
         """Turn the device on."""
-        self._send_command("Turn the device on failed.", power_switch=True)
+        command_params: dict[str, Any] = {"power_switch": True}
+
+        if percentage is not None and percentage > 0:
+            speed = math.ceil(
+                percentage_to_ranged_value(self._low_high_range, percentage)
+            )
+            command_params["speed"] = speed
+        if preset_mode is not None:
+            command_params["mode"] = preset_mode
+
+        self._send_command(ERROR_TURN_ON_FAILED, **command_params)
         self._attr_is_on = True
+        self.schedule_update_ha_state(force_refresh=True)
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        self._send_command("Turn the device off failed.", power_switch=False)
-        self._attr_is_on = False
+        self._send_command(ERROR_TURN_OFF_FAILED, power_switch=False)
+        self.schedule_update_ha_state(force_refresh=True)
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of fan."""
-        self._send_command("Set the preset mode failed.", mode=preset_mode)
-        self._attr_preset_mode = preset_mode
+        self._send_command(ERROR_SET_PRESET_MODE_FAILED, mode=preset_mode)
+        self.schedule_update_ha_state(force_refresh=True)
 
     def set_percentage(self, percentage: int) -> None:
         """Set the speed of fan."""
-        if percentage > 0:
+        if percentage <= 0:
+            self.turn_off()
+        else:
             speed = math.ceil(
-                percentage_to_ranged_value(self._attr_low_high_range, percentage)
+                percentage_to_ranged_value(self._low_high_range, percentage)
             )
-            self._send_command("Set the speed failed.", speed=speed)
-        self._attr_percentage = percentage
+            self._send_command(ERROR_SET_SPEED_FAILED, speed=speed)
+            self.schedule_update_ha_state(force_refresh=True)
 
     def oscillate(self, oscillating: bool) -> None:
         """Set the Oscillate of fan."""
-        self._send_command("Set the Oscillate failed.", oscillate=oscillating)
-        self._attr_oscillating = oscillating
+        self._send_command(ERROR_SET_OSCILLATE_FAILED, oscillate=oscillating)
+        self.schedule_update_ha_state(force_refresh=True)
 
     def update(self) -> None:
         """Update Dreo fan."""
@@ -152,10 +146,10 @@ class DreoFan(DreoEntity, FanEntity):
             self._attr_available = False
         else:
             self._attr_is_on = status.get("power_switch")
+            self._attr_available = status.get("connected")
             self._attr_preset_mode = status.get("mode")
             self._attr_percentage = ranged_value_to_percentage(
-                self._attr_low_high_range,
+                self._low_high_range,
                 status.get("speed"),
             )
             self._attr_oscillating = status.get("oscillate")
-            self._attr_available = status.get("connected")

@@ -22,5 +22,22 @@
     "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
+  },
+  "exceptions": {
+    "turn_on_failed": {
+      "message": "Failed to turn on device"
+    },
+    "turn_off_failed": {
+      "message": "Failed to turn off device"
+    },
+    "set_preset_mode_failed": {
+      "message": "Failed to set preset mode"
+    },
+    "set_speed_failed": {
+      "message": "Failed to set speed"
+    },
+    "set_oscillate_failed": {
+      "message": "Failed to set oscillation"
+    }
   }
 }

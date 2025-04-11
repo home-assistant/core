@@ -30,6 +30,7 @@ class DreoEntity(Entity):
         device: dict[str, Any],
         config_entry: DreoConfigEntry,
         unique_id_suffix: str | None = None,
+        name: str | None = None,
     ) -> None:
         """Initialize the Dreo entity.
 
@@ -37,14 +38,14 @@ class DreoEntity(Entity):
             device: Device information dictionary
             config_entry: The config entry
             unique_id_suffix: Optional suffix for unique_id to differentiate multiple entities from same device
+            name: Optional entity name, None will use the device name as-is
 
         """
         super().__init__()
-        self._device = device
         self._config_entry = config_entry
         self._model = device.get("model")
         self._device_id = device.get("deviceSn")
-        self._attr_name = device.get("deviceName")
+        self._attr_name = name
 
         if unique_id_suffix:
             self._attr_unique_id = f"{self._device_id}_{unique_id_suffix}"
@@ -55,12 +56,12 @@ class DreoEntity(Entity):
             identifiers={(DOMAIN, str(self._device_id))},
             manufacturer="Dreo",
             model=self._model,
-            name=self._attr_name,
+            name=device.get("deviceName"),
             sw_version=device.get("moduleFirmwareVersion"),
             hw_version=device.get("mcuFirmwareVersion"),
         )
 
-    def _send_command(self, error_message: str, **kwargs) -> None:
+    def _send_command(self, translation_key: str, **kwargs) -> None:
         """Call a hscloud device command and handle errors."""
 
         try:
@@ -69,13 +70,21 @@ class DreoEntity(Entity):
             )
 
         except HsCloudException as ex:
-            raise HomeAssistantError(error_message) from ex
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key=translation_key
+            ) from ex
 
         except HsCloudBusinessException as ex:
-            raise HomeAssistantError(error_message) from ex
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key=translation_key
+            ) from ex
 
         except HsCloudAccessDeniedException as ex:
-            raise HomeAssistantError(error_message) from ex
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key=translation_key
+            ) from ex
 
         except HsCloudFlowControlException as ex:
-            raise HomeAssistantError(error_message) from ex
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key=translation_key
+            ) from ex
