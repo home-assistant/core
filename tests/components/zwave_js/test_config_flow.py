@@ -2101,6 +2101,10 @@ async def test_options_not_addon_with_addon(
     assert setup_entry.call_count == 1
     assert unload_entry.call_count == 1
 
+    # avoid unload entry in teardown
+    await hass.config_entries.async_unload(entry.entry_id)
+    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
+
 
 @pytest.mark.usefixtures("supervisor")
 async def test_options_not_addon_with_addon_stop_fail(
@@ -2143,6 +2147,10 @@ async def test_options_not_addon_with_addon_stop_fail(
     assert entry.state is config_entries.ConfigEntryState.LOADED
     assert setup_entry.call_count == 1
     assert unload_entry.call_count == 1
+
+    # avoid unload entry in teardown
+    await hass.config_entries.async_unload(entry.entry_id)
+    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
 
 
 @pytest.mark.parametrize(
