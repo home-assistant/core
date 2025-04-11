@@ -11,5 +11,5 @@
   "documentation": "https://www.home-assistant.io/integrations/vicare",
   "iot_class": "cloud_polling",
   "loggers": ["PyViCare"],
-  "requirements": ["PyViCare==2.42.1"]
+  "requirements": ["PyViCare==2.44.0"]
 }

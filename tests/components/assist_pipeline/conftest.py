@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import AsyncIterable, Generator
 from pathlib import Path
 from typing import Any
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -24,7 +24,7 @@ from homeassistant.components.assist_pipeline.pipeline import (
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import chat_session, device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.setup import async_setup_component
 
@@ -379,3 +379,14 @@ def pipeline_storage(pipeline_data) -> PipelineStorageCollection:
 def make_10ms_chunk(header: bytes) -> bytes:
     """Return 10ms of zeros with the given header."""
     return header + bytes(BYTES_PER_CHUNK - len(header))
+
+
+@pytest.fixture
+def mock_chat_session(hass: HomeAssistant) -> Generator[chat_session.ChatSession]:
+    """Mock the ulid of chat sessions."""
+    # pylint: disable-next=contextmanager-generator-missing-cleanup
+    with (
+        patch("homeassistant.helpers.chat_session.ulid_now", return_value="mock-ulid"),
+        chat_session.async_get_chat_session(hass) as session,
+    ):
+        yield session

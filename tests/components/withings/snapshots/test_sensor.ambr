@@ -503,6 +503,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
@@ -512,7 +515,7 @@
     'supported_features': 0,
     'translation_key': 'deep_sleep',
     'unique_id': 'withings_12345_sleep_deep_duration_seconds',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
 # name: test_all_entities[sensor.henk_deep_sleep-state]
@@ -521,14 +524,14 @@
       'device_class': 'duration',
       'friendly_name': 'henk Deep sleep',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.henk_deep_sleep',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '5820',
+    'state': '1.617',
   })
 # ---
 # name: test_all_entities[sensor.henk_diastolic_blood_pressure-entry]
@@ -1778,7 +1781,7 @@
     'name': None,
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 1,
+        'suggested_display_precision': 2,
       }),
     }),
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
@@ -2242,6 +2245,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
@@ -2251,7 +2257,7 @@
     'supported_features': 0,
     'translation_key': 'light_sleep',
     'unique_id': 'withings_12345_sleep_light_duration_seconds',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
 # name: test_all_entities[sensor.henk_light_sleep-state]
@@ -2260,14 +2266,14 @@
       'device_class': 'duration',
       'friendly_name': 'henk Light sleep',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.henk_light_sleep',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '10440',
+    'state': '2.900',
   })
 # ---
 # name: test_all_entities[sensor.henk_maximum_heart_rate-entry]
@@ -2988,6 +2994,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
@@ -2997,7 +3006,7 @@
     'supported_features': 0,
     'translation_key': 'rem_sleep',
     'unique_id': 'withings_12345_sleep_rem_duration_seconds',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
 # name: test_all_entities[sensor.henk_rem_sleep-state]
@@ -3006,14 +3015,14 @@
       'device_class': 'duration',
       'friendly_name': 'henk REM sleep',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.henk_rem_sleep',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2400',
+    'state': '0.667',
   })
 # ---
 # name: test_all_entities[sensor.henk_skin_temperature-entry]
@@ -3198,8 +3207,11 @@
     }),
     'name': None,
     'options': dict({
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Snoring',
     'platform': 'withings',
@@ -3207,21 +3219,23 @@
     'supported_features': 0,
     'translation_key': 'snoring',
     'unique_id': 'withings_12345_sleep_snoring',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
 # name: test_all_entities[sensor.henk_snoring-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'duration',
       'friendly_name': 'henk Snoring',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.henk_snoring',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1080',
+    'state': '18.0',
   })
 # ---
 # name: test_all_entities[sensor.henk_snoring_episode_count-entry]
@@ -3611,6 +3625,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
@@ -3620,7 +3637,7 @@
     'supported_features': 0,
     'translation_key': 'time_to_sleep',
     'unique_id': 'withings_12345_sleep_tosleep_duration_seconds',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
 # name: test_all_entities[sensor.henk_time_to_sleep-state]
@@ -3629,14 +3646,14 @@
       'device_class': 'duration',
       'friendly_name': 'henk Time to sleep',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.henk_time_to_sleep',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '540',
+    'state': '0.150',
   })
 # ---
 # name: test_all_entities[sensor.henk_time_to_wakeup-entry]
@@ -3663,6 +3680,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
@@ -3672,7 +3692,7 @@
     'supported_features': 0,
     'translation_key': 'time_to_wakeup',
     'unique_id': 'withings_12345_sleep_towakeup_duration_seconds',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
 # name: test_all_entities[sensor.henk_time_to_wakeup-state]
@@ -3681,14 +3701,14 @@
       'device_class': 'duration',
       'friendly_name': 'henk Time to wakeup',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.henk_time_to_wakeup',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1140',
+    'state': '0.317',
   })
 # ---
 # name: test_all_entities[sensor.henk_total_calories_burnt_today-entry]
@@ -3966,6 +3986,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
@@ -3975,7 +3998,7 @@
     'supported_features': 0,
     'translation_key': 'wakeup_time',
     'unique_id': 'withings_12345_sleep_wakeup_duration_seconds',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
 # name: test_all_entities[sensor.henk_wakeup_time-state]
@@ -3984,14 +4007,14 @@
       'device_class': 'duration',
       'friendly_name': 'henk Wakeup time',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.henk_wakeup_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '3060',
+    'state': '0.850',
   })
 # ---
 # name: test_all_entities[sensor.henk_weight-entry]

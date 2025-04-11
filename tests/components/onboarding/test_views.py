@@ -6,24 +6,31 @@ from http import HTTPStatus
 from io import StringIO
 import os
 from typing import Any
-from unittest.mock import ANY, AsyncMock, Mock, patch
+from unittest.mock import ANY, DEFAULT, AsyncMock, MagicMock, Mock, patch
 
+from hass_nabucasa.auth import CognitoAuth
+from hass_nabucasa.const import STATE_CONNECTED
+from hass_nabucasa.iot import CloudIoT
 import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components import backup, onboarding
+from homeassistant.components.cloud import DOMAIN as CLOUD_DOMAIN, CloudClient
 from homeassistant.components.onboarding import const, views
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import area_registry as ar
-from homeassistant.setup import async_setup_component
+from homeassistant.helpers.backup import async_initialize_backup
+from homeassistant.setup import async_set_domains_to_be_loaded, async_setup_component
 
 from . import mock_storage
 
 from tests.common import (
     CLIENT_ID,
     CLIENT_REDIRECT_URI,
+    MockModule,
     MockUser,
+    mock_integration,
     register_auth_provider,
 )
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -31,11 +38,9 @@ from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(autouse=True)
-def auth_active(hass: HomeAssistant) -> None:
+async def auth_active(hass: HomeAssistant) -> None:
     """Ensure auth is always active."""
-    hass.loop.run_until_complete(
-        register_auth_provider(hass, {"type": "homeassistant"})
-    )
+    await register_auth_provider(hass, {"type": "homeassistant"})
 
 
 @pytest.fixture(name="rpi")
@@ -529,32 +534,6 @@ async def test_onboarding_core_sets_up_radio_browser(
     assert len(hass.config_entries.async_entries("radio_browser")) == 1
 
 
-async def test_onboarding_core_sets_up_rpi_power(
-    hass: HomeAssistant,
-    hass_storage: dict[str, Any],
-    hass_client: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
-    rpi,
-    mock_default_integrations,
-) -> None:
-    """Test that the core step sets up rpi_power on RPi."""
-    mock_storage(hass_storage, {"done": [const.STEP_USER]})
-
-    assert await async_setup_component(hass, "onboarding", {})
-    await hass.async_block_till_done()
-
-    client = await hass_client()
-
-    resp = await client.post("/api/onboarding/core_config")
-
-    assert resp.status == 200
-
-    await hass.async_block_till_done()
-
-    rpi_power_state = hass.states.get("binary_sensor.rpi_power_status")
-    assert rpi_power_state
-
-
 async def test_onboarding_core_no_rpi_power(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
@@ -787,10 +766,11 @@ async def test_onboarding_backup_info(
     hass_client: ClientSessionGenerator,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test returning installation type during onboarding."""
+    """Test backup info."""
     mock_storage(hass_storage, {"done": []})
 
     assert await async_setup_component(hass, "onboarding", {})
+    async_initialize_backup(hass)
     assert await async_setup_component(hass, "backup", {})
     await hass.async_block_till_done()
 
@@ -903,10 +883,11 @@ async def test_onboarding_backup_restore(
     params: dict[str, Any],
     expected_kwargs: dict[str, Any],
 ) -> None:
-    """Test returning installation type during onboarding."""
+    """Test restore backup."""
     mock_storage(hass_storage, {"done": []})
 
     assert await async_setup_component(hass, "onboarding", {})
+    async_initialize_backup(hass)
     assert await async_setup_component(hass, "backup", {})
     await hass.async_block_till_done()
 
@@ -999,10 +980,11 @@ async def test_onboarding_backup_restore_error(
     expected_json: str,
     restore_calls: int,
 ) -> None:
-    """Test returning installation type during onboarding."""
+    """Test restore backup fails."""
     mock_storage(hass_storage, {"done": []})
 
     assert await async_setup_component(hass, "onboarding", {})
+    async_initialize_backup(hass)
     assert await async_setup_component(hass, "backup", {})
     await hass.async_block_till_done()
 
@@ -1042,10 +1024,11 @@ async def test_onboarding_backup_restore_unexpected_error(
     expected_message: str,
     restore_calls: int,
 ) -> None:
-    """Test returning installation type during onboarding."""
+    """Test restore backup fails."""
     mock_storage(hass_storage, {"done": []})
 
     assert await async_setup_component(hass, "onboarding", {})
+    async_initialize_backup(hass)
     assert await async_setup_component(hass, "backup", {})
     await hass.async_block_till_done()
 
@@ -1067,10 +1050,11 @@ async def test_onboarding_backup_upload(
     hass_storage: dict[str, Any],
     hass_client: ClientSessionGenerator,
 ) -> None:
-    """Test returning installation type during onboarding."""
+    """Test upload backup."""
     mock_storage(hass_storage, {"done": []})
 
     assert await async_setup_component(hass, "onboarding", {})
+    async_initialize_backup(hass)
     assert await async_setup_component(hass, "backup", {})
     await hass.async_block_till_done()
 
@@ -1087,3 +1071,218 @@ async def test_onboarding_backup_upload(
     assert resp.status == 201
     assert await resp.json() == {"backup_id": "abc123"}
     mock_receive.assert_called_once_with(agent_ids=["backup.local"], contents=ANY)
+
+
+@pytest.fixture(name="cloud")
+async def cloud_fixture() -> AsyncGenerator[MagicMock]:
+    """Mock the cloud object.
+
+    See the real hass_nabucasa.Cloud class for how to configure the mock.
+    """
+    with patch(
+        "homeassistant.components.cloud.Cloud", autospec=True
+    ) as mock_cloud_class:
+        mock_cloud = mock_cloud_class.return_value
+
+        mock_cloud.auth = MagicMock(spec=CognitoAuth)
+        mock_cloud.iot = MagicMock(
+            spec=CloudIoT, last_disconnect_reason=None, state=STATE_CONNECTED
+        )
+
+        def set_up_mock_cloud(
+            cloud_client: CloudClient, mode: str, **kwargs: Any
+        ) -> DEFAULT:
+            """Set up mock cloud with a mock constructor."""
+
+            # Attributes set in the constructor with parameters.
+            mock_cloud.client = cloud_client
+
+            return DEFAULT
+
+        mock_cloud_class.side_effect = set_up_mock_cloud
+
+        # Attributes that we mock with default values.
+        mock_cloud.id_token = None
+        mock_cloud.is_logged_in = False
+
+        yield mock_cloud
+
+
+@pytest.fixture(name="setup_cloud")
+async def setup_cloud_fixture(hass: HomeAssistant, cloud: MagicMock) -> None:
+    """Fixture that sets up cloud."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, CLOUD_DOMAIN, {})
+    await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("setup_cloud")
+async def test_onboarding_cloud_forgot_password(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_client: ClientSessionGenerator,
+    cloud: MagicMock,
+) -> None:
+    """Test cloud forgot password."""
+    mock_storage(hass_storage, {"done": []})
+
+    assert await async_setup_component(hass, "onboarding", {})
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+
+    mock_cognito = cloud.auth
+
+    req = await client.post(
+        "/api/onboarding/cloud/forgot_password", json={"email": "hello@bla.com"}
+    )
+
+    assert req.status == HTTPStatus.OK
+    assert mock_cognito.async_forgot_password.call_count == 1
+
+
+@pytest.mark.usefixtures("setup_cloud")
+async def test_onboarding_cloud_login(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_client: ClientSessionGenerator,
+    cloud: MagicMock,
+) -> None:
+    """Test logging out from cloud."""
+    mock_storage(hass_storage, {"done": []})
+
+    assert await async_setup_component(hass, "onboarding", {})
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+    req = await client.post(
+        "/api/onboarding/cloud/login",
+        json={"email": "my_username", "password": "my_password"},
+    )
+
+    assert req.status == HTTPStatus.OK
+    data = await req.json()
+    assert data == {"cloud_pipeline": None, "success": True}
+    assert cloud.login.call_count == 1
+
+
+@pytest.mark.usefixtures("setup_cloud")
+async def test_onboarding_cloud_logout(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_client: ClientSessionGenerator,
+    cloud: MagicMock,
+) -> None:
+    """Test logging out from cloud."""
+    mock_storage(hass_storage, {"done": []})
+
+    assert await async_setup_component(hass, "onboarding", {})
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+    req = await client.post("/api/onboarding/cloud/logout")
+
+    assert req.status == HTTPStatus.OK
+    data = await req.json()
+    assert data == {"message": "ok"}
+    assert cloud.logout.call_count == 1
+
+
+@pytest.mark.usefixtures("setup_cloud")
+async def test_onboarding_cloud_status(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_client: ClientSessionGenerator,
+    cloud: MagicMock,
+) -> None:
+    """Test logging out from cloud."""
+    mock_storage(hass_storage, {"done": []})
+
+    assert await async_setup_component(hass, "onboarding", {})
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+    req = await client.get("/api/onboarding/cloud/status")
+
+    assert req.status == HTTPStatus.OK
+    data = await req.json()
+    assert data == {"logged_in": False}
+
+
+@pytest.mark.parametrize(
+    ("domain", "expected_result"),
+    [
+        ("onboarding", {"integration_loaded": True}),
+        ("non_existing_domain", {"integration_loaded": False}),
+    ],
+)
+async def test_wait_integration(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_client: ClientSessionGenerator,
+    domain: str,
+    expected_result: dict[str, Any],
+) -> None:
+    """Test we can get wait for an integration to load."""
+    mock_storage(hass_storage, {"done": []})
+
+    assert await async_setup_component(hass, "onboarding", {})
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+    req = await client.post("/api/onboarding/integration/wait", json={"domain": domain})
+
+    assert req.status == HTTPStatus.OK
+    data = await req.json()
+    assert data == expected_result
+
+
+async def test_wait_integration_startup(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test we can get wait for an integration to load during startup."""
+    mock_storage(hass_storage, {"done": []})
+
+    assert await async_setup_component(hass, "onboarding", {})
+    await hass.async_block_till_done()
+    client = await hass_client()
+
+    setup_stall = asyncio.Event()
+    setup_started = asyncio.Event()
+
+    async def mock_setup(hass: HomeAssistant, _) -> bool:
+        setup_started.set()
+        await setup_stall.wait()
+        return True
+
+    mock_integration(hass, MockModule("test", async_setup=mock_setup))
+
+    # The integration is not loaded, and is also not scheduled to load
+    req = await client.post("/api/onboarding/integration/wait", json={"domain": "test"})
+    assert req.status == HTTPStatus.OK
+    data = await req.json()
+    assert data == {"integration_loaded": False}
+
+    # Mark the component as scheduled to be loaded
+    async_set_domains_to_be_loaded(hass, {"test"})
+
+    # Start loading the component, including its config entries
+    hass.async_create_task(async_setup_component(hass, "test", {}))
+    await setup_started.wait()
+
+    # The component is not yet loaded
+    assert "test" not in hass.config.components
+
+    # Allow setup to proceed
+    setup_stall.set()
+
+    # The component is scheduled to load, this will block until the config entry is loaded
+    req = await client.post("/api/onboarding/integration/wait", json={"domain": "test"})
+    assert req.status == HTTPStatus.OK
+    data = await req.json()
+    assert data == {"integration_loaded": True}
+
+    # The component has been loaded
+    assert "test" in hass.config.components

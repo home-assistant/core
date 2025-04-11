@@ -79,7 +79,7 @@ async def test_number_workarea_commands(
     freezer.tick(timedelta(seconds=EXECUTION_TIME_DELAY))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    mocked_method.assert_called_once_with(TEST_MOWER_ID, 75, 123456)
+    mocked_method.assert_called_once_with(TEST_MOWER_ID, 123456, cutting_height=75)
     state = hass.states.get(entity_id)
     assert state.state is not None
     assert state.state == "75"
