@@ -729,7 +729,6 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
         self.restore_backup_task: asyncio.Task | None = None
         self.backup_data: bytes | None = None
         self.backup_filepath: str | None = None
-        self.error: str | None = None
 
     @callback
     def _async_update_entry(self, data: dict[str, Any]) -> None:
@@ -787,8 +786,7 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
             await self.backup_task
         except AbortFlow as err:
             _LOGGER.error(err)
-            self.error = f"Failed to backup network: {err}"
-            return self.async_show_progress_done(next_step_id="migration_failed")
+            return self.async_show_progress_done(next_step_id="backup_failed")
         finally:
             self.backup_task = None
 
@@ -814,8 +812,7 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
             await self.restore_backup_task
         except AbortFlow as err:
             _LOGGER.error(err)
-            self.error = f"Failed to restore network: {err}"
-            return self.async_show_progress_done(next_step_id="migration_failed")
+            return self.async_show_progress_done(next_step_id="restore_failed")
         finally:
             self.restore_backup_task = None
 
@@ -1048,11 +1045,17 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
         """Add-on start failed."""
         return await self.async_revert_addon_config(reason="addon_start_failed")
 
-    async def async_step_migration_failed(
+    async def async_step_backup_failed(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Migration failed."""
-        return self.async_abort(reason=self.error or "unknown")
+        """Backup failed."""
+        return self.async_abort(reason="backup_failed")
+
+    async def async_step_restore_failed(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Restore failed."""
+        return self.async_abort(reason="restore_failed")
 
     async def async_step_migration_done(
         self, user_input: dict[str, Any] | None = None

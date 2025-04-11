@@ -13,6 +13,7 @@ from aiohasupervisor.models import AddonsOptions, Discovery
 import aiohttp
 import pytest
 from serial.tools.list_ports_common import ListPortInfo
+from zwave_js_server.exceptions import FailedCommand
 from zwave_js_server.version import VersionInfo
 
 from homeassistant import config_entries
@@ -3186,3 +3187,37 @@ async def test_options_migrate_with_addon(
     assert entry.data["url"] == "ws://host1:3001"
     assert entry.data["usb_path"] == "/test"
     assert entry.data["use_addon"] is True
+
+
+async def test_options_migrate_backup_failure(
+    hass: HomeAssistant, integration, client
+) -> None:
+    """Test backup failure."""
+    entry = integration
+    hass.config_entries.async_update_entry(
+        entry, unique_id="1234", data={**entry.data, "use_addon": True}
+    )
+
+    async def mock_backup_nvm_raw():
+        raise FailedCommand("test_error", "unknown_error")
+
+    client.driver.controller.async_backup_nvm_raw = AsyncMock(
+        side_effect=mock_backup_nvm_raw
+    )
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == FlowResultType.MENU
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"next_step_id": "intent_migrate"}
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "intent_migrate"
+
+    result = await hass.config_entries.options.async_configure(result["flow_id"], {})
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "backup_failed"
