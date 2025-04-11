@@ -2867,8 +2867,6 @@ async def test_options_addon_running_server_info_failure(
                 "s2_unauthenticated_key": "old987",
                 "lr_s2_access_control_key": "old654",
                 "lr_s2_authenticated_key": "old321",
-                "log_level": "info",
-                "emulate_hardware": False,
             },
             {
                 "usb_path": "/new",
@@ -2902,8 +2900,6 @@ async def test_options_addon_running_server_info_failure(
                 "s2_unauthenticated_key": "old987",
                 "lr_s2_access_control_key": "old654",
                 "lr_s2_authenticated_key": "old321",
-                "log_level": "info",
-                "emulate_hardware": False,
             },
             {
                 "usb_path": "/new",
