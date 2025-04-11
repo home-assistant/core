@@ -92,7 +92,9 @@ rules:
     status: exempt
     comment: does not raise exceptions
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow:
+    status: exempt
+    comment: webhook config flow helper does not implement reconfigure
   repair-issues:
     status: exempt
     comment: has no repairs
