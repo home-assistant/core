@@ -91,6 +91,11 @@ class AdaxDevice(ClimateEntity):
             manufacturer="Adax",
         )
 
+    @property
+    def available(self) -> bool:
+        """Whether the entity is available or not."""
+        return super().available and self._attr_current_temperature
+
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
         if hvac_mode == HVACMode.HEAT:
@@ -126,7 +131,6 @@ class AdaxDevice(ClimateEntity):
             self._attr_name = room["name"]
             self._attr_current_temperature = room.get("temperature")
             self._attr_target_temperature = room.get("targetTemperature")
-            self._attr_available = self._attr_current_temperature is not None
             if room["heatingEnabled"]:
                 self._attr_hvac_mode = HVACMode.HEAT
                 self._attr_icon = "mdi:radiator"
