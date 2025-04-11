@@ -1,6 +1,6 @@
 """Test Homee fans."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, call
 
 import pytest
 
@@ -27,6 +27,7 @@ from tests.common import MockConfigEntry
 @pytest.mark.parametrize(
     ("speed", "expected"),
     [
+        (0, 0),
         (1, 12),
         (2, 25),
         (3, 37),
@@ -52,6 +53,19 @@ async def test_percentage(
     assert hass.states.get("fan.test_fan").attributes["percentage"] == expected
 
 
+async def test_percentage_none(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_homee: MagicMock,
+) -> None:
+    """Test percentage."""
+    mock_homee.nodes = [build_mock_node("fan.json")]
+    mock_homee.nodes[0].attributes.pop(0)  # Remove the speed attribute.
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("fan.test_fan").attributes["percentage"] is None
+
+
 @pytest.mark.parametrize(
     ("mode_value", "expected"),
     [
@@ -73,6 +87,19 @@ async def test_preset_mode(
     await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get("fan.test_fan").attributes["preset_mode"] == expected
+
+
+async def test_preset_mode_none(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_homee: MagicMock,
+) -> None:
+    """Test preset mode."""
+    mock_homee.nodes = [build_mock_node("fan.json")]
+    mock_homee.nodes[0].attributes.pop(1)  # Remove the mode attribute.
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("fan.test_fan").attributes["preset_mode"] is None
 
 
 @pytest.mark.parametrize(
@@ -124,3 +151,26 @@ async def test_fan_services(
         expected[1],
         expected[2],
     )
+
+
+async def test_turn_on_preset_last_value_zero(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_homee: MagicMock,
+) -> None:
+    """Test turn on with preset last value == 0."""
+    mock_homee.nodes = [build_mock_node("fan.json")]
+    mock_homee.nodes[0].attributes[0].last_value = 0
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "fan.test_fan", ATTR_PRESET_MODE: "manual"},
+        blocking=True,
+    )
+
+    assert mock_homee.set_value.call_args_list == [
+        call(77, 2, 0),
+        call(77, 1, 8),
+    ]

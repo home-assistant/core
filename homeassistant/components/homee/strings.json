@@ -131,6 +131,19 @@
         "name": "Ventilate"
       }
     },
+    "fan": {
+      "homee": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "manual": "Manual",
+              "auto": "Automatic",
+              "summer": "Summer"
+            }
+          }
+        }
+      }
+    },
     "light": {
       "light_instance": {
         "name": "Light {instance}"

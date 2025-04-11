@@ -149,17 +149,22 @@ class HomeeFan(HomeeNodeEntity, FanEntity):
         **kwargs: Any,
     ) -> None:
         """Turn the fan on."""
-        if preset_mode:
+        if preset_mode is not None:
             await self.async_set_preset_mode(preset_mode)
+        else:
+            await self.async_set_preset_mode("manual")
 
         # If no percentage is given, use the last known value.
-        if percentage is None and self._speed_attribute is not None:
-            percentage = ranged_value_to_percentage(
-                self.entity_description.speed_range, self._speed_attribute.last_value
-            )
-
-        # if called without percentage or the last known value is 0, set it 100%.
-        if percentage is None or percentage == 0:
-            percentage = 100
+        if percentage is None:
+            if self._speed_attribute is not None:
+                percentage = ranged_value_to_percentage(
+                    self.entity_description.speed_range,
+                    self._speed_attribute.last_value,
+                )
+                # If the last known value is 0, set 100%.
+                if percentage == 0:
+                    percentage = 100
+            else:
+                percentage = 100
 
         await self.async_set_percentage(percentage)
