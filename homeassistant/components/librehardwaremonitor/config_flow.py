@@ -76,7 +76,7 @@ class LibreHardwareMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
             try:
-                self._main_devices = await api.get_hardware_device_names()
+                self._main_devices = await api.get_main_hardware_devices()
             except LibreHardwareMonitorConnectionError:
                 _LOGGER.debug(
                     "ConnectionError: Is LibreHardwareMonitor running and the web server option enabled?"

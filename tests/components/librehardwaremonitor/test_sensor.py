@@ -1,5 +1,6 @@
 """Test the LibreHardwareMonitor sensor."""
 
+import copy
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -34,7 +35,7 @@ async def test_sensors_are_created(
     assert state.attributes.get("max_value") == "73.0"
     assert state.attributes.get("unit_of_measurement") == "°C"
 
-    mock_lhm_client.get_data_json.side_effect = LibreHardwareMonitorConnectionError()
+    mock_lhm_client.get_data.side_effect = LibreHardwareMonitorConnectionError()
 
     freezer.tick(DEFAULT_SCAN_INTERVAL)
     async_fire_time_changed(hass)
@@ -44,7 +45,7 @@ async def test_sensors_are_created(
     assert state
     assert state.state == STATE_UNAVAILABLE
 
-    mock_lhm_client.get_data_json.side_effect = None
+    mock_lhm_client.get_data.side_effect = None
 
     freezer.tick(DEFAULT_SCAN_INTERVAL)
     async_fire_time_changed(hass)
@@ -73,11 +74,9 @@ async def test_sensors_are_updated(
     assert state.name == "AMD Ryzen 7 7800X3D Package Temperature"
     assert state.state == "39.4"
 
-    c_key = "Children"
-    updated_value = "42,1 °C"
-    mock_lhm_client.get_data_json.return_value[c_key][0][c_key][1][c_key][4][c_key][1][
-        "Value"
-    ] = updated_value
+    updated_data = copy.deepcopy(mock_lhm_client.get_data.return_value)
+    updated_data.sensor_data["amdcpu-0-temperature-3"].value = "42,1"
+    mock_lhm_client.get_data.return_value = updated_data
 
     freezer.tick(DEFAULT_SCAN_INTERVAL)
     async_fire_time_changed(hass)
@@ -90,19 +89,21 @@ async def test_sensors_are_updated(
     assert state.name == "AMD Ryzen 7 7800X3D Package Temperature"
     assert state.state == "42.1"
 
+    mock_lhm_client.reset_mock()
+
 
 async def test_sensor_state_is_unknown_when_lhm_indicates_missing_value(
     hass: HomeAssistant, mock_lhm_client: AsyncMock
 ) -> None:
     """Test sensor state is unknown when no value is present."""
-    entity_id = "sensor.msi_mag_b650m_mortar_wifi_ms_7d76_system_fan_6_control"
+    entity_id = "sensor.msi_mag_b650m_mortar_wifi_ms_7d76_system_fan_1_fan"
     await init_integration(hass)
 
     state = hass.states.get(entity_id)
 
     assert state
     assert state.state == STATE_UNKNOWN
-    assert state.name == "MSI MAG B650M MORTAR WIFI (MS-7D76) System Fan #6 Control"
+    assert state.name == "MSI MAG B650M MORTAR WIFI (MS-7D76) System Fan #1 Fan"
 
 
 async def test_sensor_state_is_unknown_when_no_sensor_data_is_provided(
@@ -121,10 +122,7 @@ async def test_sensor_state_is_unknown_when_no_sensor_data_is_provided(
     assert state.name == "AMD Ryzen 7 7800X3D Package Temperature"
     assert state.state == "39.4"
 
-    c_key = "Children"
-    mock_lhm_client.get_data_json.return_value[c_key][0][c_key][1][c_key][4][c_key].pop(
-        1
-    )
+    del mock_lhm_client.get_data.return_value.sensor_data["amdcpu-0-temperature-3"]
 
     freezer.tick(DEFAULT_SCAN_INTERVAL)
     async_fire_time_changed(hass)
