@@ -125,7 +125,12 @@ EVENT_TYPES = {
     DIMMER: ["dimmer"],
     DOUBLE_BUTTON: ["button_left", "button_right"],
     TRIPPLE_BUTTON: ["button_left", "button_middle", "button_right"],
-    QUADRUPLE_BUTTON: ["button_left", "button_mid_left", "button_mid_right", "button_right"],
+    QUADRUPLE_BUTTON: [
+        "button_left",
+        "button_mid_left",
+        "button_mid_right",
+        "button_right"
+    ],
     ERROR: ["error"],
     FINGERPRINT: ["fingerprint"],
     LOCK: ["lock"],
