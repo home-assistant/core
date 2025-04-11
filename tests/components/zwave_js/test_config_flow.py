@@ -5,7 +5,7 @@ from collections.abc import Generator
 from copy import copy
 from ipaddress import ip_address
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, call, patch
+from unittest.mock import AsyncMock, MagicMock, call, mock_open, patch
 from uuid import uuid4
 
 from aiohasupervisor import SupervisorError
@@ -17,7 +17,7 @@ from zwave_js_server.version import VersionInfo
 
 from homeassistant import config_entries
 from homeassistant.components.zwave_js.config_flow import SERVER_VERSION_TIMEOUT, TITLE
-from homeassistant.components.zwave_js.const import ADDON_SLUG, DOMAIN
+from homeassistant.components.zwave_js.const import ADDON_SLUG, CONF_USB_PATH, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
@@ -262,6 +262,13 @@ async def test_manual_errors(
     entry = integration
     result = await getattr(hass.config_entries, flow).async_init(**flow_params(entry))
 
+    if flow == "options":
+        assert result["type"] is FlowResultType.MENU
+        assert result["step_id"] == "init"
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], {"next_step_id": "intent_reconfigure"}
+        )
+
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual"
 
@@ -272,7 +279,6 @@ async def test_manual_errors(
         },
     )
 
-    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual"
     assert result["errors"] == {"base": error}
 
@@ -1492,7 +1498,8 @@ async def test_addon_installed_start_failure(
     start_addon,
     get_addon_discovery_info,
 ) -> None:
-    """Test add-on start failure when add-on is installed."""
+    """Test usb discovery when add-on is installed but not running."""
+    addon_options["device"] = "/dev/incorrect_device"
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -1963,6 +1970,13 @@ async def test_options_manual(hass: HomeAssistant, client, integration) -> None:
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"next_step_id": "intent_reconfigure"}
+    )
+
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual"
 
@@ -1988,6 +2002,13 @@ async def test_options_manual_different_device(
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"next_step_id": "intent_reconfigure"}
+    )
+
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual"
 
@@ -2011,6 +2032,13 @@ async def test_options_not_addon(
     assert client.disconnect.call_count == 0
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"next_step_id": "intent_reconfigure"}
+    )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "on_supervisor"
@@ -2144,6 +2172,13 @@ async def test_options_addon_running(
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"next_step_id": "intent_reconfigure"}
+    )
+
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "on_supervisor"
 
@@ -2270,6 +2305,13 @@ async def test_options_addon_running_no_changes(
     assert client.disconnect.call_count == 0
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"next_step_id": "intent_reconfigure"}
+    )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "on_supervisor"
@@ -2443,6 +2485,13 @@ async def test_options_different_device(
     assert client.disconnect.call_count == 0
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"next_step_id": "intent_reconfigure"}
+    )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "on_supervisor"
@@ -2620,6 +2669,13 @@ async def test_options_addon_restart_failed(
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"next_step_id": "intent_reconfigure"}
+    )
+
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "on_supervisor"
 
@@ -2754,6 +2810,13 @@ async def test_options_addon_running_server_info_failure(
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"next_step_id": "intent_reconfigure"}
+    )
+
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "on_supervisor"
 
@@ -2805,6 +2868,8 @@ async def test_options_addon_running_server_info_failure(
                 "s2_unauthenticated_key": "old987",
                 "lr_s2_access_control_key": "old654",
                 "lr_s2_authenticated_key": "old321",
+                "log_level": "info",
+                "emulate_hardware": False,
             },
             {
                 "usb_path": "/new",
@@ -2838,6 +2903,8 @@ async def test_options_addon_running_server_info_failure(
                 "s2_unauthenticated_key": "old987",
                 "lr_s2_access_control_key": "old654",
                 "lr_s2_authenticated_key": "old321",
+                "log_level": "info",
+                "emulate_hardware": False,
             },
             {
                 "usb_path": "/new",
@@ -2883,6 +2950,13 @@ async def test_options_addon_not_installed(
     assert client.disconnect.call_count == 0
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"next_step_id": "intent_reconfigure"}
+    )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "on_supervisor"
@@ -2985,3 +3059,135 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_options_migrate_no_addon(hass: HomeAssistant, integration) -> None:
+    """Test migration flow fails when not using add-on."""
+    entry = integration
+    hass.config_entries.async_update_entry(
+        entry, unique_id="1234", data={**entry.data, "use_addon": False}
+    )
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"next_step_id": "intent_migrate"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "addon_required"
+
+
+@pytest.mark.parametrize(
+    "discovery_info",
+    [
+        [
+            Discovery(
+                addon="core_zwave_js",
+                service="zwave_js",
+                uuid=uuid4(),
+                config=ADDON_DISCOVERY_INFO,
+            )
+        ]
+    ],
+)
+async def test_options_migrate_with_addon(
+    hass: HomeAssistant,
+    client,
+    supervisor,
+    integration,
+    addon_running,
+    restart_addon,
+    set_addon_options,
+    get_addon_discovery_info,
+) -> None:
+    """Test migration flow with add-on."""
+    entry = integration
+    hass.config_entries.async_update_entry(
+        entry,
+        unique_id="1234",
+        data={
+            "url": "ws://localhost:3000",
+            "use_addon": True,
+            "usb_path": "/dev/ttyUSB0",
+        },
+    )
+
+    async def mock_backup_nvm_raw():
+        await asyncio.sleep(0)
+        return b"test_nvm_data"
+
+    client.driver.controller.async_backup_nvm_raw = AsyncMock(
+        side_effect=mock_backup_nvm_raw
+    )
+    client.driver.controller.async_restore_nvm = AsyncMock()
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == FlowResultType.MENU
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"next_step_id": "intent_migrate"}
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "intent_migrate"
+
+    result = await hass.config_entries.options.async_configure(result["flow_id"], {})
+
+    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "backup_nvm"
+
+    with patch("builtins.open", mock_open()) as mock_file:
+        # Make sure the flow continues when the progress task is done
+        await hass.async_block_till_done()
+        assert client.driver.controller.async_backup_nvm_raw.call_count == 1
+        assert mock_file.call_count == 1
+
+    result = await hass.config_entries.options.async_configure(result["flow_id"])
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "instruct_unplug"
+
+    result = await hass.config_entries.options.async_configure(result["flow_id"], {})
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "choose_serial_port"
+    assert result["data_schema"].schema[CONF_USB_PATH]
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USB_PATH: "/test",
+        },
+    )
+
+    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "start_addon"
+    assert set_addon_options.call_args == call(
+        "core_zwave_js", AddonsOptions(config={"device": "/test"})
+    )
+
+    await hass.async_block_till_done()
+
+    assert restart_addon.call_args == call("core_zwave_js")
+
+    result = await hass.config_entries.options.async_configure(result["flow_id"])
+
+    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "restore_nvm"
+
+    await hass.async_block_till_done()
+
+    assert client.driver.controller.async_restore_nvm.call_count == 1
+
+    result = await hass.config_entries.options.async_configure(result["flow_id"])
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert entry.data["url"] == "ws://host1:3001"
+    assert entry.data["usb_path"] == "/test"
+    assert entry.data["use_addon"] is True

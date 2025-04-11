@@ -8,7 +8,6 @@ from datetime import datetime
 import logging
 from typing import Any
 
-import aiofiles
 import aiohttp
 from serial.tools import list_ports
 import voluptuous as vol
@@ -1163,8 +1162,11 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
         self.backup_filepath = self.hass.config.path(
             f"zwavejs_nvm_backup_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.bin"
         )
-        async with aiofiles.open(self.backup_filepath, "wb") as backup_file:
-            await backup_file.write(self.backup_data)
+        self._write_backup_file(self.backup_filepath, self.backup_data)
+
+    def _write_backup_file(self, path: str, data: bytes) -> None:
+        with open(path, "wb") as backup_file:
+            backup_file.write(data)
 
     async def _async_restore_network_backup(self) -> None:
         """Restore the backup."""
