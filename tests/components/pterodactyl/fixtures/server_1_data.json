@@ -1,0 +1,39 @@
+{
+  "server_owner": true,
+  "identifier": "1",
+  "internal_id": 1,
+  "uuid": "1-1-1-1-1",
+  "name": "Test Server 1",
+  "node": "default_node",
+  "is_node_under_maintenance": false,
+  "sftp_details": {
+    "ip": "192.168.0.1",
+    "port": 2022
+  },
+  "description": "",
+  "limits": {
+    "memory": 2048,
+    "swap": 1024,
+    "disk": 10240,
+    "io": 500,
+    "cpu": 100,
+    "threads": null,
+    "oom_disabled": true
+  },
+  "invocation": "java -jar test1.jar",
+  "docker_image": "test_docker_image1",
+  "egg_features": ["eula", "java_version", "pid_limit"],
+  "feature_limits": {
+    "databases": 0,
+    "allocations": 0,
+    "backups": 3
+  },
+  "status": null,
+  "is_suspended": false,
+  "is_installing": false,
+  "is_transferring": false,
+  "relationships": {
+    "allocations": {},
+    "variables": {}
+  }
+}
