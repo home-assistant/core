@@ -94,7 +94,7 @@ class AdaxDevice(ClimateEntity):
     @property
     def available(self) -> bool:
         """Whether the entity is available or not."""
-        return super().available and self._attr_current_temperature
+        return super().available and self._attr_current_temperature is not None
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
