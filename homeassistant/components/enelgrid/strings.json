@@ -1,0 +1,38 @@
+{
+  "title": "EnelGrid",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configure EnelGrid",
+        "description": "Enter your Enel POD and credentials.",
+        "data": {
+          "numero pod": "Numero Pod",
+          "numero utente": "Numero Utente",
+          "username": "Username",
+          "password": "Password",
+          "pod": "POD",
+          "user_number": "User number",
+          "price_per_kwh": "Price per kWh"
+        },
+        "data_description": {
+          "numero pod": "Numero Pod",
+          "numero utente": "Numero Utente",
+          "username": "Username",
+          "password": "Password",
+          "pod": "POD",
+          "user_number": "User number",
+          "price_per_kwh": "Price per kWh"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Unable to connect",
+      "invalid_auth": "Invalid authentication",
+      "unknown": "Unknown error occurred"
+    },
+    "abort": {
+      "already_configured": "This POD is already configured",
+      "reauth_successful": "It worked!"
+    }
+  }
+}

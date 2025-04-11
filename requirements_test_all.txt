@@ -526,6 +526,7 @@ babel==2.15.0
 # homeassistant.components.homekit
 base36==0.1.1
 
+# homeassistant.components.enelgrid
 # homeassistant.components.scrape
 beautifulsoup4==4.12.3
 

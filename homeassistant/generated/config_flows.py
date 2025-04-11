@@ -169,6 +169,7 @@ FLOWS = {
         "emoncms",
         "emonitor",
         "emulated_roku",
+        "enelgrid",
         "energenie_power_sockets",
         "energyzero",
         "enigma2",

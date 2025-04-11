@@ -1685,6 +1685,11 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "enelgrid": {
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "energenie_power_sockets": {
       "integration_type": "device",
       "config_flow": true,
@@ -7767,6 +7772,7 @@
     "demo",
     "derivative",
     "emulated_roku",
+    "enelgrid",
     "energenie_power_sockets",
     "filesize",
     "filter",
