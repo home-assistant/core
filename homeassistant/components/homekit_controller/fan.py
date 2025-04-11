@@ -285,12 +285,12 @@ class HomeKitAirPurifer(HomeKitFanV2):
     @property
     def preset_mode(self) -> str | None:
         """Return the current preset mode."""
-        return (
-            PRESET_AUTO
-            if self.service.value(CharacteristicsTypes.AIR_PURIFIER_STATE_TARGET)
+        if (
+            self.service.value(CharacteristicsTypes.AIR_PURIFIER_STATE_TARGET)
             == TargetAirPurifierStateValues.AUTOMATIC
-            else None
-        )
+        ):
+            return PRESET_AUTO
+        return None
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan."""
