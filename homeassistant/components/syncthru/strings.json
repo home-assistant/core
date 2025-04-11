@@ -59,6 +59,9 @@
       "tray": {
         "name": "Input tray {tray_number}"
       },
+      "output_tray": {
+        "name": "Output tray {tray_number}"
+      },
       "active_alerts": {
         "name": "Active alerts",
         "unit_of_measurement": "alerts"

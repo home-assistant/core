@@ -85,7 +85,8 @@ def get_output_tray_entity_description(tray: int) -> SyncThruSensorDescription:
     """Get output tray entity description for a specific tray."""
     return SyncThruSensorDescription(
         key=f"output_tray_{tray}",
-        translation_key=f"output_tray_{tray}",
+        translation_key="output_tray",
+        translation_placeholders={"tray_number": str(tray)},
         value_fn=(
             lambda printer: printer.output_tray_status().get(tray, {}).get("status")
             or "Ready"
