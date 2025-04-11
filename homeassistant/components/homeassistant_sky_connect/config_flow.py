@@ -81,7 +81,7 @@ class HomeAssistantSkyConnectConfigFlow(
     """Handle a config flow for Home Assistant SkyConnect."""
 
     VERSION = 1
-    MINOR_VERSION = 3
+    MINOR_VERSION = 4
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the config flow."""

@@ -67,7 +67,8 @@ class ComelitSwitchEntity(CoordinatorEntity[ComelitSerialBridge], SwitchEntity):
         await self.coordinator.api.set_device_status(
             self._device.type, self._device.index, state
         )
-        await self.coordinator.async_request_refresh()
+        self.coordinator.data[self._device.type][self._device.index].status = state
+        self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from pysyncthru import SyncThru, SyncthruState
+from pysyncthru import SyncthruState
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -13,12 +13,9 @@ from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import device_identifiers
+from . import SyncthruCoordinator, device_identifiers
 from .const import DOMAIN
 
 SYNCTHRU_STATE_PROBLEM = {
@@ -39,9 +36,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up from config entry."""
 
-    coordinator: DataUpdateCoordinator[SyncThru] = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
+    coordinator: SyncthruCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     name: str = config_entry.data[CONF_NAME]
     entities = [
@@ -52,12 +47,10 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class SyncThruBinarySensor(
-    CoordinatorEntity[DataUpdateCoordinator[SyncThru]], BinarySensorEntity
-):
+class SyncThruBinarySensor(CoordinatorEntity[SyncthruCoordinator], BinarySensorEntity):
     """Implementation of an abstract Samsung Printer binary sensor platform."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator[SyncThru], name: str) -> None:
+    def __init__(self, coordinator: SyncthruCoordinator, name: str) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.syncthru = coordinator.data
@@ -85,7 +78,7 @@ class SyncThruOnlineSensor(SyncThruBinarySensor):
 
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
 
-    def __init__(self, coordinator: DataUpdateCoordinator[SyncThru], name: str) -> None:
+    def __init__(self, coordinator: SyncthruCoordinator, name: str) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, name)
         self._id_suffix = "_online"
@@ -101,9 +94,9 @@ class SyncThruProblemSensor(SyncThruBinarySensor):
 
     _attr_device_class = BinarySensorDeviceClass.PROBLEM
 
-    def __init__(self, syncthru, name):
+    def __init__(self, coordinator: SyncthruCoordinator, name: str) -> None:
         """Initialize the sensor."""
-        super().__init__(syncthru, name)
+        super().__init__(coordinator, name)
         self._id_suffix = "_problem"
 
     @property
