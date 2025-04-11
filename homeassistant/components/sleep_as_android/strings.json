@@ -94,7 +94,7 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "antisnoring": "Anti-snoring triggered"
+              "antisnoring": "Triggered"
             }
           }
         }

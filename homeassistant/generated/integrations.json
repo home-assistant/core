@@ -5998,7 +5998,7 @@
       "name": "Sleep as Android",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "cloud_push"
+      "iot_class": "local_push"
     },
     "sleepiq": {
       "name": "SleepIQ",
