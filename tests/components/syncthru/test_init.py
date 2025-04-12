@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-from homeassistant.components.syncthru import DOMAIN
+from homeassistant.components.syncthru.const import DOMAIN
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 
