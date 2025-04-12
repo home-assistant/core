@@ -142,7 +142,7 @@ class LaMarzoccoSelectEntity(LaMarzoccoEntity, SelectEntity):
     @property
     def current_option(self) -> str | None:
         """Return the current selected option."""
-        return str(self.entity_description.current_option_fn(self.coordinator.device))
+        return self.entity_description.current_option_fn(self.coordinator.device)
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""

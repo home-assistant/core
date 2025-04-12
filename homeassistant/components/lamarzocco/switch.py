@@ -171,7 +171,7 @@ class LaMarzoccoAutoOnOffSwitchEntity(LaMarzoccoBaseEntity, SwitchEntity):
         self._schedule_entry = schedule_entry
         self._identifier = schedule_entry.identifier
         self._attr_translation_placeholders = {"id": schedule_entry.identifier}
-        self.entity_category = EntityCategory.CONFIG
+        self._attr_entity_category = EntityCategory.CONFIG
 
     async def _async_enable(self, state: bool) -> None:
         """Enable or disable the auto on/off schedule."""
