@@ -30,7 +30,7 @@ class ZimiEntity(Entity):
             identifiers={(DOMAIN, self._device.manufacture_info.identifier)},
             manufacturer=self._device.manufacture_info.manufacturer,
             model=self._device.manufacture_info.model,
-            name=ZimiEntity.device_name(self._device.manufacture_info.model),
+            name=None,
             hw_version=device.manufacture_info.hwVersion,
             sw_version=device.manufacture_info.firmwareVersion,
             suggested_area=device.room,
@@ -38,19 +38,6 @@ class ZimiEntity(Entity):
         )
         self._attr_name = self._device.name.strip()
         self._attr_suggested_area = self._device.room
-
-    @classmethod
-    def device_name(cls, model: str) -> str:
-        """Return a simplified name of the device."""
-
-        if "Fan" in model:
-            return "Fan"
-        if "GPO" in model:
-            return "Outlet"
-        if "Switch" in model:
-            return "Switch"
-
-        return model
 
     @property
     def available(self) -> bool:
