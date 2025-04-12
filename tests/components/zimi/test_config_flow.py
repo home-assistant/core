@@ -3,10 +3,9 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
-from zcc import ControlPoint, ControlPointDescription, ControlPointError
+from zcc import ControlPointDescription, ControlPointDiscoveryErrors, ControlPointError
 
 from homeassistant import config_entries
-from homeassistant.components.zimi.config_flow import ZimiConfigErrors
 from homeassistant.components.zimi.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -26,17 +25,6 @@ SELECTED_HOST_AND_PORT = "selected_host_and_port"
 
 
 @pytest.fixture
-def api_mock():
-    """Mock aysnc_connect_to_controller to return api instance."""
-    with patch(
-        "homeassistant.components.zimi.config_flow.async_connect_to_controller",
-    ) as mock:
-        api = MagicMock(spec=ControlPoint)
-        mock.return_value = api
-        yield mock
-
-
-@pytest.fixture
 def discovery_mock():
     """Mock the ControlPointDiscoveryService."""
     with patch(
@@ -47,20 +35,9 @@ def discovery_mock():
         yield mock
 
 
-@pytest.fixture
-def socket_mock():
-    """Mock socket operations."""
-    with patch(
-        "homeassistant.components.zimi.config_flow.socket", autospec=True
-    ) as mock:
-        yield mock
-
-
 async def test_user_discovery_success(
     hass: HomeAssistant,
-    api_mock: MagicMock,
     discovery_mock: MagicMock,
-    socket_mock: MagicMock,
 ) -> None:
     """Test user form transitions to creation if zcc discovery succeeds."""
 
@@ -68,8 +45,11 @@ async def test_user_discovery_success(
         ControlPointDescription(host=INPUT_HOST, port=INPUT_PORT)
     ]
 
-    api_mock.return_value.mac = INPUT_MAC
-    api_mock.return_value.ready = True
+    discovery_mock.return_value.validate_connection.return_value = {
+        "result": ControlPointDescription(
+            host=INPUT_HOST, port=INPUT_PORT, mac=INPUT_MAC
+        )
+    }
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -85,9 +65,7 @@ async def test_user_discovery_success(
 
 async def test_user_discovery_success_selection(
     hass: HomeAssistant,
-    api_mock: MagicMock,
     discovery_mock: MagicMock,
-    socket_mock: MagicMock,
 ) -> None:
     """Test user form transitions via selection to creation if zcc discovery succeeds has multiple hosts."""
 
@@ -96,12 +74,15 @@ async def test_user_discovery_success_selection(
         ControlPointDescription(host=INPUT_HOST_EXTRA, port=INPUT_PORT_EXTRA),
     ]
 
-    api_mock.return_value.mac = INPUT_MAC_EXTRA
-    api_mock.return_value.ready = True
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+
+    discovery_mock.return_value.validate_connection.return_value = {
+        "result": ControlPointDescription(
+            host=INPUT_HOST_EXTRA, port=INPUT_PORT_EXTRA, mac=INPUT_MAC_EXTRA
+        )
+    }
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -136,20 +117,20 @@ async def test_user_discovery_failure(
 
 async def test_finish_manual_success(
     hass: HomeAssistant,
-    api_mock: MagicMock,
     discovery_mock: MagicMock,
-    socket_mock: MagicMock,
 ) -> None:
     """Test finish form transitions to creation with valid data."""
 
     discovery_mock.discovers.side_effect = ControlPointError("Discovery failed")
+    discovery_mock.return_value.validate_connection.return_value = {
+        "result": ControlPointDescription(
+            host=INPUT_HOST, port=INPUT_PORT, mac=INPUT_MAC
+        )
+    }
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-
-    api_mock.return_value.mac = INPUT_MAC
-    api_mock.return_value.ready = True
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -170,9 +151,7 @@ async def test_finish_manual_success(
 
 async def test_finish_manual_cannot_connect(
     hass: HomeAssistant,
-    api_mock: MagicMock,
     discovery_mock: MagicMock,
-    socket_mock: MagicMock,
 ) -> None:
     """Test finish form transitions via cannot_connect to creation."""
 
@@ -182,11 +161,10 @@ async def test_finish_manual_cannot_connect(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    api_mock.return_value.mac = INPUT_MAC
-    api_mock.return_value.ready = True
-
-    # First attempt fails with ControlPointError when attempting to connect
-    api_mock.side_effect = ControlPointError("Connection failed")
+    # First attempt fails with CANNOT_CONNECT when attempting to connect
+    discovery_mock.return_value.validate_connection.return_value = {
+        "error": ControlPointDiscoveryErrors.CANNOT_CONNECT
+    }
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -197,10 +175,15 @@ async def test_finish_manual_cannot_connect(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": ZimiConfigErrors.CANNOT_CONNECT}
+    assert result["errors"] == {"base": ControlPointDiscoveryErrors.CANNOT_CONNECT}
 
     # Second attempt succeeds
-    api_mock.side_effect = None
+    discovery_mock.return_value.validate_connection.side_effect = None
+    discovery_mock.return_value.validate_connection.return_value = {
+        "result": ControlPointDescription(
+            host=INPUT_HOST, port=INPUT_PORT, mac=INPUT_MAC
+        )
+    }
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -221,9 +204,7 @@ async def test_finish_manual_cannot_connect(
 
 async def test_finish_manual_gethostbyname_error(
     hass: HomeAssistant,
-    api_mock: MagicMock,
     discovery_mock: MagicMock,
-    socket_mock: MagicMock,
 ) -> None:
     """Test finish form transitions via gethostbyname failure to creation."""
 
@@ -233,11 +214,10 @@ async def test_finish_manual_gethostbyname_error(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    api_mock.return_value.mac = INPUT_MAC
-    api_mock.return_value.ready = True
-
-    # First attempt fails with name lookup failure
-    socket_mock.gethostbyname.return_value = None
+    # First attempt fails with name lookup failure when attempting to connect
+    discovery_mock.return_value.validate_connection.return_value = {
+        "error": ControlPointDiscoveryErrors.INVALID_HOST
+    }
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -248,11 +228,15 @@ async def test_finish_manual_gethostbyname_error(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": ZimiConfigErrors.INVALID_HOST}
+    assert result["errors"] == {"base": ControlPointDiscoveryErrors.INVALID_HOST}
 
     # Second attempt succeeds
-    api_mock.side_effect = None
-    socket_mock.gethostbyname.return_value = "xxx"
+    discovery_mock.return_value.validate_connection.side_effect = None
+    discovery_mock.return_value.validate_connection.return_value = {
+        "result": ControlPointDescription(
+            host=INPUT_HOST, port=INPUT_PORT, mac=INPUT_MAC
+        )
+    }
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -272,18 +256,22 @@ async def test_finish_manual_gethostbyname_error(
 
 
 @pytest.mark.parametrize(
-    ("side_effect", "error_expected"),
+    ("return_value", "error_expected"),
     [
-        (ConnectionRefusedError, {"base": ZimiConfigErrors.CONNECTION_REFUSED}),
-        (TimeoutError, {"base": ZimiConfigErrors.TIMEOUT}),
+        (
+            {"error": ControlPointDiscoveryErrors.CONNECTION_REFUSED},
+            {"base": ControlPointDiscoveryErrors.CONNECTION_REFUSED},
+        ),
+        (
+            {"error": ControlPointDiscoveryErrors.TIMEOUT},
+            {"base": ControlPointDiscoveryErrors.TIMEOUT},
+        ),
     ],
 )
 async def test_finish_manual_socket_errors(
     hass: HomeAssistant,
-    api_mock: MagicMock,
     discovery_mock: MagicMock,
-    socket_mock: MagicMock,
-    side_effect: Exception,
+    return_value: Exception,
     error_expected: dict,
 ) -> None:
     """Test finish form transitions via socket errors to creation."""
@@ -294,11 +282,8 @@ async def test_finish_manual_socket_errors(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    api_mock.return_value.mac = INPUT_MAC
-    api_mock.return_value.ready = True
-
     # First attempt fails with socket errors
-    socket_mock.socket.return_value.connect.side_effect = side_effect
+    discovery_mock.return_value.validate_connection.return_value = return_value
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -312,8 +297,14 @@ async def test_finish_manual_socket_errors(
     assert result["errors"] == error_expected
 
     # Second attempt succeeds
-    discovery_mock.reset_mock(return_value=True, side_effect=True)
-    socket_mock.reset_mock(return_value=True, side_effect=True)
+    # discovery_mock.reset_mock(return_value=True, side_effect=True)
+    # socket_mock.reset_mock(return_value=True, side_effect=True)
+
+    discovery_mock.return_value.validate_connection.return_value = {
+        "result": ControlPointDescription(
+            host=INPUT_HOST, port=INPUT_PORT, mac=INPUT_MAC
+        )
+    }
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],

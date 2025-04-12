@@ -60,6 +60,7 @@ class ZimiConfigFlow(ConfigFlow, domain=DOMAIN):
         if len(self.api_descriptions) == 1:
             self.data[CONF_HOST] = self.api_descriptions[0].host
             self.data[CONF_PORT] = self.api_descriptions[0].port
+            await self.check_connection(self.data[CONF_HOST], self.data[CONF_PORT])
             return await self.create_entry()
 
         return await self.async_step_selection()
@@ -74,15 +75,8 @@ class ZimiConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self.data[CONF_HOST] = user_input[SELECTED_HOST_AND_PORT].split(":")[0]
             self.data[CONF_PORT] = int(user_input[SELECTED_HOST_AND_PORT].split(":")[1])
-
-            connection_errors = await self.check_connection(
-                self.data[CONF_HOST], self.data[CONF_PORT]
-            )
-
-            if not connection_errors:
-                return await self.create_entry()
-
-            errors = connection_errors
+            await self.check_connection(self.data[CONF_HOST], self.data[CONF_PORT])
+            return await self.create_entry()
 
         available_options = [
             SelectOptionDict(
@@ -150,7 +144,7 @@ class ZimiConfigFlow(ConfigFlow, domain=DOMAIN):
             self.data[CONF_MAC] = format_mac(details.mac)
             return None
 
-        return {"base": result["errors"]}
+        return {"base": result["error"]}
 
     async def create_entry(self) -> ConfigFlowResult:
         """Create entry for zcc."""
