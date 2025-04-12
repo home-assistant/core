@@ -7,7 +7,7 @@ from typing import Any
 from homeassistant.components.button import ButtonEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .device_trigger import LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP
 from .entity import LutronCasetaEntity
@@ -17,7 +17,7 @@ from .models import LutronCasetaConfigEntry, LutronCasetaData
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: LutronCasetaConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Lutron pico and keypad buttons."""
     data = config_entry.runtime_data
@@ -53,7 +53,7 @@ async def async_setup_entry(
 
         # Append the child device name to the end of the parent keypad
         # name to create the entity name
-        full_name = f'{parent_device_info.get("name")} {device_name}'
+        full_name = f"{parent_device_info.get('name')} {device_name}"
         # Set the device_info to the same as the Parent Keypad
         # The entities will be nested inside the keypad device
         entities.append(

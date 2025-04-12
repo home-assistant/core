@@ -19,21 +19,21 @@ from reolink_aio.api import (
     StatusLedEnum,
     TrackMethodEnum,
 )
-from reolink_aio.exceptions import InvalidParameterError, ReolinkError
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory, UnitOfDataRate, UnitOfFrequency
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import (
     ReolinkChannelCoordinatorEntity,
     ReolinkChannelEntityDescription,
     ReolinkChimeCoordinatorEntity,
     ReolinkChimeEntityDescription,
+    ReolinkHostCoordinatorEntity,
+    ReolinkHostEntityDescription,
 )
-from .util import ReolinkConfigEntry, ReolinkData
+from .util import ReolinkConfigEntry, ReolinkData, raise_translated_error
 
 _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
@@ -49,6 +49,18 @@ class ReolinkSelectEntityDescription(
     get_options: list[str] | Callable[[Host, int], list[str]]
     method: Callable[[Host, int, str], Any]
     value: Callable[[Host, int], str] | None = None
+
+
+@dataclass(frozen=True, kw_only=True)
+class ReolinkHostSelectEntityDescription(
+    SelectEntityDescription,
+    ReolinkHostEntityDescription,
+):
+    """A class that describes host select entities."""
+
+    get_options: Callable[[Host], list[str]]
+    method: Callable[[Host, str], Any]
+    value: Callable[[Host], str]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -82,6 +94,7 @@ SELECT_ENTITIES = (
     ReolinkSelectEntityDescription(
         key="day_night_mode",
         cmd_key="GetIsp",
+        cmd_id=26,
         translation_key="day_night_mode",
         entity_category=EntityCategory.CONFIG,
         get_options=[mode.name for mode in DayNightEnum],
@@ -239,6 +252,19 @@ SELECT_ENTITIES = (
     ),
 )
 
+HOST_SELECT_ENTITIES = (
+    ReolinkHostSelectEntityDescription(
+        key="scene_mode",
+        cmd_key="GetScene",
+        translation_key="scene_mode",
+        entity_category=EntityCategory.CONFIG,
+        get_options=lambda api: api.baichuan.scene_names,
+        supported=lambda api: api.supported(None, "scenes"),
+        value=lambda api: api.baichuan.active_scene,
+        method=lambda api, name: api.baichuan.set_scene(scene_name=name),
+    ),
+)
+
 CHIME_SELECT_ENTITIES = (
     ReolinkChimeSelectEntityDescription(
         key="motion_tone",
@@ -296,17 +322,24 @@ CHIME_SELECT_ENTITIES = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ReolinkConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Reolink select entities."""
     reolink_data: ReolinkData = config_entry.runtime_data
 
-    entities: list[ReolinkSelectEntity | ReolinkChimeSelectEntity] = [
+    entities: list[
+        ReolinkSelectEntity | ReolinkHostSelectEntity | ReolinkChimeSelectEntity
+    ] = [
         ReolinkSelectEntity(reolink_data, channel, entity_description)
         for entity_description in SELECT_ENTITIES
         for channel in reolink_data.host.api.channels
         if entity_description.supported(reolink_data.host.api, channel)
     ]
+    entities.extend(
+        ReolinkHostSelectEntity(reolink_data, entity_description)
+        for entity_description in HOST_SELECT_ENTITIES
+        if entity_description.supported(reolink_data.host.api)
+    )
     entities.extend(
         ReolinkChimeSelectEntity(reolink_data, chime, entity_description)
         for entity_description in CHIME_SELECT_ENTITIES
@@ -354,14 +387,37 @@ class ReolinkSelectEntity(ReolinkChannelCoordinatorEntity, SelectEntity):
         self._log_error = True
         return option
 
+    @raise_translated_error
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        try:
-            await self.entity_description.method(self._host.api, self._channel, option)
-        except InvalidParameterError as err:
-            raise ServiceValidationError(err) from err
-        except ReolinkError as err:
-            raise HomeAssistantError(err) from err
+        await self.entity_description.method(self._host.api, self._channel, option)
+        self.async_write_ha_state()
+
+
+class ReolinkHostSelectEntity(ReolinkHostCoordinatorEntity, SelectEntity):
+    """Base select entity class for Reolink Host."""
+
+    entity_description: ReolinkHostSelectEntityDescription
+
+    def __init__(
+        self,
+        reolink_data: ReolinkData,
+        entity_description: ReolinkHostSelectEntityDescription,
+    ) -> None:
+        """Initialize Reolink select entity."""
+        self.entity_description = entity_description
+        super().__init__(reolink_data)
+        self._attr_options = entity_description.get_options(self._host.api)
+
+    @property
+    def current_option(self) -> str | None:
+        """Return the current option."""
+        return self.entity_description.value(self._host.api)
+
+    @raise_translated_error
+    async def async_select_option(self, option: str) -> None:
+        """Change the selected option."""
+        await self.entity_description.method(self._host.api, option)
         self.async_write_ha_state()
 
 
@@ -396,12 +452,8 @@ class ReolinkChimeSelectEntity(ReolinkChimeCoordinatorEntity, SelectEntity):
         self._log_error = True
         return option
 
+    @raise_translated_error
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        try:
-            await self.entity_description.method(self._chime, option)
-        except InvalidParameterError as err:
-            raise ServiceValidationError(err) from err
-        except ReolinkError as err:
-            raise HomeAssistantError(err) from err
+        await self.entity_description.method(self._chime, option)
         self.async_write_ha_state()

@@ -12,10 +12,9 @@ from homeassistant.components.alarm_control_panel import (
 )
 from homeassistant.const import ATTR_CODE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_platform
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AlarmDecoderConfigEntry
 from .const import (
@@ -37,7 +36,7 @@ ATTR_KEYPRESS = "keypress"
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AlarmDecoderConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up for AlarmDecoder alarm panels."""
     options = entry.options

@@ -5,11 +5,11 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
-from powerfox import PowerMeter, WaterMeter
+from powerfox import HeatMeter, PowerMeter, WaterMeter
 
 from homeassistant.core import HomeAssistant
 
-from . import PowerfoxConfigEntry, PowerfoxDataUpdateCoordinator
+from .coordinator import PowerfoxConfigEntry, PowerfoxDataUpdateCoordinator
 
 
 async def async_get_config_entry_diagnostics(
@@ -50,6 +50,22 @@ async def async_get_config_entry_diagnostics(
                         }
                     }
                     if isinstance(coordinator.data, WaterMeter)
+                    else {}
+                ),
+                **(
+                    {
+                        "heat_meter": {
+                            "outdated": coordinator.data.outdated,
+                            "timestamp": datetime.strftime(
+                                coordinator.data.timestamp, "%Y-%m-%d %H:%M:%S"
+                            ),
+                            "total_energy": coordinator.data.total_energy,
+                            "delta_energy": coordinator.data.delta_energy,
+                            "total_volume": coordinator.data.total_volume,
+                            "delta_volume": coordinator.data.delta_volume,
+                        }
+                    }
+                    if isinstance(coordinator.data, HeatMeter)
                     else {}
                 ),
             }

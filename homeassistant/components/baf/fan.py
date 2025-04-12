@@ -14,7 +14,7 @@ from homeassistant.components.fan import (
     FanEntityFeature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
     ranged_value_to_percentage,
@@ -28,7 +28,7 @@ from .entity import BAFEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: BAFConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up SenseME fans."""
     device = entry.runtime_data
@@ -46,7 +46,7 @@ class BAFFan(BAFEntity, FanEntity):
         | FanEntityFeature.TURN_OFF
         | FanEntityFeature.TURN_ON
     )
-    _enable_turn_on_off_backwards_compatibility = False
+
     _attr_preset_modes = [PRESET_MODE_AUTO]
     _attr_speed_count = SPEED_COUNT
     _attr_name = None

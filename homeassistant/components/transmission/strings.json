@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Set up Transmission Client",
+        "title": "Set up Transmission client",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "password": "[%key:common::config_flow::data::password%]",
@@ -96,11 +96,15 @@
       "fields": {
         "entry_id": {
           "name": "Transmission entry",
-          "description": "Config entry id."
+          "description": "ID of the config entry to use."
         },
         "torrent": {
           "name": "Torrent",
           "description": "URL, magnet link or Base64 encoded file."
+        },
+        "download_path": {
+          "name": "Download path",
+          "description": "Optional path to specify where the torrent should be downloaded. If not specified, the default download directory is used."
         }
       }
     },

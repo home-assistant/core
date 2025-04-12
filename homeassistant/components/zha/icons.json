@@ -124,6 +124,12 @@
       },
       "on_led_color": {
         "default": "mdi:palette"
+      },
+      "device_mode": {
+        "default": "mdi:cogs"
+      },
+      "pilot_wire_mode": {
+        "default": "mdi:radiator"
       }
     },
     "sensor": {

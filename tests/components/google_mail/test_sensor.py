@@ -12,7 +12,7 @@ from homeassistant.components.google_mail.const import DOMAIN
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .conftest import SENSOR, TOKEN, ComponentSetup
 

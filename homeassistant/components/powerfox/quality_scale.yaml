@@ -80,7 +80,7 @@ rules:
     status: exempt
     comment: |
       There is no need for icon translations.
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: |

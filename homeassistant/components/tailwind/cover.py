@@ -20,17 +20,17 @@ from homeassistant.components.cover import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, LOGGER
+from .coordinator import TailwindConfigEntry
 from .entity import TailwindDoorEntity
-from .typing import TailwindConfigEntry
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TailwindConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tailwind cover based on a config entry."""
     async_add_entities(

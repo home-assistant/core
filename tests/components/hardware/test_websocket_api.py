@@ -10,7 +10,7 @@ import psutil_home_assistant as ha_psutil
 from homeassistant.components.hardware.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.typing import WebSocketGenerator
 

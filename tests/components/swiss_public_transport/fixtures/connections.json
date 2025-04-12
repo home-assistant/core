@@ -23,8 +23,7 @@
     "platform": 2,
     "transfers": 0,
     "duration": "10",
-    "delay": 0,
-    "line": "T10"
+    "delay": 0
   },
   {
     "departure": "2024-01-06T18:06:00+0100",

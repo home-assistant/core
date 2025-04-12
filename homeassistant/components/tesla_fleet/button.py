@@ -10,7 +10,7 @@ from tesla_fleet_api.const import Scope
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TeslaFleetConfigEntry
 from .entity import TeslaFleetVehicleEntity
@@ -61,7 +61,7 @@ DESCRIPTIONS: tuple[TeslaFleetButtonEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TeslaFleetConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the TeslaFleet Button platform from a config entry."""
 

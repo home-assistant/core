@@ -6,6 +6,7 @@ core: &core
   - homeassistant/helpers/**
   - homeassistant/package_constraints.txt
   - homeassistant/util/**
+  - mypy.ini
   - pyproject.toml
   - requirements.txt
   - setup.cfg
@@ -131,6 +132,7 @@ tests: &tests
   - tests/components/conftest.py
   - tests/components/diagnostics/**
   - tests/components/history/**
+  - tests/components/light/common.py
   - tests/components/logbook/**
   - tests/components/recorder/**
   - tests/components/repairs/**

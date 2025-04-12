@@ -305,7 +305,7 @@ async def test_binary_sensor_update_motion(
         api=ufp.api,
     )
 
-    new_camera = doorbell.copy()
+    new_camera = doorbell.model_copy()
     new_camera.is_motion_detected = True
     new_camera.last_motion_event_id = event.id
 
@@ -352,7 +352,7 @@ async def test_binary_sensor_update_light_motion(
         api=ufp.api,
     )
 
-    new_light = light.copy()
+    new_light = light.model_copy()
     new_light.is_pir_motion_detected = True
     new_light.last_motion_event_id = event.id
 
@@ -386,7 +386,7 @@ async def test_binary_sensor_update_mount_type_window(
     assert state
     assert state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.DOOR.value
 
-    new_sensor = sensor_all.copy()
+    new_sensor = sensor_all.model_copy()
     new_sensor.mount_type = MountType.WINDOW
 
     mock_msg = Mock()
@@ -418,7 +418,7 @@ async def test_binary_sensor_update_mount_type_garage(
     assert state
     assert state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.DOOR.value
 
-    new_sensor = sensor_all.copy()
+    new_sensor = sensor_all.model_copy()
     new_sensor.mount_type = MountType.GARAGE
 
     mock_msg = Mock()
@@ -468,7 +468,7 @@ async def test_binary_sensor_package_detected(
         api=ufp.api,
     )
 
-    new_camera = doorbell.copy()
+    new_camera = doorbell.model_copy()
     new_camera.is_smart_detected = True
     new_camera.last_smart_detect_event_ids[SmartDetectObjectType.PACKAGE] = event.id
 
@@ -501,7 +501,7 @@ async def test_binary_sensor_package_detected(
         api=ufp.api,
     )
 
-    new_camera = doorbell.copy()
+    new_camera = doorbell.model_copy()
     new_camera.is_smart_detected = True
     new_camera.last_smart_detect_event_ids[SmartDetectObjectType.PACKAGE] = event.id
 
@@ -534,7 +534,7 @@ async def test_binary_sensor_package_detected(
         api=ufp.api,
     )
 
-    new_camera = doorbell.copy()
+    new_camera = doorbell.model_copy()
     new_camera.is_smart_detected = True
     new_camera.last_smart_detect_event_ids[SmartDetectObjectType.PACKAGE] = event.id
 
@@ -611,7 +611,7 @@ async def test_binary_sensor_person_detected(
         api=ufp.api,
     )
 
-    new_camera = doorbell.copy()
+    new_camera = doorbell.model_copy()
     new_camera.is_smart_detected = True
 
     ufp.api.bootstrap.cameras = {new_camera.id: new_camera}
@@ -641,7 +641,7 @@ async def test_binary_sensor_person_detected(
         api=ufp.api,
     )
 
-    new_camera = doorbell.copy()
+    new_camera = doorbell.model_copy()
     new_camera.is_smart_detected = True
     new_camera.last_smart_detect_event_ids[SmartDetectObjectType.PERSON] = event.id
 
@@ -680,7 +680,7 @@ async def test_binary_sensor_person_detected(
         api=ufp.api,
     )
 
-    new_camera = doorbell.copy()
+    new_camera = doorbell.model_copy()
     new_camera.is_smart_detected = True
     new_camera.last_smart_detect_event_ids[SmartDetectObjectType.PERSON] = event.id
 

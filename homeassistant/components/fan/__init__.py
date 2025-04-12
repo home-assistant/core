@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from datetime import timedelta
 from enum import IntFlag
 import functools as ft
@@ -10,7 +9,7 @@ import logging
 import math
 from typing import Any, final
 
-from propcache import cached_property
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -25,7 +24,6 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.hass_dict import HassKey
@@ -218,99 +216,6 @@ class FanEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_preset_modes: list[str] | None = None
     _attr_speed_count: int = 100
     _attr_supported_features: FanEntityFeature = FanEntityFeature(0)
-
-    __mod_supported_features: FanEntityFeature = FanEntityFeature(0)
-    # Integrations should set `_enable_turn_on_off_backwards_compatibility` to False
-    # once migrated and set the feature flags TURN_ON/TURN_OFF as needed.
-    _enable_turn_on_off_backwards_compatibility: bool = True
-
-    def __getattribute__(self, name: str, /) -> Any:
-        """Get attribute.
-
-        Modify return of `supported_features` to
-        include `_mod_supported_features` if attribute is set.
-        """
-        if name != "supported_features":
-            return super().__getattribute__(name)
-
-        # Convert the supported features to ClimateEntityFeature.
-        # Remove this compatibility shim in 2025.1 or later.
-        _supported_features: FanEntityFeature = super().__getattribute__(
-            "supported_features"
-        )
-        _mod_supported_features: FanEntityFeature = super().__getattribute__(
-            "_FanEntity__mod_supported_features"
-        )
-        if type(_supported_features) is int:  # noqa: E721
-            _features = FanEntityFeature(_supported_features)
-            self._report_deprecated_supported_features_values(_features)
-        else:
-            _features = _supported_features
-
-        if not _mod_supported_features:
-            return _features
-
-        # Add automatically calculated FanEntityFeature.TURN_OFF/TURN_ON to
-        # supported features and return it
-        return _features | _mod_supported_features
-
-    @callback
-    def add_to_platform_start(
-        self,
-        hass: HomeAssistant,
-        platform: EntityPlatform,
-        parallel_updates: asyncio.Semaphore | None,
-    ) -> None:
-        """Start adding an entity to a platform."""
-        super().add_to_platform_start(hass, platform, parallel_updates)
-
-        def _report_turn_on_off(feature: str, method: str) -> None:
-            """Log warning not implemented turn on/off feature."""
-            report_issue = self._suggest_report_issue()
-            message = (
-                "Entity %s (%s) does not set FanEntityFeature.%s"
-                " but implements the %s method. Please %s"
-            )
-            _LOGGER.warning(
-                message,
-                self.entity_id,
-                type(self),
-                feature,
-                method,
-                report_issue,
-            )
-
-        # Adds FanEntityFeature.TURN_OFF/TURN_ON depending on service calls implemented
-        # This should be removed in 2025.2.
-        if self._enable_turn_on_off_backwards_compatibility is False:
-            # Return if integration has migrated already
-            return
-
-        supported_features = self.supported_features
-        if supported_features & (FanEntityFeature.TURN_ON | FanEntityFeature.TURN_OFF):
-            # The entity supports both turn_on and turn_off, the backwards compatibility
-            # checks are not needed
-            return
-
-        if not supported_features & FanEntityFeature.TURN_OFF and (
-            type(self).async_turn_off is not ToggleEntity.async_turn_off
-            or type(self).turn_off is not ToggleEntity.turn_off
-        ):
-            # turn_off implicitly supported by implementing turn_off method
-            _report_turn_on_off("TURN_OFF", "turn_off")
-            self.__mod_supported_features |= (  # pylint: disable=unused-private-member
-                FanEntityFeature.TURN_OFF
-            )
-
-        if not supported_features & FanEntityFeature.TURN_ON and (
-            type(self).async_turn_on is not FanEntity.async_turn_on
-            or type(self).turn_on is not FanEntity.turn_on
-        ):
-            # turn_on implicitly supported by implementing turn_on method
-            _report_turn_on_off("TURN_ON", "turn_on")
-            self.__mod_supported_features |= (  # pylint: disable=unused-private-member
-                FanEntityFeature.TURN_ON
-            )
 
     def set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""

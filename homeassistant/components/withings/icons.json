@@ -16,6 +16,9 @@
       "heart_pulse": {
         "default": "mdi:heart-pulse"
       },
+      "height": {
+        "default": "mdi:human-male-height-variant"
+      },
       "hydration": {
         "default": "mdi:water"
       },

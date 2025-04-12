@@ -12,6 +12,7 @@ from pynuki.bridge import InvalidCredentialsException
 from pynuki.device import NukiDevice
 from requests.exceptions import RequestException
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -28,9 +29,12 @@ UPDATE_INTERVAL = timedelta(seconds=30)
 class NukiCoordinator(DataUpdateCoordinator[None]):
     """Data Update Coordinator for the Nuki integration."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: ConfigEntry,
         bridge: NukiBridge,
         locks: list[NukiLock],
         openers: list[NukiOpener],
@@ -39,9 +43,8 @@ class NukiCoordinator(DataUpdateCoordinator[None]):
         super().__init__(
             hass,
             _LOGGER,
-            # Name of the data. For logging purposes.
+            config_entry=config_entry,
             name="nuki devices",
-            # Polling interval. Will only be polled if there are subscribers.
             update_interval=UPDATE_INTERVAL,
         )
         self.bridge = bridge

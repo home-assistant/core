@@ -1,0 +1,24 @@
+{
+  "config": {
+    "flow_title": "Controller {serial}",
+    "step": {
+      "discovery_confirm": {
+        "title": "Add controller",
+        "description": "Add controller {serial}?"
+      }
+    },
+    "abort": {
+      "already_configured": "Controller already configured",
+      "discovery_in_progress": "Discovery in progress",
+      "not_supported": "Configuration for QBUS happens through MQTT discovery. If your controller is not automatically discovered, check the prerequisites and troubleshooting section of the documentation."
+    },
+    "error": {
+      "no_controller": "No controllers were found"
+    }
+  },
+  "exceptions": {
+    "invalid_preset": {
+      "message": "Preset mode \"{preset}\" is not valid. Valid preset modes are: {options}."
+    }
+  }
+}

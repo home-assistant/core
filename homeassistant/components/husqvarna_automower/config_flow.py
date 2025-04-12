@@ -53,10 +53,11 @@ class HusqvarnaConfigFlowHandler(
         tz = await dt_util.async_get_time_zone(str(dt_util.DEFAULT_TIME_ZONE))
         automower_api = AutomowerSession(AsyncConfigFlowAuth(websession, token), tz)
         try:
-            data = await automower_api.get_status()
-        except Exception:  # noqa: BLE001
+            status_data = await automower_api.get_status()
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unknown")
-        if data == {}:
+        if status_data == {}:
             return self.async_abort(reason="no_mower_connected")
 
         structured_token = structure_token(token[CONF_ACCESS_TOKEN])

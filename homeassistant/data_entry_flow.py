@@ -12,9 +12,8 @@ from dataclasses import dataclass
 from enum import StrEnum
 import logging
 from types import MappingProxyType
-from typing import Any, Generic, Required, TypedDict, cast
+from typing import Any, Generic, Required, TypedDict, TypeVar, cast
 
-from typing_extensions import TypeVar
 import voluptuous as vol
 
 from .core import HomeAssistant, callback
@@ -208,6 +207,13 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         Handler key is the domain of the component that we want to set up.
         """
 
+    @callback
+    def async_flow_removed(
+        self,
+        flow: FlowHandler[_FlowContextT, _FlowResultT, _HandlerT],
+    ) -> None:
+        """Handle a removed data entry flow."""
+
     @abc.abstractmethod
     async def async_finish_flow(
         self,
@@ -219,13 +225,6 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         This method is called when a flow step returns FlowResultType.ABORT or
         FlowResultType.CREATE_ENTRY.
         """
-
-    async def async_post_init(
-        self,
-        flow: FlowHandler[_FlowContextT, _FlowResultT, _HandlerT],
-        result: _FlowResultT,
-    ) -> None:
-        """Entry has finished executing its first step asynchronously."""
 
     @callback
     def async_get(self, flow_id: str) -> _FlowResultT:
@@ -313,12 +312,7 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         flow.init_data = data
         self._async_add_flow_progress(flow)
 
-        result = await self._async_handle_step(flow, flow.init_step, data)
-
-        if result["type"] != FlowResultType.ABORT:
-            await self.async_post_init(flow, result)
-
-        return result
+        return await self._async_handle_step(flow, flow.init_step, data)
 
     async def async_configure(
         self, flow_id: str, user_input: dict | None = None
@@ -470,6 +464,7 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         """Remove a flow from in progress."""
         if (flow := self._progress.pop(flow_id, None)) is None:
             raise UnknownFlow
+        self.async_flow_removed(flow)
         self._async_remove_flow_from_index(flow)
         flow.async_cancel_progress_task()
         try:
@@ -497,6 +492,13 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
                 reason=err.reason,
                 description_placeholders=err.description_placeholders,
             )
+
+        if flow.flow_id not in self._progress:
+            # The flow was removed during the step, raise UnknownFlow
+            # unless the result is an abort
+            if result["type"] != FlowResultType.ABORT:
+                raise UnknownFlow
+            return result
 
         # Setup the flow handler's preview if needed
         if result.get("preview") is not None:
@@ -548,7 +550,7 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             flow.cur_step = result
             return result
 
-        # Abort and Success results both finish the flow
+        # Abort and Success results both finish the flow.
         self._async_remove_flow_progress(flow.flow_id)
 
         return result
@@ -562,7 +564,7 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         if not hasattr(flow, method):
             self._async_remove_flow_progress(flow.flow_id)
             raise UnknownStep(
-                f"Handler {self.__class__.__name__} doesn't support step {step_id}"
+                f"Handler {flow.__class__.__name__} doesn't support step {step_id}"
             )
 
     async def _async_setup_preview(
@@ -657,6 +659,19 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
                     and not self.show_advanced_options
                 ):
                     continue
+
+            # Process the section schema options
+            if (
+                suggested_values is not None
+                and isinstance(val, section)
+                and key in suggested_values
+            ):
+                new_section_key = copy.copy(key)
+                schema[new_section_key] = val
+                val.schema = self.add_suggested_values_to_schema(
+                    val.schema, suggested_values[key]
+                )
+                continue
 
             new_key = key
             if (

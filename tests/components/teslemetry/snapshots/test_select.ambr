@@ -12,6 +12,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -69,6 +70,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -127,6 +129,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -149,7 +152,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_seat_heater_left',
-    'unique_id': 'LRWXF7EK4KC700000-climate_state_seat_heater_left',
+    'unique_id': 'LRW3F7EK4NC700000-climate_state_seat_heater_left',
     'unit_of_measurement': None,
   })
 # ---
@@ -186,6 +189,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -208,7 +212,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_seat_heater_right',
-    'unique_id': 'LRWXF7EK4KC700000-climate_state_seat_heater_right',
+    'unique_id': 'LRW3F7EK4NC700000-climate_state_seat_heater_right',
     'unit_of_measurement': None,
   })
 # ---
@@ -245,6 +249,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -267,7 +272,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_seat_heater_rear_center',
-    'unique_id': 'LRWXF7EK4KC700000-climate_state_seat_heater_rear_center',
+    'unique_id': 'LRW3F7EK4NC700000-climate_state_seat_heater_rear_center',
     'unit_of_measurement': None,
   })
 # ---
@@ -304,6 +309,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -326,7 +332,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_seat_heater_rear_left',
-    'unique_id': 'LRWXF7EK4KC700000-climate_state_seat_heater_rear_left',
+    'unique_id': 'LRW3F7EK4NC700000-climate_state_seat_heater_rear_left',
     'unit_of_measurement': None,
   })
 # ---
@@ -363,6 +369,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -385,7 +392,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_seat_heater_rear_right',
-    'unique_id': 'LRWXF7EK4KC700000-climate_state_seat_heater_rear_right',
+    'unique_id': 'LRW3F7EK4NC700000-climate_state_seat_heater_rear_right',
     'unit_of_measurement': None,
   })
 # ---
@@ -408,124 +415,6 @@
     'state': 'off',
   })
 # ---
-# name: test_select[select.test_seat_heater_third_row_left-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'off',
-        'low',
-        'medium',
-        'high',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'select',
-    'entity_category': None,
-    'entity_id': 'select.test_seat_heater_third_row_left',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Seat heater third row left',
-    'platform': 'teslemetry',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'climate_state_seat_heater_third_row_left',
-    'unique_id': 'LRWXF7EK4KC700000-climate_state_seat_heater_third_row_left',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_select[select.test_seat_heater_third_row_left-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Seat heater third row left',
-      'options': list([
-        'off',
-        'low',
-        'medium',
-        'high',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'select.test_seat_heater_third_row_left',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unavailable',
-  })
-# ---
-# name: test_select[select.test_seat_heater_third_row_right-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'off',
-        'low',
-        'medium',
-        'high',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'select',
-    'entity_category': None,
-    'entity_id': 'select.test_seat_heater_third_row_right',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Seat heater third row right',
-    'platform': 'teslemetry',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'climate_state_seat_heater_third_row_right',
-    'unique_id': 'LRWXF7EK4KC700000-climate_state_seat_heater_third_row_right',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_select[select.test_seat_heater_third_row_right-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Seat heater third row right',
-      'options': list([
-        'off',
-        'low',
-        'medium',
-        'high',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'select.test_seat_heater_third_row_right',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unavailable',
-  })
-# ---
 # name: test_select[select.test_steering_wheel_heater-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -539,6 +428,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -561,7 +451,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_steering_wheel_heat_level',
-    'unique_id': 'LRWXF7EK4KC700000-climate_state_steering_wheel_heat_level',
+    'unique_id': 'LRW3F7EK4NC700000-climate_state_steering_wheel_heat_level',
     'unit_of_measurement': None,
   })
 # ---
@@ -582,4 +472,22 @@
     'last_updated': <ANY>,
     'state': 'off',
   })
+# ---
+# name: test_select_streaming[select.test_seat_heater_front_left]
+  'off'
+# ---
+# name: test_select_streaming[select.test_seat_heater_front_right]
+  'low'
+# ---
+# name: test_select_streaming[select.test_seat_heater_rear_center]
+  'unknown'
+# ---
+# name: test_select_streaming[select.test_seat_heater_rear_left]
+  'medium'
+# ---
+# name: test_select_streaming[select.test_seat_heater_rear_right]
+  'high'
+# ---
+# name: test_select_streaming[select.test_steering_wheel_heater]
+  'off'
 # ---

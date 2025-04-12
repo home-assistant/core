@@ -2,15 +2,18 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
-from nikohomecontrol import NikoHomeControlConnection
+from nhc.controller import NHCController
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -19,11 +22,14 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-def test_connection(host: str) -> str | None:
+async def test_connection(host: str) -> str | None:
     """Test if we can connect to the Niko Home Control controller."""
+
+    controller = NHCController(host, 8000)
     try:
-        NikoHomeControlConnection(host, 8000)
-    except Exception:  # noqa: BLE001
+        await controller.connect()
+    except Exception:
+        _LOGGER.exception("Unexpected exception")
         return "cannot_connect"
     return None
 
@@ -31,7 +37,7 @@ def test_connection(host: str) -> str | None:
 class NikoHomeControlConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Niko Home Control."""
 
-    VERSION = 1
+    MINOR_VERSION = 2
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -41,7 +47,7 @@ class NikoHomeControlConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
-            error = test_connection(user_input[CONF_HOST])
+            error = await test_connection(user_input[CONF_HOST])
             if not error:
                 return self.async_create_entry(
                     title="Niko Home Control",
@@ -56,7 +62,7 @@ class NikoHomeControlConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_info: dict[str, Any]) -> ConfigFlowResult:
         """Import a config entry."""
         self._async_abort_entries_match({CONF_HOST: import_info[CONF_HOST]})
-        error = test_connection(import_info[CONF_HOST])
+        error = await test_connection(import_info[CONF_HOST])
 
         if not error:
             return self.async_create_entry(

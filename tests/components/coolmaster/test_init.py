@@ -1,6 +1,5 @@
 """The test for the Coolmaster integration."""
 
-from homeassistant.components.coolmaster.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -20,8 +19,6 @@ async def test_unload_entry(
     load_int: ConfigEntry,
 ) -> None:
     """Test Coolmaster unloading an entry."""
-    assert load_int.entry_id in hass.data.get(DOMAIN)
     await hass.config_entries.async_unload(load_int.entry_id)
     await hass.async_block_till_done()
     assert load_int.state is ConfigEntryState.NOT_LOADED
-    assert not hass.data.get(DOMAIN)

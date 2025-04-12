@@ -34,21 +34,31 @@ rules:
   docs-removal-instructions: todo
   test-before-setup: done
   docs-high-level-description: done
-  config-flow-test-coverage: done
+  config-flow-test-coverage:
+    status: todo
+    comment: |
+      All config flow tests should finish with CREATE_ENTRY and ABORT to
+      test they are able to recover from errors
   docs-actions: done
   runtime-data: done
 
   # Silver
-  log-when-unavailable: todo
-  config-entry-unloading: todo
+  log-when-unavailable: done
+  config-entry-unloading: done
   reauthentication-flow: done
-  action-exceptions: todo
-  docs-installation-parameters: todo
-  integration-owner: todo
-  parallel-updates: todo
-  test-coverage: todo
-  docs-configuration-parameters: todo
-  entity-unavailable: todo
+  action-exceptions: done
+  docs-installation-parameters:
+    status: todo
+    comment: The documentation does not mention installation parameters
+  integration-owner: done
+  parallel-updates:
+    status: todo
+    comment: The integration does not explicitly set a number of parallel updates.
+  test-coverage: done
+  docs-configuration-parameters:
+    status: todo
+    comment: The documentation for configuration parameters could be improved.
+  entity-unavailable: done
 
   # Gold
   docs-examples: todo

@@ -1,17 +1,18 @@
 # serializer version: 1
-# name: test_states[binary_sensor.my_device_battery_low-entry]
+# name: test_states[binary_sensor.my_device_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.my_device_battery_low',
+    'entity_id': 'binary_sensor.my_device_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -23,7 +24,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
-    'original_name': 'Battery low',
+    'original_name': 'Battery',
     'platform': 'tplink',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -39,6 +40,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -86,6 +88,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -133,6 +136,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
@@ -166,6 +170,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -213,6 +218,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -260,6 +266,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -300,6 +307,54 @@
     'state': 'off',
   })
 # ---
+# name: test_states[binary_sensor.my_device_overloaded-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.my_device_overloaded',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Overloaded',
+    'platform': 'tplink',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'overloaded',
+    'unique_id': '123456789ABCDEFGH_overloaded',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[binary_sensor.my_device_overloaded-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'my_device Overloaded',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.my_device_overloaded',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_states[binary_sensor.my_device_temperature_warning-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -307,6 +362,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
@@ -337,6 +393,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(

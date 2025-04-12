@@ -180,7 +180,6 @@ EXCEPTIONS = {
     "PyMicroBot",  # https://github.com/spycle/pyMicroBot/pull/3
     "PySwitchmate",  # https://github.com/Danielhiversen/pySwitchmate/pull/16
     "PyXiaomiGateway",  # https://github.com/Danielhiversen/PyXiaomiGateway/pull/201
-    "aioecowitt",  # https://github.com/home-assistant-libs/aioecowitt/pull/180
     "chacha20poly1305",  # LGPL
     "commentjson",  # https://github.com/vaidik/commentjson/pull/55
     "crownstone-cloud",  # https://github.com/crownstone/crownstone-lib-python-cloud/pull/5
@@ -191,6 +190,7 @@ EXCEPTIONS = {
     "enocean",  # https://github.com/kipe/enocean/pull/142
     "imutils",  # https://github.com/PyImageSearch/imutils/pull/292
     "iso4217",  # Public domain
+    "jaraco.itertools",  # MIT - https://github.com/jaraco/jaraco.itertools/issues/21
     "kiwiki_client",  # https://github.com/c7h/kiwiki_client/pull/6
     "ld2410-ble",  # https://github.com/930913/ld2410-ble/pull/7
     "maxcube-api",  # https://github.com/uebelack/python-maxcube-api/pull/48
@@ -199,7 +199,6 @@ EXCEPTIONS = {
     "pigpio",  # https://github.com/joan2937/pigpio/pull/608
     "pymitv",  # MIT
     "pybbox",  # https://github.com/HydrelioxGitHub/pybbox/pull/5
-    "pyeconet",  # https://github.com/w1ll1am23/pyeconet/pull/41
     "pysabnzbd",  # https://github.com/jeradM/pysabnzbd/pull/6
     "pyvera",  # https://github.com/maximvelichko/pyvera/pull/164
     "repoze.lru",

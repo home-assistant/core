@@ -8,8 +8,9 @@ from aiohttp import ClientSession
 from aiohttp.client_exceptions import ClientConnectorError
 from pyairnow import WebServiceAPI
 from pyairnow.conv import aqi_to_concentration
-from pyairnow.errors import AirNowError
+from pyairnow.errors import AirNowError, InvalidJsonError
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -21,7 +22,6 @@ from .const import (
     ATTR_API_CAT_DESCRIPTION,
     ATTR_API_CAT_LEVEL,
     ATTR_API_CATEGORY,
-    ATTR_API_PM25,
     ATTR_API_POLLUTANT,
     ATTR_API_REPORT_DATE,
     ATTR_API_REPORT_HOUR,
@@ -35,13 +35,18 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+type AirNowConfigEntry = ConfigEntry[AirNowDataUpdateCoordinator]
+
 
 class AirNowDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """The AirNow update coordinator."""
 
+    config_entry: AirNowConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: AirNowConfigEntry,
         session: ClientSession,
         api_key: str,
         latitude: float,
@@ -56,7 +61,13 @@ class AirNowDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         self.airnow = WebServiceAPI(api_key, session=session)
 
-        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=update_interval)
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            update_interval=update_interval,
+        )
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
@@ -68,7 +79,7 @@ class AirNowDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 distance=self.distance,
             )
 
-        except (AirNowError, ClientConnectorError) as error:
+        except (AirNowError, ClientConnectorError, InvalidJsonError) as error:
             raise UpdateFailed(error) from error
 
         if not obs:
@@ -91,18 +102,16 @@ class AirNowDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 max_aqi_desc = obv[ATTR_API_CATEGORY][ATTR_API_CAT_DESCRIPTION]
                 max_aqi_poll = pollutant
 
-            # Copy other data from PM2.5 Value
-            if obv[ATTR_API_AQI_PARAM] == ATTR_API_PM25:
-                # Copy Report Details
-                data[ATTR_API_REPORT_DATE] = obv[ATTR_API_REPORT_DATE]
-                data[ATTR_API_REPORT_HOUR] = obv[ATTR_API_REPORT_HOUR]
-                data[ATTR_API_REPORT_TZ] = obv[ATTR_API_REPORT_TZ]
+            # Copy Report Details
+            data[ATTR_API_REPORT_DATE] = obv[ATTR_API_REPORT_DATE]
+            data[ATTR_API_REPORT_HOUR] = obv[ATTR_API_REPORT_HOUR]
+            data[ATTR_API_REPORT_TZ] = obv[ATTR_API_REPORT_TZ]
 
-                # Copy Station Details
-                data[ATTR_API_STATE] = obv[ATTR_API_STATE]
-                data[ATTR_API_STATION] = obv[ATTR_API_STATION]
-                data[ATTR_API_STATION_LATITUDE] = obv[ATTR_API_STATION_LATITUDE]
-                data[ATTR_API_STATION_LONGITUDE] = obv[ATTR_API_STATION_LONGITUDE]
+            # Copy Station Details
+            data[ATTR_API_STATE] = obv[ATTR_API_STATE]
+            data[ATTR_API_STATION] = obv[ATTR_API_STATION]
+            data[ATTR_API_STATION_LATITUDE] = obv[ATTR_API_STATION_LATITUDE]
+            data[ATTR_API_STATION_LONGITUDE] = obv[ATTR_API_STATION_LONGITUDE]
 
         # Store Overall AQI
         data[ATTR_API_AQI] = max_aqi

@@ -15,10 +15,9 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityFeature,
     AlarmControlPanelState,
 )
-from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import YaleConfigEntry
 from .const import DOMAIN, STATE_MAP, YALE_ALL_ERRORS
@@ -27,7 +26,9 @@ from .entity import YaleAlarmEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: YaleConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: YaleConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the alarm entry."""
 
@@ -84,7 +85,7 @@ class YaleAlarmDevice(YaleAlarmEntity, AlarmControlPanelEntity):
                 translation_domain=DOMAIN,
                 translation_key="set_alarm",
                 translation_placeholders={
-                    "name": self.coordinator.config_entry.data[CONF_NAME],
+                    "name": self.coordinator.config_entry.title,
                     "error": str(error),
                 },
             ) from error

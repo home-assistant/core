@@ -26,6 +26,7 @@ from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
+    SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -79,10 +80,19 @@ def add_province_and_language_to_schema(
         }
 
     if provinces := all_countries.get(country):
+        if _country.subdivisions_aliases and (
+            subdiv_aliases := _country.get_subdivision_aliases()
+        ):
+            province_options: list[Any] = [
+                SelectOptionDict(value=k, label=", ".join(v))
+                for k, v in subdiv_aliases.items()
+            ]
+        else:
+            province_options = provinces
         province_schema = {
             vol.Optional(CONF_PROVINCE): SelectSelector(
                 SelectSelectorConfig(
-                    options=provinces,
+                    options=province_options,
                     mode=SelectSelectorMode.DROPDOWN,
                     translation_key=CONF_PROVINCE,
                 )
@@ -136,7 +146,7 @@ def validate_custom_dates(user_input: dict[str, Any]) -> None:
 
     year: int = dt_util.now().year
     if country := user_input.get(CONF_COUNTRY):
-        language = user_input.get(CONF_LANGUAGE)
+        language: str | None = user_input.get(CONF_LANGUAGE)
         province = user_input.get(CONF_PROVINCE)
         obj_holidays = country_holidays(
             country=country,
@@ -145,8 +155,10 @@ def validate_custom_dates(user_input: dict[str, Any]) -> None:
             language=language,
         )
         if (
-            supported_languages := obj_holidays.supported_languages
-        ) and language == "en":
+            (supported_languages := obj_holidays.supported_languages)
+            and language
+            and language.startswith("en")
+        ):
             for lang in supported_languages:
                 if lang.startswith("en"):
                     obj_holidays = country_holidays(

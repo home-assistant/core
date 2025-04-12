@@ -4,7 +4,7 @@ from collections.abc import Generator
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock, patch
 
-from powerfox import Device, DeviceType, PowerMeter, WaterMeter
+from powerfox import Device, DeviceType, HeatMeter, PowerMeter, WaterMeter
 import pytest
 
 from homeassistant.components.powerfox.const import DOMAIN
@@ -53,6 +53,14 @@ def mock_powerfox_client() -> Generator[AsyncMock]:
                 type=DeviceType.COLD_WATER_METER,
                 name="Wateropti",
             ),
+            Device(
+                id="9x9x1f12xx5x",
+                date_added=datetime(2024, 11, 26, 9, 22, 35, tzinfo=UTC),
+                main_device=False,
+                bidirectional=False,
+                type=DeviceType.HEAT_METER,
+                name="Heatopti",
+            ),
         ]
         client.device.side_effect = [
             PowerMeter(
@@ -69,6 +77,14 @@ def mock_powerfox_client() -> Generator[AsyncMock]:
                 timestamp=datetime(2024, 11, 26, 10, 48, 51, tzinfo=UTC),
                 cold_water=1111.111,
                 warm_water=0.0,
+            ),
+            HeatMeter(
+                outdated=False,
+                timestamp=datetime(2024, 11, 26, 10, 48, 51, tzinfo=UTC),
+                total_energy=1111.111,
+                delta_energy=111,
+                total_volume=1111.111,
+                delta_volume=0.111,
             ),
         ]
         yield client

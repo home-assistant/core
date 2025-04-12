@@ -4,18 +4,17 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import TYPE_CHECKING
 
 from airgradient import AirGradientClient, AirGradientError, Config, Measures
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER
 
-if TYPE_CHECKING:
-    from . import AirGradientConfigEntry
+type AirGradientConfigEntry = ConfigEntry[AirGradientCoordinator]
 
 
 @dataclass
@@ -32,11 +31,17 @@ class AirGradientCoordinator(DataUpdateCoordinator[AirGradientData]):
     config_entry: AirGradientConfigEntry
     _current_version: str
 
-    def __init__(self, hass: HomeAssistant, client: AirGradientClient) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: AirGradientConfigEntry,
+        client: AirGradientClient,
+    ) -> None:
         """Initialize coordinator."""
         super().__init__(
             hass,
             logger=LOGGER,
+            config_entry=config_entry,
             name=f"AirGradient {client.host}",
             update_interval=timedelta(minutes=1),
         )
@@ -55,7 +60,11 @@ class AirGradientCoordinator(DataUpdateCoordinator[AirGradientData]):
             measures = await self.client.get_current_measures()
             config = await self.client.get_config()
         except AirGradientError as error:
-            raise UpdateFailed(error) from error
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_error",
+                translation_placeholders={"error": str(error)},
+            ) from error
         if measures.firmware_version != self._current_version:
             device_registry = dr.async_get(self.hass)
             device_entry = device_registry.async_get_device(

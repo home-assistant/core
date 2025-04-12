@@ -16,7 +16,7 @@ rules:
       No custom actions are defined.
   docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions: todo
+  docs-removal-instructions: done
   entity-event-setup:
     status: exempt
     comment: |

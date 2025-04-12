@@ -13,7 +13,7 @@ from homeassistant.components.number import NumberEntity, NumberEntityDescriptio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     BIDIRECTIONAL_MODEL_PREFIXES,
@@ -71,9 +71,7 @@ NUMBER_TYPES: dict[str, WallboxNumberEntityDescription] = {
     CHARGER_MAX_ICP_CURRENT_KEY: WallboxNumberEntityDescription(
         key=CHARGER_MAX_ICP_CURRENT_KEY,
         translation_key="maximum_icp_current",
-        max_value_fn=lambda coordinator: cast(
-            float, coordinator.data[CHARGER_MAX_AVAILABLE_POWER_KEY]
-        ),
+        max_value_fn=lambda _: 255,
         min_value_fn=lambda _: 6,
         set_value_fn=lambda coordinator: coordinator.async_set_icp_current,
         native_step=1,
@@ -82,7 +80,9 @@ NUMBER_TYPES: dict[str, WallboxNumberEntityDescription] = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Create wallbox number entities in HASS."""
     coordinator: WallboxCoordinator = hass.data[DOMAIN][entry.entry_id]

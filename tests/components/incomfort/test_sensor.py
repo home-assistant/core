@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
+import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntry
@@ -12,6 +13,7 @@ from homeassistant.helpers import entity_registry as er
 from tests.common import snapshot_platform
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @patch("homeassistant.components.incomfort.PLATFORMS", [Platform.SENSOR])
 async def test_setup_platform(
     hass: HomeAssistant,

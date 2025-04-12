@@ -12,7 +12,7 @@
       },
       "device_config": {
         "title": "Device configuration",
-        "description": "The pin can be found via 'MENU button > Main Menu > System setting > Network > NetRemote PIN setup'",
+        "description": "The PIN can be found via 'MENU button > Main Menu > System setting > Network > NetRemote PIN setup'",
         "data": {
           "pin": "[%key:common::config_flow::data::pin%]"
         }

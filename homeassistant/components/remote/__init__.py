@@ -9,7 +9,7 @@ import functools as ft
 import logging
 from typing import Any, final
 
-from propcache import cached_property
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -170,19 +170,6 @@ class RemoteEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
         """Flag supported features."""
         return self._attr_supported_features
 
-    @property
-    def supported_features_compat(self) -> RemoteEntityFeature:
-        """Return the supported features as RemoteEntityFeature.
-
-        Remove this compatibility shim in 2025.1 or later.
-        """
-        features = self.supported_features
-        if type(features) is int:  # noqa: E721
-            new_features = RemoteEntityFeature(features)
-            self._report_deprecated_supported_features_values(new_features)
-            return new_features
-        return features
-
     @cached_property
     def current_activity(self) -> str | None:
         """Active activity."""
@@ -197,7 +184,7 @@ class RemoteEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
     @property
     def state_attributes(self) -> dict[str, Any] | None:
         """Return optional state attributes."""
-        if RemoteEntityFeature.ACTIVITY not in self.supported_features_compat:
+        if RemoteEntityFeature.ACTIVITY not in self.supported_features:
             return None
 
         return {

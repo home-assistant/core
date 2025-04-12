@@ -1,7 +1,7 @@
 """Tests for La Marzocco switches."""
 
 from typing import Any
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from pylamarzocco.exceptions import RequestNotSuccessful
 import pytest
@@ -12,14 +12,27 @@ from homeassistant.components.switch import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import WAKE_UP_SLEEP_ENTRY_IDS, async_init_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
+
+
+async def test_switches(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the La Marzocco switches."""
+    with patch("homeassistant.components.lamarzocco.PLATFORMS", [Platform.SWITCH]):
+        await async_init_integration(hass, mock_config_entry)
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 @pytest.mark.parametrize(
@@ -38,12 +51,10 @@ from tests.common import MockConfigEntry
         ),
     ],
 )
-async def test_switches(
+async def test_switches_actions(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
     mock_config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-    snapshot: SnapshotAssertion,
     entity_name: str,
     method_name: str,
     kwargs: dict[str, Any],
@@ -54,14 +65,6 @@ async def test_switches(
     serial_number = mock_lamarzocco.serial_number
 
     control_fn = getattr(mock_lamarzocco, method_name)
-
-    state = hass.states.get(f"switch.{serial_number}{entity_name}")
-    assert state
-    assert state == snapshot
-
-    entry = entity_registry.async_get(state.entity_id)
-    assert entry
-    assert entry == snapshot
 
     await hass.services.async_call(
         SWITCH_DOMAIN,

@@ -19,7 +19,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .mocks import MOCK_GATEWAY_DIN, _mock_powerwall_with_fixtures
 

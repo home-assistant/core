@@ -46,10 +46,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event as core_Event, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.util import slugify
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util, slugify
 
 from . import UnifiConfigEntry
 from .const import DEVICE_STATES
@@ -205,9 +204,9 @@ def async_client_is_connected_fn(hub: UnifiHub, obj_id: str) -> bool:
 
 
 @callback
-def async_device_state_value_fn(hub: UnifiHub, device: Device) -> str:
+def async_device_state_value_fn(hub: UnifiHub, device: Device) -> str | None:
     """Retrieve the state of the device."""
-    return DEVICE_STATES[device.state]
+    return DEVICE_STATES.get(device.state)
 
 
 @callback
@@ -645,7 +644,7 @@ ENTITY_DESCRIPTIONS += make_wan_latency_sensors() + make_device_temperatur_senso
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: UnifiConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensors for UniFi Network integration."""
     config_entry.runtime_data.entity_loader.register_platform(

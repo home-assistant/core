@@ -8,12 +8,13 @@ from collections.abc import Generator
 import datetime
 from http import HTTPStatus
 import io
+import pathlib
 from typing import Any
 from unittest.mock import patch
 
 import aiohttp
 import av
-from google_nest_sdm.event import EventMessage
+from freezegun import freeze_time
 import numpy as np
 import pytest
 
@@ -29,11 +30,18 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.template import DATE_STR_FORMAT
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
-from .common import DEVICE_ID, CreateDevice, FakeSubscriber
+from .common import (
+    DEVICE_ID,
+    TEST_CLIP_URL,
+    TEST_IMAGE_URL,
+    CreateDevice,
+    create_nest_event,
+)
+from .conftest import FakeAuth
 
-from tests.common import MockUser, async_capture_events
+from tests.common import MockUser, async_capture_events, async_fire_time_changed
 from tests.typing import ClientSessionGenerator
 
 DOMAIN = "nest"
@@ -70,7 +78,6 @@ BATTERY_CAMERA_TRAITS = {
 PERSON_EVENT = "sdm.devices.events.CameraPerson.Person"
 MOTION_EVENT = "sdm.devices.events.CameraMotion.Motion"
 
-TEST_IMAGE_URL = "https://domain/sdm_event_snapshot/dGTZwR3o4Y1..."
 GENERATE_IMAGE_URL_RESPONSE = {
     "results": {
         "url": TEST_IMAGE_URL,
@@ -162,12 +169,6 @@ def mp4() -> io.BytesIO:
     return output
 
 
-@pytest.fixture(autouse=True)
-def enable_prefetch(subscriber: FakeSubscriber) -> None:
-    """Fixture to enable media fetching for tests to exercise."""
-    subscriber.cache_policy.fetch = True
-
-
 @pytest.fixture
 def cache_size() -> int:
     """Fixture for overrideing cache size."""
@@ -200,7 +201,7 @@ def create_event_message(event_data, timestamp, device_id=None):
     """Create an EventMessage for a single event type."""
     if device_id is None:
         device_id = DEVICE_ID
-    return EventMessage.create_event(
+    return create_nest_event(
         {
             "eventId": f"{EVENT_ID}-{timestamp}",
             "timestamp": timestamp.isoformat(timespec="seconds"),
@@ -209,7 +210,6 @@ def create_event_message(event_data, timestamp, device_id=None):
                 "events": event_data,
             },
         },
-        auth=None,
     )
 
 
@@ -224,7 +224,7 @@ def create_battery_event_data(
         },
         "sdm.devices.events.CameraClipPreview.ClipPreview": {
             "eventSessionId": event_session_id,
-            "previewUrl": "https://127.0.0.1/example",
+            "previewUrl": TEST_CLIP_URL,
         },
     }
 
@@ -284,7 +284,9 @@ async def test_supported_device(
     assert len(browse.children) == 0
 
 
-async def test_integration_unloaded(hass: HomeAssistant, auth, setup_platform) -> None:
+async def test_integration_unloaded(
+    hass: HomeAssistant, auth: FakeAuth, setup_platform
+) -> None:
     """Test the media player loads, but has no devices, when config unloaded."""
     await setup_platform()
 
@@ -1012,9 +1014,9 @@ async def test_media_permission_unauthorized(
 
     client = await hass_client()
     response = await client.get(media_url)
-    assert (
-        response.status == HTTPStatus.UNAUTHORIZED
-    ), f"Response not matched: {response}"
+    assert response.status == HTTPStatus.UNAUTHORIZED, (
+        f"Response not matched: {response}"
+    )
 
 
 async def test_multiple_devices(
@@ -1257,6 +1259,7 @@ async def test_media_store_save_filesystem_error(
     assert response.status == HTTPStatus.NOT_FOUND, f"Response not matched: {response}"
 
 
+@pytest.mark.parametrize("device_traits", [BATTERY_CAMERA_TRAITS])
 async def test_media_store_load_filesystem_error(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -1305,9 +1308,9 @@ async def test_media_store_load_filesystem_error(
         response = await client.get(
             f"/api/nest/event_media/{device.id}/{event_identifier}"
         )
-        assert (
-            response.status == HTTPStatus.NOT_FOUND
-        ), f"Response not matched: {response}"
+        assert response.status == HTTPStatus.NOT_FOUND, (
+            f"Response not matched: {response}"
+        )
 
 
 @pytest.mark.parametrize(("device_traits", "cache_size"), [(BATTERY_CAMERA_TRAITS, 5)])
@@ -1573,3 +1576,80 @@ async def test_event_clip_media_attachment(
         response = await client.get(content_path)
         assert response.status == HTTPStatus.OK, f"Response not matched: {response}"
         await response.read()
+
+
+@pytest.mark.parametrize(("device_traits", "cache_size"), [(BATTERY_CAMERA_TRAITS, 5)])
+async def test_remove_stale_media(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    auth,
+    mp4,
+    hass_client: ClientSessionGenerator,
+    subscriber,
+    setup_platform,
+    media_path: str,
+) -> None:
+    """Test media files getting evicted from the cache."""
+    await setup_platform()
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
+    assert device
+    assert device.name == DEVICE_NAME
+
+    # Publish a media event
+    auth.responses = [
+        aiohttp.web.Response(body=mp4.getvalue()),
+    ]
+    event_timestamp = dt_util.now()
+    await subscriber.async_receive_event(
+        create_event_message(
+            create_battery_event_data(MOTION_EVENT),
+            timestamp=event_timestamp,
+        )
+    )
+    await hass.async_block_till_done()
+
+    # The first subdirectory is the device id. Media for events are stored in the
+    # device subdirectory. First verify that the media was persisted. We will
+    # then add additional media files, then invoke the garbage collector, and
+    # then verify orphaned files are removed.
+    storage_path = pathlib.Path(media_path)
+    device_path = storage_path / device.id
+    media_files = list(device_path.glob("*"))
+    assert len(media_files) == 1
+    event_media = media_files[0]
+    assert event_media.name.endswith(".mp4")
+
+    event_time1 = datetime.datetime.now(datetime.UTC) - datetime.timedelta(days=8)
+    extra_media1 = (
+        device_path / f"{int(event_time1.timestamp())}-camera_motion-test.mp4"
+    )
+    extra_media1.write_bytes(mp4.getvalue())
+    event_time2 = event_time1 + datetime.timedelta(hours=20)
+    extra_media2 = (
+        device_path / f"{int(event_time2.timestamp())}-camera_motion-test.jpg"
+    )
+    extra_media2.write_bytes(mp4.getvalue())
+    # This event will not be garbage collected because it is too recent
+    event_time3 = datetime.datetime.now(datetime.UTC) - datetime.timedelta(days=3)
+    extra_media3 = (
+        device_path / f"{int(event_time3.timestamp())}-camera_motion-test.mp4"
+    )
+    extra_media3.write_bytes(mp4.getvalue())
+
+    assert len(list(device_path.glob("*"))) == 4
+
+    # Advance the clock to invoke the garbage collector. This will remove extra
+    # files that are not valid events that are old enough.
+    point_in_time = datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=1)
+    with freeze_time(point_in_time):
+        async_fire_time_changed(hass, point_in_time)
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+
+    # Verify that the event media is still present and that the extra files
+    # are removed. Newer media is not removed.
+    assert event_media.exists()
+    assert not extra_media1.exists()
+    assert not extra_media2.exists()
+    assert extra_media3.exists()

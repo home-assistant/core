@@ -1,12 +1,13 @@
 """Test initialization of lamarzocco."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pylamarzocco.const import FirmwareType
+from freezegun.api import FrozenDateTimeFactory
+from pylamarzocco.const import FirmwareType, MachineModel
 from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
 import pytest
 from syrupy import SnapshotAssertion
-from websockets.protocol import State
 
 from homeassistant.components.lamarzocco.config_flow import CONF_MACHINE
 from homeassistant.components.lamarzocco.const import DOMAIN
@@ -28,7 +29,7 @@ from homeassistant.helpers import (
 
 from . import USER_INPUT, async_init_integration, get_bluetooth_service_info
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_load_unload_config_entry(
@@ -37,9 +38,7 @@ async def test_load_unload_config_entry(
     mock_lamarzocco: MagicMock,
 ) -> None:
     """Test loading and unloading the integration."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await async_init_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
@@ -57,9 +56,7 @@ async def test_config_entry_not_ready(
     """Test the La Marzocco configuration entry not ready."""
     mock_lamarzocco.get_config.side_effect = RequestNotSuccessful("")
 
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await async_init_integration(hass, mock_config_entry)
 
     assert len(mock_lamarzocco.get_config.mock_calls) == 1
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
@@ -72,9 +69,7 @@ async def test_invalid_auth(
 ) -> None:
     """Test auth error during setup."""
     mock_lamarzocco.get_config.side_effect = AuthFail("")
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await async_init_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
     assert len(mock_lamarzocco.get_config.mock_calls) == 1
@@ -176,13 +171,17 @@ async def test_bluetooth_is_set_from_discovery(
             return_value=[service_info],
         ) as discovery,
         patch(
-            "homeassistant.components.lamarzocco.coordinator.LaMarzoccoMachine"
-        ) as init_device,
+            "homeassistant.components.lamarzocco.LaMarzoccoMachine"
+        ) as mock_machine_class,
     ):
+        mock_machine = MagicMock()
+        mock_machine.get_firmware = AsyncMock()
+        mock_machine.firmware = mock_lamarzocco.firmware
+        mock_machine_class.return_value = mock_machine
         await async_init_integration(hass, mock_config_entry)
     discovery.assert_called_once()
-    init_device.assert_called_once()
-    _, kwargs = init_device.call_args
+    assert mock_machine_class.call_count == 2
+    _, kwargs = mock_machine_class.call_args
     assert kwargs["bluetooth_client"] is not None
     assert mock_config_entry.data[CONF_NAME] == service_info.name
     assert mock_config_entry.data[CONF_MAC] == service_info.address
@@ -200,8 +199,11 @@ async def test_websocket_closed_on_unload(
     ) as local_client:
         client = local_client.return_value
         client.websocket = AsyncMock()
-        client.websocket.state = State.OPEN
+
         await async_init_integration(hass, mock_config_entry)
+        mock_lamarzocco.websocket_connect.assert_called_once()
+
+        client.websocket.closed = False
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         await hass.async_block_till_done()
         client.websocket.close.assert_called_once()
@@ -225,6 +227,19 @@ async def test_gateway_version_issue(
     issue_registry = ir.async_get(hass)
     issue = issue_registry.async_get_issue(DOMAIN, "unsupported_gateway_firmware")
     assert (issue is not None) == issue_exists
+
+
+async def test_conf_host_removed_for_new_gateway(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_lamarzocco: MagicMock,
+) -> None:
+    """Make sure we get the issue for certain gateway firmware versions."""
+    mock_lamarzocco.firmware[FirmwareType.GATEWAY].current_version = "v5.0.9"
+
+    await async_init_integration(hass, mock_config_entry)
+
+    assert CONF_HOST not in mock_config_entry.data
 
 
 async def test_device(
@@ -254,3 +269,49 @@ async def test_device(
     device = device_registry.async_get(entry.device_id)
     assert device
     assert device == snapshot
+
+
+@pytest.mark.parametrize("device_fixture", [MachineModel.LINEA_MINI])
+async def test_scale_device(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the device."""
+
+    await async_init_integration(hass, mock_config_entry)
+
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, mock_lamarzocco.config.scale.address)}
+    )
+    assert device
+    assert device == snapshot
+
+
+@pytest.mark.parametrize("device_fixture", [MachineModel.LINEA_MINI])
+async def test_remove_stale_scale(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Ensure stale scale is cleaned up."""
+
+    await async_init_integration(hass, mock_config_entry)
+
+    scale_address = mock_lamarzocco.config.scale.address
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, scale_address)})
+    assert device
+
+    mock_lamarzocco.config.scale = None
+
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, scale_address)})
+    assert device is None

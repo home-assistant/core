@@ -29,7 +29,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .entity import HomematicipGenericEntity
@@ -57,7 +57,7 @@ HMIP_ECO_CM = "ECO"
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the HomematicIP climate from a config entry."""
     hap = hass.data[DOMAIN][config_entry.unique_id]
@@ -81,7 +81,6 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
         ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, hap: HomematicipHAP, device: AsyncHeatingGroup) -> None:
         """Initialize heating group."""

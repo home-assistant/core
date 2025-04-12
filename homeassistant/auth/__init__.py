@@ -115,7 +115,7 @@ class AuthManagerFlowManager(
         *,
         context: AuthFlowContext | None = None,
         data: dict[str, Any] | None = None,
-    ) -> LoginFlow:
+    ) -> LoginFlow[Any]:
         """Create a login flow."""
         auth_provider = self.auth_manager.get_auth_provider(*handler_key)
         if not auth_provider:

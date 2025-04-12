@@ -13,10 +13,15 @@ from homeassistant.components.button import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import OpenThermGatewayHub
-from .const import DATA_GATEWAYS, DATA_OPENTHERM_GW, GATEWAY_DEVICE_DESCRIPTION
+from .const import (
+    DATA_GATEWAYS,
+    DATA_OPENTHERM_GW,
+    GATEWAY_DEVICE_DESCRIPTION,
+    THERMOSTAT_DEVICE_DESCRIPTION,
+)
 from .entity import OpenThermEntity, OpenThermEntityDescription
 
 
@@ -31,6 +36,12 @@ class OpenThermButtonEntityDescription(
 
 BUTTON_DESCRIPTIONS: tuple[OpenThermButtonEntityDescription, ...] = (
     OpenThermButtonEntityDescription(
+        key="cancel_room_setpoint_override",
+        translation_key="cancel_room_setpoint_override",
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+        action=lambda hub: hub.set_room_setpoint(0),
+    ),
+    OpenThermButtonEntityDescription(
         key="restart_button",
         device_class=ButtonDeviceClass.RESTART,
         device_description=GATEWAY_DEVICE_DESCRIPTION,
@@ -42,7 +53,7 @@ BUTTON_DESCRIPTIONS: tuple[OpenThermButtonEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the OpenTherm Gateway buttons."""
     gw_hub = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][config_entry.data[CONF_ID]]

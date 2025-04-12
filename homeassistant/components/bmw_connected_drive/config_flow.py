@@ -18,7 +18,6 @@ import voluptuous as vol
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
@@ -39,6 +38,7 @@ from .const import (
     CONF_READ_ONLY,
     CONF_REFRESH_TOKEN,
 )
+from .coordinator import BMWConfigEntry
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -50,6 +50,12 @@ DATA_SCHEMA = vol.Schema(
                 translation_key="regions",
             )
         ),
+    },
+    extra=vol.REMOVE_EXTRA,
+)
+RECONFIGURE_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_PASSWORD): str,
     },
     extra=vol.REMOVE_EXTRA,
 )
@@ -97,9 +103,10 @@ class BMWConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    data: dict[str, Any] = {}
-
-    _existing_entry_data: Mapping[str, Any] | None = None
+    def __init__(self) -> None:
+        """Initialize the config flow."""
+        self.data: dict[str, Any] = {}
+        self._existing_entry_data: dict[str, Any] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -111,9 +118,8 @@ class BMWConfigFlow(ConfigFlow, domain=DOMAIN):
             unique_id = f"{user_input[CONF_REGION]}-{user_input[CONF_USERNAME]}"
             await self.async_set_unique_id(unique_id)
 
-            if self.source in {SOURCE_REAUTH, SOURCE_RECONFIGURE}:
-                self._abort_if_unique_id_mismatch(reason="account_mismatch")
-            else:
+            # Unique ID cannot change for reauth/reconfigure
+            if self.source not in {SOURCE_REAUTH, SOURCE_RECONFIGURE}:
                 self._abort_if_unique_id_configured()
 
             # Store user input for later use
@@ -166,19 +172,35 @@ class BMWConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
+    async def async_step_change_password(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Show the change password step."""
+        if user_input is not None:
+            return await self.async_step_user(self._existing_entry_data | user_input)
+
+        return self.async_show_form(
+            step_id="change_password",
+            data_schema=RECONFIGURE_SCHEMA,
+            description_placeholders={
+                CONF_USERNAME: self._existing_entry_data[CONF_USERNAME],
+                CONF_REGION: self._existing_entry_data[CONF_REGION],
+            },
+        )
+
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
-        self._existing_entry_data = entry_data
-        return await self.async_step_user()
+        self._existing_entry_data = dict(entry_data)
+        return await self.async_step_change_password()
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a reconfiguration flow initialized by the user."""
-        self._existing_entry_data = self._get_reconfigure_entry().data
-        return await self.async_step_user()
+        self._existing_entry_data = dict(self._get_reconfigure_entry().data)
+        return await self.async_step_change_password()
 
     async def async_step_captcha(
         self, user_input: dict[str, Any] | None = None
@@ -199,7 +221,7 @@ class BMWConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: BMWConfigEntry,
     ) -> BMWOptionsFlow:
         """Return a MyBMW option flow."""
         return BMWOptionsFlow()

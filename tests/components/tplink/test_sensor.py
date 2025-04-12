@@ -4,18 +4,14 @@ from kasa import Device, Feature, Module
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components import tplink
 from homeassistant.components.tplink.const import DOMAIN
 from homeassistant.components.tplink.entity import EXCLUDED_FEATURES
 from homeassistant.components.tplink.sensor import SENSOR_DESCRIPTIONS
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.setup import async_setup_component
 
 from . import (
-    DEVICE_ID,
-    MAC_ADDRESS,
     _mocked_device,
     _mocked_energy_features,
     _mocked_feature,
@@ -25,6 +21,7 @@ from . import (
     setup_platform_for_device,
     snapshot_platform,
 )
+from .const import DEVICE_ID, MAC_ADDRESS
 
 from tests.common import MockConfigEntry
 
@@ -36,7 +33,7 @@ async def test_states(
     device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test a sensor unique ids."""
+    """Test a sensor states."""
     features = {description.key for description in SENSOR_DESCRIPTIONS}
     features.update(EXCLUDED_FEATURES)
     device = _mocked_device(alias="my_device", features=features)
@@ -67,7 +64,7 @@ async def test_color_light_with_an_emeter(hass: HomeAssistant) -> None:
         alias="my_bulb", modules=[Module.Light], features=["state", *emeter_features]
     )
     with _patch_discovery(device=bulb), _patch_connect(device=bulb):
-        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.config_entries.async_setup(already_migrated_config_entry.entry_id)
         await hass.async_block_till_done()
         await hass.async_block_till_done()
 
@@ -104,7 +101,7 @@ async def test_plug_with_an_emeter(hass: HomeAssistant) -> None:
     )
     plug = _mocked_device(alias="my_plug", features=["state", *emeter_features])
     with _patch_discovery(device=plug), _patch_connect(device=plug):
-        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.config_entries.async_setup(already_migrated_config_entry.entry_id)
         await hass.async_block_till_done()
         await hass.async_block_till_done()
 
@@ -129,9 +126,9 @@ async def test_color_light_no_emeter(hass: HomeAssistant) -> None:
     )
     already_migrated_config_entry.add_to_hass(hass)
     bulb = _mocked_device(alias="my_bulb", modules=[Module.Light])
-    bulb.has_emeter = False
+
     with _patch_discovery(device=bulb), _patch_connect(device=bulb):
-        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.config_entries.async_setup(already_migrated_config_entry.entry_id)
         await hass.async_block_till_done()
         await hass.async_block_till_done()
 
@@ -167,7 +164,7 @@ async def test_sensor_unique_id(
     )
     plug = _mocked_device(alias="my_plug", features=emeter_features)
     with _patch_discovery(device=plug), _patch_connect(device=plug):
-        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.config_entries.async_setup(already_migrated_config_entry.entry_id)
         await hass.async_block_till_done()
 
     expected = {
@@ -202,7 +199,7 @@ async def test_undefined_sensor(
     )
     plug = _mocked_device(alias="my_plug", features=[new_feature])
     with _patch_discovery(device=plug), _patch_connect(device=plug):
-        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.config_entries.async_setup(already_migrated_config_entry.entry_id)
         await hass.async_block_till_done()
 
     msg = (
@@ -240,7 +237,7 @@ async def test_sensor_children_on_parent(
         device_type=Device.Type.WallSwitch,
     )
     with _patch_discovery(device=plug), _patch_connect(device=plug):
-        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.config_entries.async_setup(already_migrated_config_entry.entry_id)
         await hass.async_block_till_done()
 
     entity_id = "sensor.my_plug_this_month_s_consumption"
@@ -288,7 +285,7 @@ async def test_sensor_children_on_child(
         device_type=Device.Type.Strip,
     )
     with _patch_discovery(device=plug), _patch_connect(device=plug):
-        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.config_entries.async_setup(already_migrated_config_entry.entry_id)
         await hass.async_block_till_done()
 
     entity_id = "sensor.my_plug_this_month_s_consumption"
@@ -308,19 +305,18 @@ async def test_sensor_children_on_child(
         assert child_device.via_device_id == device.id
 
 
-@pytest.mark.skip
-async def test_new_datetime_sensor(
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_datetime_sensor(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """Test a sensor unique ids."""
-    # Skipped temporarily while datetime handling on hold.
+    """Test a timestamp sensor."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
     plug = _mocked_device(alias="my_plug", features=["on_since"])
     with _patch_discovery(device=plug), _patch_connect(device=plug):
-        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.config_entries.async_setup(already_migrated_config_entry.entry_id)
         await hass.async_block_till_done()
 
     entity_id = "sensor.my_plug_on_since"

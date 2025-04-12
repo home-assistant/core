@@ -9,7 +9,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import OncueEntity
 from .types import OncueConfigEntry
@@ -28,7 +28,7 @@ SENSOR_MAP = {description.key: description for description in SENSOR_TYPES}
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: OncueConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up binary sensors."""
     coordinator = config_entry.runtime_data

@@ -3,7 +3,6 @@
     "06aecb3d00354375924f50c47af36bd2": {
       "active_preset": "no_frost",
       "climate_mode": "off",
-      "control_state": "off",
       "dev_class": "climate",
       "model": "ThermoZone",
       "name": "Slaapkamer",
@@ -26,7 +25,7 @@
     "13228dab8ce04617af318a2888b3c548": {
       "active_preset": "home",
       "climate_mode": "heat",
-      "control_state": "off",
+      "control_state": "idle",
       "dev_class": "climate",
       "model": "ThermoZone",
       "name": "Woonkamer",
@@ -238,7 +237,7 @@
     "d27aede973b54be484f6842d1b2802ad": {
       "active_preset": "home",
       "climate_mode": "heat",
-      "control_state": "off",
+      "control_state": "idle",
       "dev_class": "climate",
       "model": "ThermoZone",
       "name": "Kinderkamer",
@@ -285,7 +284,7 @@
     "d58fec52899f4f1c92e4f8fad6d8c48c": {
       "active_preset": "home",
       "climate_mode": "heat",
-      "control_state": "off",
+      "control_state": "idle",
       "dev_class": "climate",
       "model": "ThermoZone",
       "name": "Logeerkamer",

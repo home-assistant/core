@@ -8,7 +8,7 @@ import datetime
 import logging
 from typing import Any, final
 
-from propcache import cached_property
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.components import frontend, websocket_api
@@ -219,18 +219,10 @@ class TodoItem:
     """A status or confirmation of the To-do item."""
 
     due: datetime.date | datetime.datetime | None = None
-    """The date and time that a to-do is expected to be completed.
-
-    This field may be a date or datetime depending whether the entity feature
-    DUE_DATE or DUE_DATETIME are set.
-    """
+    """The date and time that a to-do is expected to be completed."""
 
     description: str | None = None
-    """A more complete description of than that provided by the summary.
-
-    This field may be set when TodoListEntityFeature.DESCRIPTION is supported by
-    the entity.
-    """
+    """A more complete description than that provided by the summary."""
 
 
 CACHED_PROPERTIES_WITH_ATTR_ = {

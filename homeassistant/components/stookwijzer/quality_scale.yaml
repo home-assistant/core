@@ -86,4 +86,7 @@ rules:
   # Platinum
   async-dependency: done
   inject-websession: done
-  strict-typing: done
+  strict-typing:
+    status: todo
+    comment: |
+      Requirement 'stookwijzer==1.5.1' appears untyped

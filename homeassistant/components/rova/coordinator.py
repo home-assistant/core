@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 
 from rova.rova import Rova
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.dt import get_time_zone
@@ -16,11 +17,16 @@ EUROPE_AMSTERDAM_ZONE_INFO = get_time_zone("Europe/Amsterdam")
 class RovaCoordinator(DataUpdateCoordinator[dict[str, datetime]]):
     """Class to manage fetching Rova data."""
 
-    def __init__(self, hass: HomeAssistant, api: Rova) -> None:
+    config_entry: ConfigEntry
+
+    def __init__(
+        self, hass: HomeAssistant, config_entry: ConfigEntry, api: Rova
+    ) -> None:
         """Initialize."""
         super().__init__(
             hass,
             LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(hours=12),
         )

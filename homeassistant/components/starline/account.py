@@ -180,6 +180,7 @@ class StarlineAccount:
             "online": device.online,
         }
 
+    # Deprecated and should be removed in 2025.8
     @staticmethod
     def engine_attrs(device: StarlineDevice) -> dict[str, Any]:
         """Attributes for engine switch."""

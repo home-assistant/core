@@ -26,10 +26,8 @@ def find_matching_platform(
     if len(device_point.enum_values) > 0 and device_point.writable:
         return Platform.SELECT
 
-    if (
-        description
-        and description.native_unit_of_measurement == "DM"
-        or (device_point.raw["maxValue"] and device_point.raw["minValue"])
+    if (description and description.native_unit_of_measurement == "DM") or (
+        device_point.raw["maxValue"] and device_point.raw["minValue"]
     ):
         if device_point.writable:
             return Platform.NUMBER
@@ -95,11 +93,17 @@ PARAMETER_ID_TO_EXCLUDE_F730 = (
 )
 
 PARAMETER_ID_TO_INCLUDE_SMO20 = (
+    "40013",
+    "40033",
     "40940",
+    "44069",
+    "44071",
+    "44073",
     "47011",
     "47015",
     "47028",
     "47032",
+    "47398",
     "50004",
 )
 

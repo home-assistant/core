@@ -38,12 +38,12 @@
           "description": "The entity ID of the new scene."
         },
         "entities": {
-          "name": "Entities state",
-          "description": "List of entities and their target state. If your entities are already in the target state right now, use `snapshot_entities` instead."
+          "name": "Entity states",
+          "description": "List of entities and their target state. If your entities are already in the target state right now, use 'Entities snapshot' instead."
         },
         "snapshot_entities": {
-          "name": "Snapshot entities",
-          "description": "List of entities to be included in the snapshot. By taking a snapshot, you record the current state of those entities. If you do not want to use the current state of all your entities for this scene, you can combine the `snapshot_entities` with `entities`."
+          "name": "Entities snapshot",
+          "description": "List of entities to be included in the snapshot. By taking a snapshot, you record the current state of those entities. If you do not want to use the current state of all your entities for this scene, you can combine 'Entities snapshot' with 'Entity states'."
         }
       }
     },
@@ -54,7 +54,7 @@
   },
   "exceptions": {
     "entity_not_scene": {
-      "message": "{entity_id} is not a valid scene entity_id."
+      "message": "{entity_id} is not a valid entity ID of a scene."
     },
     "entity_not_dynamically_created": {
       "message": "The scene {entity_id} is not created with action `scene.create`."

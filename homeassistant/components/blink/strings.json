@@ -84,16 +84,16 @@
       }
     },
     "send_pin": {
-      "name": "Send pin",
-      "description": "Sends a new PIN to blink for 2FA.",
+      "name": "Send PIN",
+      "description": "Sends a new PIN to Blink for 2FA.",
       "fields": {
         "pin": {
-          "name": "Pin",
-          "description": "PIN received from blink. Leave empty if you only received a verification email."
+          "name": "PIN",
+          "description": "PIN received from Blink. Leave empty if you only received a verification email."
         },
         "config_entry_id": {
           "name": "Integration ID",
-          "description": "The Blink Integration id."
+          "description": "The Blink Integration ID."
         }
       }
     }

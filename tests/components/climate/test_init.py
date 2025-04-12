@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from enum import Enum
 from typing import Any
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, Mock
 
 import pytest
 import voluptuous as vol
@@ -38,17 +38,11 @@ from homeassistant.components.climate.const import (
     ClimateEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    PRECISION_WHOLE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    UnitOfTemperature,
-)
+from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from tests.common import (
     MockConfigEntry,
@@ -430,289 +424,6 @@ async def test_mode_validation(
     assert exc.value.translation_key == "not_valid_fan_mode"
 
 
-@pytest.mark.parametrize(
-    "supported_features_at_int",
-    [
-        ClimateEntityFeature.TARGET_TEMPERATURE.value,
-        ClimateEntityFeature.TARGET_TEMPERATURE.value
-        | ClimateEntityFeature.TURN_ON.value
-        | ClimateEntityFeature.TURN_OFF.value,
-    ],
-)
-def test_deprecated_supported_features_ints(
-    caplog: pytest.LogCaptureFixture, supported_features_at_int: int
-) -> None:
-    """Test deprecated supported features ints."""
-
-    class MockClimateEntity(ClimateEntity):
-        @property
-        def supported_features(self) -> int:
-            """Return supported features."""
-            return supported_features_at_int
-
-    entity = MockClimateEntity()
-    assert entity.supported_features is ClimateEntityFeature(supported_features_at_int)
-    assert "MockClimateEntity" in caplog.text
-    assert "is using deprecated supported features values" in caplog.text
-    assert "Instead it should use" in caplog.text
-    assert "ClimateEntityFeature.TARGET_TEMPERATURE" in caplog.text
-    caplog.clear()
-    assert entity.supported_features is ClimateEntityFeature(supported_features_at_int)
-    assert "is using deprecated supported features values" not in caplog.text
-
-
-async def test_warning_not_implemented_turn_on_off_feature(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    register_test_integration: MockConfigEntry,
-) -> None:
-    """Test adding feature flag and warn if missing when methods are set."""
-
-    called = []
-
-    class MockClimateEntityTest(MockClimateEntity):
-        """Mock Climate device."""
-
-        def turn_on(self) -> None:
-            """Turn on."""
-            called.append("turn_on")
-
-        def turn_off(self) -> None:
-            """Turn off."""
-            called.append("turn_off")
-
-    climate_entity = MockClimateEntityTest(name="test", entity_id="climate.test")
-
-    with patch.object(
-        MockClimateEntityTest, "__module__", "tests.custom_components.climate.test_init"
-    ):
-        setup_test_component_platform(
-            hass, DOMAIN, entities=[climate_entity], from_config_entry=True
-        )
-        await hass.config_entries.async_setup(register_test_integration.entry_id)
-        await hass.async_block_till_done()
-
-    state = hass.states.get("climate.test")
-    assert state is not None
-
-    assert (
-        "Entity climate.test (<class 'tests.custom_components.climate.test_init."
-        "test_warning_not_implemented_turn_on_off_feature.<locals>.MockClimateEntityTest'>)"
-        " does not set ClimateEntityFeature.TURN_OFF but implements the turn_off method."
-        " Please report it to the author of the 'test' custom integration"
-        in caplog.text
-    )
-    assert (
-        "Entity climate.test (<class 'tests.custom_components.climate.test_init."
-        "test_warning_not_implemented_turn_on_off_feature.<locals>.MockClimateEntityTest'>)"
-        " does not set ClimateEntityFeature.TURN_ON but implements the turn_on method."
-        " Please report it to the author of the 'test' custom integration"
-        in caplog.text
-    )
-
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_TURN_ON,
-        {
-            "entity_id": "climate.test",
-        },
-        blocking=True,
-    )
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_TURN_OFF,
-        {
-            "entity_id": "climate.test",
-        },
-        blocking=True,
-    )
-
-    assert len(called) == 2
-    assert "turn_on" in called
-    assert "turn_off" in called
-
-
-async def test_implicit_warning_not_implemented_turn_on_off_feature(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    register_test_integration: MockConfigEntry,
-) -> None:
-    """Test adding feature flag and warn if missing when methods are not set.
-
-    (implicit by hvac mode)
-    """
-
-    class MockClimateEntityTest(MockEntity, ClimateEntity):
-        """Mock Climate device."""
-
-        _attr_temperature_unit = UnitOfTemperature.CELSIUS
-
-        @property
-        def hvac_mode(self) -> HVACMode:
-            """Return hvac operation ie. heat, cool mode.
-
-            Need to be one of HVACMode.*.
-            """
-            return HVACMode.HEAT
-
-        @property
-        def hvac_modes(self) -> list[HVACMode]:
-            """Return the list of available hvac operation modes.
-
-            Need to be a subset of HVAC_MODES.
-            """
-            return [HVACMode.OFF, HVACMode.HEAT]
-
-    climate_entity = MockClimateEntityTest(name="test", entity_id="climate.test")
-
-    with patch.object(
-        MockClimateEntityTest, "__module__", "tests.custom_components.climate.test_init"
-    ):
-        setup_test_component_platform(
-            hass, DOMAIN, entities=[climate_entity], from_config_entry=True
-        )
-        await hass.config_entries.async_setup(register_test_integration.entry_id)
-        await hass.async_block_till_done()
-
-    state = hass.states.get("climate.test")
-    assert state is not None
-
-    assert (
-        "Entity climate.test (<class 'tests.custom_components.climate.test_init."
-        "test_implicit_warning_not_implemented_turn_on_off_feature.<locals>.MockClimateEntityTest'>)"
-        " implements HVACMode(s): off, heat and therefore implicitly supports the turn_on/turn_off"
-        " methods without setting the proper ClimateEntityFeature. Please report it to the author"
-        " of the 'test' custom integration" in caplog.text
-    )
-
-
-async def test_no_warning_implemented_turn_on_off_feature(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    register_test_integration: MockConfigEntry,
-) -> None:
-    """Test no warning when feature flags are set."""
-
-    class MockClimateEntityTest(MockClimateEntity):
-        """Mock Climate device."""
-
-        _attr_supported_features = (
-            ClimateEntityFeature.FAN_MODE
-            | ClimateEntityFeature.PRESET_MODE
-            | ClimateEntityFeature.SWING_MODE
-            | ClimateEntityFeature.TURN_OFF
-            | ClimateEntityFeature.TURN_ON
-        )
-
-    climate_entity = MockClimateEntityTest(name="test", entity_id="climate.test")
-
-    with patch.object(
-        MockClimateEntityTest, "__module__", "tests.custom_components.climate.test_init"
-    ):
-        setup_test_component_platform(
-            hass, DOMAIN, entities=[climate_entity], from_config_entry=True
-        )
-        await hass.config_entries.async_setup(register_test_integration.entry_id)
-        await hass.async_block_till_done()
-
-    state = hass.states.get("climate.test")
-    assert state is not None
-
-    assert (
-        "does not set ClimateEntityFeature.TURN_OFF but implements the turn_off method."
-        not in caplog.text
-    )
-    assert (
-        "does not set ClimateEntityFeature.TURN_ON but implements the turn_on method."
-        not in caplog.text
-    )
-    assert (
-        " implements HVACMode(s): off, heat and therefore implicitly supports the off, heat methods"
-        not in caplog.text
-    )
-
-
-async def test_no_warning_integration_has_migrated(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    register_test_integration: MockConfigEntry,
-) -> None:
-    """Test no warning when integration migrated using `_enable_turn_on_off_backwards_compatibility`."""
-
-    class MockClimateEntityTest(MockClimateEntity):
-        """Mock Climate device."""
-
-        _enable_turn_on_off_backwards_compatibility = False
-        _attr_supported_features = (
-            ClimateEntityFeature.FAN_MODE
-            | ClimateEntityFeature.PRESET_MODE
-            | ClimateEntityFeature.SWING_MODE
-        )
-
-    climate_entity = MockClimateEntityTest(name="test", entity_id="climate.test")
-
-    with patch.object(
-        MockClimateEntityTest, "__module__", "tests.custom_components.climate.test_init"
-    ):
-        setup_test_component_platform(
-            hass, DOMAIN, entities=[climate_entity], from_config_entry=True
-        )
-        await hass.config_entries.async_setup(register_test_integration.entry_id)
-        await hass.async_block_till_done()
-
-    state = hass.states.get("climate.test")
-    assert state is not None
-
-    assert (
-        "does not set ClimateEntityFeature.TURN_OFF but implements the turn_off method."
-        not in caplog.text
-    )
-    assert (
-        "does not set ClimateEntityFeature.TURN_ON but implements the turn_on method."
-        not in caplog.text
-    )
-    assert (
-        " implements HVACMode(s): off, heat and therefore implicitly supports the off, heat methods"
-        not in caplog.text
-    )
-
-
-async def test_no_warning_integration_implement_feature_flags(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    register_test_integration: MockConfigEntry,
-) -> None:
-    """Test no warning when integration uses the correct feature flags."""
-
-    class MockClimateEntityTest(MockClimateEntity):
-        """Mock Climate device."""
-
-        _attr_supported_features = (
-            ClimateEntityFeature.FAN_MODE
-            | ClimateEntityFeature.PRESET_MODE
-            | ClimateEntityFeature.SWING_MODE
-            | ClimateEntityFeature.TURN_OFF
-            | ClimateEntityFeature.TURN_ON
-        )
-
-    climate_entity = MockClimateEntityTest(name="test", entity_id="climate.test")
-
-    with patch.object(
-        MockClimateEntityTest, "__module__", "tests.custom_components.climate.test_init"
-    ):
-        setup_test_component_platform(
-            hass, DOMAIN, entities=[climate_entity], from_config_entry=True
-        )
-        await hass.config_entries.async_setup(register_test_integration.entry_id)
-        await hass.async_block_till_done()
-
-    state = hass.states.get("climate.test")
-    assert state is not None
-
-    assert "does not set ClimateEntityFeature" not in caplog.text
-    assert "implements HVACMode(s):" not in caplog.text
-
-
 async def test_turn_on_off_toggle(hass: HomeAssistant) -> None:
     """Test turn_on/turn_off/toggle methods."""
 
@@ -751,7 +462,6 @@ async def test_sync_toggle(hass: HomeAssistant) -> None:
     class MockClimateEntityTest(MockClimateEntity):
         """Mock Climate device."""
 
-        _enable_turn_on_off_backwards_compatibility = False
         _attr_supported_features = (
             ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
         )
@@ -872,7 +582,7 @@ async def test_issue_aux_property_deprecated(
     async def async_setup_entry_climate_platform(
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Set up test weather platform via config entry."""
         async_add_entities([climate_entity])

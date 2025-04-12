@@ -11,18 +11,20 @@ from syrupy.filters import props
 
 from homeassistant.components.bluesound import DOMAIN as BLUESOUND_DOMAIN
 from homeassistant.components.bluesound.const import ATTR_MASTER
-from homeassistant.components.bluesound.services import (
+from homeassistant.components.bluesound.media_player import (
     SERVICE_CLEAR_TIMER,
     SERVICE_JOIN,
     SERVICE_SET_TIMER,
 )
 from homeassistant.components.media_player import (
+    ATTR_INPUT_SOURCE,
     ATTR_MEDIA_VOLUME_LEVEL,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_PREVIOUS_TRACK,
+    SERVICE_SELECT_SOURCE,
     SERVICE_VOLUME_DOWN,
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
@@ -119,6 +121,32 @@ async def test_volume_down(
     player_mocks.player_data.player.volume.assert_called_once_with(level=9)
 
 
+async def test_select_input_source(
+    hass: HomeAssistant, setup_config_entry: None, player_mocks: PlayerMocks
+) -> None:
+    """Test the media player select input source."""
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_SELECT_SOURCE,
+        {ATTR_ENTITY_ID: "media_player.player_name1111", ATTR_INPUT_SOURCE: "input1"},
+    )
+
+    player_mocks.player_data.player.play_url.assert_called_once_with("url1")
+
+
+async def test_select_preset_source(
+    hass: HomeAssistant, setup_config_entry: None, player_mocks: PlayerMocks
+) -> None:
+    """Test the media player select preset source."""
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_SELECT_SOURCE,
+        {ATTR_ENTITY_ID: "media_player.player_name1111", ATTR_INPUT_SOURCE: "preset1"},
+    )
+
+    player_mocks.player_data.player.load_preset.assert_called_once_with(1)
+
+
 async def test_attributes_set(
     hass: HomeAssistant,
     setup_config_entry: None,
@@ -127,7 +155,9 @@ async def test_attributes_set(
 ) -> None:
     """Test the media player attributes set."""
     state = hass.states.get("media_player.player_name1111")
-    assert state == snapshot(exclude=props("media_position_updated_at"))
+    assert state == snapshot(
+        exclude=props("media_position_updated_at", "media_position")
+    )
 
 
 async def test_stop_maps_to_idle(
@@ -259,7 +289,7 @@ async def test_join(
         blocking=True,
     )
 
-    player_mocks.player_data_secondary.player.add_slave.assert_called_once_with(
+    player_mocks.player_data_secondary.player.add_follower.assert_called_once_with(
         "1.1.1.1", 11000
     )
 
@@ -273,7 +303,7 @@ async def test_unjoin(
     """Test the unjoin action."""
     updated_sync_status = dataclasses.replace(
         player_mocks.player_data.sync_status_long_polling_mock.get(),
-        master=PairedPlayer("2.2.2.2", 11000),
+        leader=PairedPlayer("2.2.2.2", 11000),
     )
     player_mocks.player_data.sync_status_long_polling_mock.set(updated_sync_status)
 
@@ -287,7 +317,7 @@ async def test_unjoin(
         blocking=True,
     )
 
-    player_mocks.player_data_secondary.player.remove_slave.assert_called_once_with(
+    player_mocks.player_data_secondary.player.remove_follower.assert_called_once_with(
         "1.1.1.1", 11000
     )
 
@@ -297,7 +327,7 @@ async def test_attr_master(
     setup_config_entry: None,
     player_mocks: PlayerMocks,
 ) -> None:
-    """Test the media player master."""
+    """Test the media player leader."""
     attr_master = hass.states.get("media_player.player_name1111").attributes[
         ATTR_MASTER
     ]
@@ -305,7 +335,7 @@ async def test_attr_master(
 
     updated_sync_status = dataclasses.replace(
         player_mocks.player_data.sync_status_long_polling_mock.get(),
-        slaves=[PairedPlayer("2.2.2.2", 11000)],
+        followers=[PairedPlayer("2.2.2.2", 11000)],
     )
     player_mocks.player_data.sync_status_long_polling_mock.set(updated_sync_status)
 
@@ -333,7 +363,7 @@ async def test_attr_bluesound_group(
 
     updated_sync_status = dataclasses.replace(
         player_mocks.player_data.sync_status_long_polling_mock.get(),
-        slaves=[PairedPlayer("2.2.2.2", 11000)],
+        followers=[PairedPlayer("2.2.2.2", 11000)],
     )
     player_mocks.player_data.sync_status_long_polling_mock.set(updated_sync_status)
 
@@ -361,7 +391,7 @@ async def test_attr_bluesound_group_for_follower(
 
     updated_sync_status = dataclasses.replace(
         player_mocks.player_data.sync_status_long_polling_mock.get(),
-        slaves=[PairedPlayer("2.2.2.2", 11000)],
+        followers=[PairedPlayer("2.2.2.2", 11000)],
     )
     player_mocks.player_data.sync_status_long_polling_mock.set(updated_sync_status)
 
@@ -370,7 +400,7 @@ async def test_attr_bluesound_group_for_follower(
 
     updated_sync_status = dataclasses.replace(
         player_mocks.player_data_secondary.sync_status_long_polling_mock.get(),
-        master=PairedPlayer("1.1.1.1", 11000),
+        leader=PairedPlayer("1.1.1.1", 11000),
     )
     player_mocks.player_data_secondary.sync_status_long_polling_mock.set(
         updated_sync_status

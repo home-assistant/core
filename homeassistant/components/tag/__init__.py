@@ -13,14 +13,16 @@ from homeassistant.components import websocket_api
 from homeassistant.const import CONF_ID, CONF_NAME
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import collection, entity_registry as er
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import (
+    collection,
+    config_validation as cv,
+    entity_registry as er,
+)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
-from homeassistant.util import slugify
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util, slugify
 from homeassistant.util.hass_dict import HassKey
 
 from .const import DEFAULT_NAME, DEVICE_ID, DOMAIN, EVENT_TAG_SCANNED, LOGGER, TAG_ID
@@ -106,7 +108,6 @@ class TagStore(Store[collection.SerializedStorageCollection]):
             for tag in data["items"]:
                 # Copy name in tag store to the entity registry
                 _create_entry(entity_registry, tag[CONF_ID], tag.get(CONF_NAME))
-                tag["migrated"] = True
         if old_major_version == 1 and old_minor_version < 3:
             # Version 1.3 removes tag_id from the store
             for tag in data["items"]:
@@ -178,10 +179,7 @@ class TagStorageCollection(collection.DictStorageCollection):
 
         We don't store the name, it's stored in the entity registry.
         """
-        # Preserve the name of migrated entries to allow downgrading to 2024.5
-        # without losing tag names. This can be removed in HA Core 2025.1.
-        migrated = item_id in self.data and "migrated" in self.data[item_id]
-        return {k: v for k, v in item.items() if k != CONF_NAME or migrated}
+        return {k: v for k, v in item.items() if k != CONF_NAME}
 
 
 class TagDictStorageCollectionWebsocket(

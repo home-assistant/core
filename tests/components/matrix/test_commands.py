@@ -42,9 +42,8 @@ class CommandTestParameters:
         Commands that are named with 'Subset' are expected not to be read from Room A.
         """
 
-        if (
-            self.expected_event_data_extra is None
-            or "Subset" in self.expected_event_data_extra["command"]
+        if self.expected_event_data_extra is None or (
+            "Subset" in self.expected_event_data_extra["command"]
             and self.room_id not in SUBSET_ROOMS
         ):
             return None

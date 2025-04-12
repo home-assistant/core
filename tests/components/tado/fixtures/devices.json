@@ -15,5 +15,24 @@
       "value": true
     },
     "shortSerialNo": "WR1"
+  },
+  {
+    "duties": ["ZONE_UI", "ZONE_DRIVER", "ZONE_LEADER"],
+    "currentFwVersion": "59.4",
+    "deviceType": "WR02",
+    "serialNo": "WR4",
+    "shortSerialNo": "WR4",
+    "commandTableUploadState": "FINISHED",
+    "connectionState": {
+      "value": true,
+      "timestamp": "2020-03-23T18:30:07.377Z"
+    },
+    "accessPointWiFi": {
+      "ssid": "tado8480"
+    },
+    "characteristics": {
+      "capabilities": ["INSIDE_TEMPERATURE_MEASUREMENT", "IDENTIFY"]
+    },
+    "childLockEnabled": false
   }
 ]

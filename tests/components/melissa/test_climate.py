@@ -10,7 +10,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.entity_registry as er
+from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 

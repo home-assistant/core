@@ -17,7 +17,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.components.script import scripts_with_entity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.issue_registry import (
     IssueSeverity,
     async_create_issue,
@@ -30,6 +30,8 @@ from .coordinator import AutomowerDataUpdateCoordinator
 from .entity import AutomowerBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 def entity_used_in(hass: HomeAssistant, entity_id: str) -> list[str]:
@@ -69,15 +71,20 @@ MOWER_BINARY_SENSOR_TYPES: tuple[AutomowerBinarySensorEntityDescription, ...] = 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AutomowerConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up binary sensor platform."""
     coordinator = entry.runtime_data
-    async_add_entities(
-        AutomowerBinarySensorEntity(mower_id, coordinator, description)
-        for mower_id in coordinator.data
-        for description in MOWER_BINARY_SENSOR_TYPES
-    )
+
+    def _async_add_new_devices(mower_ids: set[str]) -> None:
+        async_add_entities(
+            AutomowerBinarySensorEntity(mower_id, coordinator, description)
+            for mower_id in mower_ids
+            for description in MOWER_BINARY_SENSOR_TYPES
+        )
+
+    coordinator.new_devices_callbacks.append(_async_add_new_devices)
+    _async_add_new_devices(set(coordinator.data))
 
 
 class AutomowerBinarySensorEntity(AutomowerBaseEntity, BinarySensorEntity):

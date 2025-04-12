@@ -47,20 +47,20 @@ from .db_schema_32 import (
     StatisticsShortTerm,
 )
 
-from tests.typing import RecorderInstanceGenerator
+from tests.typing import RecorderInstanceContextManager
 
 
 @pytest.fixture
 async def mock_recorder_before_hass(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
 ) -> None:
     """Set up recorder."""
 
 
 @pytest.fixture(autouse=True)
-def db_schema_32():
+def db_schema_32(hass: HomeAssistant) -> Generator[None]:
     """Fixture to initialize the db with the old schema 32."""
-    with old_db_schema("32"):
+    with old_db_schema(hass, "32"):
         yield
 
 
@@ -1027,7 +1027,7 @@ async def test_purge_can_mix_legacy_and_new_format(
     def _recreate_legacy_events_index():
         """Recreate the legacy events index since its no longer created on new instances."""
         migration._create_index(
-            recorder_mock.get_session, "states", "ix_states_event_id"
+            recorder_mock, recorder_mock.get_session, "states", "ix_states_event_id"
         )
         recorder_mock.use_legacy_events_index = True
 
@@ -1178,7 +1178,7 @@ async def test_purge_can_mix_legacy_and_new_format_with_detached_state(
     def _recreate_legacy_events_index():
         """Recreate the legacy events index since its no longer created on new instances."""
         migration._create_index(
-            recorder_mock.get_session, "states", "ix_states_event_id"
+            recorder_mock, recorder_mock.get_session, "states", "ix_states_event_id"
         )
         recorder_mock.use_legacy_events_index = True
 

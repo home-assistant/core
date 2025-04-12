@@ -20,7 +20,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 

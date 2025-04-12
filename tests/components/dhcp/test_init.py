@@ -31,16 +31,18 @@ from homeassistant.const import (
     STATE_NOT_HOME,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.discovery_flow import DiscoveryKey
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import (
     MockConfigEntry,
     MockModule,
     async_fire_time_changed,
+    import_and_test_deprecated_constant,
     mock_integration,
 )
 
@@ -1353,3 +1355,30 @@ async def test_dhcp_rediscover_no_match(
         await hass.async_block_till_done()
 
         assert len(mock_init.mock_calls) == 0
+
+
+@pytest.mark.parametrize(
+    ("constant_name", "replacement_name", "replacement"),
+    [
+        (
+            "DhcpServiceInfo",
+            "homeassistant.helpers.service_info.dhcp.DhcpServiceInfo",
+            DhcpServiceInfo,
+        ),
+    ],
+)
+def test_deprecated_constants(
+    caplog: pytest.LogCaptureFixture,
+    constant_name: str,
+    replacement_name: str,
+    replacement: Any,
+) -> None:
+    """Test deprecated automation constants."""
+    import_and_test_deprecated_constant(
+        caplog,
+        dhcp,
+        constant_name,
+        replacement_name,
+        replacement,
+        "2026.2",
+    )

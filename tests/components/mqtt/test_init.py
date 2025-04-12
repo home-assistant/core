@@ -13,6 +13,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 import voluptuous as vol
 
+from homeassistant import core as ha
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import debug_info
 from homeassistant.components.mqtt.models import (
@@ -30,7 +31,6 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-import homeassistant.core as ha
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er, template
@@ -44,6 +44,8 @@ from homeassistant.util.dt import utcnow
 from tests.common import (
     MockConfigEntry,
     MockEntity,
+    MockEntityPlatform,
+    MockMqttReasonCode,
     async_fire_mqtt_message,
     async_fire_time_changed,
     mock_restore_cache,
@@ -194,6 +196,7 @@ async def test_value_template_value(hass: HomeAssistant) -> None:
     # test value template with entity
     entity = Entity()
     entity.hass = hass
+    entity.platform = MockEntityPlatform(hass)
     entity.entity_id = "select.test"
     tpl = template.Template("{{ value_json.id }}", hass=hass)
     val_tpl = mqtt.MqttValueTemplate(tpl, entity=entity)
@@ -218,6 +221,7 @@ async def test_value_template_fails(hass: HomeAssistant) -> None:
     """Test the rendering of MQTT value template fails."""
     entity = MockEntity(entity_id="sensor.test")
     entity.hass = hass
+    entity.platform = MockEntityPlatform(hass)
     tpl = template.Template("{{ value_json.some_var * 2 }}", hass=hass)
     val_tpl = mqtt.MqttValueTemplate(tpl, entity=entity)
     with pytest.raises(MqttValueTemplateException) as exc:
@@ -275,80 +279,6 @@ async def test_service_call_mqtt_entry_does_not_publish(
         )
 
 
-# The use of a topic_template in an mqtt publish action call
-# has been deprecated with HA Core 2024.8.0 and will be removed with HA Core 2025.2.0
-async def test_mqtt_publish_action_call_with_topic_and_topic_template_does_not_publish(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
-) -> None:
-    """Test the mqtt publish action call with topic/topic template.
-
-    If both 'topic' and 'topic_template' are provided then fail.
-    """
-    mqtt_mock = await mqtt_mock_entry()
-    topic = "test/topic"
-    topic_template = "test/{{ 'topic' }}"
-    with pytest.raises(vol.Invalid):
-        await hass.services.async_call(
-            mqtt.DOMAIN,
-            mqtt.SERVICE_PUBLISH,
-            {
-                mqtt.ATTR_TOPIC: topic,
-                mqtt.ATTR_TOPIC_TEMPLATE: topic_template,
-                mqtt.ATTR_PAYLOAD: "payload",
-            },
-            blocking=True,
-        )
-    assert not mqtt_mock.async_publish.called
-
-
-# The use of a topic_template in an mqtt publish action call
-# has been deprecated with HA Core 2024.8.0 and will be removed with HA Core 2025.2.0
-async def test_mqtt_action_call_with_invalid_topic_template_does_not_publish(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
-) -> None:
-    """Test the mqtt publish action call with a problematic topic template."""
-    mqtt_mock = await mqtt_mock_entry()
-    with pytest.raises(MqttCommandTemplateException) as exc:
-        await hass.services.async_call(
-            mqtt.DOMAIN,
-            mqtt.SERVICE_PUBLISH,
-            {
-                mqtt.ATTR_TOPIC_TEMPLATE: "test/{{ 1 | no_such_filter }}",
-                mqtt.ATTR_PAYLOAD: "payload",
-            },
-            blocking=True,
-        )
-    assert str(exc.value) == (
-        "TemplateError: TemplateAssertionError: No filter named 'no_such_filter'. "
-        "rendering template, template: "
-        "'test/{{ 1 | no_such_filter }}' and payload: None"
-    )
-    assert not mqtt_mock.async_publish.called
-
-
-# The use of a topic_template in an mqtt publish action call
-# has been deprecated with HA Core 2024.8.0 and will be removed with HA Core 2025.2.0
-async def test_mqtt_publish_action_call_with_template_topic_renders_template(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
-) -> None:
-    """Test the mqtt publish action call with rendered topic template.
-
-    If 'topic_template' is provided and 'topic' is not, then render it.
-    """
-    mqtt_mock = await mqtt_mock_entry()
-    await hass.services.async_call(
-        mqtt.DOMAIN,
-        mqtt.SERVICE_PUBLISH,
-        {
-            mqtt.ATTR_TOPIC_TEMPLATE: "test/{{ 1+1 }}",
-            mqtt.ATTR_PAYLOAD: "payload",
-        },
-        blocking=True,
-    )
-    assert mqtt_mock.async_publish.called
-    assert mqtt_mock.async_publish.call_args[0][0] == "test/2"
-
-
 async def test_service_call_with_template_topic_renders_invalid_topic(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
@@ -357,82 +287,21 @@ async def test_service_call_with_template_topic_renders_invalid_topic(
     If a wildcard topic is rendered, then fail.
     """
     mqtt_mock = await mqtt_mock_entry()
-    with pytest.raises(ServiceValidationError) as exc:
+    with pytest.raises(vol.Invalid) as exc:
         await hass.services.async_call(
             mqtt.DOMAIN,
             mqtt.SERVICE_PUBLISH,
             {
-                mqtt.ATTR_TOPIC_TEMPLATE: "test/{{ '+' if True else 'topic' }}/topic",
+                mqtt.ATTR_TOPIC: "test/{{ '+' if True else 'topic' }}/topic",
                 mqtt.ATTR_PAYLOAD: "payload",
             },
             blocking=True,
         )
-    assert str(exc.value) == (
-        "Unable to publish: topic template `test/{{ '+' if True else 'topic' }}/topic` "
-        "produced an invalid topic `test/+/topic` after rendering "
-        "(Wildcards cannot be used in topic names)"
+    assert (
+        str(exc.value) == "Wildcards cannot be used in topic names "
+        "for dictionary value @ data['topic']"
     )
     assert not mqtt_mock.async_publish.called
-
-
-# The use of a payload_template in an mqtt publish action call
-# has been deprecated with HA Core 2024.8.0 and will be removed with HA Core 2025.2.0
-async def test_action_call_with_invalid_rendered_payload_template_doesnt_render_template(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
-) -> None:
-    """Test the action call with unrendered payload template.
-
-    If both 'payload' and 'payload_template' are provided then fail.
-    """
-    mqtt_mock = await mqtt_mock_entry()
-    payload = "not a template"
-    payload_template = "a template"
-    with pytest.raises(vol.Invalid):
-        await hass.services.async_call(
-            mqtt.DOMAIN,
-            mqtt.SERVICE_PUBLISH,
-            {
-                mqtt.ATTR_TOPIC: "test/topic",
-                mqtt.ATTR_PAYLOAD: payload,
-                mqtt.ATTR_PAYLOAD_TEMPLATE: payload_template,
-            },
-            blocking=True,
-        )
-    assert not mqtt_mock.async_publish.called
-
-
-# The use of a payload_template in an mqtt publish action call
-# has been deprecated with HA Core 2024.8.0 and will be removed with HA Core 2025.2.0
-async def test_mqtt_publish_action_call_with_template_payload_renders_template(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
-) -> None:
-    """Test the mqtt publish action call with rendered template.
-
-    If 'payload_template' is provided and 'payload' is not, then render it.
-    """
-    mqtt_mock = await mqtt_mock_entry()
-    await hass.services.async_call(
-        mqtt.DOMAIN,
-        mqtt.SERVICE_PUBLISH,
-        {mqtt.ATTR_TOPIC: "test/topic", mqtt.ATTR_PAYLOAD_TEMPLATE: "{{ 4+4 }}"},
-        blocking=True,
-    )
-    assert mqtt_mock.async_publish.called
-    assert mqtt_mock.async_publish.call_args[0][1] == "8"
-    mqtt_mock.reset_mock()
-
-    await hass.services.async_call(
-        mqtt.DOMAIN,
-        mqtt.SERVICE_PUBLISH,
-        {
-            mqtt.ATTR_TOPIC: "test/topic",
-            mqtt.ATTR_PAYLOAD_TEMPLATE: "{{ (4+4) | pack('B') }}",
-        },
-        blocking=True,
-    )
-    assert mqtt_mock.async_publish.called
-    assert mqtt_mock.async_publish.call_args[0][1] == b"\x08"
-    mqtt_mock.reset_mock()
 
 
 @pytest.mark.parametrize(
@@ -503,56 +372,6 @@ async def test_mqtt_publish_action_call_with_raw_data(
         assert len(literal_eval_mock.mock_calls) == literal_eval_calls
 
 
-# The use of a payload_template in an mqtt publish action call
-# has been deprecated with HA Core 2024.8.0 and will be removed with HA Core 2025.2.0
-async def test_publish_action_call_with_bad_payload_template(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
-) -> None:
-    """Test the mqtt publish action call with a bad template does not publish."""
-    mqtt_mock = await mqtt_mock_entry()
-    with pytest.raises(MqttCommandTemplateException) as exc:
-        await hass.services.async_call(
-            mqtt.DOMAIN,
-            mqtt.SERVICE_PUBLISH,
-            {
-                mqtt.ATTR_TOPIC: "test/topic",
-                mqtt.ATTR_PAYLOAD_TEMPLATE: "{{ 1 | bad }}",
-            },
-            blocking=True,
-        )
-    assert not mqtt_mock.async_publish.called
-    assert str(exc.value) == (
-        "TemplateError: TemplateAssertionError: No filter named 'bad'. "
-        "rendering template, template: '{{ 1 | bad }}' and payload: None"
-    )
-
-
-# The use of a payload_template in an mqtt publish action call
-# has been deprecated with HA Core 2024.8.0 and will be removed with HA Core 2025.2.0
-async def test_action_call_with_payload_doesnt_render_template(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
-) -> None:
-    """Test the mqtt publish action call with an unrendered template.
-
-    If both 'payload' and 'payload_template' are provided then fail.
-    """
-    mqtt_mock = await mqtt_mock_entry()
-    payload = "not a template"
-    payload_template = "a template"
-    with pytest.raises(vol.Invalid):
-        await hass.services.async_call(
-            mqtt.DOMAIN,
-            mqtt.SERVICE_PUBLISH,
-            {
-                mqtt.ATTR_TOPIC: "test/topic",
-                mqtt.ATTR_PAYLOAD: payload,
-                mqtt.ATTR_PAYLOAD_TEMPLATE: payload_template,
-            },
-            blocking=True,
-        )
-    assert not mqtt_mock.async_publish.called
-
-
 async def test_service_call_with_ascii_qos_retain_flags(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
@@ -573,6 +392,25 @@ async def test_service_call_with_ascii_qos_retain_flags(
         blocking=True,
     )
     assert mqtt_mock.async_publish.called
+    assert mqtt_mock.async_publish.call_args[0][1] == ""
+    assert mqtt_mock.async_publish.call_args[0][2] == 2
+    assert not mqtt_mock.async_publish.call_args[0][3]
+
+    mqtt_mock.reset_mock()
+
+    # Test service call without payload
+    await hass.services.async_call(
+        mqtt.DOMAIN,
+        mqtt.SERVICE_PUBLISH,
+        {
+            mqtt.ATTR_TOPIC: "test/topic",
+            mqtt.ATTR_QOS: "2",
+            mqtt.ATTR_RETAIN: "no",
+        },
+        blocking=True,
+    )
+    assert mqtt_mock.async_publish.called
+    assert mqtt_mock.async_publish.call_args[0][1] is None
     assert mqtt_mock.async_publish.call_args[0][2] == 2
     assert not mqtt_mock.async_publish.call_args[0][3]
 
@@ -877,7 +715,12 @@ async def test_reload_entry_with_restored_subscriptions(
 ) -> None:
     """Test reloading the config entry with with subscriptions restored."""
     # Setup the MQTT entry
-    entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
+    entry = MockConfigEntry(
+        domain=mqtt.DOMAIN,
+        data={mqtt.CONF_BROKER: "test-broker"},
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
+    )
     entry.add_to_hass(hass)
     hass.config.components.add(mqtt.DOMAIN)
     with patch("homeassistant.config.load_yaml_config_file", return_value={}):
@@ -982,7 +825,10 @@ async def test_default_entry_setting_are_applied(
 
     # Config entry data is incomplete but valid according the schema
     entry = MockConfigEntry(
-        domain=mqtt.DOMAIN, data={"broker": "test-broker", "port": 1234}
+        domain=mqtt.DOMAIN,
+        data={"broker": "test-broker", "port": 1234},
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
     )
     entry.add_to_hass(hass)
     hass.config.components.add(mqtt.DOMAIN)
@@ -1721,65 +1567,13 @@ async def test_debug_info_qos_retain(
     } in messages
 
 
-# The use of a payload_template in an mqtt publish action call
-# has been deprecated with HA Core 2024.8.0 and will be removed with HA Core 2025.2.0
-async def test_publish_json_from_template(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
-) -> None:
-    """Test the publishing of call to mqtt publish action."""
-    mqtt_mock = await mqtt_mock_entry()
-
-    test_str = "{'valid': 'python', 'invalid': 'json'}"
-    test_str_tpl = "{'valid': '{{ \"python\" }}', 'invalid': 'json'}"
-
-    await async_setup_component(
-        hass,
-        "script",
-        {
-            "script": {
-                "test_script_payload": {
-                    "sequence": {
-                        "service": "mqtt.publish",
-                        "data": {"topic": "test-topic", "payload": test_str_tpl},
-                    }
-                },
-                "test_script_payload_template": {
-                    "sequence": {
-                        "service": "mqtt.publish",
-                        "data": {
-                            "topic": "test-topic",
-                            "payload_template": test_str_tpl,
-                        },
-                    }
-                },
-            }
-        },
-    )
-
-    await hass.services.async_call("script", "test_script_payload", blocking=True)
-    await hass.async_block_till_done()
-
-    assert mqtt_mock.async_publish.called
-    assert mqtt_mock.async_publish.call_args[0][1] == test_str
-
-    mqtt_mock.async_publish.reset_mock()
-    assert not mqtt_mock.async_publish.called
-
-    await hass.services.async_call(
-        "script", "test_script_payload_template", blocking=True
-    )
-    await hass.async_block_till_done()
-
-    assert mqtt_mock.async_publish.called
-    assert mqtt_mock.async_publish.call_args[0][1] == test_str
-
-
 async def test_subscribe_connection_status(
     hass: HomeAssistant,
     mock_debouncer: asyncio.Event,
     setup_with_birth_msg_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test connextion status subscription."""
+
     mqtt_client_mock = setup_with_birth_msg_client_mock
     mqtt_connected_calls_callback: list[bool] = []
     mqtt_connected_calls_async: list[bool] = []
@@ -1797,7 +1591,7 @@ async def test_subscribe_connection_status(
     assert mqtt.is_connected(hass) is True
 
     # Mock disconnect status
-    mqtt_client_mock.on_disconnect(None, None, 0)
+    mqtt_client_mock.on_disconnect(None, None, 0, MockMqttReasonCode())
     await hass.async_block_till_done()
     assert mqtt.is_connected(hass) is False
 
@@ -1811,12 +1605,12 @@ async def test_subscribe_connection_status(
 
     # Mock connect status
     mock_debouncer.clear()
-    mqtt_client_mock.on_connect(None, None, 0, 0)
+    mqtt_client_mock.on_connect(None, None, 0, MockMqttReasonCode())
     await mock_debouncer.wait()
     assert mqtt.is_connected(hass) is True
 
     # Mock disconnect status
-    mqtt_client_mock.on_disconnect(None, None, 0)
+    mqtt_client_mock.on_disconnect(None, None, 0, MockMqttReasonCode())
     await hass.async_block_till_done()
     assert mqtt.is_connected(hass) is False
 
@@ -1826,7 +1620,7 @@ async def test_subscribe_connection_status(
 
     # Mock connect status
     mock_debouncer.clear()
-    mqtt_client_mock.on_connect(None, None, 0, 0)
+    mqtt_client_mock.on_connect(None, None, 0, MockMqttReasonCode())
     await mock_debouncer.wait()
     assert mqtt.is_connected(hass) is True
 
@@ -1849,6 +1643,8 @@ async def test_unload_config_entry(
     entry = MockConfigEntry(
         domain=mqtt.DOMAIN,
         data={mqtt.CONF_BROKER: "test-broker"},
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
     )
     entry.add_to_hass(hass)
 

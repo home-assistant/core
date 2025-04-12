@@ -5,10 +5,9 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
+from .coordinator import TotalConnectConfigEntry
 
 TO_REDACT = [
     "username",
@@ -24,10 +23,10 @@ TO_REDACT = [
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: TotalConnectConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    client = hass.data[DOMAIN][config_entry.entry_id].client
+    client = config_entry.runtime_data.client
 
     data: dict[str, Any] = {}
     data["client"] = {
@@ -84,6 +83,7 @@ async def async_get_config_entry_diagnostics(
                 "is_new_partition": partition.is_new_partition,
                 "is_night_stay_enabled": partition.is_night_stay_enabled,
                 "exit_delay_timer": partition.exit_delay_timer,
+                "arming_state": partition.arming_state,
             }
             new_location["partitions"].append(new_partition)
 
