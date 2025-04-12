@@ -192,7 +192,7 @@ async def test_connection_lost(
     assert result.response.response_type == intent.IntentResponseType.ERROR
     assert result.response.error_code == intent.IntentResponseErrorCode.UNKNOWN
     assert result.response.speech, "No speech"
-    assert result.response.speech.get("plain", {}).get("speech") == snapshot()
+    assert result.response.speech.get("plain", {}).get("speech") == snapshot
 
 
 async def test_oserror(
@@ -221,4 +221,4 @@ async def test_oserror(
     assert result.response.response_type == intent.IntentResponseType.ERROR
     assert result.response.error_code == intent.IntentResponseErrorCode.UNKNOWN
     assert result.response.speech, "No speech"
-    assert result.response.speech.get("plain", {}).get("speech") == snapshot()
+    assert result.response.speech.get("plain", {}).get("speech") == snapshot
