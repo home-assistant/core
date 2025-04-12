@@ -6,7 +6,6 @@
       "unknown_state": "[%key:component::syncthru::config::error::unknown_state%]"
     },
     "error": {
-      "syncthru_not_supported": "Device does not support SyncThru",
       "unknown_state": "Printer state unknown, verify URL and network connectivity"
     },
     "flow_title": "{name}",
