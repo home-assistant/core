@@ -86,7 +86,6 @@ class SyncThruBinarySensor(SyncthruEntity, BinarySensorEntity):
         serial_number = coordinator.data.serial_number()
         assert serial_number is not None
         self._attr_unique_id = f"{serial_number}_{entity_description.key}"
-        self._attr_name = name
 
     @property
     def is_on(self) -> bool | None:
