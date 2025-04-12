@@ -9,9 +9,8 @@ from aiohomekit import AccessoryNotFoundError
 from aiohomekit.model import Accessory, Transport
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
-from aiohomekit.testing import FakeDiscovery, FakePairing
+from aiohomekit.testing import FakePairing
 from attr import asdict
-from bleak.backends.device import BLEDevice
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -175,6 +174,7 @@ async def test_offline_device_raises(
     assert hass.states.get("light.testdevice").state == STATE_OFF
 
 
+@pytest.mark.usefixtures("fake_ble_discovery")
 async def test_ble_device_only_checks_is_available(
     hass: HomeAssistant, get_next_aid: Callable[[], int], controller
 ) -> None:
@@ -182,11 +182,6 @@ async def test_ble_device_only_checks_is_available(
 
     is_available = False
     aid = get_next_aid()
-
-    class FakeBLEDiscovery(FakeDiscovery):
-        device = BLEDevice(
-            address="AA:BB:CC:DD:EE:FF", name="TestDevice", rssi=-50, details=()
-        )
 
     class FakeBLEPairing(FakePairing):
         """Fake BLE pairing that can flip is_available."""
@@ -221,10 +216,7 @@ async def test_ble_device_only_checks_is_available(
     )
     create_alive_service(accessory)
 
-    with (
-        patch("aiohomekit.testing.FakePairing", FakeBLEPairing),
-        patch("aiohomekit.testing.FakeDiscovery", FakeBLEDiscovery),
-    ):
+    with patch("aiohomekit.testing.FakePairing", FakeBLEPairing):
         await async_setup_component(hass, DOMAIN, {})
         config_entry, _ = await setup_test_accessories_with_controller(
             hass, [accessory], controller
