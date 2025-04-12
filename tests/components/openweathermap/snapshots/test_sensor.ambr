@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensor_states[current-pyopenweathermap.client.free_client.OWMFreeClient.get_weather-mock_return0][sensor.openweathermap_cloud_coverage-entry]
+# name: test_sensor_states[current][sensor.openweathermap_cloud_coverage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -35,7 +35,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_states[current-pyopenweathermap.client.free_client.OWMFreeClient.get_weather-mock_return0][sensor.openweathermap_cloud_coverage-state]
+# name: test_sensor_states[current][sensor.openweathermap_cloud_coverage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
@@ -51,7 +51,7 @@
     'state': '75',
   })
 # ---
-# name: test_sensor_states[current-pyopenweathermap.client.free_client.OWMFreeClient.get_weather-mock_return0][sensor.openweathermap_condition-entry]
+# name: test_sensor_states[current][sensor.openweathermap_condition-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -85,7 +85,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_states[current-pyopenweathermap.client.free_client.OWMFreeClient.get_weather-mock_return0][sensor.openweathermap_condition-state]
+# name: test_sensor_states[current][sensor.openweathermap_condition-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
@@ -99,7 +99,7 @@
     'state': 'cloudy',
   })
 # ---
-# name: test_sensor_states[current-pyopenweathermap.client.free_client.OWMFreeClient.get_weather-mock_return0][sensor.openweathermap_dew_point-entry]
+# name: test_sensor_states[current][sensor.openweathermap_dew_point-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -135,7 +135,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensor_states[current-pyopenweathermap.client.free_client.OWMFreeClient.get_weather-mock_return0][sensor.openweathermap_dew_point-state]
+# name: test_sensor_states[current][sensor.openweathermap_dew_point-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
@@ -152,7 +152,7 @@
     'state': '3.99',
   })
 # ---
-# name: test_sensor_states[current-pyopenweathermap.client.free_client.OWMFreeClient.get_weather-mock_return0][sensor.openweathermap_feels_like_temperature-entry]
+# name: test_sensor_states[current][sensor.openweathermap_feels_like_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -188,7 +188,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensor_states[current-pyopenweathermap.client.free_client.OWMFreeClient.get_weather-mock_return0][sensor.openweathermap_feels_like_temperature-state]
+# name: test_sensor_states[current][sensor.openweathermap_feels_like_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
@@ -205,7 +205,7 @@
     'state': '2.07',
   })
 # ---
-# name: test_sensor_states[current-pyopenweathermap.client.free_client.OWMFreeClient.get_weather-mock_return0][sensor.openweathermap_humidity-entry]
+# name: test_sensor_states[current][sensor.openweathermap_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -241,7 +241,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_states[current-pyopenweathermap.client.free_client.OWMFreeClient.get_weather-mock_return0][sensor.openweathermap_humidity-state]
+# name: test_sensor_states[current][sensor.openweathermap_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
@@ -258,7 +258,7 @@
     'state': '82',
   })
 # ---
-# name: test_sensor_states[current-pyopenweathermap.client.free_client.OWMFreeClient.get_weather-mock_return0][sensor.openweathermap_precipitation_kind-entry]
+# name: test_sensor_states[current][sensor.openweathermap_precipitation_kind-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -292,7 +292,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_states[current-pyopenweathermap.client.free_client.OWMFreeClient.get_weather-mock_return0][sensor.openweathermap_precipitation_kind-state]
+# name: test_sensor_states[current][sensor.openweathermap_precipitation_kind-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
@@ -306,7 +306,7 @@
     'state': 'Rain',
   })
 # ---
-# name: test_sensor_states[current-pyopenweathermap.client.free_client.OWMFreeClient.get_weather-mock_return0][sensor.openweathermap_pressure-entry]
+# name: test_sensor_states[current][sensor.openweathermap_pressure-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -342,7 +342,7 @@
     'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
   })
 # ---
-# name: test_sensor_states[current-pyopenweathermap.client.free_client.OWMFreeClient.get_weather-mock_return0][sensor.openweathermap_pressure-state]
+# name: test_sensor_states[current][sensor.openweathermap_pressure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
@@ -359,7 +359,7 @@
     'state': '1000',
   })
 # ---
-# name: test_sensor_states[current-pyopenweathermap.client.free_client.OWMFreeClient.get_weather-mock_return0][sensor.openweathermap_rain-entry]
+# name: test_sensor_states[current][sensor.openweathermap_rain-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -395,7 +395,7 @@
     'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
   })
 # ---
-# name: test_sensor_states[current-pyopenweathermap.client.free_client.OWMFreeClient.get_weather-mock_return0][sensor.openweathermap_rain-state]
+# name: test_sensor_states[current][sensor.openweathermap_rain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
@@ -412,7 +412,7 @@
     'state': '1.21',
   })
 # ---
-# name: test_sensor_states[current-pyopenweathermap.client.free_client.OWMFreeClient.get_weather-mock_return0][sensor.openweathermap_snow-entry]
+# name: test_sensor_states[current][sensor.openweathermap_snow-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -448,7 +448,7 @@
     'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
   })
 # ---
-# name: test_sensor_states[current-pyopenweathermap.client.free_client.OWMFreeClient.get_weather-mock_return0][sensor.openweathermap_snow-state]
+# name: test_sensor_states[current][sensor.openweathermap_snow-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
@@ -465,7 +465,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensor_states[current-pyopenweathermap.client.free_client.OWMFreeClient.get_weather-mock_return0][sensor.openweathermap_temperature-entry]
+# name: test_sensor_states[current][sensor.openweathermap_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -501,7 +501,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensor_states[current-pyopenweathermap.client.free_client.OWMFreeClient.get_weather-mock_return0][sensor.openweathermap_temperature-state]
+# name: test_sensor_states[current][sensor.openweathermap_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
@@ -518,7 +518,7 @@
     'state': '6.84',
   })
 # ---
-# name: test_sensor_states[current-pyopenweathermap.client.free_client.OWMFreeClient.get_weather-mock_return0][sensor.openweathermap_uv_index-entry]
+# name: test_sensor_states[current][sensor.openweathermap_uv_index-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -554,7 +554,7 @@
     'unit_of_measurement': 'UV index',
   })
 # ---
-# name: test_sensor_states[current-pyopenweathermap.client.free_client.OWMFreeClient.get_weather-mock_return0][sensor.openweathermap_uv_index-state]
+# name: test_sensor_states[current][sensor.openweathermap_uv_index-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
@@ -570,7 +570,7 @@
     'state': '0.13',
   })
 # ---
-# name: test_sensor_states[current-pyopenweathermap.client.free_client.OWMFreeClient.get_weather-mock_return0][sensor.openweathermap_visibility-entry]
+# name: test_sensor_states[current][sensor.openweathermap_visibility-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -606,7 +606,7 @@
     'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
   })
 # ---
-# name: test_sensor_states[current-pyopenweathermap.client.free_client.OWMFreeClient.get_weather-mock_return0][sensor.openweathermap_visibility-state]
+# name: test_sensor_states[current][sensor.openweathermap_visibility-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
@@ -623,7 +623,7 @@
     'state': '10000',
   })
 # ---
-# name: test_sensor_states[current-pyopenweathermap.client.free_client.OWMFreeClient.get_weather-mock_return0][sensor.openweathermap_weather-entry]
+# name: test_sensor_states[current][sensor.openweathermap_weather-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -657,7 +657,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_states[current-pyopenweathermap.client.free_client.OWMFreeClient.get_weather-mock_return0][sensor.openweathermap_weather-state]
+# name: test_sensor_states[current][sensor.openweathermap_weather-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
@@ -671,7 +671,7 @@
     'state': 'broken clouds',
   })
 # ---
-# name: test_sensor_states[current-pyopenweathermap.client.free_client.OWMFreeClient.get_weather-mock_return0][sensor.openweathermap_weather_code-entry]
+# name: test_sensor_states[current][sensor.openweathermap_weather_code-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -705,7 +705,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_states[current-pyopenweathermap.client.free_client.OWMFreeClient.get_weather-mock_return0][sensor.openweathermap_weather_code-state]
+# name: test_sensor_states[current][sensor.openweathermap_weather_code-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
@@ -719,7 +719,7 @@
     'state': '803',
   })
 # ---
-# name: test_sensor_states[current-pyopenweathermap.client.free_client.OWMFreeClient.get_weather-mock_return0][sensor.openweathermap_wind_bearing-entry]
+# name: test_sensor_states[current][sensor.openweathermap_wind_bearing-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -755,7 +755,7 @@
     'unit_of_measurement': '°',
   })
 # ---
-# name: test_sensor_states[current-pyopenweathermap.client.free_client.OWMFreeClient.get_weather-mock_return0][sensor.openweathermap_wind_bearing-state]
+# name: test_sensor_states[current][sensor.openweathermap_wind_bearing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
@@ -771,7 +771,7 @@
     'state': '199',
   })
 # ---
-# name: test_sensor_states[current-pyopenweathermap.client.free_client.OWMFreeClient.get_weather-mock_return0][sensor.openweathermap_wind_speed-entry]
+# name: test_sensor_states[current][sensor.openweathermap_wind_speed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -810,7 +810,7 @@
     'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
   })
 # ---
-# name: test_sensor_states[current-pyopenweathermap.client.free_client.OWMFreeClient.get_weather-mock_return0][sensor.openweathermap_wind_speed-state]
+# name: test_sensor_states[current][sensor.openweathermap_wind_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
@@ -827,7 +827,7 @@
     'state': '35.39',
   })
 # ---
-# name: test_sensor_states[v3.0-pyopenweathermap.client.onecall_client.OWMOneCallClient.get_weather-mock_return1][sensor.openweathermap_cloud_coverage-entry]
+# name: test_sensor_states[v3.0][sensor.openweathermap_cloud_coverage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -863,7 +863,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_states[v3.0-pyopenweathermap.client.onecall_client.OWMOneCallClient.get_weather-mock_return1][sensor.openweathermap_cloud_coverage-state]
+# name: test_sensor_states[v3.0][sensor.openweathermap_cloud_coverage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
@@ -879,7 +879,7 @@
     'state': '75',
   })
 # ---
-# name: test_sensor_states[v3.0-pyopenweathermap.client.onecall_client.OWMOneCallClient.get_weather-mock_return1][sensor.openweathermap_condition-entry]
+# name: test_sensor_states[v3.0][sensor.openweathermap_condition-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -913,7 +913,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_states[v3.0-pyopenweathermap.client.onecall_client.OWMOneCallClient.get_weather-mock_return1][sensor.openweathermap_condition-state]
+# name: test_sensor_states[v3.0][sensor.openweathermap_condition-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
@@ -927,7 +927,7 @@
     'state': 'cloudy',
   })
 # ---
-# name: test_sensor_states[v3.0-pyopenweathermap.client.onecall_client.OWMOneCallClient.get_weather-mock_return1][sensor.openweathermap_dew_point-entry]
+# name: test_sensor_states[v3.0][sensor.openweathermap_dew_point-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -963,7 +963,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensor_states[v3.0-pyopenweathermap.client.onecall_client.OWMOneCallClient.get_weather-mock_return1][sensor.openweathermap_dew_point-state]
+# name: test_sensor_states[v3.0][sensor.openweathermap_dew_point-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
@@ -980,7 +980,7 @@
     'state': '3.99',
   })
 # ---
-# name: test_sensor_states[v3.0-pyopenweathermap.client.onecall_client.OWMOneCallClient.get_weather-mock_return1][sensor.openweathermap_feels_like_temperature-entry]
+# name: test_sensor_states[v3.0][sensor.openweathermap_feels_like_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1016,7 +1016,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensor_states[v3.0-pyopenweathermap.client.onecall_client.OWMOneCallClient.get_weather-mock_return1][sensor.openweathermap_feels_like_temperature-state]
+# name: test_sensor_states[v3.0][sensor.openweathermap_feels_like_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
@@ -1033,7 +1033,7 @@
     'state': '2.07',
   })
 # ---
-# name: test_sensor_states[v3.0-pyopenweathermap.client.onecall_client.OWMOneCallClient.get_weather-mock_return1][sensor.openweathermap_humidity-entry]
+# name: test_sensor_states[v3.0][sensor.openweathermap_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1069,7 +1069,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_states[v3.0-pyopenweathermap.client.onecall_client.OWMOneCallClient.get_weather-mock_return1][sensor.openweathermap_humidity-state]
+# name: test_sensor_states[v3.0][sensor.openweathermap_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
@@ -1086,7 +1086,7 @@
     'state': '82',
   })
 # ---
-# name: test_sensor_states[v3.0-pyopenweathermap.client.onecall_client.OWMOneCallClient.get_weather-mock_return1][sensor.openweathermap_precipitation_kind-entry]
+# name: test_sensor_states[v3.0][sensor.openweathermap_precipitation_kind-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1120,7 +1120,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_states[v3.0-pyopenweathermap.client.onecall_client.OWMOneCallClient.get_weather-mock_return1][sensor.openweathermap_precipitation_kind-state]
+# name: test_sensor_states[v3.0][sensor.openweathermap_precipitation_kind-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
@@ -1134,7 +1134,7 @@
     'state': 'Rain',
   })
 # ---
-# name: test_sensor_states[v3.0-pyopenweathermap.client.onecall_client.OWMOneCallClient.get_weather-mock_return1][sensor.openweathermap_pressure-entry]
+# name: test_sensor_states[v3.0][sensor.openweathermap_pressure-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1170,7 +1170,7 @@
     'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
   })
 # ---
-# name: test_sensor_states[v3.0-pyopenweathermap.client.onecall_client.OWMOneCallClient.get_weather-mock_return1][sensor.openweathermap_pressure-state]
+# name: test_sensor_states[v3.0][sensor.openweathermap_pressure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
@@ -1187,7 +1187,7 @@
     'state': '1000',
   })
 # ---
-# name: test_sensor_states[v3.0-pyopenweathermap.client.onecall_client.OWMOneCallClient.get_weather-mock_return1][sensor.openweathermap_rain-entry]
+# name: test_sensor_states[v3.0][sensor.openweathermap_rain-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1223,7 +1223,7 @@
     'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
   })
 # ---
-# name: test_sensor_states[v3.0-pyopenweathermap.client.onecall_client.OWMOneCallClient.get_weather-mock_return1][sensor.openweathermap_rain-state]
+# name: test_sensor_states[v3.0][sensor.openweathermap_rain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
@@ -1240,7 +1240,7 @@
     'state': '1.21',
   })
 # ---
-# name: test_sensor_states[v3.0-pyopenweathermap.client.onecall_client.OWMOneCallClient.get_weather-mock_return1][sensor.openweathermap_snow-entry]
+# name: test_sensor_states[v3.0][sensor.openweathermap_snow-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1276,7 +1276,7 @@
     'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
   })
 # ---
-# name: test_sensor_states[v3.0-pyopenweathermap.client.onecall_client.OWMOneCallClient.get_weather-mock_return1][sensor.openweathermap_snow-state]
+# name: test_sensor_states[v3.0][sensor.openweathermap_snow-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
@@ -1293,7 +1293,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensor_states[v3.0-pyopenweathermap.client.onecall_client.OWMOneCallClient.get_weather-mock_return1][sensor.openweathermap_temperature-entry]
+# name: test_sensor_states[v3.0][sensor.openweathermap_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1329,7 +1329,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensor_states[v3.0-pyopenweathermap.client.onecall_client.OWMOneCallClient.get_weather-mock_return1][sensor.openweathermap_temperature-state]
+# name: test_sensor_states[v3.0][sensor.openweathermap_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
@@ -1346,7 +1346,7 @@
     'state': '6.84',
   })
 # ---
-# name: test_sensor_states[v3.0-pyopenweathermap.client.onecall_client.OWMOneCallClient.get_weather-mock_return1][sensor.openweathermap_uv_index-entry]
+# name: test_sensor_states[v3.0][sensor.openweathermap_uv_index-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1382,7 +1382,7 @@
     'unit_of_measurement': 'UV index',
   })
 # ---
-# name: test_sensor_states[v3.0-pyopenweathermap.client.onecall_client.OWMOneCallClient.get_weather-mock_return1][sensor.openweathermap_uv_index-state]
+# name: test_sensor_states[v3.0][sensor.openweathermap_uv_index-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
@@ -1398,7 +1398,7 @@
     'state': '0.13',
   })
 # ---
-# name: test_sensor_states[v3.0-pyopenweathermap.client.onecall_client.OWMOneCallClient.get_weather-mock_return1][sensor.openweathermap_visibility-entry]
+# name: test_sensor_states[v3.0][sensor.openweathermap_visibility-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1434,7 +1434,7 @@
     'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
   })
 # ---
-# name: test_sensor_states[v3.0-pyopenweathermap.client.onecall_client.OWMOneCallClient.get_weather-mock_return1][sensor.openweathermap_visibility-state]
+# name: test_sensor_states[v3.0][sensor.openweathermap_visibility-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
@@ -1451,7 +1451,7 @@
     'state': '10000',
   })
 # ---
-# name: test_sensor_states[v3.0-pyopenweathermap.client.onecall_client.OWMOneCallClient.get_weather-mock_return1][sensor.openweathermap_weather-entry]
+# name: test_sensor_states[v3.0][sensor.openweathermap_weather-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1485,7 +1485,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_states[v3.0-pyopenweathermap.client.onecall_client.OWMOneCallClient.get_weather-mock_return1][sensor.openweathermap_weather-state]
+# name: test_sensor_states[v3.0][sensor.openweathermap_weather-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
@@ -1499,7 +1499,7 @@
     'state': 'broken clouds',
   })
 # ---
-# name: test_sensor_states[v3.0-pyopenweathermap.client.onecall_client.OWMOneCallClient.get_weather-mock_return1][sensor.openweathermap_weather_code-entry]
+# name: test_sensor_states[v3.0][sensor.openweathermap_weather_code-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1533,7 +1533,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_states[v3.0-pyopenweathermap.client.onecall_client.OWMOneCallClient.get_weather-mock_return1][sensor.openweathermap_weather_code-state]
+# name: test_sensor_states[v3.0][sensor.openweathermap_weather_code-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
@@ -1547,7 +1547,7 @@
     'state': '803',
   })
 # ---
-# name: test_sensor_states[v3.0-pyopenweathermap.client.onecall_client.OWMOneCallClient.get_weather-mock_return1][sensor.openweathermap_wind_bearing-entry]
+# name: test_sensor_states[v3.0][sensor.openweathermap_wind_bearing-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1583,7 +1583,7 @@
     'unit_of_measurement': '°',
   })
 # ---
-# name: test_sensor_states[v3.0-pyopenweathermap.client.onecall_client.OWMOneCallClient.get_weather-mock_return1][sensor.openweathermap_wind_bearing-state]
+# name: test_sensor_states[v3.0][sensor.openweathermap_wind_bearing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
@@ -1599,7 +1599,7 @@
     'state': '199',
   })
 # ---
-# name: test_sensor_states[v3.0-pyopenweathermap.client.onecall_client.OWMOneCallClient.get_weather-mock_return1][sensor.openweathermap_wind_speed-entry]
+# name: test_sensor_states[v3.0][sensor.openweathermap_wind_speed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1638,7 +1638,7 @@
     'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
   })
 # ---
-# name: test_sensor_states[v3.0-pyopenweathermap.client.onecall_client.OWMOneCallClient.get_weather-mock_return1][sensor.openweathermap_wind_speed-state]
+# name: test_sensor_states[v3.0][sensor.openweathermap_wind_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
