@@ -12,15 +12,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import SyncthruCoordinator, device_identifiers
-from .const import DOMAIN
+from .coordinator import SyncThruConfigEntry
+from .entity import SyncthruEntity
 
 SYNCTHRU_STATE_PROBLEM = {
     SyncthruState.INVALID: True,
@@ -56,48 +52,22 @@ BINARY_SENSORS: tuple[SyncThruBinarySensorDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: SyncThruConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up from config entry."""
 
-    coordinator: SyncthruCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-
-    name: str = config_entry.data[CONF_NAME]
+    coordinator = config_entry.runtime_data
 
     async_add_entities(
-        SyncThruBinarySensor(coordinator, name, description)
-        for description in BINARY_SENSORS
+        SyncThruBinarySensor(coordinator, description) for description in BINARY_SENSORS
     )
 
 
-class SyncThruBinarySensor(CoordinatorEntity[SyncthruCoordinator], BinarySensorEntity):
+class SyncThruBinarySensor(SyncthruEntity, BinarySensorEntity):
     """Implementation of an abstract Samsung Printer binary sensor platform."""
 
     entity_description: SyncThruBinarySensorDescription
-
-    def __init__(
-        self,
-        coordinator: SyncthruCoordinator,
-        name: str,
-        entity_description: SyncThruBinarySensorDescription,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator)
-        self.entity_description = entity_description
-        serial_number = coordinator.data.serial_number()
-        assert serial_number is not None
-        self._attr_unique_id = f"{serial_number}_{entity_description.key}"
-        self._attr_name = name
-
-    @property
-    def device_info(self) -> DeviceInfo | None:
-        """Return device information."""
-        if (identifiers := device_identifiers(self.coordinator.data)) is None:
-            return None
-        return DeviceInfo(
-            identifiers=identifiers,
-        )
 
     @property
     def is_on(self) -> bool | None:
