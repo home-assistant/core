@@ -251,16 +251,12 @@ async def test_ble_device_only_checks_is_available(
     assert hass.states.get("light.testdevice").state == STATE_OFF
 
 
+@pytest.mark.usefixtures("fake_ble_discovery")
 async def test_ble_device_populates_connections(
     hass: HomeAssistant, get_next_aid: Callable[[], int], controller
 ) -> None:
     """Test a BLE device populates connections in the device registry."""
     aid = get_next_aid()
-
-    class FakeBLEDiscovery(FakeDiscovery):
-        device = BLEDevice(
-            address="AA:BB:CC:DD:EE:FF", name="TestDevice", rssi=-50, details=()
-        )
 
     class FakeBLEPairing(FakePairing):
         """Fake BLE pairing."""
@@ -274,10 +270,7 @@ async def test_ble_device_populates_connections(
     )
     create_alive_service(accessory)
 
-    with (
-        patch("aiohomekit.testing.FakePairing", FakeBLEPairing),
-        patch("aiohomekit.testing.FakeDiscovery", FakeBLEDiscovery),
-    ):
+    with patch("aiohomekit.testing.FakePairing", FakeBLEPairing):
         await async_setup_component(hass, DOMAIN, {})
         config_entry, _ = await setup_test_accessories_with_controller(
             hass, [accessory], controller
