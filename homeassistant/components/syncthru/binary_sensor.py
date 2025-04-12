@@ -12,12 +12,10 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SyncthruCoordinator
-from .const import DOMAIN
+from .coordinator import SyncThruConfigEntry
 from .entity import SyncthruEntity
 
 SYNCTHRU_STATE_PROBLEM = {
@@ -54,12 +52,12 @@ BINARY_SENSORS: tuple[SyncThruBinarySensorDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: SyncThruConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up from config entry."""
 
-    coordinator: SyncthruCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     async_add_entities(
         SyncThruBinarySensor(coordinator, description) for description in BINARY_SENSORS
