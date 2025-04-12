@@ -175,16 +175,16 @@
       "operation": {
         "state": {
           "warmup": "Warm-up",
-          "normal": "Normal",
+          "normal": "[%key:common::state::normal%]",
           "fault": "Fault"
         },
         "state_attributes": {
           "self_test": {
             "state": {
-              "not_completed": "Not completed",
-              "completed": "Completed",
-              "running": "Running",
-              "pending": "Pending"
+              "not_completed": "[%key:component::shelly::entity::sensor::self_test::state::not_completed%]",
+              "completed": "[%key:component::shelly::entity::sensor::self_test::state::completed%]",
+              "running": "[%key:component::shelly::entity::sensor::self_test::state::running%]",
+              "pending": "[%key:component::shelly::entity::sensor::self_test::state::pending%]"
             }
           }
         }
