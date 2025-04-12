@@ -41,7 +41,7 @@ def get_toner_entity_description(color: str) -> SyncThruSensorDescription:
     """Get toner entity description for a specific color."""
     return SyncThruSensorDescription(
         key=f"toner_{color}",
-        name=f"Toner {color}",
+        translation_key=f"toner_{color}",
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda printer: printer.toner_status().get(color, {}).get("remaining"),
         extra_state_attributes_fn=lambda printer: printer.toner_status().get(color, {}),
@@ -52,7 +52,7 @@ def get_drum_entity_description(color: str) -> SyncThruSensorDescription:
     """Get drum entity description for a specific color."""
     return SyncThruSensorDescription(
         key=f"drum_{color}",
-        name=f"Drum {color}",
+        translation_key=f"drum_{color}",
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda printer: printer.drum_status().get(color, {}).get("remaining"),
         extra_state_attributes_fn=lambda printer: printer.drum_status().get(color, {}),
@@ -61,9 +61,16 @@ def get_drum_entity_description(color: str) -> SyncThruSensorDescription:
 
 def get_input_tray_entity_description(tray: str) -> SyncThruSensorDescription:
     """Get input tray entity description for a specific tray."""
+    placeholders = {}
+    translation_key = f"tray_{tray}"
+    if "_" in tray:
+        _, identifier = tray.split("_")
+        placeholders["tray_number"] = identifier
+        translation_key = "tray"
     return SyncThruSensorDescription(
         key=f"tray_{tray}",
-        name=f"Tray {tray}",
+        translation_key=translation_key,
+        translation_placeholders=placeholders,
         value_fn=(
             lambda printer: printer.input_tray_status().get(tray, {}).get("newError")
             or "Ready"
@@ -78,7 +85,8 @@ def get_output_tray_entity_description(tray: int) -> SyncThruSensorDescription:
     """Get output tray entity description for a specific tray."""
     return SyncThruSensorDescription(
         key=f"output_tray_{tray}",
-        name=f"Output Tray {tray}",
+        translation_key="output_tray",
+        translation_placeholders={"tray_number": str(tray)},
         value_fn=(
             lambda printer: printer.output_tray_status().get(tray, {}).get("status")
             or "Ready"
@@ -94,12 +102,12 @@ def get_output_tray_entity_description(tray: int) -> SyncThruSensorDescription:
 SENSOR_TYPES: tuple[SyncThruSensorDescription, ...] = (
     SyncThruSensorDescription(
         key="active_alerts",
-        name="Active Alerts",
+        translation_key="active_alerts",
         value_fn=lambda printer: printer.raw().get("GXI_ACTIVE_ALERT_TOTAL"),
     ),
     SyncThruSensorDescription(
         key="main",
-        name="",
+        name=None,
         value_fn=lambda printer: SYNCTHRU_STATE_HUMAN[printer.device_status()],
         extra_state_attributes_fn=lambda printer: {
             "display_text": printer.device_status_details(),
@@ -152,7 +160,6 @@ class SyncThruSensor(SyncthruEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator, entity_description.key)
         self.entity_description = entity_description
-        self._attr_name = f"{name} {entity_description.name}".strip()
 
     @property
     def native_value(self) -> str | int | None:

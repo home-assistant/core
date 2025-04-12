@@ -10,6 +10,8 @@ from . import DOMAIN, SyncthruCoordinator
 class SyncthruEntity(CoordinatorEntity[SyncthruCoordinator]):
     """Base class for Syncthru entities."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, coordinator: SyncthruCoordinator, key: str) -> None:
         """Initialize the Syncthru entity."""
         super().__init__(coordinator)

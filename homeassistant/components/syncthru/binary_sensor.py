@@ -84,7 +84,6 @@ class SyncThruBinarySensor(SyncthruEntity, BinarySensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator, entity_description.key)
         self.entity_description = entity_description
-        self._attr_name = name
 
     @property
     def is_on(self) -> bool | None:
