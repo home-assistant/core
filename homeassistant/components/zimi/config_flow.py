@@ -8,9 +8,13 @@ from typing import Any
 import voluptuous as vol
 from zcc import (
     ControlPoint,
+    ControlPointCannotConnectError,
+    ControlPointConnectionRefusedError,
     ControlPointDescription,
     ControlPointDiscoveryService,
     ControlPointError,
+    ControlPointInvalidHostError,
+    ControlPointTimeoutError,
 )
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -130,21 +134,28 @@ class ZimiConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def check_connection(self, host: str, port: int) -> None | dict[str, str]:
+    async def check_connection(self, host: str, port: int) -> dict[str, str] | None:
         """Check connection to zcc.
 
         Stores mac and returns None if successful, otherwise returns error message.
         """
 
-        result = await ControlPointDiscoveryService().validate_connection(
-            self.data[CONF_HOST], self.data[CONF_PORT]
-        )
+        try:
+            result = await ControlPointDiscoveryService().validate_connection(
+                self.data[CONF_HOST], self.data[CONF_PORT]
+            )
+        except ControlPointInvalidHostError:
+            return {"base": "invalid_host"}
+        except ControlPointConnectionRefusedError:
+            return {"base": "connection_refused"}
+        except ControlPointCannotConnectError:
+            return {"base": "cannot_connect"}
+        except ControlPointTimeoutError:
+            return {"base": "timeout"}
 
-        if details := result.get("result"):
-            self.data[CONF_MAC] = format_mac(details.mac)
-            return None
+        self.data[CONF_MAC] = format_mac(result.mac)
 
-        return {"base": result["error"]}
+        return None
 
     async def create_entry(self) -> ConfigFlowResult:
         """Create entry for zcc."""
