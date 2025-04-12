@@ -27,7 +27,9 @@ _LOGGER = logging.getLogger(__name__)
 FALLBACK_POLL_INTERVAL = timedelta(seconds=180)
 
 
-class INKBIRDActiveBluetoothProcessorCoordinator(ActiveBluetoothProcessorCoordinator):
+class INKBIRDActiveBluetoothProcessorCoordinator(
+    ActiveBluetoothProcessorCoordinator[SensorUpdate]
+):
     """Coordinator for INKBIRD Bluetooth devices."""
 
     def __init__(
