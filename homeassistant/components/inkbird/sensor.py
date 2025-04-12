@@ -20,6 +20,7 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    UnitOfPressure,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -66,7 +67,7 @@ SENSOR_DESCRIPTIONS = {
     (DeviceClass.PRESSURE, Units.PRESSURE_HPA): SensorEntityDescription(
         key=f"{DeviceClass.PRESSURE}_{Units.PRESSURE_HPA}",
         device_class=SensorDeviceClass.PRESSURE,
-        native_unit_of_measurement="hPa",
+        native_unit_of_measurement=UnitOfPressure.HPA,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 }
