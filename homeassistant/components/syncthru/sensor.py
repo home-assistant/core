@@ -123,7 +123,7 @@ async def async_setup_entry(
     supp_tray = printer.input_tray_status(filter_supported=True)
     supp_output_tray = printer.output_tray_status()
 
-    name: str = config_entry.data[CONF_NAME]
+    name: str = config_entry.data.get(CONF_NAME, config_entry.title)
     entities: list[SyncThruSensorDescription] = [
         get_toner_entity_description(color) for color in supp_toner
     ]

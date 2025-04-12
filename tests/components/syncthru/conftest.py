@@ -7,7 +7,7 @@ from pysyncthru import SyncthruState
 import pytest
 
 from homeassistant.components.syncthru import DOMAIN
-from homeassistant.const import CONF_NAME, CONF_URL
+from homeassistant.const import CONF_URL
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
@@ -33,6 +33,7 @@ def mock_syncthru() -> Generator[AsyncMock]:
         patch(
             "homeassistant.components.syncthru.config_flow.SyncThru", new=mock_syncthru
         ),
+        patch("homeassistant.components.syncthru.SyncThru", new=mock_syncthru),
     ):
         client = mock_syncthru.return_value
         client.model.return_value = "C430W"
@@ -76,5 +77,7 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         title="C430W",
-        data={CONF_URL: "http://192.168.1.2/", CONF_NAME: "My Printer"},
+        data={CONF_URL: "http://192.168.1.2/"},
+        unique_id="08HRB8GJ3F019DD",
+        minor_version=2,
     )

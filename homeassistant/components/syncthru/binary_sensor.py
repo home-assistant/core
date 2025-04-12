@@ -62,7 +62,7 @@ async def async_setup_entry(
 
     coordinator: SyncthruCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    name: str = config_entry.data[CONF_NAME]
+    name: str = config_entry.data.get(CONF_NAME, config_entry.title)
 
     async_add_entities(
         SyncThruBinarySensor(coordinator, name, description)

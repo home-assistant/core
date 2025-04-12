@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-from pysyncthru import SyncThruAPINotSupported
+from pysyncthru import ConnectionMode, SyncThru, SyncThruAPINotSupported
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_URL, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 from .coordinator import SyncthruCoordinator
@@ -34,3 +35,21 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     hass.data[DOMAIN].pop(entry.entry_id, None)
     return unload_ok
+
+
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    if config_entry.minor_version == 1:
+        syncthru = SyncThru(
+            config_entry.data[CONF_URL],
+            async_get_clientsession(hass),
+            connection_mode=ConnectionMode.API,
+        )
+        await syncthru.update()
+        if syncthru.is_unknown_state():
+            return False
+        hass.config_entries.async_update_entry(
+            config_entry, minor_version=2, unique_id=syncthru.serial_number()
+        )
+
+    return True

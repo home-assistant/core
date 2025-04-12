@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[sensor.my_printer-entry]
+# name: test_all_entities[sensor.c430w-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,7 +12,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.my_printer',
+    'entity_id': 'sensor.c430w',
     'has_entity_name': False,
     'hidden_by': None,
     'icon': None,
@@ -24,7 +24,7 @@
     }),
     'original_device_class': None,
     'original_icon': 'mdi:printer',
-    'original_name': 'My Printer',
+    'original_name': 'C430W',
     'platform': 'syncthru',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -33,22 +33,22 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.my_printer-state]
+# name: test_all_entities[sensor.c430w-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'display_text': '',
-      'friendly_name': 'My Printer',
+      'friendly_name': 'C430W',
       'icon': 'mdi:printer',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.my_printer',
+    'entity_id': 'sensor.c430w',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'warning',
   })
 # ---
-# name: test_all_entities[sensor.my_printer_active_alerts-entry]
+# name: test_all_entities[sensor.c430w_active_alerts-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -61,7 +61,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.my_printer_active_alerts',
+    'entity_id': 'sensor.c430w_active_alerts',
     'has_entity_name': False,
     'hidden_by': None,
     'icon': None,
@@ -73,7 +73,7 @@
     }),
     'original_device_class': None,
     'original_icon': 'mdi:printer',
-    'original_name': 'My Printer Active Alerts',
+    'original_name': 'C430W Active Alerts',
     'platform': 'syncthru',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -82,21 +82,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.my_printer_active_alerts-state]
+# name: test_all_entities[sensor.c430w_active_alerts-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'My Printer Active Alerts',
+      'friendly_name': 'C430W Active Alerts',
       'icon': 'mdi:printer',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.my_printer_active_alerts',
+    'entity_id': 'sensor.c430w_active_alerts',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2',
   })
 # ---
-# name: test_all_entities[sensor.my_printer_output_tray_1-entry]
+# name: test_all_entities[sensor.c430w_output_tray_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -109,7 +109,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.my_printer_output_tray_1',
+    'entity_id': 'sensor.c430w_output_tray_1',
     'has_entity_name': False,
     'hidden_by': None,
     'icon': None,
@@ -121,7 +121,7 @@
     }),
     'original_device_class': None,
     'original_icon': 'mdi:printer',
-    'original_name': 'My Printer Output Tray 1',
+    'original_name': 'C430W Output Tray 1',
     'platform': 'syncthru',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -130,24 +130,24 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.my_printer_output_tray_1-state]
+# name: test_all_entities[sensor.c430w_output_tray_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'capacity': 50,
-      'friendly_name': 'My Printer Output Tray 1',
+      'friendly_name': 'C430W Output Tray 1',
       'icon': 'mdi:printer',
       'name': 1,
       'status': '',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.my_printer_output_tray_1',
+    'entity_id': 'sensor.c430w_output_tray_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Ready',
   })
 # ---
-# name: test_all_entities[sensor.my_printer_toner_black-entry]
+# name: test_all_entities[sensor.c430w_toner_black-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -160,7 +160,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.my_printer_toner_black',
+    'entity_id': 'sensor.c430w_toner_black',
     'has_entity_name': False,
     'hidden_by': None,
     'icon': None,
@@ -172,7 +172,7 @@
     }),
     'original_device_class': None,
     'original_icon': 'mdi:printer',
-    'original_name': 'My Printer Toner black',
+    'original_name': 'C430W Toner black',
     'platform': 'syncthru',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -181,11 +181,11 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_all_entities[sensor.my_printer_toner_black-state]
+# name: test_all_entities[sensor.c430w_toner_black-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'cnt': 1176,
-      'friendly_name': 'My Printer Toner black',
+      'friendly_name': 'C430W Toner black',
       'icon': 'mdi:printer',
       'newError': 'C1-5110',
       'opt': 1,
@@ -193,14 +193,14 @@
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.my_printer_toner_black',
+    'entity_id': 'sensor.c430w_toner_black',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '8',
   })
 # ---
-# name: test_all_entities[sensor.my_printer_toner_cyan-entry]
+# name: test_all_entities[sensor.c430w_toner_cyan-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -213,7 +213,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.my_printer_toner_cyan',
+    'entity_id': 'sensor.c430w_toner_cyan',
     'has_entity_name': False,
     'hidden_by': None,
     'icon': None,
@@ -225,7 +225,7 @@
     }),
     'original_device_class': None,
     'original_icon': 'mdi:printer',
-    'original_name': 'My Printer Toner cyan',
+    'original_name': 'C430W Toner cyan',
     'platform': 'syncthru',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -234,11 +234,11 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_all_entities[sensor.my_printer_toner_cyan-state]
+# name: test_all_entities[sensor.c430w_toner_cyan-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'cnt': 25,
-      'friendly_name': 'My Printer Toner cyan',
+      'friendly_name': 'C430W Toner cyan',
       'icon': 'mdi:printer',
       'newError': '',
       'opt': 1,
@@ -246,14 +246,14 @@
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.my_printer_toner_cyan',
+    'entity_id': 'sensor.c430w_toner_cyan',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '98',
   })
 # ---
-# name: test_all_entities[sensor.my_printer_toner_magenta-entry]
+# name: test_all_entities[sensor.c430w_toner_magenta-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -266,7 +266,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.my_printer_toner_magenta',
+    'entity_id': 'sensor.c430w_toner_magenta',
     'has_entity_name': False,
     'hidden_by': None,
     'icon': None,
@@ -278,7 +278,7 @@
     }),
     'original_device_class': None,
     'original_icon': 'mdi:printer',
-    'original_name': 'My Printer Toner magenta',
+    'original_name': 'C430W Toner magenta',
     'platform': 'syncthru',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -287,11 +287,11 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_all_entities[sensor.my_printer_toner_magenta-state]
+# name: test_all_entities[sensor.c430w_toner_magenta-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'cnt': 25,
-      'friendly_name': 'My Printer Toner magenta',
+      'friendly_name': 'C430W Toner magenta',
       'icon': 'mdi:printer',
       'newError': '',
       'opt': 1,
@@ -299,14 +299,14 @@
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.my_printer_toner_magenta',
+    'entity_id': 'sensor.c430w_toner_magenta',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '98',
   })
 # ---
-# name: test_all_entities[sensor.my_printer_toner_yellow-entry]
+# name: test_all_entities[sensor.c430w_toner_yellow-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -319,7 +319,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.my_printer_toner_yellow',
+    'entity_id': 'sensor.c430w_toner_yellow',
     'has_entity_name': False,
     'hidden_by': None,
     'icon': None,
@@ -331,7 +331,7 @@
     }),
     'original_device_class': None,
     'original_icon': 'mdi:printer',
-    'original_name': 'My Printer Toner yellow',
+    'original_name': 'C430W Toner yellow',
     'platform': 'syncthru',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -340,11 +340,11 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_all_entities[sensor.my_printer_toner_yellow-state]
+# name: test_all_entities[sensor.c430w_toner_yellow-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'cnt': 27,
-      'friendly_name': 'My Printer Toner yellow',
+      'friendly_name': 'C430W Toner yellow',
       'icon': 'mdi:printer',
       'newError': '',
       'opt': 1,
@@ -352,14 +352,14 @@
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.my_printer_toner_yellow',
+    'entity_id': 'sensor.c430w_toner_yellow',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '97',
   })
 # ---
-# name: test_all_entities[sensor.my_printer_tray_tray_1-entry]
+# name: test_all_entities[sensor.c430w_tray_tray_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -372,7 +372,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.my_printer_tray_tray_1',
+    'entity_id': 'sensor.c430w_tray_tray_1',
     'has_entity_name': False,
     'hidden_by': None,
     'icon': None,
@@ -384,7 +384,7 @@
     }),
     'original_device_class': None,
     'original_icon': 'mdi:printer',
-    'original_name': 'My Printer Tray tray_1',
+    'original_name': 'C430W Tray tray_1',
     'platform': 'syncthru',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -393,11 +393,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.my_printer_tray_tray_1-state]
+# name: test_all_entities[sensor.c430w_tray_tray_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'capa': 150,
-      'friendly_name': 'My Printer Tray tray_1',
+      'friendly_name': 'C430W Tray tray_1',
       'icon': 'mdi:printer',
       'newError': '',
       'opt': 1,
@@ -408,7 +408,7 @@
       'paper_type2': 0,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.my_printer_tray_tray_1',
+    'entity_id': 'sensor.c430w_tray_tray_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

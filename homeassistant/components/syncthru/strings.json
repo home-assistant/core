@@ -1,26 +1,26 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "syncthru_not_supported": "Device does not support SyncThru",
+      "unknown_state": "[%key:component::syncthru::config::error::unknown_state%]"
     },
     "error": {
-      "invalid_url": "Invalid URL",
       "syncthru_not_supported": "Device does not support SyncThru",
       "unknown_state": "Printer state unknown, verify URL and network connectivity"
     },
     "flow_title": "{name}",
     "step": {
-      "confirm": {
-        "data": {
-          "name": "[%key:common::config_flow::data::name%]",
-          "url": "[%key:component::syncthru::config::step::user::data::url%]"
-        }
-      },
       "user": {
         "data": {
-          "name": "[%key:common::config_flow::data::name%]",
-          "url": "Web interface URL"
+          "url": "[%key:common::config_flow::data::url%]"
+        },
+        "data_description": {
+          "url": "The URL of the printer's SyncThru web interface"
         }
+      },
+      "confirm": {
+        "description": "Do you want to set up SyncThru for {name} ({model})?"
       }
     }
   }
