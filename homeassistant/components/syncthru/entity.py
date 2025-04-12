@@ -4,7 +4,8 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DOMAIN, SyncthruCoordinator
+from .const import DOMAIN
+from .coordinator import SyncthruCoordinator
 
 
 class SyncthruEntity(CoordinatorEntity[SyncthruCoordinator]):
