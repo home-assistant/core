@@ -9,11 +9,10 @@ from typing import Any, cast
 from pysyncthru import SyncThru, SyncthruState
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.const import CONF_NAME, PERCENTAGE
+from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SyncthruCoordinator
 from .coordinator import SyncThruConfigEntry
 from .entity import SyncthruEntity
 
@@ -130,7 +129,6 @@ async def async_setup_entry(
     supp_tray = printer.input_tray_status(filter_supported=True)
     supp_output_tray = printer.output_tray_status()
 
-    name: str = config_entry.data[CONF_NAME]
     entities: list[SyncThruSensorDescription] = [
         get_toner_entity_description(color) for color in supp_toner
     ]
@@ -139,7 +137,7 @@ async def async_setup_entry(
     entities.extend(get_output_tray_entity_description(key) for key in supp_output_tray)
 
     async_add_entities(
-        SyncThruSensor(coordinator, name, description)
+        SyncThruSensor(coordinator, description)
         for description in SENSOR_TYPES + tuple(entities)
     )
 
@@ -150,28 +148,16 @@ class SyncThruSensor(SyncthruEntity, SensorEntity):
     _attr_icon = "mdi:printer"
     entity_description: SyncThruSensorDescription
 
-    def __init__(
-        self,
-        coordinator: SyncthruCoordinator,
-        name: str,
-        entity_description: SyncThruSensorDescription,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator)
-        self.entity_description = entity_description
-        self.syncthru = coordinator.data
-        serial_number = coordinator.data.serial_number()
-        assert serial_number is not None
-        self._attr_unique_id = f"{serial_number}_{entity_description.key}"
-
     @property
     def native_value(self) -> str | int | None:
         """Return the state of the sensor."""
-        return self.entity_description.value_fn(self.syncthru)
+        return self.entity_description.value_fn(self.coordinator.data)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         if self.entity_description.extra_state_attributes_fn:
-            return self.entity_description.extra_state_attributes_fn(self.syncthru)
+            return self.entity_description.extra_state_attributes_fn(
+                self.coordinator.data
+            )
         return None

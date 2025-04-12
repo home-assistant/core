@@ -12,11 +12,9 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SyncthruCoordinator
 from .coordinator import SyncThruConfigEntry
 from .entity import SyncthruEntity
 
@@ -61,11 +59,8 @@ async def async_setup_entry(
 
     coordinator = config_entry.runtime_data
 
-    name: str = config_entry.data[CONF_NAME]
-
     async_add_entities(
-        SyncThruBinarySensor(coordinator, name, description)
-        for description in BINARY_SENSORS
+        SyncThruBinarySensor(coordinator, description) for description in BINARY_SENSORS
     )
 
 
@@ -73,19 +68,6 @@ class SyncThruBinarySensor(SyncthruEntity, BinarySensorEntity):
     """Implementation of an abstract Samsung Printer binary sensor platform."""
 
     entity_description: SyncThruBinarySensorDescription
-
-    def __init__(
-        self,
-        coordinator: SyncthruCoordinator,
-        name: str,
-        entity_description: SyncThruBinarySensorDescription,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator)
-        self.entity_description = entity_description
-        serial_number = coordinator.data.serial_number()
-        assert serial_number is not None
-        self._attr_unique_id = f"{serial_number}_{entity_description.key}"
 
     @property
     def is_on(self) -> bool | None:
