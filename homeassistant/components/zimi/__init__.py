@@ -65,7 +65,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ZimiConfigEntry) -> boo
     """Unload a config entry."""
 
     api = entry.runtime_data
-    if api:
-        api.disconnect()
+    api.disconnect()
 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
