@@ -19,6 +19,7 @@ class ZimiEntity(Entity):
     """Representation of a Zimi API entity."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(self, device: ControlPointDevice, api: ControlPoint) -> None:
         """Initialize an HA Entity which is a ZimiDevice."""
@@ -29,6 +30,7 @@ class ZimiEntity(Entity):
             identifiers={(DOMAIN, self._device.manufacture_info.identifier)},
             manufacturer=self._device.manufacture_info.manufacturer,
             model=self._device.manufacture_info.model,
+            name=ZimiEntity.device_name(self._device.manufacture_info.model),
             hw_version=device.manufacture_info.hwVersion,
             sw_version=device.manufacture_info.firmwareVersion,
             suggested_area=device.room,
@@ -36,6 +38,19 @@ class ZimiEntity(Entity):
         )
         self._attr_name = self._device.name.strip()
         self._attr_suggested_area = self._device.room
+
+    @classmethod
+    def device_name(cls, model: str) -> str:
+        """Return a simplified name of the device."""
+
+        if "Fan" in model:
+            return "Fan"
+        if "GPO" in model:
+            return "Outlet"
+        if "Switch" in model:
+            return "Switch"
+
+        return model
 
     @property
     def available(self) -> bool:
@@ -51,6 +66,11 @@ class ZimiEntity(Entity):
         """Cleanup ZimiLight with removal of notification prior to removal."""
         self._device.unsubscribe(self)
         await super().async_will_remove_from_hass()
+
+    @property
+    def name(self) -> str:
+        """Name of the entity."""
+        return self._device.name.strip()
 
     def notify(self, _observable: object) -> None:
         """Receive notification from device that state has changed.
