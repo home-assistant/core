@@ -40,7 +40,4 @@ async def async_connect_to_controller(
 
         return api
 
-    msg = "Connection failed: not ready"
-    _LOGGER.error(msg=msg)
-
-    raise ConfigEntryNotReady
+    raise ConfigEntryNotReady("Connection failed: not ready")
