@@ -29,7 +29,6 @@ class ZimiEntity(Entity):
             identifiers={(DOMAIN, self._entity.manufacture_info.identifier)},
             manufacturer=self._entity.manufacture_info.manufacturer,
             model=self._entity.manufacture_info.model,
-            name=self._entity.manufacture_info.model,
             hw_version=device.manufacture_info.hwVersion,
             sw_version=device.manufacture_info.firmwareVersion,
             suggested_area=device.room,
