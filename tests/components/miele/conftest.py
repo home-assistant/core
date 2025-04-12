@@ -14,11 +14,10 @@ from homeassistant.components.application_credentials import (
 from homeassistant.components.miele.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-from homeassistant.util.json import json_loads
 
 from .const import CLIENT_ID, CLIENT_SECRET
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture(name="expires_at")
@@ -71,25 +70,25 @@ async def setup_credentials(hass: HomeAssistant) -> None:
 @pytest.fixture(scope="package")
 def load_device_file() -> str:
     """Fixture for loading device file."""
-    return load_fixture("3_devices.json", DOMAIN)
+    return "3_devices.json"
 
 
 @pytest.fixture
 def device_fixture(load_device_file: str) -> MieleDevices:
     """Fixture for device."""
-    return json_loads(load_device_file)
+    return load_json_object_fixture(load_device_file, DOMAIN)
 
 
 @pytest.fixture(scope="package")
 def load_action_file() -> str:
     """Fixture for loading action file."""
-    return load_fixture("action_washing_machine.json", DOMAIN)
+    return "action_washing_machine.json"
 
 
 @pytest.fixture
 def action_fixture(load_action_file: str) -> MieleAction:
     """Fixture for action."""
-    return json_loads(load_action_file)
+    return load_json_object_fixture(load_action_file, DOMAIN)
 
 
 @pytest.fixture
