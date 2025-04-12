@@ -36,18 +36,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 SELECTED_HOST_AND_PORT = "selected_host_and_port"
 
-# class ZimiConfigErrors(StrEnum):
-#     """ZimiConfig errors."""
-
-#     ALREADY_CONFIGURED = "already_configured"
-#     CANNOT_CONNECT = "cannot_connect"
-#     CONNECTION_REFUSED = "connection_refused"
-#     DISCOVERY_FAILURE = "discovery_failure"
-#     INVALID_HOST = "invalid_host"
-#     INVALID_PORT = "invalid_port"
-#     TIMEOUT = "timeout"
-#     UNKNOWN = "unknown"
-
 
 class ZimiConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for zcc."""
