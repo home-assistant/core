@@ -10,7 +10,7 @@ from pysyncthru import SyncThru, SyncthruState
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, PERCENTAGE
+from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -131,7 +131,6 @@ async def async_setup_entry(
     supp_tray = printer.input_tray_status(filter_supported=True)
     supp_output_tray = printer.output_tray_status()
 
-    name: str = config_entry.data[CONF_NAME]
     entities: list[SyncThruSensorDescription] = [
         get_toner_entity_description(color) for color in supp_toner
     ]
@@ -140,7 +139,7 @@ async def async_setup_entry(
     entities.extend(get_output_tray_entity_description(key) for key in supp_output_tray)
 
     async_add_entities(
-        SyncThruSensor(coordinator, name, description)
+        SyncThruSensor(coordinator, description)
         for description in SENSOR_TYPES + tuple(entities)
     )
 
@@ -150,16 +149,6 @@ class SyncThruSensor(SyncthruEntity, SensorEntity):
 
     _attr_icon = "mdi:printer"
     entity_description: SyncThruSensorDescription
-
-    def __init__(
-        self,
-        coordinator: SyncthruCoordinator,
-        name: str,
-        entity_description: SyncThruSensorDescription,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator, entity_description.key)
-        self.entity_description = entity_description
 
     @property
     def native_value(self) -> str | int | None:
