@@ -43,6 +43,7 @@ from homeassistant.core import (
 )
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -61,7 +62,7 @@ from tests.common import (
 TEST_DOMAIN = "test"
 TEST_DEVICE = "/dev/serial/by-id/some-unique-serial-device-12345"
 TEST_FIRMWARE_RELEASES_URL = "https://example.org/firmware"
-TEST_UPDATE_ENTITY_ID = "update.test_firmware"
+TEST_UPDATE_ENTITY_ID = "update.mock_name_firmware"
 TEST_MANIFEST = FirmwareManifest(
     url=URL("https://example.org/firmware"),
     html_url=URL("https://example.org/release_notes"),
@@ -205,6 +206,12 @@ class MockFirmwareUpdateEntity(BaseFirmwareUpdateEntity):
         """Initialize the mock SkyConnect firmware update entity."""
         super().__init__(device, config_entry, update_coordinator, entity_description)
         self._attr_unique_id = self.entity_description.key
+        self._attr_device_info = DeviceInfo(
+            identifiers={(TEST_DOMAIN, "yellow")},
+            name="Mock Name",
+            model="Mock Model",
+            manufacturer="Mock Manufacturer",
+        )
 
         # Use the cached firmware info if it exists
         if self._config_entry.data["firmware"] is not None:
