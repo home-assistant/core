@@ -20,11 +20,14 @@ import requests.exceptions
 import urllib3.exceptions
 import voluptuous as vol
 
+from homeassistant import config as conf_util
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_DOMAIN,
     CONF_ENTITY_ID,
+    CONF_EXCLUDE,
     CONF_HOST,
+    CONF_INCLUDE,
     CONF_PASSWORD,
     CONF_PATH,
     CONF_PORT,
@@ -107,29 +110,34 @@ _LOGGER = logging.getLogger(__name__)
 type InfluxDBConfigEntry = ConfigEntry[InfluxThread]
 
 
-def create_influx_url(conf: dict) -> dict:
-    """Build URL used from config inputs and default when necessary."""
+def create_influx_v2(conf: dict) -> dict:
+    """Set values for v2 API."""
     if conf[CONF_API_VERSION] == API_VERSION_2:
         if CONF_SSL not in conf:
             conf[CONF_SSL] = DEFAULT_SSL_V2
         if CONF_HOST not in conf:
             conf[CONF_HOST] = DEFAULT_HOST_V2
 
-        url = conf[CONF_HOST]
-        if conf[CONF_SSL]:
-            url = f"https://{url}"
-        else:
-            url = f"http://{url}"
-
-        if CONF_PORT in conf:
-            url = f"{url}:{conf[CONF_PORT]}"
-
-        if CONF_PATH in conf:
-            url = f"{url}{conf[CONF_PATH]}"
-
-        conf[CONF_URL] = url
+        conf[CONF_URL] = create_influx_url(conf)
 
     return conf
+
+
+def create_influx_url(conf: dict) -> str:
+    """Build URL used from config inputs and default when necessary."""
+    url = conf[CONF_HOST]
+    if conf[CONF_SSL]:
+        url = f"https://{url}"
+    else:
+        url = f"http://{url}"
+
+    if (port := conf.get(CONF_PORT)) is not None:
+        url = f"{url}:{port}"
+
+    if (path := conf.get(CONF_PATH)) is not None:
+        url = f"{url}{path}"
+
+    return url
 
 
 def validate_version_specific_config(conf: dict) -> dict:
@@ -193,7 +201,6 @@ _INFLUX_BASE_SCHEMA = INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
 INFLUX_SCHEMA = vol.All(
     _INFLUX_BASE_SCHEMA.extend(COMPONENT_CONFIG_SCHEMA_CONNECTION),
     validate_version_specific_config,
-    create_influx_url,
 )
 
 CONFIG_SCHEMA = vol.Schema(
@@ -345,7 +352,7 @@ def get_influx_connection(  # noqa: C901
 
     if conf[CONF_API_VERSION] == API_VERSION_2:
         kwargs[CONF_TIMEOUT] = TIMEOUT * 1000
-        kwargs[CONF_URL] = conf[CONF_URL]
+        kwargs[CONF_URL] = create_influx_url(conf)
         kwargs[CONF_TOKEN] = conf[CONF_TOKEN]
         kwargs[INFLUX_CONF_ORG] = conf[CONF_ORG]
         kwargs[CONF_VERIFY_SSL] = conf[CONF_VERIFY_SSL]
@@ -481,7 +488,33 @@ def get_influx_connection(  # noqa: C901
 async def async_setup_entry(hass: HomeAssistant, entry: InfluxDBConfigEntry) -> bool:
     """Set up InfluxDB from a config entry."""
     data = entry.data
-    options = entry.options
+
+    hass_config = await conf_util.async_hass_config_yaml(hass)
+
+    influx_yaml = CONFIG_SCHEMA(hass_config).get(DOMAIN, {})
+    default_yaml: dict[str, Any] = {
+        "entity_globs": [],
+        "entities": [],
+        "domains": [],
+    }
+
+    options = {
+        CONF_RETRY_COUNT: influx_yaml.get(CONF_RETRY_COUNT, 0),
+        CONF_PRECISION: influx_yaml.get(CONF_PRECISION),
+        CONF_MEASUREMENT_ATTR: influx_yaml.get(
+            CONF_MEASUREMENT_ATTR, DEFAULT_MEASUREMENT_ATTR
+        ),
+        CONF_DEFAULT_MEASUREMENT: influx_yaml.get(CONF_DEFAULT_MEASUREMENT),
+        CONF_OVERRIDE_MEASUREMENT: influx_yaml.get(CONF_OVERRIDE_MEASUREMENT),
+        CONF_INCLUDE: influx_yaml.get(CONF_INCLUDE, default_yaml),
+        CONF_EXCLUDE: influx_yaml.get(CONF_EXCLUDE, default_yaml),
+        CONF_TAGS: influx_yaml.get(CONF_TAGS, {}),
+        CONF_TAGS_ATTRIBUTES: influx_yaml.get(CONF_TAGS_ATTRIBUTES, []),
+        CONF_IGNORE_ATTRIBUTES: influx_yaml.get(CONF_IGNORE_ATTRIBUTES, []),
+        CONF_COMPONENT_CONFIG: influx_yaml.get(CONF_COMPONENT_CONFIG, {}),
+        CONF_COMPONENT_CONFIG_DOMAIN: influx_yaml.get(CONF_COMPONENT_CONFIG_DOMAIN, {}),
+        CONF_COMPONENT_CONFIG_GLOB: influx_yaml.get(CONF_COMPONENT_CONFIG_GLOB, {}),
+    }
 
     config = data | options
 

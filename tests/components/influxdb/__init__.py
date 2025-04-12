@@ -30,7 +30,6 @@ BASE_V1_CONFIG = {
 BASE_V2_CONFIG = {
     "api_version": influxdb.API_VERSION_2,
     "host": "us-west-2-1.aws.cloud2.influxdata.com",
-    "url": "https://us-west-2-1.aws.cloud2.influxdata.com",
     "token": "token",
     "organization": "org",
     "bucket": "Home Assistant",
@@ -84,7 +83,6 @@ def _split_config(conf):
         "token": conf.get("token"),
         "organization": conf.get("organization"),
         "bucket": conf.get("bucket"),
-        "url": conf.get("url"),
         "ssl": conf.get("ssl"),
         "path": conf.get("path"),
         "verify_ssl": conf.get("verify_ssl"),
