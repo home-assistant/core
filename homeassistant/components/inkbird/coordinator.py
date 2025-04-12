@@ -32,14 +32,14 @@ class INKBIRDActiveBluetoothProcessorCoordinator(
 ):
     """Coordinator for INKBIRD Bluetooth devices."""
 
+    _data: INKBIRDBluetoothDeviceData
+
     def __init__(
         self,
         hass: HomeAssistant,
         entry: ConfigEntry,
-        data: INKBIRDBluetoothDeviceData,
     ) -> None:
         """Initialize the INKBIRD Bluetooth processor coordinator."""
-        self._data = data
         self._entry = entry
         address = entry.unique_id
         assert address is not None
@@ -57,6 +57,11 @@ class INKBIRDActiveBluetoothProcessorCoordinator(
             needs_poll_method=self._async_needs_poll,
             poll_method=self._async_poll_data,
         )
+
+    @callback
+    def async_set_data(self, data: INKBIRDBluetoothDeviceData) -> None:
+        """Set the data for the coordinator."""
+        self._data = data
 
     async def _async_poll_data(
         self, last_service_info: BluetoothServiceInfoBleak
