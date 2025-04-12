@@ -1,6 +1,5 @@
 """Dreo for device."""
 
-import logging
 from typing import Any
 
 from hscloud.hscloudexception import (
@@ -16,8 +15,6 @@ from homeassistant.helpers.entity import Entity
 
 from . import DreoConfigEntry
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class DreoEntity(Entity):
@@ -42,7 +39,7 @@ class DreoEntity(Entity):
 
         """
         super().__init__()
-        self._config_entry = config_entry
+        self._client = config_entry.runtime_data.client
         self._model = device.get("model")
         self._device_id = device.get("deviceSn")
         self._attr_name = name
@@ -61,30 +58,18 @@ class DreoEntity(Entity):
             hw_version=device.get("mcuFirmwareVersion"),
         )
 
-    def _send_command(self, translation_key: str, **kwargs) -> None:
-        """Call a hscloud device command and handle errors."""
+    def _send_command_and_update(self, translation_key: str, **kwargs) -> None:
+        """Call a hscloud device command, handle errors, and update entity state."""
 
         try:
-            self._config_entry.runtime_data.client.update_status(
-                self._device_id, **kwargs
-            )
-
-        except HsCloudException as ex:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN, translation_key=translation_key
-            ) from ex
-
-        except HsCloudBusinessException as ex:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN, translation_key=translation_key
-            ) from ex
-
-        except HsCloudAccessDeniedException as ex:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN, translation_key=translation_key
-            ) from ex
-
-        except HsCloudFlowControlException as ex:
+            self._client.update_status(self._device_id, **kwargs)
+            self.schedule_update_ha_state(force_refresh=True)
+        except (
+            HsCloudException,
+            HsCloudBusinessException,
+            HsCloudAccessDeniedException,
+            HsCloudFlowControlException,
+        ) as ex:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key=translation_key
             ) from ex

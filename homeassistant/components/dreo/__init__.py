@@ -1,7 +1,6 @@
 """Dreo for Integration."""
 
 from dataclasses import dataclass
-import logging
 
 from hscloud.hscloud import HsCloud
 
@@ -10,8 +9,6 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 
 from .util import handle_api_exceptions
-
-_LOGGER = logging.getLogger(__name__)
 
 type DreoConfigEntry = ConfigEntry[DreoData]
 

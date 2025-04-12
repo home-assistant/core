@@ -8,6 +8,7 @@ import math
 from typing import Any
 
 from hscloud.const import DEVICE_TYPE, FAN_DEVICE
+from hscloud.hscloudexception import HsCloudException
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant
@@ -27,7 +28,6 @@ from .const import (
     ERROR_TURN_ON_FAILED,
 )
 from .entity import DreoEntity
-from .util import handle_api_exceptions
 
 FAN_SUFFIX = "fan"
 SCAN_INTERVAL = timedelta(seconds=10)
@@ -78,14 +78,8 @@ class DreoFan(DreoEntity, FanEntity):
         self._attr_preset_mode = None
         self._low_high_range = speed_range
         self._attr_speed_count = int_states_in_range(speed_range)
-        self._attr_percentage = None
+        self._attr_percentage = 0
         self._attr_oscillating = None
-        self._attr_is_on = False
-
-    @property
-    def is_on(self) -> bool | None:
-        """Return True if device is on."""
-        return self._attr_is_on
 
     def turn_on(
         self,
@@ -104,18 +98,15 @@ class DreoFan(DreoEntity, FanEntity):
         if preset_mode is not None:
             command_params["mode"] = preset_mode
 
-        self._send_command(ERROR_TURN_ON_FAILED, **command_params)
-        self.schedule_update_ha_state(force_refresh=True)
+        self._send_command_and_update(ERROR_TURN_ON_FAILED, **command_params)
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        self._send_command(ERROR_TURN_OFF_FAILED, power_switch=False)
-        self.schedule_update_ha_state(force_refresh=True)
+        self._send_command_and_update(ERROR_TURN_OFF_FAILED, power_switch=False)
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of fan."""
-        self._send_command(ERROR_SET_PRESET_MODE_FAILED, mode=preset_mode)
-        self.schedule_update_ha_state(force_refresh=True)
+        self._send_command_and_update(ERROR_SET_PRESET_MODE_FAILED, mode=preset_mode)
 
     def set_percentage(self, percentage: int) -> None:
         """Set the speed of fan."""
@@ -125,30 +116,34 @@ class DreoFan(DreoEntity, FanEntity):
             speed = math.ceil(
                 percentage_to_ranged_value(self._low_high_range, percentage)
             )
-            self._send_command(ERROR_SET_SPEED_FAILED, speed=speed)
-            self.schedule_update_ha_state(force_refresh=True)
+            self._send_command_and_update(ERROR_SET_SPEED_FAILED, speed=speed)
 
     def oscillate(self, oscillating: bool) -> None:
         """Set the Oscillate of fan."""
-        self._send_command(ERROR_SET_OSCILLATE_FAILED, oscillate=oscillating)
-        self.schedule_update_ha_state(force_refresh=True)
+        self._send_command_and_update(ERROR_SET_OSCILLATE_FAILED, oscillate=oscillating)
 
     def update(self) -> None:
         """Update Dreo fan."""
+        try:
+            status = self._client.get_status(self._device_id)
 
-        def get_status():
-            return self._config_entry.runtime_data.client.get_status(self._device_id)
+            if status is None:
+                self._attr_available = False
+                return
 
-        status = handle_api_exceptions(get_status)
-
-        if status is None:
-            self._attr_available = False
-        else:
-            self._attr_is_on = status.get("power_switch")
             self._attr_available = status.get("connected")
             self._attr_preset_mode = status.get("mode")
-            self._attr_percentage = ranged_value_to_percentage(
-                self._low_high_range,
-                status.get("speed"),
-            )
             self._attr_oscillating = status.get("oscillate")
+
+            if not status.get("power_switch"):
+                self._attr_percentage = 0
+                self._attr_preset_mode = None
+                self._attr_oscillating = None
+            else:
+                self._attr_percentage = ranged_value_to_percentage(
+                    self._low_high_range,
+                    status.get("speed"),
+                )
+        except (HsCloudException, Exception):
+            self._attr_available = False
+            _LOGGER.exception("Error getting status for Dreo fan %s", self._device_id)
