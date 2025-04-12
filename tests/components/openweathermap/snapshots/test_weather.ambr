@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_get_minute_forecast[mock_service_response]
+# name: test_get_minute_forecast[v3.0][mock_service_response]
   dict({
     'weather.openweathermap': dict({
       'forecast': list([
@@ -23,7 +23,7 @@
     }),
   })
 # ---
-# name: test_weather_states[current-pyopenweathermap.client.free_client.OWMFreeClient.get_weather-mock_return0][weather.openweathermap-entry]
+# name: test_weather_states[current][weather.openweathermap-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -57,7 +57,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_weather_states[current-pyopenweathermap.client.free_client.OWMFreeClient.get_weather-mock_return0][weather.openweathermap-state]
+# name: test_weather_states[current][weather.openweathermap-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'apparent_temperature': 2.1,
@@ -84,7 +84,7 @@
     'state': 'cloudy',
   })
 # ---
-# name: test_weather_states[forecast-pyopenweathermap.client.free_client.OWMFreeClient.get_weather-mock_return1][weather.openweathermap-entry]
+# name: test_weather_states[forecast][weather.openweathermap-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -118,7 +118,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_weather_states[forecast-pyopenweathermap.client.free_client.OWMFreeClient.get_weather-mock_return1][weather.openweathermap-state]
+# name: test_weather_states[forecast][weather.openweathermap-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'apparent_temperature': 2.1,
@@ -146,7 +146,7 @@
     'state': 'cloudy',
   })
 # ---
-# name: test_weather_states[v3.0-pyopenweathermap.client.onecall_client.OWMOneCallClient.get_weather-mock_return2][weather.openweathermap-entry]
+# name: test_weather_states[v3.0][weather.openweathermap-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -180,7 +180,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_weather_states[v3.0-pyopenweathermap.client.onecall_client.OWMOneCallClient.get_weather-mock_return2][weather.openweathermap-state]
+# name: test_weather_states[v3.0][weather.openweathermap-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'apparent_temperature': 2.1,
