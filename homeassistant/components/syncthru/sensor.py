@@ -9,13 +9,11 @@ from typing import Any, cast
 from pysyncthru import SyncThru, SyncthruState
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SyncthruCoordinator
-from .const import DOMAIN
+from .coordinator import SyncThruConfigEntry
 from .entity import SyncthruEntity
 
 SYNCTHRU_STATE_HUMAN = {
@@ -118,12 +116,12 @@ SENSOR_TYPES: tuple[SyncThruSensorDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: SyncThruConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up from config entry."""
 
-    coordinator: SyncthruCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     printer = coordinator.data
 
     supp_toner = printer.toner_status(filter_supported=True)
