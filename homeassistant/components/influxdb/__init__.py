@@ -406,8 +406,8 @@ def get_influx_connection(  # noqa: C901
         return InfluxClient(buckets, write_v2, query_v2, close_v2)
 
     # Else it's a V1 client
-    if conf.get(CONF_SSL_CA_CERT) is not None and conf[CONF_VERIFY_SSL]:
-        kwargs[CONF_VERIFY_SSL] = conf[CONF_SSL_CA_CERT]
+    if (cert := conf.get(CONF_SSL_CA_CERT)) is not None and conf[CONF_VERIFY_SSL]:
+        kwargs[CONF_VERIFY_SSL] = cert
     else:
         kwargs[CONF_VERIFY_SSL] = conf[CONF_VERIFY_SSL]
 
