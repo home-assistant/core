@@ -37,7 +37,6 @@ tqdm==4.67.1
 types-aiofiles==24.1.0.20241221
 types-atomicwrites==1.4.5.1
 types-croniter==5.0.1.20241205
-types-beautifulsoup4==4.12.0.20250204
 types-caldav==1.3.0.20241107
 types-chardet==0.1.5
 types-decorator==5.1.8.20250121
