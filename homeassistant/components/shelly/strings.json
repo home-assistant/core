@@ -51,6 +51,7 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "firmware_not_fully_provisioned": "Device not fully provisioned. Please contact Shelly support",
       "custom_port_not_supported": "Gen1 device does not support custom port.",
