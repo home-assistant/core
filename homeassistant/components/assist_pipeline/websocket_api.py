@@ -262,7 +262,6 @@ async def websocket_run(
             async with asyncio.timeout(timeout):
                 await run_task
         except TimeoutError:
-            _LOGGER.exception("Assist satellite run task timeout")
             pipeline_input.run.process_event(
                 PipelineEvent(
                     PipelineEventType.ERROR,
