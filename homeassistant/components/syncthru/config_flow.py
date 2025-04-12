@@ -34,9 +34,10 @@ class SyncThruConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle user initiated flow."""
         errors = {}
         if user_input is not None:
-            session = async_get_clientsession(self.hass)
             printer = SyncThru(
-                user_input[CONF_URL], session, connection_mode=ConnectionMode.API
+                user_input[CONF_URL],
+                async_get_clientsession(self.hass),
+                connection_mode=ConnectionMode.API,
             )
             try:
                 await printer.update()
@@ -74,8 +75,11 @@ class SyncThruConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(discovery_info.upnp[ATTR_UPNP_SERIAL])
         self._abort_if_unique_id_configured(updates={CONF_URL: self.url})
 
-        session = async_get_clientsession(self.hass)
-        printer = SyncThru(self.url, session, connection_mode=ConnectionMode.API)
+        printer = SyncThru(
+            self.url,
+            async_get_clientsession(self.hass),
+            connection_mode=ConnectionMode.API,
+        )
         try:
             await printer.update()
         except SyncThruAPINotSupported:
