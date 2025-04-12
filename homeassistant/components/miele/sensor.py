@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Final
+from typing import Final, cast
 
 from pymiele import MieleDevice
 
@@ -109,7 +109,8 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             device_class=SensorDeviceClass.TEMPERATURE,
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             state_class=SensorStateClass.MEASUREMENT,
-            value_fn=lambda value: value.state_temperature_1 / 100.0,
+            value_fn=lambda value: cast(int, value.state_temperatures[0].temperature)
+            / 100.0,
         ),
     ),
 )
