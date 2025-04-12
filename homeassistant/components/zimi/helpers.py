@@ -31,7 +31,7 @@ async def async_connect_to_controller(
         _LOGGER.error("Connection failed: %s", error)
         raise ControlPointError from error
 
-    if api and api.ready:
+    if api.ready:
         _LOGGER.debug("Connected")
 
         if not fast:
