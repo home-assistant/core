@@ -1,4 +1,4 @@
-"""Tests for Comelit SimpleHome climate platform."""
+"""Tests for Comelit SimpleHome humidifier platform."""
 
 from typing import Any
 from unittest.mock import AsyncMock, patch
@@ -9,23 +9,28 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.climate import (
-    ATTR_HVAC_MODE,
-    DOMAIN as CLIMATE_DOMAIN,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_TEMPERATURE,
-    HVACMode,
+from homeassistant.components.comelit.const import DOMAIN, SCAN_INTERVAL
+from homeassistant.components.humidifier import (
+    ATTR_HUMIDITY,
+    ATTR_MODE,
+    DOMAIN as HUMIDIFIER_DOMAIN,
+    MODE_AUTO,
+    MODE_NORMAL,
+    SERVICE_SET_HUMIDITY,
+    SERVICE_SET_MODE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
 )
-from homeassistant.components.comelit.const import SCAN_INTERVAL
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
-ENTITY_ID = "climate.climate0"
+ENTITY_ID = "humidifier.climate0_humidifier"
 
 
 async def test_all_entities(
@@ -36,7 +41,9 @@ async def test_all_entities(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test all entities."""
-    with patch("homeassistant.components.comelit.BRIDGE_PLATFORMS", [Platform.CLIMATE]):
+    with patch(
+        "homeassistant.components.comelit.BRIDGE_PLATFORMS", [Platform.HUMIDIFIER]
+    ):
         await setup_integration(hass, mock_serial_bridge_config_entry)
 
     await snapshot_platform(
@@ -48,52 +55,52 @@ async def test_all_entities(
 
 
 @pytest.mark.parametrize(
-    ("val", "mode", "temp"),
+    ("val", "mode", "humidity"),
     [
         (
             [
                 [100, 0, "U", "M", 210, 0, 0, "U"],
-                [650, 0, "O", "M", 500, 0, 0, "N"],
+                [650, 0, "U", "M", 500, 0, 0, "U"],
                 [0, 0],
             ],
-            HVACMode.HEAT,
-            21.0,
+            STATE_ON,
+            50.0,
         ),
         (
             [
                 [100, 1, "U", "A", 210, 1, 0, "O"],
-                [650, 0, "O", "M", 500, 0, 0, "N"],
+                [650, 1, "U", "A", 500, 1, 0, "O"],
                 [0, 0],
             ],
-            HVACMode.HEAT,
-            21.0,
+            STATE_ON,
+            50.0,
         ),
         (
             [
                 [100, 0, "O", "A", 210, 0, 0, "O"],
-                [650, 0, "O", "M", 500, 0, 0, "N"],
+                [650, 0, "O", "A", 500, 0, 0, "O"],
                 [0, 0],
             ],
-            HVACMode.OFF,
-            21.0,
+            STATE_OFF,
+            50.0,
         ),
     ],
 )
-async def test_climate_data_update(
+async def test_humidifier_data_update(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_serial_bridge: AsyncMock,
     mock_serial_bridge_config_entry: MockConfigEntry,
     val: list[Any, Any],
-    mode: HVACMode,
-    temp: float,
+    mode: str,
+    humidity: float,
 ) -> None:
-    """Test climate data update."""
+    """Test humidifier data update."""
     await setup_integration(hass, mock_serial_bridge_config_entry)
 
     assert (state := hass.states.get(ENTITY_ID))
-    assert state.state == HVACMode.HEAT
-    assert state.attributes[ATTR_TEMPERATURE] == 5.0
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_HUMIDITY] == 50.0
 
     mock_serial_bridge.get_all_devices.return_value[CLIMATE] = {
         0: ComelitSerialBridgeObject(
@@ -116,21 +123,21 @@ async def test_climate_data_update(
 
     assert (state := hass.states.get(ENTITY_ID))
     assert state.state == mode
-    assert state.attributes[ATTR_TEMPERATURE] == temp
+    assert state.attributes[ATTR_HUMIDITY] == humidity
 
 
-async def test_climate_data_update_bad_data(
+async def test_humidifier_data_update_bad_data(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_serial_bridge: AsyncMock,
     mock_serial_bridge_config_entry: MockConfigEntry,
 ) -> None:
-    """Test climate data update."""
+    """Test humidifier data update."""
     await setup_integration(hass, mock_serial_bridge_config_entry)
 
     assert (state := hass.states.get(ENTITY_ID))
-    assert state.state == HVACMode.HEAT
-    assert state.attributes[ATTR_TEMPERATURE] == 5.0
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_HUMIDITY] == 50.0
 
     mock_serial_bridge.get_all_devices.return_value[CLIMATE] = {
         0: ComelitSerialBridgeObject(
@@ -152,131 +159,134 @@ async def test_climate_data_update_bad_data(
     await hass.async_block_till_done()
 
     assert (state := hass.states.get(ENTITY_ID))
-    assert state.state == HVACMode.HEAT
-    assert state.attributes[ATTR_TEMPERATURE] == 5.0
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_HUMIDITY] == 50.0
 
 
-async def test_climate_set_temperature(
+async def test_humidifier_set_humidity(
     hass: HomeAssistant,
     mock_serial_bridge: AsyncMock,
     mock_serial_bridge_config_entry: MockConfigEntry,
 ) -> None:
-    """Test climate set temperature service."""
+    """Test humidifier set humidity service."""
 
     await setup_integration(hass, mock_serial_bridge_config_entry)
 
     assert (state := hass.states.get(ENTITY_ID))
-    assert state.state == HVACMode.HEAT
-    assert state.attributes[ATTR_TEMPERATURE] == 5.0
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_HUMIDITY] == 50.0
 
-    # Test set temperature
+    # Test set humidity
     await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 23},
+        HUMIDIFIER_DOMAIN,
+        SERVICE_SET_HUMIDITY,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HUMIDITY: 23},
         blocking=True,
     )
-    mock_serial_bridge.set_clima_status.assert_called()
+    mock_serial_bridge.set_humidity_status.assert_called()
 
     assert (state := hass.states.get(ENTITY_ID))
-    assert state.state == HVACMode.HEAT
-    assert state.attributes[ATTR_TEMPERATURE] == 23.0
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_HUMIDITY] == 23.0
 
 
-async def test_climate_set_temperature_when_off(
+async def test_humidifier_set_humidity_while_off(
     hass: HomeAssistant,
     mock_serial_bridge: AsyncMock,
     mock_serial_bridge_config_entry: MockConfigEntry,
 ) -> None:
-    """Test climate set temperature service when off."""
+    """Test humidifier set humidity service while off."""
 
     await setup_integration(hass, mock_serial_bridge_config_entry)
 
     assert (state := hass.states.get(ENTITY_ID))
-    assert state.state == HVACMode.HEAT
-    assert state.attributes[ATTR_TEMPERATURE] == 5.0
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_HUMIDITY] == 50.0
 
-    # Switch climate off
+    # Switch humidifier off
     await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.OFF},
+        HUMIDIFIER_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
-    mock_serial_bridge.set_clima_status.assert_called()
+    mock_serial_bridge.set_humidity_status.assert_called()
 
     assert (state := hass.states.get(ENTITY_ID))
-    assert state.state == HVACMode.OFF
+    assert state.state == STATE_OFF
 
-    # Test set temperature
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 23},
-        blocking=True,
-    )
-    mock_serial_bridge.set_clima_status.assert_called()
+    # Try setting humidity
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            HUMIDIFIER_DOMAIN,
+            SERVICE_SET_HUMIDITY,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HUMIDITY: 23},
+            blocking=True,
+        )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "humidity_while_off"
 
-    assert (state := hass.states.get(ENTITY_ID))
-    assert state.state == HVACMode.OFF
 
-
-async def test_climate_hvac_mode(
+async def test_humidifier_set_mode(
     hass: HomeAssistant,
     mock_serial_bridge: AsyncMock,
     mock_serial_bridge_config_entry: MockConfigEntry,
 ) -> None:
-    """Test climate hvac mode service."""
+    """Test humidifier set mode service."""
 
     await setup_integration(hass, mock_serial_bridge_config_entry)
 
     assert (state := hass.states.get(ENTITY_ID))
-    assert state.state == HVACMode.HEAT
-    assert state.attributes[ATTR_TEMPERATURE] == 5.0
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_HUMIDITY] == 50.0
+    assert state.attributes[ATTR_MODE] == MODE_NORMAL
 
     await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.OFF},
+        HUMIDIFIER_DOMAIN,
+        SERVICE_SET_MODE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MODE: MODE_AUTO},
         blocking=True,
     )
-    mock_serial_bridge.set_clima_status.assert_called()
+    mock_serial_bridge.set_humidity_status.assert_called()
 
     assert (state := hass.states.get(ENTITY_ID))
-    assert state.state == HVACMode.OFF
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_MODE] == MODE_AUTO
 
 
-async def test_climate_hvac_mode_when_off(
+async def test_humidifier_set_status(
     hass: HomeAssistant,
     mock_serial_bridge: AsyncMock,
     mock_serial_bridge_config_entry: MockConfigEntry,
 ) -> None:
-    """Test climate hvac mode service when off."""
+    """Test humidifier set status service."""
 
     await setup_integration(hass, mock_serial_bridge_config_entry)
 
     assert (state := hass.states.get(ENTITY_ID))
-    assert state.state == HVACMode.HEAT
-    assert state.attributes[ATTR_TEMPERATURE] == 5.0
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_HUMIDITY] == 50.0
 
+    # Test turn off
     await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.OFF},
+        HUMIDIFIER_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
-    mock_serial_bridge.set_clima_status.assert_called()
+    mock_serial_bridge.set_humidity_status.assert_called()
 
     assert (state := hass.states.get(ENTITY_ID))
-    assert state.state == HVACMode.OFF
+    assert state.state == STATE_OFF
 
+    # Test turn on
     await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.AUTO},
+        HUMIDIFIER_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
-    mock_serial_bridge.set_clima_status.assert_called()
+    mock_serial_bridge.set_humidity_status.assert_called()
 
     assert (state := hass.states.get(ENTITY_ID))
-    assert state.state == HVACMode.AUTO
+    assert state.state == STATE_ON
