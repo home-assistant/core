@@ -3,8 +3,7 @@
 import logging
 from typing import Any
 
-from homeassistant import config_entries
-from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.config_entries import ConfigEntryState, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_EXCLUDE,
     CONF_HOST,
@@ -64,7 +63,7 @@ async def _validate_influxdb_connection(
     return None
 
 
-class InfluxDBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class InfluxDBConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for InfluxDB."""
 
     VERSION = 1
@@ -96,8 +95,8 @@ class InfluxDBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         options={**entry.options, **options},
                     )
                     if changed and entry.state in (
-                        config_entries.ConfigEntryState.LOADED,
-                        config_entries.ConfigEntryState.SETUP_RETRY,
+                        ConfigEntryState.LOADED,
+                        ConfigEntryState.SETUP_RETRY,
                     ):
                         self.hass.async_create_task(
                             self.hass.config_entries.async_reload(entry.entry_id)
