@@ -63,11 +63,6 @@ BASE_V2_QUERY = {
 }
 
 
-@pytest.fixture(autouse=True)
-def patch_hass_config(mock_hass_config: None) -> None:
-    """Patch configuration.yaml."""
-
-
 @dataclass
 class Record:
     """Record in a Table."""
@@ -198,7 +193,6 @@ async def _setup(
 ) -> list[State]:
     """Create client and test expected sensors."""
     config = {
-        DOMAIN: config_ext,
         sensor.DOMAIN: {"platform": DOMAIN},
     }
     influx_config = config[sensor.DOMAIN]
@@ -218,17 +212,15 @@ async def _setup(
 
 
 @pytest.mark.parametrize(
-    ("hass_config", "mock_client", "config_ext", "queries", "set_query_mock"),
+    ("mock_client", "config_ext", "queries", "set_query_mock"),
     [
         (
-            {"influxdb": {}},
             DEFAULT_API_VERSION,
             BASE_V1_CONFIG,
             BASE_V1_QUERY,
             _set_query_mock_v1,
         ),
         (
-            {"influxdb": {}},
             API_VERSION_2,
             BASE_V2_CONFIG,
             BASE_V2_QUERY,
@@ -246,10 +238,9 @@ async def test_minimal_config(
 
 
 @pytest.mark.parametrize(
-    ("hass_config", "mock_client", "config_ext", "queries", "set_query_mock"),
+    ("mock_client", "config_ext", "queries", "set_query_mock"),
     [
         (
-            {"influxdb": {}},
             DEFAULT_API_VERSION,
             {
                 "ssl": "true",
@@ -279,7 +270,6 @@ async def test_minimal_config(
             _set_query_mock_v1,
         ),
         (
-            {"influxdb": {}},
             API_VERSION_2,
             {
                 "api_version": "2",
@@ -331,7 +321,6 @@ async def test_config_failure(hass: HomeAssistant, config_ext) -> None:
 
 @pytest.mark.parametrize(
     (
-        "hass_config",
         "mock_client",
         "config_ext",
         "queries",
@@ -340,7 +329,6 @@ async def test_config_failure(hass: HomeAssistant, config_ext) -> None:
     ),
     [
         (
-            {"influxdb": {}},
             DEFAULT_API_VERSION,
             BASE_V1_CONFIG,
             BASE_V1_QUERY,
@@ -348,7 +336,6 @@ async def test_config_failure(hass: HomeAssistant, config_ext) -> None:
             _make_v1_resultset,
         ),
         (
-            {"influxdb": {}},
             API_VERSION_2,
             BASE_V2_CONFIG,
             BASE_V2_QUERY,
@@ -376,7 +363,6 @@ async def test_state_matches_query_result(
 
 @pytest.mark.parametrize(
     (
-        "hass_config",
         "mock_client",
         "config_ext",
         "queries",
@@ -385,7 +371,6 @@ async def test_state_matches_query_result(
     ),
     [
         (
-            {"influxdb": {}},
             DEFAULT_API_VERSION,
             BASE_V1_CONFIG,
             BASE_V1_QUERY,
@@ -393,7 +378,6 @@ async def test_state_matches_query_result(
             _make_v1_resultset,
         ),
         (
-            {"influxdb": {}},
             API_VERSION_2,
             BASE_V2_CONFIG,
             BASE_V2_QUERY,
@@ -423,17 +407,15 @@ async def test_state_matches_first_query_result_for_multiple_return(
 
 
 @pytest.mark.parametrize(
-    ("hass_config", "mock_client", "config_ext", "queries", "set_query_mock"),
+    ("mock_client", "config_ext", "queries", "set_query_mock"),
     [
         (
-            {"influxdb": {}},
             DEFAULT_API_VERSION,
             BASE_V1_CONFIG,
             BASE_V1_QUERY,
             _set_query_mock_v1,
         ),
         (
-            {"influxdb": {}},
             API_VERSION_2,
             BASE_V2_CONFIG,
             BASE_V2_QUERY,
@@ -462,7 +444,6 @@ async def test_state_for_no_results(
 
 @pytest.mark.parametrize(
     (
-        "hass_config",
         "mock_client",
         "config_ext",
         "queries",
@@ -471,7 +452,6 @@ async def test_state_for_no_results(
     ),
     [
         (
-            {"influxdb": {}},
             DEFAULT_API_VERSION,
             BASE_V1_CONFIG,
             BASE_V1_QUERY,
@@ -479,7 +459,6 @@ async def test_state_for_no_results(
             OSError("fail"),
         ),
         (
-            {"influxdb": {}},
             DEFAULT_API_VERSION,
             BASE_V1_CONFIG,
             BASE_V1_QUERY,
@@ -487,7 +466,6 @@ async def test_state_for_no_results(
             InfluxDBClientError("fail"),
         ),
         (
-            {"influxdb": {}},
             DEFAULT_API_VERSION,
             BASE_V1_CONFIG,
             BASE_V1_QUERY,
@@ -495,7 +473,6 @@ async def test_state_for_no_results(
             InfluxDBClientError("fail", code=400),
         ),
         (
-            {"influxdb": {}},
             API_VERSION_2,
             BASE_V2_CONFIG,
             BASE_V2_QUERY,
@@ -503,7 +480,6 @@ async def test_state_for_no_results(
             OSError("fail"),
         ),
         (
-            {"influxdb": {}},
             API_VERSION_2,
             BASE_V2_CONFIG,
             BASE_V2_QUERY,
@@ -511,7 +487,6 @@ async def test_state_for_no_results(
             ApiException(http_resp=MagicMock()),
         ),
         (
-            {"influxdb": {}},
             API_VERSION_2,
             BASE_V2_CONFIG,
             BASE_V2_QUERY,
@@ -542,7 +517,6 @@ async def test_error_querying_influx(
 
 @pytest.mark.parametrize(
     (
-        "hass_config",
         "mock_client",
         "config_ext",
         "queries",
@@ -552,7 +526,6 @@ async def test_error_querying_influx(
     ),
     [
         (
-            {"influxdb": {}},
             DEFAULT_API_VERSION,
             BASE_V1_CONFIG,
             {
@@ -571,7 +544,6 @@ async def test_error_querying_influx(
             "where",
         ),
         (
-            {"influxdb": {}},
             API_VERSION_2,
             BASE_V2_CONFIG,
             {
@@ -620,7 +592,6 @@ async def test_error_rendering_template(
 
 @pytest.mark.parametrize(
     (
-        "hass_config",
         "mock_client",
         "config_ext",
         "queries",
@@ -630,7 +601,6 @@ async def test_error_rendering_template(
     ),
     [
         (
-            {"influxdb": {}},
             DEFAULT_API_VERSION,
             BASE_V1_CONFIG,
             BASE_V1_QUERY,
@@ -639,7 +609,6 @@ async def test_error_rendering_template(
             _make_v1_resultset,
         ),
         (
-            {"influxdb": {}},
             DEFAULT_API_VERSION,
             BASE_V1_CONFIG,
             BASE_V1_QUERY,
@@ -648,7 +617,6 @@ async def test_error_rendering_template(
             _make_v1_resultset,
         ),
         (
-            {"influxdb": {}},
             DEFAULT_API_VERSION,
             BASE_V1_CONFIG,
             BASE_V1_QUERY,
@@ -657,7 +625,6 @@ async def test_error_rendering_template(
             _make_v1_resultset,
         ),
         (
-            {"influxdb": {}},
             API_VERSION_2,
             BASE_V2_CONFIG,
             BASE_V2_QUERY,
@@ -666,7 +633,6 @@ async def test_error_rendering_template(
             _make_v2_resultset,
         ),
         (
-            {"influxdb": {}},
             API_VERSION_2,
             BASE_V2_CONFIG,
             BASE_V2_QUERY,
@@ -708,17 +674,15 @@ async def test_connection_error_at_startup(
 
 
 @pytest.mark.parametrize(
-    ("hass_config", "mock_client", "config_ext", "queries", "set_query_mock"),
+    ("mock_client", "config_ext", "queries", "set_query_mock"),
     [
         (
-            {"influxdb": {}},
             DEFAULT_API_VERSION,
             {"database": "bad_db"},
             BASE_V1_QUERY,
             _set_query_mock_v1,
         ),
         (
-            {"influxdb": {}},
             API_VERSION_2,
             {
                 "api_version": API_VERSION_2,
