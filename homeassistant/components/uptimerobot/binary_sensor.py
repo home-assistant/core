@@ -14,6 +14,9 @@ from .const import DOMAIN
 from .coordinator import UptimeRobotConfigEntry, UptimeRobotDataUpdateCoordinator
 from .entity import UptimeRobotEntity
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,

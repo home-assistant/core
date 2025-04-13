@@ -18,6 +18,9 @@ from .const import API_ATTR_OK, DOMAIN, LOGGER
 from .coordinator import UptimeRobotConfigEntry, UptimeRobotDataUpdateCoordinator
 from .entity import UptimeRobotEntity
 
+# Limit the number of parallel updates to 1
+PARALLEL_UPDATES = 1
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
