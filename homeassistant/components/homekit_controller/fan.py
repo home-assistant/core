@@ -219,16 +219,10 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
         if not self.is_on:
             characteristics[self.on_characteristic] = True
 
-        if preset_mode is not None:
-            if preset_mode == PRESET_AUTO:
-                characteristics[CharacteristicsTypes.FAN_STATE_TARGET] = (
-                    TargetFanStateValues.AUTOMATIC
-                )
-            else:
-                characteristics[CharacteristicsTypes.FAN_STATE_TARGET] = (
-                    TargetFanStateValues.MANUAL
-                )
-
+        if preset_mode == PRESET_AUTO:
+            characteristics[CharacteristicsTypes.FAN_STATE_TARGET] = (
+                TargetFanStateValues.AUTOMATIC
+            )
         elif (
             percentage is not None
             and FanEntityFeature.SET_SPEED in self.supported_features
@@ -323,16 +317,10 @@ class HomeKitAirPurifer(HomeKitFanV2):
         if not self.is_on:
             characteristics[self.on_characteristic] = True
 
-        if preset_mode is not None:
-            if preset_mode == PRESET_AUTO:
-                characteristics[CharacteristicsTypes.AIR_PURIFIER_STATE_TARGET] = (
-                    TargetAirPurifierStateValues.AUTOMATIC
-                )
-            else:
-                characteristics[CharacteristicsTypes.AIR_PURIFIER_STATE_TARGET] = (
-                    TargetAirPurifierStateValues.MANUAL
-                )
-
+        if preset_mode == PRESET_AUTO:
+            characteristics[CharacteristicsTypes.AIR_PURIFIER_STATE_TARGET] = (
+                TargetAirPurifierStateValues.AUTOMATIC
+            )
         elif (
             percentage is not None
             and FanEntityFeature.SET_SPEED in self.supported_features

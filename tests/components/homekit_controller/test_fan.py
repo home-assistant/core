@@ -697,6 +697,19 @@ async def test_fanv2_set_preset_mode(
         },
     )
 
+    await hass.services.async_call(
+        "fan",
+        "turn_on",
+        {"entity_id": "fan.testdevice", "preset_mode": "auto"},
+        blocking=True,
+    )
+    helper.async_assert_service_values(
+        ServicesTypes.FAN_V2,
+        {
+            CharacteristicsTypes.FAN_STATE_TARGET: 1,
+        },
+    )
+
 
 async def test_v2_set_percentage_with_min_step(
     hass: HomeAssistant, get_next_aid: Callable[[], int]
@@ -939,6 +952,215 @@ async def test_v2_set_percentage_non_standard_rotation_range(
     )
 
 
+async def test_air_purifier_turn_on(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
+    """Test that we can turn on an air purifier."""
+    helper = await setup_test_component(
+        hass, get_next_aid(), create_air_purifier_service
+    )
+
+    await hass.services.async_call(
+        "fan",
+        "turn_on",
+        {"entity_id": "fan.testdevice", "percentage": 100},
+        blocking=True,
+    )
+    helper.async_assert_service_values(
+        ServicesTypes.AIR_PURIFIER,
+        {
+            CharacteristicsTypes.ACTIVE: 1,
+            CharacteristicsTypes.ROTATION_SPEED: 100,
+        },
+    )
+
+    await hass.services.async_call(
+        "fan",
+        "turn_on",
+        {"entity_id": "fan.testdevice", "percentage": 66},
+        blocking=True,
+    )
+    helper.async_assert_service_values(
+        ServicesTypes.AIR_PURIFIER,
+        {
+            CharacteristicsTypes.ACTIVE: 1,
+            CharacteristicsTypes.ROTATION_SPEED: 75.0,
+        },
+    )
+
+    await hass.services.async_call(
+        "fan",
+        "turn_on",
+        {"entity_id": "fan.testdevice", "percentage": 33},
+        blocking=True,
+    )
+    helper.async_assert_service_values(
+        ServicesTypes.AIR_PURIFIER,
+        {
+            CharacteristicsTypes.ACTIVE: 1,
+            CharacteristicsTypes.ROTATION_SPEED: 25.0,
+        },
+    )
+
+    await hass.services.async_call(
+        "fan",
+        "turn_off",
+        {"entity_id": "fan.testdevice"},
+        blocking=True,
+    )
+    helper.async_assert_service_values(
+        ServicesTypes.AIR_PURIFIER,
+        {
+            CharacteristicsTypes.ACTIVE: 0,
+            CharacteristicsTypes.ROTATION_SPEED: 25.0,
+        },
+    )
+
+    await hass.services.async_call(
+        "fan",
+        "turn_on",
+        {"entity_id": "fan.testdevice"},
+        blocking=True,
+    )
+    helper.async_assert_service_values(
+        ServicesTypes.AIR_PURIFIER,
+        {
+            CharacteristicsTypes.ACTIVE: 1,
+            CharacteristicsTypes.ROTATION_SPEED: 25.0,
+        },
+    )
+
+
+async def test_air_purifier_turn_off(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
+    """Test that we can turn an air purifier fan off."""
+    helper = await setup_test_component(
+        hass, get_next_aid(), create_air_purifier_service
+    )
+
+    await helper.async_update(
+        ServicesTypes.AIR_PURIFIER, {CharacteristicsTypes.ACTIVE: 1}
+    )
+
+    await hass.services.async_call(
+        "fan",
+        "turn_off",
+        {"entity_id": "fan.testdevice"},
+        blocking=True,
+    )
+    helper.async_assert_service_values(
+        ServicesTypes.AIR_PURIFIER,
+        {
+            CharacteristicsTypes.ACTIVE: 0,
+        },
+    )
+
+
+async def test_air_purifier_set_speed(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
+    """Test that we set air purifier fan speed."""
+    helper = await setup_test_component(
+        hass, get_next_aid(), create_air_purifier_service
+    )
+
+    await helper.async_update(
+        ServicesTypes.AIR_PURIFIER, {CharacteristicsTypes.ACTIVE: 1}
+    )
+
+    await hass.services.async_call(
+        "fan",
+        "set_percentage",
+        {"entity_id": "fan.testdevice", "percentage": 100},
+        blocking=True,
+    )
+    helper.async_assert_service_values(
+        ServicesTypes.AIR_PURIFIER,
+        {
+            CharacteristicsTypes.ROTATION_SPEED: 100,
+        },
+    )
+
+    await hass.services.async_call(
+        "fan",
+        "set_percentage",
+        {"entity_id": "fan.testdevice", "percentage": 66},
+        blocking=True,
+    )
+    helper.async_assert_service_values(
+        ServicesTypes.AIR_PURIFIER,
+        {
+            CharacteristicsTypes.ROTATION_SPEED: 75.0,
+        },
+    )
+
+    await hass.services.async_call(
+        "fan",
+        "set_percentage",
+        {"entity_id": "fan.testdevice", "percentage": 33},
+        blocking=True,
+    )
+    helper.async_assert_service_values(
+        ServicesTypes.AIR_PURIFIER,
+        {
+            CharacteristicsTypes.ROTATION_SPEED: 25.0,
+        },
+    )
+
+    await hass.services.async_call(
+        "fan",
+        "set_percentage",
+        {"entity_id": "fan.testdevice", "percentage": 0},
+        blocking=True,
+    )
+    helper.async_assert_service_values(
+        ServicesTypes.AIR_PURIFIER,
+        {
+            CharacteristicsTypes.ACTIVE: 0,
+        },
+    )
+
+
+async def test_air_purifier_set_percentage(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
+    """Test that we set air purifier fan speed by percentage."""
+    helper = await setup_test_component(
+        hass, get_next_aid(), create_air_purifier_service
+    )
+
+    await helper.async_update(
+        ServicesTypes.AIR_PURIFIER, {CharacteristicsTypes.ACTIVE: 1}
+    )
+
+    await hass.services.async_call(
+        "fan",
+        "set_percentage",
+        {"entity_id": "fan.testdevice", "percentage": 75},
+        blocking=True,
+    )
+    helper.async_assert_service_values(
+        ServicesTypes.AIR_PURIFIER,
+        {
+            CharacteristicsTypes.ROTATION_SPEED: 75,
+        },
+    )
+
+    await hass.services.async_call(
+        "fan",
+        "set_percentage",
+        {"entity_id": "fan.testdevice", "percentage": 0},
+        blocking=True,
+    )
+    helper.async_assert_service_values(
+        ServicesTypes.AIR_PURIFIER,
+        {
+            CharacteristicsTypes.ACTIVE: 0,
+        },
+    )
+
+
 async def test_air_purifier_set_preset_mode(
     hass: HomeAssistant, get_next_aid: Callable[[], int]
 ) -> None:
@@ -988,6 +1210,19 @@ async def test_air_purifier_set_preset_mode(
         {
             CharacteristicsTypes.ROTATION_SPEED: 25.0,
             CharacteristicsTypes.AIR_PURIFIER_STATE_TARGET: 0,
+        },
+    )
+
+    await hass.services.async_call(
+        "fan",
+        "turn_on",
+        {"entity_id": "fan.testdevice", "preset_mode": "auto"},
+        blocking=True,
+    )
+    helper.async_assert_service_values(
+        ServicesTypes.AIR_PURIFIER,
+        {
+            CharacteristicsTypes.AIR_PURIFIER_STATE_TARGET: 1,
         },
     )
 
