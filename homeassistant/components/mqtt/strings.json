@@ -678,7 +678,7 @@
     },
     "platform": {
       "options": {
-        "light": "Light",
+        "light": "[%key:component::sensor::title%]",
         "notify": "Notify",
         "sensor": "Sensor",
         "switch": "Switch"
@@ -700,15 +700,15 @@
     },
     "supported_color_modes": {
       "options": {
-        "onoff": "On/Off",
-        "brightness": "Brightness",
-        "color_temp": "Color temperature",
-        "hs": "HS",
-        "xy": "XY",
-        "rgb": "RGB",
-        "rgbw": "RGBW",
-        "rgbww": "RGBWW",
-        "white": "White"
+        "onoff": "[%key:component::light::entity_component::_::state_attributes::color_mode::state::onoff%]",
+        "brightness": "[%key:component::light::entity_component::_::state_attributes::color_mode::state::brightness%]",
+        "color_temp": "[%key:component::light::entity_component::_::state_attributes::color_mode::state::color_temp%]",
+        "hs": "[%key:component::light::entity_component::_::state_attributes::color_mode::state::hs%]",
+        "xy": "[%key:component::light::entity_component::_::state_attributes::color_mode::state::xy%]",
+        "rgb": "[%key:component::light::entity_component::_::state_attributes::color_mode::state::rgb%]",
+        "rgbw": "[%key:component::light::entity_component::_::state_attributes::color_mode::state::rgbw%]",
+        "rgbww": "[%key:component::light::entity_component::_::state_attributes::color_mode::state::rgbww%]",
+        "white": "[%key:component::light::entity_component::_::state_attributes::color_mode::state::white%]"
       }
     }
   },
