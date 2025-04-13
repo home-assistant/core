@@ -52,6 +52,7 @@ GROWATT_LOGIN_LOCKED_RESPONSE = {
     "success": False,
 }
 
+
 async def test_show_authenticate_form(hass: HomeAssistant) -> None:
     """Test that the setup form is served."""
     result = await hass.config_entries.flow.async_init(
@@ -80,6 +81,7 @@ async def test_incorrect_login(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "invalid_auth"}
 
+
 async def test_locked_login(hass: HomeAssistant) -> None:
     """Test that it shows the appropriate error when an correct username/password/server is entered, but the account is locked."""
     result = await hass.config_entries.flow.async_init(
@@ -99,6 +101,7 @@ async def test_locked_login(hass: HomeAssistant) -> None:
     assert result["errors"] == {
         "base": "Current account has been locked for 24 hours; lockDuration=24"
     }
+
 
 async def test_no_plants_on_account(hass: HomeAssistant) -> None:
     """Test registering an integration and finishing flow with an entered plant_id."""
