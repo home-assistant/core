@@ -83,6 +83,7 @@ MOCK_MINIMAL_STATUS: Final = OrderedDict(
 
 async def async_init_integration(
     hass: HomeAssistant,
+    *,
     host: str = "test",
     status: dict[str, str] | None = None,
     entry_id: str | None = None,

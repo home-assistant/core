@@ -135,7 +135,7 @@ async def test_multiple_manual_update_entity(hass: HomeAssistant) -> None:
 
 
 async def test_sensor_unknown(hass: HomeAssistant) -> None:
-    """Test if our integration can properly certain sensors as unknown when it becomes so."""
+    """Test if our integration can properly mark certain sensors as unknown when it becomes so."""
     await async_init_integration(hass, status=MOCK_MINIMAL_STATUS)
 
     ups_mode_id = "sensor.apc_ups_mode"
