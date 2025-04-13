@@ -971,7 +971,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "switcher_kis",
     "switchmate",
     "syncthing",
-    "syncthru",
     "synology_chat",
     "synology_dsm",
     "synology_srm",
