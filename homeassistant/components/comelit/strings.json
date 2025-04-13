@@ -75,6 +75,9 @@
     },
     "cannot_authenticate": {
       "message": "Error authenticating: {error}"
+    },
+    "updated_failed": {
+      "message": "Failed to update data: {error}"
     }
   }
 }
