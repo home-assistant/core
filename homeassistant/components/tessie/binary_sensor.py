@@ -191,7 +191,7 @@ async def async_setup_entry(
                 TessieEnergyLiveBinarySensorEntity(energy, description)
                 for energy in entry.runtime_data.energysites
                 for description in ENERGY_LIVE_DESCRIPTIONS
-                if energy.live_coordinator
+                if energy.live_coordinator is not None
             ),
             (
                 TessieEnergyInfoBinarySensorEntity(vehicle, description)
