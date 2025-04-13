@@ -56,20 +56,18 @@ class TadoChildLockSwitchEntity(TadoZoneEntity, SwitchEntity):
     ) -> None:
         """Initialize the Tado child lock switch entity."""
         super().__init__(zone_name, coordinator.home_id, zone_id, coordinator)
-        self._device_infos = device_infos
-        self._device_info = device_infos[0]
-        self._device_id = self._device_info["shortSerialNo"]
+        self._zone_device_infos = device_infos
         self._attr_unique_id = f"{zone_id} {coordinator.home_id} child-lock"
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        for device in self._device_infos:
+        for device in self._zone_device_infos:
             await self.coordinator.set_child_lock(device["shortSerialNo"], True)
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        for device in self._device_infos:
+        for device in self._zone_device_infos:
             await self.coordinator.set_child_lock(device["shortSerialNo"], False)
         await self.coordinator.async_request_refresh()
 
@@ -77,7 +75,7 @@ class TadoChildLockSwitchEntity(TadoZoneEntity, SwitchEntity):
         """Return the active child lock state by all supported devices in zone."""
         return all(
             device_info.get("childLockEnabled", False) is True
-            for device_info in self._device_infos
+            for device_info in self._zone_device_infos
         )
 
     @callback
@@ -93,11 +91,10 @@ class TadoChildLockSwitchEntity(TadoZoneEntity, SwitchEntity):
             zone = next(
                 zone for zone in self.coordinator.zones if zone["id"] == self.zone_id
             )
-            self._device_infos = filter_child_lock_enabled_devices_in_zone(zone)
+            self._zone_device_infos = filter_child_lock_enabled_devices_in_zone(zone)
         except KeyError:
             _LOGGER.error(
-                "Could not update child lock info for device %s in zone %s",
-                self._device_id,
+                "Could not update child lock info for devices in zone %s",
                 self.zone_name,
             )
         else:
