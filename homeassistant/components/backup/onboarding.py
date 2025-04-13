@@ -54,14 +54,7 @@ def with_backup_manager[_ViewT: BaseOnboardingView, **_P](
         if self._data["done"]:
             raise HTTPUnauthorized
 
-        try:
-            manager = await async_get_backup_manager(request.app[KEY_HASS])
-        except HomeAssistantError:
-            return self.json(
-                {"code": "backup_disabled"},
-                status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-            )
-
+        manager = await async_get_backup_manager(request.app[KEY_HASS])
         return await func(self, manager, request, *args, **kwargs)
 
     return with_backup

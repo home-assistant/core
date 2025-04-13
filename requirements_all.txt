@@ -33,7 +33,7 @@ Mastodon.py==2.0.1
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
 # homeassistant.components.tensorflow
-Pillow==11.1.0
+Pillow==11.2.1
 
 # homeassistant.components.plex
 PlexAPI==4.15.16
@@ -590,7 +590,7 @@ batinfo==0.4.2
 # beacontools[scan]==2.1.0
 
 # homeassistant.components.scrape
-beautifulsoup4==4.12.3
+beautifulsoup4==4.13.3
 
 # homeassistant.components.beewi_smartclim
 # beewi-smartclim==0.0.10
@@ -709,7 +709,7 @@ coinbase-advanced-py==1.2.2
 coinbase==2.1.0
 
 # homeassistant.scripts.check_config
-colorlog==6.8.2
+colorlog==6.9.0
 
 # homeassistant.components.color_extractor
 colorthief==0.2.1
@@ -2133,6 +2133,9 @@ pymeteoclimatic==0.1.0
 # homeassistant.components.assist_pipeline
 pymicro-vad==1.0.1
 
+# homeassistant.components.miele
+pymiele==0.3.4
+
 # homeassistant.components.xiaomi_tv
 pymitv==1.4.3
 
@@ -3097,7 +3100,7 @@ wyoming==1.5.4
 xbox-webapi==2.1.0
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==0.36.0
+xiaomi-ble==0.37.0
 
 # homeassistant.components.knx
 xknx==3.6.0
