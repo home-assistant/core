@@ -98,9 +98,7 @@ async def test_locked_login(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {
-        "base": "Current account has been locked for 24 hours; lockDuration=24"
-    }
+    assert result["errors"] == {"base": "account_locked"}
 
 
 async def test_no_plants_on_account(hass: HomeAssistant) -> None:

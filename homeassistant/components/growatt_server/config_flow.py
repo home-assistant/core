@@ -68,16 +68,8 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self._async_show_user_form({"base": "invalid_auth"})
             if login_response["msg"] == LOGIN_LOCKED_CODE:
                 # Account locked
-                return self._async_show_user_form(
-                    {
-                        "base": f"{login_response['error']}; lockDuration={login_response['lockDuration']}"
-                    }
-                )
-            return self._async_show_user_form(
-                {
-                    "base": f"Unknown auth error, server responds: {login_response['error']}"
-                }
-            )
+                return self._async_show_user_form({"base": "account_locked"})
+            return self._async_show_user_form({"base": "unknown_error"})
         self.user_id = login_response["user"]["id"]
 
         self.data = user_input
