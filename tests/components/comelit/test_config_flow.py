@@ -240,10 +240,10 @@ async def test_reconfigure_successful(
 
     reconfigure_result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {
+        user_input={
             CONF_HOST: new_host,
-            CONF_PORT: 80,
-            CONF_PIN: 123456,
+            CONF_PORT: BRIDGE_PORT,
+            CONF_PIN: BRIDGE_PIN,
         },
     )
 
@@ -280,10 +280,10 @@ async def test_reconfigure_fails(
 
     reconfigure_result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {
+        user_input={
             CONF_HOST: "192.168.100.60",
-            CONF_PORT: 80,
-            CONF_PIN: 123456,
+            CONF_PORT: BRIDGE_PORT,
+            CONF_PIN: BRIDGE_PIN,
             CONF_TYPE: BRIDGE,
         },
     )
