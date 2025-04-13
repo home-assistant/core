@@ -53,10 +53,12 @@
           "title": "[%key:component::ntfy::common::topic%]",
           "description": "[%key:component::ntfy::common::add_topic_description%]",
           "data": {
-            "topic": "[%key:component::ntfy::common::topic%]"
+            "topic": "[%key:component::ntfy::common::topic%]",
+            "name": "Display name"
           },
           "data_description": {
-            "topic": "Enter the name of the topic you want to use for notifications. Topics may not be password-protected, so choose a name that's not easy to guess."
+            "topic": "Enter the name of the topic you want to use for notifications. Topics may not be password-protected, so choose a name that's not easy to guess.",
+            "name": "Set an alternative name to display instead of the topic name. This helps identify topics with complex or hard-to-read names more easily."
           }
         }
       },

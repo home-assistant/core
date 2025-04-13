@@ -12,7 +12,7 @@ from homeassistant.components.notify import (
     NotifyEntityFeature,
 )
 from homeassistant.config_entries import ConfigSubentry
-from homeassistant.const import CONF_URL
+from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -63,7 +63,7 @@ class NtfyNotifyEntity(NotifyEntity):
             manufacturer="ntfy LLC",
             model="ntfy",
             model_id=config_entry.data[CONF_URL],
-            name=self.topic,
+            name=subentry.data.get(CONF_NAME, self.topic),
             configuration_url=URL(config_entry.data[CONF_URL]) / self.topic,
             identifiers={(DOMAIN, f"{config_entry.entry_id}_{subentry.subentry_id}")},
         )

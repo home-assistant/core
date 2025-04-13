@@ -12,7 +12,13 @@ import pytest
 
 from homeassistant.components.ntfy.const import CONF_TOPIC, DOMAIN, SECTION_AUTH
 from homeassistant.config_entries import SOURCE_USER, ConfigSubentry
-from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_URL, CONF_USERNAME
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_TOKEN,
+    CONF_URL,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -241,17 +247,17 @@ async def test_generated_topic(hass: HomeAssistant, mock_random: AsyncMock) -> N
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        user_input={CONF_TOPIC: "randomtopic"},
+        user_input={CONF_TOPIC: "randomtopic", CONF_NAME: "mytopic"},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     subentry_id = list(config_entry.subentries)[0]
     assert config_entry.subentries == {
         subentry_id: ConfigSubentry(
-            data={CONF_TOPIC: "randomtopic"},
+            data={CONF_TOPIC: "randomtopic", CONF_NAME: "mytopic"},
             subentry_id=subentry_id,
             subentry_type="topic",
-            title="randomtopic",
+            title="mytopic",
             unique_id="randomtopic",
         )
     }

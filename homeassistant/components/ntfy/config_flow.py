@@ -25,7 +25,13 @@ from homeassistant.config_entries import (
     ConfigSubentryFlow,
     SubentryFlowResult,
 )
-from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_URL, CONF_USERNAME
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_TOKEN,
+    CONF_URL,
+    CONF_USERNAME,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
@@ -68,7 +74,12 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
-STEP_USER_TOPIC_SCHEMA = vol.Schema({vol.Required(CONF_TOPIC): str})
+STEP_USER_TOPIC_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_TOPIC): str,
+        vol.Optional(CONF_NAME): str,
+    }
+)
 
 RE_TOPIC = re.compile("^[-_a-zA-Z0-9]{1,64}$")
 
@@ -191,7 +202,7 @@ class TopicSubentryFlowHandler(ConfigSubentryFlow):
                         return self.async_abort(reason="already_configured")
 
                 return self.async_create_entry(
-                    title=user_input[CONF_TOPIC],
+                    title=user_input.get(CONF_NAME, user_input[CONF_TOPIC]),
                     data=user_input,
                     unique_id=user_input[CONF_TOPIC],
                 )
