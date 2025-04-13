@@ -341,7 +341,8 @@ async def test_async_set_updated_data_usage(hass: HomeAssistant) -> None:
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
 
     # Each listener should receive the same data
-    # since both match
+    # since both match, and an additional all_events
+    # for the async_set_updated_data call
     assert len(entity_key_events) == 1
     assert len(all_events) == 2
 
@@ -351,7 +352,8 @@ async def test_async_set_updated_data_usage(hass: HomeAssistant) -> None:
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO_2)
 
     # Only the all listener should receive the new data
-    # since temperature is not in the new data
+    # since temperature is not in the new data, and an additional all_events
+    # for the async_set_updated_data call
     assert len(entity_key_events) == 1
     assert len(all_events) == 3
 
