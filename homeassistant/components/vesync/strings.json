@@ -76,6 +76,11 @@
         }
       }
     },
+    "switch": {
+      "display": {
+        "name": "Display"
+      }
+    },
     "fan": {
       "vesync": {
         "state_attributes": {

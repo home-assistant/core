@@ -13,6 +13,7 @@ from homeassistant.components.switch import (
     SwitchEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -33,6 +34,7 @@ class VeSyncSwitchEntityDescription(SwitchEntityDescription):
     exists_fn: Callable[[VeSyncBaseDevice], bool]
     on_fn: Callable[[VeSyncBaseDevice], bool]
     off_fn: Callable[[VeSyncBaseDevice], bool]
+    should_force_update_ha_state: bool = False
 
 
 SENSOR_DESCRIPTIONS: Final[tuple[VeSyncSwitchEntityDescription, ...]] = (
@@ -44,6 +46,16 @@ SENSOR_DESCRIPTIONS: Final[tuple[VeSyncSwitchEntityDescription, ...]] = (
         name=None,
         on_fn=lambda device: device.turn_on(),
         off_fn=lambda device: device.turn_off(),
+    ),
+    VeSyncSwitchEntityDescription(
+        key="display",
+        is_on=lambda device: device.details["display"],
+        exists_fn=lambda device: "display" in device.details,
+        translation_key="display",
+        on_fn=lambda device: device.turn_on_display(),
+        off_fn=lambda device: device.turn_off_display(),
+        should_force_update_ha_state=True,
+        entity_category=EntityCategory.CONFIG,
     ),
 )
 
@@ -112,9 +124,13 @@ class VeSyncSwitchEntity(SwitchEntity, VeSyncBaseEntity):
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         if self.entity_description.off_fn(self.device):
-            self.schedule_update_ha_state()
+            self.schedule_update_ha_state(
+                force_refresh=self.entity_description.should_force_update_ha_state
+            )
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         if self.entity_description.on_fn(self.device):
-            self.schedule_update_ha_state()
+            self.schedule_update_ha_state(
+                force_refresh=self.entity_description.should_force_update_ha_state
+            )
