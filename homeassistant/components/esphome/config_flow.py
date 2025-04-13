@@ -285,11 +285,11 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         configured_port: int | None = entry.data.get(CONF_PORT)
         configured_psk: str | None = entry.data.get(CONF_NOISE_PSK)
         await self._fetch_device_info(host, port or configured_port, configured_psk)
-        if self._device_mac != formatted_mac:
-            return
-        updates: dict[str, Any] = {CONF_HOST: host}
-        if port is not None:
-            updates[CONF_PORT] = port
+        updates: dict[str, Any] = {}
+        if self._device_mac == formatted_mac:
+            updates[CONF_HOST] = host
+            if port is not None:
+                updates[CONF_PORT] = port
         self._abort_if_unique_id_configured(updates=updates)
 
     async def async_step_mqtt(
