@@ -6790,6 +6790,184 @@ def test_flatten(hass: HomeAssistant) -> None:
         template.Template("{{ flatten() }}", hass).async_render()
 
 
+def test_intersect(hass: HomeAssistant) -> None:
+    """Test the intersect function and filter."""
+    assert list(
+        template.Template(
+            "{{ intersect([1, 2, 5, 3, 4, 10], [1, 2, 3, 4, 5, 11, 99]) }}", hass
+        ).async_render()
+    ) == unordered([1, 2, 3, 4, 5])
+
+    assert list(
+        template.Template(
+            "{{ [1, 2, 5, 3, 4, 10] | intersect([1, 2, 3, 4, 5, 11, 99]) }}", hass
+        ).async_render()
+    ) == unordered([1, 2, 3, 4, 5])
+
+    assert list(
+        template.Template(
+            "{{ intersect(['a', 'b', 'c'], ['b', 'c', 'd']) }}", hass
+        ).async_render()
+    ) == unordered(["b", "c"])
+
+    assert list(
+        template.Template(
+            "{{ ['a', 'b', 'c'] | intersect(['b', 'c', 'd']) }}", hass
+        ).async_render()
+    ) == unordered(["b", "c"])
+
+    assert (
+        template.Template("{{ intersect([], [1, 2, 3]) }}", hass).async_render() == []
+    )
+
+    assert (
+        template.Template("{{ [] | intersect([1, 2, 3]) }}", hass).async_render() == []
+    )
+
+    with pytest.raises(TemplateError, match="intersect expected a list, got str"):
+        template.Template("{{ 'string' | intersect([1, 2, 3]) }}", hass).async_render()
+
+    with pytest.raises(TemplateError, match="intersect expected a list, got str"):
+        template.Template("{{ [1, 2, 3] | intersect('string') }}", hass).async_render()
+
+
+def test_difference(hass: HomeAssistant) -> None:
+    """Test the difference function and filter."""
+    assert list(
+        template.Template(
+            "{{ difference([1, 2, 5, 3, 4, 10], [1, 2, 3, 4, 5, 11, 99]) }}", hass
+        ).async_render()
+    ) == [10]
+
+    assert list(
+        template.Template(
+            "{{ [1, 2, 5, 3, 4, 10] | difference([1, 2, 3, 4, 5, 11, 99]) }}", hass
+        ).async_render()
+    ) == [10]
+
+    assert list(
+        template.Template(
+            "{{ difference(['a', 'b', 'c'], ['b', 'c', 'd']) }}", hass
+        ).async_render()
+    ) == ["a"]
+
+    assert list(
+        template.Template(
+            "{{ ['a', 'b', 'c'] | difference(['b', 'c', 'd']) }}", hass
+        ).async_render()
+    ) == ["a"]
+
+    assert (
+        template.Template("{{ difference([], [1, 2, 3]) }}", hass).async_render() == []
+    )
+
+    assert (
+        template.Template("{{ [] | difference([1, 2, 3]) }}", hass).async_render() == []
+    )
+
+    with pytest.raises(TemplateError, match="difference expected a list, got str"):
+        template.Template("{{ 'string' | difference([1, 2, 3]) }}", hass).async_render()
+
+    with pytest.raises(TemplateError, match="difference expected a list, got str"):
+        template.Template("{{ [1, 2, 3] | difference('string') }}", hass).async_render()
+
+
+def test_union(hass: HomeAssistant) -> None:
+    """Test the union function and filter."""
+    assert list(
+        template.Template(
+            "{{ union([1, 2, 5, 3, 4, 10], [1, 2, 3, 4, 5, 11, 99]) }}", hass
+        ).async_render()
+    ) == unordered([1, 2, 3, 4, 5, 10, 11, 99])
+
+    assert list(
+        template.Template(
+            "{{ [1, 2, 5, 3, 4, 10] | union([1, 2, 3, 4, 5, 11, 99]) }}", hass
+        ).async_render()
+    ) == unordered([1, 2, 3, 4, 5, 10, 11, 99])
+
+    assert list(
+        template.Template(
+            "{{ union(['a', 'b', 'c'], ['b', 'c', 'd']) }}", hass
+        ).async_render()
+    ) == unordered(["a", "b", "c", "d"])
+
+    assert list(
+        template.Template(
+            "{{ ['a', 'b', 'c'] | union(['b', 'c', 'd']) }}", hass
+        ).async_render()
+    ) == unordered(["a", "b", "c", "d"])
+
+    assert list(
+        template.Template("{{ union([], [1, 2, 3]) }}", hass).async_render()
+    ) == unordered([1, 2, 3])
+
+    assert list(
+        template.Template("{{ [] | union([1, 2, 3]) }}", hass).async_render()
+    ) == unordered([1, 2, 3])
+
+    with pytest.raises(TemplateError, match="union expected a list, got str"):
+        template.Template("{{ 'string' | union([1, 2, 3]) }}", hass).async_render()
+
+    with pytest.raises(TemplateError, match="union expected a list, got str"):
+        template.Template("{{ [1, 2, 3] | union('string') }}", hass).async_render()
+
+
+def test_symmetric_difference(hass: HomeAssistant) -> None:
+    """Test the symmetric_difference function and filter."""
+    assert list(
+        template.Template(
+            "{{ symmetric_difference([1, 2, 5, 3, 4, 10], [1, 2, 3, 4, 5, 11, 99]) }}",
+            hass,
+        ).async_render()
+    ) == unordered([10, 11, 99])
+
+    assert list(
+        template.Template(
+            "{{ [1, 2, 5, 3, 4, 10] | symmetric_difference([1, 2, 3, 4, 5, 11, 99]) }}",
+            hass,
+        ).async_render()
+    ) == unordered([10, 11, 99])
+
+    assert list(
+        template.Template(
+            "{{ symmetric_difference(['a', 'b', 'c'], ['b', 'c', 'd']) }}", hass
+        ).async_render()
+    ) == unordered(["a", "d"])
+
+    assert list(
+        template.Template(
+            "{{ ['a', 'b', 'c'] | symmetric_difference(['b', 'c', 'd']) }}", hass
+        ).async_render()
+    ) == unordered(["a", "d"])
+
+    assert list(
+        template.Template(
+            "{{ symmetric_difference([], [1, 2, 3]) }}", hass
+        ).async_render()
+    ) == unordered([1, 2, 3])
+
+    assert list(
+        template.Template(
+            "{{ [] | symmetric_difference([1, 2, 3]) }}", hass
+        ).async_render()
+    ) == unordered([1, 2, 3])
+
+    with pytest.raises(
+        TemplateError, match="symmetric_difference expected a list, got str"
+    ):
+        template.Template(
+            "{{ 'string' | symmetric_difference([1, 2, 3]) }}", hass
+        ).async_render()
+
+    with pytest.raises(
+        TemplateError, match="symmetric_difference expected a list, got str"
+    ):
+        template.Template(
+            "{{ [1, 2, 3] | symmetric_difference('string') }}", hass
+        ).async_render()
+
+
 def test_md5(hass: HomeAssistant) -> None:
     """Test the md5 function and filter."""
     assert (

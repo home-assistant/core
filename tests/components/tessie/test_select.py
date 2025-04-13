@@ -52,7 +52,7 @@ async def test_select(
     # Test site operation mode
     entity_id = "select.energy_site_operation_mode"
     with patch(
-        "homeassistant.components.teslemetry.EnergySpecific.operation",
+        "tesla_fleet_api.tessie.EnergySite.operation",
         return_value=TEST_RESPONSE,
     ) as call:
         await hass.services.async_call(
@@ -71,7 +71,7 @@ async def test_select(
     # Test site export mode
     entity_id = "select.energy_site_allow_export"
     with patch(
-        "homeassistant.components.teslemetry.EnergySpecific.grid_import_export",
+        "tesla_fleet_api.tessie.EnergySite.grid_import_export",
         return_value=TEST_RESPONSE,
     ) as call:
         await hass.services.async_call(
@@ -129,7 +129,7 @@ async def test_errors(hass: HomeAssistant) -> None:
     # Test changing energy select with unknown error
     with (
         patch(
-            "homeassistant.components.tessie.EnergySpecific.operation",
+            "tesla_fleet_api.tessie.EnergySite.operation",
             side_effect=UnsupportedVehicle,
         ) as mock_set,
         pytest.raises(HomeAssistantError) as error,

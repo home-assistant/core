@@ -79,6 +79,7 @@ SERVICE_CREATE_HABIT = "create_habit"
 SERVICE_UPDATE_TODO = "update_todo"
 SERVICE_CREATE_TODO = "create_todo"
 SERVICE_UPDATE_DAILY = "update_daily"
+SERVICE_CREATE_DAILY = "create_daily"
 
 DEVELOPER_ID = "4c4ca53f-c059-4ffa-966e-9d29dd405daf"
 X_CLIENT = f"{DEVELOPER_ID} - {APPLICATION_NAME} {__version__}"
