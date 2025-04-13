@@ -9,7 +9,6 @@ from homeassistant.components.growatt_server.const import (
     DEFAULT_URL,
     DOMAIN,
     LOGIN_INVALID_AUTH_CODE,
-    LOGIN_LOCKED_CODE,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
