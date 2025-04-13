@@ -2,7 +2,9 @@
 
 from contextlib import suppress
 import math
+from typing import Any
 
+from aiohttp import web
 import voluptuous as vol
 
 from homeassistant import core as ha
@@ -37,7 +39,7 @@ ATTR_PROJECTS = "projects"
 ATTR_RADIO_SHOW = "radio_show"
 ATTR_LAT = "lat"
 ATTR_LON = "lon"
-ATTR_API = "api"
+ATTR_API_COMPATILBILITY = "api_compatibility"
 ATTR_CLOSED = "closed"
 ATTR_CONTACT = "contact"
 ATTR_ISSUE_REPORT_CHANNELS = "issue_report_channels"
@@ -50,6 +52,7 @@ ATTR_UNIT = "unit"
 ATTR_URL = "url"
 ATTR_VALUE = "value"
 ATTR_SENSOR_LOCATION = "location"
+ATTR_XMPP = "xmpp"
 
 CONF_CONTACT = "contact"
 CONF_HUMIDITY = "humidity"
@@ -108,7 +111,7 @@ DOMAIN = "spaceapi"
 ISSUE_REPORT_CHANNELS = [CONF_EMAIL, CONF_ISSUE_MAIL, CONF_ML, CONF_TWITTER]
 
 SENSOR_TYPES = [CONF_HUMIDITY, CONF_TEMPERATURE]
-SPACEAPI_VERSION = "0.13"
+SPACEAPI_VERSION = "15"
 
 URL_API_SPACEAPI = "/api/spaceapi"
 
@@ -251,7 +254,7 @@ class APISpaceApiView(HomeAssistantView):
     name = "api:spaceapi"
 
     @staticmethod
-    def get_sensor_data(hass, spaceapi, sensor):
+    def get_sensor_data(hass: HomeAssistant, spaceapi, sensor):
         """Get data from a sensor."""
         if not (sensor_state := hass.states.get(sensor)):
             return None
@@ -276,10 +279,10 @@ class APISpaceApiView(HomeAssistantView):
         return sensor_data
 
     @ha.callback
-    def get(self, request):
+    def get(self, request: web.Request):
         """Get SpaceAPI data."""
-        hass = request.app[KEY_HASS]
-        spaceapi = dict(hass.data[DATA_SPACEAPI])
+        hass: HomeAssistant = request.app[KEY_HASS]
+        spaceapi: dict = dict(hass.data[DATA_SPACEAPI])
         is_sensors = spaceapi.get("sensors")
 
         location = {ATTR_LAT: hass.config.latitude, ATTR_LON: hass.config.longitude}
@@ -293,13 +296,14 @@ class APISpaceApiView(HomeAssistantView):
 
         state_entity = spaceapi["state"][ATTR_ENTITY_ID]
 
+        state: dict[str, Any] = {}
         if (space_state := hass.states.get(state_entity)) is not None:
             state = {
                 ATTR_OPEN: space_state.state != "off",
                 ATTR_LASTCHANGE: dt_util.as_timestamp(space_state.last_updated),
             }
         else:
-            state = {ATTR_OPEN: "null", ATTR_LASTCHANGE: 0}
+            state = {ATTR_OPEN: False, ATTR_LASTCHANGE: 0}
 
         with suppress(KeyError):
             state[ATTR_ICON] = {
@@ -307,10 +311,15 @@ class APISpaceApiView(HomeAssistantView):
                 ATTR_CLOSED: spaceapi["state"][CONF_ICON_CLOSED],
             }
 
+        # Space API v15 renamed "jabber" to "xmpp"
+        # but we need to process the legacy YAML config for now
+        contact: dict[str, Any] | None = spaceapi.get(CONF_CONTACT)
+        if contact and contact.get(CONF_JABBER) is not None:
+            contact[ATTR_XMPP] = contact.pop(CONF_JABBER)
+
         data = {
-            ATTR_API: SPACEAPI_VERSION,
+            ATTR_API_COMPATILBILITY: [SPACEAPI_VERSION],
             ATTR_CONTACT: spaceapi[CONF_CONTACT],
-            ATTR_ISSUE_REPORT_CHANNELS: spaceapi[CONF_ISSUE_REPORT_CHANNELS],
             ATTR_LOCATION: location,
             ATTR_LOGO: spaceapi[CONF_LOGO],
             ATTR_SPACE: spaceapi[CONF_SPACE],
@@ -321,26 +330,21 @@ class APISpaceApiView(HomeAssistantView):
         with suppress(KeyError):
             data[ATTR_CAM] = spaceapi[CONF_CAM]
 
-        with suppress(KeyError):
-            data[ATTR_SPACEFED] = spaceapi[CONF_SPACEFED]
-
-        with suppress(KeyError):
-            data[ATTR_STREAM] = spaceapi[CONF_STREAM]
+        spacefed_config: dict | None = spaceapi.get(CONF_SPACEFED)
+        if spacefed_config:
+            # Remove "spacephone" from the "spacefed" configuration to
+            # support API v15
+            spacefed_config.pop(CONF_SPACEPHONE)
+            data[ATTR_SPACEFED] = spacefed_config
 
         with suppress(KeyError):
             data[ATTR_FEEDS] = spaceapi[CONF_FEEDS]
 
         with suppress(KeyError):
-            data[ATTR_CACHE] = spaceapi[CONF_CACHE]
-
-        with suppress(KeyError):
             data[ATTR_PROJECTS] = spaceapi[CONF_PROJECTS]
 
-        with suppress(KeyError):
-            data[ATTR_RADIO_SHOW] = spaceapi[CONF_RADIO_SHOW]
-
         if is_sensors is not None:
-            sensors = {}
+            sensors: dict[str, Any] = {}
             for sensor_type in is_sensors:
                 sensors[sensor_type] = []
                 for sensor in spaceapi["sensors"][sensor_type]:
