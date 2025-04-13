@@ -16,11 +16,13 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+type SyncThruConfigEntry = ConfigEntry[SyncthruCoordinator]
+
 
 class SyncthruCoordinator(DataUpdateCoordinator[SyncThru]):
     """Class to manage fetching Syncthru data."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: SyncThruConfigEntry) -> None:
         """Initialize the Syncthru coordinator."""
         super().__init__(
             hass,
