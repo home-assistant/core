@@ -101,6 +101,25 @@ async def test_locked_login(hass: HomeAssistant) -> None:
     assert result["errors"] == {"base": "account_locked"}
 
 
+async def test_unknown_login_error(hass: HomeAssistant) -> None:
+    """Test that it shows the appropriate error when an incorrect username/password/server is entered."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "growattServer.GrowattApi.login",
+        return_value={"msg": "599", "success": False},
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_USER_INPUT
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "unknown_error"}
+
+
 async def test_no_plants_on_account(hass: HomeAssistant) -> None:
     """Test registering an integration and finishing flow with an entered plant_id."""
     result = await hass.config_entries.flow.async_init(
