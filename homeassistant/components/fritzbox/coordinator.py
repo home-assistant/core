@@ -165,6 +165,22 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
         """Fetch all device data."""
         new_data = await self.hass.async_add_executor_job(self._update_fritz_devices)
 
+        for device in new_data.devices.values():
+            # create device registry entry for new main devices
+            if (
+                device.ain not in self.data.devices
+                and device.device_and_unit_id[1] is None
+            ):
+                dr.async_get(self.hass).async_get_or_create(
+                    config_entry_id=self.config_entry.entry_id,
+                    name=device.name,
+                    identifiers={(DOMAIN, device.ain)},
+                    manufacturer=device.manufacturer,
+                    model=device.productname,
+                    sw_version=device.fw_version,
+                    configuration_url=self.configuration_url,
+                )
+
         if (
             self.data.devices.keys() - new_data.devices.keys()
             or self.data.templates.keys() - new_data.templates.keys()
