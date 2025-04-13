@@ -10,6 +10,8 @@ from operator import attrgetter
 from typing import TYPE_CHECKING
 
 from pyenphase import (
+    EnvoyACBPower,
+    EnvoyBatteryAggregate,
     EnvoyEncharge,
     EnvoyEnchargeAggregate,
     EnvoyEnchargePower,
@@ -35,6 +37,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     PERCENTAGE,
+    EntityCategory,
     UnitOfApparentPower,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -46,18 +49,19 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
 from .entity import EnvoyBaseEntity
 
-ICON = "mdi:flash"
 _LOGGER = logging.getLogger(__name__)
 
 INVERTERS_KEY = "inverters"
 LAST_REPORTED_KEY = "last_reported"
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -366,6 +370,7 @@ CT_NET_CONSUMPTION_SENSORS = (
         key="net_consumption_ct_metering_status",
         translation_key="net_ct_metering_status",
         device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
         options=list(CtMeterStatus),
         entity_registry_enabled_default=False,
         value_fn=attrgetter("metering_status"),
@@ -375,6 +380,7 @@ CT_NET_CONSUMPTION_SENSORS = (
         key="net_consumption_ct_status_flags",
         translation_key="net_ct_status_flags",
         state_class=None,
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda ct: 0 if ct.status_flags is None else len(ct.status_flags),
         on_phase=None,
@@ -448,6 +454,7 @@ CT_PRODUCTION_SENSORS = (
         translation_key="production_ct_metering_status",
         device_class=SensorDeviceClass.ENUM,
         options=list(CtMeterStatus),
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=attrgetter("metering_status"),
         on_phase=None,
@@ -456,6 +463,7 @@ CT_PRODUCTION_SENSORS = (
         key="production_ct_status_flags",
         translation_key="production_ct_status_flags",
         state_class=None,
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda ct: 0 if ct.status_flags is None else len(ct.status_flags),
         on_phase=None,
@@ -561,6 +569,7 @@ CT_STORAGE_SENSORS = (
         translation_key="storage_ct_metering_status",
         device_class=SensorDeviceClass.ENUM,
         options=list(CtMeterStatus),
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=attrgetter("metering_status"),
         on_phase=None,
@@ -569,6 +578,7 @@ CT_STORAGE_SENSORS = (
         key="storage_ct_status_flags",
         translation_key="storage_ct_status_flags",
         state_class=None,
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda ct: 0 if ct.status_flags is None else len(ct.status_flags),
         on_phase=None,
@@ -721,10 +731,82 @@ ENCHARGE_AGGREGATE_SENSORS = (
 )
 
 
+@dataclass(frozen=True, kw_only=True)
+class EnvoyAcbBatterySensorEntityDescription(SensorEntityDescription):
+    """Describes an Envoy ACB Battery sensor entity."""
+
+    value_fn: Callable[[EnvoyACBPower], int | str]
+
+
+ACB_BATTERY_POWER_SENSORS = (
+    EnvoyAcbBatterySensorEntityDescription(
+        key="acb_power",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        value_fn=attrgetter("power"),
+    ),
+    EnvoyAcbBatterySensorEntityDescription(
+        key="acb_soc",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.BATTERY,
+        value_fn=attrgetter("state_of_charge"),
+    ),
+    EnvoyAcbBatterySensorEntityDescription(
+        key="acb_battery_state",
+        translation_key="acb_battery_state",
+        device_class=SensorDeviceClass.ENUM,
+        options=["discharging", "idle", "charging", "full"],
+        value_fn=attrgetter("state"),
+    ),
+)
+
+ACB_BATTERY_ENERGY_SENSORS = (
+    EnvoyAcbBatterySensorEntityDescription(
+        key="acb_available_energy",
+        translation_key="acb_available_energy",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY_STORAGE,
+        value_fn=attrgetter("charge_wh"),
+    ),
+)
+
+
+@dataclass(frozen=True, kw_only=True)
+class EnvoyAggregateBatterySensorEntityDescription(SensorEntityDescription):
+    """Describes an Envoy aggregate Ensemble and ACB Battery sensor entity."""
+
+    value_fn: Callable[[EnvoyBatteryAggregate], int]
+
+
+AGGREGATE_BATTERY_SENSORS = (
+    EnvoyAggregateBatterySensorEntityDescription(
+        key="aggregated_soc",
+        translation_key="aggregated_soc",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.BATTERY,
+        value_fn=attrgetter("state_of_charge"),
+    ),
+    EnvoyAggregateBatterySensorEntityDescription(
+        key="aggregated_available_energy",
+        translation_key="aggregated_available_energy",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY_STORAGE,
+        value_fn=attrgetter("available_energy"),
+    ),
+    EnvoyAggregateBatterySensorEntityDescription(
+        key="aggregated_max_battery_capacity",
+        translation_key="aggregated_max_capacity",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY_STORAGE,
+        value_fn=attrgetter("max_available_capacity"),
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: EnphaseConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up envoy sensor platform."""
     coordinator = config_entry.runtime_data
@@ -845,6 +927,20 @@ async def async_setup_entry(
             EnvoyEnpowerEntity(coordinator, description)
             for description in ENPOWER_SENSORS
         )
+    if envoy_data.acb_power:
+        entities.extend(
+            EnvoyAcbBatteryPowerEntity(coordinator, description)
+            for description in ACB_BATTERY_POWER_SENSORS
+        )
+        entities.extend(
+            EnvoyAcbBatteryEnergyEntity(coordinator, description)
+            for description in ACB_BATTERY_ENERGY_SENSORS
+        )
+    if envoy_data.battery_aggregate:
+        entities.extend(
+            AggregateBatteryEntity(coordinator, description)
+            for description in AGGREGATE_BATTERY_SENSORS
+        )
 
     async_add_entities(entities)
 
@@ -855,8 +951,6 @@ class EnvoySensorBaseEntity(EnvoyBaseEntity, SensorEntity):
 
 class EnvoySystemSensorEntity(EnvoySensorBaseEntity):
     """Envoy system base entity."""
-
-    _attr_icon = ICON
 
     def __init__(
         self,
@@ -1084,7 +1178,6 @@ class EnvoyStorageCTPhaseEntity(EnvoySystemSensorEntity):
 class EnvoyInverterEntity(EnvoySensorBaseEntity):
     """Envoy inverter entity."""
 
-    _attr_icon = ICON
     entity_description: EnvoyInverterSensorEntityDescription
 
     def __init__(
@@ -1226,3 +1319,60 @@ class EnvoyEnpowerEntity(EnvoySensorBaseEntity):
         enpower = self.data.enpower
         assert enpower is not None
         return self.entity_description.value_fn(enpower)
+
+
+class EnvoyAcbBatteryPowerEntity(EnvoySensorBaseEntity):
+    """Envoy ACB Battery power sensor entity."""
+
+    entity_description: EnvoyAcbBatterySensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: EnphaseUpdateCoordinator,
+        description: EnvoyAcbBatterySensorEntityDescription,
+    ) -> None:
+        """Initialize ACB Battery entity."""
+        super().__init__(coordinator, description)
+        acb_data = self.data.acb_power
+        assert acb_data is not None
+        self._attr_unique_id = f"{self.envoy_serial_num}_{description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{self.envoy_serial_num}_acb")},
+            manufacturer="Enphase",
+            model="ACB",
+            name=f"ACB {self.envoy_serial_num}",
+            via_device=(DOMAIN, self.envoy_serial_num),
+        )
+
+    @property
+    def native_value(self) -> int | str | None:
+        """Return the state of the ACB Battery power sensors."""
+        acb = self.data.acb_power
+        assert acb is not None
+        return self.entity_description.value_fn(acb)
+
+
+class EnvoyAcbBatteryEnergyEntity(EnvoySystemSensorEntity):
+    """Envoy combined ACB and Ensemble Battery Aggregate energy sensor entity."""
+
+    entity_description: EnvoyAcbBatterySensorEntityDescription
+
+    @property
+    def native_value(self) -> int | str:
+        """Return the state of the aggregate energy sensors."""
+        acb = self.data.acb_power
+        assert acb is not None
+        return self.entity_description.value_fn(acb)
+
+
+class AggregateBatteryEntity(EnvoySystemSensorEntity):
+    """Envoy combined ACB and Ensemble Battery Aggregate sensor entity."""
+
+    entity_description: EnvoyAggregateBatterySensorEntityDescription
+
+    @property
+    def native_value(self) -> int:
+        """Return the state of the aggregate sensors."""
+        battery_aggregate = self.data.battery_aggregate
+        assert battery_aggregate is not None
+        return self.entity_description.value_fn(battery_aggregate)

@@ -1,17 +1,14 @@
 """Support for Elgato Lights."""
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .coordinator import ElgatoDataUpdateCoordinator
+from .coordinator import ElgatoConfigEntry, ElgatoDataUpdateCoordinator
 
 PLATFORMS = [Platform.BUTTON, Platform.LIGHT, Platform.SENSOR, Platform.SWITCH]
 
-type ElgatorConfigEntry = ConfigEntry[ElgatoDataUpdateCoordinator]
 
-
-async def async_setup_entry(hass: HomeAssistant, entry: ElgatorConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ElgatoConfigEntry) -> bool:
     """Set up Elgato Light from a config entry."""
     coordinator = ElgatoDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
@@ -22,6 +19,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ElgatorConfigEntry) -> b
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ElgatorConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ElgatoConfigEntry) -> bool:
     """Unload Elgato Light config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

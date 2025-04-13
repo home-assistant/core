@@ -24,7 +24,7 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -172,7 +172,7 @@ class SnmpScanner(DeviceScanner):
                 _LOGGER.error(
                     "SNMP error: %s at %s",
                     errstatus.prettyPrint(),
-                    errindex and res[int(errindex) - 1][0] or "?",
+                    (errindex and res[int(errindex) - 1][0]) or "?",
                 )
                 return None
 

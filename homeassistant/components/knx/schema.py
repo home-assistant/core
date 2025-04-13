@@ -41,10 +41,12 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
     Platform,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import ENTITY_CATEGORIES_SCHEMA
 
 from .const import (
+    CONF_CONTEXT_TIMEOUT,
+    CONF_IGNORE_INTERNAL_STATE,
     CONF_INVERT,
     CONF_KNX_EXPOSE,
     CONF_PAYLOAD_LENGTH,
@@ -211,20 +213,9 @@ class BinarySensorSchema(KNXPlatformSchema):
     """Voluptuous schema for KNX binary sensors."""
 
     PLATFORM = Platform.BINARY_SENSOR
-
-    CONF_STATE_ADDRESS = CONF_STATE_ADDRESS
-    CONF_SYNC_STATE = CONF_SYNC_STATE
-    CONF_INVERT = CONF_INVERT
-    CONF_IGNORE_INTERNAL_STATE = "ignore_internal_state"
-    CONF_CONTEXT_TIMEOUT = "context_timeout"
-    CONF_RESET_AFTER = CONF_RESET_AFTER
-
     DEFAULT_NAME = "KNX Binary Sensor"
 
     ENTITY_SCHEMA = vol.All(
-        # deprecated since September 2020
-        cv.deprecated("significant_bit"),
-        cv.deprecated("automation"),
         vol.Schema(
             {
                 vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -348,6 +339,10 @@ class ClimateSchema(KNXPlatformSchema):
     CONF_FAN_SPEED_MODE = "fan_speed_mode"
     CONF_FAN_ZERO_MODE = "fan_zero_mode"
     CONF_HUMIDITY_STATE_ADDRESS = "humidity_state_address"
+    CONF_SWING_ADDRESS = "swing_address"
+    CONF_SWING_STATE_ADDRESS = "swing_state_address"
+    CONF_SWING_HORIZONTAL_ADDRESS = "swing_horizontal_address"
+    CONF_SWING_HORIZONTAL_STATE_ADDRESS = "swing_horizontal_state_address"
 
     DEFAULT_NAME = "KNX Climate"
     DEFAULT_SETPOINT_SHIFT_MODE = "DPT6010"
@@ -358,10 +353,6 @@ class ClimateSchema(KNXPlatformSchema):
     DEFAULT_FAN_SPEED_MODE = "percent"
 
     ENTITY_SCHEMA = vol.All(
-        # deprecated since September 2020
-        cv.deprecated("setpoint_shift_step", replacement_key=CONF_TEMPERATURE_STEP),
-        # deprecated since 2021.6
-        cv.deprecated("create_temperature_sensors"),
         vol.Schema(
             {
                 vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -440,6 +431,10 @@ class ClimateSchema(KNXPlatformSchema):
                 vol.Optional(CONF_FAN_ZERO_MODE, default=FAN_OFF): vol.Coerce(
                     FanZeroMode
                 ),
+                vol.Optional(CONF_SWING_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_SWING_STATE_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_SWING_HORIZONTAL_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_SWING_HORIZONTAL_STATE_ADDRESS): ga_list_validator,
                 vol.Optional(CONF_HUMIDITY_STATE_ADDRESS): ga_list_validator,
             }
         ),
@@ -969,8 +964,6 @@ class WeatherSchema(KNXPlatformSchema):
     DEFAULT_NAME = "KNX Weather Station"
 
     ENTITY_SCHEMA = vol.All(
-        # deprecated since 2021.6
-        cv.deprecated("create_sensors"),
         vol.Schema(
             {
                 vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,

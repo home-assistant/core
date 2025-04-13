@@ -1,0 +1,251 @@
+# serializer version: 1
+# name: test_all_entities[sensor.vodafone_station_m123456789_active_connection-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'dsl',
+        'fiber',
+        'internet_key',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.vodafone_station_m123456789_active_connection',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Active connection',
+    'platform': 'vodafone_station',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'active_connection',
+    'unique_id': 'm123456789_inter_ip_address',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.vodafone_station_m123456789_active_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Vodafone Station (m123456789) Active connection',
+      'options': list([
+        'dsl',
+        'fiber',
+        'internet_key',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vodafone_station_m123456789_active_connection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[sensor.vodafone_station_m123456789_cpu_usage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.vodafone_station_m123456789_cpu_usage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'CPU usage',
+    'platform': 'vodafone_station',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'sys_cpu_usage',
+    'unique_id': 'm123456789_sys_cpu_usage',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[sensor.vodafone_station_m123456789_cpu_usage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Vodafone Station (m123456789) CPU usage',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vodafone_station_m123456789_cpu_usage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '97.0',
+  })
+# ---
+# name: test_all_entities[sensor.vodafone_station_m123456789_memory_usage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.vodafone_station_m123456789_memory_usage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Memory usage',
+    'platform': 'vodafone_station',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'sys_memory_usage',
+    'unique_id': 'm123456789_sys_memory_usage',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[sensor.vodafone_station_m123456789_memory_usage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Vodafone Station (m123456789) Memory usage',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vodafone_station_m123456789_memory_usage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '51.94',
+  })
+# ---
+# name: test_all_entities[sensor.vodafone_station_m123456789_reboot_cause-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.vodafone_station_m123456789_reboot_cause',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Reboot cause',
+    'platform': 'vodafone_station',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'sys_reboot_cause',
+    'unique_id': 'm123456789_sys_reboot_cause',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.vodafone_station_m123456789_reboot_cause-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Vodafone Station (m123456789) Reboot cause',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vodafone_station_m123456789_reboot_cause',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Web Reboot',
+  })
+# ---
+# name: test_all_entities[sensor.vodafone_station_m123456789_uptime-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.vodafone_station_m123456789_uptime',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Uptime',
+    'platform': 'vodafone_station',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'sys_uptime',
+    'unique_id': 'm123456789_sys_uptime',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.vodafone_station_m123456789_uptime-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Vodafone Station (m123456789) Uptime',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vodafone_station_m123456789_uptime',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-11-19T20:19:00+00:00',
+  })
+# ---

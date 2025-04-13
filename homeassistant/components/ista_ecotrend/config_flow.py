@@ -66,7 +66,7 @@ class IstaConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 if TYPE_CHECKING:
                     assert info
-                title = f"{info["firstName"]} {info["lastName"]}".strip()
+                title = f"{info['firstName']} {info['lastName']}".strip()
                 await self.async_set_unique_id(info["activeConsumptionUnit"])
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(

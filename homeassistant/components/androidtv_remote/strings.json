@@ -44,15 +44,20 @@
         }
       },
       "apps": {
-        "title": "Configure Android Apps",
-        "description": "Configure application id {app_id}",
+        "title": "Configure Android apps",
+        "description": "Configure application ID {app_id}",
         "data": {
-          "app_name": "Application Name",
+          "app_name": "Application name",
           "app_id": "Application ID",
-          "app_icon": "Application Icon",
+          "app_icon": "Application icon",
           "app_delete": "Check to delete this application"
         }
       }
+    }
+  },
+  "exceptions": {
+    "connection_closed": {
+      "message": "Connection to the Android TV device is closed"
     }
   }
 }

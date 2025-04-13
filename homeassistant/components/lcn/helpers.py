@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 from copy import deepcopy
-from itertools import chain
 import re
 from typing import cast
 
@@ -22,7 +21,6 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_RESOURCE,
     CONF_SENSORS,
-    CONF_SOURCE,
     CONF_SWITCHES,
 )
 from homeassistant.core import HomeAssistant
@@ -30,22 +28,14 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    BINSENSOR_PORTS,
     CONF_CLIMATES,
     CONF_HARDWARE_SERIAL,
     CONF_HARDWARE_TYPE,
-    CONF_OUTPUT,
     CONF_SCENES,
     CONF_SOFTWARE_SERIAL,
     CONNECTION,
+    DEVICE_CONNECTIONS,
     DOMAIN,
-    LED_PORTS,
-    LOGICOP_PORTS,
-    OUTPUT_PORTS,
-    S0_INPUTS,
-    SETPOINTS,
-    THRESHOLDS,
-    VARIABLES,
 )
 
 # typing
@@ -89,34 +79,9 @@ def get_resource(domain_name: str, domain_data: ConfigType) -> str:
     if domain_name == "cover":
         return cast(str, domain_data["motor"])
     if domain_name == "climate":
-        return f'{domain_data["source"]}.{domain_data["setpoint"]}'
+        return f"{domain_data['source']}.{domain_data['setpoint']}"
     if domain_name == "scene":
-        return f'{domain_data["register"]}.{domain_data["scene"]}'
-    raise ValueError("Unknown domain")
-
-
-def get_device_model(domain_name: str, domain_data: ConfigType) -> str:
-    """Return the model for the specified domain_data."""
-    if domain_name in ("switch", "light"):
-        return "Output" if domain_data[CONF_OUTPUT] in OUTPUT_PORTS else "Relay"
-    if domain_name in ("binary_sensor", "sensor"):
-        if domain_data[CONF_SOURCE] in BINSENSOR_PORTS:
-            return "Binary Sensor"
-        if domain_data[CONF_SOURCE] in chain(
-            VARIABLES, SETPOINTS, THRESHOLDS, S0_INPUTS
-        ):
-            return "Variable"
-        if domain_data[CONF_SOURCE] in LED_PORTS:
-            return "Led"
-        if domain_data[CONF_SOURCE] in LOGICOP_PORTS:
-            return "Logical Operation"
-        return "Key"
-    if domain_name == "cover":
-        return "Motor"
-    if domain_name == "climate":
-        return "Regulator"
-    if domain_name == "scene":
-        return "Scene"
+        return f"{domain_data['register']}.{domain_data['scene']}"
     raise ValueError("Unknown domain")
 
 
@@ -168,13 +133,6 @@ def purge_device_registry(
 ) -> None:
     """Remove orphans from device registry which are not in entry data."""
     device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
-
-    # Find all devices that are referenced in the entity registry.
-    references_entities = {
-        entry.device_id
-        for entry in entity_registry.entities.get_entries_for_config_entry_id(entry_id)
-    }
 
     # Find device that references the host.
     references_host = set()
@@ -197,7 +155,6 @@ def purge_device_registry(
             entry.id
             for entry in dr.async_entries_for_config_entry(device_registry, entry_id)
         }
-        - references_entities
         - references_host
         - references_entry_data
     )
@@ -237,7 +194,7 @@ def register_lcn_address_devices(
         identifiers = {(DOMAIN, generate_unique_id(config_entry.entry_id, address))}
 
         if device_config[CONF_ADDRESS][2]:  # is group
-            device_model = f"LCN group (g{address[0]:03d}{address[1]:03d})"
+            device_model = "LCN group"
             sw_version = None
         else:  # is module
             hardware_type = device_config[CONF_HARDWARE_TYPE]
@@ -245,10 +202,10 @@ def register_lcn_address_devices(
                 hardware_name = pypck.lcn_defs.HARDWARE_DESCRIPTIONS[hardware_type]
             else:
                 hardware_name = pypck.lcn_defs.HARDWARE_DESCRIPTIONS[-1]
-            device_model = f"{hardware_name} (m{address[0]:03d}{address[1]:03d})"
+            device_model = f"{hardware_name}"
             sw_version = f"{device_config[CONF_SOFTWARE_SERIAL]:06X}"
 
-        device_registry.async_get_or_create(
+        device_entry = device_registry.async_get_or_create(
             config_entry_id=config_entry.entry_id,
             identifiers=identifiers,
             via_device=host_identifiers,
@@ -257,6 +214,10 @@ def register_lcn_address_devices(
             name=device_name,
             model=device_model,
         )
+
+        hass.data[DOMAIN][config_entry.entry_id][DEVICE_CONNECTIONS][
+            device_entry.id
+        ] = get_device_connection(hass, address, config_entry)
 
 
 async def async_update_device_config(

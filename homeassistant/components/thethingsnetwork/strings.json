@@ -2,12 +2,12 @@
   "config": {
     "step": {
       "user": {
-        "title": "Connect to The Things Network v3 App",
-        "description": "Enter the API hostname, app id and API key for your TTN application.\n\nYou can find your API key in the [The Things Network console](https://console.thethingsnetwork.org) -> Applications -> application_id -> API keys.",
+        "title": "Connect to The Things Network v3",
+        "description": "Enter the API hostname, application ID and API key to use with Home Assistant.\n\n[Read the instructions](https://www.thethingsindustries.com/docs/integrations/adding-applications/) on how to register your application and create an API key.",
         "data": {
-          "hostname": "[%key:common::config_flow::data::host%]",
+          "host": "[%key:common::config_flow::data::host%]",
           "app_id": "Application ID",
-          "access_key": "[%key:common::config_flow::data::api_key%]"
+          "api_key": "[%key:common::config_flow::data::api_key%]"
         }
       },
       "reauth_confirm": {

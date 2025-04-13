@@ -13,7 +13,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import SqueezeboxConfigEntry
@@ -33,28 +33,25 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=STATUS_SENSOR_INFO_TOTAL_ALBUMS,
         state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement="albums",
     ),
     SensorEntityDescription(
         key=STATUS_SENSOR_INFO_TOTAL_ARTISTS,
         state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement="artists",
     ),
     SensorEntityDescription(
         key=STATUS_SENSOR_INFO_TOTAL_DURATION,
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
     ),
     SensorEntityDescription(
         key=STATUS_SENSOR_INFO_TOTAL_GENRES,
         state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement="genres",
     ),
     SensorEntityDescription(
         key=STATUS_SENSOR_INFO_TOTAL_SONGS,
         state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement="songs",
     ),
     SensorEntityDescription(
         key=STATUS_SENSOR_LASTSCAN,
@@ -63,13 +60,11 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=STATUS_SENSOR_PLAYER_COUNT,
         state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement="players",
     ),
     SensorEntityDescription(
         key=STATUS_SENSOR_OTHER_PLAYER_COUNT,
         state_class=SensorStateClass.TOTAL,
         entity_registry_visible_default=False,
-        native_unit_of_measurement="players",
     ),
 )
 
@@ -79,7 +74,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SqueezeboxConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Platform setup using common elements."""
 

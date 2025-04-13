@@ -30,13 +30,14 @@ from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
     EntityCategory,
     Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .conftest import (
     ConfigEntryFactoryType,
@@ -891,7 +892,9 @@ async def test_device_state(
     for i in list(map(int, DeviceState)):
         device["state"] = i
         mock_websocket_message(message=MessageKey.DEVICE, data=device)
-        assert hass.states.get("sensor.device_state").state == DEVICE_STATES[i]
+        assert hass.states.get("sensor.device_state").state == DEVICE_STATES.get(
+            i, STATE_UNKNOWN
+        )
 
 
 @pytest.mark.parametrize(

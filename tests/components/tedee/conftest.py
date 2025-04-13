@@ -14,6 +14,8 @@ from homeassistant.components.tedee.const import CONF_LOCAL_ACCESS_TOKEN, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 
+from . import setup_integration
+
 from tests.common import MockConfigEntry, load_fixture
 
 WEBHOOK_ID = "bq33efxmdi3vxy55q2wbnudbra7iv8mjrq9x0gea33g4zqtd87093pwveg8xcb33"
@@ -84,8 +86,6 @@ async def init_integration(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_tedee: MagicMock
 ) -> MockConfigEntry:
     """Set up the Tedee integration for testing."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
 
     return mock_config_entry

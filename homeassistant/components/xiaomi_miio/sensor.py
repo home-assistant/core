@@ -24,7 +24,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    AREA_SQUARE_METERS,
     ATTR_BATTERY_LEVEL,
     ATTR_TEMPERATURE,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
@@ -37,6 +36,7 @@ from homeassistant.const import (
     PERCENTAGE,
     REVOLUTIONS_PER_MINUTE,
     EntityCategory,
+    UnitOfArea,
     UnitOfPower,
     UnitOfPressure,
     UnitOfTemperature,
@@ -45,7 +45,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import VacuumCoordinatorDataAttributes
@@ -622,7 +622,7 @@ VACUUM_SENSORS = {
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     f"last_clean_{ATTR_LAST_CLEAN_AREA}": XiaomiMiioSensorDescription(
-        native_unit_of_measurement=AREA_SQUARE_METERS,
+        native_unit_of_measurement=UnitOfArea.SQUARE_METERS,
         icon="mdi:texture-box",
         key=ATTR_LAST_CLEAN_AREA,
         parent_key=VacuumCoordinatorDataAttributes.last_clean_details,
@@ -639,7 +639,7 @@ VACUUM_SENSORS = {
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     f"current_{ATTR_LAST_CLEAN_AREA}": XiaomiMiioSensorDescription(
-        native_unit_of_measurement=AREA_SQUARE_METERS,
+        native_unit_of_measurement=UnitOfArea.SQUARE_METERS,
         icon="mdi:texture-box",
         key=ATTR_STATUS_CLEAN_AREA,
         parent_key=VacuumCoordinatorDataAttributes.status,
@@ -657,7 +657,7 @@ VACUUM_SENSORS = {
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     f"clean_history_{ATTR_CLEAN_HISTORY_TOTAL_AREA}": XiaomiMiioSensorDescription(
-        native_unit_of_measurement=AREA_SQUARE_METERS,
+        native_unit_of_measurement=UnitOfArea.SQUARE_METERS,
         icon="mdi:texture-box",
         key=ATTR_CLEAN_HISTORY_TOTAL_AREA,
         parent_key=VacuumCoordinatorDataAttributes.clean_history_status,
@@ -755,7 +755,7 @@ def _setup_vacuum_sensors(hass, config_entry, async_add_entities):
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Xiaomi sensor from a config entry."""
     entities: list[SensorEntity] = []

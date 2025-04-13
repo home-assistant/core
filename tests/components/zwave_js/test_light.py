@@ -7,10 +7,10 @@ from zwave_js_server.event import Event
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
-    ATTR_MAX_MIREDS,
-    ATTR_MIN_MIREDS,
+    ATTR_MAX_COLOR_TEMP_KELVIN,
+    ATTR_MIN_COLOR_TEMP_KELVIN,
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
     ATTR_SUPPORTED_COLOR_MODES,
@@ -51,8 +51,8 @@ async def test_light(
 
     assert state
     assert state.state == STATE_OFF
-    assert state.attributes[ATTR_MIN_MIREDS] == 153
-    assert state.attributes[ATTR_MAX_MIREDS] == 370
+    assert state.attributes[ATTR_MAX_COLOR_TEMP_KELVIN] == 6500
+    assert state.attributes[ATTR_MIN_COLOR_TEMP_KELVIN] == 2700
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == LightEntityFeature.TRANSITION
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == ["color_temp", "hs"]
 
@@ -130,7 +130,7 @@ async def test_light(
     assert state.state == STATE_ON
     assert state.attributes[ATTR_COLOR_MODE] == "color_temp"
     assert state.attributes[ATTR_BRIGHTNESS] == 255
-    assert state.attributes[ATTR_COLOR_TEMP] == 370
+    assert state.attributes[ATTR_COLOR_TEMP_KELVIN] == 2702
     assert state.attributes[ATTR_RGB_COLOR] is not None
 
     # Test turning on with same brightness
@@ -256,7 +256,7 @@ async def test_light(
     assert state.attributes[ATTR_COLOR_MODE] == "hs"
     assert state.attributes[ATTR_BRIGHTNESS] == 255
     assert state.attributes[ATTR_RGB_COLOR] == (255, 76, 255)
-    assert state.attributes[ATTR_COLOR_TEMP] is None
+    assert state.attributes[ATTR_COLOR_TEMP_KELVIN] is None
 
     client.async_send_command.reset_mock()
 
@@ -293,7 +293,7 @@ async def test_light(
     await hass.services.async_call(
         "light",
         "turn_on",
-        {"entity_id": BULB_6_MULTI_COLOR_LIGHT_ENTITY, ATTR_COLOR_TEMP: 170},
+        {"entity_id": BULB_6_MULTI_COLOR_LIGHT_ENTITY, ATTR_COLOR_TEMP_KELVIN: 5881},
         blocking=True,
     )
 
@@ -358,14 +358,14 @@ async def test_light(
     assert state.state == STATE_ON
     assert state.attributes[ATTR_COLOR_MODE] == "color_temp"
     assert state.attributes[ATTR_BRIGHTNESS] == 255
-    assert state.attributes[ATTR_COLOR_TEMP] == 170
+    assert state.attributes[ATTR_COLOR_TEMP_KELVIN] == 5881
     assert ATTR_RGB_COLOR in state.attributes
 
     # Test turning on with same color temp
     await hass.services.async_call(
         "light",
         "turn_on",
-        {"entity_id": BULB_6_MULTI_COLOR_LIGHT_ENTITY, ATTR_COLOR_TEMP: 170},
+        {"entity_id": BULB_6_MULTI_COLOR_LIGHT_ENTITY, ATTR_COLOR_TEMP_KELVIN: 5881},
         blocking=True,
     )
 
@@ -379,7 +379,7 @@ async def test_light(
         "turn_on",
         {
             "entity_id": BULB_6_MULTI_COLOR_LIGHT_ENTITY,
-            ATTR_COLOR_TEMP: 170,
+            ATTR_COLOR_TEMP_KELVIN: 5881,
             ATTR_TRANSITION: 35,
         },
         blocking=True,

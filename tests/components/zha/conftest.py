@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, create_autospec, patch
 import warnings
 
 import pytest
+import zhaquirks
 import zigpy
 from zigpy.application import ControllerApplication
 import zigpy.backups
@@ -24,7 +25,7 @@ from zigpy.zcl.clusters.general import Basic, Groups
 from zigpy.zcl.foundation import Status
 import zigpy.zdo.types as zdo_t
 
-import homeassistant.components.zha.const as zha_const
+from homeassistant.components.zha import const as zha_const
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -38,7 +39,7 @@ FIXTURE_GRP_NAME = "fixture group"
 COUNTER_NAMES = ["counter_1", "counter_2", "counter_3"]
 
 
-@pytest.fixture(scope="module", autouse=True)
+@pytest.fixture(scope="package", autouse=True)
 def globally_load_quirks():
     """Load quirks automatically so that ZHA tests run deterministically in isolation.
 
@@ -46,8 +47,6 @@ def globally_load_quirks():
     independently, bugs can emerge that will show up only when more of the test suite is
     run.
     """
-
-    import zhaquirks  # pylint: disable=import-outside-toplevel
 
     zhaquirks.setup()
 
@@ -156,6 +155,7 @@ async def zigpy_app_controller():
     app.state.node_info.ieee = zigpy.types.EUI64.convert("00:15:8d:00:02:32:4f:32")
     app.state.node_info.manufacturer = "Coordinator Manufacturer"
     app.state.node_info.model = "Coordinator Model"
+    app.state.node_info.version = "7.1.4.0 build 389"
     app.state.network_info.pan_id = 0x1234
     app.state.network_info.extended_pan_id = app.state.node_info.ieee
     app.state.network_info.channel = 15

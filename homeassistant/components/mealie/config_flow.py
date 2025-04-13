@@ -38,6 +38,10 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> tuple[dict[str, str], str | None]:
         """Check connection to the Mealie API."""
         assert self.host is not None
+
+        if "/hassio/ingress/" in self.host:
+            return {"base": "ingress_url"}, None
+
         client = MealieClient(
             self.host,
             token=api_token,

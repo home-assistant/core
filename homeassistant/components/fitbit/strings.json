@@ -38,21 +38,82 @@
       },
       "battery_level": {
         "name": "Battery level"
+      },
+      "activity_calories": {
+        "name": "Activity calories"
+      },
+      "calories": {
+        "name": "Calories"
+      },
+      "calories_bmr": {
+        "name": "Calories BMR"
+      },
+      "elevation": {
+        "name": "Elevation"
+      },
+      "floors": {
+        "name": "Floors"
+      },
+      "resting_heart_rate": {
+        "name": "Resting heart rate"
+      },
+      "minutes_fairly_active": {
+        "name": "Minutes fairly active"
+      },
+      "minutes_lightly_active": {
+        "name": "Minutes lightly active"
+      },
+      "minutes_sedentary": {
+        "name": "Minutes sedentary"
+      },
+      "minutes_very_active": {
+        "name": "Minutes very active"
+      },
+      "sleep_start_time": {
+        "name": "Sleep start time"
+      },
+      "steps": {
+        "name": "Steps"
+      },
+      "bmi": {
+        "name": "BMI"
+      },
+      "body_fat": {
+        "name": "Body fat"
+      },
+      "awakenings_count": {
+        "name": "Awakenings count"
+      },
+      "sleep_efficiency": {
+        "name": "Sleep efficiency"
+      },
+      "minutes_after_wakeup": {
+        "name": "Minutes after wakeup"
+      },
+      "sleep_minutes_asleep": {
+        "name": "Sleep minutes asleep"
+      },
+      "sleep_minutes_awake": {
+        "name": "Sleep minutes awake"
+      },
+      "sleep_minutes_to_fall_asleep": {
+        "name": "Sleep minutes to fall asleep"
+      },
+      "sleep_time_in_bed": {
+        "name": "Sleep time in bed"
+      },
+      "calories_in": {
+        "name": "Calories in"
+      },
+      "water": {
+        "name": "Water"
       }
     }
   },
-  "issues": {
-    "deprecated_yaml_no_import": {
-      "title": "Fitbit YAML configuration is being removed",
-      "description": "Configuring Fitbit using YAML is being removed.\n\nRemove the `fitbit` configuration from your configuration.yaml file and remove fitbit.conf if it exists and restart Home Assistant and [set up the integration](/config/integrations/dashboard/add?domain=fitbit) manually."
-    },
-    "deprecated_yaml_import": {
-      "title": "Fitbit YAML configuration is being removed",
-      "description": "Configuring Fitbit using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically, including OAuth Application Credentials.\n\nRemove the `fitbit` configuration from your configuration.yaml file and remove fitbit.conf and restart Home Assistant to fix this issue."
-    },
-    "deprecated_yaml_import_issue_cannot_connect": {
-      "title": "The Fitbit YAML configuration import failed",
-      "description": "Configuring Fitbit using YAML is being removed but there was a connection error importing your YAML configuration.\n\nRestart Home Assistant to try again or remove the Fitbit YAML configuration from your configuration.yaml file and remove the fitbit.conf and continue to [set up the integration](/config/integrations/dashboard/add?domain=fitbit) manually."
+
+  "device": {
+    "tracker": {
+      "name": "{display_name} tracker"
     }
   }
 }

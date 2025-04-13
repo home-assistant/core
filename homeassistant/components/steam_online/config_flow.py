@@ -18,8 +18,8 @@ from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 
-from . import SteamConfigEntry
 from .const import CONF_ACCOUNT, CONF_ACCOUNTS, DOMAIN, LOGGER, PLACEHOLDERS
+from .coordinator import SteamConfigEntry
 
 # To avoid too long request URIs, the amount of ids to request is limited
 MAX_IDS_TO_REQUEST = 275

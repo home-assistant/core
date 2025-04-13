@@ -12,18 +12,27 @@ from homeassistant.components.button import (
     ButtonEntity,
     ButtonEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import BUTTON_TYPE_WOL, CONNECTION_TYPE_LAN, DATA_FRITZ, DOMAIN, MeshRoles
-from .coordinator import AvmWrapper, FritzData, FritzDevice, _is_tracked
+from .const import BUTTON_TYPE_WOL, CONNECTION_TYPE_LAN, MeshRoles
+from .coordinator import (
+    FRITZ_DATA_KEY,
+    AvmWrapper,
+    FritzConfigEntry,
+    FritzData,
+    FritzDevice,
+    _is_tracked,
+)
 from .entity import FritzDeviceBase
 
 _LOGGER = logging.getLogger(__name__)
+
+# Set a sane value to avoid too many updates
+PARALLEL_UPDATES = 5
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -65,12 +74,12 @@ BUTTONS: Final = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: FritzConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set buttons for device."""
     _LOGGER.debug("Setting up buttons")
-    avm_wrapper: AvmWrapper = hass.data[DOMAIN][entry.entry_id]
+    avm_wrapper = entry.runtime_data
 
     entities_list: list[ButtonEntity] = [
         FritzButton(avm_wrapper, entry.title, button) for button in BUTTONS
@@ -80,7 +89,7 @@ async def async_setup_entry(
         async_add_entities(entities_list)
         return
 
-    data_fritz: FritzData = hass.data[DATA_FRITZ]
+    data_fritz = hass.data[FRITZ_DATA_KEY]
     entities_list += _async_wol_buttons_list(avm_wrapper, data_fritz)
 
     async_add_entities(entities_list)
@@ -169,16 +178,6 @@ class FritzBoxWOLButton(FritzDeviceBase, ButtonEntity):
         self._name = f"{self.hostname} Wake on LAN"
         self._attr_unique_id = f"{self._mac}_wake_on_lan"
         self._is_available = True
-        self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, self._mac)},
-            default_manufacturer="AVM",
-            default_model="FRITZ!Box Tracked device",
-            default_name=device.hostname,
-            via_device=(
-                DOMAIN,
-                avm_wrapper.unique_id,
-            ),
-        )
 
     async def async_press(self) -> None:
         """Press the button."""

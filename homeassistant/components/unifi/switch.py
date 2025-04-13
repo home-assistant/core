@@ -4,6 +4,7 @@ Support for controlling power supply of clients which are powered over Ethernet 
 Support for controlling network access of clients selected in option flow.
 Support for controlling deep packet inspection (DPI) restriction groups.
 Support for controlling WLAN availability.
+Support for controlling zone based traffic rules.
 """
 
 from __future__ import annotations
@@ -17,9 +18,11 @@ import aiounifi
 from aiounifi.interfaces.api_handlers import ItemEvent
 from aiounifi.interfaces.clients import Clients
 from aiounifi.interfaces.dpi_restriction_groups import DPIRestrictionGroups
+from aiounifi.interfaces.firewall_policies import FirewallPolicies
 from aiounifi.interfaces.outlets import Outlets
 from aiounifi.interfaces.port_forwarding import PortForwarding
 from aiounifi.interfaces.ports import Ports
+from aiounifi.interfaces.traffic_routes import TrafficRoutes
 from aiounifi.interfaces.traffic_rules import TrafficRules
 from aiounifi.interfaces.wlans import Wlans
 from aiounifi.models.api import ApiItemT
@@ -28,9 +31,11 @@ from aiounifi.models.device import DeviceSetOutletRelayRequest
 from aiounifi.models.dpi_restriction_app import DPIRestrictionAppEnableRequest
 from aiounifi.models.dpi_restriction_group import DPIRestrictionGroup
 from aiounifi.models.event import Event, EventKey
+from aiounifi.models.firewall_policy import FirewallPolicy, FirewallPolicyUpdateRequest
 from aiounifi.models.outlet import Outlet
 from aiounifi.models.port import Port
 from aiounifi.models.port_forward import PortForward, PortForwardEnableRequest
+from aiounifi.models.traffic_route import TrafficRoute, TrafficRouteSaveRequest
 from aiounifi.models.traffic_rule import TrafficRule, TrafficRuleEnableRequest
 from aiounifi.models.wlan import Wlan, WlanEnableRequest
 
@@ -42,9 +47,9 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.helpers.entity_registry as er
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import UnifiConfigEntry
 from .const import ATTR_MANUFACTURER, DOMAIN as UNIFI_DOMAIN
@@ -127,6 +132,24 @@ async def async_dpi_group_control_fn(hub: UnifiHub, obj_id: str, target: bool) -
     )
 
 
+async def async_firewall_policy_control_fn(
+    hub: UnifiHub, obj_id: str, target: bool
+) -> None:
+    """Control firewall policy state."""
+    policy = hub.api.firewall_policies[obj_id].raw
+    policy["enabled"] = target
+    await hub.api.request(FirewallPolicyUpdateRequest.create(policy))
+    # Update the policies so the UI is updated appropriately
+    await hub.api.firewall_policies.update()
+
+
+@callback
+def async_firewall_policy_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
+    """Check if firewall policy is able to be controlled. Predefined policies are unable to be turned off."""
+    policy = hub.api.firewall_policies[obj_id]
+    return not policy.predefined
+
+
 @callback
 def async_outlet_switching_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Determine if an outlet supports switching."""
@@ -168,6 +191,16 @@ async def async_traffic_rule_control_fn(
     await hub.api.request(TrafficRuleEnableRequest.create(traffic_rule, target))
     # Update the traffic rules so the UI is updated appropriately
     await hub.api.traffic_rules.update()
+
+
+async def async_traffic_route_control_fn(
+    hub: UnifiHub, obj_id: str, target: bool
+) -> None:
+    """Control traffic route state."""
+    traffic_route = hub.api.traffic_routes[obj_id].raw
+    await hub.api.request(TrafficRouteSaveRequest.create(traffic_route, target))
+    # Update the traffic routes so the UI is updated appropriately
+    await hub.api.traffic_routes.update()
 
 
 async def async_wlan_control_fn(hub: UnifiHub, obj_id: str, target: bool) -> None:
@@ -224,6 +257,20 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         supported_fn=lambda hub, obj_id: bool(hub.api.dpi_groups[obj_id].dpiapp_ids),
         unique_id_fn=lambda hub, obj_id: obj_id,
     ),
+    UnifiSwitchEntityDescription[FirewallPolicies, FirewallPolicy](
+        key="Firewall policy control",
+        translation_key="firewall_policy_control",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        api_handler_fn=lambda api: api.firewall_policies,
+        control_fn=async_firewall_policy_control_fn,
+        device_info_fn=async_unifi_network_device_info_fn,
+        is_on_fn=lambda hub, firewall_policy: firewall_policy.enabled,
+        name_fn=lambda firewall_policy: firewall_policy.name,
+        object_fn=lambda api, obj_id: api.firewall_policies[obj_id],
+        unique_id_fn=lambda hub, obj_id: f"firewall_policy-{obj_id}",
+        supported_fn=async_firewall_policy_supported_fn,
+    ),
     UnifiSwitchEntityDescription[Outlets, Outlet](
         key="Outlet control",
         device_class=SwitchDeviceClass.OUTLET,
@@ -262,6 +309,19 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         name_fn=lambda traffic_rule: traffic_rule.description,
         object_fn=lambda api, obj_id: api.traffic_rules[obj_id],
         unique_id_fn=lambda hub, obj_id: f"traffic_rule-{obj_id}",
+    ),
+    UnifiSwitchEntityDescription[TrafficRoutes, TrafficRoute](
+        key="Traffic route control",
+        translation_key="traffic_route_control",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        api_handler_fn=lambda api: api.traffic_routes,
+        control_fn=async_traffic_route_control_fn,
+        device_info_fn=async_unifi_network_device_info_fn,
+        is_on_fn=lambda hub, traffic_route: traffic_route.enabled,
+        name_fn=lambda traffic_route: traffic_route.description,
+        object_fn=lambda api, obj_id: api.traffic_routes[obj_id],
+        unique_id_fn=lambda hub, obj_id: f"traffic_route-{obj_id}",
     ),
     UnifiSwitchEntityDescription[Ports, Port](
         key="PoE port control",
@@ -327,7 +387,7 @@ def async_update_unique_id(hass: HomeAssistant, config_entry: UnifiConfigEntry) 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: UnifiConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switches for UniFi Network integration."""
     async_update_unique_id(hass, config_entry)

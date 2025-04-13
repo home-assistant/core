@@ -11,7 +11,7 @@ import pytest
 
 from homeassistant.auth.models import RefreshToken
 from homeassistant.components.hassio.handler import HassIO, HassioAPIError
-from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.setup import async_setup_component
 
@@ -46,7 +46,7 @@ def hassio_env(supervisor_is_connected: AsyncMock) -> Generator[None]:
 
 
 @pytest.fixture
-def hassio_stubs(
+async def hassio_stubs(
     hassio_env: None,
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -75,28 +75,27 @@ def hassio_stubs(
             "homeassistant.components.hassio.issues.SupervisorIssues.setup",
         ),
     ):
-        hass.set_state(CoreState.starting)
-        hass.loop.run_until_complete(async_setup_component(hass, "hassio", {}))
+        await async_setup_component(hass, "hassio", {})
 
     return hass_api.call_args[0][1]
 
 
 @pytest.fixture
-def hassio_client(
+async def hassio_client(
     hassio_stubs: RefreshToken, hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> TestClient:
     """Return a Hass.io HTTP client."""
-    return hass.loop.run_until_complete(hass_client())
+    return await hass_client()
 
 
 @pytest.fixture
-def hassio_noauth_client(
+async def hassio_noauth_client(
     hassio_stubs: RefreshToken,
     hass: HomeAssistant,
     aiohttp_client: ClientSessionGenerator,
 ) -> TestClient:
     """Return a Hass.io HTTP client without auth."""
-    return hass.loop.run_until_complete(aiohttp_client(hass.http.app))
+    return await aiohttp_client(hass.http.app)
 
 
 @pytest.fixture

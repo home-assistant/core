@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_switch_entities[HWE-KWH1-switch.device_cloud_connection-system_set-cloud_enabled]
+# name: test_switch_entities[HWE-KWH1-switch.device_cloud_connection-system-cloud_enabled]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Cloud connection',
@@ -12,13 +12,14 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_entities[HWE-KWH1-switch.device_cloud_connection-system_set-cloud_enabled].1
+# name: test_switch_entities[HWE-KWH1-switch.device_cloud_connection-system-cloud_enabled].1
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -41,19 +42,20 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_connection',
-    'unique_id': 'aabbccddeeff_cloud_connection',
+    'unique_id': 'HWE-P1_5c2fafabcdef_cloud_connection',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_entities[HWE-KWH1-switch.device_cloud_connection-system_set-cloud_enabled].2
+# name: test_switch_entities[HWE-KWH1-switch.device_cloud_connection-system-cloud_enabled].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -63,7 +65,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -81,7 +83,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_switch_entities[HWE-KWH3-switch.device_cloud_connection-system_set-cloud_enabled]
+# name: test_switch_entities[HWE-KWH3-switch.device_cloud_connection-system-cloud_enabled]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Cloud connection',
@@ -94,13 +96,14 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_entities[HWE-KWH3-switch.device_cloud_connection-system_set-cloud_enabled].1
+# name: test_switch_entities[HWE-KWH3-switch.device_cloud_connection-system-cloud_enabled].1
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -123,19 +126,20 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_connection',
-    'unique_id': 'aabbccddeeff_cloud_connection',
+    'unique_id': 'HWE-P1_5c2fafabcdef_cloud_connection',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_entities[HWE-KWH3-switch.device_cloud_connection-system_set-cloud_enabled].2
+# name: test_switch_entities[HWE-KWH3-switch.device_cloud_connection-system-cloud_enabled].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -145,7 +149,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -163,7 +167,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_switch_entities[HWE-SKT-11-switch.device-state_set-power_on]
+# name: test_switch_entities[HWE-SKT-11-switch.device-state-power_on]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'outlet',
@@ -177,13 +181,14 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_entities[HWE-SKT-11-switch.device-state_set-power_on].1
+# name: test_switch_entities[HWE-SKT-11-switch.device-state-power_on].1
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -206,19 +211,20 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'aabbccddeeff_power_on',
+    'unique_id': 'HWE-P1_5c2fafabcdef_power_on',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_entities[HWE-SKT-11-switch.device-state_set-power_on].2
+# name: test_switch_entities[HWE-SKT-11-switch.device-state-power_on].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -228,7 +234,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -246,7 +252,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_switch_entities[HWE-SKT-11-switch.device_cloud_connection-system_set-cloud_enabled]
+# name: test_switch_entities[HWE-SKT-11-switch.device_cloud_connection-system-cloud_enabled]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Cloud connection',
@@ -259,13 +265,14 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_entities[HWE-SKT-11-switch.device_cloud_connection-system_set-cloud_enabled].1
+# name: test_switch_entities[HWE-SKT-11-switch.device_cloud_connection-system-cloud_enabled].1
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -288,19 +295,20 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_connection',
-    'unique_id': 'aabbccddeeff_cloud_connection',
+    'unique_id': 'HWE-P1_5c2fafabcdef_cloud_connection',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_entities[HWE-SKT-11-switch.device_cloud_connection-system_set-cloud_enabled].2
+# name: test_switch_entities[HWE-SKT-11-switch.device_cloud_connection-system-cloud_enabled].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -310,7 +318,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -328,7 +336,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_switch_entities[HWE-SKT-11-switch.device_switch_lock-state_set-switch_lock]
+# name: test_switch_entities[HWE-SKT-11-switch.device_switch_lock-state-switch_lock]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Switch lock',
@@ -341,13 +349,14 @@
     'state': 'off',
   })
 # ---
-# name: test_switch_entities[HWE-SKT-11-switch.device_switch_lock-state_set-switch_lock].1
+# name: test_switch_entities[HWE-SKT-11-switch.device_switch_lock-state-switch_lock].1
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -370,19 +379,20 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'switch_lock',
-    'unique_id': 'aabbccddeeff_switch_lock',
+    'unique_id': 'HWE-P1_5c2fafabcdef_switch_lock',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_entities[HWE-SKT-11-switch.device_switch_lock-state_set-switch_lock].2
+# name: test_switch_entities[HWE-SKT-11-switch.device_switch_lock-state-switch_lock].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -392,7 +402,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -410,7 +420,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_switch_entities[HWE-SKT-21-switch.device-state_set-power_on]
+# name: test_switch_entities[HWE-SKT-21-switch.device-state-power_on]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'outlet',
@@ -424,13 +434,14 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_entities[HWE-SKT-21-switch.device-state_set-power_on].1
+# name: test_switch_entities[HWE-SKT-21-switch.device-state-power_on].1
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -453,19 +464,20 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'aabbccddeeff_power_on',
+    'unique_id': 'HWE-P1_5c2fafabcdef_power_on',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_entities[HWE-SKT-21-switch.device-state_set-power_on].2
+# name: test_switch_entities[HWE-SKT-21-switch.device-state-power_on].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -475,7 +487,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -493,7 +505,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_switch_entities[HWE-SKT-21-switch.device_cloud_connection-system_set-cloud_enabled]
+# name: test_switch_entities[HWE-SKT-21-switch.device_cloud_connection-system-cloud_enabled]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Cloud connection',
@@ -506,13 +518,14 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_entities[HWE-SKT-21-switch.device_cloud_connection-system_set-cloud_enabled].1
+# name: test_switch_entities[HWE-SKT-21-switch.device_cloud_connection-system-cloud_enabled].1
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -535,19 +548,20 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_connection',
-    'unique_id': 'aabbccddeeff_cloud_connection',
+    'unique_id': 'HWE-P1_5c2fafabcdef_cloud_connection',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_entities[HWE-SKT-21-switch.device_cloud_connection-system_set-cloud_enabled].2
+# name: test_switch_entities[HWE-SKT-21-switch.device_cloud_connection-system-cloud_enabled].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -557,7 +571,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -575,7 +589,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_switch_entities[HWE-SKT-21-switch.device_switch_lock-state_set-switch_lock]
+# name: test_switch_entities[HWE-SKT-21-switch.device_switch_lock-state-switch_lock]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Switch lock',
@@ -588,13 +602,14 @@
     'state': 'off',
   })
 # ---
-# name: test_switch_entities[HWE-SKT-21-switch.device_switch_lock-state_set-switch_lock].1
+# name: test_switch_entities[HWE-SKT-21-switch.device_switch_lock-state-switch_lock].1
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -617,19 +632,20 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'switch_lock',
-    'unique_id': 'aabbccddeeff_switch_lock',
+    'unique_id': 'HWE-P1_5c2fafabcdef_switch_lock',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_entities[HWE-SKT-21-switch.device_switch_lock-state_set-switch_lock].2
+# name: test_switch_entities[HWE-SKT-21-switch.device_switch_lock-state-switch_lock].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -639,7 +655,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -657,7 +673,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_switch_entities[HWE-WTR-switch.device_cloud_connection-system_set-cloud_enabled]
+# name: test_switch_entities[HWE-WTR-switch.device_cloud_connection-system-cloud_enabled]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Cloud connection',
@@ -670,13 +686,14 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_entities[HWE-WTR-switch.device_cloud_connection-system_set-cloud_enabled].1
+# name: test_switch_entities[HWE-WTR-switch.device_cloud_connection-system-cloud_enabled].1
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -699,19 +716,20 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_connection',
-    'unique_id': 'aabbccddeeff_cloud_connection',
+    'unique_id': 'HWE-P1_5c2fafabcdef_cloud_connection',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_entities[HWE-WTR-switch.device_cloud_connection-system_set-cloud_enabled].2
+# name: test_switch_entities[HWE-WTR-switch.device_cloud_connection-system-cloud_enabled].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -721,7 +739,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -739,7 +757,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_switch_entities[SDM230-switch.device_cloud_connection-system_set-cloud_enabled]
+# name: test_switch_entities[SDM230-switch.device_cloud_connection-system-cloud_enabled]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Cloud connection',
@@ -752,13 +770,14 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_entities[SDM230-switch.device_cloud_connection-system_set-cloud_enabled].1
+# name: test_switch_entities[SDM230-switch.device_cloud_connection-system-cloud_enabled].1
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -781,19 +800,20 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_connection',
-    'unique_id': 'aabbccddeeff_cloud_connection',
+    'unique_id': 'HWE-P1_5c2fafabcdef_cloud_connection',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_entities[SDM230-switch.device_cloud_connection-system_set-cloud_enabled].2
+# name: test_switch_entities[SDM230-switch.device_cloud_connection-system-cloud_enabled].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -803,7 +823,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -821,7 +841,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_switch_entities[SDM630-switch.device_cloud_connection-system_set-cloud_enabled]
+# name: test_switch_entities[SDM630-switch.device_cloud_connection-system-cloud_enabled]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Cloud connection',
@@ -834,13 +854,14 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_entities[SDM630-switch.device_cloud_connection-system_set-cloud_enabled].1
+# name: test_switch_entities[SDM630-switch.device_cloud_connection-system-cloud_enabled].1
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -863,19 +884,20 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_connection',
-    'unique_id': 'aabbccddeeff_cloud_connection',
+    'unique_id': 'HWE-P1_5c2fafabcdef_cloud_connection',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_entities[SDM630-switch.device_cloud_connection-system_set-cloud_enabled].2
+# name: test_switch_entities[SDM630-switch.device_cloud_connection-system-cloud_enabled].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -885,7 +907,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,

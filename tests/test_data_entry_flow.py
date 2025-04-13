@@ -13,11 +13,7 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util.decorator import Registry
 
-from .common import (
-    async_capture_events,
-    help_test_all,
-    import_and_test_deprecated_constant_enum,
-)
+from .common import async_capture_events
 
 
 class MockFlowManager(data_entry_flow.FlowManager):
@@ -137,6 +133,61 @@ async def test_show_form(manager: MockFlowManager) -> None:
     assert form["errors"] == {"username": "Should be unique."}
 
 
+async def test_form_shows_with_added_suggested_values(manager: MockFlowManager) -> None:
+    """Test that we can show a form with suggested values."""
+    schema = vol.Schema(
+        {
+            vol.Required("username"): str,
+            vol.Required("password"): str,
+            vol.Required("section_1"): data_entry_flow.section(
+                vol.Schema(
+                    {
+                        vol.Optional("full_name"): str,
+                    }
+                ),
+                {"collapsed": False},
+            ),
+        }
+    )
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            data_schema = self.add_suggested_values_to_schema(
+                schema,
+                {
+                    "username": "doej",
+                    "password": "verySecret1",
+                    "section_1": {"full_name": "John Doe"},
+                },
+            )
+            return self.async_show_form(
+                step_id="init",
+                data_schema=data_schema,
+            )
+
+    form = await manager.async_init("test")
+    assert form["type"] == data_entry_flow.FlowResultType.FORM
+    assert form["data_schema"].schema == schema.schema
+    markers = list(form["data_schema"].schema)
+    assert len(markers) == 3
+    assert markers[0] == "username"
+    assert markers[0].description == {"suggested_value": "doej"}
+    assert markers[1] == "password"
+    assert markers[1].description == {"suggested_value": "verySecret1"}
+    assert markers[2] == "section_1"
+    section_validator = form["data_schema"].schema["section_1"]
+    assert isinstance(section_validator, data_entry_flow.section)
+    # The section class was not replaced
+    assert section_validator is schema.schema["section_1"]
+    # The section schema was not replaced
+    assert section_validator.schema is schema.schema["section_1"].schema
+    section_markers = list(section_validator.schema.schema)
+    assert len(section_markers) == 1
+    assert section_markers[0] == "full_name"
+    assert section_markers[0].description == {"suggested_value": "John Doe"}
+
+
 async def test_abort_removes_instance(manager: MockFlowManager) -> None:
     """Test that abort removes the flow from progress."""
 
@@ -159,6 +210,21 @@ async def test_abort_removes_instance(manager: MockFlowManager) -> None:
     assert len(manager.mock_created_entries) == 0
 
 
+async def test_abort_aborted_flow(manager: MockFlowManager) -> None:
+    """Test return abort from aborted flow."""
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            manager.async_abort(self.flow_id)
+            return self.async_abort(reason="blah")
+
+    form = await manager.async_init("test")
+    assert form["reason"] == "blah"
+    assert len(manager.async_progress()) == 0
+    assert len(manager.mock_created_entries) == 0
+
+
 async def test_abort_calls_async_remove(manager: MockFlowManager) -> None:
     """Test abort calling the async_remove FlowHandler method."""
 
@@ -172,6 +238,23 @@ async def test_abort_calls_async_remove(manager: MockFlowManager) -> None:
     await manager.async_init("test")
 
     TestFlow.async_remove.assert_called_once()
+
+    assert len(manager.async_progress()) == 0
+    assert len(manager.mock_created_entries) == 0
+
+
+async def test_abort_calls_async_flow_removed(manager: MockFlowManager) -> None:
+    """Test abort calling the async_flow_removed FlowManager method."""
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            return self.async_abort(reason="reason")
+
+    manager.async_flow_removed = Mock()
+    await manager.async_init("test")
+
+    manager.async_flow_removed.assert_called_once()
 
     assert len(manager.async_progress()) == 0
     assert len(manager.mock_created_entries) == 0
@@ -219,6 +302,42 @@ async def test_create_saves_data(manager: MockFlowManager) -> None:
     assert entry["title"] == "Test Title"
     assert entry["data"] == "Test Data"
     assert entry["source"] is None
+
+
+async def test_create_aborted_flow(manager: MockFlowManager) -> None:
+    """Test return create_entry from aborted flow."""
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        VERSION = 5
+
+        async def async_step_init(self, user_input=None):
+            manager.async_abort(self.flow_id)
+            return self.async_create_entry(title="Test Title", data="Test Data")
+
+    with pytest.raises(data_entry_flow.UnknownFlow):
+        await manager.async_init("test")
+    assert len(manager.async_progress()) == 0
+
+    # No entry should be created if the flow is aborted
+    assert len(manager.mock_created_entries) == 0
+
+
+async def test_create_calls_async_flow_removed(manager: MockFlowManager) -> None:
+    """Test create calling the async_flow_removed FlowManager method."""
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            return self.async_create_entry(title="Test Title", data="Test Data")
+
+    manager.async_flow_removed = Mock()
+    await manager.async_init("test")
+
+    manager.async_flow_removed.assert_called_once()
+
+    assert len(manager.async_progress()) == 0
+    assert len(manager.mock_created_entries) == 1
 
 
 async def test_discovery_init_flow(manager: MockFlowManager) -> None:
@@ -833,12 +952,34 @@ async def test_configure_raises_unknown_flow_if_not_in_progress(
         await manager.async_configure("wrong_flow_id")
 
 
-async def test_abort_raises_unknown_flow_if_not_in_progress(
+async def test_manager_abort_raises_unknown_flow_if_not_in_progress(
     manager: MockFlowManager,
 ) -> None:
     """Test abort raises UnknownFlow if the flow is not in progress."""
     with pytest.raises(data_entry_flow.UnknownFlow):
-        await manager.async_abort("wrong_flow_id")
+        manager.async_abort("wrong_flow_id")
+
+
+async def test_manager_abort_calls_async_flow_removed(manager: MockFlowManager) -> None:
+    """Test abort calling the async_flow_removed FlowManager method."""
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            return self.async_show_form(step_id="init")
+
+    manager.async_flow_removed = Mock()
+    result = await manager.async_init("test")
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    manager.async_flow_removed.assert_not_called()
+
+    manager.async_abort(result["flow_id"])
+    manager.async_flow_removed.assert_called_once()
+
+    assert len(manager.async_progress()) == 0
+    assert len(manager.mock_created_entries) == 0
 
 
 @pytest.mark.parametrize(
@@ -983,22 +1124,6 @@ async def test_find_flows_by_init_data_type(manager: MockFlowManager) -> None:
     )
     assert len(wifi_flows) == 0
     assert len(manager.async_progress()) == 0
-
-
-def test_all() -> None:
-    """Test module.__all__ is correctly set."""
-    help_test_all(data_entry_flow)
-
-
-@pytest.mark.parametrize(("enum"), list(data_entry_flow.FlowResultType))
-def test_deprecated_constants(
-    caplog: pytest.LogCaptureFixture,
-    enum: data_entry_flow.FlowResultType,
-) -> None:
-    """Test deprecated constants."""
-    import_and_test_deprecated_constant_enum(
-        caplog, data_entry_flow, enum, "RESULT_TYPE_", "2025.1"
-    )
 
 
 def test_section_in_serializer() -> None:

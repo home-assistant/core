@@ -1,0 +1,118 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: Service does not register actions
+  appropriate-polling:
+    status: exempt
+    comment: Service is not polling
+  brands: done
+  common-modules:
+    status: exempt
+    comment: Service does not have entities or coordinators
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: Service does not register actions
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: Service does not subscribe to events
+  entity-unique-id:
+    status: exempt
+    comment: Service does not have entities
+  has-entity-name:
+    status: exempt
+    comment: Service does not have entities
+  runtime-data:
+    status: exempt
+    comment: No configuration state is used by the integration
+  test-before-configure:
+    status: exempt
+    comment: Service does not a connection
+  test-before-setup:
+    status: exempt
+    comment: Service does not a connection
+  unique-config-entry:
+    status: done
+    comment: Integration requires a single config entry.
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: Service does not register actions
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable:
+    status: exempt
+    comment: Service does not have entities
+  integration-owner: done
+  log-when-unavailable:
+    status: exempt
+    comment: Service does not have entities
+  parallel-updates:
+    status: exempt
+    comment: Service does not have entities
+  reauthentication-flow:
+    status: exempt
+    comment: Service does not require authentication
+  test-coverage: done
+
+  # Gold
+  devices:
+    status: exempt
+    comment: Service does not have entities
+  diagnostics: todo
+  discovery-update-info:
+    status: exempt
+    comment: Service does not support discovery
+  discovery:
+    status: exempt
+    comment: Service does not support discovery
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: todo
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: Service does not support devices
+  entity-category:
+    status: exempt
+    comment: Service does not have entities
+  entity-device-class:
+    status: exempt
+    comment: Service does not have entities
+  entity-disabled-by-default:
+    status: exempt
+    comment: Service does not have entities
+  entity-translations:
+    status: exempt
+    comment: Service does not have entities
+  exception-translations: todo
+  icon-translations:
+    status: exempt
+    comment: Service does not have entities
+  reconfiguration-flow: todo
+  repair-issues:
+    status: exempt
+    comment: Service does not have anything to repair
+  stale-devices:
+    status: exempt
+    comment: Service does not have devices
+
+  # Platinum
+  async-dependency:
+    status: exempt
+    comment: Service does not communicate with devices
+  inject-websession:
+    status: exempt
+    comment: Service does not communicate with devices
+  strict-typing: done

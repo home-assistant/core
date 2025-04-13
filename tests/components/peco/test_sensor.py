@@ -39,7 +39,7 @@ async def test_sensor_available(
             "peco.PecoOutageApi.get_outage_totals",
             return_value=OutageResults(
                 customers_out=123,
-                percent_customers_out=15.589,
+                percent_customers_out=15,
                 outage_count=456,
                 customers_served=789,
             ),
@@ -74,7 +74,7 @@ async def test_sensor_available(
             "peco.PecoOutageApi.get_outage_count",
             return_value=OutageResults(
                 customers_out=123,
-                percent_customers_out=15.589,
+                percent_customers_out=15,
                 outage_count=456,
                 customers_served=789,
             ),

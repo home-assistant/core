@@ -14,10 +14,12 @@ from homeassistant.components.rtsp_to_webrtc import DOMAIN
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from .conftest import SERVER_URL, STREAM_SOURCE, ComponentSetup
 
+from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import WebSocketGenerator
 
@@ -33,15 +35,28 @@ async def setup_homeassistant(hass: HomeAssistant):
     await async_setup_component(hass, "homeassistant", {})
 
 
+@pytest.mark.usefixtures("rtsp_to_webrtc_client")
 async def test_setup_success(
-    hass: HomeAssistant, rtsp_to_webrtc_client: Any, setup_integration: ComponentSetup
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test successful setup and unload."""
-    await setup_integration()
+    config_entry.add_to_hass(hass)
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, "deprecated")
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert entries[0].state is ConfigEntryState.LOADED
+    await hass.config_entries.async_unload(entries[0].entry_id)
+    await hass.async_block_till_done()
+
+    assert not hass.data.get(DOMAIN)
+    assert entries[0].state is ConfigEntryState.NOT_LOADED
+    assert not issue_registry.async_get_issue(DOMAIN, "deprecated")
 
 
 @pytest.mark.parametrize("config_entry_data", [{}])

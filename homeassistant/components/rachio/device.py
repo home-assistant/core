@@ -189,8 +189,10 @@ class RachioPerson:
             RachioBaseStation(
                 rachio,
                 base,
-                RachioUpdateCoordinator(hass, rachio, base, base_count),
-                RachioScheduleUpdateCoordinator(hass, rachio, base),
+                RachioUpdateCoordinator(
+                    hass, rachio, self.config_entry, base, base_count
+                ),
+                RachioScheduleUpdateCoordinator(hass, rachio, self.config_entry, base),
             )
             for base in base_stations
         )

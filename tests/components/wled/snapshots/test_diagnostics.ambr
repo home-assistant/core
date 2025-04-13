@@ -224,7 +224,7 @@
       'udpport': 21324,
       'uptime': 966,
       'ver': '0.14.4',
-      'vid': 2405180,
+      'vid': '2405180',
       'wifi': '**REDACTED**',
     }),
     'palettes': dict({

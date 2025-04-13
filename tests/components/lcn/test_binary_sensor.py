@@ -15,8 +15,7 @@ from homeassistant.components.lcn.helpers import get_device_connection
 from homeassistant.components.script import scripts_with_entity
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import entity_registry as er
-import homeassistant.helpers.issue_registry as ir
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from .conftest import MockConfigEntry, init_integration

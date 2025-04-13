@@ -54,6 +54,7 @@ class OneWireEntity(Entity):
         """Return the state attributes of the entity."""
         return {
             "device_file": self._device_file,
+            # raw_value attribute is deprecated and can be removed in 2025.8
             "raw_value": self._value_raw,
         }
 
@@ -84,4 +85,4 @@ class OneWireEntity(Entity):
             elif self.entity_description.read_mode == READ_MODE_BOOL:
                 self._state = int(self._value_raw) == 1
             else:
-                self._state = round(self._value_raw, 1)
+                self._state = self._value_raw

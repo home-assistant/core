@@ -4,16 +4,18 @@ from __future__ import annotations
 
 import logging
 import threading
-from typing import TYPE_CHECKING, Final, Literal
+from typing import TYPE_CHECKING, Any, Final, Literal
 
 from lru import LRU
 from sqlalchemy import lambda_stmt, select
+from sqlalchemy.orm import InstrumentedAttribute
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.expression import true
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 
+from ..const import CIRCULAR_MEAN_SCHEMA_VERSION
 from ..db_schema import StatisticsMeta
-from ..models import StatisticMetaData
+from ..models import StatisticMeanType, StatisticMetaData
 from ..util import execute_stmt_lambda_element
 
 if TYPE_CHECKING:
@@ -28,7 +30,6 @@ QUERY_STATISTIC_META = (
     StatisticsMeta.statistic_id,
     StatisticsMeta.source,
     StatisticsMeta.unit_of_measurement,
-    StatisticsMeta.has_mean,
     StatisticsMeta.has_sum,
     StatisticsMeta.name,
 )
@@ -37,24 +38,38 @@ INDEX_ID: Final = 0
 INDEX_STATISTIC_ID: Final = 1
 INDEX_SOURCE: Final = 2
 INDEX_UNIT_OF_MEASUREMENT: Final = 3
-INDEX_HAS_MEAN: Final = 4
-INDEX_HAS_SUM: Final = 5
-INDEX_NAME: Final = 6
+INDEX_HAS_SUM: Final = 4
+INDEX_NAME: Final = 5
+INDEX_MEAN_TYPE: Final = 6
 
 
 def _generate_get_metadata_stmt(
     statistic_ids: set[str] | None = None,
     statistic_type: Literal["mean", "sum"] | None = None,
     statistic_source: str | None = None,
+    schema_version: int = 0,
 ) -> StatementLambdaElement:
-    """Generate a statement to fetch metadata."""
-    stmt = lambda_stmt(lambda: select(*QUERY_STATISTIC_META))
+    """Generate a statement to fetch metadata with the passed filters.
+
+    Depending on the schema version, either mean_type (added in version 49) or has_mean column is used.
+    """
+    columns: list[InstrumentedAttribute[Any]] = list(QUERY_STATISTIC_META)
+    if schema_version >= CIRCULAR_MEAN_SCHEMA_VERSION:
+        columns.append(StatisticsMeta.mean_type)
+    else:
+        columns.append(StatisticsMeta.has_mean)
+    stmt = lambda_stmt(lambda: select(*columns))
     if statistic_ids:
         stmt += lambda q: q.where(StatisticsMeta.statistic_id.in_(statistic_ids))
     if statistic_source is not None:
         stmt += lambda q: q.where(StatisticsMeta.source == statistic_source)
     if statistic_type == "mean":
-        stmt += lambda q: q.where(StatisticsMeta.has_mean == true())
+        if schema_version >= CIRCULAR_MEAN_SCHEMA_VERSION:
+            stmt += lambda q: q.where(
+                StatisticsMeta.mean_type != StatisticMeanType.NONE
+            )
+        else:
+            stmt += lambda q: q.where(StatisticsMeta.has_mean == true())
     elif statistic_type == "sum":
         stmt += lambda q: q.where(StatisticsMeta.has_sum == true())
     return stmt
@@ -100,14 +115,34 @@ class StatisticsMetaManager:
             for row in execute_stmt_lambda_element(
                 session,
                 _generate_get_metadata_stmt(
-                    statistic_ids, statistic_type, statistic_source
+                    statistic_ids,
+                    statistic_type,
+                    statistic_source,
+                    self.recorder.schema_version,
                 ),
                 orm_rows=False,
             ):
                 statistic_id = row[INDEX_STATISTIC_ID]
                 row_id = row[INDEX_ID]
+                if self.recorder.schema_version >= CIRCULAR_MEAN_SCHEMA_VERSION:
+                    try:
+                        mean_type = StatisticMeanType(row[INDEX_MEAN_TYPE])
+                    except ValueError:
+                        _LOGGER.warning(
+                            "Invalid mean type found for statistic_id: %s, mean_type: %s. Skipping",
+                            statistic_id,
+                            row[INDEX_MEAN_TYPE],
+                        )
+                        continue
+                else:
+                    mean_type = (
+                        StatisticMeanType.ARITHMETIC
+                        if row[INDEX_MEAN_TYPE]
+                        else StatisticMeanType.NONE
+                    )
                 meta = {
-                    "has_mean": row[INDEX_HAS_MEAN],
+                    "has_mean": mean_type is StatisticMeanType.ARITHMETIC,
+                    "mean_type": mean_type,
                     "has_sum": row[INDEX_HAS_SUM],
                     "name": row[INDEX_NAME],
                     "source": row[INDEX_SOURCE],
@@ -157,9 +192,18 @@ class StatisticsMetaManager:
         This call is not thread-safe and must be called from the
         recorder thread.
         """
+        if "mean_type" not in new_metadata:
+            # To maintain backward compatibility after adding 'mean_type' in schema version 49,
+            # we must still check for its presence. Even though type hints suggest it should always exist,
+            # custom integrations might omit it, so we need to guard against that.
+            new_metadata["mean_type"] = (  # type: ignore[unreachable]
+                StatisticMeanType.ARITHMETIC
+                if new_metadata["has_mean"]
+                else StatisticMeanType.NONE
+            )
         metadata_id, old_metadata = old_metadata_dict[statistic_id]
         if not (
-            old_metadata["has_mean"] != new_metadata["has_mean"]
+            old_metadata["mean_type"] != new_metadata["mean_type"]
             or old_metadata["has_sum"] != new_metadata["has_sum"]
             or old_metadata["name"] != new_metadata["name"]
             or old_metadata["unit_of_measurement"]
@@ -170,7 +214,7 @@ class StatisticsMetaManager:
         self._assert_in_recorder_thread()
         session.query(StatisticsMeta).filter_by(statistic_id=statistic_id).update(
             {
-                StatisticsMeta.has_mean: new_metadata["has_mean"],
+                StatisticsMeta.mean_type: new_metadata["mean_type"],
                 StatisticsMeta.has_sum: new_metadata["has_sum"],
                 StatisticsMeta.name: new_metadata["name"],
                 StatisticsMeta.unit_of_measurement: new_metadata["unit_of_measurement"],

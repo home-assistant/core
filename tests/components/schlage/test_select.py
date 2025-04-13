@@ -7,13 +7,16 @@ from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
+from . import MockSchlageConfigEntry
+
 
 async def test_select(
-    hass: HomeAssistant, mock_lock: Mock, mock_added_config_entry: ConfigEntry
+    hass: HomeAssistant,
+    mock_lock: Mock,
+    mock_added_config_entry: MockSchlageConfigEntry,
 ) -> None:
     """Test the auto-lock time select entity."""
     entity_id = "select.vault_door_auto_lock_time"

@@ -8,7 +8,7 @@ from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, VOLVO_DISCOVERY_NEW
 from .coordinator import VolvoUpdateCoordinator
@@ -18,7 +18,7 @@ from .entity import VolvoEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Configure device_trackers from a config entry created in the integrations UI."""
     coordinator: VolvoUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]

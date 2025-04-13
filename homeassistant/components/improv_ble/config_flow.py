@@ -83,12 +83,9 @@ class ImprovBLEConfigFlow(ConfigFlow, domain=DOMAIN):
             self._discovery_info = self._discovered_devices[address]
             return await self.async_step_start_improv()
 
-        current_addresses = self._async_current_ids()
         for discovery in bluetooth.async_discovered_service_info(self.hass):
-            if (
-                discovery.address in current_addresses
-                or discovery.address in self._discovered_devices
-                or not device_filter(discovery.advertisement)
+            if discovery.address in self._discovered_devices or not device_filter(
+                discovery.advertisement
             ):
                 continue
             self._discovered_devices[discovery.address] = discovery
@@ -126,15 +123,23 @@ class ImprovBLEConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         except improv_ble_errors.InvalidCommand as err:
             _LOGGER.warning(
-                "Aborting improv flow, device %s sent invalid improv data: '%s'",
-                self._discovery_info.address,
+                (
+                    "Received invalid improv via BLE data '%s' from device with "
+                    "bluetooth address '%s'; if the device is a self-configured "
+                    "ESPHome device, either correct or disable the 'esp32_improv' "
+                    "configuration; if it's a commercial device, contact the vendor"
+                ),
                 service_data[SERVICE_DATA_UUID].hex(),
+                self._discovery_info.address,
             )
             raise AbortFlow("invalid_improv_data") from err
 
         if improv_service_data.state in (State.PROVISIONING, State.PROVISIONED):
             _LOGGER.debug(
-                "Aborting improv flow, device %s is already provisioned: %s",
+                (
+                    "Aborting improv flow, device with bluetooth address '%s' is "
+                    "already provisioned: %s"
+                ),
                 self._discovery_info.address,
                 improv_service_data.state,
             )
@@ -356,6 +361,18 @@ class ImprovBLEConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self._provision_result is not None
 
         result = self._provision_result
+        if result["type"] == "abort" and result["reason"] in (
+            "provision_successful",
+            "provision_successful_url",
+        ):
+            # Delete ignored config entry, if it exists
+            address = self.context["unique_id"]
+            current_entries = self._async_current_entries(include_ignore=True)
+            for entry in current_entries:
+                if entry.unique_id == address:
+                    _LOGGER.debug("Removing ignored entry: %s", entry)
+                    await self.hass.config_entries.async_remove(entry.entry_id)
+                    break
         self._provision_result = None
         return result
 

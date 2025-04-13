@@ -13,7 +13,6 @@ from deebot_client.authentication import Authenticator, create_rest_config
 from deebot_client.const import UNDEFINED, UndefinedType
 from deebot_client.device import Device
 from deebot_client.exceptions import DeebotError, InvalidAuthenticationError
-from deebot_client.models import DeviceInfo
 from deebot_client.mqtt_client import MqttClient, create_mqtt_config
 from deebot_client.util import md5
 from deebot_client.util.continents import get_continent
@@ -81,25 +80,32 @@ class EcovacsController:
         try:
             devices = await self._api_client.get_devices()
             credentials = await self._authenticator.authenticate()
-            for device_config in devices:
-                if isinstance(device_config, DeviceInfo):
-                    # MQTT device
-                    device = Device(device_config, self._authenticator)
-                    mqtt = await self._get_mqtt_client()
-                    await device.initialize(mqtt)
-                    self._devices.append(device)
-                else:
-                    # Legacy device
-                    bot = VacBot(
-                        credentials.user_id,
-                        EcoVacsAPI.REALM,
-                        self._device_id[0:8],
-                        credentials.token,
-                        device_config,
-                        self._continent,
-                        monitor=True,
-                    )
-                    self._legacy_devices.append(bot)
+            for device_info in devices.mqtt:
+                device = Device(device_info, self._authenticator)
+                mqtt = await self._get_mqtt_client()
+                await device.initialize(mqtt)
+                self._devices.append(device)
+            for device_config in devices.xmpp:
+                bot = VacBot(
+                    credentials.user_id,
+                    EcoVacsAPI.REALM,
+                    self._device_id[0:8],
+                    credentials.token,
+                    device_config,
+                    self._continent,
+                    monitor=True,
+                )
+                self._legacy_devices.append(bot)
+            for device_config in devices.not_supported:
+                _LOGGER.warning(
+                    (
+                        'Device "%s" not supported. More information at '
+                        "https://github.com/DeebotUniverse/client.py/issues/612: %s"
+                    ),
+                    device_config["deviceName"],
+                    device_config,
+                )
+
         except InvalidAuthenticationError as ex:
             raise ConfigEntryError("Invalid credentials") from ex
         except DeebotError as ex:

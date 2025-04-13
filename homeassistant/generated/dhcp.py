@@ -62,6 +62,14 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "E82725*",
     },
     {
+        "domain": "balboa",
+        "registered_devices": True,
+    },
+    {
+        "domain": "balboa",
+        "macaddress": "001527*",
+    },
+    {
         "domain": "blink",
         "hostname": "blink*",
         "macaddress": "B85F98*",
@@ -75,6 +83,16 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "domain": "blink",
         "hostname": "blink*",
         "macaddress": "20A171*",
+    },
+    {
+        "domain": "bond",
+        "hostname": "bond-*",
+        "macaddress": "3C6A2C1*",
+    },
+    {
+        "domain": "bond",
+        "hostname": "bond-*",
+        "macaddress": "F44E38*",
     },
     {
         "domain": "broadlink",
@@ -210,6 +228,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "registered_devices": True,
     },
     {
+        "domain": "fyta",
+        "hostname": "fyta*",
+    },
+    {
         "domain": "goalzero",
         "registered_devices": True,
     },
@@ -237,6 +259,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "30AEA4*",
     },
     {
+        "domain": "homewizard",
+        "registered_devices": True,
+    },
+    {
         "domain": "hunterdouglas_powerview",
         "registered_devices": True,
     },
@@ -244,6 +270,15 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "domain": "hunterdouglas_powerview",
         "hostname": "hunter*",
         "macaddress": "002674*",
+    },
+    {
+        "domain": "incomfort",
+        "hostname": "rfgateway",
+        "macaddress": "0004A3*",
+    },
+    {
+        "domain": "incomfort",
+        "registered_devices": True,
     },
     {
         "domain": "insteon",
@@ -275,6 +310,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "domain": "isy994",
         "hostname": "polisy*",
         "macaddress": "000DB9*",
+    },
+    {
+        "domain": "lamarzocco",
+        "registered_devices": True,
     },
     {
         "domain": "lamarzocco",
@@ -470,6 +509,18 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "341513*",
     },
     {
+        "domain": "roborock",
+        "macaddress": "249E7D*",
+    },
+    {
+        "domain": "roborock",
+        "macaddress": "B04A39*",
+    },
+    {
+        "domain": "roborock",
+        "hostname": "roborock-*",
+    },
+    {
         "domain": "roomba",
         "hostname": "irobot-*",
         "macaddress": "501479*",
@@ -563,6 +614,15 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "64DBA0*",
     },
     {
+        "domain": "sma",
+        "hostname": "sma*",
+        "macaddress": "0015BB*",
+    },
+    {
+        "domain": "sma",
+        "registered_devices": True,
+    },
+    {
         "domain": "smartthings",
         "hostname": "st*",
         "macaddress": "24FD5B*",
@@ -586,6 +646,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "domain": "smartthings",
         "hostname": "hub*",
         "macaddress": "286D97*",
+    },
+    {
+        "domain": "smlight",
+        "registered_devices": True,
     },
     {
         "domain": "solaredge",
@@ -1100,12 +1164,21 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "74ACB9*",
     },
     {
+        "domain": "velux",
+        "hostname": "velux_klf*",
+        "macaddress": "646184*",
+    },
+    {
         "domain": "verisure",
         "macaddress": "0023C1*",
     },
     {
         "domain": "vicare",
         "macaddress": "B87424*",
+    },
+    {
+        "domain": "withings",
+        "macaddress": "0024E4*",
     },
     {
         "domain": "wiz",

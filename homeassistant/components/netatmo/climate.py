@@ -30,7 +30,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -118,7 +118,9 @@ NA_VALVE = DeviceType.NRV
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Netatmo energy platform."""
 
@@ -192,7 +194,6 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
     _attr_name = None
     _away: bool | None = None
     _connected: bool | None = None
-    _enable_turn_on_off_backwards_compatibility = False
 
     _away_temperature: float | None = None
     _hg_temperature: float | None = None

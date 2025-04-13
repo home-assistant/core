@@ -10,7 +10,7 @@ from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon 
 )
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
-    guess_firmware_type,
+    guess_firmware_info,
 )
 from homeassistant.config_entries import SOURCE_HARDWARE, ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -18,7 +18,7 @@ from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.hassio import is_hassio
 
-from .const import FIRMWARE, RADIO_DEVICE, ZHA_HW_DISCOVERY_DATA
+from .const import FIRMWARE, FIRMWARE_VERSION, RADIO_DEVICE, ZHA_HW_DISCOVERY_DATA
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,11 +55,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             data=ZHA_HW_DISCOVERY_DATA,
         )
 
+    await hass.config_entries.async_forward_entry_setups(entry, ["update"])
+
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
+    await hass.config_entries.async_unload_platforms(entry, ["update"])
     return True
 
 
@@ -75,7 +78,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             # Add-on startup with type service get started before Core, always (e.g. the
             # Multi-Protocol add-on). Probing the firmware would interfere with the add-on,
             # so we can't safely probe here. Instead, we must make an educated guess!
-            firmware_guess = await guess_firmware_type(hass, RADIO_DEVICE)
+            firmware_guess = await guess_firmware_info(hass, RADIO_DEVICE)
 
             new_data = {**config_entry.data}
             new_data[FIRMWARE] = firmware_guess.firmware_type.value
@@ -85,6 +88,18 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                 data=new_data,
                 version=1,
                 minor_version=2,
+            )
+
+        if config_entry.minor_version == 2:
+            # Add a `firmware_version` key
+            hass.config_entries.async_update_entry(
+                config_entry,
+                data={
+                    **config_entry.data,
+                    FIRMWARE_VERSION: None,
+                },
+                version=1,
+                minor_version=3,
             )
 
         _LOGGER.debug(

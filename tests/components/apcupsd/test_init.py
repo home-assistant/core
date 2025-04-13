@@ -29,11 +29,11 @@ from tests.common import MockConfigEntry, async_fire_time_changed
         # Contains "SERIALNO" but no "UPSNAME" field.
         # We should create devices for the entities and prefix their IDs with default "APC UPS".
         MOCK_MINIMAL_STATUS | {"SERIALNO": "XXXX"},
-        # Does not contain either "SERIALNO" field nor "UPSNAME".
-        # "SERIALNO" is used to determine the unique ID of the integration, but the integration
-        # should work fine without it.
-        # We should _not_ create devices for the entities and their IDs will not have prefixes.
+        # Does not contain either "SERIALNO" field or "UPSNAME" field. Our integration should work
+        # fine without it by falling back to config entry ID as unique ID and "APC UPS" as default name.
         MOCK_MINIMAL_STATUS,
+        # Some models report "Blank" as SERIALNO, but we should treat it as not reported.
+        MOCK_MINIMAL_STATUS | {"SERIALNO": "Blank"},
     ],
 )
 async def test_async_setup_entry(
@@ -48,9 +48,9 @@ async def test_async_setup_entry(
         identifiers={(DOMAIN, config_entry.unique_id)}
     )
     if "UPSNAME" in status or "SERIALNO" in status:
-        assert (
-            device_entry is not None
-        ), "device must be created when UPSNAME or SERIALNO is present"
+        assert device_entry is not None, (
+            "device must be created when UPSNAME or SERIALNO is present"
+        )
         assert device_entry == snapshot(name=f"device-{device_entry.name}")
 
     # Use a representative sensor to test (1) if the integration is working, and (2) the entity ID

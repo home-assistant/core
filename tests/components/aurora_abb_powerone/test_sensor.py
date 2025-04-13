@@ -123,9 +123,9 @@ async def test_sensors(hass: HomeAssistant, entity_registry: EntityRegistry) -> 
         ]
         for entity_id, _ in sensors:
             assert not hass.states.get(entity_id)
-            assert (
-                entry := entity_registry.async_get(entity_id)
-            ), f"Entity registry entry for {entity_id} is missing"
+            assert (entry := entity_registry.async_get(entity_id)), (
+                f"Entity registry entry for {entity_id} is missing"
+            )
             assert entry.disabled
             assert entry.disabled_by is RegistryEntryDisabler.INTEGRATION
 

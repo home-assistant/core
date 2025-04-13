@@ -6,6 +6,7 @@ from typing import Any
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
+    PRESET_BOOST,
     PRESET_COMFORT,
     PRESET_ECO,
     ClimateEntity,
@@ -20,7 +21,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     ATTR_STATE_BATTERY_LOW,
@@ -38,7 +39,7 @@ from .sensor import value_scheduled_preset
 HVAC_MODES = [HVACMode.HEAT, HVACMode.OFF]
 PRESET_HOLIDAY = "holiday"
 PRESET_SUMMER = "summer"
-PRESET_MODES = [PRESET_ECO, PRESET_COMFORT]
+PRESET_MODES = [PRESET_ECO, PRESET_COMFORT, PRESET_BOOST]
 SUPPORTED_FEATURES = (
     ClimateEntityFeature.TARGET_TEMPERATURE
     | ClimateEntityFeature.PRESET_MODE
@@ -59,7 +60,7 @@ OFF_REPORT_SET_TEMPERATURE = 0.0
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: FritzboxConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the FRITZ!SmartHome thermostat from ConfigEntry."""
     coordinator = entry.runtime_data
@@ -85,10 +86,11 @@ async def async_setup_entry(
 class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
     """The thermostat class for FRITZ!SmartHome thermostats."""
 
+    _attr_max_temp = MAX_TEMPERATURE
+    _attr_min_temp = MIN_TEMPERATURE
     _attr_precision = PRECISION_HALVES
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = "thermostat"
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
@@ -136,13 +138,15 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        target_temp = kwargs.get(ATTR_TEMPERATURE)
-        hvac_mode = kwargs.get(ATTR_HVAC_MODE)
-        if hvac_mode == HVACMode.OFF:
+        if (hvac_mode := kwargs.get(ATTR_HVAC_MODE)) is HVACMode.OFF:
             await self.async_set_hvac_mode(hvac_mode)
-        elif target_temp is not None:
+        elif (target_temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
+            if target_temp == OFF_API_TEMPERATURE:
+                target_temp = OFF_REPORT_SET_TEMPERATURE
+            elif target_temp == ON_API_TEMPERATURE:
+                target_temp = ON_REPORT_SET_TEMPERATURE
             await self.hass.async_add_executor_job(
-                self.data.set_target_temperature, target_temp
+                self.data.set_target_temperature, target_temp, True
             )
         else:
             return
@@ -170,12 +174,12 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
                 translation_domain=DOMAIN,
                 translation_key="change_hvac_while_active_mode",
             )
-        if self.hvac_mode == hvac_mode:
+        if self.hvac_mode is hvac_mode:
             LOGGER.debug(
                 "%s is already in requested hvac mode %s", self.name, hvac_mode
             )
             return
-        if hvac_mode == HVACMode.OFF:
+        if hvac_mode is HVACMode.OFF:
             await self.async_set_temperature(temperature=OFF_REPORT_SET_TEMPERATURE)
         else:
             if value_scheduled_preset(self.data) == PRESET_ECO:
@@ -191,6 +195,8 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
             return PRESET_HOLIDAY
         if self.data.summer_active:
             return PRESET_SUMMER
+        if self.data.target_temperature == ON_API_TEMPERATURE:
+            return PRESET_BOOST
         if self.data.target_temperature == self.data.comfort_temperature:
             return PRESET_COMFORT
         if self.data.target_temperature == self.data.eco_temperature:
@@ -208,16 +214,8 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
             await self.async_set_temperature(temperature=self.data.comfort_temperature)
         elif preset_mode == PRESET_ECO:
             await self.async_set_temperature(temperature=self.data.eco_temperature)
-
-    @property
-    def min_temp(self) -> int:
-        """Return the minimum temperature."""
-        return MIN_TEMPERATURE
-
-    @property
-    def max_temp(self) -> int:
-        """Return the maximum temperature."""
-        return MAX_TEMPERATURE
+        elif preset_mode == PRESET_BOOST:
+            await self.async_set_temperature(temperature=ON_REPORT_SET_TEMPERATURE)
 
     @property
     def extra_state_attributes(self) -> ClimateExtraAttributes:

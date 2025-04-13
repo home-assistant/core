@@ -11,7 +11,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -25,6 +25,7 @@ from .const import (
     ATTR_SENT,
     ATTR_SEVERITY,
     ATTR_START,
+    ATTR_WEB,
     CONF_MESSAGE_SLOTS,
     CONF_REGIONS,
     DOMAIN,
@@ -35,7 +36,7 @@ from .coordinator import NINADataUpdateCoordinator
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entries."""
 
@@ -103,6 +104,7 @@ class NINAMessage(CoordinatorEntity[NINADataUpdateCoordinator], BinarySensorEnti
             ATTR_SEVERITY: data.severity,
             ATTR_RECOMMENDED_ACTIONS: data.recommended_actions,
             ATTR_AFFECTED_AREAS: data.affected_areas,
+            ATTR_WEB: data.web,
             ATTR_ID: data.id,
             ATTR_SENT: data.sent,
             ATTR_START: data.start,

@@ -1,0 +1,69 @@
+# serializer version: 1
+# name: test_water_heater_states[dhw_state.json][water_heater.bsb_lan-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max_temp': 65.0,
+      'min_temp': 40.0,
+      'operation_list': list([
+        'eco',
+        'off',
+        'on',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'water_heater',
+    'entity_category': None,
+    'entity_id': 'water_heater.bsb_lan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'bsblan',
+    'previous_unique_id': None,
+    'supported_features': <WaterHeaterEntityFeature: 3>,
+    'translation_key': None,
+    'unique_id': '00:80:41:19:69:90',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_water_heater_states[dhw_state.json][water_heater.bsb_lan-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 48.5,
+      'friendly_name': 'BSB-LAN',
+      'max_temp': 65.0,
+      'min_temp': 40.0,
+      'operation_list': list([
+        'eco',
+        'off',
+        'on',
+      ]),
+      'operation_mode': 'on',
+      'supported_features': <WaterHeaterEntityFeature: 3>,
+      'target_temp_high': None,
+      'target_temp_low': None,
+      'temperature': 50.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'water_heater.bsb_lan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

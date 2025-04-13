@@ -4,7 +4,7 @@ from pywizlight import PilotBuilder
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
@@ -91,7 +91,7 @@ async def test_rgbww_light(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP: 153, ATTR_BRIGHTNESS: 128},
+        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP_KELVIN: 6535, ATTR_BRIGHTNESS: 128},
         blocking=True,
     )
     pilot: PilotBuilder = bulb.turn_on.mock_calls[0][1][0]
@@ -99,7 +99,7 @@ async def test_rgbww_light(hass: HomeAssistant) -> None:
     await async_push_update(hass, bulb, {"mac": FAKE_MAC, **pilot.pilot_params})
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_COLOR_TEMP] == 153
+    assert state.attributes[ATTR_COLOR_TEMP_KELVIN] == 6535
 
     bulb.turn_on.reset_mock()
     await hass.services.async_call(
@@ -148,7 +148,7 @@ async def test_rgbw_light(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP: 153, ATTR_BRIGHTNESS: 128},
+        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP_KELVIN: 6535, ATTR_BRIGHTNESS: 128},
         blocking=True,
     )
     pilot: PilotBuilder = bulb.turn_on.mock_calls[0][1][0]
@@ -162,7 +162,7 @@ async def test_turnable_light(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP: 153, ATTR_BRIGHTNESS: 128},
+        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP_KELVIN: 6535, ATTR_BRIGHTNESS: 128},
         blocking=True,
     )
     pilot: PilotBuilder = bulb.turn_on.mock_calls[0][1][0]
@@ -171,7 +171,7 @@ async def test_turnable_light(hass: HomeAssistant) -> None:
     await async_push_update(hass, bulb, {"mac": FAKE_MAC, **pilot.pilot_params})
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_COLOR_TEMP] == 153
+    assert state.attributes[ATTR_COLOR_TEMP_KELVIN] == 6535
 
 
 async def test_old_firmware_dimmable_light(hass: HomeAssistant) -> None:

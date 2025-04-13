@@ -10,6 +10,10 @@
       "title": "The country has not been configured",
       "description": "No country has been configured, please update the configuration by clicking on the \"learn more\" button below."
     },
+    "imperial_unit_system": {
+      "title": "The imperial unit system is deprecated",
+      "description": "The imperial unit system is deprecated and your system is currently using US customary. Please update your configuration to use the US customary unit system and reload the Core configuration to fix this issue."
+    },
     "deprecated_yaml": {
       "title": "The {integration_title} YAML configuration is being removed",
       "description": "Configuring {integration_title} using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the `{domain}` configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
@@ -40,7 +44,7 @@
     },
     "no_platform_setup": {
       "title": "Unused YAML configuration for the {platform} integration",
-      "description": "It's not possible to configure {platform} {domain} by adding `{platform_key}` to the {domain} configuration. Please check the documentation for more information on how to set up this integration.\n\nTo resolve this:\n1. Remove `{platform_key}` occurences from the `{domain}:` configuration in your YAML configuration file.\n2. Restart Home Assistant.\n\nExample that should be removed:\n{yaml_example}"
+      "description": "It's not possible to configure {platform} {domain} by adding `{platform_key}` to the {domain} configuration. Please check the documentation for more information on how to set up this integration.\n\nTo resolve this:\n1. Remove `{platform_key}` occurrences from the `{domain}:` configuration in your YAML configuration file.\n2. Restart Home Assistant.\n\nExample that should be removed:\n{yaml_example}"
     },
     "storage_corruption": {
       "title": "Storage corruption detected for {storage_key}",
@@ -107,8 +111,8 @@
       "description": "Checks the Home Assistant YAML-configuration files for errors. Errors will be shown in the Home Assistant logs."
     },
     "reload_core_config": {
-      "name": "Reload core configuration",
-      "description": "Reloads the core configuration from the YAML-configuration."
+      "name": "Reload Core configuration",
+      "description": "Reloads the Core configuration from the YAML-configuration."
     },
     "restart": {
       "name": "[%key:common::action::restart%]",
@@ -134,7 +138,7 @@
         },
         "elevation": {
           "name": "[%key:common::config_flow::data::elevation%]",
-          "description": "Elevation of your location."
+          "description": "Elevation of your location above sea level."
         }
       }
     },
@@ -156,7 +160,7 @@
     },
     "update_entity": {
       "name": "Update entity",
-      "description": "Forces one or more entities to update its data.",
+      "description": "Forces one or more entities to update their data.",
       "fields": {
         "entity_id": {
           "name": "Entities to update",
@@ -184,7 +188,7 @@
     },
     "reload_all": {
       "name": "Reload all",
-      "description": "Reload all YAML configuration that can be reloaded without restarting Home Assistant."
+      "description": "Reloads all YAML configuration that can be reloaded without restarting Home Assistant."
     }
   },
   "exceptions": {
@@ -223,6 +227,9 @@
     },
     "service_not_found": {
       "message": "Action {domain}.{service} not found."
+    },
+    "service_not_supported": {
+      "message": "Entity {entity_id} does not support action {domain}.{service}."
     },
     "service_does_not_support_response": {
       "message": "An action which does not return responses can't be called with {return_response}."

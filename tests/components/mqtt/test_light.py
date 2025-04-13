@@ -72,7 +72,7 @@ mqtt:
         payload_on: "on"
         payload_off: "off"
 
-config with brightness and color temp
+config with brightness and color temp (mired)
 
 mqtt:
     light:
@@ -82,6 +82,23 @@ mqtt:
         brightness_state_topic: "office/rgb1/brightness/status"
         brightness_command_topic: "office/rgb1/brightness/set"
         brightness_scale: 99
+        color_temp_state_topic: "office/rgb1/color_temp/status"
+        color_temp_command_topic: "office/rgb1/color_temp/set"
+        qos: 0
+        payload_on: "on"
+        payload_off: "off"
+
+config with brightness and color temp (Kelvin)
+
+mqtt:
+    light:
+      - name: "Office Light Color Temp"
+        state_topic: "office/rgb1/light/status"
+        command_topic: "office/rgb1/light/switch"
+        brightness_state_topic: "office/rgb1/brightness/status"
+        brightness_command_topic: "office/rgb1/brightness/set"
+        brightness_scale: 99
+        color_temp_kelvin: true
         color_temp_state_topic: "office/rgb1/color_temp/status"
         color_temp_command_topic: "office/rgb1/color_temp/set"
         qos: 0
@@ -193,7 +210,7 @@ from homeassistant.components.mqtt.models import PublishPayloadType
 from homeassistant.const import ATTR_ASSUMED_STATE, STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
 
-from .test_common import (
+from .common import (
     help_custom_config,
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
@@ -270,7 +287,7 @@ async def test_no_color_brightness_color_temp_hs_white_xy_if_no_topics(
     assert state.state == STATE_UNKNOWN
     assert state.attributes.get("rgb_color") is None
     assert state.attributes.get("brightness") is None
-    assert state.attributes.get("color_temp") is None
+    assert state.attributes.get("color_temp_kelvin") is None
     assert state.attributes.get("hs_color") is None
     assert state.attributes.get("rgb_color") is None
     assert state.attributes.get("rgbw_color") is None
@@ -285,7 +302,7 @@ async def test_no_color_brightness_color_temp_hs_white_xy_if_no_topics(
     assert state.state == STATE_ON
     assert state.attributes.get("rgb_color") is None
     assert state.attributes.get("brightness") is None
-    assert state.attributes.get("color_temp") is None
+    assert state.attributes.get("color_temp_kelvin") is None
     assert state.attributes.get("hs_color") is None
     assert state.attributes.get("rgb_color") is None
     assert state.attributes.get("rgbw_color") is None
@@ -303,6 +320,101 @@ async def test_no_color_brightness_color_temp_hs_white_xy_if_no_topics(
 
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    ("hass_config", "min_kelvin", "max_kelvin"),
+    [
+        (
+            help_custom_config(
+                light.DOMAIN,
+                DEFAULT_CONFIG,
+                (
+                    {
+                        "color_temp_state_topic": "test_light_rgb/color_temp/status",
+                        "color_temp_command_topic": "test_light_rgb/color_temp/set",
+                    },
+                ),
+            ),
+            light.DEFAULT_MIN_KELVIN,
+            light.DEFAULT_MAX_KELVIN,
+        ),
+        (
+            help_custom_config(
+                light.DOMAIN,
+                DEFAULT_CONFIG,
+                (
+                    {
+                        "color_temp_state_topic": "test_light_rgb/color_temp/status",
+                        "color_temp_command_topic": "test_light_rgb/color_temp/set",
+                        "min_mireds": 180,
+                    },
+                ),
+            ),
+            light.DEFAULT_MIN_KELVIN,
+            5555,
+        ),
+        (
+            help_custom_config(
+                light.DOMAIN,
+                DEFAULT_CONFIG,
+                (
+                    {
+                        "color_temp_state_topic": "test_light_rgb/color_temp/status",
+                        "color_temp_command_topic": "test_light_rgb/color_temp/set",
+                        "max_mireds": 400,
+                    },
+                ),
+            ),
+            2500,
+            light.DEFAULT_MAX_KELVIN,
+        ),
+        (
+            help_custom_config(
+                light.DOMAIN,
+                DEFAULT_CONFIG,
+                (
+                    {
+                        "color_temp_state_topic": "test_light_rgb/color_temp/status",
+                        "color_temp_command_topic": "test_light_rgb/color_temp/set",
+                        "max_kelvin": 5555,
+                    },
+                ),
+            ),
+            light.DEFAULT_MIN_KELVIN,
+            5555,
+        ),
+        (
+            help_custom_config(
+                light.DOMAIN,
+                DEFAULT_CONFIG,
+                (
+                    {
+                        "color_temp_state_topic": "test_light_rgb/color_temp/status",
+                        "color_temp_command_topic": "test_light_rgb/color_temp/set",
+                        "min_kelvin": 2500,
+                    },
+                ),
+            ),
+            2500,
+            light.DEFAULT_MAX_KELVIN,
+        ),
+    ],
+)
+async def test_no_min_max_kelvin(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    min_kelvin: int,
+    max_kelvin: int,
+) -> None:
+    """Test if there is no color and brightness if no topic."""
+    await mqtt_mock_entry()
+
+    async_fire_mqtt_message(hass, "test-topic", "ON")
+    state = hass.states.get("light.test")
+    assert state is not None and state.state == STATE_UNKNOWN
+    assert state.attributes.get(light.ATTR_MIN_COLOR_TEMP_KELVIN) == min_kelvin
+    assert state.attributes.get(light.ATTR_MAX_COLOR_TEMP_KELVIN) == max_kelvin
 
 
 @pytest.mark.parametrize(
@@ -350,7 +462,7 @@ async def test_controlling_state_via_topic(
     assert state.state == STATE_UNKNOWN
     assert state.attributes.get("rgb_color") is None
     assert state.attributes.get("brightness") is None
-    assert state.attributes.get("color_temp") is None
+    assert state.attributes.get("color_temp_kelvin") is None
     assert state.attributes.get("effect") is None
     assert state.attributes.get("hs_color") is None
     assert state.attributes.get("rgb_color") is None
@@ -366,7 +478,7 @@ async def test_controlling_state_via_topic(
     assert state.state == STATE_ON
     assert state.attributes.get("rgb_color") is None
     assert state.attributes.get("brightness") is None
-    assert state.attributes.get("color_temp") is None
+    assert state.attributes.get("color_temp_kelvin") is None
     assert state.attributes.get("effect") is None
     assert state.attributes.get("hs_color") is None
     assert state.attributes.get("rgb_color") is None
@@ -428,6 +540,76 @@ async def test_controlling_state_via_topic(
     light_state = hass.states.get("light.test")
     assert light_state.attributes.get("xy_color") == (0.675, 0.322)
     assert light_state.attributes.get(light.ATTR_COLOR_MODE) == "xy"
+    assert light_state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) == color_modes
+
+
+@pytest.mark.parametrize(
+    ("hass_config", "payload", "kelvin"),
+    [
+        (
+            {
+                mqtt.DOMAIN: {
+                    light.DOMAIN: {
+                        "name": "test",
+                        "state_topic": "test_light_color_temp/status",
+                        "command_topic": "test_light_color_temp/set",
+                        "brightness_state_topic": "test_light_color_temp/brightness/status",
+                        "brightness_command_topic": "test_light_color_temp/brightness/set",
+                        "color_temp_state_topic": "test_light_color_temp/color_temp/status",
+                        "color_temp_command_topic": "test_light_color_temp/color_temp/set",
+                        "color_temp_kelvin": False,
+                    }
+                }
+            },
+            "300",
+            3333,
+        ),
+        (
+            {
+                mqtt.DOMAIN: {
+                    light.DOMAIN: {
+                        "name": "test",
+                        "state_topic": "test_light_color_temp/status",
+                        "command_topic": "test_light_color_temp/set",
+                        "brightness_state_topic": "test_light_color_temp/brightness/status",
+                        "brightness_command_topic": "test_light_color_temp/brightness/set",
+                        "color_temp_state_topic": "test_light_color_temp/color_temp/status",
+                        "color_temp_command_topic": "test_light_color_temp/color_temp/set",
+                        "color_temp_kelvin": True,
+                    }
+                }
+            },
+            "3333",
+            3333,
+        ),
+    ],
+    ids=["mireds", "kelvin"],
+)
+async def test_controlling_color_mode_state_via_topic(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    payload: str,
+    kelvin: int,
+) -> None:
+    """Test the controlling of the color mode state via topic."""
+    color_modes = ["color_temp"]
+
+    await mqtt_mock_entry()
+
+    state = hass.states.get("light.test")
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes.get("color_temp_kelvin") is None
+    assert state.attributes.get(light.ATTR_COLOR_MODE) is None
+    assert state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) == color_modes
+    assert not state.attributes.get(ATTR_ASSUMED_STATE)
+
+    async_fire_mqtt_message(hass, "test_light_color_temp/status", "ON")
+    async_fire_mqtt_message(hass, "test_light_color_temp/brightness/status", "70")
+    async_fire_mqtt_message(hass, "test_light_color_temp/color_temp/status", payload)
+    light_state = hass.states.get("light.test")
+    assert light_state.attributes.get("brightness") == 70
+    assert light_state.attributes["color_temp_kelvin"] == kelvin
+    assert light_state.attributes.get(light.ATTR_COLOR_MODE) == "color_temp"
     assert light_state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) == color_modes
 
 
@@ -649,7 +831,7 @@ async def test_invalid_state_via_topic(
     assert state.attributes.get("rgbw_color") is None
     assert state.attributes.get("rgbww_color") is None
     assert state.attributes.get("brightness") is None
-    assert state.attributes.get("color_temp") is None
+    assert state.attributes.get("color_temp_kelvin") is None
     assert state.attributes.get("effect") is None
     assert state.attributes.get("hs_color") is None
     assert state.attributes.get("xy_color") is None
@@ -665,7 +847,7 @@ async def test_invalid_state_via_topic(
     assert state.state == STATE_ON
     assert state.attributes.get("rgb_color") == (255, 255, 255)
     assert state.attributes.get("brightness") == 255
-    assert state.attributes.get("color_temp") is None
+    assert state.attributes.get("color_temp_kelvin") is None
     assert state.attributes.get("effect") == "none"
     assert state.attributes.get("hs_color") == (0, 0)
     assert state.attributes.get("xy_color") == (0.323, 0.329)
@@ -721,16 +903,16 @@ async def test_invalid_state_via_topic(
 
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
-    assert state.attributes.get("rgb_color") == (255, 254, 250)
+    assert state.attributes.get("rgb_color") == (255, 255, 251)
     assert state.attributes.get("brightness") == 255
-    assert state.attributes.get("color_temp") == 153
+    assert state.attributes.get("color_temp_kelvin") == 6535
     assert state.attributes.get("effect") == "none"
     assert state.attributes.get("hs_color") == (54.768, 1.6)
-    assert state.attributes.get("xy_color") == (0.326, 0.333)
+    assert state.attributes.get("xy_color") == (0.325, 0.333)
 
     async_fire_mqtt_message(hass, "test_light_rgb/color_temp/status", "")
     light_state = hass.states.get("light.test")
-    assert light_state.attributes["color_temp"] == 153
+    assert light_state.attributes["color_temp_kelvin"] == 6535
 
 
 @pytest.mark.parametrize(
@@ -939,7 +1121,7 @@ async def test_controlling_state_via_topic_with_templates(
         hass, "test_light_rgb/color_temp/status", '{"hello": "300"}'
     )
     state = hass.states.get("light.test")
-    assert state.attributes.get("color_temp") == 300
+    assert state.attributes.get("color_temp_kelvin") == 3333
     assert state.attributes.get(light.ATTR_COLOR_MODE) == "color_temp"
     assert state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) == color_modes
 
@@ -1008,7 +1190,7 @@ async def test_sending_mqtt_commands_and_optimistic(
             "brightness": 95,
             "hs_color": [100, 100],
             "effect": "random",
-            "color_temp": 100,
+            "color_temp_kelvin": 100000,
             "color_mode": "hs",
         },
     )
@@ -1021,7 +1203,7 @@ async def test_sending_mqtt_commands_and_optimistic(
     assert state.attributes.get("brightness") == 95
     assert state.attributes.get("hs_color") == (100, 100)
     assert state.attributes.get("effect") == "random"
-    assert state.attributes.get("color_temp") is None
+    assert state.attributes.get("color_temp_kelvin") is None
     assert state.attributes.get(light.ATTR_COLOR_MODE) == "hs"
     assert state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) == color_modes
     assert state.attributes.get(ATTR_ASSUMED_STATE)
@@ -1148,7 +1330,7 @@ async def test_sending_mqtt_commands_and_optimistic(
     assert state.attributes.get(light.ATTR_COLOR_MODE) == "xy"
     assert state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) == color_modes
 
-    await common.async_turn_on(hass, "light.test", color_temp=125)
+    await common.async_turn_on(hass, "light.test", color_temp_kelvin=8000)
     mqtt_mock.async_publish.assert_has_calls(
         [
             call("test_light_rgb/color_temp/set", "125", 2, False),
@@ -1160,7 +1342,7 @@ async def test_sending_mqtt_commands_and_optimistic(
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
     assert state.attributes.get("brightness") == 60
-    assert state.attributes.get("color_temp") == 125
+    assert state.attributes.get("color_temp_kelvin") == 8000
     assert state.attributes.get(light.ATTR_COLOR_MODE) == "color_temp"
     assert state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) == color_modes
 
@@ -1295,25 +1477,47 @@ async def test_sending_mqtt_rgbww_command_with_template(
 
 
 @pytest.mark.parametrize(
-    "hass_config",
+    ("hass_config", "payload"),
     [
-        {
-            mqtt.DOMAIN: {
-                light.DOMAIN: {
-                    "name": "test",
-                    "command_topic": "test_light_color_temp/set",
-                    "color_temp_command_topic": "test_light_color_temp/color_temp/set",
-                    "color_temp_command_template": "{{ (1000 / value) | round(0) }}",
-                    "payload_on": "on",
-                    "payload_off": "off",
-                    "qos": 0,
+        (
+            {
+                mqtt.DOMAIN: {
+                    light.DOMAIN: {
+                        "name": "test",
+                        "command_topic": "test_light_color_temp/set",
+                        "color_temp_command_topic": "test_light_color_temp/color_temp/set",
+                        "color_temp_command_template": "{{ (1000 / value) | round(0) }}",
+                        "color_temp_kelvin": False,
+                        "payload_on": "on",
+                        "payload_off": "off",
+                        "qos": 0,
+                    }
                 }
-            }
-        }
+            },
+            "10",
+        ),
+        (
+            {
+                mqtt.DOMAIN: {
+                    light.DOMAIN: {
+                        "name": "test",
+                        "command_topic": "test_light_color_temp/set",
+                        "color_temp_command_topic": "test_light_color_temp/color_temp/set",
+                        "color_temp_command_template": "{{ (0.5 * value) | round(0) }}",
+                        "color_temp_kelvin": True,
+                        "payload_on": "on",
+                        "payload_off": "off",
+                        "qos": 0,
+                    }
+                }
+            },
+            "5000",
+        ),
     ],
+    ids=["mireds", "kelvin"],
 )
 async def test_sending_mqtt_color_temp_command_with_template(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator, payload: str
 ) -> None:
     """Test the sending of Color Temp command with template."""
     mqtt_mock = await mqtt_mock_entry()
@@ -1321,19 +1525,19 @@ async def test_sending_mqtt_color_temp_command_with_template(
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
 
-    await common.async_turn_on(hass, "light.test", color_temp=100)
+    await common.async_turn_on(hass, "light.test", color_temp_kelvin=10000)
 
     mqtt_mock.async_publish.assert_has_calls(
         [
             call("test_light_color_temp/set", "on", 0, False),
-            call("test_light_color_temp/color_temp/set", "10", 0, False),
+            call("test_light_color_temp/color_temp/set", payload, 0, False),
         ],
         any_order=True,
     )
 
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
-    assert state.attributes["color_temp"] == 100
+    assert state.attributes["color_temp_kelvin"] == 10000
 
 
 @pytest.mark.parametrize(
@@ -2103,7 +2307,7 @@ async def test_explicit_color_mode(
     assert state.state == STATE_UNKNOWN
     assert state.attributes.get("rgb_color") is None
     assert state.attributes.get("brightness") is None
-    assert state.attributes.get("color_temp") is None
+    assert state.attributes.get("color_temp_kelvin") is None
     assert state.attributes.get("effect") is None
     assert state.attributes.get("hs_color") is None
     assert state.attributes.get("rgb_color") is None
@@ -2119,7 +2323,7 @@ async def test_explicit_color_mode(
     assert state.state == STATE_ON
     assert state.attributes.get("rgb_color") is None
     assert state.attributes.get("brightness") is None
-    assert state.attributes.get("color_temp") is None
+    assert state.attributes.get("color_temp_kelvin") is None
     assert state.attributes.get("effect") is None
     assert state.attributes.get("hs_color") is None
     assert state.attributes.get("rgb_color") is None
@@ -2248,7 +2452,7 @@ async def test_explicit_color_mode_templated(
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
     assert state.attributes.get("brightness") is None
-    assert state.attributes.get("color_temp") is None
+    assert state.attributes.get("color_temp_kelvin") is None
     assert state.attributes.get("hs_color") is None
     assert state.attributes.get(light.ATTR_COLOR_MODE) is None
     assert state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) == color_modes
@@ -2258,7 +2462,7 @@ async def test_explicit_color_mode_templated(
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
     assert state.attributes.get("brightness") is None
-    assert state.attributes.get("color_temp") is None
+    assert state.attributes.get("color_temp_kelvin") is None
     assert state.attributes.get("hs_color") is None
     assert state.attributes.get(light.ATTR_COLOR_MODE) == "unknown"
     assert state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) == color_modes
