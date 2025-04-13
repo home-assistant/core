@@ -10,6 +10,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -42,6 +43,7 @@ class ComelitVedoBinarySensorEntity(
 
     _attr_has_entity_name = True
     _attr_device_class = BinarySensorDeviceClass.MOTION
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(
         self,

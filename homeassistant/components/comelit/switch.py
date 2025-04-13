@@ -8,6 +8,7 @@ from aiocomelit import ComelitSerialBridgeObject
 from aiocomelit.const import IRRIGATION, OTHER, STATE_OFF, STATE_ON
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -43,6 +44,7 @@ class ComelitSwitchEntity(ComelitBridgeBaseEntity, SwitchEntity):
     """Switch device."""
 
     _attr_name = None
+    _attr_entity_categoty = EntityCategory.CONFIG
 
     def __init__(
         self,

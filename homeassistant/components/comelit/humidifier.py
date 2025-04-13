@@ -16,6 +16,7 @@ from homeassistant.components.humidifier import (
     HumidifierEntity,
     HumidifierEntityFeature,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -99,6 +100,8 @@ class ComelitHumidifierEntity(ComelitBridgeBaseEntity, HumidifierEntity):
     _attr_available_modes = [MODE_NORMAL, MODE_AUTO]
     _attr_min_humidity = 10
     _attr_max_humidity = 90
+    _attr_has_entity_name = True
+    _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
         self,

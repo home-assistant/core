@@ -7,6 +7,7 @@ from typing import Any, cast
 from aiocomelit.const import LIGHT, STATE_OFF, STATE_ON
 
 from homeassistant.components.light import ColorMode, LightEntity
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -38,6 +39,7 @@ class ComelitLightEntity(ComelitBridgeBaseEntity, LightEntity):
     _attr_color_mode = ColorMode.ONOFF
     _attr_name = None
     _attr_supported_color_modes = {ColorMode.ONOFF}
+    _attr_entity_category = EntityCategory.CONFIG
 
     async def _light_set_state(self, state: int) -> None:
         """Set desired light state."""
