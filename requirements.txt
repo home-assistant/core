@@ -35,7 +35,7 @@ mutagen==1.47.0
 numpy==2.2.2
 PyJWT==2.10.1
 cryptography==44.0.1
-Pillow==11.1.0
+Pillow==11.2.1
 propcache==0.3.1
 pyOpenSSL==25.0.0
 orjson==3.10.16
