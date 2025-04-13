@@ -76,6 +76,7 @@ CONFIG_DIR = {
         Path("backups/not_backup"),
     ],
     "/another_subdir": [
+        Path("another_subdir/.DS_Store"),
         Path("another_subdir/backups"),
         Path("another_subdir/tts"),
     ],

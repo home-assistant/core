@@ -576,6 +576,10 @@ async def test_assist_api_prompt(
         )
     )
     exposed_entities_prompt = """An overview of the areas and the devices in this smart home:
+- names: '1'
+  domain: light
+  state: unavailable
+  areas: Test Area 2
 - names: Kitchen
   domain: light
   state: 'on'
@@ -590,18 +594,6 @@ async def test_assist_api_prompt(
   domain: light
   state: unavailable
   areas: Test Area, Alternative name
-- names: Test Service
-  domain: light
-  state: unavailable
-  areas: Test Area, Alternative name
-- names: Test Service
-  domain: light
-  state: unavailable
-  areas: Test Area, Alternative name
-- names: Test Service
-  domain: light
-  state: unavailable
-  areas: Test Area, Alternative name
 - names: Test Device 2
   domain: light
   state: unavailable
@@ -614,16 +606,27 @@ async def test_assist_api_prompt(
   domain: light
   state: unavailable
   areas: Test Area 2
-- names: Unnamed Device
+- names: Test Service
   domain: light
   state: unavailable
-  areas: Test Area 2
-- names: '1'
+  areas: Test Area, Alternative name
+- names: Test Service
+  domain: light
+  state: unavailable
+  areas: Test Area, Alternative name
+- names: Test Service
+  domain: light
+  state: unavailable
+  areas: Test Area, Alternative name
+- names: Unnamed Device
   domain: light
   state: unavailable
   areas: Test Area 2
 """
     stateless_exposed_entities_prompt = """An overview of the areas and the devices in this smart home:
+- names: '1'
+  domain: light
+  areas: Test Area 2
 - names: Kitchen
   domain: light
 - names: Living Room
@@ -632,15 +635,6 @@ async def test_assist_api_prompt(
 - names: Test Device, my test light
   domain: light
   areas: Test Area, Alternative name
-- names: Test Service
-  domain: light
-  areas: Test Area, Alternative name
-- names: Test Service
-  domain: light
-  areas: Test Area, Alternative name
-- names: Test Service
-  domain: light
-  areas: Test Area, Alternative name
 - names: Test Device 2
   domain: light
   areas: Test Area 2
@@ -650,10 +644,16 @@ async def test_assist_api_prompt(
 - names: Test Device 4
   domain: light
   areas: Test Area 2
-- names: Unnamed Device
+- names: Test Service
   domain: light
-  areas: Test Area 2
-- names: '1'
+  areas: Test Area, Alternative name
+- names: Test Service
+  domain: light
+  areas: Test Area, Alternative name
+- names: Test Service
+  domain: light
+  areas: Test Area, Alternative name
+- names: Unnamed Device
   domain: light
   areas: Test Area 2
 """

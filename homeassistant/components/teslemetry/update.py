@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from tesla_fleet_api.const import Scope
-from tesla_fleet_api.vehiclespecific import VehicleSpecific
+from tesla_fleet_api.teslemetry import Vehicle
 
 from homeassistant.components.update import UpdateEntity, UpdateEntityFeature
 from homeassistant.core import HomeAssistant
@@ -48,7 +48,7 @@ async def async_setup_entry(
 class TeslemetryUpdateEntity(TeslemetryRootEntity, UpdateEntity):
     """Teslemetry Updates entity."""
 
-    api: VehicleSpecific
+    api: Vehicle
     _attr_supported_features = UpdateEntityFeature.PROGRESS
 
     async def async_install(

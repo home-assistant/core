@@ -1455,6 +1455,7 @@ async def test_working_location_ignored(
     ("event_type", "expected_event_message"),
     [
         ("workingLocation", "Test All Day Event"),
+        ("birthday", None),
         ("default", None),
     ],
 )
@@ -1515,3 +1516,49 @@ async def test_no_working_location_entity(
 
     entity_entry = entity_registry.async_get("calendar.working_location")
     assert not entity_entry
+
+
+@pytest.mark.parametrize(
+    ("event_type", "expected_event_message"),
+    [
+        ("workingLocation", None),
+        ("birthday", "Test All Day Event"),
+        ("default", None),
+    ],
+)
+@pytest.mark.parametrize("calendar_is_primary", [True])
+async def test_birthday_entity(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    entity_registry: er.EntityRegistry,
+    mock_events_list_items: Callable[[list[dict[str, Any]]], None],
+    component_setup: ComponentSetup,
+    event_type: str,
+    expected_event_message: str | None,
+) -> None:
+    """Test that birthday events appear only on the birthdays calendar."""
+    event = {
+        **TEST_EVENT,
+        **upcoming(),
+        "eventType": event_type,
+    }
+    mock_events_list_items([event])
+    assert await component_setup()
+
+    entity_entry = entity_registry.async_get("calendar.birthdays")
+    assert entity_entry
+    assert entity_entry.disabled_by is None  # Enabled by default
+
+    entity_registry.async_update_entity(
+        entity_id="calendar.birthdays", disabled_by=None
+    )
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + datetime.timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("calendar.birthdays")
+    assert state
+    assert state.name == "Birthdays"
+    assert state.attributes.get("message") == expected_event_message

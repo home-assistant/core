@@ -115,7 +115,7 @@
       "sensitivity": {
         "name": "Pure sensitivity",
         "state": {
-          "n": "Normal",
+          "n": "[%key:common::state::normal%]",
           "s": "Sensitive"
         }
       },
@@ -140,10 +140,10 @@
             "name": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::name%]",
             "state": {
               "auto": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::auto%]",
-              "high": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::high%]",
-              "low": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::low%]",
+              "high": "[%key:common::state::high%]",
+              "low": "[%key:common::state::low%]",
               "medium_low": "Medium low",
-              "medium": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::medium%]",
+              "medium": "[%key:common::state::medium%]",
               "medium_high": "Medium high",
               "strong": "Strong",
               "quiet": "Quiet"
@@ -226,10 +226,10 @@
             "name": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::name%]",
             "state": {
               "auto": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::auto%]",
-              "high": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::high%]",
-              "low": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::low%]",
+              "high": "[%key:common::state::high%]",
+              "low": "[%key:common::state::low%]",
               "medium_low": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::fanlevel::state::medium_low%]",
-              "medium": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::medium%]",
+              "medium": "[%key:common::state::medium%]",
               "medium_high": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::fanlevel::state::medium_high%]",
               "strong": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::fanlevel::state::strong%]",
               "quiet": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::fanlevel::state::quiet%]"
@@ -330,7 +330,7 @@
       "timer_on_switch": {
         "name": "Timer",
         "state_attributes": {
-          "id": { "name": "Id" },
+          "id": { "name": "ID" },
           "turn_on": {
             "name": "Turns on",
             "state": {
@@ -364,11 +364,11 @@
             "state": {
               "quiet": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::fanlevel::state::quiet%]",
               "strong": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::fanlevel::state::strong%]",
-              "low": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::low%]",
+              "low": "[%key:common::state::low%]",
               "medium_low": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::fanlevel::state::medium_low%]",
-              "medium": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::medium%]",
+              "medium": "[%key:common::state::medium%]",
               "medium_high": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::fanlevel::state::medium_high%]",
-              "high": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::high%]",
+              "high": "[%key:common::state::high%]",
               "auto": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::auto%]"
             }
           },
@@ -524,7 +524,7 @@
   "selector": {
     "sensitivity": {
       "options": {
-        "normal": "[%key:component::sensibo::entity::sensor::sensitivity::state::n%]",
+        "normal": "[%key:common::state::normal%]",
         "sensitive": "[%key:component::sensibo::entity::sensor::sensitivity::state::s%]"
       }
     },
@@ -594,7 +594,7 @@
   "issues": {
     "deprecated_entity_horizontalswing": {
       "title": "The Sensibo {name} entity is deprecated",
-      "description": "The Sensibo entity `{entity}` is deprecated and will be removed in a future release.\nPlease update your automations and scripts to use the `horizontal_swing` attribute part of the `climate` entity instead.\n, Disable the `{entity}` and reload the config entry or restart Home Assistant to fix this issue."
+      "description": "The Sensibo entity `{entity}` is deprecated and will be removed in a future release.\nPlease update your automations and scripts to use the `horizontal_swing` attribute part of the `climate` entity instead.\nDisable `{entity}` and reload the config entry or restart Home Assistant to fix this issue."
     }
   }
 }
