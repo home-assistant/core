@@ -73,15 +73,15 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         target_temperature: float | None = kwargs.get(ATTR_TEMPERATURE)
-        if target_temperature is not None:
-            if self.target_temperature != target_temperature:
-                matter_attribute = (
-                    clusters.Thermostat.Attributes.OccupiedHeatingSetpoint
-                )
-                await self.write_attribute(
-                    value=round(target_temperature * TEMPERATURE_SCALING_FACTOR),
-                    matter_attribute=matter_attribute,
-                )
+        if (
+            target_temperature is not None
+            and self.target_temperature != target_temperature
+        ):
+            matter_attribute = clusters.Thermostat.Attributes.OccupiedHeatingSetpoint
+            await self.write_attribute(
+                value=round(target_temperature * TEMPERATURE_SCALING_FACTOR),
+                matter_attribute=matter_attribute,
+            )
 
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
