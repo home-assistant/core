@@ -1304,6 +1304,7 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "coinbase",
     "color_extractor",
     "comed_hourly_pricing",
+    "comelit",
     "comfoconnect",
     "command_line",
     "compensation",
