@@ -6,16 +6,15 @@ from typing import Any
 
 from pyuptimerobot import UptimeRobotException
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
-from .coordinator import UptimeRobotDataUpdateCoordinator
+from .coordinator import UptimeRobotConfigEntry, UptimeRobotDataUpdateCoordinator
 
 
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: UptimeRobotConfigEntry,
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     coordinator: UptimeRobotDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
