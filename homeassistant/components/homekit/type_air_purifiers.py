@@ -1,7 +1,5 @@
 """Class to hold all air purifier accessories."""
 
-from collections.abc import Callable
-from functools import partial
 import logging
 from typing import Any
 
@@ -11,16 +9,9 @@ from pyhap.service import Service
 from pyhap.util import callback as pyhap_callback
 
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
-from homeassistant.core import (
-    Event,
-    EventStateChangedData,
-    HassJobType,
-    State,
-    callback,
-)
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.core import State, callback
 
-from .accessories import TYPES
+from .accessories import TYPES, LinkedEntityStateTracking
 from .const import (
     CHAR_ACTIVE,
     CHAR_AIR_QUALITY,
@@ -133,7 +124,7 @@ class AirPurifier(Fan):
 
             humidity_state = self.hass.states.get(self.linked_humidity_sensor)
             if humidity_state:
-                self._async_update_sensor(
+                self.async_update_linked_entity(
                     self.char_current_humidity,
                     self.linked_humidity_sensor,
                     convert_to_float,
@@ -155,7 +146,7 @@ class AirPurifier(Fan):
 
             pm25_state = self.hass.states.get(self.linked_pm25_sensor)
             if pm25_state:
-                self._async_update_sensor(
+                self.async_update_linked_entity(
                     self.char_pm25_density,
                     self.linked_pm25_sensor,
                     convert_to_float,
@@ -177,7 +168,7 @@ class AirPurifier(Fan):
 
             temperature_state = self.hass.states.get(self.linked_temperature_sensor)
             if temperature_state:
-                self._async_update_sensor(
+                self.async_update_linked_entity(
                     self.char_current_temperature,
                     self.linked_temperature_sensor,
                     convert_to_float,
@@ -216,7 +207,7 @@ class AirPurifier(Fan):
                     self.linked_filter_change_indicator_binary_sensor
                 )
                 if filter_change_indicator_state:
-                    self._async_update_sensor(
+                    self.async_update_linked_entity(
                         self.char_filter_change_indication,
                         self.linked_filter_change_indicator_binary_sensor,
                         filter_change_indication_from_binary_sensor,
@@ -233,7 +224,7 @@ class AirPurifier(Fan):
                     self.linked_filter_life_level_sensor
                 )
                 if filter_life_level_state:
-                    self._async_update_sensor(
+                    self.async_update_linked_entity(
                         self.char_filter_life_level,
                         self.linked_filter_life_level_sensor,
                         convert_to_float,
@@ -255,117 +246,41 @@ class AirPurifier(Fan):
         Run inside the Home Assistant event loop.
         """
         # Add subscriptions for all float sensors
-        float_sensors: list[
-            tuple[
-                str | None,
-                Characteristic | None,
-                Callable[[float], None] | None,
-            ]
-        ] = [
-            (
-                self.linked_humidity_sensor,
-                self.char_current_humidity,
-                None,
-            ),
+        for linked_sensor, characteristic, post_processor in (
+            (self.linked_humidity_sensor, self.char_current_humidity, None),
             (
                 self.linked_pm25_sensor,
                 self.char_pm25_density,
                 self._async_update_air_quality_from_pm25,
             ),
-            (
-                self.linked_temperature_sensor,
-                self.char_current_temperature,
-                None,
-            ),
+            (self.linked_temperature_sensor, self.char_current_temperature, None),
             (
                 self.linked_filter_life_level_sensor,
                 self.char_filter_life_level,
                 self._async_update_filter_change_indicator_from_filter_life_level,
             ),
-        ]
-        for linked_sensor, char, post_processor in float_sensors:
-            if linked_sensor and char:
-                self._subscriptions.append(
-                    async_track_state_change_event(
-                        self.hass,
-                        [linked_sensor],
-                        partial(  # type: ignore[misc] # mypy fails to infer the type parameter (`float` here)
-                            self._async_update_sensor_event,
-                            char,
-                            linked_sensor,
-                            convert_to_float,
-                            post_processor=post_processor,
-                        ),
-                        job_type=HassJobType.Callback,
+        ):
+            if linked_sensor and characteristic:
+                self.track_linked_entity(
+                    LinkedEntityStateTracking(
+                        linked_sensor, characteristic, convert_to_float, post_processor
                     )
                 )
 
-        # Add subscriptions for the binary sensor
+        # Add subscription for the binary sensor
         if (
             self.linked_filter_change_indicator_binary_sensor
             and self.char_filter_change_indication
         ):
-            self._subscriptions.append(
-                async_track_state_change_event(
-                    self.hass,
-                    [self.linked_filter_change_indicator_binary_sensor],
-                    partial(
-                        self._async_update_sensor_event,
-                        self.char_filter_change_indication,
-                        self.linked_filter_change_indicator_binary_sensor,
-                        filter_change_indication_from_binary_sensor,
-                    ),
-                    job_type=HassJobType.Callback,
+            self.track_linked_entity(
+                LinkedEntityStateTracking(
+                    self.linked_filter_change_indicator_binary_sensor,
+                    self.char_filter_change_indication,
+                    filter_change_indication_from_binary_sensor,
                 )
             )
 
         super().run()
-
-    @callback
-    def _async_update_sensor_event[T](
-        self,
-        char: Characteristic,
-        linked_sensor_entity_id: str,
-        convert_value: Callable[[Any], T],
-        event: Event[EventStateChangedData],
-        post_processor: Callable[[T], None] | None = None,
-    ) -> None:
-        """Handle state change event listener callback."""
-        self._async_update_sensor(
-            char,
-            linked_sensor_entity_id,
-            convert_value,
-            event.data["new_state"],
-            post_processor,
-        )
-
-    @callback
-    def _async_update_sensor[T](
-        self,
-        char: Characteristic,
-        linked_sensor_entity_id: str,
-        convert_value: Callable[[Any], T | None],
-        new_state: State | None,
-        post_processor: Callable[[T], None] | None = None,
-    ) -> None:
-        """Handle linked sensor state change to update HomeKit value."""
-        if new_state is None or new_state.state in IGNORED_STATES:
-            return
-
-        current_value = convert_value(new_state.state)
-        if current_value is None or char.value == current_value:
-            return
-
-        _LOGGER.debug(
-            "%s: Linked sensor %s changed to %s",
-            self.entity_id,
-            linked_sensor_entity_id,
-            current_value,
-        )
-        char.set_value(current_value)
-
-        if post_processor:
-            post_processor(current_value)
 
     @callback
     def _async_update_air_quality_from_pm25(self, current_pm25: float) -> None:

@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
+from functools import partial
 import logging
 from typing import Any, cast
 from uuid import UUID
@@ -125,6 +128,7 @@ RELOAD_ON_CHANGE_ATTRS = (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
 )
+INVALID_STATES = {STATE_UNAVAILABLE, STATE_UNKNOWN}
 
 
 def get_accessory(  # noqa: C901
@@ -295,6 +299,16 @@ def get_accessory(  # noqa: C901
 
     _LOGGER.debug('Add "%s" as "%s"', state.entity_id, a_type)
     return TYPES[a_type](hass, driver, name, state.entity_id, aid, config)
+
+
+@dataclass
+class LinkedEntityStateTracking[T]:
+    """Track the state of a linked entity."""
+
+    entity_id: str
+    characteristic: Characteristic
+    state_to_value: Callable[[Any], T | None]
+    post_processor: Callable[[T], None] | None = None
 
 
 class HomeAccessory(Accessory):  # type: ignore[misc]
@@ -607,6 +621,77 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
             _LOGGER.debug(
                 "%s: Updated battery charging to %d", self.entity_id, hk_charging
             )
+
+    def track_linked_entity[T](self, data: LinkedEntityStateTracking[T]) -> None:
+        """Track the state of a linked entity, to update a HomeKit characteristic."""
+        self._subscriptions.append(
+            async_track_state_change_event(
+                self.hass,
+                [data.entity_id],
+                partial(
+                    self._async_update_linked_entity_event,
+                    data.characteristic,
+                    data.entity_id,
+                    data.state_to_value,
+                    post_processor=data.post_processor,
+                ),
+            )
+        )
+
+    @ha_callback
+    def _async_update_linked_entity_event[T](
+        self,
+        char: Characteristic,
+        linked_entity_id: str,
+        state_to_value: Callable[[Any], T | None],
+        event: Event[EventStateChangedData],
+        post_processor: Callable[[T], None] | None = None,
+    ) -> None:
+        self.async_update_linked_entity(
+            char,
+            linked_entity_id,
+            state_to_value,
+            event.data["new_state"],
+            post_processor,
+        )
+
+    @ha_callback
+    def async_update_linked_entity[T](
+        self,
+        char: Characteristic,
+        linked_entity_id: str,
+        state_to_value: Callable[[Any], T | None],
+        new_state: State | None,
+        post_processor: Callable[[T], None] | None = None,
+    ) -> None:
+        """Handle updated state from a linked entity.
+
+        Generic handler that can be used for any linked entity. Will use the given conversion function
+        to convert the updated state to the value to set for the given characteristic.
+        Updates won't be sent if the new state is None or in INVALID_STATES, if the conversion function
+        return None, or if the new value is equal to the previous.
+
+        You can also provide a post processor function that will be called with the new value, e.g.
+        to handle any custom logic based on the updated value.
+        """
+        if new_state is None or new_state.state in INVALID_STATES:
+            return
+
+        if (
+            updated_value := state_to_value(new_state.state)
+        ) is None or updated_value == char.value:
+            return
+
+        _LOGGER.debug(
+            "%s: Linked entity %s changed to %s",
+            self.entity_id,
+            linked_entity_id,
+            updated_value,
+        )
+        char.set_value(updated_value)
+
+        if post_processor:
+            post_processor(updated_value)
 
     @ha_callback
     def async_update_state(self, new_state: State) -> None:
