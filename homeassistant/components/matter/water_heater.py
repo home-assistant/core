@@ -24,7 +24,6 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import MatterEntity
@@ -95,8 +94,6 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
             duration=3600
         )
         system_mode_value = WATER_HEATER_SYSTEM_MODE_MAP[operation_mode]
-        if system_mode_value is None:
-            raise ServiceValidationError(f"Unsupported mode {operation_mode} in Matter")
         await self.write_attribute(
             value=system_mode_value,
             matter_attribute=clusters.Thermostat.Attributes.SystemMode,
