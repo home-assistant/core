@@ -561,7 +561,7 @@ PLATFORM_ENTITY_FIELDS = {
             exclude_from_reconfig=True,
         ),
         CONF_COLOR_TEMP_KELVIN: PlatformField(
-            selector=Selector(),
+            selector=BOOLEAN_SELECTOR,
             required=True,
             validator=bool,
             default=True,
