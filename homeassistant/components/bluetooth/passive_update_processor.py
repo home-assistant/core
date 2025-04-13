@@ -377,7 +377,7 @@ class PassiveBluetoothProcessorCoordinator[_DataT](BasePassiveBluetoothCoordinat
         self._process_update(update, was_available)
 
     @callback
-    def async_manual_update(self, update: _DataT) -> None:
+    def async_set_updated_data(self, update: _DataT) -> None:
         """Manually update the processor with new data.
 
         If the data comes in via a different method, like a

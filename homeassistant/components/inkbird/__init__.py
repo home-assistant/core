@@ -40,7 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: INKBIRDConfigEntry) -> b
     data = INKBIRDBluetoothDeviceData(
         device_type,
         device_data,
-        coordinator.async_manual_update,
+        coordinator.async_set_updated_data,
         _async_device_data_changed,
     )
     coordinator.async_set_data(data)
