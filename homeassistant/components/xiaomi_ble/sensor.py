@@ -194,8 +194,6 @@ SENSOR_DESCRIPTIONS = {
     # User profile ID sensor
     (ExtendedSensorDeviceClass.PROFILE_ID, None): SensorEntityDescription(
         key=str(ExtendedSensorDeviceClass.PROFILE_ID),
-        native_unit_of_measurement=None,
-        state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:identifier",
     ),
 }
