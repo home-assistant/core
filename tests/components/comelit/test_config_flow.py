@@ -219,3 +219,75 @@ async def test_reauth_not_successful(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert mock_vedo_config_entry.data[CONF_PIN] == VEDO_PIN
+
+
+async def test_reconfigure_successful(
+    hass: HomeAssistant,
+    mock_serial_bridge: AsyncMock,
+    mock_serial_bridge_config_entry: MockConfigEntry,
+) -> None:
+    """Test that the host can be reconfigured."""
+    mock_serial_bridge_config_entry.add_to_hass(hass)
+    result = await mock_serial_bridge_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    # original entry
+    assert mock_serial_bridge_config_entry.data["host"] == "fake_bridge_host"
+
+    new_host = "new_bridge_host"
+
+    reconfigure_result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: new_host,
+            CONF_PORT: 80,
+            CONF_PIN: 123456,
+        },
+    )
+
+    assert reconfigure_result["type"] is FlowResultType.ABORT
+    assert reconfigure_result["reason"] == "reconfigure_successful"
+
+    # changed entry
+    assert mock_serial_bridge_config_entry.data["host"] == new_host
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        (CannotConnect, "cannot_connect"),
+        (CannotAuthenticate, "invalid_auth"),
+        (ConnectionResetError, "unknown"),
+    ],
+)
+async def test_reconfigure_fails(
+    hass: HomeAssistant,
+    mock_serial_bridge: AsyncMock,
+    mock_serial_bridge_config_entry: MockConfigEntry,
+    side_effect: Exception,
+    error: str,
+) -> None:
+    """Test that the host can be reconfigured."""
+    mock_serial_bridge_config_entry.add_to_hass(hass)
+    result = await mock_serial_bridge_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    mock_serial_bridge.login.side_effect = side_effect
+
+    reconfigure_result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "192.168.100.60",
+            CONF_PORT: 80,
+            CONF_PIN: 123456,
+            CONF_TYPE: BRIDGE,
+        },
+    )
+
+    assert reconfigure_result["type"] is FlowResultType.FORM
+    assert reconfigure_result["step_id"] == "reconfigure"
+    assert reconfigure_result["errors"] == {"base": error}
