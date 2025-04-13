@@ -33,15 +33,6 @@
     {
       "local_name": "ITH-21-B",
       "connectable": false
-    },
-    {
-      "local_name": "Ink@IAM-T1",
-      "connectable": true
-    },
-    {
-      "manufacturer_id": 12628,
-      "manufacturer_data_start": [67, 45, 54, 50, 48, 48],
-      "connectable": true
     }
   ],
   "codeowners": ["@bdraco"],
