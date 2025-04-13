@@ -1,4 +1,4 @@
-"""Weather data coordinator for the OpenWeatherMap (OWM) service."""
+"""Data coordinator for the OpenWeatherMap (OWM) service."""
 
 from __future__ import annotations
 
@@ -7,6 +7,8 @@ import logging
 from typing import TYPE_CHECKING
 
 from pyopenweathermap import (
+    AirPollutionReport,
+    CurrentAirPollution,
     CurrentWeather,
     DailyWeatherForecast,
     HourlyWeatherForecast,
@@ -31,6 +33,15 @@ if TYPE_CHECKING:
     from . import OpenweathermapConfigEntry
 
 from .const import (
+    ATTR_API_AIRPOLLUTION_AQI,
+    ATTR_API_AIRPOLLUTION_CO,
+    ATTR_API_AIRPOLLUTION_NH3,
+    ATTR_API_AIRPOLLUTION_NO,
+    ATTR_API_AIRPOLLUTION_NO2,
+    ATTR_API_AIRPOLLUTION_O3,
+    ATTR_API_AIRPOLLUTION_PM2_5,
+    ATTR_API_AIRPOLLUTION_PM10,
+    ATTR_API_AIRPOLLUTION_SO2,
     ATTR_API_CLOUDS,
     ATTR_API_CONDITION,
     ATTR_API_CURRENT,
@@ -63,6 +74,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 WEATHER_UPDATE_INTERVAL = timedelta(minutes=10)
+AIRPOLLUTION_UPDATE_INTERVAL = timedelta(minutes=10)
 
 
 class WeatherUpdateCoordinator(DataUpdateCoordinator):
@@ -248,3 +260,65 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             return ATTR_CONDITION_CLEAR_NIGHT
 
         return CONDITION_MAP.get(weather_code)
+
+
+class AirPollutionUpdateCoordinator(DataUpdateCoordinator):
+    """Air Pollution data update coordinator."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: OpenweathermapConfigEntry,
+        owm_client: OWMClient,
+    ) -> None:
+        """Initialize coordinator."""
+        self._owm_client = owm_client
+        self._latitude = config_entry.data.get(CONF_LATITUDE, hass.config.latitude)
+        self._longitude = config_entry.data.get(CONF_LONGITUDE, hass.config.longitude)
+
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            update_interval=AIRPOLLUTION_UPDATE_INTERVAL,
+        )
+
+    async def _async_update_data(self):
+        """Update the data."""
+        try:
+            air_pollution_report = await self._owm_client.get_air_pollution(
+                self._latitude, self._longitude
+            )
+        except RequestError as error:
+            raise UpdateFailed(error) from error
+        return self._convert_air_pollution_response(air_pollution_report)
+
+    def _convert_air_pollution_response(self, air_pollution_report: AirPollutionReport):
+        """Format the air pollution response correctly."""
+        _LOGGER.debug("OWM air pollution response: %s", air_pollution_report)
+
+        current_air_pollution = (
+            self._get_current_air_pollution_data(air_pollution_report.current)
+            if air_pollution_report.current is not None
+            else {}
+        )
+
+        return {
+            ATTR_API_CURRENT: current_air_pollution,
+        }
+
+    def _get_current_air_pollution_data(
+        self, current_air_pollution: CurrentAirPollution
+    ):
+        return {
+            ATTR_API_AIRPOLLUTION_AQI: current_air_pollution.aqi,
+            ATTR_API_AIRPOLLUTION_CO: current_air_pollution.co,
+            ATTR_API_AIRPOLLUTION_NO: current_air_pollution.no,
+            ATTR_API_AIRPOLLUTION_NO2: current_air_pollution.no2,
+            ATTR_API_AIRPOLLUTION_O3: current_air_pollution.o3,
+            ATTR_API_AIRPOLLUTION_SO2: current_air_pollution.so2,
+            ATTR_API_AIRPOLLUTION_PM2_5: current_air_pollution.pm2_5,
+            ATTR_API_AIRPOLLUTION_PM10: current_air_pollution.pm10,
+            ATTR_API_AIRPOLLUTION_NH3: current_air_pollution.nh3,
+        }
