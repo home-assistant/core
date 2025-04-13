@@ -54,11 +54,6 @@ class ZimiEntity(Entity):
         self._device.unsubscribe(self)
         await super().async_will_remove_from_hass()
 
-    @property
-    def name(self) -> str:
-        """Name of the entity."""
-        return self._device.name.strip()
-
     def notify(self, _observable: object) -> None:
         """Receive notification from device that state has changed.
 
