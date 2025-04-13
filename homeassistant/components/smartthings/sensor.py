@@ -1003,9 +1003,8 @@ CAPABILITY_TO_SENSORS: dict[
                 translation_key="water_consumption",
                 state_class=SensorStateClass.TOTAL_INCREASING,
                 device_class=SensorDeviceClass.WATER,
-                native_unit_of_measurement=UnitOfVolume.MILLILITERS,
-                suggested_unit_of_measurement=UnitOfVolume.LITERS,
-                value_fn=lambda value: value["cumulativeAmount"],
+                native_unit_of_measurement=UnitOfVolume.LITERS,
+                value_fn=lambda value: value["cumulativeAmount"] / 1000,
             )
         ]
     },
