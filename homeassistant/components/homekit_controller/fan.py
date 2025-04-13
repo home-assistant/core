@@ -153,9 +153,7 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
     @cached_property
     def preset_modes(self) -> list[str]:
         """Return the preset modes."""
-        if self.service.has(self.preset_char):
-            return [PRESET_AUTO]
-        return []
+        return [PRESET_AUTO] if self.service.has(self.preset_char) else []
 
     @property
     def preset_mode(self) -> str | None:
