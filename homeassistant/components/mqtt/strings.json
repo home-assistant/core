@@ -295,17 +295,21 @@
               "name": "Advanced settings",
               "data": {
                 "expire_after": "Expire after",
+                "flash": "Flash support",
                 "flash_time_long": "Flash time long",
                 "flash_time_short": "Flash time short",
                 "max_kelvin": "Max Kelvin",
-                "min_kelvin": "Min Kelvin"
+                "min_kelvin": "Min Kelvin",
+                "transition": "Transition support"
               },
               "data_description": {
                 "expire_after": "If set, it defines the number of seconds after the sensor’s state expires, if it’s not updated. After expiry, the sensor’s state becomes unavailable. If not set, the sensor's state never expires. [Learn more.]({url}#expire_after)",
+                "flash": "Enable the flash feature for this light",
                 "flash_time_long": "The duration, in seconds, of a \"long\" flash.",
                 "flash_time_short": "The duration, in seconds, of a \"short\" flash.",
                 "max_kelvin": "The maximum color temperature in Kelvin.",
-                "min_kelvin": "The minimum color temperature in Kelvin."
+                "min_kelvin": "The minimum color temperature in Kelvin.",
+                "transition": "Enable the transition feature for this light"
               }
             },
             "light_brightness_settings": {
