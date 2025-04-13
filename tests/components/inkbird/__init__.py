@@ -56,3 +56,14 @@ IBBQ_SERVICE_INFO = BluetoothServiceInfo(
     service_data={},
     source="local",
 )
+
+
+IAM_T1_SERVICE_INFO = BluetoothServiceInfo(
+    name="Ink@IAM-T1",
+    manufacturer_data={12628: b"AC-6200a13cae\x00\x00"},
+    service_uuids=["0000fff0-0000-1000-8000-00805f9b34fb"],
+    address="62:00:A1:3C:AE:7B",
+    rssi=-44,
+    service_data={},
+    source="local",
+)
