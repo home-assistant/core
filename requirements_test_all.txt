@@ -1745,6 +1745,9 @@ pymeteoclimatic==0.1.0
 # homeassistant.components.assist_pipeline
 pymicro-vad==1.0.1
 
+# homeassistant.components.miele
+pymiele==0.3.4
+
 # homeassistant.components.mochad
 pymochad==0.2.0
 
