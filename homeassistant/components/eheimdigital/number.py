@@ -9,8 +9,11 @@ from eheimdigital.device import EheimDigitalDevice
 from eheimdigital.heater import EheimDigitalHeater
 from eheimdigital.types import HeaterUnit
 
-from homeassistant.components.number import NumberEntity, NumberEntityDescription
-from homeassistant.components.number.const import NumberDeviceClass
+from homeassistant.components.number import (
+    NumberDeviceClass,
+    NumberEntity,
+    NumberEntityDescription,
+)
 from homeassistant.const import (
     PERCENTAGE,
     PRECISION_HALVES,
