@@ -33,7 +33,7 @@ Mastodon.py==2.0.1
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
 # homeassistant.components.tensorflow
-Pillow==11.1.0
+Pillow==11.2.1
 
 # homeassistant.components.plex
 PlexAPI==4.15.16
@@ -590,7 +590,7 @@ batinfo==0.4.2
 # beacontools[scan]==2.1.0
 
 # homeassistant.components.scrape
-beautifulsoup4==4.12.3
+beautifulsoup4==4.13.3
 
 # homeassistant.components.beewi_smartclim
 # beewi-smartclim==0.0.10
@@ -709,7 +709,7 @@ coinbase-advanced-py==1.2.2
 coinbase==2.1.0
 
 # homeassistant.scripts.check_config
-colorlog==6.8.2
+colorlog==6.9.0
 
 # homeassistant.components.color_extractor
 colorthief==0.2.1
@@ -1096,7 +1096,7 @@ gstreamer-player==1.1.2
 guppy3==3.1.5
 
 # homeassistant.components.iaqualink
-h2==4.1.0
+h2==4.2.0
 
 # homeassistant.components.ffmpeg
 ha-ffmpeg==3.2.2
@@ -1157,7 +1157,7 @@ hole==0.8.0
 holidays==0.69
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250404.0
+home-assistant-frontend==20250411.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.3.28
@@ -2322,7 +2322,7 @@ pysma==0.7.5
 pysmappee==0.2.29
 
 # homeassistant.components.smartthings
-pysmartthings==3.0.2
+pysmartthings==3.0.4
 
 # homeassistant.components.smarty
 pysmarty2==0.10.2
@@ -2733,7 +2733,7 @@ sentry-sdk==1.45.1
 sfrbox-api==0.0.11
 
 # homeassistant.components.sharkiq
-sharkiq==1.0.2
+sharkiq==1.1.0
 
 # homeassistant.components.aquostv
 sharp_aquos_rc==0.3.2
@@ -2968,7 +2968,7 @@ typedmonarchmoney==0.4.4
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==7.5.1
+uiprotect==7.5.3
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
@@ -3094,7 +3094,7 @@ wyoming==1.5.4
 xbox-webapi==2.1.0
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==0.35.0
+xiaomi-ble==0.37.0
 
 # homeassistant.components.knx
 xknx==3.6.0
