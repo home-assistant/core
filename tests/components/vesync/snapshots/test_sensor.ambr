@@ -129,7 +129,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '48',
+    'state': '25',
   })
 # ---
 # name: test_sensor_state[Air Purifier 200s][devices]
