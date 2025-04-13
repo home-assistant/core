@@ -285,14 +285,14 @@
       "switch_current_position": {
         "name": "Current switch position"
       },
+      "estimated_heat_required": {
+        "name": "Required heating energy"
+      },
       "tank_volume": {
         "name": "Tank volume"
       },
       "tank_percentage": {
         "name": "Hot water level"
-      },
-      "estimated_heat_required": {
-        "name": "Required heating energy"
       },
       "valve_position": {
         "name": "Valve position"
