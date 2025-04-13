@@ -30,8 +30,9 @@ from tests.common import MockConfigEntry, async_fire_time_changed
         # Contains "SERIALNO" but no "UPSNAME" field.
         # We should create devices for the entities and prefix their IDs with default "APC UPS".
         MOCK_MINIMAL_STATUS | {"SERIALNO": "XXXX"},
-        # Does not contain either "SERIALNO" field or "UPSNAME" field. Our integration should work
-        # fine without it by falling back to config entry ID as unique ID and "APC UPS" as default name.
+        # Does not contain either "SERIALNO" field or "UPSNAME" field.
+        # Our integration should work fine without it by falling back to config entry ID as unique
+        # ID and "APC UPS" as default name.
         MOCK_MINIMAL_STATUS,
         # Some models report "Blank" as SERIALNO, but we should treat it as not reported.
         MOCK_MINIMAL_STATUS | {"SERIALNO": "Blank"},
@@ -50,7 +51,8 @@ async def test_async_setup_entry(
     device_entry = device_registry.async_get_device(
         identifiers={(DOMAIN, config_entry.unique_id or config_entry.entry_id)}
     )
-    assert device_entry == snapshot(name=f"device-{device_entry.name}")
+    name = f"device_{device_entry.name}_{status.get('SERIALNO', '<no serial>')}"
+    assert device_entry == snapshot(name=name)
 
     platforms = async_get_platforms(hass, DOMAIN)
     assert len(platforms) > 0
