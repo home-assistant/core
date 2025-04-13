@@ -678,7 +678,7 @@
     },
     "platform": {
       "options": {
-        "light": "[%key:component::sensor::title%]",
+        "light": "[%key:component::light::title%]",
         "notify": "Notify",
         "sensor": "Sensor",
         "switch": "Switch"
