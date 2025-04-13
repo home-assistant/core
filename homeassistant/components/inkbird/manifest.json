@@ -33,6 +33,10 @@
     {
       "local_name": "ITH-21-B",
       "connectable": false
+    },
+    {
+      "manufacturer_id": 12628,
+      "manufacturer_data_start": [67, 45, 54, 50, 48, 48]
     }
   ],
   "codeowners": ["@bdraco"],
