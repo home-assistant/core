@@ -225,7 +225,7 @@
         "name": "Number of rinses",
         "state": {
           "off": "[%key:common::state::off%]",
-          "normal": "Normal",
+          "normal": "[%key:common::state::normal%]",
           "extra": "Extra",
           "max": "Max"
         }
@@ -244,7 +244,7 @@
       "contamination_state": {
         "name": "Contamination state",
         "state": {
-          "normal": "Normal",
+          "normal": "[%key:common::state::normal%]",
           "low": "[%key:common::state::low%]",
           "warning": "Warning",
           "critical": "Critical"
