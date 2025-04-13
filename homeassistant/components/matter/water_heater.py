@@ -44,12 +44,6 @@ WATER_HEATER_SYSTEM_MODE_MAP = {
     STATE_OFF: 0,
 }
 
-BOOST_STATE_MAP = {
-    clusters.WaterHeaterManagement.Enums.BoostStateEnum.kInactive: "inactive",
-    clusters.WaterHeaterManagement.Enums.BoostStateEnum.kActive: "active",
-    clusters.WaterHeaterManagement.Enums.BoostStateEnum.kUnknownEnumValue: None,
-}
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
