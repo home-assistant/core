@@ -155,22 +155,6 @@ MOCK_SUBENTRY_LIGHT_BASIC_KELVIN_COMPONENT = {
         "entity_picture": "https://example.com/8131babc5e8d4f44b82e0761d39091a2",
     },
 }
-MOCK_SUBENTRY_LIGHT_BASIC_MIREDS_COMPONENT = {
-    "8131babc5e8d4f44b82e0761d39091a2": {
-        "platform": "light",
-        "name": "Basic light",
-        "on_command_type": "last",
-        "optimistic": True,
-        "payload_off": "OFF",
-        "payload_on": "ON",
-        "command_topic": "test-topic",
-        "schema": "basic",
-        "state_topic": "test-topic",
-        "color_temp_kelvin": False,
-        "state_value_template": "{{ value_json.value }}",
-        "entity_picture": "https://example.com/8131babc5e8d4f44b82e0761d39091a2",
-    },
-}
 MOCK_SUBENTRY_NOTIFY_BAD_SCHEMA = {
     "b10b531e15244425a74bb0abb1e9d2c6": {
         "platform": "notify",
@@ -213,10 +197,6 @@ MOCK_NOTIFY_SUBENTRY_DATA_NO_NAME = {
 MOCK_LIGHT_BASIC_KELVIN_SUBENTRY_DATA_SINGLE = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_LIGHT_BASIC_KELVIN_COMPONENT,
-}
-MOCK_LIGHT_BASIC_MIREDS_SUBENTRY_DATA_SINGLE = {
-    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
-    "components": MOCK_SUBENTRY_LIGHT_BASIC_MIREDS_COMPONENT,
 }
 MOCK_SENSOR_SUBENTRY_DATA_SINGLE = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},

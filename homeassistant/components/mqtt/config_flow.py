@@ -155,9 +155,7 @@ from .const import (
     CONF_KEEPALIVE,
     CONF_LAST_RESET_VALUE_TEMPLATE,
     CONF_MAX_KELVIN,
-    CONF_MAX_MIREDS,
     CONF_MIN_KELVIN,
-    CONF_MIN_MIREDS,
     CONF_ON_COMMAND_TYPE,
     CONF_OPTIONS,
     CONF_PAYLOAD_AVAILABLE,
@@ -235,9 +233,6 @@ ADDON_SETUP_TIMEOUT = 5
 ADDON_SETUP_TIMEOUT_ROUNDS = 5
 
 CONF_CLIENT_KEY_PASSWORD = "client_key_password"
-
-DEFAULT_MAX_MIREDS = 500
-DEFAULT_MIN_MIREDS = 154
 
 MQTT_TIMEOUT = 5
 
@@ -386,15 +381,6 @@ KELVIN_SELECTOR = NumberSelector(
         unit_of_measurement="K",
     )
 )
-MIRED_SELECTOR = NumberSelector(
-    NumberSelectorConfig(
-        mode=NumberSelectorMode.BOX,
-        min=100,
-        max=1000,
-        step="any",
-        unit_of_measurement="mireds",
-    )
-)
 SCALE_SELECTOR = NumberSelector(
     NumberSelectorConfig(
         mode=NumberSelectorMode.BOX,
@@ -477,7 +463,8 @@ class PlatformField:
     required: bool
     validator: Callable[..., Any]
     error: str | None = None
-    default: str | int | vol.Undefined = vol.UNDEFINED
+    default: str | int | bool | vol.Undefined = vol.UNDEFINED
+    is_schema_default: bool = False
     exclude_from_reconfig: bool = False
     conditions: tuple[dict[str, Any], ...] | None = None
     custom_filtering: bool = False
@@ -506,17 +493,11 @@ def unit_of_measurement_selector(user_data: dict[str, Any | None]) -> Selector:
 def validate_light_platform_config(user_data: dict[str, Any]) -> dict[str, str]:
     """Validate MQTT light configuration."""
     errors: dict[str, Any] = {}
-    if user_data[CONF_COLOR_TEMP_KELVIN]:
-        if user_data.get(CONF_MIN_KELVIN, DEFAULT_MIN_KELVIN) >= user_data.get(
-            CONF_MAX_KELVIN, DEFAULT_MAX_KELVIN
-        ):
-            errors[CONF_MAX_KELVIN] = "max_below_min_kelvin"
-            errors[CONF_MIN_KELVIN] = "max_below_min_kelvin"
-    elif user_data.get(CONF_MIN_MIREDS, DEFAULT_MIN_MIREDS) >= user_data.get(
-        CONF_MAX_MIREDS, DEFAULT_MAX_MIREDS
+    if user_data.get(CONF_MIN_KELVIN, DEFAULT_MIN_KELVIN) >= user_data.get(
+        CONF_MAX_KELVIN, DEFAULT_MAX_KELVIN
     ):
-        errors[CONF_MAX_MIREDS] = "max_below_min_mireds"
-        errors[CONF_MIN_MIREDS] = "max_below_min_mireds"
+        errors[CONF_MAX_KELVIN] = "max_below_min_kelvin"
+        errors[CONF_MIN_KELVIN] = "max_below_min_kelvin"
     return errors
 
 
@@ -580,11 +561,11 @@ PLATFORM_ENTITY_FIELDS = {
             exclude_from_reconfig=True,
         ),
         CONF_COLOR_TEMP_KELVIN: PlatformField(
-            selector=BOOLEAN_SELECTOR,
+            selector=Selector(),
             required=True,
             validator=bool,
             default=True,
-            exclude_from_reconfig=True,
+            is_schema_default=True,
         ),
     },
 }
@@ -1113,7 +1094,6 @@ PLATFORM_MQTT_FIELDS = {
             required=False,
             validator=cv.positive_int,
             default=DEFAULT_MAX_KELVIN,
-            conditions=({CONF_COLOR_TEMP_KELVIN: True},),
             section="advanced_settings",
         ),
         CONF_MIN_KELVIN: PlatformField(
@@ -1121,23 +1101,6 @@ PLATFORM_MQTT_FIELDS = {
             required=False,
             validator=cv.positive_int,
             default=DEFAULT_MIN_KELVIN,
-            conditions=({CONF_COLOR_TEMP_KELVIN: True},),
-            section="advanced_settings",
-        ),
-        CONF_MAX_MIREDS: PlatformField(
-            selector=MIRED_SELECTOR,
-            required=False,
-            validator=cv.positive_int,
-            default=DEFAULT_MAX_MIREDS,
-            conditions=({CONF_COLOR_TEMP_KELVIN: False},),
-            section="advanced_settings",
-        ),
-        CONF_MIN_MIREDS: PlatformField(
-            selector=MIRED_SELECTOR,
-            required=False,
-            validator=cv.positive_int,
-            default=DEFAULT_MIN_MIREDS,
-            conditions=({CONF_COLOR_TEMP_KELVIN: False},),
             section="advanced_settings",
         ),
         CONF_FLASH_TIME_SHORT: PlatformField(
@@ -1331,7 +1294,9 @@ def data_schema_from_fields(
         component_data_with_user_input |= user_input
 
     sections: dict[str | None, None] = {
-        field_details.section: None for field_details in data_schema_fields.values()
+        field_details.section: None
+        for field_details in data_schema_fields.values()
+        if not field_details.is_schema_default
     }
     data_schema: dict[Any, Any] = {}
     all_data_element_options: set[Any] = set()
@@ -1346,7 +1311,8 @@ def data_schema_from_fields(
             if field_details.custom_filtering
             else field_details.selector
             for field_name, field_details in data_schema_fields.items()
-            if field_details.section == schema_section
+            if not field_details.is_schema_default
+            and field_details.section == schema_section
             and (not field_details.exclude_from_reconfig or not reconfig)
             and _check_conditions(field_details, component_data_with_user_input)
         }
@@ -1386,6 +1352,18 @@ def data_schema_from_fields(
             if field in component_data:
                 del component_data[field]
     return vol.Schema(data_schema)
+
+
+@callback
+def subentry_schema_default_data_from_fields(
+    data_schema_fields: dict[str, PlatformField],
+) -> dict[str, Any]:
+    """Generate custom data schema from platform fields or device data."""
+    return {
+        key: field.default
+        for key, field in data_schema_fields.items()
+        if field.is_schema_default
+    }
 
 
 class FlowHandler(ConfigFlow, domain=DOMAIN):
@@ -2205,6 +2183,16 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         )
 
     @callback
+    def _async_update_component_data_defaults(self) -> None:
+        """Update component data defaults."""
+        for component_data in self._subentry_data["components"].values():
+            platform = component_data[CONF_PLATFORM]
+            subentry_default_data = subentry_schema_default_data_from_fields(
+                PLATFORM_ENTITY_FIELDS[platform]
+            )
+            component_data.update(subentry_default_data)
+
+    @callback
     def _async_create_subentry(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
@@ -2220,6 +2208,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         else:
             full_entity_name = device_name
 
+        self._async_update_component_data_defaults()
         return self.async_create_entry(
             data=self._subentry_data,
             title=self._subentry_data[CONF_DEVICE][CONF_NAME],
@@ -2284,6 +2273,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         if len(self._subentry_data["components"]) > 1:
             menu_options.append("delete_entity")
         menu_options.extend(["device", "availability"])
+        self._async_update_component_data_defaults()
         if self._subentry_data != self._get_reconfigure_subentry().data:
             menu_options.append("save_changes")
         return self.async_show_menu(

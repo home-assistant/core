@@ -214,7 +214,6 @@
           "description": "Please configure specific details for {platform} entity \"{entity}\":",
           "data": {
             "device_class": "Device class",
-            "color_temp_kelvin": "Color temperature in Kelvin",
             "options": "Add option",
             "schema": "Schema",
             "state_class": "State class",
@@ -223,7 +222,6 @@
           },
           "data_description": {
             "device_class": "The Device class of the {platform} entity. [Learn more.]({url}#device_class)",
-            "color_temp_kelvin": "When set color mode updates will be published in Kelvin and processed state will be assumed in Kelvin. When not set the color temp values are converted to mireds instead.",
             "options": "Options for allowed sensor state values. The sensor’s Device class must be set to Enumeration. The 'Options' setting cannot be used together with State class or Unit of measurement.",
             "schema": "The schema to use. [Learn more.]({url}#comparison-of-light-mqtt-schemas)",
             "state_class": "The [State class](https://developers.home-assistant.io/docs/core/entity/sensor/#available-state-classes) of the sensor. [Learn more.]({url}#state_class)",
@@ -273,10 +271,10 @@
             "blue_template": "[Template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract blue color from the state payload value. Expected result of the template is an integer from 0-255 range.",
             "brightness_template": "[Template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract brightness from the state payload value. Expected result of the template is an integer from 0-255 range.",
             "command_off_template": "The [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) for \"off\" state changes. Available variables are: `state` and `transition`.",
-            "command_on_template": "The [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) for \"on\" state changes. Available variables: `state`, `brightness`, `color_temp`, `red`, `green`, `blue`, `hue`, `sat`, `flash`, `transition` and `effect`. Values `red`, `green`, `blue` and `brightness` are provided as integers from range 0-255. Value of `hue` is provided as float from range 0-360. Value of `sat` is provided as float from range 0-100. Value of `color_temp` is provided as integer representing mired or Kelvin units if 'Color temperature in Kelvin' is true.",
+            "command_on_template": "The [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) for \"on\" state changes. Available variables: `state`, `brightness`, `color_temp`, `red`, `green`, `blue`, `hue`, `sat`, `flash`, `transition` and `effect`. Values `red`, `green`, `blue` and `brightness` are provided as integers from range 0-255. Value of `hue` is provided as float from range 0-360. Value of `sat` is provided as float from range 0-100. Value of `color_temp` is provided as integer representing Kelvin units.",
             "command_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to render the payload to be published at the command topic.",
             "command_topic": "The publishing topic that will be used to control the {platform} entity. [Learn more.]({url}#command_topic)",
-            "color_temp_template": "[Template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract color temperature from the state payload value. Expected result of the template is an integer. If the color tempemperature in Kelvin setting is true, the expected value is in Kelvin, else mireds are expected.",
+            "color_temp_template": "[Template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract color temperature in Kelvin from the state payload value. Expected result of the template is an integer.",
             "green_template": "[Template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract green color from the state payload value. Expected result of the template is an integer from 0-255 range.",
             "last_reset_value_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the last reset. When Last reset template is set, the State class option must be Total. [Learn more.]({url}#last_reset_value_template)",
             "force_update": "Sends update events even if the value hasn’t changed. Useful if you want to have meaningful value graphs in history. [Learn more.]({url}#force_update)",
@@ -300,18 +298,14 @@
                 "flash_time_long": "Flash time long",
                 "flash_time_short": "Flash time short",
                 "max_kelvin": "Max Kelvin",
-                "min_kelvin": "Min Kelvin",
-                "max_mireds": "Max mireds",
-                "min_mireds": "Min mireds"
+                "min_kelvin": "Min Kelvin"
               },
               "data_description": {
                 "expire_after": "If set, it defines the number of seconds after the sensor’s state expires, if it’s not updated. After expiry, the sensor’s state becomes unavailable. If not set, the sensor's state never expires. [Learn more.]({url}#expire_after)",
                 "flash_time_long": "The duration, in seconds, of a \"long\" flash.",
                 "flash_time_short": "The duration, in seconds, of a \"short\" flash.",
                 "max_kelvin": "The maximum color temperature in Kelvin.",
-                "min_kelvin": "The minimum color temperature in Kelvin.",
-                "max_mireds": "The maximum color temperature in mireds.",
-                "min_mireds": "The minimum color temperature in mireds."
+                "min_kelvin": "The minimum color temperature in Kelvin."
               }
             },
             "light_brightness_settings": {
@@ -482,7 +476,6 @@
         "invalid_url": "Invalid URL",
         "last_reset_not_with_state_class_total": "The last reset value template option should be used with state class 'Total' only",
         "max_below_min_kelvin": "Max Kelvin value should be greater than min Kelvin value",
-        "max_below_min_mireds": "Max mireds value should be greater than min mireds value",
         "options_not_allowed_with_state_class_or_uom": "The 'Options' setting is not allowed when state class or unit of measurement are used",
         "options_device_class_enum": "The 'Options' setting must be used with the Enumeration device class. If you continue, the existing options will be reset",
         "options_with_enum_device_class": "Configure options for the enumeration sensor",

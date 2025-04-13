@@ -34,7 +34,6 @@ from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from .common import (
     MOCK_LIGHT_BASIC_KELVIN_SUBENTRY_DATA_SINGLE,
-    MOCK_LIGHT_BASIC_MIREDS_SUBENTRY_DATA_SINGLE,
     MOCK_NOTIFY_SUBENTRY_DATA_MULTI,
     MOCK_NOTIFY_SUBENTRY_DATA_NO_NAME,
     MOCK_NOTIFY_SUBENTRY_DATA_SINGLE,
@@ -2768,7 +2767,7 @@ async def test_migrate_of_incompatible_config_entry(
             MOCK_LIGHT_BASIC_KELVIN_SUBENTRY_DATA_SINGLE,
             {"name": "Milk notifier", "mqtt_settings": {"qos": 1}},
             {"name": "Basic light"},
-            {"color_temp_kelvin": True},
+            {},
             {},
             {
                 "command_topic": "test-topic",
@@ -2801,43 +2800,6 @@ async def test_migrate_of_incompatible_config_entry(
             ),
             "Milk notifier Basic light",
         ),
-        (
-            MOCK_LIGHT_BASIC_MIREDS_SUBENTRY_DATA_SINGLE,
-            {"name": "Milk notifier", "mqtt_settings": {"qos": 1}},
-            {"name": "Basic light"},
-            {"color_temp_kelvin": False},
-            {},
-            {
-                "command_topic": "test-topic",
-                "state_topic": "test-topic",
-                "state_value_template": "{{ value_json.value }}",
-                "optimistic": True,
-            },
-            (
-                (
-                    {"command_topic": "test-topic#invalid"},
-                    {"command_topic": "invalid_publish_topic"},
-                ),
-                (
-                    {
-                        "command_topic": "test-topic",
-                        "state_topic": "test-topic#invalid",
-                    },
-                    {"state_topic": "invalid_subscribe_topic"},
-                ),
-                (
-                    {
-                        "command_topic": "test-topic",
-                        "advanced_settings": {"min_mireds": 200, "max_mireds": 190},
-                    },
-                    {
-                        "max_mireds": "max_below_min_mireds",
-                        "min_mireds": "max_below_min_mireds",
-                    },
-                ),
-            ),
-            "Milk notifier Basic light",
-        ),
     ],
     ids=[
         "notify_with_entity_name",
@@ -2846,7 +2808,6 @@ async def test_migrate_of_incompatible_config_entry(
         "sensor_total",
         "switch",
         "light_basic_kelvin",
-        "light_basic_mireds",
     ],
 )
 async def test_subentry_configflow(
