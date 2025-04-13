@@ -82,7 +82,6 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
                     value=round(target_temperature * TEMPERATURE_SCALING_FACTOR),
                     matter_attribute=matter_attribute,
                 )
-            return
 
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
