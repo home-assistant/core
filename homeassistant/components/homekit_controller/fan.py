@@ -48,6 +48,9 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
     # This must be set in subclasses to the name of a boolean characteristic
     # that controls whether the fan is on or off.
     on_characteristic: str
+    preset_char = CharacteristicsTypes.FAN_STATE_TARGET
+    preset_manual_value: int = TargetFanStateValues.MANUAL
+    preset_automatic_value: int = TargetFanStateValues.AUTOMATIC
 
     @callback
     def _async_reconfigure(self) -> None:
@@ -72,8 +75,8 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
             CharacteristicsTypes.ROTATION_SPEED,
             self.on_characteristic,
         ]
-        if self.service.has(CharacteristicsTypes.FAN_STATE_TARGET):
-            types.append(CharacteristicsTypes.FAN_STATE_TARGET)
+        if self.service.has(self.preset_char):
+            types.append(self.preset_char)
         return types
 
     @property
@@ -134,7 +137,7 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
         if self.service.has(CharacteristicsTypes.SWING_MODE):
             features |= FanEntityFeature.OSCILLATE
 
-        if self.service.has(CharacteristicsTypes.FAN_STATE_TARGET):
+        if self.service.has(self.preset_char):
             features |= FanEntityFeature.PRESET_MODE
 
         return features
@@ -150,7 +153,7 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
     @cached_property
     def preset_modes(self) -> list[str]:
         """Return the preset modes."""
-        if self.service.has(CharacteristicsTypes.FAN_STATE_TARGET):
+        if self.service.has(self.preset_char):
             return [PRESET_AUTO]
         return []
 
@@ -158,21 +161,20 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
     def preset_mode(self) -> str | None:
         """Return the current preset mode."""
         if (
-            self.service.has(CharacteristicsTypes.FAN_STATE_TARGET)
-            and self.service.value(CharacteristicsTypes.FAN_STATE_TARGET)
-            == TargetFanStateValues.AUTOMATIC
+            self.service.has(self.preset_char)
+            and self.service.value(self.preset_char) == self.preset_automatic_value
         ):
             return PRESET_AUTO
         return None
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
-        if self.service.has(CharacteristicsTypes.FAN_STATE_TARGET):
+        if self.service.has(self.preset_char):
             await self.async_put_characteristics(
                 {
-                    CharacteristicsTypes.FAN_STATE_TARGET: TargetFanStateValues.AUTOMATIC
+                    self.preset_char: self.preset_automatic_value
                     if preset_mode == PRESET_AUTO
-                    else TargetFanStateValues.MANUAL
+                    else self.preset_manual_value
                 }
             )
 
@@ -195,9 +197,7 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
         }
 
         if FanEntityFeature.PRESET_MODE in self.supported_features:
-            characteristics[CharacteristicsTypes.FAN_STATE_TARGET] = (
-                TargetFanStateValues.MANUAL
-            )
+            characteristics[self.preset_char] = self.preset_manual_value
 
         await self.async_put_characteristics(characteristics)
 
@@ -220,9 +220,7 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
             characteristics[self.on_characteristic] = True
 
         if preset_mode == PRESET_AUTO:
-            characteristics[CharacteristicsTypes.FAN_STATE_TARGET] = (
-                TargetFanStateValues.AUTOMATIC
-            )
+            characteristics[self.preset_char] = self.preset_automatic_value
         elif (
             percentage is not None
             and FanEntityFeature.SET_SPEED in self.supported_features
@@ -231,9 +229,7 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
                 percentage_to_ranged_value(self._speed_range, percentage)
             )
             if FanEntityFeature.PRESET_MODE in self.supported_features:
-                characteristics[CharacteristicsTypes.FAN_STATE_TARGET] = (
-                    TargetFanStateValues.MANUAL
-                )
+                characteristics[self.preset_char] = self.preset_manual_value
 
         if characteristics:
             await self.async_put_characteristics(characteristics)
@@ -259,92 +255,9 @@ class HomeKitAirPurifer(HomeKitFanV2):
     """Implement air purifier support for public.hap.service.airpurifier."""
 
     on_characteristic = CharacteristicsTypes.ACTIVE
-
-    def get_characteristic_types(self) -> list[str]:
-        """Define the homekit characteristics the entity cares about."""
-        types = super().get_characteristic_types()
-        types.append(CharacteristicsTypes.AIR_PURIFIER_STATE_TARGET)
-        return types
-
-    @cached_property
-    def supported_features(self) -> FanEntityFeature:
-        """Flag supported features."""
-        return super().supported_features | FanEntityFeature.PRESET_MODE
-
-    @cached_property
-    def preset_modes(self) -> list[str]:
-        """Return the preset modes."""
-        return [PRESET_AUTO]
-
-    @property
-    def preset_mode(self) -> str | None:
-        """Return the current preset mode."""
-        if (
-            self.service.value(CharacteristicsTypes.AIR_PURIFIER_STATE_TARGET)
-            == TargetAirPurifierStateValues.AUTOMATIC
-        ):
-            return PRESET_AUTO
-        return None
-
-    async def async_set_percentage(self, percentage: int) -> None:
-        """Set the speed of the fan."""
-        if percentage == 0:
-            await self.async_turn_off()
-            return
-
-        characteristics = {
-            CharacteristicsTypes.ROTATION_SPEED: round(
-                percentage_to_ranged_value(self._speed_range, percentage)
-            )
-        }
-
-        if FanEntityFeature.PRESET_MODE in self.supported_features:
-            characteristics[CharacteristicsTypes.AIR_PURIFIER_STATE_TARGET] = (
-                TargetAirPurifierStateValues.MANUAL
-            )
-
-        await self.async_put_characteristics(characteristics)
-
-    async def async_turn_on(
-        self,
-        percentage: int | None = None,
-        preset_mode: str | None = None,
-        **kwargs: Any,
-    ) -> None:
-        """Turn the specified fan on."""
-        characteristics: dict[str, Any] = {}
-
-        if not self.is_on:
-            characteristics[self.on_characteristic] = True
-
-        if preset_mode == PRESET_AUTO:
-            characteristics[CharacteristicsTypes.AIR_PURIFIER_STATE_TARGET] = (
-                TargetAirPurifierStateValues.AUTOMATIC
-            )
-        elif (
-            percentage is not None
-            and FanEntityFeature.SET_SPEED in self.supported_features
-        ):
-            characteristics[CharacteristicsTypes.ROTATION_SPEED] = round(
-                percentage_to_ranged_value(self._speed_range, percentage)
-            )
-            if FanEntityFeature.PRESET_MODE in self.supported_features:
-                characteristics[CharacteristicsTypes.AIR_PURIFIER_STATE_TARGET] = (
-                    TargetAirPurifierStateValues.MANUAL
-                )
-
-        if characteristics:
-            await self.async_put_characteristics(characteristics)
-
-    async def async_set_preset_mode(self, preset_mode: str) -> None:
-        """Set the preset mode of the fan."""
-        await self.async_put_characteristics(
-            {
-                CharacteristicsTypes.AIR_PURIFIER_STATE_TARGET: TargetAirPurifierStateValues.AUTOMATIC
-                if preset_mode == PRESET_AUTO
-                else TargetAirPurifierStateValues.MANUAL
-            }
-        )
+    preset_char = CharacteristicsTypes.AIR_PURIFIER_STATE_TARGET
+    preset_manual_value = TargetAirPurifierStateValues.MANUAL
+    preset_automatic_value = TargetAirPurifierStateValues.AUTOMATIC
 
 
 ENTITY_TYPES = {
