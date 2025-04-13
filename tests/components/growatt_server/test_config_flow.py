@@ -45,7 +45,12 @@ GROWATT_PLANT_LIST_RESPONSE = {
     "success": True,
 }
 GROWATT_LOGIN_RESPONSE = {"user": {"id": 123456}, "userLevel": 1, "success": True}
-
+GROWATT_LOGIN_LOCKED_RESPONSE = {
+    "error": "Current account has been locked for 24 hours",
+    "lockDuration": "24",
+    "msg": "507",
+    "success": False,
+}
 
 async def test_show_authenticate_form(hass: HomeAssistant) -> None:
     """Test that the setup form is served."""
@@ -75,6 +80,25 @@ async def test_incorrect_login(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "invalid_auth"}
 
+async def test_locked_login(hass: HomeAssistant) -> None:
+    """Test that it shows the appropriate error when an correct username/password/server is entered, but the account is locked."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "growattServer.GrowattApi.login",
+        return_value=GROWATT_LOGIN_LOCKED_RESPONSE,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_USER_INPUT
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {
+        "base": "Current account has been locked for 24 hours; lockDuration=24"
+    }
 
 async def test_no_plants_on_account(hass: HomeAssistant) -> None:
     """Test registering an integration and finishing flow with an entered plant_id."""
