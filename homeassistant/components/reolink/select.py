@@ -21,7 +21,7 @@ from reolink_aio.api import (
 )
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.const import EntityCategory, UnitOfDataRate, UnitOfFrequency
+from homeassistant.const import EntityCategory, UnitOfDataRate, UnitOfFrequency, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -262,6 +262,17 @@ HOST_SELECT_ENTITIES = (
         supported=lambda api: api.supported(None, "scenes"),
         value=lambda api: api.baichuan.active_scene,
         method=lambda api, name: api.baichuan.set_scene(scene_name=name),
+    ),
+    ReolinkHostSelectEntityDescription(
+        key="packing_time",
+        cmd_key="GetRec",
+        translation_key="packing_time",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        get_options=lambda api: api.recording_packing_time_list,
+        supported=lambda api: api.supported(None, "pak_time"),
+        value=lambda api: api.recording_packing_time,
+        method=lambda api, value: api.set_recording_packing_time(value),
     ),
 )
 
