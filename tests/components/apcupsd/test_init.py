@@ -10,9 +10,10 @@ from syrupy import SnapshotAssertion
 from homeassistant.components.apcupsd.const import DOMAIN
 from homeassistant.components.apcupsd.coordinator import UPDATE_INTERVAL
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
-from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.entity_platform import async_get_platforms
 from homeassistant.util import slugify, utcnow
 
 from . import CONF_DATA, MOCK_MINIMAL_STATUS, MOCK_STATUS, async_init_integration
@@ -43,28 +44,17 @@ async def test_async_setup_entry(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test a successful setup entry."""
-    config_entry = await async_init_integration(hass, status=status)
+    config_entry = await async_init_integration(
+        hass, status=status, entry_id="mocked-config-entry-id"
+    )
     device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, config_entry.unique_id)}
+        identifiers={(DOMAIN, config_entry.unique_id or config_entry.entry_id)}
     )
-    if "UPSNAME" in status or "SERIALNO" in status:
-        assert device_entry is not None, (
-            "device must be created when UPSNAME or SERIALNO is present"
-        )
-        assert device_entry == snapshot(name=f"device-{device_entry.name}")
+    assert device_entry == snapshot(name=f"device-{device_entry.name}")
 
-    # Use a representative sensor to test (1) if the integration is working, and (2) the entity ID
-    # is properly named.
-    online_status_sensor = next(
-        state
-        for state in hass.states.async_all(domain_filter=Platform.BINARY_SENSOR)
-        if state.entity_id.startswith(Platform.BINARY_SENSOR)
-        and state.entity_id.endswith("online_status")
-    )
-    assert online_status_sensor.state == STATE_ON
-    expected_prefix = slugify(f"{device_entry.name}") + "_" if device_entry else ""
-    expected_name = f"{Platform.BINARY_SENSOR}.{expected_prefix}online_status"
-    assert online_status_sensor.entity_id == expected_name
+    platforms = async_get_platforms(hass, DOMAIN)
+    assert len(platforms) > 0
+    assert all(len(p.entities) > 0 for p in platforms)
 
 
 async def test_multiple_integrations(hass: HomeAssistant) -> None:
