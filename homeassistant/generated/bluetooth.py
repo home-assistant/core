@@ -380,9 +380,9 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "connectable": True,
         "domain": "inkbird",
         "manufacturer_data_start": [
+            65,
             67,
             45,
-            54,
         ],
         "manufacturer_id": 12628,
     },
