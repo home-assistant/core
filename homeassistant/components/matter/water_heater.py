@@ -104,7 +104,7 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
         ] = clusters.WaterHeaterManagement.Structs.WaterHeaterBoostInfoStruct(
             duration=3600
         )
-        system_mode_value = WATER_HEATER_SYSTEM_MODE_MAP.get(operation_mode)
+        system_mode_value = WATER_HEATER_SYSTEM_MODE_MAP[operation_mode]
         if system_mode_value is None:
             raise ServiceValidationError(f"Unsupported mode {operation_mode} in Matter")
         await self.write_attribute(
