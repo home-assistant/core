@@ -134,7 +134,6 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
     @callback
     def _update_from_device(self) -> None:
         """Update from device."""
-        # self._calculate_features()
         self._attr_current_temperature = self._get_temperature_in_degrees(
             clusters.Thermostat.Attributes.LocalTemperature
         )
