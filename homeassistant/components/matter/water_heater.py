@@ -90,7 +90,7 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
                     clusters.Thermostat.Attributes.OccupiedHeatingSetpoint
                 )
                 await self.write_attribute(
-                    value=int(target_temperature * TEMPERATURE_SCALING_FACTOR),
+                    value=round(target_temperature * TEMPERATURE_SCALING_FACTOR),
                     matter_attribute=matter_attribute,
                 )
             return
