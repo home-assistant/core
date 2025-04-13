@@ -3259,7 +3259,9 @@ async def test_unique_id_update_existing_entry_without_reload(
             """Test user step."""
             await self.async_set_unique_id("mock-unique-id")
             self._abort_if_unique_id_configured(
-                updates={"host": "1.1.1.1"}, reload_on_update=False
+                updates={"host": "1.1.1.1"},
+                reload_on_update=False,
+                description_placeholders={"title": "Other device"},
             )
 
     with (
@@ -3275,6 +3277,7 @@ async def test_unique_id_update_existing_entry_without_reload(
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+    assert result["description_placeholders"]["title"] == "Other device"
     assert entry.data["host"] == "1.1.1.1"
     assert entry.data["additional"] == "data"
     assert len(async_reload.mock_calls) == 0
@@ -3309,7 +3312,9 @@ async def test_unique_id_update_existing_entry_with_reload(
             """Test user step."""
             await self.async_set_unique_id("mock-unique-id")
             await self._abort_if_unique_id_configured(
-                updates=updates, reload_on_update=True
+                updates=updates,
+                reload_on_update=True,
+                description_placeholders={"title": "Other device"},
             )
 
     with (
@@ -3325,6 +3330,7 @@ async def test_unique_id_update_existing_entry_with_reload(
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+    assert result["description_placeholders"]["title"] == "Other device"
     assert entry.data["host"] == "1.1.1.1"
     assert entry.data["additional"] == "data"
     assert len(async_reload.mock_calls) == 1
@@ -3345,6 +3351,7 @@ async def test_unique_id_update_existing_entry_with_reload(
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+    assert result["description_placeholders"]["title"] == "Other device"
     assert entry.data["host"] == "2.2.2.2"
     assert entry.data["additional"] == "data"
     assert len(async_reload.mock_calls) == 0
