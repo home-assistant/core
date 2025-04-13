@@ -254,7 +254,6 @@ class HomeKitFanV2(BaseHomeKitFan):
 class HomeKitAirPurifer(HomeKitFanV2):
     """Implement air purifier support for public.hap.service.airpurifier."""
 
-    on_characteristic = CharacteristicsTypes.ACTIVE
     preset_char = CharacteristicsTypes.AIR_PURIFIER_STATE_TARGET
     preset_manual_value = TargetAirPurifierStateValues.MANUAL
     preset_automatic_value = TargetAirPurifierStateValues.AUTOMATIC
