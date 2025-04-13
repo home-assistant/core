@@ -135,7 +135,7 @@ async def test_form_auth_error(
 
 @pytest.mark.usefixtures("mock_auth_api", "mock_appliances_manager_api")
 async def test_form_already_configured(hass: HomeAssistant, region, brand) -> None:
-    """Test we handle cannot connect error."""
+    """Test that configuring the integration twice with the same data fails."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
         data=CONFIG_INPUT | {"region": region[0], "brand": brand[0]},
