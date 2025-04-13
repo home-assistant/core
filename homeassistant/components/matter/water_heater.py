@@ -38,6 +38,7 @@ SUPPORT_FLAGS_HEATER = (
 )
 TEMPERATURE_SCALING_FACTOR = 100
 
+# Map HA WH system mode to Matter ThermostatRunningMode attribute of the Thermostat cluster (Heat = 4)
 WATER_HEATER_SYSTEM_MODE_MAP = {
     STATE_ECO: 4,
     STATE_HIGH_DEMAND: 4,
