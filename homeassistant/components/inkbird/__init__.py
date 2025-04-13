@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from inkbird_ble import INKBIRDBluetoothDeviceData
@@ -13,14 +12,12 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import CONF_DEVICE_DATA, CONF_DEVICE_TYPE
+from .const import CONF_DEVICE_DATA, CONF_DEVICE_TYPE, DOMAIN
 from .coordinator import INKBIRDActiveBluetoothProcessorCoordinator
 
 INKBIRDConfigEntry = ConfigEntry[INKBIRDActiveBluetoothProcessorCoordinator]
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: INKBIRDConfigEntry) -> bool:
@@ -47,7 +44,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: INKBIRDConfigEntry) -> b
     if data.uses_notify:
         if not (service_info := async_last_service_info(hass, entry.unique_id)):
             raise ConfigEntryNotReady(
-                f"Bluetooth device {entry.unique_id} not found, please check your Bluetooth connection"
+                translation_domain=DOMAIN,
+                translation_key="no_advertisement",
+                translation_placeholders={"address": entry.unique_id},
             )
         await data.async_start(service_info, service_info.device)
         entry.async_on_unload(data.async_stop)
