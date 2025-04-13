@@ -15,6 +15,7 @@ from pyiotdevice import (
     map_fan_speed,
     map_hvac_mode,
     prepare_device_payload,
+    validate_temperature,
 )
 
 from homeassistant.components.climate import (
@@ -258,6 +259,15 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
             self.async_write_ha_state()
             return
 
+        # Fan speed cannot be changed When PowerChill is enabled
+        if self._attr_preset_mode == PRESET_BOOST:
+            message = (
+                "Fan mode change operation is not permitted when PowerChill is enabled."
+            )
+            _LOGGER.error("Entity %s: %s", self.entity_id, message)
+            self.async_write_ha_state()
+            return
+
         # Get the corresponding fan mode value
         fan_mode_value = get_fan_mode_value(fan_mode)
 
@@ -284,10 +294,35 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
             _LOGGER.error("Entity %s: %s", self.entity_id, message)
             return
 
+        # Check powerchill and apply temperature change check
+        if self._attr_preset_mode == PRESET_BOOST:
+            message = "Temperature cannot be changed when PowerChill is enabled."
+            _LOGGER.error("Entity %s: %s", self.entity_id, message)
+            # Revert the temperature dial to the previous value
+            self._target_temperature = temperature
+            self.async_write_ha_state()
+            return
+
         # Check HVAC mode and apply temperature range or restrictions
         if self._hvac_mode == HVACMode.COOL:
-            if temperature < 16 or temperature > 32:
-                message = f"Temperature {temperature}°C is out of range for COOL mode (16-32°C)."
+            if temperature < 18 or temperature > 32:
+                message = f"Temperature {temperature}°C is out of range for COOL mode (18-32°C)."
+                _LOGGER.error("Entity %s: %s", self.entity_id, message)
+                # Revert the temperature dial to the previous value
+                self._target_temperature = temperature
+                self.async_write_ha_state()
+                return
+        elif self._hvac_mode == HVACMode.HEAT:
+            if temperature < 10 or temperature > 30:
+                message = f"Temperature {temperature}°C is out of range for HEAT mode (10-30°C)."
+                _LOGGER.error("Entity %s: %s", self.entity_id, message)
+                # Revert the temperature dial to the previous value
+                self._target_temperature = temperature
+                self.async_write_ha_state()
+                return
+        elif self._hvac_mode == HVACMode.AUTO:
+            if temperature < 18 or temperature > 30:
+                message = f"Temperature {temperature}°C is out of range for AUTO mode (18-30°C)."
                 _LOGGER.error("Entity %s: %s", self.entity_id, message)
                 # Revert the temperature dial to the previous value
                 self._target_temperature = temperature
@@ -394,7 +429,9 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
             self._hvac_mode = (
                 map_hvac_mode(mode_value) if self._power_state else HVACMode.OFF
             )
-            self._target_temperature = port_status.get("temperature")
+            self._target_temperature = validate_temperature(
+                port_status.get("temperature")
+            )
             self._current_temperature = port_status.get("sensors", {}).get("room_temp")
             self._fan_mode = map_fan_speed(port_status.get("fan"))
             # Update vertical swing state
@@ -433,7 +470,7 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
         port_status = status.get("port1", {})
 
         self._current_temperature = port_status.get("sensors", {}).get("room_temp")
-        self._target_temperature = port_status.get("temperature")
+        self._target_temperature = validate_temperature(port_status.get("temperature"))
 
         # Map power state to HVAC mode
         self._power_state = port_status.get("power", 0)  # 0 = OFF, 1 = ON

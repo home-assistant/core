@@ -100,7 +100,7 @@ async def test_async_set_hvac_mode(
         HVACMode.OFF: json.dumps({"port1": {"power": 0}}),
         HVACMode.FAN_ONLY: json.dumps({"port1": {"mode": 6, "power": 1}}),
         HVACMode.COOL: json.dumps({"port1": {"mode": 3, "power": 1}}),
-        HVACMode.DRY: json.dumps({"port1": {"mode": 2, "power": 1}}),
+        HVACMode.DRY: json.dumps({"port1": {"mode": 2, "power": 1, "fan": 17}}),
         HVACMode.HEAT: json.dumps({"port1": {"mode": 4, "power": 1}}),
         HVACMode.AUTO: json.dumps({"port1": {"mode": 1, "power": 1}}),
     }
@@ -164,6 +164,7 @@ async def test_async_set_fan_mode(
         f"Expected HVAC mode DRY, got {climate_entity.hvac_mode}"
     )
     caplog.clear()
+
     await climate_entity.async_set_fan_mode("medium")
     # Assert that no command is sent when in DRY mode.
     assert climate_entity.set_thing_state.call_count == 0
@@ -176,6 +177,26 @@ async def test_async_set_fan_mode(
     assert climate_entity.set_thing_state.call_count == 0
     # Assert that an error log was recorded.
     assert any("Unsupported fan mode" in record.message for record in caplog.records)
+
+    # --- Test fan mode change when Preset is PowerChill (should not send command) ---
+    monkeypatch.setattr(climate_entity, "_attr_preset_mode", PRESET_BOOST)
+    assert climate_entity.preset_mode == PRESET_BOOST, (
+        f"Expected Preset PowerChill, got {climate_entity.preset_mode}"
+    )
+    caplog.clear()
+
+    # Attempt to change fan mode while in PowerChill preset mode
+    await climate_entity.async_set_fan_mode("medium")
+
+    # Assert that no command is sent when in PowerChill preset mode
+    assert climate_entity.set_thing_state.call_count == 0
+
+    # Assert that an appropriate log message was generated
+    assert any(
+        "Fan mode change operation is not permitted when PowerChill is enabled"
+        in message
+        for message in caplog.messages
+    ), "Expected log not found"
 
 
 @pytest.mark.asyncio
@@ -196,6 +217,56 @@ async def test_async_set_temperature(
     climate_entity.async_write_ha_state = MagicMock()
 
     caplog.set_level("DEBUG")
+
+    # --- Test valid temperature in HEAT mode (within the range of 10-30°C) ---
+    monkeypatch.setattr(climate_entity, "_hvac_mode", HVACMode.HEAT)
+    valid_temp = 18
+    expected_json = json.dumps({"port1": {"temperature": valid_temp}})
+    await climate_entity.async_set_temperature(**{ATTR_TEMPERATURE: valid_temp})
+    climate_entity.set_thing_state.assert_called_once_with(expected_json)
+    climate_entity.set_thing_state.reset_mock()
+
+    # # --- Test temperature below range in HEAT mode (should not send command) ---
+    caplog.clear()
+    await climate_entity.async_set_temperature(**{ATTR_TEMPERATURE: 9})
+    # No command should be sent if temperature is out of range (below 10).
+    climate_entity.set_thing_state.assert_not_called()
+
+    # # --- Test temperature above range in HEAT mode (should not send command) ---
+    caplog.clear()
+    await climate_entity.async_set_temperature(**{ATTR_TEMPERATURE: 31})
+    # No command should be sent if temperature is out of range (above 30).
+    climate_entity.set_thing_state.assert_not_called()
+
+    # --- Verify if the correct error was logged when the temperature is out of range ---
+    assert any("Temperature" in record.message for record in caplog.records), (
+        "Expected error log not found for out-of-range temperature"
+    )
+
+    # --- Test valid temperature in AUTO mode (within the range of 18-30°C) ---
+    monkeypatch.setattr(climate_entity, "_hvac_mode", HVACMode.AUTO)
+    valid_temp = 18
+    expected_json = json.dumps({"port1": {"temperature": valid_temp}})
+    await climate_entity.async_set_temperature(**{ATTR_TEMPERATURE: valid_temp})
+    climate_entity.set_thing_state.assert_called_once_with(expected_json)
+    climate_entity.set_thing_state.reset_mock()
+
+    # --- Test temperature below range in AUTO mode (should not send command) ---
+    caplog.clear()
+    await climate_entity.async_set_temperature(**{ATTR_TEMPERATURE: 17})
+    # No command should be sent if temperature is out of range (below 18).
+    climate_entity.set_thing_state.assert_not_called()
+
+    # --- Test temperature above range in AUTO mode (should not send command) ---
+    caplog.clear()
+    await climate_entity.async_set_temperature(**{ATTR_TEMPERATURE: 31})
+    # No command should be sent if temperature is out of range (above 30).
+    climate_entity.set_thing_state.assert_not_called()
+
+    # --- Verify if the correct error was logged when the temperature is out of range ---
+    assert any("Temperature" in record.message for record in caplog.records), (
+        "Expected error log not found for out-of-range temperature"
+    )
 
     # --- Test valid temperature in COOL mode ---
     monkeypatch.setattr(climate_entity, "_hvac_mode", HVACMode.COOL)
@@ -224,6 +295,17 @@ async def test_async_set_temperature(
 
     # --- Test temperature setting in DRY mode (should not send command) ---
     monkeypatch.setattr(climate_entity, "_hvac_mode", HVACMode.DRY)
+    caplog.clear()
+    await climate_entity.async_set_temperature(**{ATTR_TEMPERATURE: 25})
+    climate_entity.set_thing_state.assert_not_called()
+
+    # --- Test missing temperature attribute ---
+    caplog.clear()
+    await climate_entity.async_set_temperature()
+    climate_entity.set_thing_state.assert_not_called()
+
+    # --- Test temperature setting when Preset is PowerChill (should not send command) ---
+    monkeypatch.setattr(climate_entity, "_attr_preset_mode", PRESET_BOOST)
     caplog.clear()
     await climate_entity.async_set_temperature(**{ATTR_TEMPERATURE: 25})
     climate_entity.set_thing_state.assert_not_called()
@@ -587,8 +669,8 @@ def test_map_fan_speed(fan_value, expected_mode) -> None:
         (22, 22),  # Valid temperature.
         (30, 30),  # Valid upper limit.
         (16, 16),  # Valid lower limit.
-        (50, 50),  # Extreme value (assuming no validation).
-        (None, None),  # Edge case: None input.
+        (50, 24),  # Extreme value (Fall back to default value).
+        (None, 24),  # Edge case: None input. (Fall back to default value).
     ],
 )
 def test_target_temperature_property(
