@@ -83,11 +83,10 @@ def get_device_uid_and_ch(
     is_chime = False
 
     for dev_id in device.identifiers:
-        if dev_id[0] != DOMAIN:
-            continue
-        device_uid = dev_id[1].split("_")
-        if device_uid[0] == host.unique_id:
-            break
+        if dev_id[0] == DOMAIN:
+            device_uid = dev_id[1].split("_")
+            if device_uid[0] == host.unique_id:
+                break
 
     if len(device_uid) < 2:
         # NVR itself
