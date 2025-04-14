@@ -25,6 +25,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
+from homeassistant.util.json import JsonObjectType
 
 from tests.common import MockConfigEntry, async_mock_service
 
@@ -45,9 +46,12 @@ def llm_context() -> llm.LLMContext:
 class MyAPI(llm.API):
     """Test API."""
 
+    prompt: str = ""
+    tools: list[llm.Tool] = []
+
     async def async_get_api_instance(self, _: llm.ToolInput) -> llm.APIInstance:
         """Return a list of tools."""
-        return llm.APIInstance(self, "", [], llm_context)
+        return llm.APIInstance(self, self.prompt, llm_context, self.tools)
 
 
 async def test_get_api_no_existing(
@@ -1326,3 +1330,57 @@ async def test_no_tools_exposed(hass: HomeAssistant) -> None:
     )
     api = await llm.async_get_api(hass, "assist", llm_context)
     assert api.tools == []
+
+
+async def test_merged_api(hass: HomeAssistant, llm_context: llm.LLMContext) -> None:
+    """Test an API instance that merges multiple llm apis."""
+
+    class MyTool(llm.Tool):
+        def __init__(self, name: str, description: str) -> None:
+            self.name = name
+            self.description = description
+
+        async def async_call(
+            self, hass: HomeAssistant, tool_input: llm.ToolInput, _: llm.LLMContext
+        ) -> JsonObjectType:
+            return {"result": {tool_input.tool_name: tool_input.tool_args}}
+
+    api1 = MyAPI(hass=hass, id="api-1", name="API 1")
+    api1.prompt = "This is prompt 1"
+    api1.tools = [MyTool(name="Tool_1", description="Description 1")]
+    llm.async_register_api(hass, api1)
+
+    api2 = MyAPI(hass=hass, id="api-2", name="API 2")
+    api2.prompt = "This is prompt 2"
+    api2.tools = [MyTool(name="Tool_2", description="Description 2")]
+    llm.async_register_api(hass, api2)
+
+    instance = await llm.async_get_api(hass, ["api-1", "api-2"], llm_context)
+    assert instance.api.id == "api-1|api-2"
+
+    assert (
+        instance.api_prompt
+        == """Follow these instructions for tools from "api-1":
+This is prompt 1
+
+Follow these instructions for tools from "api-2":
+This is prompt 2
+
+"""
+    )
+    assert [(tool.name, tool.description) for tool in instance.tools] == [
+        ("api-1.Tool_1", "Description 1"),
+        ("api-2.Tool_2", "Description 2"),
+    ]
+
+    # The test tool returns back the provided arguments so we can verify
+    # the original tool is invoked with the correct tool name and args.
+    result = await instance.async_call_tool(
+        llm.ToolInput(tool_name="api-1.Tool_1", tool_args={"arg1": "value1"})
+    )
+    assert result == {"result": {"Tool_1": {"arg1": "value1"}}}
+
+    result = await instance.async_call_tool(
+        llm.ToolInput(tool_name="api-2.Tool_2", tool_args={"arg2": "value2"})
+    )
+    assert result == {"result": {"Tool_2": {"arg2": "value2"}}}
