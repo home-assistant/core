@@ -31,10 +31,6 @@ async def test_entry_diagnostics(
 ) -> None:
     """Test config entry diagnostics."""
 
-    ec_data = json.loads(
-        load_fixture("environment_canada/current_conditions_data.json")
-    )
-
     config_entry = await init_integration(hass, ec_data)
     diagnostics = await get_diagnostics_for_config_entry(
         hass, hass_client, config_entry
