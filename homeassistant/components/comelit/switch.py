@@ -10,9 +10,9 @@ from aiocomelit.const import IRRIGATION, OTHER, STATE_OFF, STATE_ON
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import ComelitConfigEntry, ComelitSerialBridge
+from .entity import ComelitBridgeBaseEntity
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -39,10 +39,9 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class ComelitSwitchEntity(CoordinatorEntity[ComelitSerialBridge], SwitchEntity):
+class ComelitSwitchEntity(ComelitBridgeBaseEntity, SwitchEntity):
     """Switch device."""
 
-    _attr_has_entity_name = True
     _attr_name = None
 
     def __init__(
@@ -52,13 +51,8 @@ class ComelitSwitchEntity(CoordinatorEntity[ComelitSerialBridge], SwitchEntity):
         config_entry_entry_id: str,
     ) -> None:
         """Init switch entity."""
-        self._api = coordinator.api
-        self._device = device
-        super().__init__(coordinator)
-        # Use config_entry.entry_id as base for unique_id
-        # because no serial number or mac is available
+        super().__init__(coordinator, device, config_entry_entry_id)
         self._attr_unique_id = f"{config_entry_entry_id}-{device.type}-{device.index}"
-        self._attr_device_info = coordinator.platform_device_info(device, device.type)
         if device.type == OTHER:
             self._attr_device_class = SwitchDeviceClass.OUTLET
 
