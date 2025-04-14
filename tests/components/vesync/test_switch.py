@@ -114,14 +114,13 @@ async def test_turn_on_off_display_raises_error(
             command,
             return_value=False,
         ) as method_mock,
-    ):
-        with pytest.raises(HomeAssistantError):
-            await hass.services.async_call(
-                SWITCH_DOMAIN,
-                action,
-                {ATTR_ENTITY_ID: ENTITY_SWITCH_DISPLAY},
-                blocking=True,
-            )
+    pytest.raises(HomeAssistantError)):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            action,
+            {ATTR_ENTITY_ID: ENTITY_SWITCH_DISPLAY},
+            blocking=True,
+        )
 
         await hass.async_block_till_done()
         method_mock.assert_called_once()
