@@ -1673,6 +1673,7 @@ def async_is_pem_data(data: bytes) -> bool:
     return (
         b"-----BEGIN CERTIFICATE-----" in data
         or b"-----BEGIN PRIVATE KEY-----" in data
+        or b"-----BEGIN EC PRIVATE KEY-----" in data
         or b"-----BEGIN RSA PRIVATE KEY-----" in data
         or b"-----BEGIN ENCRYPTED PRIVATE KEY-----" in data
     )
