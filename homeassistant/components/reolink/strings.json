@@ -845,6 +845,9 @@
           "home": "[%key:common::state::home%]",
           "away": "[%key:common::state::not_home%]"
         }
+      },
+      "packing_time": {
+        "name": "Recording packing time"
       }
     },
     "sensor": {
