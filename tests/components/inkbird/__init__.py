@@ -94,7 +94,7 @@ IBBQ_SERVICE_INFO = _make_bluetooth_service_info(
 )
 
 
-IAM_T1_SERVICE_INFO = BluetoothServiceInfo(
+IAM_T1_SERVICE_INFO = _make_bluetooth_service_info(
     name="Ink@IAM-T1",
     manufacturer_data={12628: b"AC-6200a13cae\x00\x00"},
     service_uuids=["0000fff0-0000-1000-8000-00805f9b34fb"],
