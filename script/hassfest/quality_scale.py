@@ -160,7 +160,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "anthropic",
     "aosmith",
     "apache_kafka",
-    "apcupsd",
     "apple_tv",
     "apprise",
     "aprilaire",
