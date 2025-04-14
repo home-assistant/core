@@ -75,6 +75,7 @@ class ESPHomeDashboardManager:
                 # so we don't want to remove the dashboard, but for now
                 # we don't want to use it.
                 _LOGGER.debug("Addon %s is no longer installed", info["addon_slug"])
+                return
 
         await self.async_set_dashboard_info(
             info["addon_slug"], info["host"], info["port"]

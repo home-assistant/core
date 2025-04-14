@@ -64,9 +64,14 @@ async def test_restore_dashboard_storage_end_to_end(
         "key": dashboard.STORAGE_KEY,
         "data": {"info": {"addon_slug": "test-slug", "host": "new-host", "port": 6052}},
     }
-    with patch(
-        "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI"
-    ) as mock_dashboard_api:
+    with (
+        patch(
+            "homeassistant.components.esphome.dashboard.is_hassio", return_value=False
+        ),
+        patch(
+            "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI"
+        ) as mock_dashboard_api,
+    ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
         assert mock_config_entry.state is ConfigEntryState.LOADED
@@ -87,7 +92,9 @@ async def test_restore_dashboard_storage_skipped_if_addon_uninstalled(
         "data": {"info": {"addon_slug": "test-slug", "host": "new-host", "port": 6052}},
     }
     with (
-        patch("homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI"),
+        patch(
+            "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI"
+        ) as mock_dashboard_api,
         patch(
             "homeassistant.components.esphome.dashboard.is_hassio", return_value=True
         ),
@@ -100,6 +107,7 @@ async def test_restore_dashboard_storage_skipped_if_addon_uninstalled(
         await hass.async_block_till_done()
         assert mock_config_entry.state is ConfigEntryState.LOADED
         assert "test-slug is no longer installed" in caplog.text
+        assert not mock_dashboard_api.called
 
 
 async def test_setup_dashboard_fails(
