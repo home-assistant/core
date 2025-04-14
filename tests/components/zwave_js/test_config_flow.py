@@ -2097,6 +2097,13 @@ async def test_options_not_addon_with_addon(
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"next_step_id": "intent_reconfigure"}
+    )
+
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "on_supervisor"
 
@@ -2156,6 +2163,13 @@ async def test_options_not_addon_with_addon_stop_fail(
     setup_entry.reset_mock()
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"next_step_id": "intent_reconfigure"}
+    )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "on_supervisor"
