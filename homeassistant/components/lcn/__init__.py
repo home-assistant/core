@@ -173,14 +173,11 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
     if config_entry.version < 3:
         # update to 3.1 (remove resource parameter, add climate target lock value parameter)
-        new_entities_data = [*new_data[CONF_ENTITIES]]
-        for entity in new_entities_data:
+        for entity in new_data[CONF_ENTITIES]:
             entity.pop(CONF_RESOURCE, None)
 
             if entity[CONF_DOMAIN] == Platform.CLIMATE:
                 entity[CONF_DOMAIN_DATA].setdefault(CONF_TARGET_VALUE_LOCKED, -1)
-
-        new_data[CONF_ENTITIES] = new_entities_data
 
         # migrate climate and scene unique ids
         await async_migrate_entities(hass, config_entry)
