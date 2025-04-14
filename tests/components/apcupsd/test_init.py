@@ -91,7 +91,7 @@ async def test_multiple_integrations_different_devices(hass: HomeAssistant) -> N
             hass, host="test1", status=status1, entry_id="entry-id-1"
         ),
         await async_init_integration(
-            hass, host="test2", status=status2, entry_id="entry-id-1"
+            hass, host="test2", status=status2, entry_id="entry-id-2"
         ),
     )
 
