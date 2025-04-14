@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -17,9 +18,12 @@ async def test_calandar(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
     mock_legacy: AsyncMock,
 ) -> None:
     """Tests that the climate entity is correct."""
+
+    freezer.move_to("2024-01-01 00:00:00+00:00")
 
     entry = await setup_platform(hass, [Platform.CALENDAR])
 

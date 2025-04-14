@@ -1,4 +1,98 @@
 # serializer version: 1
+# name: test_calandar[calendar.energy_site_buy_tariff-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'calendar',
+    'entity_category': None,
+    'entity_id': 'calendar.energy_site_buy_tariff',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Buy tariff',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'tariff_content_v2',
+    'unique_id': '123456-tariff_content_v2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_calandar[calendar.energy_site_buy_tariff-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Energy Site Buy tariff',
+    }),
+    'context': <ANY>,
+    'entity_id': 'calendar.energy_site_buy_tariff',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_calandar[calendar.energy_site_sell_tariff-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'calendar',
+    'entity_category': None,
+    'entity_id': 'calendar.energy_site_sell_tariff',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sell tariff',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'tariff_content_v2_sell_tariff',
+    'unique_id': '123456-tariff_content_v2_sell_tariff',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_calandar[calendar.energy_site_sell_tariff-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Energy Site Sell tariff',
+    }),
+    'context': <ANY>,
+    'entity_id': 'calendar.energy_site_sell_tariff',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_calandar[calendar.test_charging_schedule-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -38,11 +132,11 @@
     'attributes': ReadOnlyDict({
       'all_day': False,
       'description': '-30.222626,-97.6236871',
-      'end_time': '2025-04-14 16:00:00',
+      'end_time': '2024-01-01 16:00:00',
       'friendly_name': 'Test Charging schedule',
       'location': '-30.222626,-97.6236871',
       'message': 'Charge scheduled for Test',
-      'start_time': '2025-04-14 09:00:00',
+      'start_time': '2024-01-01 09:00:00',
     }),
     'context': <ANY>,
     'entity_id': 'calendar.test_charging_schedule',
