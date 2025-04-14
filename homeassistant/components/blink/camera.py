@@ -11,9 +11,10 @@ from blinkpy.camera import BlinkCamera as BlinkCameraAPI
 from requests.exceptions import ChunkedEncodingError
 import voluptuous as vol
 
-from homeassistant.components.camera import Camera
+from homeassistant.components.camera import Camera, CameraEntityFeature
+from homeassistant.components.stream import Stream
 from homeassistant.const import CONF_FILE_PATH, CONF_FILENAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     HomeAssistantError,
@@ -84,6 +85,7 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
         super().__init__(coordinator)
         Camera.__init__(self)
         self._camera = camera
+        self._livestream = None
         self._attr_unique_id = f"{camera.serial}-camera"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, camera.serial)},
@@ -226,3 +228,68 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
         except UnauthorizedError as er:
             self.coordinator.config_entry.async_start_reauth(self.hass)
             raise ConfigEntryAuthFailed("Blink authorization failed") from er
+
+    _attr_supported_features = CameraEntityFeature.STREAM
+
+    async def async_create_stream(self) -> Stream | None:
+        """Create a stream with custom ffmpeg options."""
+        stream = await super().async_create_stream()
+        if stream is None:
+            _LOGGER.error("Unable to create stream for %s", self._camera.name)
+            return None
+
+        stream.pyav_options["f"] = "mpegts"
+        stream.pyav_options["err_detect"] = "ignore_err"
+        return stream
+
+    async def stream_source(self) -> str | None:
+        """Return the source of the stream."""
+        if not self.is_streaming:
+            livestream = await self._camera.init_livestream()
+            if await livestream.start():
+                _LOGGER.debug("%s started serving", self._camera.name)
+                self._livestream = livestream
+            else:
+                _LOGGER.error("Unable to start stream for %s", self._camera.name)
+                return None
+
+            name = f"livestream-{self._camera.serial}"
+            task = self.hass.async_create_task(target=livestream.feed(), name=name)
+            if task:
+                _LOGGER.debug("%s started streaming", self._camera.name)
+                task.add_done_callback(self.async_stream_done_callback)
+            else:
+                _LOGGER.error("Unable to create stream task for %s", self._camera.name)
+                return None
+
+        if not self._livestream:
+            _LOGGER.error("No livestream available for %s", self._camera.name)
+            return None
+
+        _LOGGER.debug("Stream URL for %s: %s", self._camera.name, self._livestream.url)
+        return self._livestream.url
+
+    @callback
+    def async_stream_done_callback(self, task: Any) -> None:
+        """Handle the completion of the stream task."""
+        self.stream = None
+
+        if self._livestream:
+            self._livestream.stop()
+            self._livestream = None
+            self.async_write_ha_state()
+            _LOGGER.debug("%s finished streaming", self._camera.name)
+        else:
+            _LOGGER.debug(
+                "%s finished streaming, but no stream was active", self._camera.name
+            )
+
+    @property
+    def is_streaming(self) -> bool:
+        """Return True if the camera is streaming."""
+        if self._livestream and self._livestream.is_serving:
+            _LOGGER.debug("%s is streaming", self._camera.name)
+            return True
+
+        _LOGGER.debug("%s is NOT streaming", self._camera.name)
+        return False
