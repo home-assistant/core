@@ -115,8 +115,8 @@
   },
   "entity": {
     "binary_sensor": {
-      "info": {
-        "name": "Info"
+      "notification_active": {
+        "name": "Notification active"
       },
       "mobile_start": {
         "name": "Mobile start"

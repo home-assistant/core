@@ -1,7 +1,7 @@
 {
   "entity": {
     "binary_sensor": {
-      "info": {
+      "notification_active": {
         "default": "mdi:information"
       },
       "mobile_start": {

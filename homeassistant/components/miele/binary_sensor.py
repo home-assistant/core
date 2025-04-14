@@ -104,7 +104,7 @@ BINARY_SENSOR_TYPES: Final[tuple[MieleBinarySensorDefinition, ...]] = (
             key="state_signal_info",
             value_fn=lambda value: value.state_signal_info,
             device_class=BinarySensorDeviceClass.PROBLEM,
-            translation_key="info",
+            translation_key="notification_active",
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
     ),

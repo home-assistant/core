@@ -47,54 +47,6 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor_states[platforms0][binary_sensor.freezer_info-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.freezer_info',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-    'original_icon': None,
-    'original_name': 'Info',
-    'platform': 'miele',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'info',
-    'unique_id': 'Dummy_Appliance_1-state_signal_info',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_binary_sensor_states[platforms0][binary_sensor.freezer_info-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Freezer Info',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.freezer_info',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.freezer_mobile_start-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -136,6 +88,54 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.freezer_mobile_start',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensor_states[platforms0][binary_sensor.freezer_notification_active-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.freezer_notification_active',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Notification active',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'notification_active',
+    'unique_id': 'Dummy_Appliance_1-state_signal_info',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor_states[platforms0][binary_sensor.freezer_notification_active-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Freezer Notification active',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.freezer_notification_active',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -332,54 +332,6 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor_states[platforms0][binary_sensor.refrigerator_info-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.refrigerator_info',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-    'original_icon': None,
-    'original_name': 'Info',
-    'platform': 'miele',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'info',
-    'unique_id': 'Dummy_Appliance_2-state_signal_info',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_binary_sensor_states[platforms0][binary_sensor.refrigerator_info-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Refrigerator Info',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.refrigerator_info',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.refrigerator_mobile_start-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -421,6 +373,54 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.refrigerator_mobile_start',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensor_states[platforms0][binary_sensor.refrigerator_notification_active-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.refrigerator_notification_active',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Notification active',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'notification_active',
+    'unique_id': 'Dummy_Appliance_2-state_signal_info',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor_states[platforms0][binary_sensor.refrigerator_notification_active-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Refrigerator Notification active',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.refrigerator_notification_active',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -617,54 +617,6 @@
     'state': 'on',
   })
 # ---
-# name: test_binary_sensor_states[platforms0][binary_sensor.washing_machine_info-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.washing_machine_info',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-    'original_icon': None,
-    'original_name': 'Info',
-    'platform': 'miele',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'info',
-    'unique_id': 'Dummy_Appliance_3-state_signal_info',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_binary_sensor_states[platforms0][binary_sensor.washing_machine_info-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Washing machine Info',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.washing_machine_info',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
 # name: test_binary_sensor_states[platforms0][binary_sensor.washing_machine_mobile_start-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -706,6 +658,54 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.washing_machine_mobile_start',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensor_states[platforms0][binary_sensor.washing_machine_notification_active-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.washing_machine_notification_active',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Notification active',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'notification_active',
+    'unique_id': 'Dummy_Appliance_3-state_signal_info',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor_states[platforms0][binary_sensor.washing_machine_notification_active-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Washing machine Notification active',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.washing_machine_notification_active',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
