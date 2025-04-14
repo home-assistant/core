@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Final, cast
 
 from aioshelly.block_device import Block
-from aioshelly.const import RPC_GENERATIONS
+from aioshelly.const import BLU_TRV_TIMEOUT, RPC_GENERATIONS
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
 
 from homeassistant.components.number import (
@@ -25,7 +25,7 @@ from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceIn
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 
-from .const import BLU_TRV_TIMEOUT, CONF_SLEEP_PERIOD, LOGGER, VIRTUAL_NUMBER_MODE_MAP
+from .const import CONF_SLEEP_PERIOD, DOMAIN, LOGGER, VIRTUAL_NUMBER_MODE_MAP
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     BlockEntityDescription,
@@ -324,8 +324,12 @@ class BlockSleepingNumber(ShellySleepingBlockAttributeEntity, RestoreNumber):
         except DeviceConnectionError as err:
             self.coordinator.last_update_success = False
             raise HomeAssistantError(
-                f"Setting state for entity {self.name} failed, state: {params}, error:"
-                f" {err!r}"
+                translation_domain=DOMAIN,
+                translation_key="device_communication_action_error",
+                translation_placeholders={
+                    "entity": self.entity_id,
+                    "device": self.coordinator.name,
+                },
             ) from err
         except InvalidAuthError:
             await self.coordinator.async_shutdown_device_and_start_reauth()

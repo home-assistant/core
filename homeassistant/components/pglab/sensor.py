@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
-
 from pypglab.const import SENSOR_REBOOT_TIME, SENSOR_TEMPERATURE, SENSOR_VOLTAGE
 from pypglab.device import Device as PyPGLabDevice
 
@@ -16,12 +14,11 @@ from homeassistant.components.sensor import (
 from homeassistant.const import Platform, UnitOfElectricPotential, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util.dt import utcnow
 
-from . import PGLABConfigEntry
-from .device_sensor import PGLabDeviceSensor
+from . import PGLabConfigEntry
+from .coordinator import PGLabSensorsCoordinator
 from .discovery import PGLabDiscovery
-from .entity import PGLabEntity
+from .entity import PGLabSensorEntity
 
 PARALLEL_UPDATES = 0
 
@@ -50,7 +47,7 @@ SENSOR_INFO: list[SensorEntityDescription] = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: PGLABConfigEntry,
+    config_entry: PGLabConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensor for device."""
@@ -58,62 +55,55 @@ async def async_setup_entry(
     @callback
     def async_discover(
         pglab_device: PyPGLabDevice,
-        pglab_device_sensor: PGLabDeviceSensor,
+        pglab_coordinator: PGLabSensorsCoordinator,
     ) -> None:
         """Discover and add a PG LAB Sensor."""
         pglab_discovery = config_entry.runtime_data
-        for description in SENSOR_INFO:
-            pglab_sensor = PGLabSensor(
-                pglab_discovery, pglab_device, pglab_device_sensor, description
+
+        sensors: list[PGLabSensor] = [
+            PGLabSensor(
+                description,
+                pglab_discovery,
+                pglab_device,
+                pglab_coordinator,
             )
-            async_add_entities([pglab_sensor])
+            for description in SENSOR_INFO
+        ]
+
+        async_add_entities(sensors)
 
     # Register the callback to create the sensor entity when discovered.
     pglab_discovery = config_entry.runtime_data
     await pglab_discovery.register_platform(hass, Platform.SENSOR, async_discover)
 
 
-class PGLabSensor(PGLabEntity, SensorEntity):
+class PGLabSensor(PGLabSensorEntity, SensorEntity):
     """A PGLab sensor."""
 
     def __init__(
         self,
+        description: SensorEntityDescription,
         pglab_discovery: PGLabDiscovery,
         pglab_device: PyPGLabDevice,
-        pglab_device_sensor: PGLabDeviceSensor,
-        description: SensorEntityDescription,
+        pglab_coordinator: PGLabSensorsCoordinator,
     ) -> None:
         """Initialize the Sensor class."""
 
-        super().__init__(
-            discovery=pglab_discovery,
-            device=pglab_device,
-            entity=pglab_device_sensor.sensors,
-        )
+        super().__init__(pglab_discovery, pglab_device, pglab_coordinator)
 
-        self._type = description.key
-        self._pglab_device_sensor = pglab_device_sensor
         self._attr_unique_id = f"{pglab_device.id}_{description.key}"
         self.entity_description = description
 
     @callback
-    def state_updated(self, payload: str) -> None:
-        """Handle state updates."""
+    def _handle_coordinator_update(self) -> None:
+        """Update attributes when the coordinator updates."""
 
-        # get the sensor value from pglab multi fields sensor
-        value = self._pglab_device_sensor.state[self._type]
+        self._attr_native_value = self.coordinator.get_sensor_value(
+            self.entity_description.key
+        )
+        super()._handle_coordinator_update()
 
-        if self.entity_description.device_class == SensorDeviceClass.TIMESTAMP:
-            self._attr_native_value = utcnow() - timedelta(seconds=value)
-        else:
-            self._attr_native_value = value
-
-        super().state_updated(payload)
-
-    async def subscribe_to_update(self):
-        """Register the HA sensor to be notify when the sensor status is changed."""
-        self._pglab_device_sensor.add_ha_sensor(self)
-
-    async def unsubscribe_to_update(self):
-        """Unregister the HA sensor from sensor tatus updates."""
-        self._pglab_device_sensor.remove_ha_sensor(self)
+    @property
+    def available(self) -> bool:
+        """Return PG LAB sensor availability."""
+        return super().available and self.native_value is not None
