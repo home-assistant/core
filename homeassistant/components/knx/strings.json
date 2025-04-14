@@ -315,7 +315,7 @@
           "preset_mode": {
             "name": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::name%]",
             "state": {
-              "auto": "Auto",
+              "auto": "[%key:common::state::auto%]",
               "building_protection": "Building protection",
               "comfort": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::comfort%]",
               "economy": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::eco%]",
