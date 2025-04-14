@@ -464,7 +464,9 @@ async def test_show_progress(hass: HomeAssistant, manager: MockFlowManager) -> N
     """Test show progress logic."""
     manager.hass = hass
     events = []
-    progress_update_events = []
+    progress_update_events = async_capture_events(
+        hass, data_entry_flow.EVENT_DATA_ENTRY_FLOW_PROGRESS_UPDATE
+    )
     task_one_evt = asyncio.Event()
     task_two_evt = asyncio.Event()
     event_received_evt = asyncio.Event()
@@ -473,10 +475,6 @@ async def test_show_progress(hass: HomeAssistant, manager: MockFlowManager) -> N
     def capture_events(event: Event) -> None:
         events.append(event)
         event_received_evt.set()
-
-    @callback
-    def capture_progress_update(event: Event) -> None:
-        progress_update_events.append(event)
 
     @manager.mock_reg_handler("test")
     class TestFlow(data_entry_flow.FlowHandler):
@@ -528,10 +526,6 @@ async def test_show_progress(hass: HomeAssistant, manager: MockFlowManager) -> N
     hass.bus.async_listen(
         data_entry_flow.EVENT_DATA_ENTRY_FLOW_PROGRESSED,
         capture_events,
-    )
-    hass.bus.async_listen(
-        data_entry_flow.EVENT_DATA_ENTRY_FLOW_PROGRESS_UPDATE,
-        capture_progress_update,
     )
 
     result = await manager.async_init("test")
