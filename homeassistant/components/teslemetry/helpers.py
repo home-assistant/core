@@ -10,14 +10,17 @@ from homeassistant.exceptions import HomeAssistantError
 from .const import DOMAIN, LOGGER, TeslemetryState
 
 
-def flatten(data: dict[str, Any], parent: str | None = None) -> dict[str, Any]:
+def flatten(
+    data: dict[str, Any], parent: str | None = None, exceptions: list[str] | None = None
+) -> dict[str, Any]:
     """Flatten the data structure."""
     result = {}
     for key, value in data.items():
+        exception = exceptions and key in exceptions
         if parent:
             key = f"{parent}_{key}"
-        if isinstance(value, dict):
-            result.update(flatten(value, key))
+        if isinstance(value, dict) and not exception:
+            result.update(flatten(value, key, exceptions))
         else:
             result[key] = value
     return result
