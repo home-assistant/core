@@ -89,6 +89,6 @@ rules:
   # Platinum
   async-dependency: done
   inject-websession:
-    status: exempt
-    comment: See https://github.com/chemelli74/aiocomelit/blob/main/src/aiocomelit/api.py#L205
+    status: todo
+    comment: implement aiohttp_client.async_create_clientsession
   strict-typing: done
