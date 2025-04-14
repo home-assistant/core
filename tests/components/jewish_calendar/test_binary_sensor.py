@@ -105,7 +105,6 @@ MELACHA_PARAMS = [
 @pytest.mark.parametrize(
     ("location_data", "test_time", "results"), MELACHA_PARAMS, indirect=True
 )
-@pytest.mark.usefixtures("location_data")
 async def test_issur_melacha_sensor(
     hass: HomeAssistant,
     test_time: dt,
@@ -135,7 +134,6 @@ async def test_issur_melacha_sensor(
     ids=["before_candle_lighting", "before_havdalah"],
     indirect=True,
 )
-@pytest.mark.usefixtures("location_data")
 async def test_issur_melacha_sensor_update(
     hass: HomeAssistant,
     test_time: dt,
