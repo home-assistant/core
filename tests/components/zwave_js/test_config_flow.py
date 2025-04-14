@@ -3374,6 +3374,50 @@ async def test_options_migrate_backup_failure(
     assert result["reason"] == "backup_failed"
 
 
+async def test_options_migrate_backup_file_failure(
+    hass: HomeAssistant, integration, client
+) -> None:
+    """Test backup file failure."""
+    entry = integration
+    hass.config_entries.async_update_entry(
+        entry, unique_id="1234", data={**entry.data, "use_addon": True}
+    )
+
+    async def mock_backup_nvm_raw():
+        await asyncio.sleep(0)
+        return b"test_nvm_data"
+
+    client.driver.controller.async_backup_nvm_raw = AsyncMock(
+        side_effect=mock_backup_nvm_raw
+    )
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == FlowResultType.MENU
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"next_step_id": "intent_migrate"}
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "intent_migrate"
+
+    result = await hass.config_entries.options.async_configure(result["flow_id"], {})
+
+    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "backup_nvm"
+
+    with patch("anyio.Path.write_bytes", MagicMock(side_effect=OSError("test_error"))):
+        await hass.async_block_till_done()
+        assert client.driver.controller.async_backup_nvm_raw.call_count == 1
+
+    result = await hass.config_entries.options.async_configure(result["flow_id"])
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "backup_failed"
+
+
 @pytest.mark.parametrize(
     "discovery_info",
     [
