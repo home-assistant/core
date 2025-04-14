@@ -7,6 +7,7 @@ from collections.abc import Callable
 from contextlib import suppress
 import logging
 
+from awesomeversion import AwesomeVersion
 from synology_dsm import SynologyDSM
 from synology_dsm.api.core.security import SynoCoreSecurity
 from synology_dsm.api.core.system import SynoCoreSystem
@@ -135,6 +136,9 @@ class SynoApi:
         )
         await self.async_login()
 
+        self.information = self.dsm.information
+        await self.information.update()
+
         # check if surveillance station is used
         self._with_surveillance_station = bool(
             self.dsm.apis.get(SynoSurveillanceStation.CAMERA_API_KEY)
@@ -165,7 +169,10 @@ class SynoApi:
             LOGGER.debug("Disabled fetching upgrade data during setup: %s", ex)
 
         # check if file station is used and permitted
-        self._with_file_station = bool(self.dsm.apis.get(SynoFileStation.LIST_API_KEY))
+        self._with_file_station = bool(
+            self.information.awesome_version >= AwesomeVersion("6.0")
+            and self.dsm.apis.get(SynoFileStation.LIST_API_KEY)
+        )
         if self._with_file_station:
             shares: list | None = None
             with suppress(*SYNOLOGY_CONNECTION_EXCEPTIONS):
@@ -317,7 +324,6 @@ class SynoApi:
 
     async def _fetch_device_configuration(self) -> None:
         """Fetch initial device config."""
-        self.information = self.dsm.information
         self.network = self.dsm.network
         await self.network.update()
 

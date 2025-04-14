@@ -23,6 +23,7 @@ from homeassistant.components.esphome.const import (
     CONF_ALLOW_SERVICE_CALLS,
     CONF_DEVICE_NAME,
     CONF_NOISE_PSK,
+    CONF_SUBSCRIBE_LOGS,
     DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
     DOMAIN,
 )
@@ -1046,6 +1047,36 @@ async def test_reauth_confirm_invalid_with_unique_id(
     assert entry.data[CONF_NOISE_PSK] == VALID_NOISE_PSK
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_reauth_encryption_key_removed(
+    hass: HomeAssistant, mock_client, mock_setup_entry: None
+) -> None:
+    """Test reauth when the encryption key was removed."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 6053,
+            CONF_PASSWORD: "",
+            CONF_NOISE_PSK: VALID_NOISE_PSK,
+        },
+        unique_id="test",
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_encryption_removed_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.data[CONF_NOISE_PSK] == ""
+
+
 async def test_discovery_dhcp_updates_host(
     hass: HomeAssistant, mock_client: APIClient, mock_setup_entry: None
 ) -> None:
@@ -1056,6 +1087,9 @@ async def test_discovery_dhcp_updates_host(
         unique_id="11:22:33:44:55:aa",
     )
     entry.add_to_hass(hass)
+    mock_client.device_info = AsyncMock(
+        return_value=DeviceInfo(name="test8266", mac_address="1122334455aa")
+    )
 
     service_info = DhcpServiceInfo(
         ip="192.168.43.184",
@@ -1070,6 +1104,94 @@ async def test_discovery_dhcp_updates_host(
     assert result["reason"] == "already_configured"
 
     assert entry.data[CONF_HOST] == "192.168.43.184"
+
+
+async def test_discovery_dhcp_does_not_update_host_wrong_mac(
+    hass: HomeAssistant, mock_client: APIClient, mock_setup_entry: None
+) -> None:
+    """Test dhcp discovery does not update the host if the mac is wrong."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.43.183", CONF_PORT: 6053, CONF_PASSWORD: ""},
+        unique_id="11:22:33:44:55:aa",
+    )
+    entry.add_to_hass(hass)
+    mock_client.device_info = AsyncMock(
+        return_value=DeviceInfo(name="test8266", mac_address="1122334455ff")
+    )
+
+    service_info = DhcpServiceInfo(
+        ip="192.168.43.184",
+        hostname="test8266",
+        macaddress="1122334455aa",
+    )
+    result = await hass.config_entries.flow.async_init(
+        "esphome", context={"source": config_entries.SOURCE_DHCP}, data=service_info
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    # Mac was wrong, should not update
+    assert entry.data[CONF_HOST] == "192.168.43.183"
+
+
+async def test_discovery_dhcp_does_not_update_host_wrong_mac_bad_key(
+    hass: HomeAssistant, mock_client: APIClient, mock_setup_entry: None
+) -> None:
+    """Test dhcp discovery does not update the host if the mac is wrong."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.43.183", CONF_PORT: 6053, CONF_PASSWORD: ""},
+        unique_id="11:22:33:44:55:aa",
+    )
+    entry.add_to_hass(hass)
+    mock_client.device_info.side_effect = InvalidEncryptionKeyAPIError(
+        "Wrong key", "test8266", "1122334455cc"
+    )
+    service_info = DhcpServiceInfo(
+        ip="192.168.43.184",
+        hostname="test8266",
+        macaddress="1122334455aa",
+    )
+    result = await hass.config_entries.flow.async_init(
+        "esphome", context={"source": config_entries.SOURCE_DHCP}, data=service_info
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    # Mac was wrong, should not update
+    assert entry.data[CONF_HOST] == "192.168.43.183"
+
+
+async def test_discovery_dhcp_does_not_update_host_missing_mac_bad_key(
+    hass: HomeAssistant, mock_client: APIClient, mock_setup_entry: None
+) -> None:
+    """Test dhcp discovery does not update the host if the mac is missing."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.43.183", CONF_PORT: 6053, CONF_PASSWORD: ""},
+        unique_id="11:22:33:44:55:aa",
+    )
+    entry.add_to_hass(hass)
+    mock_client.device_info.side_effect = InvalidEncryptionKeyAPIError(
+        "Wrong key", "test8266", None
+    )
+    service_info = DhcpServiceInfo(
+        ip="192.168.43.184",
+        hostname="test8266",
+        macaddress="1122334455aa",
+    )
+    result = await hass.config_entries.flow.async_init(
+        "esphome", context={"source": config_entries.SOURCE_DHCP}, data=service_info
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    # Mac was missing, should not update
+    assert entry.data[CONF_HOST] == "192.168.43.183"
 
 
 async def test_discovery_dhcp_no_changes(
@@ -1295,14 +1417,57 @@ async def test_zeroconf_no_encryption_key_via_dashboard(
     assert result["step_id"] == "encryption_key"
 
 
-@pytest.mark.parametrize("option_value", [True, False])
-async def test_option_flow(
+async def test_option_flow_allow_service_calls(
     hass: HomeAssistant,
-    option_value: bool,
     mock_client: APIClient,
     mock_generic_device_entry,
 ) -> None:
-    """Test config flow options."""
+    """Test config flow options for allow service calls."""
+    entry = await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=[],
+        user_service=[],
+        states=[],
+    )
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result["data_schema"]({}) == {
+        CONF_ALLOW_SERVICE_CALLS: DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
+        CONF_SUBSCRIBE_LOGS: False,
+    }
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result["data_schema"]({}) == {
+        CONF_ALLOW_SERVICE_CALLS: DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
+        CONF_SUBSCRIBE_LOGS: False,
+    }
+    with patch(
+        "homeassistant.components.esphome.async_setup_entry", return_value=True
+    ) as mock_reload:
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={CONF_ALLOW_SERVICE_CALLS: True, CONF_SUBSCRIBE_LOGS: False},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_ALLOW_SERVICE_CALLS: True,
+        CONF_SUBSCRIBE_LOGS: False,
+    }
+    assert len(mock_reload.mock_calls) == 1
+
+
+async def test_option_flow_subscribe_logs(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry,
+) -> None:
+    """Test config flow options with subscribe logs."""
     entry = await mock_generic_device_entry(
         mock_client=mock_client,
         entity_info=[],
@@ -1315,7 +1480,8 @@ async def test_option_flow(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     assert result["data_schema"]({}) == {
-        CONF_ALLOW_SERVICE_CALLS: DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS
+        CONF_ALLOW_SERVICE_CALLS: DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
+        CONF_SUBSCRIBE_LOGS: False,
     }
 
     with patch(
@@ -1323,15 +1489,16 @@ async def test_option_flow(
     ) as mock_reload:
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
-            user_input={
-                CONF_ALLOW_SERVICE_CALLS: option_value,
-            },
+            user_input={CONF_ALLOW_SERVICE_CALLS: False, CONF_SUBSCRIBE_LOGS: True},
         )
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == {CONF_ALLOW_SERVICE_CALLS: option_value}
-    assert len(mock_reload.mock_calls) == int(option_value)
+    assert result["data"] == {
+        CONF_ALLOW_SERVICE_CALLS: False,
+        CONF_SUBSCRIBE_LOGS: True,
+    }
+    assert len(mock_reload.mock_calls) == 1
 
 
 @pytest.mark.usefixtures("mock_zeroconf")

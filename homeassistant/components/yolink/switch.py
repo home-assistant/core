@@ -162,11 +162,12 @@ class YoLinkSwitchEntity(YoLinkEntity, SwitchEntity):
     @callback
     def update_entity_state(self, state: dict[str, str | list[str]]) -> None:
         """Update HA Entity State."""
-        self._attr_is_on = self._get_state(
-            state.get("state"),
-            self.entity_description.plug_index_fn(self.coordinator.device),
-        )
-        self.async_write_ha_state()
+        if (state_value := state.get("state")) is not None:
+            self._attr_is_on = self._get_state(
+                state_value,
+                self.entity_description.plug_index_fn(self.coordinator.device),
+            )
+            self.async_write_ha_state()
 
     async def call_state_change(self, state: str) -> None:
         """Call setState api to change switch state."""

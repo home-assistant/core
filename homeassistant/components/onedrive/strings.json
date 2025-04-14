@@ -7,6 +7,26 @@
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
         "description": "The OneDrive integration needs to re-authenticate your account"
+      },
+      "folder_name": {
+        "title": "Pick a folder name",
+        "description": "This name will be used to create a folder that is specific for this Home Assistant instance. This folder will be created inside `{apps_folder}/{approot}`",
+        "data": {
+          "folder_name": "Folder name"
+        },
+        "data_description": {
+          "folder_name": "Name of the folder"
+        }
+      },
+      "reconfigure_folder": {
+        "title": "Change the folder name",
+        "description": "Rename the instance specific folder inside `{apps_folder}/{approot}`. This will only rename the folder (and does not select another folder), so make sure the new name is not already in use.",
+        "data": {
+          "folder_name": "[%key:component::onedrive::config::step::folder_name::data::folder_name%]"
+        },
+        "data_description": {
+          "folder_name": "[%key:component::onedrive::config::step::folder_name::data_description::folder_name%]"
+        }
       }
     },
     "abort": {
@@ -23,10 +43,29 @@
       "connection_error": "Failed to connect to OneDrive.",
       "wrong_drive": "New account does not contain previously configured OneDrive.",
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    },
+    "error": {
+      "folder_rename_error": "Failed to rename folder",
+      "folder_creation_error": "Failed to create folder",
+      "folder_already_in_use": "Folder already used for backups from another Home Assistant instance"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "By default, files are put into the Recycle Bin when deleted, where they remain available for another 30 days. If you enable this option, files will be deleted immediately when they are cleaned up by the backup system.",
+        "data": {
+          "delete_permanently": "Delete files permanently"
+        },
+        "data_description": {
+          "delete_permanently": "Delete files without moving them to the Recycle Bin"
+        }
+      }
     }
   },
   "issues": {
@@ -51,6 +90,24 @@
     },
     "update_failed": {
       "message": "Failed to update drive state"
+    },
+    "integration_not_found": {
+      "message": "Integration \"{target}\" not found in registry."
+    },
+    "no_access_to_path": {
+      "message": "Cannot read {filename}, no access to path; `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`"
+    },
+    "filename_does_not_exist": {
+      "message": "`{filename}` does not exist"
+    },
+    "file_too_large": {
+      "message": "`{filename}` is too large ({size} > {limit})"
+    },
+    "upload_error": {
+      "message": "Failed to upload content: {message}"
+    },
+    "create_folder_error": {
+      "message": "Failed to create folder: {message}"
     }
   },
   "entity": {
@@ -67,10 +124,32 @@
       "drive_state": {
         "name": "Drive state",
         "state": {
-          "normal": "Normal",
+          "normal": "[%key:common::state::normal%]",
           "nearing": "Nearing limit",
           "critical": "Critical",
           "exceeded": "Exceeded"
+        }
+      }
+    }
+  },
+  "services": {
+    "upload": {
+      "name": "Upload file",
+      "description": "Uploads files to OneDrive.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Config entry ID",
+          "description": "The config entry representing the OneDrive you want to upload to."
+        },
+        "filename": {
+          "name": "Filename",
+          "description": "Path to the file to upload.",
+          "example": "/config/www/image.jpg"
+        },
+        "destination_folder": {
+          "name": "Destination folder",
+          "description": "Folder inside the Home Assistant app folder (Apps/Home Assistant) you want to upload the file to. Will be created if it does not exist.",
+          "example": "photos/snapshots"
         }
       }
     }

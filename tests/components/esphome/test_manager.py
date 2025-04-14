@@ -2,17 +2,20 @@
 
 import asyncio
 from collections.abc import Awaitable, Callable
-from unittest.mock import AsyncMock, call
+import logging
+from unittest.mock import AsyncMock, Mock, call
 
 from aioesphomeapi import (
     APIClient,
     APIConnectionError,
     DeviceInfo,
+    EncryptionPlaintextAPIError,
     EntityInfo,
     EntityState,
     HomeassistantServiceCall,
     InvalidAuthAPIError,
     InvalidEncryptionKeyAPIError,
+    LogLevel,
     RequiresEncryptionAPIError,
     UserService,
     UserServiceArg,
@@ -23,8 +26,11 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.esphome.const import (
     CONF_ALLOW_SERVICE_CALLS,
+    CONF_BLUETOOTH_MAC_ADDRESS,
     CONF_DEVICE_NAME,
+    CONF_SUBSCRIBE_LOGS,
     DOMAIN,
+    STABLE_BLE_URL_VERSION,
     STABLE_BLE_VERSION_STR,
 )
 from homeassistant.const import (
@@ -42,6 +48,95 @@ from homeassistant.setup import async_setup_component
 from .conftest import MockESPHomeDevice
 
 from tests.common import MockConfigEntry, async_capture_events, async_mock_service
+
+
+async def test_esphome_device_subscribe_logs(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test configuring a device to subscribe to logs."""
+    assert await async_setup_component(hass, "logger", {"logger": {}})
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "fe80::1",
+            CONF_PORT: 6053,
+            CONF_PASSWORD: "",
+        },
+        options={CONF_SUBSCRIBE_LOGS: True},
+    )
+    entry.add_to_hass(hass)
+    device: MockESPHomeDevice = await mock_esphome_device(
+        mock_client=mock_client,
+        entry=entry,
+        entity_info=[],
+        user_service=[],
+        device_info={},
+        states=[],
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "logger",
+        "set_level",
+        {"homeassistant.components.esphome": "DEBUG"},
+        blocking=True,
+    )
+    assert device.current_log_level == LogLevel.LOG_LEVEL_VERY_VERBOSE
+
+    caplog.set_level(logging.DEBUG)
+    device.mock_on_log_message(
+        Mock(level=LogLevel.LOG_LEVEL_INFO, message=b"test_log_message")
+    )
+    await hass.async_block_till_done()
+    assert "test_log_message" in caplog.text
+
+    device.mock_on_log_message(
+        Mock(level=LogLevel.LOG_LEVEL_ERROR, message=b"test_error_log_message")
+    )
+    await hass.async_block_till_done()
+    assert "test_error_log_message" in caplog.text
+
+    caplog.set_level(logging.ERROR)
+    device.mock_on_log_message(
+        Mock(level=LogLevel.LOG_LEVEL_DEBUG, message=b"test_debug_log_message")
+    )
+    await hass.async_block_till_done()
+    assert "test_debug_log_message" not in caplog.text
+
+    caplog.set_level(logging.DEBUG)
+    device.mock_on_log_message(
+        Mock(level=LogLevel.LOG_LEVEL_DEBUG, message=b"test_debug_log_message")
+    )
+    await hass.async_block_till_done()
+    assert "test_debug_log_message" in caplog.text
+
+    await hass.services.async_call(
+        "logger",
+        "set_level",
+        {"homeassistant.components.esphome": "WARNING"},
+        blocking=True,
+    )
+    assert device.current_log_level == LogLevel.LOG_LEVEL_WARN
+    await hass.services.async_call(
+        "logger",
+        "set_level",
+        {"homeassistant.components.esphome": "ERROR"},
+        blocking=True,
+    )
+    assert device.current_log_level == LogLevel.LOG_LEVEL_ERROR
+    await hass.services.async_call(
+        "logger",
+        "set_level",
+        {"homeassistant.components.esphome": "INFO"},
+        blocking=True,
+    )
+    assert device.current_log_level == LogLevel.LOG_LEVEL_CONFIG
 
 
 async def test_esphome_device_service_calls_not_allowed(
@@ -273,7 +368,7 @@ async def test_esphome_device_with_old_bluetooth(
     )
     assert (
         issue.learn_more_url
-        == f"https://esphome.io/changelog/{STABLE_BLE_VERSION_STR}.html"
+        == f"https://esphome.io/changelog/{STABLE_BLE_URL_VERSION}.html"
     )
 
 
@@ -381,6 +476,39 @@ async def test_unique_id_updated_to_mac(hass: HomeAssistant, mock_client) -> Non
         await subscribe_done
 
     assert entry.unique_id == "11:22:33:44:55:aa"
+
+
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_add_missing_bluetooth_mac_address(
+    hass: HomeAssistant, mock_client
+) -> None:
+    """Test bluetooth mac is added if its missing."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "test.local", CONF_PORT: 6053, CONF_PASSWORD: ""},
+        unique_id="mock-config-name",
+    )
+    entry.add_to_hass(hass)
+    subscribe_done = hass.loop.create_future()
+
+    def async_subscribe_states(*args, **kwargs) -> None:
+        subscribe_done.set_result(None)
+
+    mock_client.subscribe_states = async_subscribe_states
+    mock_client.device_info = AsyncMock(
+        return_value=DeviceInfo(
+            mac_address="1122334455aa",
+            bluetooth_mac_address="AA:BB:CC:DD:EE:FF",
+        )
+    )
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    async with asyncio.timeout(1):
+        await subscribe_done
+
+    assert entry.unique_id == "11:22:33:44:55:aa"
+    assert entry.data.get(CONF_BLUETOOTH_MAC_ADDRESS) == "AA:BB:CC:DD:EE:FF"
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
@@ -615,7 +743,7 @@ async def test_connection_aborted_wrong_device(
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_HOST] == "192.168.43.184"
     await hass.async_block_till_done()
-    assert len(new_info.mock_calls) == 1
+    assert len(new_info.mock_calls) == 2
     assert "Unexpected device found at" not in caplog.text
 
 
@@ -1189,6 +1317,7 @@ async def test_disconnects_at_close_event(
 @pytest.mark.parametrize(
     "error",
     [
+        EncryptionPlaintextAPIError,
         RequiresEncryptionAPIError,
         InvalidEncryptionKeyAPIError,
         InvalidAuthAPIError,
@@ -1222,6 +1351,42 @@ async def test_start_reauth(
     assert flow["context"]["source"] == "reauth"
 
 
+async def test_no_reauth_wrong_mac(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test exceptions on connect error trigger reauth."""
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=[],
+        user_service=[],
+        device_info={"compilation_time": "comp_time"},
+        states=[],
+    )
+    await hass.async_block_till_done()
+
+    await device.mock_connect_error(
+        InvalidEncryptionKeyAPIError(
+            "fail", received_mac="aabbccddeeff", received_name="test"
+        )
+    )
+    await hass.async_block_till_done()
+
+    # Reauth should not be triggered
+    flows = hass.config_entries.flow.async_progress(DOMAIN)
+    assert len(flows) == 0
+    assert (
+        "Unexpected device found at test.local; expected `test` "
+        "with mac address `11:22:33:44:55:aa`, found `test` "
+        "with mac address `aa:bb:cc:dd:ee:ff`" in caplog.text
+    )
+
+
 async def test_entry_missing_unique_id(
     hass: HomeAssistant,
     mock_client: APIClient,
@@ -1245,3 +1410,32 @@ async def test_entry_missing_unique_id(
     await mock_esphome_device(mock_client=mock_client, mock_storage=True)
     await hass.async_block_till_done()
     assert entry.unique_id == "11:22:33:44:55:aa"
+
+
+async def test_entry_missing_bluetooth_mac_address(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
+) -> None:
+    """Test the bluetooth_mac_address is added if available."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=None,
+        data={
+            CONF_HOST: "test.local",
+            CONF_PORT: 6053,
+            CONF_PASSWORD: "",
+        },
+        options={CONF_ALLOW_SERVICE_CALLS: True},
+    )
+    entry.add_to_hass(hass)
+    await mock_esphome_device(
+        mock_client=mock_client,
+        mock_storage=True,
+        device_info={"bluetooth_mac_address": "AA:BB:CC:DD:EE:FC"},
+    )
+    await hass.async_block_till_done()
+    assert entry.data[CONF_BLUETOOTH_MAC_ADDRESS] == "AA:BB:CC:DD:EE:FC"
