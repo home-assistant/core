@@ -10,6 +10,7 @@ from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.storage import Store
 from homeassistant.util.hass_dict import HassKey
@@ -61,6 +62,17 @@ class ESPHomeDashboardManager:
         """Restore the dashboard from storage."""
         self._data = await self._store.async_load()
         if (data := self._data) and (info := data.get("info")):
+            if is_hassio(self._hass):
+                from homeassistant.components.hassio import (  # pylint: disable=import-outside-toplevel
+                    get_addons_info,
+                )
+
+                installed_addons = get_addons_info(self._hass)
+                _LOGGER.warning(
+                    "Installed Addons: %s - addon_slug: %s",
+                    installed_addons,
+                    info["addon_slug"],
+                )
             await self.async_set_dashboard_info(
                 info["addon_slug"], info["host"], info["port"]
             )
