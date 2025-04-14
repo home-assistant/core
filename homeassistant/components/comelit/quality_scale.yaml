@@ -60,7 +60,7 @@ rules:
   docs-supported-devices:
     status: todo
     comment: review and complete missing ones
-  docs-supported-functions: done
+  docs-supported-functions: todo
   docs-troubleshooting: done
   docs-use-cases: done
   dynamic-devices:
