@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import patch
 
 from aioesphomeapi import DeviceInfo, InvalidAuthAPIError
+import pytest
 
 from homeassistant.components.esphome import CONF_NOISE_PSK, coordinator, dashboard
 from homeassistant.config_entries import ConfigEntryState
@@ -70,6 +71,35 @@ async def test_restore_dashboard_storage_end_to_end(
         await hass.async_block_till_done()
         assert mock_config_entry.state is ConfigEntryState.LOADED
         assert mock_dashboard_api.mock_calls[0][1][0] == "http://new-host:6052"
+
+
+async def test_restore_dashboard_storage_skipped_if_addon_uninstalled(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    hass_storage: dict[str, Any],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Restore dashboard restore is skipped if the addon is uninstalled."""
+    hass_storage[dashboard.STORAGE_KEY] = {
+        "version": dashboard.STORAGE_VERSION,
+        "minor_version": dashboard.STORAGE_VERSION,
+        "key": dashboard.STORAGE_KEY,
+        "data": {"info": {"addon_slug": "test-slug", "host": "new-host", "port": 6052}},
+    }
+    with (
+        patch("homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI"),
+        patch(
+            "homeassistant.components.esphome.dashboard.is_hassio", return_value=True
+        ),
+        patch(
+            "homeassistant.components.hassio.get_addons_info",
+            return_value={},
+        ),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert mock_config_entry.state is ConfigEntryState.LOADED
+        assert "test-slug is no longer installed" in caplog.text
 
 
 async def test_setup_dashboard_fails(
