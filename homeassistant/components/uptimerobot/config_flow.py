@@ -48,7 +48,8 @@ class UptimeRobotConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "invalid_api_key"
         except UptimeRobotException:
             errors["base"] = "cannot_connect"
-        except Exception:  # noqa: BLE001
+        except Exception as exception:  # noqa: BLE001
+            LOGGER.exception(exception)
             errors["base"] = "unknown"
         else:
             if response.status != API_ATTR_OK:
