@@ -1190,7 +1190,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "anthropic",
     "aosmith",
     "apache_kafka",
-    "apcupsd",
     "apple_tv",
     "apprise",
     "aprilaire",
