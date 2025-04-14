@@ -248,19 +248,21 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
         if self.home.entity_id != data["home_id"]:
             return
 
-        if data["event_type"] == EVENT_TYPE_SCHEDULE and "schedule_id" in data:
-            self._selected_schedule = getattr(
-                self.hass.data[DOMAIN][DATA_SCHEDULES][self.home.entity_id].get(
-                    data["schedule_id"]
-                ),
-                "name",
-                None,
-            )
-            self._attr_extra_state_attributes[ATTR_SELECTED_SCHEDULE] = (
-                self._selected_schedule
-            )
-            self.async_write_ha_state()
-            self.data_handler.async_force_update(self._signal_name)
+        if data["event_type"] == EVENT_TYPE_SCHEDULE:
+            if "schedule_id" in data:
+                # This is a schedule change
+                self._selected_schedule = getattr(
+                    self.hass.data[DOMAIN][DATA_SCHEDULES][self.home.entity_id].get(
+                        data["schedule_id"]
+                    ),
+                    "name",
+                    None,
+                )
+                self._attr_extra_state_attributes[ATTR_SELECTED_SCHEDULE] = (
+                    self._selected_schedule
+                )
+                self.async_write_ha_state()
+                self.data_handler.async_force_update(self._signal_name)
             return
 
         home = data["home"]
@@ -435,6 +437,9 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
                     if module.boiler_status is not None:
                         self._boilerstatus = module.boiler_status
                         break
+
+        # Notify Home Assistant of the updated state
+        self.async_write_ha_state()
 
     async def _async_service_set_schedule(self, **kwargs: Any) -> None:
         schedule_name = kwargs.get(ATTR_SCHEDULE_NAME)
