@@ -50,11 +50,6 @@ class INKBIRDActiveBluetoothProcessorCoordinator(
         self._device_data = device_data
         address = entry.unique_id
         assert address is not None
-        entry.async_on_unload(
-            async_track_time_interval(
-                hass, self._async_schedule_poll, FALLBACK_POLL_INTERVAL
-            )
-        )
         super().__init__(
             hass=hass,
             logger=_LOGGER,
@@ -74,6 +69,11 @@ class INKBIRDActiveBluetoothProcessorCoordinator(
             self._async_device_data_changed,
         )
         if not self._data.uses_notify:
+            self._entry.async_on_unload(
+                async_track_time_interval(
+                    self.hass, self._async_schedule_poll, FALLBACK_POLL_INTERVAL
+                )
+            )
             return
         if not (service_info := async_last_service_info(self.hass, self.address)):
             raise ConfigEntryNotReady(
