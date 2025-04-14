@@ -84,11 +84,6 @@ class INKBIRDActiveBluetoothProcessorCoordinator(
         await self._data.async_start(service_info, service_info.device)
         self._entry.async_on_unload(self._data.async_stop)
 
-    @callback
-    def async_set_data(self, data: INKBIRDBluetoothDeviceData) -> None:
-        """Set the data for the coordinator."""
-        self._data = data
-
     async def _async_poll_data(
         self, last_service_info: BluetoothServiceInfoBleak
     ) -> SensorUpdate:
