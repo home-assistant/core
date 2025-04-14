@@ -142,7 +142,7 @@ async def test_polling_sensor(hass: HomeAssistant) -> None:
     assert len(hass.states.async_all()) == 0
 
     with patch(
-        "homeassistant.components.inkbird.INKBIRDBluetoothDeviceData.async_poll",
+        "homeassistant.components.inkbird.coordinator.INKBIRDBluetoothDeviceData.async_poll",
         return_value=_make_sensor_update("IBS-TH", 10.24),
     ):
         inject_bluetooth_service_info(hass, SPS_PASSIVE_SERVICE_INFO)
@@ -159,7 +159,7 @@ async def test_polling_sensor(hass: HomeAssistant) -> None:
     assert entry.data[CONF_DEVICE_TYPE] == "IBS-TH"
 
     with patch(
-        "homeassistant.components.inkbird.INKBIRDBluetoothDeviceData.async_poll",
+        "homeassistant.components.inkbird.coordinator.INKBIRDBluetoothDeviceData.async_poll",
         return_value=_make_sensor_update("IBS-TH", 20.24),
     ):
         async_fire_time_changed(hass, dt_util.utcnow() + FALLBACK_POLL_INTERVAL)
@@ -224,7 +224,7 @@ async def test_notify_sensor(hass: HomeAssistant) -> None:
     mock_client = MagicMock(start_notify=AsyncMock(), disconnect=AsyncMock())
     with (
         patch(
-            "homeassistant.components.inkbird.INKBIRDBluetoothDeviceData",
+            "homeassistant.components.inkbird.coordinator.INKBIRDBluetoothDeviceData",
             MockINKBIRDBluetoothDeviceData,
         ),
         patch("inkbird_ble.parser.establish_connection", return_value=mock_client),
