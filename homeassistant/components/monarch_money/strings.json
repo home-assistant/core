@@ -42,5 +42,11 @@
         "name": "Savings rate"
       }
     }
+  },
+  "services": {
+    "get_holdings": {
+      "name": "Get holdings",
+      "description": "Retrieves the current holdings for the account(s). Note that it can take some time to retrieve this data."
+    }
   }
 }
