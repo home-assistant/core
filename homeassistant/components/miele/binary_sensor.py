@@ -70,7 +70,6 @@ BINARY_SENSOR_TYPES: Final[tuple[MieleBinarySensorDefinition, ...]] = (
             key="state_signal_door",
             value_fn=lambda value: value.state_signal_door,
             device_class=BinarySensorDeviceClass.DOOR,
-            translation_key="door",
         ),
     ),
     MieleBinarySensorDefinition(
@@ -144,7 +143,6 @@ BINARY_SENSOR_TYPES: Final[tuple[MieleBinarySensorDefinition, ...]] = (
             key="state_signal_failure",
             value_fn=lambda value: value.state_signal_failure,
             device_class=BinarySensorDeviceClass.PROBLEM,
-            translation_key="failure",
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
     ),

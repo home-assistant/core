@@ -115,12 +115,6 @@
   },
   "entity": {
     "binary_sensor": {
-      "door": {
-        "name": "Door"
-      },
-      "failure": {
-        "name": "Failure"
-      },
       "info": {
         "name": "Info"
       },

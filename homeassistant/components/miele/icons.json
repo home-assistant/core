@@ -1,8 +1,8 @@
 {
   "entity": {
     "binary_sensor": {
-      "failure": {
-        "default": "mdi:alert"
+      "info": {
+        "default": "mdi:information"
       },
       "mobile_start": {
         "default": "mdi:cellphone-wireless"
