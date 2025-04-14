@@ -308,10 +308,6 @@
           "longitude": -97.6236871
         }
       ],
-      "timestamp": {
-        "seconds": 1744595421,
-        "nanos": 830000000
-      },
       "charge_schedule_window": {
         "id": 1744595421,
         "name": "",
@@ -353,10 +349,6 @@
           "longitude": -97.6236871
         }
       ],
-      "timestamp": {
-        "seconds": 1744595422,
-        "nanos": 362000000
-      },
       "preconditioning_schedule_window": {
         "id": 1,
         "name": "",
