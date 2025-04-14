@@ -129,7 +129,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         vol.All(
             cv.make_entity_service_schema(
                 {
-                    vol.Required(ATTR_ITEM): vol.All(cv.string, vol.Length(min=1)),
+                    vol.Required(ATTR_ITEM): vol.All(
+                        cv.string, str.strip, vol.Length(min=1)
+                    ),
                     **TODO_ITEM_FIELD_SCHEMA,
                 }
             ),
@@ -144,7 +146,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             cv.make_entity_service_schema(
                 {
                     vol.Required(ATTR_ITEM): vol.All(cv.string, vol.Length(min=1)),
-                    vol.Optional(ATTR_RENAME): vol.All(cv.string, vol.Length(min=1)),
+                    vol.Optional(ATTR_RENAME): vol.All(
+                        cv.string, str.strip, vol.Length(min=1)
+                    ),
                     vol.Optional(ATTR_STATUS): vol.In(
                         {TodoItemStatus.NEEDS_ACTION, TodoItemStatus.COMPLETED},
                     ),

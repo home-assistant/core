@@ -472,9 +472,9 @@
     },
     "platform": {
       "options": {
-        "notify": "Notify",
-        "sensor": "Sensor",
-        "switch": "Switch"
+        "notify": "[%key:component::notify::title%]",
+        "sensor": "[%key:component::sensor::title%]",
+        "switch": "[%key:component::switch::title%]"
       }
     },
     "set_ca_cert": {

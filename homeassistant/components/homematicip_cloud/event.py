@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from homematicip.aio.device import Device
+from homematicip.device import Device
 
 from homeassistant.components.event import (
     EventDeviceClass,

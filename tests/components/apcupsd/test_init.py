@@ -28,8 +28,8 @@ from tests.common import MockConfigEntry, async_fire_time_changed
         # Contains "SERIALNO" but no "UPSNAME" field.
         # We should create devices for the entities and prefix their IDs with default "APC UPS".
         MOCK_MINIMAL_STATUS | {"SERIALNO": "XXXX"},
-        # Does not contain either "SERIALNO" field.
-        # We should _not_ create devices for the entities and their IDs will not have prefixes.
+        # Does not contain either "SERIALNO" field or "UPSNAME" field. Our integration should work
+        # fine without it by falling back to config entry ID as unique ID and "APC UPS" as default name.
         MOCK_MINIMAL_STATUS,
         # Some models report "Blank" as SERIALNO, but we should treat it as not reported.
         MOCK_MINIMAL_STATUS | {"SERIALNO": "Blank"},
@@ -37,14 +37,9 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 )
 async def test_async_setup_entry(hass: HomeAssistant, status: OrderedDict) -> None:
     """Test a successful setup entry."""
-    # Minimal status does not contain "SERIALNO" field, which is used to determine the
-    # unique ID of this integration. But, the integration should work fine without it.
-    # In such a case, the device will not be added either
     await async_init_integration(hass, status=status)
 
-    prefix = ""
-    if "SERIALNO" in status and status["SERIALNO"] != "Blank":
-        prefix = slugify(status.get("UPSNAME", "APC UPS")) + "_"
+    prefix = slugify(status.get("UPSNAME", "APC UPS")) + "_"
 
     # Verify successful setup by querying the status sensor.
     state = hass.states.get(f"binary_sensor.{prefix}online_status")
@@ -72,15 +67,13 @@ async def test_device_entry(
     hass: HomeAssistant, status: OrderedDict, device_registry: dr.DeviceRegistry
 ) -> None:
     """Test successful setup of device entries."""
-    await async_init_integration(hass, status=status)
+    config_entry = await async_init_integration(hass, status=status)
 
     # Verify device info is properly set up.
-    if "SERIALNO" not in status or status["SERIALNO"] == "Blank":
-        assert len(device_registry.devices) == 0
-        return
-
     assert len(device_registry.devices) == 1
-    entry = device_registry.async_get_device({(DOMAIN, status["SERIALNO"])})
+    entry = device_registry.async_get_device(
+        {(DOMAIN, config_entry.unique_id or config_entry.entry_id)}
+    )
     assert entry is not None
     # Specify the mapping between field name and the expected fields in device entry.
     fields = {
