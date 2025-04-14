@@ -58,6 +58,9 @@
     "set_schedule": {
       "service": "mdi:calendar-clock"
     },
+    "sync_schedule": {
+      "service": "mdi:calendar-sync-outline"
+    },
     "set_preset_mode_with_end_datetime": {
       "service": "mdi:calendar-clock"
     },
