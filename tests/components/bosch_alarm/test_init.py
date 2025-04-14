@@ -20,8 +20,22 @@ def disable_platform_only():
 
 
 @pytest.mark.parametrize("model", ["solution_3000"])
-@pytest.mark.parametrize("exception", [PermissionError(), TimeoutError()])
+@pytest.mark.parametrize("exception", [PermissionError()])
 async def test_incorrect_auth(
+    hass: HomeAssistant,
+    mock_panel: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
+) -> None:
+    """Test errors with incorrect auth."""
+    mock_panel.connect.side_effect = exception
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+@pytest.mark.parametrize("model", ["solution_3000"])
+@pytest.mark.parametrize("exception", [TimeoutError()])
+async def test_connection_error(
     hass: HomeAssistant,
     mock_panel: AsyncMock,
     mock_config_entry: MockConfigEntry,

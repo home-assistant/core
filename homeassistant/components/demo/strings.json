@@ -78,6 +78,17 @@
         }
       }
     },
+    "light": {
+      "bed_light": {
+        "state_attributes": {
+          "effect": {
+            "state": {
+              "rainbow": "Rainbow"
+            }
+          }
+        }
+      }
+    },
     "select": {
       "speed": {
         "state": {
