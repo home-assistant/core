@@ -81,7 +81,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-PySwitchbot==0.59.0
+PySwitchbot==0.60.0
 
 # homeassistant.components.syncthru
 PySyncThru==0.8.0
@@ -231,7 +231,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==29.9.0
+aioesphomeapi==29.10.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -741,7 +741,7 @@ energyzero==2.1.1
 enocean==0.50
 
 # homeassistant.components.environment_canada
-env-canada==0.8.0
+env-canada==0.10.1
 
 # homeassistant.components.season
 ephem==4.1.6
@@ -1050,7 +1050,7 @@ influxdb-client==1.24.0
 influxdb==5.3.1
 
 # homeassistant.components.inkbird
-inkbird-ble==0.10.1
+inkbird-ble==0.13.0
 
 # homeassistant.components.insteon
 insteon-frontend-home-assistant==0.5.0
@@ -1745,6 +1745,9 @@ pymeteoclimatic==0.1.0
 # homeassistant.components.assist_pipeline
 pymicro-vad==1.0.1
 
+# homeassistant.components.miele
+pymiele==0.3.4
+
 # homeassistant.components.mochad
 pymochad==0.2.0
 
@@ -1808,7 +1811,7 @@ pyotgw==2.2.2
 pyotp==2.8.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.16.5
+pyoverkiz==1.17.0
 
 # homeassistant.components.onewire
 pyownet==0.10.0.post1
