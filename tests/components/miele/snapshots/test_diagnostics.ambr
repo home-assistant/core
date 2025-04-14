@@ -1,0 +1,789 @@
+# serializer version: 1
+# name: test_diagnostics_config_entry
+  dict({
+    'config_entry_data': dict({
+      'auth_implementation': 'miele',
+      'token': dict({
+        'access_token': '**REDACTED**',
+        'expires_in': 86399,
+        'refresh_token': '**REDACTED**',
+        'token_type': 'Bearer',
+      }),
+    }),
+    'miele_data': dict({
+      'actions': dict({
+        '**REDACTED_019aa577ad1c330d': dict({
+          'ambientLight': list([
+          ]),
+          'colors': list([
+          ]),
+          'deviceName': True,
+          'light': list([
+          ]),
+          'modes': list([
+          ]),
+          'powerOff': False,
+          'powerOn': True,
+          'processAction': list([
+          ]),
+          'programId': list([
+          ]),
+          'runOnTime': list([
+          ]),
+          'startTime': list([
+          ]),
+          'targetTemperature': list([
+          ]),
+          'ventilationStep': list([
+          ]),
+        }),
+        '**REDACTED_57d53e72806e88b4': dict({
+          'ambientLight': list([
+          ]),
+          'colors': list([
+          ]),
+          'deviceName': True,
+          'light': list([
+          ]),
+          'modes': list([
+          ]),
+          'powerOff': False,
+          'powerOn': True,
+          'processAction': list([
+          ]),
+          'programId': list([
+          ]),
+          'runOnTime': list([
+          ]),
+          'startTime': list([
+          ]),
+          'targetTemperature': list([
+          ]),
+          'ventilationStep': list([
+          ]),
+        }),
+        '**REDACTED_c9fe55cdf70786ca': dict({
+          'ambientLight': list([
+          ]),
+          'colors': list([
+          ]),
+          'deviceName': True,
+          'light': list([
+          ]),
+          'modes': list([
+          ]),
+          'powerOff': False,
+          'powerOn': True,
+          'processAction': list([
+          ]),
+          'programId': list([
+          ]),
+          'runOnTime': list([
+          ]),
+          'startTime': list([
+          ]),
+          'targetTemperature': list([
+          ]),
+          'ventilationStep': list([
+          ]),
+        }),
+      }),
+      'devices': dict({
+        '**REDACTED_019aa577ad1c330d': dict({
+          'ident': dict({
+            'deviceIdentLabel': dict({
+              'fabIndex': '17',
+              'fabNumber': '**REDACTED**',
+              'matNumber': '10804770',
+              'swids': list([
+                '4497',
+              ]),
+              'techType': 'KS 28423 D ed/c',
+            }),
+            'deviceName': '',
+            'protocolVersion': 201,
+            'type': dict({
+              'key_localized': 'Device type',
+              'value_localized': 'Refrigerator',
+              'value_raw': 19,
+            }),
+            'xkmIdentLabel': dict({
+              'releaseVersion': '31.17',
+              'techType': 'EK042',
+            }),
+          }),
+          'state': dict({
+            'ProgramID': dict({
+              'key_localized': 'Program name',
+              'value_localized': '',
+              'value_raw': 0,
+            }),
+            'ambientLight': None,
+            'batteryLevel': None,
+            'coreTargetTemperature': list([
+            ]),
+            'coreTemperature': list([
+            ]),
+            'dryingStep': dict({
+              'key_localized': 'Drying level',
+              'value_localized': '',
+              'value_raw': None,
+            }),
+            'ecoFeedback': None,
+            'elapsedTime': list([
+            ]),
+            'light': None,
+            'plateStep': list([
+            ]),
+            'programPhase': dict({
+              'key_localized': 'Program phase',
+              'value_localized': '',
+              'value_raw': 0,
+            }),
+            'programType': dict({
+              'key_localized': 'Program type',
+              'value_localized': '',
+              'value_raw': 0,
+            }),
+            'remainingTime': list([
+              0,
+              0,
+            ]),
+            'remoteEnable': dict({
+              'fullRemoteControl': True,
+              'mobileStart': False,
+              'smartGrid': False,
+            }),
+            'signalDoor': False,
+            'signalFailure': False,
+            'signalInfo': False,
+            'spinningSpeed': dict({
+              'key_localized': 'Spin speed',
+              'unit': 'rpm',
+              'value_localized': None,
+              'value_raw': None,
+            }),
+            'startTime': list([
+              0,
+              0,
+            ]),
+            'status': dict({
+              'key_localized': 'status',
+              'value_localized': 'In use',
+              'value_raw': 5,
+            }),
+            'targetTemperature': list([
+              dict({
+                'unit': 'Celsius',
+                'value_localized': 4,
+                'value_raw': 400,
+              }),
+              dict({
+                'unit': 'Celsius',
+                'value_localized': None,
+                'value_raw': -32768,
+              }),
+              dict({
+                'unit': 'Celsius',
+                'value_localized': None,
+                'value_raw': -32768,
+              }),
+            ]),
+            'temperature': list([
+              dict({
+                'unit': 'Celsius',
+                'value_localized': 4,
+                'value_raw': 400,
+              }),
+              dict({
+                'unit': 'Celsius',
+                'value_localized': None,
+                'value_raw': -32768,
+              }),
+              dict({
+                'unit': 'Celsius',
+                'value_localized': None,
+                'value_raw': -32768,
+              }),
+            ]),
+            'ventilationStep': dict({
+              'key_localized': 'Fan level',
+              'value_localized': '',
+              'value_raw': None,
+            }),
+          }),
+        }),
+        '**REDACTED_57d53e72806e88b4': dict({
+          'ident': dict({
+            'deviceIdentLabel': dict({
+              'fabIndex': '21',
+              'fabNumber': '**REDACTED**',
+              'matNumber': '10805070',
+              'swids': list([
+                '4497',
+              ]),
+              'techType': 'FNS 28463 E ed/',
+            }),
+            'deviceName': '',
+            'protocolVersion': 201,
+            'type': dict({
+              'key_localized': 'Device type',
+              'value_localized': 'Freezer',
+              'value_raw': 20,
+            }),
+            'xkmIdentLabel': dict({
+              'releaseVersion': '31.17',
+              'techType': 'EK042',
+            }),
+          }),
+          'state': dict({
+            'ProgramID': dict({
+              'key_localized': 'Program name',
+              'value_localized': '',
+              'value_raw': 0,
+            }),
+            'ambientLight': None,
+            'batteryLevel': None,
+            'coreTargetTemperature': list([
+            ]),
+            'coreTemperature': list([
+            ]),
+            'dryingStep': dict({
+              'key_localized': 'Drying level',
+              'value_localized': '',
+              'value_raw': None,
+            }),
+            'ecoFeedback': None,
+            'elapsedTime': list([
+            ]),
+            'light': None,
+            'plateStep': list([
+            ]),
+            'programPhase': dict({
+              'key_localized': 'Program phase',
+              'value_localized': '',
+              'value_raw': 0,
+            }),
+            'programType': dict({
+              'key_localized': 'Program type',
+              'value_localized': '',
+              'value_raw': 0,
+            }),
+            'remainingTime': list([
+              0,
+              0,
+            ]),
+            'remoteEnable': dict({
+              'fullRemoteControl': True,
+              'mobileStart': False,
+              'smartGrid': False,
+            }),
+            'signalDoor': False,
+            'signalFailure': False,
+            'signalInfo': False,
+            'spinningSpeed': dict({
+              'key_localized': 'Spin speed',
+              'unit': 'rpm',
+              'value_localized': None,
+              'value_raw': None,
+            }),
+            'startTime': list([
+              0,
+              0,
+            ]),
+            'status': dict({
+              'key_localized': 'status',
+              'value_localized': 'In use',
+              'value_raw': 5,
+            }),
+            'targetTemperature': list([
+              dict({
+                'unit': 'Celsius',
+                'value_localized': -18,
+                'value_raw': -1800,
+              }),
+              dict({
+                'unit': 'Celsius',
+                'value_localized': None,
+                'value_raw': -32768,
+              }),
+              dict({
+                'unit': 'Celsius',
+                'value_localized': None,
+                'value_raw': -32768,
+              }),
+            ]),
+            'temperature': list([
+              dict({
+                'unit': 'Celsius',
+                'value_localized': -18,
+                'value_raw': -1800,
+              }),
+              dict({
+                'unit': 'Celsius',
+                'value_localized': None,
+                'value_raw': -32768,
+              }),
+              dict({
+                'unit': 'Celsius',
+                'value_localized': None,
+                'value_raw': -32768,
+              }),
+            ]),
+            'ventilationStep': dict({
+              'key_localized': 'Fan level',
+              'value_localized': '',
+              'value_raw': None,
+            }),
+          }),
+        }),
+        '**REDACTED_c9fe55cdf70786ca': dict({
+          'ident': dict({
+            'deviceIdentLabel': dict({
+              'fabIndex': '44',
+              'fabNumber': '**REDACTED**',
+              'matNumber': '11387290',
+              'swids': list([
+                '5975',
+                '20456',
+                '25213',
+                '25191',
+                '25446',
+                '25205',
+                '25447',
+                '25319',
+              ]),
+              'techType': 'WCI870',
+            }),
+            'deviceName': '',
+            'protocolVersion': 4,
+            'type': dict({
+              'key_localized': 'Device type',
+              'value_localized': 'Washing machine',
+              'value_raw': 1,
+            }),
+            'xkmIdentLabel': dict({
+              'releaseVersion': '08.32',
+              'techType': 'EK057',
+            }),
+          }),
+          'state': dict({
+            'ProgramID': dict({
+              'key_localized': 'Program name',
+              'value_localized': '',
+              'value_raw': 0,
+            }),
+            'ambientLight': None,
+            'batteryLevel': None,
+            'coreTargetTemperature': list([
+              dict({
+                'unit': 'Celsius',
+                'value_localized': None,
+                'value_raw': -32768,
+              }),
+            ]),
+            'coreTemperature': list([
+              dict({
+                'unit': 'Celsius',
+                'value_localized': None,
+                'value_raw': -32768,
+              }),
+            ]),
+            'dryingStep': dict({
+              'key_localized': 'Drying level',
+              'value_localized': '',
+              'value_raw': None,
+            }),
+            'ecoFeedback': dict({
+              'currentEnergyConsumption': dict({
+                'unit': 'kWh',
+                'value': 0.0,
+              }),
+              'currentWaterConsumption': dict({
+                'unit': 'l',
+                'value': 0.0,
+              }),
+              'energyForecast': 0.1,
+              'waterForecast': 0.0,
+            }),
+            'elapsedTime': list([
+              0,
+              0,
+            ]),
+            'light': None,
+            'plateStep': list([
+            ]),
+            'programPhase': dict({
+              'key_localized': 'Program phase',
+              'value_localized': '',
+              'value_raw': 0,
+            }),
+            'programType': dict({
+              'key_localized': 'Program type',
+              'value_localized': '',
+              'value_raw': 0,
+            }),
+            'remainingTime': list([
+              0,
+              0,
+            ]),
+            'remoteEnable': dict({
+              'fullRemoteControl': True,
+              'mobileStart': False,
+              'smartGrid': False,
+            }),
+            'signalDoor': True,
+            'signalFailure': False,
+            'signalInfo': False,
+            'spinningSpeed': dict({
+              'key_localized': 'Spin speed',
+              'unit': 'rpm',
+              'value_localized': None,
+              'value_raw': None,
+            }),
+            'startTime': list([
+              0,
+              0,
+            ]),
+            'status': dict({
+              'key_localized': 'status',
+              'value_localized': 'Off',
+              'value_raw': 1,
+            }),
+            'targetTemperature': list([
+              dict({
+                'unit': 'Celsius',
+                'value_localized': None,
+                'value_raw': -32768,
+              }),
+              dict({
+                'unit': 'Celsius',
+                'value_localized': None,
+                'value_raw': -32768,
+              }),
+              dict({
+                'unit': 'Celsius',
+                'value_localized': None,
+                'value_raw': -32768,
+              }),
+            ]),
+            'temperature': list([
+              dict({
+                'unit': 'Celsius',
+                'value_localized': None,
+                'value_raw': -32768,
+              }),
+              dict({
+                'unit': 'Celsius',
+                'value_localized': None,
+                'value_raw': -32768,
+              }),
+              dict({
+                'unit': 'Celsius',
+                'value_localized': None,
+                'value_raw': -32768,
+              }),
+            ]),
+            'ventilationStep': dict({
+              'key_localized': 'Fan level',
+              'value_localized': '',
+              'value_raw': None,
+            }),
+          }),
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_diagnostics_device
+  dict({
+    'data': dict({
+      'auth_implementation': 'miele',
+      'token': dict({
+        'access_token': '**REDACTED**',
+        'expires_in': 86399,
+        'refresh_token': '**REDACTED**',
+        'token_type': 'Bearer',
+      }),
+    }),
+    'info': dict({
+      'manufacturer': 'Miele',
+      'model': 'FNS 28463 E ed/',
+    }),
+    'miele_data': dict({
+      'actions': dict({
+        '**REDACTED_57d53e72806e88b4': dict({
+          'ambientLight': list([
+          ]),
+          'colors': list([
+          ]),
+          'deviceName': True,
+          'light': list([
+          ]),
+          'modes': list([
+          ]),
+          'powerOff': False,
+          'powerOn': True,
+          'processAction': list([
+          ]),
+          'programId': list([
+          ]),
+          'runOnTime': list([
+          ]),
+          'startTime': list([
+          ]),
+          'targetTemperature': list([
+          ]),
+          'ventilationStep': list([
+          ]),
+        }),
+      }),
+      'devices': dict({
+        '**REDACTED_57d53e72806e88b4': dict({
+          'ident': dict({
+            'deviceIdentLabel': dict({
+              'fabIndex': '21',
+              'fabNumber': '**REDACTED**',
+              'matNumber': '10805070',
+              'swids': list([
+                '4497',
+              ]),
+              'techType': 'FNS 28463 E ed/',
+            }),
+            'deviceName': '',
+            'protocolVersion': 201,
+            'type': dict({
+              'key_localized': 'Device type',
+              'value_localized': 'Freezer',
+              'value_raw': 20,
+            }),
+            'xkmIdentLabel': dict({
+              'releaseVersion': '31.17',
+              'techType': 'EK042',
+            }),
+          }),
+          'state': dict({
+            'ProgramID': dict({
+              'key_localized': 'Program name',
+              'value_localized': '',
+              'value_raw': 0,
+            }),
+            'ambientLight': None,
+            'batteryLevel': None,
+            'coreTargetTemperature': list([
+            ]),
+            'coreTemperature': list([
+            ]),
+            'dryingStep': dict({
+              'key_localized': 'Drying level',
+              'value_localized': '',
+              'value_raw': None,
+            }),
+            'ecoFeedback': None,
+            'elapsedTime': list([
+            ]),
+            'light': None,
+            'plateStep': list([
+            ]),
+            'programPhase': dict({
+              'key_localized': 'Program phase',
+              'value_localized': '',
+              'value_raw': 0,
+            }),
+            'programType': dict({
+              'key_localized': 'Program type',
+              'value_localized': '',
+              'value_raw': 0,
+            }),
+            'remainingTime': list([
+              0,
+              0,
+            ]),
+            'remoteEnable': dict({
+              'fullRemoteControl': True,
+              'mobileStart': False,
+              'smartGrid': False,
+            }),
+            'signalDoor': False,
+            'signalFailure': False,
+            'signalInfo': False,
+            'spinningSpeed': dict({
+              'key_localized': 'Spin speed',
+              'unit': 'rpm',
+              'value_localized': None,
+              'value_raw': None,
+            }),
+            'startTime': list([
+              0,
+              0,
+            ]),
+            'status': dict({
+              'key_localized': 'status',
+              'value_localized': 'In use',
+              'value_raw': 5,
+            }),
+            'targetTemperature': list([
+              dict({
+                'unit': 'Celsius',
+                'value_localized': -18,
+                'value_raw': -1800,
+              }),
+              dict({
+                'unit': 'Celsius',
+                'value_localized': None,
+                'value_raw': -32768,
+              }),
+              dict({
+                'unit': 'Celsius',
+                'value_localized': None,
+                'value_raw': -32768,
+              }),
+            ]),
+            'temperature': list([
+              dict({
+                'unit': 'Celsius',
+                'value_localized': -18,
+                'value_raw': -1800,
+              }),
+              dict({
+                'unit': 'Celsius',
+                'value_localized': None,
+                'value_raw': -32768,
+              }),
+              dict({
+                'unit': 'Celsius',
+                'value_localized': None,
+                'value_raw': -32768,
+              }),
+            ]),
+            'ventilationStep': dict({
+              'key_localized': 'Fan level',
+              'value_localized': '',
+              'value_raw': None,
+            }),
+          }),
+        }),
+      }),
+      'programs': '''
+        [
+          {
+            "programId": 146,
+            "program": "QuickPowerWash",
+            "parameters": {}
+          },
+          {
+            "programId": 123,
+            "program": "Dark garments / Denim",
+            "parameters": {}
+          },
+          {
+            "programId": 190,
+            "program": "ECO 40-60 ",
+            "parameters": {}
+          },
+          {
+            "programId": 27,
+            "program": "Proofing",
+            "parameters": {}
+          },
+          {
+            "programId": 23,
+            "program": "Shirts",
+            "parameters": {}
+          },
+          {
+            "programId": 9,
+            "program": "Silks ",
+            "parameters": {}
+          },
+          {
+            "programId": 8,
+            "program": "Woollens ",
+            "parameters": {}
+          },
+          {
+            "programId": 4,
+            "program": "Delicates",
+            "parameters": {}
+          },
+          {
+            "programId": 3,
+            "program": "Minimum iron",
+            "parameters": {}
+          },
+          {
+            "programId": 1,
+            "program": "Cottons",
+            "parameters": {}
+          },
+          {
+            "programId": 69,
+            "program": "Cottons hygiene",
+            "parameters": {}
+          },
+          {
+            "programId": 37,
+            "program": "Outerwear",
+            "parameters": {}
+          },
+          {
+            "programId": 122,
+            "program": "Express 20",
+            "parameters": {}
+          },
+          {
+            "programId": 29,
+            "program": "Sportswear",
+            "parameters": {}
+          },
+          {
+            "programId": 31,
+            "program": "Automatic plus",
+            "parameters": {}
+          },
+          {
+            "programId": 39,
+            "program": "Pillows",
+            "parameters": {}
+          },
+          {
+            "programId": 22,
+            "program": "Curtains",
+            "parameters": {}
+          },
+          {
+            "programId": 129,
+            "program": "Down filled items",
+            "parameters": {}
+          },
+          {
+            "programId": 53,
+            "program": "First wash",
+            "parameters": {}
+          },
+          {
+            "programId": 95,
+            "program": "Down duvets",
+            "parameters": {}
+          },
+          {
+            "programId": 52,
+            "program": "Separate rinse / Starch",
+            "parameters": {}
+          },
+          {
+            "programId": 21,
+            "program": "Drain / Spin",
+            "parameters": {}
+          },
+          {
+            "programId": 91,
+            "program": "Clean machine",
+            "parameters": {}
+          }
+        ]
+  
+      ''',
+    }),
+  })
+# ---
