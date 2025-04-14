@@ -44,6 +44,10 @@
           "calendar_access": "Home Assistant access to Google Calendar"
         }
       }
+    },
+    "calendar_access": {
+      "read_only": "Read-only access",
+      "read_write": "Read/Write access (can create events)"
     }
   },
   "application_credentials": {
