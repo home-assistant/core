@@ -9,7 +9,7 @@ from aiobotocore.client import AioBaseClient as S3Client
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 
 from ._api import (
     CannotConnectError,
@@ -41,7 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: S3ConfigEntry) -> bool:
             translation_key="invalid_bucket_name",
         ) from err
     except CannotConnectError as err:
-        raise ConfigEntryError(
+        raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",
         ) from err

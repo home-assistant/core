@@ -12,16 +12,22 @@ from homeassistant.components.s3._api import (
     InvalidEndpointURLError,
     get_client,
 )
+from homeassistant.components.s3.const import (
+    CONF_ACCESS_KEY_ID,
+    CONF_BUCKET,
+    CONF_ENDPOINT_URL,
+    CONF_SECRET_ACCESS_KEY,
+)
 
 
 @pytest.fixture
 def user_input():
     """Fixture for S3 data."""
     return {
-        "endpoint_url": "https://s3.amazonaws.com",
-        "secret_access_key": "test_secret",
-        "access_key_id": "test_key",
-        "bucket": "test_bucket",
+        CONF_ENDPOINT_URL: "https://s3.amazonaws.com",
+        CONF_SECRET_ACCESS_KEY: "test_secret",
+        CONF_ACCESS_KEY_ID: "test_key",
+        CONF_BUCKET: "test_bucket",
     }
 
 
@@ -41,12 +47,12 @@ async def mock_create_client():
 async def test_get_client_success(user_input) -> None:
     """Test successful client creation."""
     async with get_client(user_input) as client:
-        client.head_bucket.assert_called_once_with(Bucket=user_input["bucket"])
+        client.head_bucket.assert_called_once_with(Bucket=user_input[CONF_BUCKET])
 
 
 async def test_get_client_invalid_endpoint_url(user_input, mock_create_client) -> None:
     """Test invalid endpoint URL."""
-    user_input["endpoint_url"] = "invalid_url"
+    user_input[CONF_ENDPOINT_URL] = "invalid_url"
     mock_create_client.__aenter__.side_effect = ValueError
 
     with pytest.raises(InvalidEndpointURLError):
@@ -54,26 +60,31 @@ async def test_get_client_invalid_endpoint_url(user_input, mock_create_client) -
             pass
 
 
-async def test_get_client_cannot_connect(user_input, mock_create_client) -> None:
-    """Test cannot connect to endpoint."""
-    mock_create_client.head_bucket.side_effect = (
-        botocore.exceptions.EndpointConnectionError(
-            endpoint_url=user_input["endpoint_url"]
-        )
-    )
-    with pytest.raises(CannotConnectError):
-        async with get_client(user_input):
-            pass
+@pytest.mark.parametrize(
+    ("side_effect", "expected_exception"),
+    [
+        (
+            botocore.exceptions.EndpointConnectionError(
+                endpoint_url="https://s3.amazonaws.com"
+            ),
+            CannotConnectError,
+        ),
+        (
+            botocore.exceptions.ClientError(
+                error_response={"Error": {"Code": "InvalidAccessKeyId"}},
+                operation_name="head_bucket",
+            ),
+            InvalidCredentialsError,
+        ),
+    ],
+)
+async def test_get_client_errors(
+    user_input, mock_create_client, side_effect, expected_exception
+) -> None:
+    """Test various client connection errors."""
+    mock_create_client.head_bucket.side_effect = side_effect
 
-
-async def test_get_client_invalid_credentials(user_input, mock_create_client) -> None:
-    """Test invalid credentials."""
-    mock_create_client.head_bucket.side_effect = botocore.exceptions.ClientError(
-        error_response={"Error": {"Code": "InvalidAccessKeyId"}},
-        operation_name="head_bucket",
-    )
-
-    with pytest.raises(InvalidCredentialsError):
+    with pytest.raises(expected_exception):
         async with get_client(user_input):
             pass
 

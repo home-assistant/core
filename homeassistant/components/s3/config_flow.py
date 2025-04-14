@@ -56,7 +56,12 @@ class S3ConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            self._async_abort_entries_match(user_input)
+            self._async_abort_entries_match(
+                {
+                    CONF_BUCKET: user_input[CONF_BUCKET],
+                    CONF_ENDPOINT_URL: user_input[CONF_ENDPOINT_URL],
+                }
+            )
             try:
                 async with get_client(user_input):
                     pass

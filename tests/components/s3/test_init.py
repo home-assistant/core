@@ -39,7 +39,7 @@ async def test_load_unload_config_entry(
         (InvalidCredentialsError, ConfigEntryState.SETUP_ERROR),
         (InvalidBucketNameError, ConfigEntryState.SETUP_ERROR),
         (InvalidEndpointURLError, ConfigEntryState.SETUP_ERROR),
-        (CannotConnectError, ConfigEntryState.SETUP_ERROR),
+        (CannotConnectError, ConfigEntryState.SETUP_RETRY),
     ],
 )
 async def test_setup_errors(

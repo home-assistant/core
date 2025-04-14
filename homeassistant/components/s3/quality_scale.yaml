@@ -52,7 +52,7 @@ rules:
   # Gold
   devices:
     status: exempt
-    comment: This integration interacts with cloud storage and does not have devices.
+    comment: This integration does not have entities.
   diagnostics: todo
   discovery-update-info:
     status: exempt
@@ -106,7 +106,5 @@ rules:
 
   # Platinum
   async-dependency: done
-  inject-websession:
-    status: exempt
-    comment: Aiobotocore doesn't support injecting client from outside.
+  inject-websession: todo
   strict-typing: todo
