@@ -672,7 +672,7 @@ devialet==1.5.7
 devolo-home-control-api==0.18.3
 
 # homeassistant.components.devolo_home_network
-devolo-plc-api==1.4.1
+devolo-plc-api==1.5.1
 
 # homeassistant.components.chacon_dio
 dio-chacon-wifi-api==1.2.1
@@ -1976,7 +1976,7 @@ python-juicenet==1.1.0
 python-kasa[speedups]==0.10.2
 
 # homeassistant.components.linkplay
-python-linkplay==0.2.2
+python-linkplay==0.2.3
 
 # homeassistant.components.matter
 python-matter-server==7.0.0
