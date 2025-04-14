@@ -51,7 +51,7 @@ def get_device_list(api, config):
         if login_response["msg"] == LOGIN_LOCKED_CODE:
             raise ConfigEntryError(login_response["error"])
         raise ConfigEntryError(
-            f"Unknown auth error, server responds: {login_response['error']}"
+            f"Unknown error, server responds: {login_response['error']}"
         )
     user_id = login_response["user"]["id"]
     if plant_id == DEFAULT_PLANT_ID:
