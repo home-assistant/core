@@ -92,7 +92,7 @@ class StateStatus(IntEnum):
     ON = 2
     PROGRAMMED = 3
     WAITING_TO_START = 4
-    RUNNING = 5
+    IN_USE = 5
     PAUSE = 6
     PROGRAM_ENDED = 7
     FAILURE = 8
@@ -113,7 +113,7 @@ STATE_STATUS_TAGS = {
     StateStatus.ON: "on",
     StateStatus.PROGRAMMED: "programmed",
     StateStatus.WAITING_TO_START: "waiting_to_start",
-    StateStatus.RUNNING: "running",
+    StateStatus.IN_USE: "in_use",
     StateStatus.PAUSE: "pause",
     StateStatus.PROGRAM_ENDED: "program_ended",
     StateStatus.FAILURE: "failure",

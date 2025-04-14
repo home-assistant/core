@@ -10,7 +10,7 @@
         'on',
         'programmed',
         'waiting_to_start',
-        'running',
+        'in_use',
         'pause',
         'program_ended',
         'failure',
@@ -65,7 +65,7 @@
         'on',
         'programmed',
         'waiting_to_start',
-        'running',
+        'in_use',
         'pause',
         'program_ended',
         'failure',
@@ -86,7 +86,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'running',
+    'state': 'in_use',
   })
 # ---
 # name: test_sensor_states[platforms0][sensor.freezer_temperature-entry]
@@ -152,7 +152,7 @@
         'on',
         'programmed',
         'waiting_to_start',
-        'running',
+        'in_use',
         'pause',
         'program_ended',
         'failure',
@@ -207,7 +207,7 @@
         'on',
         'programmed',
         'waiting_to_start',
-        'running',
+        'in_use',
         'pause',
         'program_ended',
         'failure',
@@ -228,7 +228,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'running',
+    'state': 'in_use',
   })
 # ---
 # name: test_sensor_states[platforms0][sensor.refrigerator_temperature-entry]
@@ -294,7 +294,7 @@
         'on',
         'programmed',
         'waiting_to_start',
-        'running',
+        'in_use',
         'pause',
         'program_ended',
         'failure',
@@ -349,7 +349,7 @@
         'on',
         'programmed',
         'waiting_to_start',
-        'running',
+        'in_use',
         'pause',
         'program_ended',
         'failure',
