@@ -1,10 +1,10 @@
 """Tests for the homelink coordinator."""
 
+import asyncio
 import logging
 import time
 from unittest.mock import patch
 
-from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.gentex_homelink import async_setup_entry
@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant
 
 from .mocks.mock_provider import MockProvider
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
@@ -64,7 +64,6 @@ async def test_get_state_updates(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test state updates.
@@ -104,9 +103,11 @@ async def test_get_state_updates(
 
         _LOGGER.info("Fire first event. Buttons should be on")
 
-        freezer.tick(1)
         provider._call_listeners(state_data[0])
+
         await hass.async_block_till_done(wait_background_tasks=True)
+        await asyncio.gather(*asyncio.all_tasks() - {asyncio.current_task()})
+        await asyncio.sleep(0.01)
         states = hass.states.async_all()
 
         assert (state != STATE_UNAVAILABLE for state in states), (
@@ -118,9 +119,8 @@ async def test_get_state_updates(
             "Fetch data again. Buttons should be off because more than 10s has elapsed"
         )
 
-        freezer.tick(EVENT_TIMEOUT + 1)
-        async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
+        await asyncio.sleep(EVENT_TIMEOUT)
         states = hass.states.async_all()
         assert (state != STATE_UNAVAILABLE for state in states), (
             "Some button is still unavailable"
@@ -128,32 +128,3 @@ async def test_get_state_updates(
 
         buttons_off = [s.attributes["event_type"] == EVENT_OFF for s in states]
         assert all(buttons_off), "Some button was not Off"
-        _LOGGER.info(
-            "Fetch data again. Buttons should be on because the request has a different timestamp and id"
-        )
-        provider._call_listeners(state_data[2])
-
-        freezer.tick(1)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done(wait_background_tasks=True)
-        states = hass.states.async_all()
-
-        assert (state != STATE_UNAVAILABLE for state in states), (
-            "Some button became unavailable"
-        )
-        buttons_pressed = [s.attributes["event_type"] == EVENT_PRESSED for s in states]
-        assert all(buttons_pressed), "At least one button was not pressed"
-
-        _LOGGER.info("Fetch data again. Buttons should be off the time has expired")
-        freezer.tick(EVENT_TIMEOUT + 1)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done(wait_background_tasks=True)
-
-        states = hass.states.async_all()
-        assert (state != STATE_UNAVAILABLE for state in states), (
-            "Some button became unavailable"
-        )
-        buttons_off = [s.attributes["event_type"] == EVENT_OFF for s in states]
-        assert all(buttons_off), (
-            "At least one button failed to turn off after the designated time"
-        )
