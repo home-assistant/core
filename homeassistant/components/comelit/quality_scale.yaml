@@ -76,9 +76,7 @@ rules:
     status: todo
     comment: PR in progress
   icon-translations: done
-  reconfiguration-flow:
-    status: todo
-    comment: PR in progress
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: no known use cases for repair issues or flows, yet
