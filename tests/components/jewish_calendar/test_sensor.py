@@ -158,7 +158,7 @@ TEST_PARAMS = [
 @pytest.mark.parametrize(
     ("location_data", "test_time", "results", "language", "sensor"),
     TEST_PARAMS,
-    indirect=["location_data", "test_time", "results", "language"],
+    indirect=["location_data", "test_time", "results"],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "setup_at_time")
 async def test_jewish_calendar_sensor(
@@ -486,11 +486,11 @@ SHABBAT_PARAMS = [
 ]
 
 
-@pytest.mark.parametrize("language", ["english", "hebrew"], indirect=True)
+@pytest.mark.parametrize("language", ["english", "hebrew"])
 @pytest.mark.parametrize(
     ("location_data", "test_time", "results", "havdalah_offset"),
     SHABBAT_PARAMS,
-    indirect=True,
+    indirect=("location_data", "test_time", "results"),
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "setup_at_time")
 async def test_shabbat_times_sensor(

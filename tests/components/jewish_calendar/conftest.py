@@ -90,15 +90,15 @@ def results(request: pytest.FixtureRequest, tz_info: dt.tzinfo) -> Iterable:
 
 
 @pytest.fixture
-def havdalah_offset(request: pytest.FixtureRequest) -> int | None:
+def havdalah_offset() -> int | None:
     """Return None if default havdalah offset is not specified."""
-    return getattr(request, "param", None)
+    return None
 
 
 @pytest.fixture
-def language(request: pytest.FixtureRequest) -> str:
+def language() -> str:
     """Return default language value, unless language is parametrized."""
-    return getattr(request, "param", "english")
+    return "english"
 
 
 @pytest.fixture(autouse=True)
