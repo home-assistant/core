@@ -29,10 +29,12 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.service import async_register_admin_service
 
 from .const import (
+    ATTR_EVENT_TYPE,
     AUTH,
     DATA_PERSONS,
     DATA_SCHEDULES,
     DOMAIN,
+    EVENT_TYPE_SCHEDULE,
     MANUFACTURER,
     NETATMO_CREATE_BATTERY,
     NETATMO_CREATE_BUTTON,
@@ -51,6 +53,7 @@ from .const import (
     PLATFORMS,
     WEBHOOK_ACTIVATION,
     WEBHOOK_DEACTIVATION,
+    WEBHOOK_HOME_EVENT_CHANGED,
     WEBHOOK_NACAMERA_CONNECTION,
     WEBHOOK_PUSH_TYPE,
 )
@@ -171,6 +174,14 @@ class NetatmoDataHandler:
             )
         )
 
+        self.config_entry.async_on_unload(
+            async_dispatcher_connect(
+                self.hass,
+                f"signal-{DOMAIN}-webhook-{EVENT_TYPE_SCHEDULE}",
+                self.handle_event,
+            )
+        )
+
         self.account = pyatmo.AsyncAccount(self._auth)
 
         await self.subscribe(ACCOUNT, ACCOUNT, None)
@@ -243,6 +254,16 @@ class NetatmoDataHandler:
         elif event["data"][WEBHOOK_PUSH_TYPE] == WEBHOOK_NACAMERA_CONNECTION:
             _LOGGER.debug("%s camera reconnected", MANUFACTURER)
             self.async_force_update(ACCOUNT)
+
+        elif (
+            event["data"][WEBHOOK_PUSH_TYPE] == WEBHOOK_HOME_EVENT_CHANGED
+            and event["data"][ATTR_EVENT_TYPE] == EVENT_TYPE_SCHEDULE
+            and "schedule_id" not in event["data"]
+        ):
+            _LOGGER.debug("%s schedule updated", MANUFACTURER)
+            signal_name = f"{HOME}-{event['data']['home_id']}"
+            await self.async_fetch_data(signal_name)
+            async_dispatcher_send(self.hass, signal_name)
 
     async def async_fetch_data(self, signal_name: str) -> bool:
         """Fetch data and notify."""
