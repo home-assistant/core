@@ -5,9 +5,7 @@ rules:
     comment: no actions
   appropriate-polling: done
   brands: done
-  common-modules:
-    status: todo
-    comment: PR in progress
+  common-modules: done
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
