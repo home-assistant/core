@@ -160,4 +160,5 @@ async def test_get_device_uid_and_ch(
     await hass.async_block_till_done()
 
     result = get_device_uid_and_ch(dev_entry, config_entry.runtime_data.host)
+    # always get the uid and channel form the DEV_ID_NVR since is_nvr = True
     assert result == ([TEST_UID, TEST_UID_CAM], 0, False)
