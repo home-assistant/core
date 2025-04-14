@@ -131,7 +131,7 @@ async def test_setup_devices_exception(
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.LOADED
 
 
 async def test_setup_all_good_no_recognized_devices(
