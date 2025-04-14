@@ -28,6 +28,8 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
+from homeassistant.components.reolink.util import get_device_uid_and_ch
+
 from .conftest import TEST_NVR_NAME
 
 from tests.common import MockConfigEntry
@@ -123,3 +125,30 @@ async def test_try_function(
     assert err.value.translation_key == expected.translation_key
 
     reolink_connect.set_volume.reset_mock(side_effect=True)
+
+
+async def test_get_device_uid_and_ch(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reolink_connect: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test get_device_uid_and_ch with multiple identifiers."""
+    reolink_connect.channels = [0]
+
+    dev_id_NVR = f"{TEST_UID}_{TEST_UID_CAM}"
+    dev_id_standalone_CAM = f"{TEST_UID_CAM}"
+
+    dev_entry = device_registry.async_get_or_create(
+        identifiers={(DOMAIN, dev_id_standalone_CAM), (DOMAIN, dev_id_NVR)},
+        config_entry_id=config_entry.entry_id,
+        disabled_by=None,
+    )
+
+    # setup CH 0 and host entities/device
+    with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SWITCH]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = get_device_uid_and_ch(dev_entry, config_entry.runtime_data.host)
+    assert result == ([TEST_UID, TEST_UID_CAM], 0, False)
