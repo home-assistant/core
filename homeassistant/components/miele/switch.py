@@ -142,7 +142,7 @@ class MieleSwitch(MieleEntity, SwitchEntity):
     def __init__(
         self,
         coordinator: MieleDataUpdateCoordinator,
-        device_id,
+        device_id: str,
         description: MieleSwitchDescription,
     ) -> None:
         """Initialize the switch."""
