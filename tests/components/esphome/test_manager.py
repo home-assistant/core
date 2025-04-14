@@ -752,7 +752,7 @@ async def test_connection_aborted_wrong_device(
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_HOST] == "192.168.43.184"
     await hass.async_block_till_done()
-    assert len(new_info.mock_calls) == 1
+    assert len(new_info.mock_calls) == 2
     assert "Unexpected device found at" not in caplog.text
 
 
