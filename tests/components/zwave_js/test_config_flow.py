@@ -25,7 +25,7 @@ from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_capture_events
 
 ADDON_DISCOVERY_INFO = {
     "addon": "Z-Wave JS",
@@ -3250,16 +3250,24 @@ async def test_options_migrate_with_addon(
     client.driver.controller.async_backup_nvm_raw = AsyncMock(
         side_effect=mock_backup_nvm_raw
     )
-    client.driver.controller.async_restore_nvm = AsyncMock()
 
-    events = []
+    async def mock_restore_nvm(data: bytes):
+        client.driver.controller.emit(
+            "nvm convert progress",
+            {"event": "nvm convert progress", "bytesRead": 100, "total": 200},
+        )
+        await asyncio.sleep(0)
+        client.driver.controller.emit(
+            "nvm restore progress",
+            {"event": "nvm restore progress", "bytesWritten": 100, "total": 200},
+        )
 
-    def capture_events(event):
-        events.append(event)
+    client.driver.controller.async_restore_nvm = AsyncMock(side_effect=mock_restore_nvm)
 
-    hass.bus.async_listen(
-        data_entry_flow.EVENT_DATA_ENTRY_FLOW_PROGRESS_UPDATE,
-        capture_events,
+    hass.config_entries.async_reload = AsyncMock()
+
+    events = async_capture_events(
+        hass, data_entry_flow.EVENT_DATA_ENTRY_FLOW_PROGRESS_UPDATE
     )
 
     result = await hass.config_entries.options.async_init(integration.entry_id)
@@ -3321,8 +3329,11 @@ async def test_options_migrate_with_addon(
     assert result["step_id"] == "restore_nvm"
 
     await hass.async_block_till_done()
-
+    assert hass.config_entries.async_reload.called
     assert client.driver.controller.async_restore_nvm.call_count == 1
+    assert len(events) == 2
+    assert events[0].data["progress"] == 0.25
+    assert events[1].data["progress"] == 0.75
 
     result = await hass.config_entries.options.async_configure(result["flow_id"])
 
