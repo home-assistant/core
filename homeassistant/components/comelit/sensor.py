@@ -99,6 +99,8 @@ async def async_setup_vedo_entry(
 class ComelitBridgeSensorEntity(ComelitBridgeBaseEntity, SensorEntity):
     """Sensor device."""
 
+    _attr_name = None
+
     def __init__(
         self,
         coordinator: ComelitSerialBridge,
