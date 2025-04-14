@@ -83,7 +83,7 @@ dependencies = [
   "PyJWT==2.10.1",
   # PyJWT has loose dependency. We want the latest one.
   "cryptography==44.0.1",
-  "Pillow==11.1.0",
+  "Pillow==11.2.1",
   "propcache==0.3.1",
   "pyOpenSSL==25.0.0",
   "orjson==3.10.16",
@@ -527,8 +527,6 @@ filterwarnings = [
   "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:meteofrance_api.model.forecast",
 
   # -- fixed, waiting for release / update
-  # https://bugs.launchpad.net/beautifulsoup/+bug/2076897 - >4.12.3
-  "ignore:The 'strip_cdata' option of HTMLParser\\(\\) has never done anything and will eventually be removed:DeprecationWarning:bs4.builder._lxml",
   # https://github.com/DataDog/datadogpy/pull/290 - >=0.23.0
   "ignore:invalid escape sequence:SyntaxWarning:.*datadog.dogstatsd.base",
   # https://github.com/DataDog/datadogpy/pull/566/files - >=0.37.0
@@ -584,9 +582,6 @@ filterwarnings = [
   "ignore:Callback API version 1 is deprecated, update to latest version:DeprecationWarning:roborock.cloud_api",
   # https://github.com/briis/pyweatherflowudp/blob/v1.4.5/pyweatherflowudp/const.py#L20 - v1.4.5 - 2023-10-10
   "ignore:This function will be removed in future versions of pint:DeprecationWarning:pyweatherflowudp.const",
-  # Wrong stacklevel
-  # https://bugs.launchpad.net/beautifulsoup/+bug/2034451 fixed in >4.12.3
-  "ignore:It looks like you're parsing an XML document using an HTML parser:UserWarning:html.parser",
   # New in aiohttp - v3.9.0
   "ignore:It is recommended to use web.AppKey instances for keys:UserWarning:(homeassistant|tests|aiohttp_cors)",
   # - SyntaxWarnings
@@ -645,6 +640,8 @@ filterwarnings = [
   # https://pypi.org/project/directv/ - v0.4.0 - 2020-09-12
   "ignore:with timeout\\(\\) is deprecated:DeprecationWarning:directv.directv",
   "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:directv.models",
+  # https://pypi.org/project/enocean/ - v0.50.1 (installed) -> v0.60.1 - 2021-06-18
+  "ignore:It looks like you're using an HTML parser to parse an XML document:UserWarning:enocean.protocol.eep",
   # https://pypi.org/project/httpsig/ - v1.3.0 - 2018-11-28
   "ignore:pkg_resources is deprecated as an API:DeprecationWarning:httpsig",
   # https://pypi.org/project/influxdb/ - v5.3.2 - 2024-04-18 (archived)
