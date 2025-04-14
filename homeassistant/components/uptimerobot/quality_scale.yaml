@@ -6,7 +6,9 @@ rules:
   appropriate-polling: done
   brands: done
   common-modules: done
-  config-flow-test-coverage: done
+  config-flow-test-coverage:
+    status: todo
+    comment: fix name and docstring
   config-flow: done
   dependency-transparency: done
   docs-actions:
@@ -26,16 +28,22 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions: done
+  action-exceptions:
+    status: todo
+    comment: recheck raise in switch.py
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
-  entity-unavailable: done
+  entity-unavailable:
+    status: todo
+    comment: recheck entity unavailable logic
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
   reauthentication-flow: done
-  test-coverage: done
+  test-coverage:
+    status: todo
+    comment: recheck typos
 
   # Gold
   devices: done
@@ -55,7 +63,9 @@ rules:
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: done
-  dynamic-devices: done
+  dynamic-devices:
+    status: todo
+    comment: recheck dynamic devices logic
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default:
@@ -70,7 +80,9 @@ rules:
   repair-issues:
     status: exempt
     comment: no known use cases for repair issues or flows, yet
-  stale-devices: done
+  stale-devices:
+    status: todo
+    comment: recheck stale devices logic
 
   # Platinum
   async-dependency: done
