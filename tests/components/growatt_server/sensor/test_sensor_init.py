@@ -91,7 +91,7 @@ def test_get_device_list_unknown_error(mock_api) -> None:
 
     with pytest.raises(
         ConfigEntryError,
-        match="Unkown auth error, server responds: Unknown error occurred",
+        match="Unknown auth error, server responds: Unknown error occurred",
     ):
         get_device_list(mock_api, config)
 

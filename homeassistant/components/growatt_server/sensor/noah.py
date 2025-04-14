@@ -3,12 +3,7 @@
 from __future__ import annotations
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.const import (
-    PERCENTAGE,
-    UnitOfElectricPotential,
-    UnitOfEnergy,
-    UnitOfPower,
-)
+from homeassistant.const import PERCENTAGE, UnitOfEnergy, UnitOfPower
 
 from .sensor_entity_description import GrowattSensorEntityDescription
 
@@ -16,7 +11,7 @@ NOAH_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
     GrowattSensorEntityDescription(
         key="noah_energy_today",
         translation_key="noah_energy_today",
-        api_key="eacToday",  # <-- genaues Feld aus der Growatt-API
+        api_key="eacToday",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -24,7 +19,7 @@ NOAH_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
     GrowattSensorEntityDescription(
         key="noah_energy_total",
         translation_key="noah_energy_total",
-        api_key="eacTotal",  # <-- genaues Feld aus der Growatt-API
+        api_key="eacTotal",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -40,7 +35,7 @@ NOAH_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
     GrowattSensorEntityDescription(
         key="noah_current_power",
         translation_key="noah_current_power",
-        api_key="pac",  # bspw. 'pac' = aktuelle Leistung
+        api_key="pac",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -48,7 +43,7 @@ NOAH_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
     GrowattSensorEntityDescription(
         key="noah_charge_power",
         translation_key="noah_charge_power",
-        api_key="chargePower",  # bspw. 'pac' = aktuelle Leistung
+        api_key="chargePower",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -56,7 +51,7 @@ NOAH_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
     GrowattSensorEntityDescription(
         key="noah_discharge_power",
         translation_key="noah_discharge_power",
-        api_key="disChargePower",  # bspw. 'pac' = aktuelle Leistung
+        api_key="disChargePower",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -64,9 +59,9 @@ NOAH_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
     GrowattSensorEntityDescription(
         key="noah_solar_power",
         translation_key="noah_solar_power",
-        api_key="ppv",  # bspw. 'pac' = aktuelle Leistung
+        api_key="ppv",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-    )
+    ),
 )

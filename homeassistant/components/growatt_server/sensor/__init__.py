@@ -50,7 +50,9 @@ def get_device_list(api, config):
             raise ConfigEntryError("Username, Password or URL may be incorrect!")
         if login_response["msg"] == LOGIN_LOCKED_CODE:
             raise ConfigEntryError(login_response["error"])
-        raise ConfigEntryError(f"Unkown auth error, server responds: {login_response["error"]}")
+        raise ConfigEntryError(
+            f"Unknown auth error, server responds: {login_response['error']}"
+        )
     user_id = login_response["user"]["id"]
     if plant_id == DEFAULT_PLANT_ID:
         plant_info = api.plant_list(user_id)
