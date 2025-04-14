@@ -1,6 +1,5 @@
 """Test Environment Canada diagnostics."""
 
-import json
 from typing import Any
 
 from syrupy import SnapshotAssertion
@@ -11,7 +10,6 @@ from homeassistant.core import HomeAssistant
 
 from . import init_integration
 
-from tests.common import load_fixture
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 

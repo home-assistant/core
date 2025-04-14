@@ -4,9 +4,9 @@ import contextlib
 from datetime import datetime
 import json
 
+from env_canada.ec_weather import MetaData
 import pytest
 
-from env_canada.ec_weather import MetaData
 from tests.common import load_fixture
 
 
