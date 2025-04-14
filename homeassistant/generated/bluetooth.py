@@ -405,6 +405,10 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "local_name": "mib*",
     },
     {
+        "domain": "kulersky",
+        "service_uuid": "8d96a001-0002-64c2-0001-9acc4838521c",
+    },
+    {
         "domain": "lamarzocco",
         "local_name": "MICRA_*",
     },
