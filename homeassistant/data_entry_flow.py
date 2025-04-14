@@ -832,7 +832,7 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
 
     @callback
     def async_update_progress(self, progress: float) -> None:
-        """Update the progress of a flow."""
+        """Update the progress of a flow. `progress` must be between 0 and 1."""
         self.hass.bus.async_fire_internal(
             EVENT_DATA_ENTRY_FLOW_PROGRESS_UPDATE,
             {"handler": self.handler, "flow_id": self.flow_id, "progress": progress},
