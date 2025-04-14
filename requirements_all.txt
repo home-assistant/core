@@ -2591,7 +2591,7 @@ pyzbar==0.1.7
 pyzerproc==0.4.8
 
 # homeassistant.components.qbittorrent
-qbittorrent-api==2024.2.59
+qbittorrent-api==2024.9.67
 
 # homeassistant.components.qbus
 qbusmqttapi==1.3.0
