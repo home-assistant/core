@@ -23,16 +23,20 @@ from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
+from homeassistant.components.reolink.const import DOMAIN
+from homeassistant.components.reolink.util import get_device_uid_and_ch
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import device_registry as dr
 
-from homeassistant.components.reolink.util import get_device_uid_and_ch
-
-from .conftest import TEST_NVR_NAME
+from .conftest import TEST_NVR_NAME, TEST_UID, TEST_UID_CAM
 
 from tests.common import MockConfigEntry
+
+DEV_ID_NVR = f"{TEST_UID}_{TEST_UID_CAM}"
+DEV_ID_STANDALONE_CAM = f"{TEST_UID_CAM}"
 
 
 @pytest.mark.parametrize(
@@ -127,20 +131,25 @@ async def test_try_function(
     reolink_connect.set_volume.reset_mock(side_effect=True)
 
 
+@pytest.mark.parametrize(
+    ("identifiers"),
+    [
+        ({(DOMAIN, DEV_ID_NVR), (DOMAIN, DEV_ID_STANDALONE_CAM)}),
+        ({(DOMAIN, DEV_ID_STANDALONE_CAM), (DOMAIN, DEV_ID_NVR)}),
+    ],
+)
 async def test_get_device_uid_and_ch(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     reolink_connect: MagicMock,
     device_registry: dr.DeviceRegistry,
+    identifiers: set[tuple[str, str]],
 ) -> None:
     """Test get_device_uid_and_ch with multiple identifiers."""
     reolink_connect.channels = [0]
 
-    dev_id_NVR = f"{TEST_UID}_{TEST_UID_CAM}"
-    dev_id_standalone_CAM = f"{TEST_UID_CAM}"
-
     dev_entry = device_registry.async_get_or_create(
-        identifiers={(DOMAIN, dev_id_standalone_CAM), (DOMAIN, dev_id_NVR)},
+        identifiers=identifiers,
         config_entry_id=config_entry.entry_id,
         disabled_by=None,
     )
