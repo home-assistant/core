@@ -119,6 +119,7 @@ class Schedule:
 class TeslemetryChargeSchedule(TeslemetryVehicleEntity, CalendarEntity):
     """Vehicle Charge Schedule Calendar."""
 
+    _attr_entity_registry_enabled_default = False
     schedules: list[Schedule] = []
     summary: str
 
@@ -229,6 +230,7 @@ class TeslemetryChargeSchedule(TeslemetryVehicleEntity, CalendarEntity):
 class TeslemetryPreconditionSchedule(TeslemetryVehicleEntity, CalendarEntity):
     """Vehicle Precondition Schedule Calendar."""
 
+    _attr_entity_registry_enabled_default = False
     events: list[CalendarEvent]
     summary: str
 
