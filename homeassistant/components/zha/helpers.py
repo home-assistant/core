@@ -1368,17 +1368,39 @@ def exclude_none_values(obj: Mapping[str, Any]) -> dict[str, Any]:
     return {k: v for k, v in obj.items() if v is not None}
 
 
-async def migrate_entities_unique_ids(hass: HomeAssistant, domain: str, entities: list):
+async def migrate_entities_unique_ids(
+    hass: HomeAssistant, domain: str, entity_data: list[EntityData]
+) -> None:
     """Migrate to new entity unique ids."""
 
+    # Build the migration mapping first, to make sure it is valid
     entity_registry = er.async_get(hass)
-    for entity_data in entities:
-        meta = entity_data.entity.info_object
-        if hasattr(meta, "previous_unique_id") and meta.previous_unique_id is not None:
-            entity_id = entity_registry.async_get_entity_id(
-                domain=domain, platform=DOMAIN, unique_id=meta.previous_unique_id
-            )
-            if entity_id is not None:
-                entity_registry.async_update_entity(
-                    entity_id, new_unique_id=meta.unique_id
+    unique_id_migrations: dict[str, str] = {}
+
+    for data in entity_data:
+        meta = data.entity.info_object
+        for old_unique_id in meta.migrate_unique_ids:
+            if old_unique_id in unique_id_migrations:
+                raise ValueError(
+                    f"Duplicate unique_id detected: {old_unique_id} migrates to both"
+                    f" {meta.unique_id} and {unique_id_migrations[old_unique_id]}"
                 )
+
+            unique_id_migrations[old_unique_id] = meta.unique_id
+
+    # Finally, migrate the entities
+    for old_unique_id, new_unique_id in unique_id_migrations.items():
+        entity_id = entity_registry.async_get_entity_id(
+            domain=domain, platform=DOMAIN, unique_id=old_unique_id
+        )
+
+        # There can be multiple previous unique IDs for a single entity, this is
+        # expected to be `None` most of the time
+        if entity_id is not None:
+            _LOGGER.debug(
+                "Migrating unique id for %r: %r -> %r",
+                entity_id,
+                old_unique_id,
+                new_unique_id,
+            )
+            entity_registry.async_update_entity(entity_id, new_unique_id=new_unique_id)
