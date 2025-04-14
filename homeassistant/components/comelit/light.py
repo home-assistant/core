@@ -8,6 +8,7 @@ from aiocomelit import ComelitSerialBridgeObject
 from aiocomelit.const import LIGHT, STATE_OFF, STATE_ON
 
 from homeassistant.components.light import ColorMode, LightEntity
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -40,6 +41,7 @@ class ComelitLightEntity(CoordinatorEntity[ComelitSerialBridge], LightEntity):
     _attr_has_entity_name = True
     _attr_name = None
     _attr_supported_color_modes = {ColorMode.ONOFF}
+    _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
         self,
