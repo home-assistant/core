@@ -4,12 +4,12 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.growatt_server.__init__ import get_device_list
 from homeassistant.components.growatt_server.const import (
     DEFAULT_PLANT_ID,
     LOGIN_INVALID_AUTH_CODE,
     LOGIN_LOCKED_CODE,
 )
+from homeassistant.components.growatt_server.sensor import get_device_list
 from homeassistant.exceptions import ConfigEntryError
 
 
