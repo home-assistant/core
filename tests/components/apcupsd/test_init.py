@@ -45,9 +45,7 @@ async def test_async_setup_entry(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test a successful setup entry."""
-    config_entry = await async_init_integration(
-        hass, status=status, entry_id="mocked-config-entry-id"
-    )
+    config_entry = await async_init_integration(hass, status=status)
     device_entry = device_registry.async_get_device(
         identifiers={(DOMAIN, config_entry.unique_id or config_entry.entry_id)}
     )
@@ -65,8 +63,12 @@ async def test_multiple_integrations(hass: HomeAssistant) -> None:
     status1 = MOCK_STATUS | {"LOADPCT": "15.0 Percent", "SERIALNO": "XXXXX1"}
     status2 = MOCK_STATUS | {"LOADPCT": "16.0 Percent", "SERIALNO": "XXXXX2"}
     entries = (
-        await async_init_integration(hass, host="test1", status=status1),
-        await async_init_integration(hass, host="test2", status=status2),
+        await async_init_integration(
+            hass, host="test1", status=status1, entry_id="entry-id-1"
+        ),
+        await async_init_integration(
+            hass, host="test2", status=status2, entry_id="entry-id-2"
+        ),
     )
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 2
@@ -85,8 +87,12 @@ async def test_multiple_integrations_different_devices(hass: HomeAssistant) -> N
     status1 = MOCK_STATUS | {"SERIALNO": "XXXXX1", "UPSNAME": "MyUPS1"}
     status2 = MOCK_STATUS | {"SERIALNO": "XXXXX2", "UPSNAME": "MyUPS2"}
     entries = (
-        await async_init_integration(hass, host="test1", status=status1),
-        await async_init_integration(hass, host="test2", status=status2),
+        await async_init_integration(
+            hass, host="test1", status=status1, entry_id="entry-id-1"
+        ),
+        await async_init_integration(
+            hass, host="test2", status=status2, entry_id="entry-id-1"
+        ),
     )
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 2
@@ -123,8 +129,12 @@ async def test_unload_remove_entry(hass: HomeAssistant) -> None:
     """Test successful unload and removal of an entry."""
     # Load two integrations from two mock hosts.
     entries = (
-        await async_init_integration(hass, host="test1", status=MOCK_STATUS),
-        await async_init_integration(hass, host="test2", status=MOCK_MINIMAL_STATUS),
+        await async_init_integration(
+            hass, host="test1", status=MOCK_STATUS, entry_id="entry-id-1"
+        ),
+        await async_init_integration(
+            hass, host="test2", status=MOCK_MINIMAL_STATUS, entry_id="entry-id-2"
+        ),
     )
 
     # Assert they are loaded.

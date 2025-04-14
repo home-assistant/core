@@ -86,7 +86,7 @@ async def async_init_integration(
     *,
     host: str = "test",
     status: dict[str, str] | None = None,
-    entry_id: str | None = None,
+    entry_id: str = "mocked-config-entry-id",
 ) -> MockConfigEntry:
     """Set up the APC UPS Daemon integration in HomeAssistant."""
     if status is None:
