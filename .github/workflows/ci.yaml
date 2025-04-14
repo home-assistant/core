@@ -1003,6 +1003,7 @@ jobs:
             -o console_output_style=count \
             -p no:sugar \
             --exclude-warning-annotations \
+            --junitxml=junit.xml -o junit_family=legacy \  # NOTE: for Codecov's test results
             $(sed -n "${{ matrix.group }},1p" pytest_buckets.txt) \
               2>&1 | tee pytest-${{ matrix.python-version }}-${{ matrix.group }}.txt
       - name: Upload pytest output
@@ -1135,6 +1136,7 @@ jobs:
             tests/components/logbook \
             tests/components/recorder \
             tests/components/sensor \
+            --junitxml=junit.xml -o junit_family=legacy \  # NOTE: for Codecov's test results
               2>&1 | tee pytest-${{ matrix.python-version }}-${mariadb}.txt
       - name: Upload pytest output
         if: success() || failure() && steps.pytest-partial.conclusion == 'failure'
@@ -1315,6 +1317,11 @@ jobs:
         uses: actions/download-artifact@v4.2.1
         with:
           pattern: coverage-*
+      - name: Upload test results to Codecov
+        if: ${{ !cancelled() }} # Run even if tests fail
+        uses: codecov/test-results-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
       - name: Upload coverage to Codecov
         if: needs.info.outputs.test_full_suite == 'true'
         uses: codecov/codecov-action@v5.4.0
@@ -1457,6 +1464,11 @@ jobs:
         uses: actions/download-artifact@v4.2.1
         with:
           pattern: coverage-*
+      - name: Upload test results to Codecov
+        if: ${{ !cancelled() }} # Run even if tests fail
+        uses: codecov/test-results-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
       - name: Upload coverage to Codecov
         if: needs.info.outputs.test_full_suite == 'false'
         uses: codecov/codecov-action@v5.4.0
