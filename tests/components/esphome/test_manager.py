@@ -9,6 +9,7 @@ from aioesphomeapi import (
     APIClient,
     APIConnectionError,
     DeviceInfo,
+    EncryptionPlaintextAPIError,
     EntityInfo,
     EntityState,
     HomeassistantServiceCall,
@@ -1316,6 +1317,7 @@ async def test_disconnects_at_close_event(
 @pytest.mark.parametrize(
     "error",
     [
+        EncryptionPlaintextAPIError,
         RequiresEncryptionAPIError,
         InvalidEncryptionKeyAPIError,
         InvalidAuthAPIError,
@@ -1347,6 +1349,42 @@ async def test_start_reauth(
     assert len(flows) == 1
     flow = flows[0]
     assert flow["context"]["source"] == "reauth"
+
+
+async def test_no_reauth_wrong_mac(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test exceptions on connect error trigger reauth."""
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=[],
+        user_service=[],
+        device_info={"compilation_time": "comp_time"},
+        states=[],
+    )
+    await hass.async_block_till_done()
+
+    await device.mock_connect_error(
+        InvalidEncryptionKeyAPIError(
+            "fail", received_mac="aabbccddeeff", received_name="test"
+        )
+    )
+    await hass.async_block_till_done()
+
+    # Reauth should not be triggered
+    flows = hass.config_entries.flow.async_progress(DOMAIN)
+    assert len(flows) == 0
+    assert (
+        "Unexpected device found at test.local; expected `test` "
+        "with mac address `11:22:33:44:55:aa`, found `test` "
+        "with mac address `aa:bb:cc:dd:ee:ff`" in caplog.text
+    )
 
 
 async def test_entry_missing_unique_id(
