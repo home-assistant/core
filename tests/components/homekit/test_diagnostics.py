@@ -453,7 +453,7 @@ async def test_config_entry_with_trigger_accessory(
                                 "iid": 6,
                                 "perms": ["pr"],
                                 "type": "30",
-                                "value": ANY,
+                                "value": device_id,
                             },
                             {
                                 "format": "string",
@@ -484,8 +484,15 @@ async def test_config_entry_with_trigger_accessory(
                                 "value": "Ceiling Lights Changed States",
                             },
                             {
-                                "format": "uint8",
+                                "format": "string",
                                 "iid": 11,
+                                "perms": ["pr", "pw", "ev"],
+                                "type": "E3",
+                                "value": "Ceiling Lights Changed States",
+                            },
+                            {
+                                "format": "uint8",
+                                "iid": 12,
                                 "maxValue": 255,
                                 "minStep": 1,
                                 "minValue": 1,
@@ -495,28 +502,28 @@ async def test_config_entry_with_trigger_accessory(
                             },
                         ],
                         "iid": 8,
-                        "linked": [12],
+                        "linked": [13],
                         "type": "89",
                     },
                     {
                         "characteristics": [
                             {
                                 "format": "uint8",
-                                "iid": 13,
+                                "iid": 14,
                                 "perms": ["pr"],
                                 "type": "CD",
                                 "valid-values": [0, 1],
                                 "value": 1,
                             }
                         ],
-                        "iid": 12,
+                        "iid": 13,
                         "type": "CC",
                     },
                     {
                         "characteristics": [
                             {
                                 "format": "uint8",
-                                "iid": 15,
+                                "iid": 16,
                                 "perms": ["pr", "ev"],
                                 "type": "73",
                                 "valid-values": [0],
@@ -524,14 +531,21 @@ async def test_config_entry_with_trigger_accessory(
                             },
                             {
                                 "format": "string",
-                                "iid": 16,
+                                "iid": 17,
                                 "perms": ["pr"],
                                 "type": "23",
                                 "value": "Ceiling Lights Turned Off",
                             },
                             {
+                                "format": "string",
+                                "iid": 18,
+                                "perms": ["pr", "pw", "ev"],
+                                "type": "E3",
+                                "value": "Ceiling Lights Turned Off",
+                            },
+                            {
                                 "format": "uint8",
-                                "iid": 17,
+                                "iid": 19,
                                 "maxValue": 255,
                                 "minStep": 1,
                                 "minValue": 1,
@@ -540,29 +554,29 @@ async def test_config_entry_with_trigger_accessory(
                                 "value": 2,
                             },
                         ],
-                        "iid": 14,
-                        "linked": [18],
+                        "iid": 15,
+                        "linked": [20],
                         "type": "89",
                     },
                     {
                         "characteristics": [
                             {
                                 "format": "uint8",
-                                "iid": 19,
+                                "iid": 21,
                                 "perms": ["pr"],
                                 "type": "CD",
                                 "valid-values": [0, 1],
                                 "value": 1,
                             }
                         ],
-                        "iid": 18,
+                        "iid": 20,
                         "type": "CC",
                     },
                     {
                         "characteristics": [
                             {
                                 "format": "uint8",
-                                "iid": 21,
+                                "iid": 23,
                                 "perms": ["pr", "ev"],
                                 "type": "73",
                                 "valid-values": [0],
@@ -570,14 +584,21 @@ async def test_config_entry_with_trigger_accessory(
                             },
                             {
                                 "format": "string",
-                                "iid": 22,
+                                "iid": 24,
                                 "perms": ["pr"],
                                 "type": "23",
                                 "value": "Ceiling Lights Turned On",
                             },
                             {
+                                "format": "string",
+                                "iid": 25,
+                                "perms": ["pr", "pw", "ev"],
+                                "type": "E3",
+                                "value": "Ceiling Lights Turned On",
+                            },
+                            {
                                 "format": "uint8",
-                                "iid": 23,
+                                "iid": 26,
                                 "maxValue": 255,
                                 "minStep": 1,
                                 "minValue": 1,
@@ -586,22 +607,22 @@ async def test_config_entry_with_trigger_accessory(
                                 "value": 3,
                             },
                         ],
-                        "iid": 20,
-                        "linked": [24],
+                        "iid": 22,
+                        "linked": [27],
                         "type": "89",
                     },
                     {
                         "characteristics": [
                             {
                                 "format": "uint8",
-                                "iid": 25,
+                                "iid": 28,
                                 "perms": ["pr"],
                                 "type": "CD",
                                 "valid-values": [0, 1],
                                 "value": 1,
                             }
                         ],
-                        "iid": 24,
+                        "iid": 27,
                         "type": "CC",
                     },
                 ],
@@ -626,6 +647,7 @@ async def test_config_entry_with_trigger_accessory(
         "pairing_id": ANY,
         "status": 1,
     }
+
     with (
         patch("pyhap.accessory_driver.AccessoryDriver.async_start"),
         patch("homeassistant.components.homekit.HomeKit.async_stop"),

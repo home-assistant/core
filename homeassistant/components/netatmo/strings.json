@@ -257,10 +257,10 @@
         "name": "Reachability"
       },
       "rf_strength": {
-        "name": "Radio"
+        "name": "RF strength"
       },
       "wifi_strength": {
-        "name": "Wi-Fi"
+        "name": "Wi-Fi strength"
       },
       "health_idx": {
         "name": "Health index",

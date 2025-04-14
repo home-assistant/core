@@ -15,6 +15,7 @@ from homeassistant.components.light import (
     ATTR_WHITE,
     DEFAULT_MAX_KELVIN,
     DEFAULT_MIN_KELVIN,
+    EFFECT_OFF,
     ColorMode,
     LightEntity,
     LightEntityFeature,
@@ -28,7 +29,7 @@ from . import DOMAIN
 
 LIGHT_COLORS = [(56, 86), (345, 75)]
 
-LIGHT_EFFECT_LIST = ["rainbow", "none"]
+LIGHT_EFFECT_LIST = ["rainbow", EFFECT_OFF]
 
 LIGHT_TEMPS = [4166, 2631]
 
@@ -48,6 +49,7 @@ async def async_setup_entry(
                 available=True,
                 effect_list=LIGHT_EFFECT_LIST,
                 effect=LIGHT_EFFECT_LIST[0],
+                translation_key="bed_light",
                 device_name="Bed Light",
                 state=False,
                 unique_id="light_1",
@@ -119,8 +121,10 @@ class DemoLight(LightEntity):
         rgbw_color: tuple[int, int, int, int] | None = None,
         rgbww_color: tuple[int, int, int, int, int] | None = None,
         supported_color_modes: set[ColorMode] | None = None,
+        translation_key: str | None = None,
     ) -> None:
         """Initialize the light."""
+        self._attr_translation_key = translation_key
         self._available = True
         self._brightness = brightness
         self._ct = ct or random.choice(LIGHT_TEMPS)

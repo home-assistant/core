@@ -165,8 +165,17 @@ async def test_unsupported_inputs(
     ## and then the exception isn't raised anymore.
 
 
+@pytest.mark.parametrize(
+    ("http_status", "error"),
+    [
+        (401, "cannot_connect"),
+        (403, "forbidden"),
+    ],
+)
 @respx.mock
-async def test_form_http_status_error(hass: HomeAssistant, ics_content: str) -> None:
+async def test_form_http_status_error(
+    hass: HomeAssistant, ics_content: str, http_status: int, error: str
+) -> None:
     """Test we http status."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -174,7 +183,7 @@ async def test_form_http_status_error(hass: HomeAssistant, ics_content: str) -> 
     assert result["type"] is FlowResultType.FORM
     respx.get(CALENDER_URL).mock(
         return_value=Response(
-            status_code=403,
+            status_code=http_status,
         )
     )
 
@@ -186,7 +195,7 @@ async def test_form_http_status_error(hass: HomeAssistant, ics_content: str) -> 
         },
     )
     assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result2["errors"] == {"base": error}
     respx.get(CALENDER_URL).mock(
         return_value=Response(
             status_code=200,

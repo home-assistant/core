@@ -82,6 +82,15 @@ OPTIMISTIC_TEMPLATE_ALARM_CONFIG = {
         "data": {"code": "{{ this.entity_id }}"},
     },
 }
+EMPTY_ACTIONS = {
+    "arm_away": [],
+    "arm_home": [],
+    "arm_night": [],
+    "arm_vacation": [],
+    "arm_custom_bypass": [],
+    "disarm": [],
+    "trigger": [],
+}
 
 
 TEMPLATE_ALARM_CONFIG = {
@@ -171,6 +180,12 @@ async def test_setup_config_entry(
             "alarm_control_panel": {
                 "platform": "template",
                 "panels": {"test_template_panel": OPTIMISTIC_TEMPLATE_ALARM_CONFIG},
+            }
+        },
+        {
+            "alarm_control_panel": {
+                "platform": "template",
+                "panels": {"test_template_panel": EMPTY_ACTIONS},
             }
         },
     ],

@@ -6,7 +6,12 @@ import logging
 
 from aiohttp import ClientError, ClientResponseError
 from tesla_fleet_api.const import Scope
-from tesla_fleet_api.exceptions import TeslaFleetError
+from tesla_fleet_api.exceptions import (
+    Forbidden,
+    InvalidToken,
+    SubscriptionRequired,
+    TeslaFleetError,
+)
 from tesla_fleet_api.tessie import Tessie
 from tessie_api import get_state_of_all_vehicles
 
@@ -124,12 +129,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bo
                     continue
 
                 api = tessie.energySites.create(site_id)
+
+                try:
+                    live_status = (await api.live_status())["response"]
+                except (InvalidToken, Forbidden, SubscriptionRequired) as e:
+                    raise ConfigEntryAuthFailed from e
+                except TeslaFleetError as e:
+                    raise ConfigEntryNotReady(e.message) from e
+
                 energysites.append(
                     TessieEnergyData(
                         api=api,
                         id=site_id,
-                        live_coordinator=TessieEnergySiteLiveCoordinator(
-                            hass, entry, api
+                        live_coordinator=(
+                            TessieEnergySiteLiveCoordinator(
+                                hass, entry, api, live_status
+                            )
+                            if isinstance(live_status, dict)
+                            else None
                         ),
                         info_coordinator=TessieEnergySiteInfoCoordinator(
                             hass, entry, api
@@ -147,6 +164,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bo
             *(
                 energysite.live_coordinator.async_config_entry_first_refresh()
                 for energysite in energysites
+                if energysite.live_coordinator is not None
             ),
             *(
                 energysite.info_coordinator.async_config_entry_first_refresh()

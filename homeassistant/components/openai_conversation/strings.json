@@ -46,16 +46,16 @@
   "selector": {
     "reasoning_effort": {
       "options": {
-        "low": "Low",
-        "medium": "Medium",
-        "high": "High"
+        "low": "[%key:common::state::low%]",
+        "medium": "[%key:common::state::medium%]",
+        "high": "[%key:common::state::high%]"
       }
     },
     "search_context_size": {
       "options": {
-        "low": "Low",
-        "medium": "Medium",
-        "high": "High"
+        "low": "[%key:common::state::low%]",
+        "medium": "[%key:common::state::medium%]",
+        "high": "[%key:common::state::high%]"
       }
     }
   },

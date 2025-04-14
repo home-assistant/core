@@ -148,7 +148,7 @@ def _build_response_apps_radios_category(
 ) -> BrowseMedia:
     """Build item for App or radio category."""
     return BrowseMedia(
-        media_content_id=item.get("id", ""),
+        media_content_id=item["id"],
         title=item["title"],
         media_content_type=cmd,
         media_class=browse_data.content_type_media_class[cmd]["item"],
@@ -163,7 +163,7 @@ def _build_response_known_app(
     """Build item for app or radio."""
 
     return BrowseMedia(
-        media_content_id=item.get("id", ""),
+        media_content_id=item["id"],
         title=item["title"],
         media_content_type=search_type,
         media_class=browse_data.content_type_media_class[search_type]["item"],
@@ -185,7 +185,7 @@ def _build_response_favorites(item: dict[str, Any]) -> BrowseMedia:
         )
     if item["hasitems"] and not item["isaudio"]:
         return BrowseMedia(
-            media_content_id=item.get("id", ""),
+            media_content_id=item["id"],
             title=item["title"],
             media_content_type="Favorites",
             media_class=CONTENT_TYPE_MEDIA_CLASS["Favorites"]["item"],
@@ -193,7 +193,7 @@ def _build_response_favorites(item: dict[str, Any]) -> BrowseMedia:
             can_play=False,
         )
     return BrowseMedia(
-        media_content_id=item.get("id", ""),
+        media_content_id=item["id"],
         title=item["title"],
         media_content_type="Favorites",
         media_class=CONTENT_TYPE_MEDIA_CLASS[MediaType.TRACK]["item"],
@@ -217,7 +217,7 @@ def _get_item_thumbnail(
             item_thumbnail = player.generate_image_url_from_track_id(artwork_track_id)
         elif item_type is not None:
             item_thumbnail = entity.get_browse_image_url(
-                item_type, item.get("id", ""), artwork_track_id
+                item_type, item["id"], artwork_track_id
             )
 
     elif search_type in ["Apps", "Radios"]:
@@ -263,6 +263,8 @@ async def build_item_response(
 
         children = []
         for item in result["items"]:
+            # Force the item id to a string in case it's numeric from some lms
+            item["id"] = str(item.get("id", ""))
             if search_type == "Favorites":
                 child_media = _build_response_favorites(item)
 
@@ -294,7 +296,7 @@ async def build_item_response(
 
             elif item_type:
                 child_media = BrowseMedia(
-                    media_content_id=str(item.get("id", "")),
+                    media_content_id=item["id"],
                     title=item["title"],
                     media_content_type=item_type,
                     media_class=CONTENT_TYPE_MEDIA_CLASS[item_type]["item"],
