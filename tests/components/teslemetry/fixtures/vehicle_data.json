@@ -278,6 +278,97 @@
       "vehicle_self_test_progress": 0,
       "vehicle_self_test_requested": false,
       "webcam_available": true
+    },
+    "charge_schedule_data": {
+      "charge_schedules": [
+        {
+          "id": 1728797699,
+          "name": "",
+          "days_of_week": 127,
+          "start_enabled": true,
+          "start_time": 540,
+          "end_enabled": true,
+          "end_time": 960,
+          "one_time": false,
+          "enabled": true,
+          "latitude": -30.222626,
+          "longitude": -97.6236871
+        },
+        {
+          "id": 154911594,
+          "name": "",
+          "days_of_week": 64,
+          "start_enabled": true,
+          "start_time": 1200,
+          "end_enabled": true,
+          "end_time": 1260,
+          "one_time": true,
+          "enabled": false,
+          "latitude": -30.222626,
+          "longitude": -97.6236871
+        }
+      ],
+      "timestamp": {
+        "seconds": 1744595421,
+        "nanos": 830000000
+      },
+      "charge_schedule_window": {
+        "id": 1744595421,
+        "name": "",
+        "days_of_week": 2,
+        "start_enabled": true,
+        "start_time": 540,
+        "end_enabled": true,
+        "end_time": 960,
+        "one_time": false,
+        "enabled": true,
+        "latitude": -30.222626,
+        "longitude": -97.6236871
+      },
+      "charge_buffer": 6,
+      "max_num_charge_schedules": 100,
+      "next_schedule": false,
+      "show_schedule_complete_state": false
+    },
+    "preconditioning_schedule_data": {
+      "precondition_schedules": [
+        {
+          "id": 1739410968753,
+          "name": "",
+          "days_of_week": 0,
+          "precondition_time": 60,
+          "one_time": true,
+          "enabled": true,
+          "latitude": -30.222626,
+          "longitude": -97.6236871
+        },
+        {
+          "id": 1724190474,
+          "name": "",
+          "days_of_week": 127,
+          "precondition_time": 960,
+          "one_time": false,
+          "enabled": false,
+          "latitude": -30.222626,
+          "longitude": -97.6236871
+        }
+      ],
+      "timestamp": {
+        "seconds": 1744595422,
+        "nanos": 362000000
+      },
+      "preconditioning_schedule_window": {
+        "id": 1,
+        "name": "",
+        "days_of_week": 16,
+        "precondition_time": 510,
+        "one_time": false,
+        "enabled": true,
+        "latitude": -30.222626,
+        "longitude": -97.6236871
+      },
+      "max_num_precondition_schedules": 100,
+      "next_schedule": true
     }
   }
 }
