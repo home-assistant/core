@@ -50,7 +50,6 @@ from .dashboard import async_get_or_create_dashboard_manager, async_set_dashboar
 
 ERROR_REQUIRES_ENCRYPTION_KEY = "requires_encryption_key"
 ERROR_INVALID_ENCRYPTION_KEY = "invalid_psk"
-ESPHOME_URL = "https://esphome.io/"
 _LOGGER = logging.getLogger(__name__)
 
 ZERO_NOISE_PSK = "MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA="
@@ -96,7 +95,6 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(fields),
             errors=errors,
-            description_placeholders={"esphome_url": ESPHOME_URL},
         )
 
     async def async_step_user(
