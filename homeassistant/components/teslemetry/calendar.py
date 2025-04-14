@@ -237,13 +237,19 @@ class TeslemetryPreconditionSchedule(TeslemetryVehicleEntity, CalendarEntity):
         """Return the next upcoming event."""
         now = dt_util.now()
         event = None
+
         for schedule in self.schedules:
             day = dt_util.start_of_local_day()
+
+            # Find the next occurrence of the schedule in time
+            # but dont look past an existing valid event
             while not event or day < event.start:
+                # Confirm the schedule runs on this day of the week
                 if test_days_of_week(day, schedule.days_of_week):
                     start = day + schedule.start_mins
                     end = day + schedule.end_mins
 
+                    # Confirm schedule in in the future, and before any other valid event
                     if end > now and (not event or start < event.start):
                         event = CalendarEvent(
                             start=start,
