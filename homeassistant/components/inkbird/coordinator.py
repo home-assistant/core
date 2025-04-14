@@ -68,12 +68,12 @@ class INKBIRDActiveBluetoothProcessorCoordinator(
             self.async_set_updated_data,
             self._async_device_data_changed,
         )
-        self._entry.async_on_unload(
-            async_track_time_interval(
-                self.hass, self._async_schedule_poll, FALLBACK_POLL_INTERVAL
-            )
-        )
         if not self._data.uses_notify:
+            self._entry.async_on_unload(
+                async_track_time_interval(
+                    self.hass, self._async_schedule_poll, FALLBACK_POLL_INTERVAL
+                )
+            )
             return
         if not (service_info := async_last_service_info(self.hass, self.address)):
             raise ConfigEntryNotReady(
