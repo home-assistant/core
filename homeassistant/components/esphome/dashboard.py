@@ -61,21 +61,24 @@ class ESPHomeDashboardManager:
     async def async_setup(self) -> None:
         """Restore the dashboard from storage."""
         self._data = await self._store.async_load()
-        if (data := self._data) and (info := data.get("info")):
-            if is_hassio(self._hass):
-                from homeassistant.components.hassio import (  # pylint: disable=import-outside-toplevel
-                    get_addons_info,
-                )
-
-                installed_addons = get_addons_info(self._hass)
-                _LOGGER.warning(
-                    "Installed Addons: %s - addon_slug: %s",
-                    installed_addons,
-                    info["addon_slug"],
-                )
-            await self.async_set_dashboard_info(
-                info["addon_slug"], info["host"], info["port"]
+        if not (data := self._data) or not (info := data.get("info")):
+            return
+        if is_hassio(self._hass):
+            from homeassistant.components.hassio import (  # pylint: disable=import-outside-toplevel
+                get_addons_info,
             )
+
+            if (addons := get_addons_info(self._hass)) is not None and info[
+                "addon_slug"
+            ] not in addons:
+                # The addon is not installed anymore, but it make come back
+                # so we don't want to remove the dashboard, but for now
+                # we don't want to use it.
+                _LOGGER.debug("Addon %s is no longer installed", info["addon_slug"])
+
+        await self.async_set_dashboard_info(
+            info["addon_slug"], info["host"], info["port"]
+        )
 
     @callback
     def async_get(self) -> ESPHomeDashboardCoordinator | None:
