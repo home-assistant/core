@@ -6,5 +6,5 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/scrape",
   "iot_class": "cloud_polling",
-  "requirements": ["beautifulsoup4==4.12.3", "lxml==5.3.0"]
+  "requirements": ["beautifulsoup4==4.13.3", "lxml==5.3.0"]
 }
