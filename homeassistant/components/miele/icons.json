@@ -1,0 +1,18 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "failure": {
+        "default": "mdi:alert"
+      },
+      "mobile_start": {
+        "default": "mdi:cellphone-wireless"
+      },
+      "remote_control": {
+        "default": "mdi:remote"
+      },
+      "smart_grid": {
+        "default": "mdi:view-grid-plus-outline"
+      }
+    }
+  }
+}

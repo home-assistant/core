@@ -71,7 +71,7 @@
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-    'original_icon': 'mdi:alert',
+    'original_icon': None,
     'original_name': 'Failure',
     'platform': 'miele',
     'previous_unique_id': None,
@@ -86,7 +86,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'friendly_name': 'Freezer Failure',
-      'icon': 'mdi:alert',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.freezer_failure',
@@ -168,7 +167,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:cellphone-wireless',
+    'original_icon': None,
     'original_name': 'Mobile start',
     'platform': 'miele',
     'previous_unique_id': None,
@@ -182,7 +181,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Freezer Mobile start',
-      'icon': 'mdi:cellphone-wireless',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.freezer_mobile_start',
@@ -216,7 +214,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:remote',
+    'original_icon': None,
     'original_name': 'Remote control',
     'platform': 'miele',
     'previous_unique_id': None,
@@ -230,7 +228,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Freezer Remote control',
-      'icon': 'mdi:remote',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.freezer_remote_control',
@@ -264,7 +261,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:view-grid-plus-outline',
+    'original_icon': None,
     'original_name': 'Smart grid',
     'platform': 'miele',
     'previous_unique_id': None,
@@ -278,7 +275,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Freezer Smart grid',
-      'icon': 'mdi:view-grid-plus-outline',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.freezer_smart_grid',
@@ -360,7 +356,7 @@
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-    'original_icon': 'mdi:alert',
+    'original_icon': None,
     'original_name': 'Failure',
     'platform': 'miele',
     'previous_unique_id': None,
@@ -375,7 +371,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'friendly_name': 'Refrigerator Failure',
-      'icon': 'mdi:alert',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.refrigerator_failure',
@@ -457,7 +452,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:cellphone-wireless',
+    'original_icon': None,
     'original_name': 'Mobile start',
     'platform': 'miele',
     'previous_unique_id': None,
@@ -471,7 +466,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Refrigerator Mobile start',
-      'icon': 'mdi:cellphone-wireless',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.refrigerator_mobile_start',
@@ -505,7 +499,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:remote',
+    'original_icon': None,
     'original_name': 'Remote control',
     'platform': 'miele',
     'previous_unique_id': None,
@@ -519,7 +513,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Refrigerator Remote control',
-      'icon': 'mdi:remote',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.refrigerator_remote_control',
@@ -553,7 +546,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:view-grid-plus-outline',
+    'original_icon': None,
     'original_name': 'Smart grid',
     'platform': 'miele',
     'previous_unique_id': None,
@@ -567,7 +560,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Refrigerator Smart grid',
-      'icon': 'mdi:view-grid-plus-outline',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.refrigerator_smart_grid',
@@ -649,7 +641,7 @@
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-    'original_icon': 'mdi:alert',
+    'original_icon': None,
     'original_name': 'Failure',
     'platform': 'miele',
     'previous_unique_id': None,
@@ -664,7 +656,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'friendly_name': 'Washing machine Failure',
-      'icon': 'mdi:alert',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.washing_machine_failure',
@@ -746,7 +737,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:cellphone-wireless',
+    'original_icon': None,
     'original_name': 'Mobile start',
     'platform': 'miele',
     'previous_unique_id': None,
@@ -760,7 +751,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Washing machine Mobile start',
-      'icon': 'mdi:cellphone-wireless',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.washing_machine_mobile_start',
@@ -794,7 +784,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:remote',
+    'original_icon': None,
     'original_name': 'Remote control',
     'platform': 'miele',
     'previous_unique_id': None,
@@ -808,7 +798,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Washing machine Remote control',
-      'icon': 'mdi:remote',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.washing_machine_remote_control',
@@ -842,7 +831,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:view-grid-plus-outline',
+    'original_icon': None,
     'original_name': 'Smart grid',
     'platform': 'miele',
     'previous_unique_id': None,
@@ -856,7 +845,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Washing machine Smart grid',
-      'icon': 'mdi:view-grid-plus-outline',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.washing_machine_smart_grid',

@@ -145,7 +145,6 @@ BINARY_SENSOR_TYPES: Final[tuple[MieleBinarySensorDefinition, ...]] = (
             value_fn=lambda value: value.state_signal_failure,
             device_class=BinarySensorDeviceClass.PROBLEM,
             translation_key="failure",
-            icon="mdi:alert",
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
     ),
@@ -181,7 +180,6 @@ BINARY_SENSOR_TYPES: Final[tuple[MieleBinarySensorDefinition, ...]] = (
         description=MieleBinarySensorDescription(
             key="state_full_remote_control",
             translation_key="remote_control",
-            icon="mdi:remote",
             value_fn=lambda value: value.state_full_remote_control,
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
@@ -218,7 +216,6 @@ BINARY_SENSOR_TYPES: Final[tuple[MieleBinarySensorDefinition, ...]] = (
             key="state_smart_grid",
             value_fn=lambda value: value.state_smart_grid,
             translation_key="smart_grid",
-            icon="mdi:view-grid-plus-outline",
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
     ),
@@ -255,7 +252,6 @@ BINARY_SENSOR_TYPES: Final[tuple[MieleBinarySensorDefinition, ...]] = (
             key="state_mobile_start",
             value_fn=lambda value: value.state_mobile_start,
             translation_key="mobile_start",
-            icon="mdi:cellphone-wireless",
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
     ),
@@ -270,14 +266,12 @@ async def async_setup_entry(
     """Set up the binary sensor platform."""
     coordinator = config_entry.runtime_data
 
-    entities = [
+    async_add_entities(
         MieleBinarySensor(coordinator, device_id, definition.description)
         for device_id, device in coordinator.data.devices.items()
         for definition in BINARY_SENSOR_TYPES
         if device.device_type in definition.types
-    ]
-
-    async_add_entities(entities)
+    )
 
 
 class MieleBinarySensor(MieleEntity, BinarySensorEntity):
