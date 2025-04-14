@@ -270,13 +270,14 @@ class APIEntityStateView(HomeAssistantView):
 
         attributes = data.get("attributes")
         force_update = data.get("force_update", False)
+        timestamp = data.get("timestamp", None)
 
         is_new_state = hass.states.get(entity_id) is None
 
         # Write state
         try:
             hass.states.async_set(
-                entity_id, new_state, attributes, force_update, self.context(request)
+                entity_id, new_state, attributes, force_update, self.context(request), None, timestamp
             )
         except InvalidEntityFormatError:
             return self.json_message(
