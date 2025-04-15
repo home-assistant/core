@@ -4,7 +4,6 @@ from datetime import datetime
 from unittest.mock import patch
 
 from freezegun import freeze_time
-import pytest
 
 from homeassistant.components import (
     conversation,
@@ -60,14 +59,6 @@ class MockTodoListEntity(todo.TodoListEntity):
     async def async_delete_todo_items(self, uids: list[str]) -> None:
         """Delete an item in the To-do list."""
         self._attr_todo_items = [item for item in self.items if item.uid not in uids]
-
-
-@pytest.fixture
-async def init_components(hass: HomeAssistant):
-    """Initialize relevant components with empty configs."""
-    assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "conversation", {})
-    assert await async_setup_component(hass, "intent", {})
 
 
 async def test_cover_set_position(
