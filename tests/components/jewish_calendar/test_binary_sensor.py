@@ -4,6 +4,7 @@ from datetime import datetime as dt, timedelta
 from typing import Any
 
 from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -107,6 +108,7 @@ MELACHA_PARAMS = [
 )
 async def test_issur_melacha_sensor(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     test_time: dt,
     results: dict[str, Any],
     config_entry: MockConfigEntry,
@@ -119,10 +121,10 @@ async def test_issur_melacha_sensor(
         await hass.async_block_till_done()
         assert hass.states.get(sensor_id).state == results["state"]
 
-    with freeze_time(results["update"]):
-        async_fire_time_changed(hass, results["update"])
-        await hass.async_block_till_done()
-        assert hass.states.get(sensor_id).state == results["new_state"]
+    freezer.move_to(results["update"])
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(sensor_id).state == results["new_state"]
 
 
 @pytest.mark.parametrize(
@@ -136,6 +138,7 @@ async def test_issur_melacha_sensor(
 )
 async def test_issur_melacha_sensor_update(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     test_time: dt,
     results: list[str],
     config_entry: MockConfigEntry,
@@ -148,11 +151,10 @@ async def test_issur_melacha_sensor_update(
         await hass.async_block_till_done()
         assert hass.states.get(sensor_id).state == results[0]
 
-    test_time += timedelta(microseconds=1)
-    with freeze_time(test_time):
-        async_fire_time_changed(hass, test_time)
-        await hass.async_block_till_done()
-        assert hass.states.get(sensor_id).state == results[1]
+    freezer.move_to(test_time + timedelta(microseconds=1))
+    async_fire_time_changed(hass, test_time)
+    await hass.async_block_till_done()
+    assert hass.states.get(sensor_id).state == results[1]
 
 
 async def test_no_discovery_info(
