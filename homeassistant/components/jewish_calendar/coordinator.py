@@ -10,6 +10,7 @@ from hdate.translator import Language
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import SUN_EVENT_SUNSET
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.helpers.event import async_track_point_in_time
 from homeassistant.helpers.sun import get_astral_event_date
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 import homeassistant.util.dt as dt_util
@@ -124,7 +125,7 @@ class JewishCalendarUpdateCoordinator(DataUpdateCoordinator[JewishCalendarData])
         self.config_data.results = JewishCalendarResults(
             daytime_date, after_shkia_date, after_tzais_date, today_times
         )
-        self.async_schedule_future_update()
+        # self.async_schedule_future_update()
         return self.config_data
 
     @callback
@@ -140,4 +141,13 @@ class JewishCalendarUpdateCoordinator(DataUpdateCoordinator[JewishCalendarData])
 
         now = dt_util.now()
         next_update = min([upd for upd in updates if upd], key=lambda x: x - now)
-        self.update_interval = next_update - now
+        # self.update_interval = next_update - now
+        self._cancel_scheduled_update()  # Cancel any existing schedule
+        self._unsub_update = async_track_point_in_time(
+            self.hass, self._handle_scheduled_update, next_update
+        )
+
+        @callback
+        async def _handle_scheduled_update(self, _):
+            await self._async_update_data()
+            self.async_schedule_future_update()
