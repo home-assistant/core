@@ -28,7 +28,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import EheimDigitalConfigEntry, EheimDigitalUpdateCoordinator
 from .entity import EheimDigitalEntity
 
-# Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
 
 _DeviceT_co = TypeVar("_DeviceT_co", bound=EheimDigitalDevice, covariant=True)
@@ -40,6 +39,7 @@ class EheimDigitalNumberDescription(NumberEntityDescription, Generic[_DeviceT_co
 
     value_fn: Callable[[_DeviceT_co], float | None]
     set_value_fn: Callable[[_DeviceT_co, float], Awaitable[None]]
+    uom_fn: Callable[[_DeviceT_co], str] | None = None
 
 
 CLASSICVARIO_DESCRIPTIONS: tuple[
@@ -83,6 +83,11 @@ HEATER_DESCRIPTIONS: tuple[EheimDigitalNumberDescription[EheimDigitalHeater], ..
         native_max_value=3,
         native_step=PRECISION_TENTHS,
         device_class=NumberDeviceClass.TEMPERATURE,
+        uom_fn=lambda device: (
+            UnitOfTemperature.CELSIUS
+            if device.temperature_unit == HeaterUnit.CELSIUS
+            else UnitOfTemperature.FAHRENHEIT
+        ),
         value_fn=lambda device: device.temperature_offset,
         set_value_fn=lambda device, value: device.set_temperature_offset(value),
     ),
@@ -94,6 +99,11 @@ HEATER_DESCRIPTIONS: tuple[EheimDigitalNumberDescription[EheimDigitalHeater], ..
         native_max_value=5,
         native_step=PRECISION_HALVES,
         device_class=NumberDeviceClass.TEMPERATURE,
+        uom_fn=lambda device: (
+            UnitOfTemperature.CELSIUS
+            if device.temperature_unit == HeaterUnit.CELSIUS
+            else UnitOfTemperature.FAHRENHEIT
+        ),
         value_fn=lambda device: device.night_temperature_offset,
         set_value_fn=lambda device, value: device.set_night_temperature_offset(value),
     ),
@@ -105,13 +115,13 @@ async def async_setup_entry(
     entry: EheimDigitalConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the callbacks for the coordinator so lights can be added as devices are found."""
+    """Set up the callbacks for the coordinator so numbers can be added as devices are found."""
     coordinator = entry.runtime_data
 
     def async_setup_device_entities(
         device_address: dict[str, EheimDigitalDevice],
     ) -> None:
-        """Set up the light entities for one or multiple devices."""
+        """Set up the number entities for one or multiple devices."""
         entities: list[EheimDigitalNumber[EheimDigitalDevice]] = []
         for device in device_address.values():
             if isinstance(device, EheimDigitalClassicVario):
@@ -160,11 +170,8 @@ class EheimDigitalNumber(
     @override
     def _async_update_attrs(self) -> None:
         self._attr_native_value = self.entity_description.value_fn(self._device)
-        if (
-            isinstance(self._device, EheimDigitalHeater)
-            and self.entity_description.device_class == NumberDeviceClass.TEMPERATURE
-        ):
-            if self._device.temperature_unit == HeaterUnit.CELSIUS:
-                self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
-            elif self._device.temperature_unit == HeaterUnit.FAHRENHEIT:
-                self._attr_native_unit_of_measurement = UnitOfTemperature.FAHRENHEIT
+        self._attr_native_unit_of_measurement = (
+            self.entity_description.uom_fn(self._device)
+            if self.entity_description.uom_fn
+            else self.entity_description.native_unit_of_measurement
+        )
