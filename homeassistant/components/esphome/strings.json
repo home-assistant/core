@@ -23,7 +23,7 @@
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]"
         },
-        "description": "Please enter connection settings of your [ESPHome]({esphome_url}) node."
+        "description": "Please enter connection settings of your ESPHome device."
       },
       "authenticate": {
         "data": {
@@ -47,8 +47,8 @@
         "description": "The ESPHome device {name} disabled transport encryption. Please confirm that you want to remove the encryption key and allow unencrypted connections."
       },
       "discovery_confirm": {
-        "description": "Do you want to add the ESPHome node `{name}` to Home Assistant?",
-        "title": "Discovered ESPHome node"
+        "description": "Do you want to add the device `{name}` to Home Assistant?",
+        "title": "Discovered ESPHome device"
       }
     },
     "flow_title": "{name}"
@@ -130,6 +130,29 @@
     "service_calls_not_allowed": {
       "title": "{name} is not permitted to perform Home Assistant actions",
       "description": "The ESPHome device attempted to perform a Home Assistant action, but this functionality is not enabled.\n\nIf you trust this device and want to allow it to perform Home Assistant action, you can enable this functionality in the options flow."
+    },
+    "device_conflict": {
+      "title": "Device conflict for {name}",
+      "fix_flow": {
+        "step": {
+          "init": {
+            "title": "Device conflict for {name}",
+            "description": "**The device `{name}` (`{model}`) at `{ip}` has reported a MAC address change from `{stored_mac}` to `{mac}`.**\n\nIf you have multiple devices with the same name, please rename or remove the one with MAC address `{mac}` to avoid conflicts.\n\nIf this is a hardware replacement, please confirm that you would like to migrate the Home Assistant configuration to the new device with MAC address `{mac}`.",
+            "menu_options": {
+              "migrate": "Migrate configuration to new device",
+              "manual": "Remove or rename device"
+            }
+          },
+          "migrate": {
+            "title": "Confirm device replacement for {name}",
+            "description": "Are you sure you want to migrate the Home Assistant configuration for `{name}` (`{model}`) at `{ip}` from `{stored_mac}` to `{mac}`?"
+          },
+          "manual": {
+            "title": "Remove or rename device {name}",
+            "description": "To resolve the conflict, either remove the device with MAC address `{mac}` from the network and restart the one with MAC address `{stored_mac}`, or re-flash the device with MAC address `{mac}` using a different name than `{name}`. Submit again once done."
+          }
+        }
+      }
     }
   }
 }

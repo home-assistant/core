@@ -265,6 +265,11 @@
       "version_latest": {
         "name": "Newest version"
       }
+    },
+    "update": {
+      "update": {
+        "name": "[%key:component::update::title%]"
+      }
     }
   },
   "services": {

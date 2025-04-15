@@ -22,12 +22,12 @@ from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture
-def mock_api_client(
+async def mock_api_client(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> TestClient:
     """Start the Home Assistant HTTP component and return admin API client."""
-    hass.loop.run_until_complete(async_setup_component(hass, "api", {}))
-    return hass.loop.run_until_complete(hass_client())
+    await async_setup_component(hass, "api", {})
+    return await hass_client()
 
 
 async def test_api_list_state_entities(

@@ -106,5 +106,7 @@ class SamsungTVEntity(CoordinatorEntity[SamsungTVDataUpdateCoordinator], Entity)
                 self.entity_id,
             )
             raise HomeAssistantError(
-                f"Entity {self.entity_id} does not support this service."
+                translation_domain=DOMAIN,
+                translation_key="service_unsupported",
+                translation_placeholders={"entity": self.entity_id},
             )

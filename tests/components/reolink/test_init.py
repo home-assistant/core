@@ -424,6 +424,15 @@ async def test_removing_chime(
             True,
             True,
         ),
+        (
+            f"{TEST_UID}_unexpected",
+            f"{TEST_UID}_unexpected",
+            f"{TEST_UID}_{TEST_UID_CAM}",
+            f"{TEST_UID}_{TEST_UID_CAM}",
+            Platform.SWITCH,
+            True,
+            True,
+        ),
     ],
 )
 async def test_migrate_entity_ids(
@@ -469,7 +478,8 @@ async def test_migrate_entity_ids(
     )
 
     assert entity_registry.async_get_entity_id(domain, DOMAIN, original_id)
-    assert entity_registry.async_get_entity_id(domain, DOMAIN, new_id) is None
+    if original_id != new_id:
+        assert entity_registry.async_get_entity_id(domain, DOMAIN, new_id) is None
 
     assert device_registry.async_get_device(identifiers={(DOMAIN, original_dev_id)})
     if new_dev_id != original_dev_id:
@@ -482,7 +492,8 @@ async def test_migrate_entity_ids(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entity_registry.async_get_entity_id(domain, DOMAIN, original_id) is None
+    if original_id != new_id:
+        assert entity_registry.async_get_entity_id(domain, DOMAIN, original_id) is None
     assert entity_registry.async_get_entity_id(domain, DOMAIN, new_id)
 
     if new_dev_id != original_dev_id:

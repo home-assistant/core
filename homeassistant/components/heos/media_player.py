@@ -71,6 +71,7 @@ BASE_SUPPORTED_FEATURES = (
 
 PLAY_STATE_TO_STATE = {
     None: MediaPlayerState.IDLE,
+    PlayState.UNKNOWN: MediaPlayerState.IDLE,
     PlayState.PLAY: MediaPlayerState.PLAYING,
     PlayState.STOP: MediaPlayerState.IDLE,
     PlayState.PAUSE: MediaPlayerState.PAUSED,
@@ -478,6 +479,13 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
     async def async_remove_from_queue(self, queue_ids: list[int]) -> None:
         """Remove items from the queue."""
         await self._player.remove_from_queue(queue_ids)
+
+    @catch_action_error("move queue item")
+    async def async_move_queue_item(
+        self, queue_ids: list[int], destination_position: int
+    ) -> None:
+        """Move items in the queue."""
+        await self._player.move_queue_item(queue_ids, destination_position)
 
     @property
     def available(self) -> bool:

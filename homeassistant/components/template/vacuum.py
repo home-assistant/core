@@ -158,7 +158,8 @@ class TemplateVacuum(TemplateEntity, StateVacuumEntity):
             (SERVICE_LOCATE, VacuumEntityFeature.LOCATE),
             (SERVICE_SET_FAN_SPEED, VacuumEntityFeature.FAN_SPEED),
         ):
-            if action_config := config.get(action_id):
+            # Scripts can be an empty list, therefore we need to check for None
+            if (action_config := config.get(action_id)) is not None:
                 self.add_script(action_id, action_config, name, DOMAIN)
                 self._attr_supported_features |= supported_feature
 

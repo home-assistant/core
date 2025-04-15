@@ -11,9 +11,9 @@ from homeassistant.components.cover import CoverDeviceClass, CoverEntity, CoverS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import ComelitConfigEntry, ComelitSerialBridge
+from .entity import ComelitBridgeBaseEntity
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -34,13 +34,10 @@ async def async_setup_entry(
     )
 
 
-class ComelitCoverEntity(
-    CoordinatorEntity[ComelitSerialBridge], RestoreEntity, CoverEntity
-):
+class ComelitCoverEntity(ComelitBridgeBaseEntity, RestoreEntity, CoverEntity):
     """Cover device."""
 
     _attr_device_class = CoverDeviceClass.SHUTTER
-    _attr_has_entity_name = True
     _attr_name = None
 
     def __init__(
@@ -50,13 +47,7 @@ class ComelitCoverEntity(
         config_entry_entry_id: str,
     ) -> None:
         """Init cover entity."""
-        self._api = coordinator.api
-        self._device = device
-        super().__init__(coordinator)
-        # Use config_entry.entry_id as base for unique_id
-        # because no serial number or mac is available
-        self._attr_unique_id = f"{config_entry_entry_id}-{device.index}"
-        self._attr_device_info = coordinator.platform_device_info(device, device.type)
+        super().__init__(coordinator, device, config_entry_entry_id)
         # Device doesn't provide a status so we assume UNKNOWN at first startup
         self._last_action: int | None = None
         self._last_state: str | None = None
@@ -101,7 +92,7 @@ class ComelitCoverEntity(
     async def _cover_set_state(self, action: int, state: int) -> None:
         """Set desired cover state."""
         self._last_state = self.state
-        await self._api.set_device_status(COVER, self._device.index, action)
+        await self.coordinator.api.set_device_status(COVER, self._device.index, action)
         self.coordinator.data[COVER][self._device.index].status = state
         self.async_write_ha_state()
 

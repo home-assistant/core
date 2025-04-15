@@ -211,7 +211,7 @@
       ]),
       'max_temp': 35,
       'min_temp': 7,
-      'preset_mode': None,
+      'preset_mode': 'windFree',
       'preset_modes': list([
         'windFree',
       ]),

@@ -258,7 +258,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: SamsungTVConfigEntry) -
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: SamsungTVConfigEntry
+) -> bool:
     """Migrate old entry."""
     version = config_entry.version
     minor_version = config_entry.minor_version

@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Login",
-        "description": "Enter your SmartTub email address and password to login",
+        "description": "Enter your SmartTub email address and password to log in",
         "data": {
           "email": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"

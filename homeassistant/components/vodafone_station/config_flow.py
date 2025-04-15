@@ -156,8 +156,6 @@ class VodafoneStationConfigFlow(ConfigFlow, domain=DOMAIN):
 
         errors: dict[str, str] = {}
 
-        errors = {}
-
         try:
             await validate_input(self.hass, user_input)
         except aiovodafone_exceptions.AlreadyLogged:

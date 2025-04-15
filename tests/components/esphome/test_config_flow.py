@@ -1087,6 +1087,9 @@ async def test_discovery_dhcp_updates_host(
         unique_id="11:22:33:44:55:aa",
     )
     entry.add_to_hass(hass)
+    mock_client.device_info = AsyncMock(
+        return_value=DeviceInfo(name="test8266", mac_address="1122334455aa")
+    )
 
     service_info = DhcpServiceInfo(
         ip="192.168.43.184",
@@ -1101,6 +1104,94 @@ async def test_discovery_dhcp_updates_host(
     assert result["reason"] == "already_configured"
 
     assert entry.data[CONF_HOST] == "192.168.43.184"
+
+
+async def test_discovery_dhcp_does_not_update_host_wrong_mac(
+    hass: HomeAssistant, mock_client: APIClient, mock_setup_entry: None
+) -> None:
+    """Test dhcp discovery does not update the host if the mac is wrong."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.43.183", CONF_PORT: 6053, CONF_PASSWORD: ""},
+        unique_id="11:22:33:44:55:aa",
+    )
+    entry.add_to_hass(hass)
+    mock_client.device_info = AsyncMock(
+        return_value=DeviceInfo(name="test8266", mac_address="1122334455ff")
+    )
+
+    service_info = DhcpServiceInfo(
+        ip="192.168.43.184",
+        hostname="test8266",
+        macaddress="1122334455aa",
+    )
+    result = await hass.config_entries.flow.async_init(
+        "esphome", context={"source": config_entries.SOURCE_DHCP}, data=service_info
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    # Mac was wrong, should not update
+    assert entry.data[CONF_HOST] == "192.168.43.183"
+
+
+async def test_discovery_dhcp_does_not_update_host_wrong_mac_bad_key(
+    hass: HomeAssistant, mock_client: APIClient, mock_setup_entry: None
+) -> None:
+    """Test dhcp discovery does not update the host if the mac is wrong."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.43.183", CONF_PORT: 6053, CONF_PASSWORD: ""},
+        unique_id="11:22:33:44:55:aa",
+    )
+    entry.add_to_hass(hass)
+    mock_client.device_info.side_effect = InvalidEncryptionKeyAPIError(
+        "Wrong key", "test8266", "1122334455cc"
+    )
+    service_info = DhcpServiceInfo(
+        ip="192.168.43.184",
+        hostname="test8266",
+        macaddress="1122334455aa",
+    )
+    result = await hass.config_entries.flow.async_init(
+        "esphome", context={"source": config_entries.SOURCE_DHCP}, data=service_info
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    # Mac was wrong, should not update
+    assert entry.data[CONF_HOST] == "192.168.43.183"
+
+
+async def test_discovery_dhcp_does_not_update_host_missing_mac_bad_key(
+    hass: HomeAssistant, mock_client: APIClient, mock_setup_entry: None
+) -> None:
+    """Test dhcp discovery does not update the host if the mac is missing."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.43.183", CONF_PORT: 6053, CONF_PASSWORD: ""},
+        unique_id="11:22:33:44:55:aa",
+    )
+    entry.add_to_hass(hass)
+    mock_client.device_info.side_effect = InvalidEncryptionKeyAPIError(
+        "Wrong key", "test8266", None
+    )
+    service_info = DhcpServiceInfo(
+        ip="192.168.43.184",
+        hostname="test8266",
+        macaddress="1122334455aa",
+    )
+    result = await hass.config_entries.flow.async_init(
+        "esphome", context={"source": config_entries.SOURCE_DHCP}, data=service_info
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    # Mac was missing, should not update
+    assert entry.data[CONF_HOST] == "192.168.43.183"
 
 
 async def test_discovery_dhcp_no_changes(
