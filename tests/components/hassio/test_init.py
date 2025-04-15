@@ -17,12 +17,12 @@ from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAI
 from homeassistant.components.hassio import (
     ADDONS_COORDINATOR,
     DOMAIN,
-    STORAGE_KEY,
     get_core_info,
     get_supervisor_ip,
     hostname_from_addon_slug,
     is_hassio as deprecated_is_hassio,
 )
+from homeassistant.components.hassio.config import STORAGE_KEY
 from homeassistant.components.hassio.const import REQUEST_REFRESH_DELAY
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
@@ -309,7 +309,10 @@ async def test_setup_api_push_api_data_default(
     supervisor_client: AsyncMock,
 ) -> None:
     """Test setup with API push default data."""
-    with patch.dict(os.environ, MOCK_ENVIRON):
+    with (
+        patch.dict(os.environ, MOCK_ENVIRON),
+        patch("homeassistant.components.hassio.config.STORE_DELAY_SAVE", 0),
+    ):
         result = await async_setup_component(hass, "hassio", {"http": {}, "hassio": {}})
         await hass.async_block_till_done()
 

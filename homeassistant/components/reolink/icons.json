@@ -380,6 +380,9 @@
       },
       "scene_mode": {
         "default": "mdi:view-list"
+      },
+      "packing_time": {
+        "default": "mdi:record-rec"
       }
     },
     "sensor": {

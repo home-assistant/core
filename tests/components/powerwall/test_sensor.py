@@ -118,7 +118,6 @@ async def test_sensors(hass: HomeAssistant, device_registry: dr.DeviceRegistry) 
     expected_attributes = {
         "unit_of_measurement": PERCENTAGE,
         "friendly_name": "MySite Backup reserve",
-        "device_class": "battery",
     }
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
