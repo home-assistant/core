@@ -7,7 +7,7 @@ import asyncio
 from datetime import datetime
 import logging
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import aiohttp
 from serial.tools import list_ports
@@ -1231,14 +1231,14 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
                 unsub()
 
     def _get_driver(self) -> Driver:
-        client: Client = self.config_entry.runtime_data[DATA_CLIENT]
+        client: Client | None
         if (
             self.config_entry.state != ConfigEntryState.LOADED
-            or not client
+            or (client := self.config_entry.runtime_data[DATA_CLIENT]) is None
             or client.driver is None
         ):
             raise AbortFlow("Driver not ready")
-        return client.driver
+        return cast(Driver, client.driver)
 
 
 class CannotConnect(HomeAssistantError):

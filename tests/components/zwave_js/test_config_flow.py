@@ -234,18 +234,48 @@ async def slow_server_version(*args):
 
 
 @pytest.mark.parametrize(
-    ("flow", "flow_params"),
+    ("url", "server_version_side_effect", "server_version_timeout", "error"),
     [
         (
-            "flow",
-            lambda entry: {
-                "handler": DOMAIN,
-                "context": {"source": config_entries.SOURCE_USER},
-            },
+            "not-ws-url",
+            None,
+            SERVER_VERSION_TIMEOUT,
+            "invalid_ws_url",
         ),
-        ("options", lambda entry: {"handler": entry.entry_id}),
+        (
+            "ws://localhost:3000",
+            slow_server_version,
+            0,
+            "cannot_connect",
+        ),
+        (
+            "ws://localhost:3000",
+            Exception("Boom"),
+            SERVER_VERSION_TIMEOUT,
+            "unknown",
+        ),
     ],
 )
+async def test_manual_errors(hass: HomeAssistant, integration, url, error) -> None:
+    """Test all errors with a manual set up."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "manual"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "url": url,
+        },
+    )
+
+    assert result["step_id"] == "manual"
+    assert result["errors"] == {"base": error}
+
+
 @pytest.mark.parametrize(
     ("url", "server_version_side_effect", "server_version_timeout", "error"),
     [
@@ -269,24 +299,22 @@ async def slow_server_version(*args):
         ),
     ],
 )
-async def test_manual_errors(
-    hass: HomeAssistant, integration, url, error, flow, flow_params
+async def test_manual_errors_options_flow(
+    hass: HomeAssistant, integration, url, error
 ) -> None:
     """Test all errors with a manual set up."""
-    entry = integration
-    result = await getattr(hass.config_entries, flow).async_init(**flow_params(entry))
+    result = await hass.config_entries.options.async_init(integration.entry_id)
 
-    if flow == "options":
-        assert result["type"] is FlowResultType.MENU
-        assert result["step_id"] == "init"
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"], {"next_step_id": "intent_reconfigure"}
-        )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "init"
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"next_step_id": "intent_reconfigure"}
+    )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual"
 
-    result = await getattr(hass.config_entries, flow).async_configure(
+    result = await getattr(hass.config_entries, "options").async_configure(
         result["flow_id"],
         {
             "url": url,
@@ -3553,7 +3581,7 @@ async def test_get_driver_failure(hass: HomeAssistant, integration, client) -> N
     handler = OptionsFlowHandler()
     handler.hass = hass
     handler._config_entry = integration
-    client.driver = None
+    await hass.config_entries.async_unload(integration.entry_id)
 
     with pytest.raises(data_entry_flow.AbortFlow):
         await handler._get_driver()
