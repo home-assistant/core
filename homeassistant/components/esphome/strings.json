@@ -23,11 +23,18 @@
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]"
         },
+        "data_description": {
+          "host": "IP address or hostname of the ESPHome device",
+          "port": "Port that the native API is running on"
+        },
         "description": "Please enter connection settings of your ESPHome device."
       },
       "authenticate": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "Password. Passwords are deprecated and will be removed in a future version. Please use an encryption key instead."
         },
         "description": "Please enter the password you set in your configuration for {name}."
       },
@@ -35,11 +42,17 @@
         "data": {
           "noise_psk": "Encryption key"
         },
+        "data_description": {
+          "noise_psk": "Encryption key. This is used to encrypt the connection between Home Assistant and the ESPHome device. You can find this in the api: section of your ESPHome configuration if it is enabled."
+        },
         "description": "Please enter the encryption key for {name}. You can find it in the ESPHome Dashboard or in your device configuration."
       },
       "reauth_confirm": {
         "data": {
           "noise_psk": "[%key:component::esphome::config::step::encryption_key::data::noise_psk%]"
+        },
+        "data_description": {
+          "noise_psk": "[%key:component::esphome::config::step::encryption_key::data_description::noise_psk%]"
         },
         "description": "The ESPHome device {name} enabled transport encryption or changed the encryption key. Please enter the updated key. You can find it in the ESPHome Dashboard or in your device configuration."
       },
