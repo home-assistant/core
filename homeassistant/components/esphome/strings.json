@@ -9,7 +9,8 @@
       "mqtt_missing_mac": "Missing MAC address in MQTT properties.",
       "mqtt_missing_api": "Missing API port in MQTT properties.",
       "mqtt_missing_ip": "Missing IP address in MQTT properties.",
-      "mqtt_missing_payload": "Missing MQTT Payload."
+      "mqtt_missing_payload": "Missing MQTT Payload.",
+      "name_conflict_migrated": "The device `{name}` has been migrated to a new device with MAC address `{mac}` from `{existing_mac}`."
     },
     "error": {
       "resolve_error": "Can't resolve address of the ESP. If this error persists, please set a static IP address",
@@ -49,6 +50,14 @@
       "discovery_confirm": {
         "description": "Do you want to add the device `{name}` to Home Assistant?",
         "title": "Discovered ESPHome device"
+      },
+      "name_conflict": {
+        "title": "Name conflict for {name}",
+        "description": "**The name `{name}` is already being used by another device, {existing_title} with MAC address `{existing_mac}`.**\n\nIf you have multiple devices with the same name, please rename or remove the one with MAC address `{mac}` to avoid conflicts.\n\nIf this is a hardware replacement, please confirm that you would like to migrate the Home Assistant configuration to the new device with MAC address `{mac}`.\n\nIf the new device is not a replacement, and you want to delete the existing configuration, select the option to replace the existing configuration.",
+        "menu_options": {
+          "name_conflict_migrate": "Migrate configuration to new device",
+          "name_conflict_replace": "Replace the existing configuration"
+        }
       }
     },
     "flow_title": "{name}"
