@@ -799,6 +799,12 @@
           "waiting_to_start": "Waiting to start"
         }
       },
+      "temperature_zone_2": {
+        "name": "Temperature zone 2"
+      },
+      "temperature_zone_3": {
+        "name": "Temperature zone 3"
+      },
       "water_consumption": {
         "name": "Water consumption"
       }

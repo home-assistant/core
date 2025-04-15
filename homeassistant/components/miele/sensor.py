@@ -16,6 +16,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    REVOLUTIONS_PER_MINUTE,
     EntityCategory,
     UnitOfEnergy,
     UnitOfTemperature,
@@ -31,7 +32,6 @@ from .const import (
     STATE_PROGRAM_PHASE,
     STATE_PROGRAM_TYPE,
     STATE_STATUS_TAGS,
-    WASHING_MACHINE_PROGRAM_ID,
     MieleAppliance,
     StateStatus,
 )
@@ -40,12 +40,14 @@ from .entity import MieleEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+DISABLED_TEMPERATURE = -32768
+
 
 @dataclass(frozen=True, kw_only=True)
 class MieleSensorDescription(SensorEntityDescription):
     """Class describing Miele sensor entities."""
 
-    value_fn: Callable[[MieleDevice], StateType]
+    value_fn: Callable[[MieleDevice], StateType | list[int]]
     zone: int | None = None
 
 
@@ -121,8 +123,7 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             key="state_program_id",
             translation_key="program_id",
             device_class=SensorDeviceClass.ENUM,
-            value_fn=lambda value: value.state_program_phase,
-            options=list(WASHING_MACHINE_PROGRAM_ID.values()),
+            value_fn=lambda value: value.state_program_id,
         ),
     ),
     MieleSensorDefinition(
@@ -203,7 +204,7 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
         description=MieleSensorDescription(
             key="state_remaining_time",
             translation_key="remaining_time",
-            value_fn=lambda value: value.state_remaining_time,  # type: ignore [return-value, arg-type]
+            value_fn=lambda value: value.state_remaining_time,
             device_class=SensorDeviceClass.DURATION,
             native_unit_of_measurement=UnitOfTime.MINUTES,
             entity_category=EntityCategory.DIAGNOSTIC,
@@ -228,7 +229,7 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
         description=MieleSensorDescription(
             key="state_elapsed_time",
             translation_key="elapsed_time",
-            value_fn=lambda value: value.state_elapsed_time,  # type: ignore [return-value, arg-type]
+            value_fn=lambda value: value.state_elapsed_time,
             device_class=SensorDeviceClass.DURATION,
             native_unit_of_measurement=UnitOfTime.MINUTES,
             entity_category=EntityCategory.DIAGNOSTIC,
@@ -290,7 +291,7 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
         description=MieleSensorDescription(
             key="state_start_time",
             translation_key="start_time",
-            value_fn=lambda value: value.state_start_time,  # type: ignore [return-value, arg-type]
+            value_fn=lambda value: value.state_start_time,
             native_unit_of_measurement=UnitOfTime.MINUTES,
             device_class=SensorDeviceClass.DURATION,
             entity_category=EntityCategory.DIAGNOSTIC,
@@ -308,7 +309,7 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             key="state_spinning_speed",
             translation_key="spin_speed",
             value_fn=lambda value: value.state_spinning_speed,
-            native_unit_of_measurement="rpm",
+            native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
     ),
@@ -338,7 +339,8 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             device_class=SensorDeviceClass.TEMPERATURE,
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             state_class=SensorStateClass.MEASUREMENT,
-            value_fn=lambda value: value.state_temperatures[0].temperature / 100.0,  # type: ignore [operator]
+            value_fn=lambda value: cast(int, value.state_temperatures[0].temperature)
+            / 100.0,
         ),
     ),
     MieleSensorDefinition(
@@ -365,6 +367,7 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             key="state_temperature_2",
             zone=2,
             device_class=SensorDeviceClass.TEMPERATURE,
+            translation_key="temperature_zone_2",
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             state_class=SensorStateClass.MEASUREMENT,
             value_fn=lambda value: value.state_temperatures[1].temperature / 100.0,  # type: ignore [operator]
@@ -405,7 +408,8 @@ async def async_setup_entry(
                         entity_class = MieleSensor
                 if (
                     definition.description.device_class == SensorDeviceClass.TEMPERATURE
-                    and definition.description.value_fn(device) == -32768 / 100
+                    and definition.description.value_fn(device)
+                    == DISABLED_TEMPERATURE / 100
                 ):
                     # Don't create entity if API signals that datapoint is disabled
                     continue
@@ -454,7 +458,7 @@ class MieleSensor(MieleEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self.entity_description.value_fn(self.device)
+        return cast(StateType, self.entity_description.value_fn(self.device))
 
 
 class MieleStatusSensor(MieleSensor):
@@ -534,6 +538,11 @@ class MieleProgramIdSensor(MieleSensor):
                 self.device.device_type,
             )
         return ret_val
+
+    @property
+    def options(self) -> list[str]:
+        """Return the options list for the actual device type."""
+        return list(STATE_PROGRAM_ID.get(self.device.device_type, {}).values())
 
 
 class MieleDurationSensor(MieleSensor):
