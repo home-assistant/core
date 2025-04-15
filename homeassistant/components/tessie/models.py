@@ -28,7 +28,7 @@ class TessieEnergyData:
     """Data for a Energy Site in the Tessie integration."""
 
     api: EnergySite
-    live_coordinator: TessieEnergySiteLiveCoordinator
+    live_coordinator: TessieEnergySiteLiveCoordinator | None
     info_coordinator: TessieEnergySiteInfoCoordinator
     id: int
     device: DeviceInfo

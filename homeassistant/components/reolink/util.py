@@ -79,11 +79,15 @@ def get_device_uid_and_ch(
     device: dr.DeviceEntry, host: ReolinkHost
 ) -> tuple[list[str], int | None, bool]:
     """Get the channel and the split device_uid from a reolink DeviceEntry."""
-    device_uid = [
-        dev_id[1].split("_") for dev_id in device.identifiers if dev_id[0] == DOMAIN
-    ][0]
-
+    device_uid = []
     is_chime = False
+
+    for dev_id in device.identifiers:
+        if dev_id[0] == DOMAIN:
+            device_uid = dev_id[1].split("_")
+            if device_uid[0] == host.unique_id:
+                break
+
     if len(device_uid) < 2:
         # NVR itself
         ch = None
