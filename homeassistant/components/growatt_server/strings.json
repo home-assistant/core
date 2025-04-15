@@ -7,7 +7,7 @@
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "account_locked": "Account is locked for 24 hours. Please try again later.",
-      "unknown_error": "Unknown error occured."
+      "unknown_error": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "plant": {
