@@ -6,13 +6,15 @@ from abc import ABC, abstractmethod
 import asyncio
 from datetime import datetime
 import logging
+from pathlib import Path
 from typing import Any
 
 import aiohttp
-from anyio import Path
 from serial.tools import list_ports
 import voluptuous as vol
+from zwave_js_server.client import Client
 from zwave_js_server.exceptions import FailedCommand
+from zwave_js_server.model.driver import Driver
 from zwave_js_server.version import VersionInfo, get_server_version
 
 from homeassistant.components import usb
@@ -832,15 +834,9 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
             # Now that the old controller is gone, we can scan for serial ports again
             return await self.async_step_choose_serial_port()
 
-        if (
-            self.config_entry.state != ConfigEntryState.LOADED
-            or not (client := self.config_entry.runtime_data[DATA_CLIENT]).driver
-        ):
-            raise AbortFlow("Driver not ready")
-
         # reset the old controller
         try:
-            await client.driver.async_hard_reset()
+            await self._get_driver().async_hard_reset()
         except FailedCommand as err:
             _LOGGER.error("Failed to reset controller: %s", err)
             return self.async_abort(reason="reset_failed")
@@ -1175,18 +1171,13 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
 
     async def _async_backup_network(self) -> None:
         """Backup the current network."""
-        if (
-            self.config_entry.state != ConfigEntryState.LOADED
-            or not (client := self.config_entry.runtime_data[DATA_CLIENT]).driver
-        ):
-            raise AbortFlow("Driver not ready")
 
         @callback
         def forward_progress(event: dict) -> None:
             """Forward progress events to frontend."""
             self.async_update_progress(event["bytesRead"] / event["total"])
 
-        controller = client.driver.controller
+        controller = self._get_driver().controller
         unsub = controller.on("nvm backup progress", forward_progress)
         try:
             self.backup_data = await controller.async_backup_nvm_raw()
@@ -1200,7 +1191,10 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
             f"zwavejs_nvm_backup_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.bin"
         )
         try:
-            await Path(self.backup_filepath).write_bytes(self.backup_data)
+            await self.hass.async_add_executor_job(
+                Path(self.backup_filepath).write_bytes,
+                self.backup_data,
+            )
         except OSError as err:
             raise AbortFlow(f"Failed to save backup file: {err}") from err
 
@@ -1211,11 +1205,6 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
 
         # Reload the config entry to reconnect the client after the addon restart
         await self.hass.config_entries.async_reload(self.config_entry.entry_id)
-        if (
-            self.config_entry.state != ConfigEntryState.LOADED
-            or not (client := self.config_entry.runtime_data[DATA_CLIENT]).driver
-        ):
-            raise AbortFlow("Driver not ready")
 
         @callback
         def forward_progress(event: dict) -> None:
@@ -1229,7 +1218,7 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
                     event["bytesWritten"] / event["total"] * 0.5 + 0.5
                 )
 
-        controller = client.driver.controller
+        controller = self._get_driver().controller
         unsubs = [
             controller.on("nvm convert progress", forward_progress),
             controller.on("nvm restore progress", forward_progress),
@@ -1241,6 +1230,16 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
         finally:
             for unsub in unsubs:
                 unsub()
+
+    def _get_driver(self) -> Driver:
+        client: Client = self.config_entry.runtime_data[DATA_CLIENT]
+        if (
+            self.config_entry.state != ConfigEntryState.LOADED
+            or not client
+            or client.driver is None
+        ):
+            raise AbortFlow("Driver not ready")
+        return client.driver
 
 
 class CannotConnect(HomeAssistantError):

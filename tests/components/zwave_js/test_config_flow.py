@@ -17,7 +17,11 @@ from zwave_js_server.exceptions import FailedCommand
 from zwave_js_server.version import VersionInfo
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.zwave_js.config_flow import SERVER_VERSION_TIMEOUT, TITLE
+from homeassistant.components.zwave_js.config_flow import (
+    SERVER_VERSION_TIMEOUT,
+    TITLE,
+    OptionsFlowHandler,
+)
 from homeassistant.components.zwave_js.const import ADDON_SLUG, CONF_USB_PATH, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -3287,7 +3291,7 @@ async def test_options_migrate_with_addon(
     assert result["type"] == FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "backup_nvm"
 
-    with patch("anyio.Path.write_bytes", AsyncMock()) as mock_file:
+    with patch("pathlib.Path.write_bytes", MagicMock()) as mock_file:
         await hass.async_block_till_done()
         assert client.driver.controller.async_backup_nvm_raw.call_count == 1
         assert mock_file.call_count == 1
@@ -3408,7 +3412,9 @@ async def test_options_migrate_backup_file_failure(
     assert result["type"] == FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "backup_nvm"
 
-    with patch("anyio.Path.write_bytes", MagicMock(side_effect=OSError("test_error"))):
+    with patch(
+        "pathlib.Path.write_bytes", MagicMock(side_effect=OSError("test_error"))
+    ):
         await hass.async_block_till_done()
         assert client.driver.controller.async_backup_nvm_raw.call_count == 1
 
@@ -3474,7 +3480,7 @@ async def test_options_migrate_restore_failure(
     assert result["type"] == FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "backup_nvm"
 
-    with patch("anyio.Path.write_bytes", AsyncMock()) as mock_file:
+    with patch("pathlib.Path.write_bytes", MagicMock()) as mock_file:
         await hass.async_block_till_done()
         assert client.driver.controller.async_backup_nvm_raw.call_count == 1
         assert mock_file.call_count == 1
@@ -3513,3 +3519,52 @@ async def test_options_migrate_restore_failure(
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "restore_failed"
+
+
+async def test_get_driver_failure(hass: HomeAssistant, integration, client) -> None:
+    """Test get driver failure."""
+
+    handler = OptionsFlowHandler()
+    handler.hass = hass
+    handler._config_entry = integration
+    client.driver = None
+
+    with pytest.raises(data_entry_flow.AbortFlow):
+        await handler._get_driver()
+
+
+async def test_hard_reset_failure(hass: HomeAssistant, integration, client) -> None:
+    """Test hard reset failure."""
+    handler = OptionsFlowHandler()
+    handler.hass = hass
+    handler._config_entry = integration
+
+    client.driver.async_hard_reset = AsyncMock(
+        side_effect=FailedCommand("test_error", "unknown_error")
+    )
+
+    result = await handler.async_step_instruct_unplug()
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "reset_failed"
+
+
+async def test_get_usb_ports_failure(
+    hass: HomeAssistant, integration, addon_running
+) -> None:
+    """Test get usb ports failure."""
+    handler = OptionsFlowHandler()
+    handler.hass = hass
+    handler._config_entry = integration
+
+    with patch(
+        "homeassistant.components.zwave_js.config_flow.async_get_usb_ports",
+        side_effect=OSError("test_error"),
+    ):
+        result = await handler.async_step_choose_serial_port()
+        assert result["type"] == FlowResultType.ABORT
+        assert result["reason"] == "usb_ports_failed"
+
+        result = await handler.async_step_configure_addon()
+        assert result["type"] == FlowResultType.ABORT
+        assert result["reason"] == "usb_ports_failed"
