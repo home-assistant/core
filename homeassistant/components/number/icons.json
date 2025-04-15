@@ -9,17 +9,26 @@
     "aqi": {
       "default": "mdi:air-filter"
     },
+    "area": {
+      "default": "mdi:texture-box"
+    },
     "atmospheric_pressure": {
       "default": "mdi:thermometer-lines"
     },
     "battery": {
       "default": "mdi:battery"
     },
+    "blood_glucose_concentration": {
+      "default": "mdi:spoon-sugar"
+    },
     "carbon_dioxide": {
       "default": "mdi:molecule-co2"
     },
     "carbon_monoxide": {
       "default": "mdi:molecule-co"
+    },
+    "conductivity": {
+      "default": "mdi:sprout-outline"
     },
     "current": {
       "default": "mdi:current-ac"
@@ -141,11 +150,16 @@
     "weight": {
       "default": "mdi:weight"
     },
+    "wind_direction": {
+      "default": "mdi:compass-rose"
+    },
     "wind_speed": {
       "default": "mdi:weather-windy"
     }
   },
   "services": {
-    "set_value": "mdi:numeric"
+    "set_value": {
+      "service": "mdi:numeric"
+    }
   }
 }

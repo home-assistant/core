@@ -330,10 +330,10 @@ async def test_rssi_sensor(hass: HomeAssistant, rfxtrx) -> None:
     await hass.async_block_till_done()
     await hass.async_start()
 
-    state = hass.states.get("sensor.pt2262_22670e_signal_strength")
+    state = hass.states.get("sensor.pt2262_226700_signal_strength")
     assert state
     assert state.state == "unknown"
-    assert state.attributes.get("friendly_name") == "PT2262 22670e Signal strength"
+    assert state.attributes.get("friendly_name") == "PT2262 226700 Signal strength"
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == SIGNAL_STRENGTH_DECIBELS_MILLIWATT
@@ -351,7 +351,7 @@ async def test_rssi_sensor(hass: HomeAssistant, rfxtrx) -> None:
     await rfxtrx.signal("0913000022670e013b70")
     await rfxtrx.signal("0b1100cd0213c7f230010f71")
 
-    state = hass.states.get("sensor.pt2262_22670e_signal_strength")
+    state = hass.states.get("sensor.pt2262_226700_signal_strength")
     assert state
     assert state.state == "-64"
 
@@ -362,7 +362,7 @@ async def test_rssi_sensor(hass: HomeAssistant, rfxtrx) -> None:
     await rfxtrx.signal("0913000022670e013b60")
     await rfxtrx.signal("0b1100cd0213c7f230010f61")
 
-    state = hass.states.get("sensor.pt2262_22670e_signal_strength")
+    state = hass.states.get("sensor.pt2262_226700_signal_strength")
     assert state
     assert state.state == "-72"
 

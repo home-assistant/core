@@ -2,220 +2,51 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
+from typing import Any
 
-from requests import HTTPError
-import voluptuous as vol
+from aiohomeconnect.client import Client as HomeConnectClient
+import aiohttp
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_DEVICE_ID, CONF_DEVICE, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     config_entry_oauth2_flow,
     config_validation as cv,
-    device_registry as dr,
+    issue_registry as ir,
 )
+from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import Throttle
 
-from . import api
-from .const import (
-    ATTR_KEY,
-    ATTR_PROGRAM,
-    ATTR_UNIT,
-    ATTR_VALUE,
-    BSH_PAUSE,
-    BSH_RESUME,
-    DOMAIN,
-    SERVICE_OPTION_ACTIVE,
-    SERVICE_OPTION_SELECTED,
-    SERVICE_PAUSE_PROGRAM,
-    SERVICE_RESUME_PROGRAM,
-    SERVICE_SELECT_PROGRAM,
-    SERVICE_SETTING,
-    SERVICE_START_PROGRAM,
-)
+from .api import AsyncConfigEntryAuth
+from .const import DOMAIN, OLD_NEW_UNIQUE_ID_SUFFIX_MAP
+from .coordinator import HomeConnectConfigEntry, HomeConnectCoordinator
+from .services import register_actions
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(minutes=1)
-
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-SERVICE_SETTING_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_DEVICE_ID): str,
-        vol.Required(ATTR_KEY): str,
-        vol.Required(ATTR_VALUE): vol.Any(str, int, bool),
-    }
-)
-
-SERVICE_OPTION_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_DEVICE_ID): str,
-        vol.Required(ATTR_KEY): str,
-        vol.Required(ATTR_VALUE): vol.Any(str, int, bool),
-        vol.Optional(ATTR_UNIT): str,
-    }
-)
-
-SERVICE_PROGRAM_SCHEMA = vol.Any(
-    {
-        vol.Required(ATTR_DEVICE_ID): str,
-        vol.Required(ATTR_PROGRAM): str,
-        vol.Required(ATTR_KEY): str,
-        vol.Required(ATTR_VALUE): vol.Any(int, str),
-        vol.Optional(ATTR_UNIT): str,
-    },
-    {
-        vol.Required(ATTR_DEVICE_ID): str,
-        vol.Required(ATTR_PROGRAM): str,
-    },
-)
-
-SERVICE_COMMAND_SCHEMA = vol.Schema({vol.Required(ATTR_DEVICE_ID): str})
-
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.LIGHT, Platform.SENSOR, Platform.SWITCH]
-
-
-def _get_appliance_by_device_id(
-    hass: HomeAssistant, device_id: str
-) -> api.HomeConnectDevice:
-    """Return a Home Connect appliance instance given an device_id."""
-    for hc_api in hass.data[DOMAIN].values():
-        for dev_dict in hc_api.devices:
-            device = dev_dict[CONF_DEVICE]
-            if device.device_id == device_id:
-                return device.appliance
-    raise ValueError(f"Appliance for device id {device_id} not found")
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.LIGHT,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.TIME,
+]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Home Connect component."""
-    hass.data[DOMAIN] = {}
-
-    async def _async_service_program(call, method):
-        """Execute calls to services taking a program."""
-        program = call.data[ATTR_PROGRAM]
-        device_id = call.data[ATTR_DEVICE_ID]
-
-        options = []
-
-        option_key = call.data.get(ATTR_KEY)
-        if option_key is not None:
-            option = {ATTR_KEY: option_key, ATTR_VALUE: call.data[ATTR_VALUE]}
-
-            option_unit = call.data.get(ATTR_UNIT)
-            if option_unit is not None:
-                option[ATTR_UNIT] = option_unit
-
-            options.append(option)
-
-        appliance = _get_appliance_by_device_id(hass, device_id)
-        await hass.async_add_executor_job(getattr(appliance, method), program, options)
-
-    async def _async_service_command(call, command):
-        """Execute calls to services executing a command."""
-        device_id = call.data[ATTR_DEVICE_ID]
-
-        appliance = _get_appliance_by_device_id(hass, device_id)
-        await hass.async_add_executor_job(appliance.execute_command, command)
-
-    async def _async_service_key_value(call, method):
-        """Execute calls to services taking a key and value."""
-        key = call.data[ATTR_KEY]
-        value = call.data[ATTR_VALUE]
-        unit = call.data.get(ATTR_UNIT)
-        device_id = call.data[ATTR_DEVICE_ID]
-
-        appliance = _get_appliance_by_device_id(hass, device_id)
-        if unit is not None:
-            await hass.async_add_executor_job(
-                getattr(appliance, method),
-                key,
-                value,
-                unit,
-            )
-        else:
-            await hass.async_add_executor_job(
-                getattr(appliance, method),
-                key,
-                value,
-            )
-
-    async def async_service_option_active(call):
-        """Service for setting an option for an active program."""
-        await _async_service_key_value(call, "set_options_active_program")
-
-    async def async_service_option_selected(call):
-        """Service for setting an option for a selected program."""
-        await _async_service_key_value(call, "set_options_selected_program")
-
-    async def async_service_setting(call):
-        """Service for changing a setting."""
-        await _async_service_key_value(call, "set_setting")
-
-    async def async_service_pause_program(call):
-        """Service for pausing a program."""
-        await _async_service_command(call, BSH_PAUSE)
-
-    async def async_service_resume_program(call):
-        """Service for resuming a paused program."""
-        await _async_service_command(call, BSH_RESUME)
-
-    async def async_service_select_program(call):
-        """Service for selecting a program."""
-        await _async_service_program(call, "select_program")
-
-    async def async_service_start_program(call):
-        """Service for starting a program."""
-        await _async_service_program(call, "start_program")
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_OPTION_ACTIVE,
-        async_service_option_active,
-        schema=SERVICE_OPTION_SCHEMA,
-    )
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_OPTION_SELECTED,
-        async_service_option_selected,
-        schema=SERVICE_OPTION_SCHEMA,
-    )
-    hass.services.async_register(
-        DOMAIN, SERVICE_SETTING, async_service_setting, schema=SERVICE_SETTING_SCHEMA
-    )
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_PAUSE_PROGRAM,
-        async_service_pause_program,
-        schema=SERVICE_COMMAND_SCHEMA,
-    )
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_RESUME_PROGRAM,
-        async_service_resume_program,
-        schema=SERVICE_COMMAND_SCHEMA,
-    )
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_SELECT_PROGRAM,
-        async_service_select_program,
-        schema=SERVICE_PROGRAM_SCHEMA,
-    )
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_START_PROGRAM,
-        async_service_start_program,
-        schema=SERVICE_PROGRAM_SCHEMA,
-    )
-
+    register_actions(hass)
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: HomeConnectConfigEntry) -> bool:
     """Set up Home Connect from a config entry."""
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
@@ -223,48 +54,81 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     )
 
-    hc_api = api.ConfigEntryAuth(hass, entry, implementation)
+    session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
 
-    hass.data[DOMAIN][entry.entry_id] = hc_api
+    config_entry_auth = AsyncConfigEntryAuth(hass, session)
+    try:
+        await config_entry_auth.async_get_access_token()
+    except aiohttp.ClientResponseError as err:
+        if 400 <= err.status < 500:
+            raise ConfigEntryAuthFailed from err
+        raise ConfigEntryNotReady from err
+    except aiohttp.ClientError as err:
+        raise ConfigEntryNotReady from err
 
-    await update_all_devices(hass, entry)
+    home_connect_client = HomeConnectClient(config_entry_auth)
+
+    coordinator = HomeConnectCoordinator(hass, entry, home_connect_client)
+    await coordinator.async_setup()
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    entry.runtime_data.start_event_listener()
+
+    entry.async_create_background_task(
+        hass,
+        coordinator.async_refresh(),
+        f"home_connect-initial-full-refresh-{entry.entry_id}",
+    )
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: HomeConnectConfigEntry
+) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
+    issue_registry = ir.async_get(hass)
+    issues_to_delete = [
+        "deprecated_set_program_and_option_actions",
+        "deprecated_command_actions",
+    ] + [
+        issue_id
+        for (issue_domain, issue_id) in issue_registry.issues
+        if issue_domain == DOMAIN
+        and issue_id.startswith("home_connect_too_many_connected_paired_events")
+    ]
+    for issue_id in issues_to_delete:
+        issue_registry.async_delete(DOMAIN, issue_id)
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    return unload_ok
 
+async def async_migrate_entry(
+    hass: HomeAssistant, entry: HomeConnectConfigEntry
+) -> bool:
+    """Migrate old entry."""
+    _LOGGER.debug("Migrating from version %s", entry.version)
 
-@Throttle(SCAN_INTERVAL)
-async def update_all_devices(hass, entry):
-    """Update all the devices."""
-    data = hass.data[DOMAIN]
-    hc_api = data[entry.entry_id]
+    if entry.version == 1 and entry.minor_version == 1:
 
-    device_registry = dr.async_get(hass)
-    try:
-        await hass.async_add_executor_job(hc_api.get_devices)
-        for device_dict in hc_api.devices:
-            device = device_dict["device"]
+        @callback
+        def update_unique_id(
+            entity_entry: RegistryEntry,
+        ) -> dict[str, Any] | None:
+            """Update unique ID of entity entry."""
+            for old_id_suffix, new_id_suffix in OLD_NEW_UNIQUE_ID_SUFFIX_MAP.items():
+                if entity_entry.unique_id.endswith(f"-{old_id_suffix}"):
+                    return {
+                        "new_unique_id": entity_entry.unique_id.replace(
+                            old_id_suffix, new_id_suffix
+                        )
+                    }
+            return None
 
-            device_entry = device_registry.async_get_or_create(
-                config_entry_id=entry.entry_id,
-                identifiers={(DOMAIN, device.appliance.haId)},
-                name=device.appliance.name,
-                manufacturer=device.appliance.brand,
-                model=device.appliance.vib,
-            )
+        await async_migrate_entries(hass, entry.entry_id, update_unique_id)
 
-            device.device_id = device_entry.id
+        hass.config_entries.async_update_entry(entry, minor_version=2)
 
-            await hass.async_add_executor_job(device.initialize)
-    except HTTPError as err:
-        _LOGGER.warning("Cannot update devices: %s", err.response.status_code)
+    _LOGGER.debug("Migration to version %s successful", entry.version)
+    return True

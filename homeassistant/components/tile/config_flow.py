@@ -71,12 +71,6 @@ class TileFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=self._username, data=data)
 
-    async def async_step_import(
-        self, import_config: dict[str, Any]
-    ) -> ConfigFlowResult:
-        """Import a config entry from configuration.yaml."""
-        return await self.async_step_user(import_config)
-
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:

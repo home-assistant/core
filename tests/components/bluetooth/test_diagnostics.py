@@ -4,6 +4,7 @@ from unittest.mock import ANY, MagicMock, patch
 
 from bleak.backends.scanner import AdvertisementData, BLEDevice
 from bluetooth_adapters import DEFAULT_ADDRESS
+import pytest
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
@@ -43,12 +44,11 @@ class FakeHaScanner(FakeScannerMixin, HaScanner):
 
 
 @patch("homeassistant.components.bluetooth.HaScanner", FakeHaScanner)
+@pytest.mark.usefixtures("enable_bluetooth", "two_adapters")
 async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     mock_bleak_scanner_start: MagicMock,
-    enable_bluetooth: None,
-    two_adapters: None,
 ) -> None:
     """Test we can setup and unsetup bluetooth with multiple adapters."""
     # Normally we do not want to patch our classes, but since bleak will import
@@ -133,6 +133,20 @@ async def test_diagnostics(
                 }
             },
             "manager": {
+                "allocations": {
+                    "00:00:00:00:00:01": {
+                        "allocated": [],
+                        "free": 5,
+                        "slots": 5,
+                        "source": "00:00:00:00:00:01",
+                    },
+                    "00:00:00:00:00:02": {
+                        "allocated": [],
+                        "free": 2,
+                        "slots": 2,
+                        "source": "00:00:00:00:00:02",
+                    },
+                },
                 "adapters": {
                     "hci0": {
                         "address": "00:00:00:00:00:01",
@@ -168,6 +182,7 @@ async def test_diagnostics(
                 "scanners": [
                     {
                         "adapter": "hci0",
+                        "connectable": True,
                         "discovered_devices_and_advertisement_data": [],
                         "last_detection": ANY,
                         "monotonic_time": ANY,
@@ -204,6 +219,7 @@ async def test_diagnostics(
                                 "rssi": -127,
                             }
                         ],
+                        "connectable": True,
                         "last_detection": ANY,
                         "monotonic_time": ANY,
                         "name": "hci1 (00:00:00:00:00:02)",
@@ -237,12 +253,11 @@ async def test_diagnostics(
 
 
 @patch("homeassistant.components.bluetooth.HaScanner", FakeHaScanner)
+@pytest.mark.usefixtures(
+    "macos_adapter", "mock_bleak_scanner_start", "mock_bluetooth_adapters"
+)
 async def test_diagnostics_macos(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    mock_bleak_scanner_start: MagicMock,
-    mock_bluetooth_adapters: None,
-    macos_adapter,
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
     """Test diagnostics for macos."""
     # Normally we do not want to patch our classes, but since bleak will import
@@ -292,6 +307,14 @@ async def test_diagnostics_macos(
                 }
             },
             "manager": {
+                "allocations": {
+                    "Core Bluetooth": {
+                        "allocated": [],
+                        "free": 5,
+                        "slots": 5,
+                        "source": "Core Bluetooth",
+                    },
+                },
                 "adapters": {
                     "Core Bluetooth": {
                         "address": "00:00:00:00:00:00",
@@ -370,6 +393,7 @@ async def test_diagnostics_macos(
                 "scanners": [
                     {
                         "adapter": "Core Bluetooth",
+                        "connectable": True,
                         "discovered_devices_and_advertisement_data": [
                             {
                                 "address": "44:44:33:11:23:45",
@@ -414,13 +438,14 @@ async def test_diagnostics_macos(
 
 
 @patch("homeassistant.components.bluetooth.HaScanner", FakeHaScanner)
+@pytest.mark.usefixtures(
+    "enable_bluetooth",
+    "one_adapter",
+    "mock_bleak_scanner_start",
+    "mock_bluetooth_adapters",
+)
 async def test_diagnostics_remote_adapter(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    mock_bleak_scanner_start: MagicMock,
-    mock_bluetooth_adapters: None,
-    enable_bluetooth: None,
-    one_adapter: None,
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
     """Test diagnostics for remote adapter."""
     manager = _get_manager()
@@ -484,6 +509,14 @@ async def test_diagnostics_remote_adapter(
             },
             "dbus": {},
             "manager": {
+                "allocations": {
+                    "00:00:00:00:00:01": {
+                        "allocated": [],
+                        "free": 5,
+                        "slots": 5,
+                        "source": "00:00:00:00:00:01",
+                    },
+                },
                 "adapters": {
                     "hci0": {
                         "address": "00:00:00:00:00:01",
@@ -563,6 +596,7 @@ async def test_diagnostics_remote_adapter(
                 "scanners": [
                     {
                         "adapter": "hci0",
+                        "connectable": True,
                         "discovered_devices_and_advertisement_data": [],
                         "last_detection": ANY,
                         "monotonic_time": ANY,
@@ -582,6 +616,8 @@ async def test_diagnostics_remote_adapter(
                     },
                     {
                         "connectable": True,
+                        "current_mode": None,
+                        "requested_mode": None,
                         "discovered_device_timestamps": {"44:44:33:11:23:45": ANY},
                         "discovered_devices_and_advertisement_data": [
                             {

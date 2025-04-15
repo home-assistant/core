@@ -3,41 +3,56 @@
     "step": {
       "connection_type": {
         "title": "KNX connection",
-        "description": "Please enter the connection type we should use for your KNX connection. \n AUTOMATIC - The integration takes care of the connectivity to your KNX Bus by performing a gateway scan. \n TUNNELING - The integration will connect to your KNX bus via tunneling. \n ROUTING - The integration will connect to your KNX bus via routing.",
+        "description": "'Automatic' performs a gateway scan on start, to find a KNX IP interface. It will connect via a tunnel. (Not available if a gateway scan was not successful.)\n\n'Tunneling' will connect to a specific KNX IP interface over a tunnel.\n\n'Routing' will use Multicast to communicate with KNX IP routers.",
         "data": {
-          "connection_type": "KNX Connection Type"
+          "connection_type": "KNX connection type"
+        },
+        "data_description": {
+          "connection_type": "Please select the connection type you want to use for your KNX connection."
         }
       },
       "tunnel": {
         "title": "Tunnel",
-        "description": "Please select a gateway from the list.",
         "data": {
-          "gateway": "KNX Tunnel Connection"
+          "gateway": "Please select a gateway from the list."
+        },
+        "data_description": {
+          "gateway": "Select a KNX tunneling interface you want use for the connection."
+        }
+      },
+      "tcp_tunnel_endpoint": {
+        "title": "Tunnel endpoint",
+        "data": {
+          "tunnel_endpoint_ia": "Select the tunnel endpoint used for the connection."
+        },
+        "data_description": {
+          "tunnel_endpoint_ia": "'Automatic' selects a free tunnel endpoint for you when connecting. If you're unsure, this is the best option."
         }
       },
       "manual_tunnel": {
         "title": "Tunnel settings",
         "description": "Please enter the connection information of your tunneling device.",
         "data": {
-          "tunneling_type": "KNX Tunneling Type",
-          "port": "[%key:common::config_flow::data::port%]",
+          "tunneling_type": "KNX tunneling type",
           "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
           "route_back": "Route back / NAT mode",
           "local_ip": "Local IP interface"
         },
         "data_description": {
-          "port": "Port of the KNX/IP tunneling device.",
+          "tunneling_type": "Select the tunneling type of your KNX/IP tunneling device. Older interfaces may only support `UDP`.",
           "host": "IP address or hostname of the KNX/IP tunneling device.",
+          "port": "Port used by the KNX/IP tunneling device.",
           "route_back": "Enable if your KNXnet/IP tunneling server is behind NAT. Only applies for UDP connections.",
           "local_ip": "Local IP or interface name used for the connection from Home Assistant. Leave blank to use auto-discovery."
         }
       },
       "secure_key_source_menu_tunnel": {
-        "title": "KNX IP-Secure",
-        "description": "Select how you want to configure KNX/IP Secure.",
+        "title": "KNX IP Secure",
+        "description": "How do you want to configure KNX/IP Secure?",
         "menu_options": {
-          "secure_knxkeys": "Use a `.knxkeys` file containing IP secure keys",
-          "secure_tunnel_manual": "Configure IP secure credentials manually"
+          "secure_knxkeys": "Use a `.knxkeys` file providing IP Secure keys",
+          "secure_tunnel_manual": "Configure IP Secure credentials manually"
         }
       },
       "secure_key_source_menu_routing": {
@@ -45,37 +60,40 @@
         "description": "[%key:component::knx::config::step::secure_key_source_menu_tunnel::description%]",
         "menu_options": {
           "secure_knxkeys": "[%key:component::knx::config::step::secure_key_source_menu_tunnel::menu_options::secure_knxkeys%]",
-          "secure_routing_manual": "Configure IP secure backbone key manually"
+          "secure_routing_manual": "Configure IP Secure backbone key manually"
         }
       },
       "secure_knxkeys": {
         "title": "Import KNX Keyring",
-        "description": "Please select a `.knxkeys` file to import.",
+        "description": "The Keyring is used to encrypt and decrypt KNX IP Secure communication.",
         "data": {
           "knxkeys_file": "Keyring file",
-          "knxkeys_password": "The password to decrypt the `.knxkeys` file"
+          "knxkeys_password": "Keyring password"
         },
         "data_description": {
-          "knxkeys_password": "This was set when exporting the file from ETS."
+          "knxkeys_file": "Select a `.knxkeys` file. This can be exported from ETS.",
+          "knxkeys_password": "The password to open the `.knxkeys` file was set when exporting."
         }
       },
       "knxkeys_tunnel_select": {
-        "title": "Tunnel endpoint",
-        "description": "Select the tunnel used for connection.",
+        "title": "[%key:component::knx::config::step::tcp_tunnel_endpoint::title%]",
         "data": {
-          "user_id": "`Automatic` will use the first free tunnel endpoint."
+          "tunnel_endpoint_ia": "[%key:component::knx::config::step::tcp_tunnel_endpoint::data::tunnel_endpoint_ia%]"
+        },
+        "data_description": {
+          "tunnel_endpoint_ia": "[%key:component::knx::config::step::tcp_tunnel_endpoint::data_description::tunnel_endpoint_ia%]"
         }
       },
       "secure_tunnel_manual": {
         "title": "Secure tunnelling",
-        "description": "Please enter your IP secure information.",
+        "description": "Please enter your IP Secure information.",
         "data": {
           "user_id": "User ID",
           "user_password": "User password",
           "device_authentication": "Device authentication password"
         },
         "data_description": {
-          "user_id": "This is often tunnel number +1. So 'Tunnel 2' would have User-ID '3'.",
+          "user_id": "This usually is tunnel number +1. So first tunnel in the list presented in ETS would have User-ID `2`.",
           "user_password": "Password for the specific tunnel connection set in the 'Properties' panel of the tunnel in ETS.",
           "device_authentication": "This is set in the 'IP' panel of the interface in ETS."
         }
@@ -88,8 +106,8 @@
           "sync_latency_tolerance": "Network latency tolerance"
         },
         "data_description": {
-          "backbone_key": "Can be seen in the 'Security' report of an ETS project. Eg. '00112233445566778899AABBCCDDEEFF'",
-          "sync_latency_tolerance": "Default is 1000."
+          "backbone_key": "Can be seen in the 'Security' report of your ETS project. Eg. `00112233445566778899AABBCCDDEEFF`",
+          "sync_latency_tolerance": "Should be equal to the backbone configuration of your ETS project. Default is `1000`"
         }
       },
       "routing": {
@@ -97,13 +115,16 @@
         "description": "Please configure the routing options.",
         "data": {
           "individual_address": "Individual address",
-          "routing_secure": "Use KNX IP Secure",
+          "routing_secure": "KNX IP Secure Routing",
           "multicast_group": "Multicast group",
           "multicast_port": "Multicast port",
           "local_ip": "[%key:component::knx::config::step::manual_tunnel::data::local_ip%]"
         },
         "data_description": {
           "individual_address": "KNX address to be used by Home Assistant, e.g. `0.0.4`",
+          "routing_secure": "Select if your installation uses encrypted communication according to the KNX IP Secure standard. This setting requires compatible devices and configuration. You'll be prompted for credentials in the next step.",
+          "multicast_group": "Multicast group used by your installation. Default is `224.0.23.12`",
+          "multicast_port": "Multicast port used by your installation. Default is `3671`",
           "local_ip": "[%key:component::knx::config::step::manual_tunnel::data_description::local_ip%]"
         }
       }
@@ -140,8 +161,8 @@
           "telegram_log_size": "Telegram history limit"
         },
         "data_description": {
-          "state_updater": "Set default for reading states from the KNX Bus. When disabled, Home Assistant will not actively retrieve entity states from the KNX Bus. Can be overridden by `sync_state` entity options.",
-          "rate_limit": "Maximum outgoing telegrams per second.\n`0` to disable limit. Recommended: 0 or 20 to 40",
+          "state_updater": "Sets the default behavior for reading state addresses from the KNX Bus.\nWhen enabled, Home Assistant will monitor each group address and read it from the bus if no value has been received for one hour.\nWhen disabled, state addresses will only be read once after a bus connection is established.\nThis behavior can be overridden for individual entities using the `sync_state` option.",
+          "rate_limit": "Maximum outgoing telegrams per second.\n`0` to disable limit. Recommended: `0` or between `20` and `40`",
           "telegram_log_size": "Telegrams to keep in memory for KNX panel group monitor. Maximum: {telegram_log_size_max}"
         }
       },
@@ -150,13 +171,27 @@
         "description": "[%key:component::knx::config::step::connection_type::description%]",
         "data": {
           "connection_type": "[%key:component::knx::config::step::connection_type::data::connection_type%]"
+        },
+        "data_description": {
+          "connection_type": "[%key:component::knx::config::step::connection_type::data_description::connection_type%]"
         }
       },
       "tunnel": {
         "title": "[%key:component::knx::config::step::tunnel::title%]",
-        "description": "[%key:component::knx::config::step::tunnel::description%]",
         "data": {
           "gateway": "[%key:component::knx::config::step::tunnel::data::gateway%]"
+        },
+        "data_description": {
+          "gateway": "[%key:component::knx::config::step::tunnel::data_description::gateway%]"
+        }
+      },
+      "tcp_tunnel_endpoint": {
+        "title": "[%key:component::knx::config::step::tcp_tunnel_endpoint::title%]",
+        "data": {
+          "tunnel_endpoint_ia": "[%key:component::knx::config::step::tcp_tunnel_endpoint::data::tunnel_endpoint_ia%]"
+        },
+        "data_description": {
+          "tunnel_endpoint_ia": "[%key:component::knx::config::step::tcp_tunnel_endpoint::data_description::tunnel_endpoint_ia%]"
         }
       },
       "manual_tunnel": {
@@ -170,6 +205,7 @@
           "local_ip": "[%key:component::knx::config::step::manual_tunnel::data::local_ip%]"
         },
         "data_description": {
+          "tunneling_type": "[%key:component::knx::config::step::manual_tunnel::data_description::tunneling_type%]",
           "port": "[%key:component::knx::config::step::manual_tunnel::data_description::port%]",
           "host": "[%key:component::knx::config::step::manual_tunnel::data_description::host%]",
           "route_back": "[%key:component::knx::config::step::manual_tunnel::data_description::route_back%]",
@@ -200,14 +236,17 @@
           "knxkeys_password": "[%key:component::knx::config::step::secure_knxkeys::data::knxkeys_password%]"
         },
         "data_description": {
+          "knxkeys_file": "[%key:component::knx::config::step::secure_knxkeys::data_description::knxkeys_file%]",
           "knxkeys_password": "[%key:component::knx::config::step::secure_knxkeys::data_description::knxkeys_password%]"
         }
       },
       "knxkeys_tunnel_select": {
-        "title": "[%key:component::knx::config::step::knxkeys_tunnel_select::title%]",
-        "description": "[%key:component::knx::config::step::knxkeys_tunnel_select::description%]",
+        "title": "[%key:component::knx::config::step::tcp_tunnel_endpoint::title%]",
         "data": {
-          "user_id": "[%key:component::knx::config::step::knxkeys_tunnel_select::data::user_id%]"
+          "tunnel_endpoint_ia": "[%key:component::knx::config::step::tcp_tunnel_endpoint::data::tunnel_endpoint_ia%]"
+        },
+        "data_description": {
+          "tunnel_endpoint_ia": "[%key:component::knx::config::step::tcp_tunnel_endpoint::data_description::tunnel_endpoint_ia%]"
         }
       },
       "secure_tunnel_manual": {
@@ -248,6 +287,9 @@
         },
         "data_description": {
           "individual_address": "[%key:component::knx::config::step::routing::data_description::individual_address%]",
+          "routing_secure": "[%key:component::knx::config::step::routing::data_description::routing_secure%]",
+          "multicast_group": "[%key:component::knx::config::step::routing::data_description::multicast_group%]",
+          "multicast_port": "[%key:component::knx::config::step::routing::data_description::multicast_port%]",
           "local_ip": "[%key:component::knx::config::step::manual_tunnel::data_description::local_ip%]"
         }
       }
@@ -267,6 +309,22 @@
     }
   },
   "entity": {
+    "climate": {
+      "knx_climate": {
+        "state_attributes": {
+          "preset_mode": {
+            "name": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::name%]",
+            "state": {
+              "auto": "[%key:common::state::auto%]",
+              "building_protection": "Building protection",
+              "comfort": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::comfort%]",
+              "economy": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::eco%]",
+              "standby": "[%key:common::state::standby%]"
+            }
+          }
+        }
+      }
+    },
     "sensor": {
       "individual_address": {
         "name": "[%key:component::knx::config::step::routing::data::individual_address%]"
@@ -278,25 +336,46 @@
         "name": "Connection type"
       },
       "telegrams_incoming": {
-        "name": "Incoming telegrams"
+        "name": "Incoming telegrams",
+        "unit_of_measurement": "[%key:component::knx::entity::sensor::telegram_count::unit_of_measurement%]"
       },
       "telegrams_incoming_error": {
-        "name": "Incoming telegram errors"
+        "name": "Incoming telegram errors",
+        "unit_of_measurement": "errors"
       },
       "telegrams_outgoing": {
-        "name": "Outgoing telegrams"
+        "name": "Outgoing telegrams",
+        "unit_of_measurement": "[%key:component::knx::entity::sensor::telegram_count::unit_of_measurement%]"
       },
       "telegrams_outgoing_error": {
-        "name": "Outgoing telegram errors"
+        "name": "Outgoing telegram errors",
+        "unit_of_measurement": "[%key:component::knx::entity::sensor::telegrams_incoming_error::unit_of_measurement%]"
       },
       "telegram_count": {
-        "name": "Telegrams"
+        "name": "Telegrams",
+        "unit_of_measurement": "telegrams"
       }
     }
   },
   "device_automation": {
     "trigger_type": {
-      "telegram": "Telegram sent or received"
+      "telegram": "Telegram"
+    },
+    "extra_fields": {
+      "destination": "Group addresses",
+      "group_value_write": "GroupValueWrite",
+      "group_value_read": "GroupValueRead",
+      "group_value_response": "GroupValueResponse",
+      "incoming": "Incoming",
+      "outgoing": "Outgoing"
+    },
+    "extra_fields_descriptions": {
+      "destination": "The trigger will listen to telegrams sent or received on these group addresses. If no address is selected, the trigger will fire for every group address.",
+      "group_value_write": "Listen on GroupValueWrite telegrams.",
+      "group_value_read": "Listen on GroupValueRead telegrams.",
+      "group_value_response": "Listen on GroupValueResponse telegrams.",
+      "incoming": "Listen on incoming telegrams.",
+      "outgoing": "Listen on outgoing telegrams."
     }
   },
   "services": {
@@ -318,13 +397,13 @@
         },
         "response": {
           "name": "Send as Response",
-          "description": "If set to `True`, the telegram will be sent as a `GroupValueResponse` instead of a `GroupValueWrite`."
+          "description": "Whether the telegram should be sent as a `GroupValueResponse` instead of a `GroupValueWrite`."
         }
       }
     },
     "read": {
-      "name": "Reads from KNX bus",
-      "description": "Send GroupValueRead requests to the KNX bus. Response can be used from `knx_event` and will be processed in KNX entities.",
+      "name": "Read from KNX bus",
+      "description": "Sends GroupValueRead requests to the KNX bus. Response can be used from `knx_event` and will be processed in KNX entities.",
       "fields": {
         "address": {
           "name": "[%key:component::knx::services::send::fields::address::name%]",
@@ -333,8 +412,8 @@
       }
     },
     "event_register": {
-      "name": "Registers knx_event",
-      "description": "Add or remove group addresses to knx_event filter for triggering `knx_event`s. Only addresses added with this service can be removed.",
+      "name": "Register knx_event",
+      "description": "Adds or removes group addresses to knx_event filter for triggering `knx_event`s. Only addresses added with this action can be removed.",
       "fields": {
         "address": {
           "name": "[%key:component::knx::services::send::fields::address::name%]",
@@ -346,13 +425,13 @@
         },
         "remove": {
           "name": "Remove event registration",
-          "description": "If `True` the group address(es) will be removed."
+          "description": "Whether the group address(es) will be removed."
         }
       }
     },
     "exposure_register": {
       "name": "Expose to KNX bus",
-      "description": "Adds or remove exposures to KNX bus. Only exposures added with this service can be removed.",
+      "description": "Adds or removes exposures to KNX bus. Only exposures added with this action can be removed.",
       "fields": {
         "address": {
           "name": "[%key:component::knx::services::send::fields::address::name%]",
@@ -364,7 +443,7 @@
         },
         "entity_id": {
           "name": "Entity",
-          "description": "Entity id whose state or attribute shall be exposed."
+          "description": "Entity ID whose state or attribute shall be exposed."
         },
         "attribute": {
           "name": "Entity attribute",
@@ -376,7 +455,7 @@
         },
         "remove": {
           "name": "Remove exposure",
-          "description": "If `True` the exposure will be removed. Only `address` is required for removal."
+          "description": "Whether the exposure should be removed. Only the 'Address' field is required for removal."
         }
       }
     },

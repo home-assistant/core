@@ -55,7 +55,9 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         (Exception, "unknown"),
     ],
 )
-async def test_invalid(hass: HomeAssistant, test_side_effect, test_error):
+async def test_invalid(
+    hass: HomeAssistant, test_side_effect: Exception, test_error: str
+) -> None:
     """Test all side_effects on the controller.connect via parameters."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}

@@ -17,7 +17,7 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP, DOMAIN, SMARTTUB_CONTROLLER
@@ -42,7 +42,9 @@ HVAC_ACTIONS = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up climate entity for the thermostat in the tub."""
 
@@ -68,7 +70,6 @@ class SmartTubThermostat(SmartTubEntity, ClimateEntity):
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_preset_modes = list(PRESET_MODES.values())
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, coordinator, spa):
         """Initialize the entity."""

@@ -1,4 +1,10 @@
 {
+  "issues": {
+    "yale_brand_migration": {
+      "title": "Yale Home has a new integration",
+      "description": "Add the [Yale integration]({migrate_url}), and remove the August integration as soon as possible to avoid an interruption in service. The Yale Home brand will stop working with the August integration soon and will be removed in a future release."
+    }
+  },
   "config": {
     "error": {
       "unhandled": "Unhandled error: {error}",
@@ -14,7 +20,7 @@
       "validation": {
         "title": "Two factor authentication",
         "data": {
-          "code": "Verification code"
+          "verification_code": "Verification code"
         },
         "description": "Please check your {login_method} ({username}) and enter the verification code below. Codes may take a few minutes to arrive."
       },
@@ -40,6 +46,9 @@
   },
   "entity": {
     "binary_sensor": {
+      "ding": {
+        "name": "Doorbell ding"
+      },
       "image_capture": {
         "name": "Image capture"
       }
@@ -57,6 +66,26 @@
     "sensor": {
       "operator": {
         "name": "Operator"
+      }
+    },
+    "event": {
+      "doorbell": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "ring": "Ring"
+            }
+          }
+        }
+      },
+      "motion": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "motion": "Motion"
+            }
+          }
+        }
       }
     }
   }

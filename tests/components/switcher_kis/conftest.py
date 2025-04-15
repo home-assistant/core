@@ -1,13 +1,13 @@
 """Common fixtures and objects for the Switcher integration tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.switcher_kis.async_setup_entry", return_value=True
@@ -16,7 +16,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_bridge(request):
+def mock_bridge(request: pytest.FixtureRequest) -> Generator[MagicMock]:
     """Return a mocked SwitcherBridge."""
     with (
         patch(
@@ -60,19 +60,11 @@ def mock_api():
 
     patchers = [
         patch(
-            "homeassistant.components.switcher_kis.switch.SwitcherType1Api.connect",
+            "homeassistant.components.switcher_kis.entity.SwitcherApi.connect",
             new=api_mock,
         ),
         patch(
-            "homeassistant.components.switcher_kis.switch.SwitcherType1Api.disconnect",
-            new=api_mock,
-        ),
-        patch(
-            "homeassistant.components.switcher_kis.climate.SwitcherType2Api.connect",
-            new=api_mock,
-        ),
-        patch(
-            "homeassistant.components.switcher_kis.climate.SwitcherType2Api.disconnect",
+            "homeassistant.components.switcher_kis.entity.SwitcherApi.disconnect",
             new=api_mock,
         ),
     ]

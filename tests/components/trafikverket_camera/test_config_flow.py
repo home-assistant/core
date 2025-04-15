@@ -5,8 +5,12 @@ from __future__ import annotations
 from unittest.mock import patch
 
 import pytest
-from pytrafikverket.exceptions import InvalidAuthentication, NoCameraFound, UnknownError
-from pytrafikverket.trafikverket_camera import CameraInfo
+from pytrafikverket import (
+    CameraInfoModel,
+    InvalidAuthentication,
+    NoCameraFound,
+    UnknownError,
+)
 
 from homeassistant import config_entries
 from homeassistant.components.trafikverket_camera.const import DOMAIN
@@ -17,7 +21,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-async def test_form(hass: HomeAssistant, get_camera: CameraInfo) -> None:
+async def test_form(hass: HomeAssistant, get_camera: CameraInfoModel) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -56,7 +60,9 @@ async def test_form(hass: HomeAssistant, get_camera: CameraInfo) -> None:
 
 
 async def test_form_multiple_cameras(
-    hass: HomeAssistant, get_cameras: list[CameraInfo], get_camera2: CameraInfo
+    hass: HomeAssistant,
+    get_cameras: list[CameraInfoModel],
+    get_camera2: CameraInfoModel,
 ) -> None:
     """Test we get the form with multiple cameras."""
 
@@ -108,7 +114,7 @@ async def test_form_multiple_cameras(
 
 
 async def test_form_no_location_data(
-    hass: HomeAssistant, get_camera_no_location: CameraInfo
+    hass: HomeAssistant, get_camera_no_location: CameraInfoModel
 ) -> None:
     """Test we get the form."""
 
@@ -206,15 +212,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "unique_id": entry.unique_id,
-            "entry_id": entry.entry_id,
-        },
-        data=entry.data,
-    )
+    result = await entry.start_reauth_flow(hass)
     assert result["step_id"] == "reauth_confirm"
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
@@ -278,15 +276,7 @@ async def test_reauth_flow_error(
     entry.add_to_hass(hass)
     await hass.async_block_till_done()
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "unique_id": entry.unique_id,
-            "entry_id": entry.entry_id,
-        },
-        data=entry.data,
-    )
+    result = await entry.start_reauth_flow(hass)
 
     with patch(
         "homeassistant.components.trafikverket_camera.config_flow.TrafikverketCamera.async_get_cameras",
@@ -322,4 +312,151 @@ async def test_reauth_flow_error(
     assert entry.data == {
         "api_key": "1234567891",
         "id": "1234",
+    }
+
+
+async def test_reconfigure_flow(
+    hass: HomeAssistant,
+    get_cameras: list[CameraInfoModel],
+    get_camera2: CameraInfoModel,
+) -> None:
+    """Test a reconfigure flow."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_API_KEY: "1234567890",
+            CONF_ID: "1234",
+        },
+        unique_id="1234",
+        version=3,
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["step_id"] == "reconfigure"
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.trafikverket_camera.config_flow.TrafikverketCamera.async_get_cameras",
+        return_value=get_cameras,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_API_KEY: "1234567890",
+                CONF_LOCATION: "Test loc",
+            },
+        )
+        await hass.async_block_till_done()
+
+    with (
+        patch(
+            "homeassistant.components.trafikverket_camera.config_flow.TrafikverketCamera.async_get_cameras",
+            return_value=[get_camera2],
+        ),
+        patch(
+            "homeassistant.components.trafikverket_camera.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_ID: "5678",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {
+        "api_key": "1234567890",
+        "id": "5678",
+    }
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error_key", "p_error"),
+    [
+        (
+            InvalidAuthentication,
+            "base",
+            "invalid_auth",
+        ),
+        (
+            NoCameraFound,
+            "location",
+            "invalid_location",
+        ),
+        (
+            UnknownError,
+            "base",
+            "cannot_connect",
+        ),
+    ],
+)
+async def test_reconfigure_flow_error(
+    hass: HomeAssistant,
+    get_camera: CameraInfoModel,
+    side_effect: Exception,
+    error_key: str,
+    p_error: str,
+) -> None:
+    """Test a reauthentication flow with error."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_API_KEY: "1234567890",
+            CONF_ID: "1234",
+        },
+        unique_id="1234",
+        version=3,
+    )
+    entry.add_to_hass(hass)
+    await hass.async_block_till_done()
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    with patch(
+        "homeassistant.components.trafikverket_camera.config_flow.TrafikverketCamera.async_get_cameras",
+        side_effect=side_effect,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_API_KEY: "1234567890",
+                CONF_LOCATION: "Test loc",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["step_id"] == "reconfigure"
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {error_key: p_error}
+
+    with (
+        patch(
+            "homeassistant.components.trafikverket_camera.config_flow.TrafikverketCamera.async_get_cameras",
+            return_value=[get_camera],
+        ),
+        patch(
+            "homeassistant.components.trafikverket_camera.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_API_KEY: "1234567891",
+                CONF_LOCATION: "Test loc",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reconfigure_successful"
+    assert entry.data == {
+        CONF_ID: "1234",
+        CONF_API_KEY: "1234567891",
     }

@@ -1,0 +1,61 @@
+# serializer version: 1
+# name: test_setup_platform[water_heater.boiler-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max_temp': 80.0,
+      'min_temp': 30.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'water_heater',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'water_heater.boiler',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'incomfort',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'boiler',
+    'unique_id': 'c0ffeec0ffee',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup_platform[water_heater.boiler-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 35.3,
+      'display_code': <DisplayCode.STANDBY: 126>,
+      'display_text': 'standby',
+      'friendly_name': 'Boiler',
+      'is_burning': False,
+      'max_temp': 80.0,
+      'min_temp': 30.0,
+      'supported_features': <WaterHeaterEntityFeature: 0>,
+      'target_temp_high': None,
+      'target_temp_low': None,
+      'temperature': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'water_heater.boiler',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'standby',
+  })
+# ---

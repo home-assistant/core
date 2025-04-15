@@ -10,9 +10,9 @@ from aiobafi6 import Device, Service
 from aiobafi6.discovery import PORT
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN, RUN_TIMEOUT
 from .models import BAFDiscovery
@@ -44,7 +44,7 @@ class BAFFlowHandler(ConfigFlow, domain=DOMAIN):
         self.discovery: BAFDiscovery | None = None
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         if discovery_info.ip_address.version == 6:

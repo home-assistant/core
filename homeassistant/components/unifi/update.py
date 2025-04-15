@@ -19,7 +19,7 @@ from homeassistant.components.update import (
     UpdateEntityFeature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import UnifiConfigEntry
 from .entity import (
@@ -68,7 +68,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiUpdateEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: UnifiConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up update entities for UniFi Network integration."""
     config_entry.runtime_data.entity_loader.register_platform(
@@ -96,7 +96,7 @@ class UnifiDeviceUpdateEntity(UnifiEntity[_HandlerT, _DataT], UpdateEntity):
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install an update."""
-        await self.entity_description.control_fn(self.hub.api, self._obj_id)
+        await self.entity_description.control_fn(self.api, self._obj_id)
 
     @callback
     def async_update_state(self, event: ItemEvent, obj_id: str) -> None:
@@ -106,7 +106,7 @@ class UnifiDeviceUpdateEntity(UnifiEntity[_HandlerT, _DataT], UpdateEntity):
         """
         description = self.entity_description
 
-        obj = description.object_fn(self.hub.api, self._obj_id)
-        self._attr_in_progress = description.state_fn(self.hub.api, obj)
+        obj = description.object_fn(self.api, self._obj_id)
+        self._attr_in_progress = description.state_fn(self.api, obj)
         self._attr_installed_version = obj.version
         self._attr_latest_version = obj.upgrade_to_firmware or obj.version

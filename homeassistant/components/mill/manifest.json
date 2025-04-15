@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/mill",
   "iot_class": "local_polling",
   "loggers": ["mill", "mill_local"],
-  "requirements": ["millheater==0.11.8", "mill-local==0.3.0"]
+  "requirements": ["millheater==0.12.3", "mill-local==0.3.0"]
 }

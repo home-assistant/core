@@ -10,7 +10,7 @@ import tellcore.constants as tellcore_constants
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
 )
@@ -23,13 +23,13 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
-DatatypeDescription = namedtuple(
+DatatypeDescription = namedtuple(  # noqa: PYI024
     "DatatypeDescription", ["name", "unit", "device_class"]
 )
 
@@ -40,7 +40,7 @@ CONF_TEMPERATURE_SCALE = "temperature_scale"
 DEFAULT_DATATYPE_MASK = 127
 DEFAULT_TEMPERATURE_SCALE = UnitOfTemperature.CELSIUS
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(
             CONF_TEMPERATURE_SCALE, default=DEFAULT_TEMPERATURE_SCALE

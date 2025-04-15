@@ -18,10 +18,18 @@
       }
     }
   },
+  "entity": {
+    "image": {
+      "weather_radar": {
+        "name": "Weather radar"
+      }
+    }
+  },
   "options": {
     "step": {
       "init": {
         "data": {
+          "radar_updates": "Gather data from AEMET weather radar",
           "station_updates": "Gather data from AEMET weather stations"
         }
       }

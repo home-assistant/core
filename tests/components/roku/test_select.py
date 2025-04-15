@@ -22,20 +22,19 @@ from homeassistant.const import ATTR_ENTITY_ID, SERVICE_SELECT_OPTION
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_application_state(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
     mock_device: RokuDevice,
     mock_roku: MagicMock,
 ) -> None:
     """Test the creation and values of the Roku selects."""
-    entity_registry = er.async_get(hass)
-
     entity_registry.async_get_or_create(
         SELECT_DOMAIN,
         DOMAIN,
@@ -122,14 +121,13 @@ async def test_application_state(
 )
 async def test_application_select_error(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
     mock_roku: MagicMock,
     error: RokuError,
     error_string: str,
 ) -> None:
     """Test error handling of the Roku selects."""
-    entity_registry = er.async_get(hass)
-
     entity_registry.async_get_or_create(
         SELECT_DOMAIN,
         DOMAIN,
@@ -165,13 +163,12 @@ async def test_application_select_error(
 @pytest.mark.parametrize("mock_device", ["roku/rokutv-7820x.json"], indirect=True)
 async def test_channel_state(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     init_integration: MockConfigEntry,
     mock_device: RokuDevice,
     mock_roku: MagicMock,
 ) -> None:
     """Test the creation and values of the Roku selects."""
-    entity_registry = er.async_get(hass)
-
     state = hass.states.get("select.58_onn_roku_tv_channel")
     assert state
     assert state.attributes.get(ATTR_OPTIONS) == [

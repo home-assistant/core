@@ -8,14 +8,11 @@ import voluptuous as vol
 
 from homeassistant import loader
 from homeassistant.components import websocket_api
-from homeassistant.components.websocket_api.decorators import require_admin
+from homeassistant.components.websocket_api import require_admin
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import (
-    DeviceEntry,
-    DeviceEntryDisabler,
-    async_get,
-)
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceEntry, DeviceEntryDisabler
 
 
 @callback
@@ -42,10 +39,10 @@ def websocket_list_devices(
     msg: dict[str, Any],
 ) -> None:
     """Handle list devices command."""
-    registry = async_get(hass)
+    registry = dr.async_get(hass)
     # Build start of response message
     msg_json_prefix = (
-        f'{{"id":{msg["id"]},"type": "{websocket_api.const.TYPE_RESULT}",'
+        f'{{"id":{msg["id"]},"type": "{websocket_api.TYPE_RESULT}",'
         f'"success":true,"result": ['
     ).encode()
     # Concatenate cached entity registry item JSON serializations
@@ -80,7 +77,7 @@ def websocket_update_device(
     msg: dict[str, Any],
 ) -> None:
     """Handle update device websocket command."""
-    registry = async_get(hass)
+    registry = dr.async_get(hass)
 
     msg.pop("type")
     msg_id = msg.pop("id")
@@ -112,7 +109,7 @@ async def websocket_remove_config_entry_from_device(
     msg: dict[str, Any],
 ) -> None:
     """Remove config entry from a device."""
-    registry = async_get(hass)
+    registry = dr.async_get(hass)
     config_entry_id = msg["config_entry_id"]
     device_id = msg["device_id"]
 
@@ -141,10 +138,14 @@ async def websocket_remove_config_entry_from_device(
             "Failed to remove device entry, rejected by integration"
         )
 
-    entry = registry.async_update_device(
-        device_id, remove_config_entry_id=config_entry_id
-    )
+    # Integration might have removed the config entry already, that is fine.
+    if registry.async_get(device_id):
+        entry = registry.async_update_device(
+            device_id, remove_config_entry_id=config_entry_id
+        )
 
-    entry_as_dict = entry.dict_repr if entry else None
+        entry_as_dict = entry.dict_repr if entry else None
+    else:
+        entry_as_dict = None
 
     connection.send_message(websocket_api.result_message(msg["id"], entry_as_dict))

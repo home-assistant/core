@@ -54,14 +54,19 @@ from homeassistant.components.recorder.models import (
     ulid_to_bytes_or_none,
     uuid_hex_to_bytes_or_none,
 )
+from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_FRIENDLY_NAME,
+    ATTR_UNIT_OF_MEASUREMENT,
+    MATCH_ALL,
     MAX_LENGTH_EVENT_EVENT_TYPE,
     MAX_LENGTH_STATE_ENTITY_ID,
     MAX_LENGTH_STATE_STATE,
 )
 from homeassistant.core import Context, Event, EventOrigin, State
 from homeassistant.helpers.json import JSON_DUMP, json_bytes, json_bytes_strip_null
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 from homeassistant.util.json import (
     JSON_DECODE_EXCEPTIONS,
     json_loads,
@@ -166,7 +171,7 @@ def compile_char_one(type_: TypeDecorator, compiler: Any, **kw: Any) -> str:
 class FAST_PYSQLITE_DATETIME(sqlite.DATETIME):
     """Use ciso8601 to parse datetimes instead of sqlalchemy built-in regex."""
 
-    def result_processor(self, dialect, coltype):  # type: ignore[no-untyped-def]
+    def result_processor(self, dialect: Dialect, coltype: Any) -> Callable | None:
         """Offload the datetime parsing to ciso8601."""
         return lambda value: None if value is None else ciso8601.parse_datetime(value)
 
@@ -174,7 +179,7 @@ class FAST_PYSQLITE_DATETIME(sqlite.DATETIME):
 class NativeLargeBinary(LargeBinary):
     """A faster version of LargeBinary for engines that support python bytes natively."""
 
-    def result_processor(self, dialect, coltype):  # type: ignore[no-untyped-def]
+    def result_processor(self, dialect: Dialect, coltype: Any) -> Callable | None:
         """No conversion needed for engines that support native bytes."""
         return None
 
@@ -577,10 +582,27 @@ class StateAttributes(Base):
         if state is None:
             return b"{}"
         if state_info := state.state_info:
+            unrecorded_attributes = state_info["unrecorded_attributes"]
             exclude_attrs = {
                 *ALL_DOMAIN_EXCLUDE_ATTRS,
-                *state_info["unrecorded_attributes"],
+                *unrecorded_attributes,
             }
+            if MATCH_ALL in unrecorded_attributes:
+                # Don't exclude device class, state class, unit of measurement
+                # or friendly name when using the MATCH_ALL exclude constant
+                _exclude_attributes = {
+                    k: v
+                    for k, v in state.attributes.items()
+                    if k
+                    not in (
+                        ATTR_DEVICE_CLASS,
+                        ATTR_STATE_CLASS,
+                        ATTR_UNIT_OF_MEASUREMENT,
+                        ATTR_FRIENDLY_NAME,
+                    )
+                }
+                exclude_attrs.update(_exclude_attributes)
+
         else:
             exclude_attrs = ALL_DOMAIN_EXCLUDE_ATTRS
         encoder = json_bytes_strip_null if dialect == PSQL_DIALECT else json_bytes
@@ -665,7 +687,7 @@ class StatisticsBase:
             created=None,
             created_ts=time.time(),
             start=None,
-            start_ts=dt_util.utc_to_timestamp(stats["start"]),
+            start_ts=stats["start"].timestamp(),
             mean=stats.get("mean"),
             min=stats.get("min"),
             max=stats.get("max"),

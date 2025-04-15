@@ -1,39 +1,115 @@
 # serializer version: 1
-# name: test_entity_state_attrs
-  list([
-    StateSnapshot({
-      'attributes': ReadOnlyDict({
-        'attribution': 'Data provided by MyBMW',
-        'device_class': 'battery',
-        'friendly_name': 'iX xDrive50 Target SoC',
-        'max': 100.0,
-        'min': 20.0,
-        'mode': <NumberMode.SLIDER: 'slider'>,
-        'step': 5.0,
-      }),
-      'context': <ANY>,
-      'entity_id': 'number.ix_xdrive50_target_soc',
-      'last_changed': <ANY>,
-      'last_reported': <ANY>,
-      'last_updated': <ANY>,
-      'state': '80',
+# name: test_entity_state_attrs[number.i4_edrive40_target_soc-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
     }),
-    StateSnapshot({
-      'attributes': ReadOnlyDict({
-        'attribution': 'Data provided by MyBMW',
-        'device_class': 'battery',
-        'friendly_name': 'i4 eDrive40 Target SoC',
-        'max': 100.0,
-        'min': 20.0,
-        'mode': <NumberMode.SLIDER: 'slider'>,
-        'step': 5.0,
-      }),
-      'context': <ANY>,
-      'entity_id': 'number.i4_edrive40_target_soc',
-      'last_changed': <ANY>,
-      'last_reported': <ANY>,
-      'last_updated': <ANY>,
-      'state': '80',
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100.0,
+      'min': 20.0,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 5.0,
     }),
-  ])
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.i4_edrive40_target_soc',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Target SoC',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'target_soc',
+    'unique_id': 'WBA00000000DEMO02-target_soc',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state_attrs[number.i4_edrive40_target_soc-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'i4 eDrive40 Target SoC',
+      'max': 100.0,
+      'min': 20.0,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 5.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.i4_edrive40_target_soc',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '80',
+  })
+# ---
+# name: test_entity_state_attrs[number.ix_xdrive50_target_soc-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100.0,
+      'min': 20.0,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 5.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.ix_xdrive50_target_soc',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Target SoC',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'target_soc',
+    'unique_id': 'WBA00000000DEMO01-target_soc',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state_attrs[number.ix_xdrive50_target_soc-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'iX xDrive50 Target SoC',
+      'max': 100.0,
+      'min': 20.0,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 5.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.ix_xdrive50_target_soc',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '80',
+  })
 # ---

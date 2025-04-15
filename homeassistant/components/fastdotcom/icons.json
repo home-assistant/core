@@ -5,8 +5,5 @@
         "default": "mdi:speedometer"
       }
     }
-  },
-  "services": {
-    "speedtest": "mdi:speedometer"
   }
 }

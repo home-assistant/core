@@ -5,7 +5,7 @@ from datetime import timedelta
 from homeassistant.components import configurator
 from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed
 
@@ -14,9 +14,9 @@ async def test_request_least_info(hass: HomeAssistant) -> None:
     """Test request config with least amount of data."""
     request_id = configurator.async_request_config(hass, "Test Request", lambda _: None)
 
-    assert (
-        len(hass.services.async_services().get(configurator.DOMAIN, [])) == 1
-    ), "No new service registered"
+    assert len(hass.services.async_services().get(configurator.DOMAIN, [])) == 1, (
+        "No new service registered"
+    )
 
     states = hass.states.async_all()
 

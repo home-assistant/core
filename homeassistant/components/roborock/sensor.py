@@ -6,35 +6,43 @@ from collections.abc import Callable
 from dataclasses import dataclass
 import datetime
 
+from roborock.code_mappings import DyadError, RoborockDyadStateCode, ZeoError, ZeoState
 from roborock.containers import (
     RoborockDockErrorCode,
     RoborockDockTypeCode,
     RoborockErrorCode,
     RoborockStateCode,
 )
-from roborock.roborock_message import RoborockDataProtocol
+from roborock.roborock_message import (
+    RoborockDataProtocol,
+    RoborockDyadDataProtocol,
+    RoborockZeoProtocol,
+)
 from roborock.roborock_typing import DeviceProp
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    AREA_SQUARE_METERS,
-    PERCENTAGE,
-    EntityCategory,
-    UnitOfTime,
-)
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfArea, UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.util import slugify
 
-from .const import DOMAIN
-from .coordinator import RoborockDataUpdateCoordinator
-from .device import RoborockCoordinatedEntity
+from .coordinator import (
+    RoborockConfigEntry,
+    RoborockDataUpdateCoordinator,
+    RoborockDataUpdateCoordinatorA01,
+)
+from .entity import (
+    RoborockCoordinatedEntityA01,
+    RoborockCoordinatedEntityV1,
+    RoborockEntity,
+)
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -44,6 +52,16 @@ class RoborockSensorDescription(SensorEntityDescription):
     value_fn: Callable[[DeviceProp], StateType | datetime.datetime]
 
     protocol_listener: RoborockDataProtocol | None = None
+
+    # If it is a dock entity
+    is_dock_entity: bool = False
+
+
+@dataclass(frozen=True, kw_only=True)
+class RoborockSensorDescriptionA01(SensorEntityDescription):
+    """A class that describes Roborock sensors."""
+
+    data_protocol: RoborockDyadDataProtocol | RoborockZeoProtocol
 
 
 def _dock_error_value_fn(properties: DeviceProp) -> str | None:
@@ -108,6 +126,13 @@ SENSOR_DESCRIPTIONS = [
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     RoborockSensorDescription(
+        key="total_cleaning_count",
+        translation_key="total_cleaning_count",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda data: data.clean_summary.clean_count,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    RoborockSensorDescription(
         key="status",
         device_class=SensorDeviceClass.ENUM,
         translation_key="status",
@@ -121,14 +146,14 @@ SENSOR_DESCRIPTIONS = [
         translation_key="cleaning_area",
         value_fn=lambda data: data.status.square_meter_clean_area,
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=AREA_SQUARE_METERS,
+        native_unit_of_measurement=UnitOfArea.SQUARE_METERS,
     ),
     RoborockSensorDescription(
         key="total_cleaning_area",
         translation_key="total_cleaning_area",
         value_fn=lambda data: data.clean_summary.square_meter_clean_area,
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=AREA_SQUARE_METERS,
+        native_unit_of_measurement=UnitOfArea.SQUARE_METERS,
     ),
     RoborockSensorDescription(
         key="vacuum_error",
@@ -181,6 +206,7 @@ SENSOR_DESCRIPTIONS = [
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.ENUM,
         options=RoborockDockErrorCode.keys(),
+        is_dock_entity=True,
     ),
     RoborockSensorDescription(
         key="mop_clean_remaining",
@@ -189,45 +215,141 @@ SENSOR_DESCRIPTIONS = [
         value_fn=lambda data: data.status.rdt,
         translation_key="mop_drying_remaining_time",
         entity_category=EntityCategory.DIAGNOSTIC,
+        is_dock_entity=True,
+    ),
+]
+
+
+A01_SENSOR_DESCRIPTIONS: list[RoborockSensorDescriptionA01] = [
+    RoborockSensorDescriptionA01(
+        key="status",
+        data_protocol=RoborockDyadDataProtocol.STATUS,
+        translation_key="a01_status",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.ENUM,
+        options=RoborockDyadStateCode.keys(),
+    ),
+    RoborockSensorDescriptionA01(
+        key="battery",
+        data_protocol=RoborockDyadDataProtocol.POWER,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.BATTERY,
+    ),
+    RoborockSensorDescriptionA01(
+        key="filter_time_left",
+        data_protocol=RoborockDyadDataProtocol.MESH_LEFT,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        device_class=SensorDeviceClass.DURATION,
+        translation_key="filter_time_left",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    RoborockSensorDescriptionA01(
+        key="brush_remaining",
+        data_protocol=RoborockDyadDataProtocol.BRUSH_LEFT,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        device_class=SensorDeviceClass.DURATION,
+        translation_key="brush_remaining",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    RoborockSensorDescriptionA01(
+        key="error",
+        data_protocol=RoborockDyadDataProtocol.ERROR,
+        device_class=SensorDeviceClass.ENUM,
+        translation_key="a01_error",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        options=DyadError.keys(),
+    ),
+    RoborockSensorDescriptionA01(
+        key="total_cleaning_time",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        data_protocol=RoborockDyadDataProtocol.TOTAL_RUN_TIME,
+        device_class=SensorDeviceClass.DURATION,
+        translation_key="total_cleaning_time",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    RoborockSensorDescriptionA01(
+        key="state",
+        data_protocol=RoborockZeoProtocol.STATE,
+        translation_key="zeo_state",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.ENUM,
+        options=ZeoState.keys(),
+    ),
+    RoborockSensorDescriptionA01(
+        key="countdown",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        data_protocol=RoborockZeoProtocol.COUNTDOWN,
+        device_class=SensorDeviceClass.DURATION,
+        translation_key="countdown",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    RoborockSensorDescriptionA01(
+        key="washing_left",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        data_protocol=RoborockZeoProtocol.WASHING_LEFT,
+        device_class=SensorDeviceClass.DURATION,
+        translation_key="washing_left",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    RoborockSensorDescriptionA01(
+        key="error",
+        data_protocol=RoborockZeoProtocol.ERROR,
+        device_class=SensorDeviceClass.ENUM,
+        translation_key="zeo_error",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        options=ZeoError.keys(),
     ),
 ]
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: RoborockConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Roborock vacuum sensors."""
-    coordinators: dict[str, RoborockDataUpdateCoordinator] = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
-    async_add_entities(
+    coordinators = config_entry.runtime_data
+    entities: list[RoborockEntity] = [
         RoborockSensorEntity(
-            f"{description.key}_{slugify(device_id)}",
             coordinator,
             description,
         )
-        for device_id, coordinator in coordinators.items()
+        for coordinator in coordinators.v1
         for description in SENSOR_DESCRIPTIONS
         if description.value_fn(coordinator.roborock_device_info.props) is not None
+    ]
+    entities.extend(RoborockCurrentRoom(coordinator) for coordinator in coordinators.v1)
+    entities.extend(
+        RoborockSensorEntityA01(
+            coordinator,
+            description,
+        )
+        for coordinator in coordinators.a01
+        for description in A01_SENSOR_DESCRIPTIONS
+        if description.data_protocol in coordinator.data
     )
+    async_add_entities(entities)
 
 
-class RoborockSensorEntity(RoborockCoordinatedEntity, SensorEntity):
+class RoborockSensorEntity(RoborockCoordinatedEntityV1, SensorEntity):
     """Representation of a Roborock sensor."""
 
     entity_description: RoborockSensorDescription
 
     def __init__(
         self,
-        unique_id: str,
         coordinator: RoborockDataUpdateCoordinator,
         description: RoborockSensorDescription,
     ) -> None:
         """Initialize the entity."""
         self.entity_description = description
-        super().__init__(unique_id, coordinator, description.protocol_listener)
+        super().__init__(
+            f"{description.key}_{coordinator.duid_slug}",
+            coordinator,
+            description.protocol_listener,
+            is_dock_entity=description.is_dock_entity,
+        )
 
     @property
     def native_value(self) -> StateType | datetime.datetime:
@@ -235,3 +357,65 @@ class RoborockSensorEntity(RoborockCoordinatedEntity, SensorEntity):
         return self.entity_description.value_fn(
             self.coordinator.roborock_device_info.props
         )
+
+
+class RoborockCurrentRoom(RoborockCoordinatedEntityV1, SensorEntity):
+    """Representation of a Current Room Sensor."""
+
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_translation_key = "current_room"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(
+        self,
+        coordinator: RoborockDataUpdateCoordinator,
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__(
+            f"current_room_{coordinator.duid_slug}",
+            coordinator,
+            None,
+            is_dock_entity=False,
+        )
+
+    @property
+    def options(self) -> list[str]:
+        """Return the currently valid rooms."""
+        if (
+            self.coordinator.current_map is not None
+            and self.coordinator.current_map in self.coordinator.maps
+        ):
+            return list(
+                self.coordinator.maps[self.coordinator.current_map].rooms.values()
+            )
+        return []
+
+    @property
+    def native_value(self) -> str | None:
+        """Return the value reported by the sensor."""
+        if (
+            self.coordinator.current_map is not None
+            and self.coordinator.current_map in self.coordinator.maps
+        ):
+            return self.coordinator.maps[self.coordinator.current_map].current_room
+        return None
+
+
+class RoborockSensorEntityA01(RoborockCoordinatedEntityA01, SensorEntity):
+    """Representation of a A01 Roborock sensor."""
+
+    entity_description: RoborockSensorDescriptionA01
+
+    def __init__(
+        self,
+        coordinator: RoborockDataUpdateCoordinatorA01,
+        description: RoborockSensorDescriptionA01,
+    ) -> None:
+        """Initialize the entity."""
+        self.entity_description = description
+        super().__init__(f"{description.key}_{coordinator.duid_slug}", coordinator)
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the value reported by the sensor."""
+        return self.coordinator.data[self.entity_description.data_protocol]

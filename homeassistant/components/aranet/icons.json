@@ -6,6 +6,9 @@
       },
       "radiation_rate": {
         "default": "mdi:radioactive"
+      },
+      "radon_concentration": {
+        "default": "mdi:radioactive"
       }
     }
   }

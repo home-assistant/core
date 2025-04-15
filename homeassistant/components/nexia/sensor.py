@@ -10,25 +10,23 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import NexiaDataUpdateCoordinator
 from .entity import NexiaThermostatEntity, NexiaThermostatZoneEntity
+from .types import NexiaConfigEntry
 from .util import percent_conv
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: NexiaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensors for a Nexia device."""
 
-    coordinator: NexiaDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     nexia_home = coordinator.nexia_home
     entities: list[NexiaThermostatEntity] = []
 
@@ -110,6 +108,35 @@ async def async_setup_entry(
                     thermostat,
                     "get_relative_humidity",
                     None,
+                    SensorDeviceClass.HUMIDITY,
+                    PERCENTAGE,
+                    SensorStateClass.MEASUREMENT,
+                    percent_conv,
+                )
+            )
+        # Heating Humidification Setpoint
+        if thermostat.has_humidify_support():
+            entities.append(
+                NexiaThermostatSensor(
+                    coordinator,
+                    thermostat,
+                    "get_humidify_setpoint",
+                    "get_humidify_setpoint",
+                    SensorDeviceClass.HUMIDITY,
+                    PERCENTAGE,
+                    SensorStateClass.MEASUREMENT,
+                    percent_conv,
+                )
+            )
+
+        # Cooling Dehumidification Setpoint
+        if thermostat.has_dehumidify_support():
+            entities.append(
+                NexiaThermostatSensor(
+                    coordinator,
+                    thermostat,
+                    "get_dehumidify_setpoint",
+                    "get_dehumidify_setpoint",
                     SensorDeviceClass.HUMIDITY,
                     PERCENTAGE,
                     SensorStateClass.MEASUREMENT,

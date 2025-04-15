@@ -2,12 +2,12 @@
 
 import json
 
-from kasa import SmartDevice
+from kasa import Device
 import pytest
 
 from homeassistant.core import HomeAssistant
 
-from . import _mocked_bulb, _mocked_plug, initialize_config_entry_for_device
+from . import _mocked_device, initialize_config_entry_for_device
 
 from tests.common import load_fixture
 from tests.components.diagnostics import get_diagnostics_for_config_entry
@@ -18,13 +18,13 @@ from tests.typing import ClientSessionGenerator
     ("mocked_dev", "fixture_file", "sysinfo_vars", "expected_oui"),
     [
         (
-            _mocked_bulb(),
+            _mocked_device(),
             "tplink-diagnostics-data-bulb-kl130.json",
             ["mic_mac", "deviceId", "oemId", "hwId", "alias"],
             "AA:BB:CC",
         ),
         (
-            _mocked_plug(),
+            _mocked_device(),
             "tplink-diagnostics-data-plug-hs110.json",
             ["mac", "deviceId", "oemId", "hwId", "alias", "longitude_i", "latitude_i"],
             "AA:BB:CC",
@@ -34,11 +34,11 @@ from tests.typing import ClientSessionGenerator
 async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    mocked_dev: SmartDevice,
+    mocked_dev: Device,
     fixture_file: str,
     sysinfo_vars: list[str],
     expected_oui: str | None,
-):
+) -> None:
     """Test diagnostics for config entry."""
     diagnostics_data = json.loads(load_fixture(fixture_file, "tplink"))
 

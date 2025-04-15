@@ -8,10 +8,10 @@ import broadlink.exceptions as blke
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import dhcp
 from homeassistant.components.broadlink.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from . import get_device
 
@@ -734,13 +734,9 @@ async def test_flow_reauth_works(hass: HomeAssistant) -> None:
     mock_entry.add_to_hass(hass)
     mock_api = device.get_mock_api()
     mock_api.auth.side_effect = blke.AuthenticationError()
-    data = {"name": device.name, **device.get_entry_data()}
 
     with patch(DEVICE_FACTORY, return_value=mock_api):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=data
-        )
-
+        result = await mock_entry.start_reauth_flow(hass, data={"name": device.name})
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reset"
 
@@ -770,12 +766,8 @@ async def test_flow_reauth_invalid_host(hass: HomeAssistant) -> None:
     mock_entry.add_to_hass(hass)
     mock_api = device.get_mock_api()
     mock_api.auth.side_effect = blke.AuthenticationError()
-    data = {"name": device.name, **device.get_entry_data()}
-
     with patch(DEVICE_FACTORY, return_value=mock_api):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=data
-        )
+        result = await mock_entry.start_reauth_flow(hass, data={"name": device.name})
 
     device.mac = get_device("Office").mac
     mock_api = device.get_mock_api()
@@ -804,12 +796,9 @@ async def test_flow_reauth_valid_host(hass: HomeAssistant) -> None:
     mock_entry.add_to_hass(hass)
     mock_api = device.get_mock_api()
     mock_api.auth.side_effect = blke.AuthenticationError()
-    data = {"name": device.name, **device.get_entry_data()}
 
     with patch(DEVICE_FACTORY, return_value=mock_api):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=data
-        )
+        result = await mock_entry.start_reauth_flow(hass, data={"name": device.name})
 
     device.host = "192.168.1.128"
     mock_api = device.get_mock_api()
@@ -839,7 +828,7 @@ async def test_dhcp_can_finish(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 hostname="broadlink",
                 ip="1.2.3.4",
                 macaddress=device.mac,
@@ -873,7 +862,7 @@ async def test_dhcp_fails_to_connect(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 hostname="broadlink",
                 ip="1.2.3.4",
                 macaddress="34ea34b43b5a",
@@ -892,7 +881,7 @@ async def test_dhcp_unreachable(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 hostname="broadlink",
                 ip="1.2.3.4",
                 macaddress="34ea34b43b5a",
@@ -911,7 +900,7 @@ async def test_dhcp_connect_unknown_error(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 hostname="broadlink",
                 ip="1.2.3.4",
                 macaddress="34ea34b43b5a",
@@ -933,7 +922,7 @@ async def test_dhcp_device_not_supported(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 hostname="broadlink",
                 ip=device.host,
                 macaddress=device.mac,
@@ -957,7 +946,7 @@ async def test_dhcp_already_exists(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 hostname="broadlink",
                 ip="1.2.3.4",
                 macaddress="34ea34b43b5a",
@@ -982,7 +971,7 @@ async def test_dhcp_updates_host(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 hostname="broadlink",
                 ip="4.5.6.7",
                 macaddress="34ea34b43b5a",

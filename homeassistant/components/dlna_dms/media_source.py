@@ -13,11 +13,11 @@ Media identifiers can look like:
 from __future__ import annotations
 
 from homeassistant.components.media_player import BrowseError, MediaClass, MediaType
-from homeassistant.components.media_source.error import Unresolvable
-from homeassistant.components.media_source.models import (
+from homeassistant.components.media_source import (
     BrowseMediaSource,
     MediaSource,
     MediaSourceItem,
+    Unresolvable,
 )
 from homeassistant.core import HomeAssistant
 

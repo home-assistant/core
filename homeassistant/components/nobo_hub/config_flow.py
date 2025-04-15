@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import socket
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pynobo import nobo
 import voluptuous as vol
@@ -36,10 +36,10 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the config flow."""
-        self._discovered_hubs = None
-        self._hub = None
+        self._discovered_hubs: dict[str, Any] | None = None
+        self._hub: str | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -75,6 +75,9 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle configuration of a selected discovered device."""
         errors = {}
+        if TYPE_CHECKING:
+            assert self._discovered_hubs
+            assert self._hub
         if user_input is not None:
             serial_prefix = self._discovered_hubs[self._hub]
             serial_suffix = user_input["serial_suffix"]
@@ -172,7 +175,7 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> OptionsFlow:
         """Get the options flow for this handler."""
-        return OptionsFlowHandler(config_entry)
+        return OptionsFlowHandler()
 
 
 class NoboHubConnectError(HomeAssistantError):
@@ -186,10 +189,6 @@ class NoboHubConnectError(HomeAssistantError):
 
 class OptionsFlowHandler(OptionsFlow):
     """Handles options flow for the component."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize the options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(self, user_input=None) -> ConfigFlowResult:
         """Manage the options."""

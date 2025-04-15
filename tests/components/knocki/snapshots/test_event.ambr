@@ -1,0 +1,56 @@
+# serializer version: 1
+# name: test_entities[event.knc1_w_00000214_aaaa-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'triggered',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.knc1_w_00000214_aaaa',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Aaaa',
+    'platform': 'knocki',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'knocki',
+    'unique_id': 'KNC1-W-00000214_31',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[event.knc1_w_00000214_aaaa-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event_type': None,
+      'event_types': list([
+        'triggered',
+      ]),
+      'friendly_name': 'KNC1-W-00000214 Aaaa',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.knc1_w_00000214_aaaa',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

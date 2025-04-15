@@ -1,0 +1,99 @@
+[
+  {
+    "locationInfo": {
+      "locationId": "3164610",
+      "name": "Living room",
+      "streetAddress": "1 Main Road",
+      "city": "Boomtown",
+      "country": "Netherlands",
+      "postcode": "1234XX",
+      "locationType": "Residential",
+      "useDaylightSaveSwitching": true,
+      "timeZone": {
+        "timeZoneId": "WEuropeStandardTime",
+        "displayName": "(UTC+01:00) Amsterdam, Berlijn, Bern, Rome, Stockholm, Wenen",
+        "offsetMinutes": 60,
+        "currentOffsetMinutes": 120,
+        "supportsDaylightSaving": true
+      },
+      "locationOwner": {
+        "userId": "2624305",
+        "username": "user_2624305@gmail.com",
+        "firstname": "Chris",
+        "lastname": "Jones"
+      }
+    },
+    "gateways": [
+      {
+        "gatewayInfo": {
+          "gatewayId": "2938388",
+          "mac": "00D02D5A7000",
+          "crc": "1234",
+          "isWiFi": false
+        },
+        "temperatureControlSystems": [
+          {
+            "systemId": "4187769",
+            "modelType": "EvoTouch",
+            "zones": [
+              {
+                "zoneId": "4187768",
+                "modelType": "RoundModulation",
+                "setpointCapabilities": {
+                  "maxHeatSetpoint": 35.0,
+                  "minHeatSetpoint": 5.0,
+                  "valueResolution": 0.5,
+                  "canControlHeat": true,
+                  "canControlCool": false,
+                  "allowedSetpointModes": [
+                    "PermanentOverride",
+                    "FollowSchedule",
+                    "TemporaryOverride"
+                  ],
+                  "maxDuration": "1.00:00:00",
+                  "timingResolution": "00:10:00"
+                },
+                "scheduleCapabilities": {
+                  "maxSwitchpointsPerDay": 6,
+                  "minSwitchpointsPerDay": 0,
+                  "timingResolution": "00:10:00",
+                  "setpointValueResolution": 0.5
+                },
+                "name": "Thermostat",
+                "zoneType": "Thermostat"
+              }
+            ],
+            "allowedSystemModes": [
+              {
+                "systemMode": "Auto",
+                "canBePermanent": true,
+                "canBeTemporary": false
+              },
+              {
+                "systemMode": "AutoWithEco",
+                "canBePermanent": true,
+                "canBeTemporary": true,
+                "maxDuration": "1.00:00:00",
+                "timingResolution": "01:00:00",
+                "timingMode": "Duration"
+              },
+              {
+                "systemMode": "Away",
+                "canBePermanent": true,
+                "canBeTemporary": true,
+                "maxDuration": "99.00:00:00",
+                "timingResolution": "1.00:00:00",
+                "timingMode": "Period"
+              },
+              {
+                "systemMode": "HeatingOff",
+                "canBePermanent": true,
+                "canBeTemporary": false
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

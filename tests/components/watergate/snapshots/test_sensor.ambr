@@ -1,0 +1,516 @@
+# serializer version: 1
+# name: test_sensor[sensor.sonic_mqtt_up_since-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.sonic_mqtt_up_since',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'MQTT up since',
+    'platform': 'watergate',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'mqtt_up_since',
+    'unique_id': 'a63182948ce2896a.mqtt_up_since',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.sonic_mqtt_up_since-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Sonic MQTT up since',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.sonic_mqtt_up_since',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2021-01-09T11:59:58+00:00',
+  })
+# ---
+# name: test_sensor[sensor.sonic_power_supply_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'battery',
+        'external',
+        'battery_external',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.sonic_power_supply_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Power supply mode',
+    'platform': 'watergate',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_supply_mode',
+    'unique_id': 'a63182948ce2896a.power_supply_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.sonic_power_supply_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Sonic Power supply mode',
+      'options': list([
+        'battery',
+        'external',
+        'battery_external',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.sonic_power_supply_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'battery',
+  })
+# ---
+# name: test_sensor[sensor.sonic_signal_strength-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.sonic_signal_strength',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
+    'original_icon': None,
+    'original_name': 'Signal strength',
+    'platform': 'watergate',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'a63182948ce2896a.rssi',
+    'unit_of_measurement': 'dBm',
+  })
+# ---
+# name: test_sensor[sensor.sonic_signal_strength-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'signal_strength',
+      'friendly_name': 'Sonic Signal strength',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'dBm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.sonic_signal_strength',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-50',
+  })
+# ---
+# name: test_sensor[sensor.sonic_up_since-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.sonic_up_since',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Up since',
+    'platform': 'watergate',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'up_since',
+    'unique_id': 'a63182948ce2896a.up_since',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.sonic_up_since-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Sonic Up since',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.sonic_up_since',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2021-01-09T11:58:20+00:00',
+  })
+# ---
+# name: test_sensor[sensor.sonic_volume_flow_rate-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.sonic_volume_flow_rate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.VOLUME_FLOW_RATE: 'volume_flow_rate'>,
+    'original_icon': None,
+    'original_name': 'Volume flow rate',
+    'platform': 'watergate',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'a63182948ce2896a.water_flow_rate',
+    'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 'L/min'>,
+  })
+# ---
+# name: test_sensor[sensor.sonic_volume_flow_rate-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'volume_flow_rate',
+      'friendly_name': 'Sonic Volume flow rate',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 'L/min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.sonic_volume_flow_rate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensor[sensor.sonic_water_meter_duration-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.sonic_water_meter_duration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Water meter duration',
+    'platform': 'watergate',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'water_meter_duration',
+    'unique_id': 'a63182948ce2896a.water_meter_duration',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_sensor[sensor.sonic_water_meter_duration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Sonic Water meter duration',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.sonic_water_meter_duration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
+  })
+# ---
+# name: test_sensor[sensor.sonic_water_meter_volume-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.sonic_water_meter_volume',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.WATER: 'water'>,
+    'original_icon': None,
+    'original_name': 'Water meter volume',
+    'platform': 'watergate',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'water_meter_volume',
+    'unique_id': 'a63182948ce2896a.water_meter_volume',
+    'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
+  })
+# ---
+# name: test_sensor[sensor.sonic_water_meter_volume-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'water',
+      'friendly_name': 'Sonic Water meter volume',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.sonic_water_meter_volume',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.2',
+  })
+# ---
+# name: test_sensor[sensor.sonic_water_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.sonic_water_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': 'Water pressure',
+    'platform': 'watergate',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'water_pressure',
+    'unique_id': 'a63182948ce2896a.water_pressure',
+    'unit_of_measurement': <UnitOfPressure.MBAR: 'mbar'>,
+  })
+# ---
+# name: test_sensor[sensor.sonic_water_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'Sonic Water pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.MBAR: 'mbar'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.sonic_water_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
+  })
+# ---
+# name: test_sensor[sensor.sonic_water_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.sonic_water_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Water temperature',
+    'platform': 'watergate',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'water_temperature',
+    'unique_id': 'a63182948ce2896a.water_temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensor[sensor.sonic_water_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Sonic Water temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.sonic_water_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '28.32',
+  })
+# ---
+# name: test_sensor[sensor.sonic_wi_fi_up_since-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.sonic_wi_fi_up_since',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Wi-Fi up since',
+    'platform': 'watergate',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'wifi_up_since',
+    'unique_id': 'a63182948ce2896a.wifi_up_since',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.sonic_wi_fi_up_since-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Sonic Wi-Fi up since',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.sonic_wi_fi_up_since',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2021-01-09T11:59:57+00:00',
+  })
+# ---

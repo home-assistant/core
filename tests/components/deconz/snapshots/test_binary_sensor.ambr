@@ -1,0 +1,1035 @@
+# serializer version: 1
+# name: test_binary_sensors[sensor_payload0-expected0-config_entry_options0][binary_sensor.alarm_10-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.alarm_10',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.SAFETY: 'safety'>,
+    'original_icon': None,
+    'original_name': 'Alarm 10',
+    'platform': 'deconz',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00:15:8d:00:02:b5:d1:80-01-0500-alarm',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[sensor_payload0-expected0-config_entry_options0][binary_sensor.alarm_10-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'safety',
+      'friendly_name': 'Alarm 10',
+      'on': True,
+      'temperature': 26.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.alarm_10',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[sensor_payload1-expected1-config_entry_options0][binary_sensor.cave_co-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.cave_co',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.CO: 'carbon_monoxide'>,
+    'original_icon': None,
+    'original_name': 'Cave CO',
+    'platform': 'deconz',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00:15:8d:00:02:a5:21:24-01-0101-carbon_monoxide',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[sensor_payload1-expected1-config_entry_options0][binary_sensor.cave_co-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'carbon_monoxide',
+      'friendly_name': 'Cave CO',
+      'on': True,
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.cave_co',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[sensor_payload1-expected1-config_entry_options0][binary_sensor.cave_co_low_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.cave_co_low_battery',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Cave CO Low Battery',
+    'platform': 'deconz',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00:15:8d:00:02:a5:21:24-01-0101-low_battery',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[sensor_payload1-expected1-config_entry_options0][binary_sensor.cave_co_low_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Cave CO Low Battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.cave_co_low_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[sensor_payload1-expected1-config_entry_options0][binary_sensor.cave_co_tampered-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.cave_co_tampered',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
+    'original_icon': None,
+    'original_name': 'Cave CO Tampered',
+    'platform': 'deconz',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00:15:8d:00:02:a5:21:24-01-0101-tampered',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[sensor_payload1-expected1-config_entry_options0][binary_sensor.cave_co_tampered-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'tamper',
+      'friendly_name': 'Cave CO Tampered',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.cave_co_tampered',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[sensor_payload10-expected10-config_entry_options0][binary_sensor.presence_sensor-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.presence_sensor',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
+    'original_icon': None,
+    'original_name': 'Presence sensor',
+    'platform': 'deconz',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00:00:00:00:00:00:00:00-00-presence',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[sensor_payload10-expected10-config_entry_options0][binary_sensor.presence_sensor-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'dark': False,
+      'device_class': 'motion',
+      'friendly_name': 'Presence sensor',
+      'on': True,
+      'temperature': 0.1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.presence_sensor',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[sensor_payload10-expected10-config_entry_options0][binary_sensor.presence_sensor_low_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.presence_sensor_low_battery',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Presence sensor Low Battery',
+    'platform': 'deconz',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00:00:00:00:00:00:00:00-00-low_battery',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[sensor_payload10-expected10-config_entry_options0][binary_sensor.presence_sensor_low_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Presence sensor Low Battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.presence_sensor_low_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[sensor_payload10-expected10-config_entry_options0][binary_sensor.presence_sensor_tampered-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.presence_sensor_tampered',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
+    'original_icon': None,
+    'original_name': 'Presence sensor Tampered',
+    'platform': 'deconz',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00:00:00:00:00:00:00:00-00-tampered',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[sensor_payload10-expected10-config_entry_options0][binary_sensor.presence_sensor_tampered-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'tamper',
+      'friendly_name': 'Presence sensor Tampered',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.presence_sensor_tampered',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[sensor_payload2-expected2-config_entry_options0][binary_sensor.sensor_kitchen_smoke-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.sensor_kitchen_smoke',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
+    'original_icon': None,
+    'original_name': 'sensor_kitchen_smoke',
+    'platform': 'deconz',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00:15:8d:00:01:d9:3e:7c-01-0500-fire',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[sensor_payload2-expected2-config_entry_options0][binary_sensor.sensor_kitchen_smoke-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'smoke',
+      'friendly_name': 'sensor_kitchen_smoke',
+      'on': True,
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.sensor_kitchen_smoke',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[sensor_payload2-expected2-config_entry_options0][binary_sensor.sensor_kitchen_smoke_test_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.sensor_kitchen_smoke_test_mode',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
+    'original_icon': None,
+    'original_name': 'sensor_kitchen_smoke Test Mode',
+    'platform': 'deconz',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00:15:8d:00:01:d9:3e:7c-01-0500-in_test_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[sensor_payload2-expected2-config_entry_options0][binary_sensor.sensor_kitchen_smoke_test_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'smoke',
+      'friendly_name': 'sensor_kitchen_smoke Test Mode',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.sensor_kitchen_smoke_test_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[sensor_payload3-expected3-config_entry_options0][binary_sensor.sensor_kitchen_smoke-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.sensor_kitchen_smoke',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
+    'original_icon': None,
+    'original_name': 'sensor_kitchen_smoke',
+    'platform': 'deconz',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00:15:8d:00:01:d9:3e:7c-01-0500-fire',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[sensor_payload3-expected3-config_entry_options0][binary_sensor.sensor_kitchen_smoke-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'smoke',
+      'friendly_name': 'sensor_kitchen_smoke',
+      'on': True,
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.sensor_kitchen_smoke',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[sensor_payload3-expected3-config_entry_options0][binary_sensor.sensor_kitchen_smoke_test_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.sensor_kitchen_smoke_test_mode',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
+    'original_icon': None,
+    'original_name': 'sensor_kitchen_smoke Test Mode',
+    'platform': 'deconz',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00:15:8d:00:01:d9:3e:7c-01-0500-in_test_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[sensor_payload3-expected3-config_entry_options0][binary_sensor.sensor_kitchen_smoke_test_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'smoke',
+      'friendly_name': 'sensor_kitchen_smoke Test Mode',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.sensor_kitchen_smoke_test_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[sensor_payload4-expected4-config_entry_options0][binary_sensor.kitchen_switch-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.kitchen_switch',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Kitchen Switch',
+    'platform': 'deconz',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'kitchen-switch-flag',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[sensor_payload4-expected4-config_entry_options0][binary_sensor.kitchen_switch-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Kitchen Switch',
+      'on': True,
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.kitchen_switch',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensors[sensor_payload5-expected5-config_entry_options0][binary_sensor.back_door-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.back_door',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
+    'original_icon': None,
+    'original_name': 'Back Door',
+    'platform': 'deconz',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00:15:8d:00:02:2b:96:b4-01-0006-open',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[sensor_payload5-expected5-config_entry_options0][binary_sensor.back_door-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'opening',
+      'friendly_name': 'Back Door',
+      'on': True,
+      'temperature': 33.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.back_door',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[sensor_payload6-expected6-config_entry_options0][binary_sensor.motion_sensor_4-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.motion_sensor_4',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
+    'original_icon': None,
+    'original_name': 'Motion sensor 4',
+    'platform': 'deconz',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00:17:88:01:03:28:8c:9b-02-0406-presence',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[sensor_payload6-expected6-config_entry_options0][binary_sensor.motion_sensor_4-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'dark': False,
+      'device_class': 'motion',
+      'friendly_name': 'Motion sensor 4',
+      'on': True,
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.motion_sensor_4',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[sensor_payload7-expected7-config_entry_options0][binary_sensor.water2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.water2',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
+    'original_icon': None,
+    'original_name': 'water2',
+    'platform': 'deconz',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00:15:8d:00:02:2f:07:db-01-0500-water',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[sensor_payload7-expected7-config_entry_options0][binary_sensor.water2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'moisture',
+      'friendly_name': 'water2',
+      'on': True,
+      'temperature': 25.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.water2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[sensor_payload7-expected7-config_entry_options0][binary_sensor.water2_low_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.water2_low_battery',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'water2 Low Battery',
+    'platform': 'deconz',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00:15:8d:00:02:2f:07:db-01-0500-low_battery',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[sensor_payload7-expected7-config_entry_options0][binary_sensor.water2_low_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'water2 Low Battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.water2_low_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[sensor_payload7-expected7-config_entry_options0][binary_sensor.water2_tampered-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.water2_tampered',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
+    'original_icon': None,
+    'original_name': 'water2 Tampered',
+    'platform': 'deconz',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00:15:8d:00:02:2f:07:db-01-0500-tampered',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[sensor_payload7-expected7-config_entry_options0][binary_sensor.water2_tampered-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'tamper',
+      'friendly_name': 'water2 Tampered',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.water2_tampered',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[sensor_payload8-expected8-config_entry_options0][binary_sensor.vibration_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.vibration_1',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.VIBRATION: 'vibration'>,
+    'original_icon': None,
+    'original_name': 'Vibration 1',
+    'platform': 'deconz',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00:15:8d:00:02:a5:21:24-01-0101-vibration',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[sensor_payload8-expected8-config_entry_options0][binary_sensor.vibration_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'vibration',
+      'friendly_name': 'Vibration 1',
+      'on': True,
+      'orientation': list([
+        10,
+        1059,
+        0,
+      ]),
+      'temperature': 32.0,
+      'tiltangle': 83,
+      'vibrationstrength': 114,
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.vibration_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensors[sensor_payload9-expected9-config_entry_options0][binary_sensor.presence_sensor-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.presence_sensor',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
+    'original_icon': None,
+    'original_name': 'Presence sensor',
+    'platform': 'deconz',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00:00:00:00:00:00:00:00-00-presence',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[sensor_payload9-expected9-config_entry_options0][binary_sensor.presence_sensor-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'dark': False,
+      'device_class': 'motion',
+      'friendly_name': 'Presence sensor',
+      'on': True,
+      'temperature': 0.1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.presence_sensor',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[sensor_payload9-expected9-config_entry_options0][binary_sensor.presence_sensor_low_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.presence_sensor_low_battery',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Presence sensor Low Battery',
+    'platform': 'deconz',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00:00:00:00:00:00:00:00-00-low_battery',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[sensor_payload9-expected9-config_entry_options0][binary_sensor.presence_sensor_low_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Presence sensor Low Battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.presence_sensor_low_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[sensor_payload9-expected9-config_entry_options0][binary_sensor.presence_sensor_tampered-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.presence_sensor_tampered',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
+    'original_icon': None,
+    'original_name': 'Presence sensor Tampered',
+    'platform': 'deconz',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00:00:00:00:00:00:00:00-00-tampered',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[sensor_payload9-expected9-config_entry_options0][binary_sensor.presence_sensor_tampered-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'tamper',
+      'friendly_name': 'Presence sensor Tampered',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.presence_sensor_tampered',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

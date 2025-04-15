@@ -14,7 +14,7 @@ from homeassistant.const import ATTR_TIME, UnitOfLength
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.unit_conversion import DistanceConverter
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
@@ -38,7 +38,9 @@ SOURCE = "geonetnz_quakes"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the GeoNet NZ Quakes Feed platform."""
     manager: GeonetnzQuakesFeedEntityManager = hass.data[DOMAIN][FEED][entry.entry_id]
@@ -156,16 +158,16 @@ class GeonetnzQuakesEvent(GeolocationEvent):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
-        attributes = {}
-        for key, value in (
-            (ATTR_EXTERNAL_ID, self._external_id),
-            (ATTR_DEPTH, self._depth),
-            (ATTR_LOCALITY, self._locality),
-            (ATTR_MAGNITUDE, self._magnitude),
-            (ATTR_MMI, self._mmi),
-            (ATTR_QUALITY, self._quality),
-            (ATTR_TIME, self._time),
-        ):
-            if value or isinstance(value, bool):
-                attributes[key] = value
-        return attributes
+        return {
+            key: value
+            for key, value in (
+                (ATTR_EXTERNAL_ID, self._external_id),
+                (ATTR_DEPTH, self._depth),
+                (ATTR_LOCALITY, self._locality),
+                (ATTR_MAGNITUDE, self._magnitude),
+                (ATTR_MMI, self._mmi),
+                (ATTR_QUALITY, self._quality),
+                (ATTR_TIME, self._time),
+            )
+            if value or isinstance(value, bool)
+        }

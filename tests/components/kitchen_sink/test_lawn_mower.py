@@ -72,6 +72,12 @@ async def test_states(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
             LawnMowerActivity.MOWING,
             LawnMowerActivity.DOCKED,
         ),
+        (
+            "lawn_mower.mower_can_return",
+            SERVICE_DOCK,
+            LawnMowerActivity.RETURNING,
+            LawnMowerActivity.DOCKED,
+        ),
     ],
 )
 async def test_mower(
@@ -94,7 +100,7 @@ async def test_mower(
     await hass.async_block_till_done()
 
     assert state_changes[0].data["entity_id"] == entity
-    assert state_changes[0].data["new_state"].state == str(next_activity.value)
+    assert state_changes[0].data["new_state"].state == next_activity.value
 
 
 @pytest.mark.parametrize(

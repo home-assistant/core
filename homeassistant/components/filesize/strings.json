@@ -5,6 +5,11 @@
         "data": {
           "file_path": "Path to file"
         }
+      },
+      "reconfigure": {
+        "data": {
+          "file_path": "[%key:component::filesize::config::step::user::data::file_path%]"
+        }
       }
     },
     "error": {
@@ -12,7 +17,8 @@
       "not_allowed": "Path is not allowed"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "title": "Filesize",
@@ -26,6 +32,9 @@
       },
       "last_updated": {
         "name": "Last updated"
+      },
+      "created": {
+        "name": "Created"
       }
     }
   }

@@ -1,0 +1,55 @@
+{
+  "response": {
+    "serial_number": "xxxxxx",
+    "period": "day",
+    "installation_time_zone": "Australia/Brisbane",
+    "time_series": [
+      {
+        "timestamp": "2024-09-18T00:00:00+10:00",
+        "solar_energy_exported": 0,
+        "generator_energy_exported": 0,
+        "grid_energy_imported": 0,
+        "grid_services_energy_imported": 0,
+        "grid_services_energy_exported": 0,
+        "grid_energy_exported_from_solar": 0,
+        "grid_energy_exported_from_generator": 0,
+        "grid_energy_exported_from_battery": 0,
+        "battery_energy_exported": 36,
+        "battery_energy_imported_from_grid": 0,
+        "battery_energy_imported_from_solar": 0,
+        "battery_energy_imported_from_generator": 0,
+        "consumer_energy_imported_from_grid": 0,
+        "consumer_energy_imported_from_solar": 0,
+        "consumer_energy_imported_from_battery": 36,
+        "consumer_energy_imported_from_generator": 0,
+        "raw_timestamp": "2024-09-18T00:00:00+10:00",
+        "total_home_usage": 36,
+        "total_battery_discharge": 36
+      },
+      {
+        "timestamp": "2024-09-18T08:45:00+10:00",
+        "solar_energy_exported": 724,
+        "generator_energy_exported": 0,
+        "grid_energy_imported": 0,
+        "grid_services_energy_imported": 0,
+        "grid_services_energy_exported": 0,
+        "grid_energy_exported_from_solar": 2,
+        "grid_energy_exported_from_generator": 0,
+        "grid_energy_exported_from_battery": 0,
+        "battery_energy_exported": 0,
+        "battery_energy_imported_from_grid": 0,
+        "battery_energy_imported_from_solar": 684,
+        "battery_energy_imported_from_generator": 0,
+        "consumer_energy_imported_from_grid": 0,
+        "consumer_energy_imported_from_solar": 38,
+        "consumer_energy_imported_from_battery": 0,
+        "consumer_energy_imported_from_generator": 0,
+        "raw_timestamp": "2024-09-18T08:45:00+10:00",
+        "total_home_usage": 38,
+        "total_solar_generation": 724,
+        "total_battery_charge": 684,
+        "total_grid_energy_exported": 2
+      }
+    ]
+  }
+}

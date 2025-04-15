@@ -26,7 +26,7 @@ from homeassistant.components.humidifier import (
     ATTR_MIN_HUMIDITY,
     DEFAULT_MAX_HUMIDITY,
     DEFAULT_MIN_HUMIDITY,
-    DOMAIN,
+    DOMAIN as HUMIDIFIER_DOMAIN,
     SERVICE_SET_HUMIDITY,
     HumidifierDeviceClass,
 )
@@ -42,12 +42,12 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 
 from tests.common import async_mock_service
 
 
-async def test_humidifier(hass: HomeAssistant, hk_driver, events) -> None:
+async def test_humidifier(hass: HomeAssistant, hk_driver, events: list[Event]) -> None:
     """Test if humidifier accessory and HA are updated accordingly."""
     entity_id = "humidifier.test"
 
@@ -106,7 +106,9 @@ async def test_humidifier(hass: HomeAssistant, hk_driver, events) -> None:
     assert acc.char_active.value == 0
 
     # Set from HomeKit
-    call_set_humidity = async_mock_service(hass, DOMAIN, SERVICE_SET_HUMIDITY)
+    call_set_humidity = async_mock_service(
+        hass, HUMIDIFIER_DOMAIN, SERVICE_SET_HUMIDITY
+    )
 
     char_target_humidity_iid = acc.char_target_humidity.to_HAP()[HAP_REPR_IID]
 
@@ -132,7 +134,9 @@ async def test_humidifier(hass: HomeAssistant, hk_driver, events) -> None:
     assert events[-1].data[ATTR_VALUE] == "RelativeHumidityHumidifierThreshold to 39.0%"
 
 
-async def test_dehumidifier(hass: HomeAssistant, hk_driver, events) -> None:
+async def test_dehumidifier(
+    hass: HomeAssistant, hk_driver, events: list[Event]
+) -> None:
     """Test if dehumidifier accessory and HA are updated accordingly."""
     entity_id = "humidifier.test"
 
@@ -192,7 +196,9 @@ async def test_dehumidifier(hass: HomeAssistant, hk_driver, events) -> None:
     assert acc.char_active.value == 0
 
     # Set from HomeKit
-    call_set_humidity = async_mock_service(hass, DOMAIN, SERVICE_SET_HUMIDITY)
+    call_set_humidity = async_mock_service(
+        hass, HUMIDIFIER_DOMAIN, SERVICE_SET_HUMIDITY
+    )
 
     char_target_humidity_iid = acc.char_target_humidity.to_HAP()[HAP_REPR_IID]
 
@@ -220,7 +226,9 @@ async def test_dehumidifier(hass: HomeAssistant, hk_driver, events) -> None:
     )
 
 
-async def test_hygrostat_power_state(hass: HomeAssistant, hk_driver, events) -> None:
+async def test_hygrostat_power_state(
+    hass: HomeAssistant, hk_driver, events: list[Event]
+) -> None:
     """Test if accessory and HA are updated accordingly."""
     entity_id = "humidifier.test"
 
@@ -253,7 +261,7 @@ async def test_hygrostat_power_state(hass: HomeAssistant, hk_driver, events) -> 
     assert acc.char_active.value == 0
 
     # Set from HomeKit
-    call_turn_on = async_mock_service(hass, DOMAIN, SERVICE_TURN_ON)
+    call_turn_on = async_mock_service(hass, HUMIDIFIER_DOMAIN, SERVICE_TURN_ON)
 
     char_active_iid = acc.char_active.to_HAP()[HAP_REPR_IID]
 
@@ -277,7 +285,7 @@ async def test_hygrostat_power_state(hass: HomeAssistant, hk_driver, events) -> 
     assert len(events) == 1
     assert events[-1].data[ATTR_VALUE] == "Active to 1"
 
-    call_turn_off = async_mock_service(hass, DOMAIN, SERVICE_TURN_OFF)
+    call_turn_off = async_mock_service(hass, HUMIDIFIER_DOMAIN, SERVICE_TURN_OFF)
 
     hk_driver.set_characteristics(
         {
@@ -301,7 +309,7 @@ async def test_hygrostat_power_state(hass: HomeAssistant, hk_driver, events) -> 
 
 
 async def test_hygrostat_get_humidity_range(
-    hass: HomeAssistant, hk_driver, events
+    hass: HomeAssistant, hk_driver, events: list[Event]
 ) -> None:
     """Test if humidity range is evaluated correctly."""
     entity_id = "humidifier.test"
@@ -319,7 +327,9 @@ async def test_hygrostat_get_humidity_range(
     await hass.async_block_till_done()
 
     # Set from HomeKit
-    call_set_humidity = async_mock_service(hass, DOMAIN, SERVICE_SET_HUMIDITY)
+    call_set_humidity = async_mock_service(
+        hass, HUMIDIFIER_DOMAIN, SERVICE_SET_HUMIDITY
+    )
 
     char_target_humidity_iid = acc.char_target_humidity.to_HAP()[HAP_REPR_IID]
 
@@ -452,7 +462,10 @@ async def test_humidifier_with_a_missing_linked_humidity_sensor(
 
 
 async def test_humidifier_as_dehumidifier(
-    hass: HomeAssistant, hk_driver, events, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    hk_driver,
+    events: list[Event],
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test an invalid char_target_humidifier_dehumidifier from HomeKit."""
     entity_id = "humidifier.test"
@@ -495,7 +508,10 @@ async def test_humidifier_as_dehumidifier(
 
 
 async def test_dehumidifier_as_humidifier(
-    hass: HomeAssistant, hk_driver, events, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    hk_driver,
+    events: list[Event],
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test an invalid char_target_humidifier_dehumidifier from HomeKit."""
     entity_id = "humidifier.test"

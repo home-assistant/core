@@ -5,13 +5,15 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import dhcp, zeroconf
 from homeassistant.components.hunterdouglas_powerview.const import DOMAIN
 from homeassistant.const import CONF_API_VERSION, CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import DHCP_DATA, DISCOVERY_DATA, HOMEKIT_DATA
+from .const import DHCP_DATA, DISCOVERY_DATA, HOMEKIT_DATA, MOCK_SERIAL
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
@@ -40,7 +42,7 @@ async def test_user_form(
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == f"Powerview Generation {api_version}"
     assert result2["data"] == {CONF_HOST: "1.2.3.4", CONF_API_VERSION: api_version}
-    assert result2["result"].unique_id == "A1B2C3D4E5G6H7"
+    assert result2["result"].unique_id == MOCK_SERIAL
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -64,7 +66,7 @@ async def test_form_homekit_and_dhcp_cannot_connect(
     hass: HomeAssistant,
     mock_setup_entry: MagicMock,
     source: str,
-    discovery_info: dhcp.DhcpServiceInfo,
+    discovery_info: DhcpServiceInfo,
     api_version: int,
 ) -> None:
     """Test we get the form with homekit and dhcp source."""
@@ -75,7 +77,7 @@ async def test_form_homekit_and_dhcp_cannot_connect(
     ignored_config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.hunterdouglas_powerview.Hub.query_firmware",
+        "homeassistant.components.hunterdouglas_powerview.util.Hub.query_firmware",
         side_effect=TimeoutError,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -100,7 +102,7 @@ async def test_form_homekit_and_dhcp_cannot_connect(
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == f"Powerview Generation {api_version}"
     assert result3["data"] == {CONF_HOST: "1.2.3.4", CONF_API_VERSION: api_version}
-    assert result3["result"].unique_id == "A1B2C3D4E5G6H7"
+    assert result3["result"].unique_id == MOCK_SERIAL
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -111,7 +113,7 @@ async def test_form_homekit_and_dhcp(
     hass: HomeAssistant,
     mock_setup_entry: MagicMock,
     source: str,
-    discovery_info: dhcp.DhcpServiceInfo | zeroconf.ZeroconfServiceInfo,
+    discovery_info: DhcpServiceInfo | ZeroconfServiceInfo,
     api_version: int,
 ) -> None:
     """Test we get the form with homekit and dhcp source."""
@@ -142,7 +144,7 @@ async def test_form_homekit_and_dhcp(
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == f"Powerview Generation {api_version}"
     assert result2["data"] == {CONF_HOST: "1.2.3.4", CONF_API_VERSION: api_version}
-    assert result2["result"].unique_id == "A1B2C3D4E5G6H7"
+    assert result2["result"].unique_id == MOCK_SERIAL
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -165,10 +167,10 @@ async def test_discovered_by_homekit_and_dhcp(
     hass: HomeAssistant,
     mock_setup_entry: MagicMock,
     homekit_source: str,
-    homekit_discovery: zeroconf.ZeroconfServiceInfo,
+    homekit_discovery: ZeroconfServiceInfo,
     api_version: int,
     dhcp_source: str,
-    dhcp_discovery: dhcp.DhcpServiceInfo,
+    dhcp_discovery: DhcpServiceInfo,
     dhcp_api_version: int,
 ) -> None:
     """Test we get the form with homekit and abort for dhcp source when we get both."""
@@ -205,7 +207,7 @@ async def test_form_cannot_connect(
 
     # Simulate a timeout error
     with patch(
-        "homeassistant.components.hunterdouglas_powerview.Hub.query_firmware",
+        "homeassistant.components.hunterdouglas_powerview.util.Hub.query_firmware",
         side_effect=TimeoutError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -225,7 +227,7 @@ async def test_form_cannot_connect(
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == f"Powerview Generation {api_version}"
     assert result3["data"] == {CONF_HOST: "1.2.3.4", CONF_API_VERSION: api_version}
-    assert result3["result"].unique_id == "A1B2C3D4E5G6H7"
+    assert result3["result"].unique_id == MOCK_SERIAL
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -244,11 +246,11 @@ async def test_form_no_data(
 
     with (
         patch(
-            "homeassistant.components.hunterdouglas_powerview.Hub.request_raw_data",
+            "homeassistant.components.hunterdouglas_powerview.util.Hub.request_raw_data",
             return_value={},
         ),
         patch(
-            "homeassistant.components.hunterdouglas_powerview.Hub.request_home_data",
+            "homeassistant.components.hunterdouglas_powerview.util.Hub.request_home_data",
             return_value={},
         ),
     ):
@@ -269,7 +271,7 @@ async def test_form_no_data(
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == f"Powerview Generation {api_version}"
     assert result3["data"] == {CONF_HOST: "1.2.3.4", CONF_API_VERSION: api_version}
-    assert result3["result"].unique_id == "A1B2C3D4E5G6H7"
+    assert result3["result"].unique_id == MOCK_SERIAL
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -288,7 +290,7 @@ async def test_form_unknown_exception(
 
     # Simulate a transient error
     with patch(
-        "homeassistant.components.hunterdouglas_powerview.config_flow.Hub.query_firmware",
+        "homeassistant.components.hunterdouglas_powerview.util.Hub.query_firmware",
         side_effect=SyntaxError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -308,7 +310,7 @@ async def test_form_unknown_exception(
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == f"Powerview Generation {api_version}"
     assert result2["data"] == {CONF_HOST: "1.2.3.4", CONF_API_VERSION: api_version}
-    assert result2["result"].unique_id == "A1B2C3D4E5G6H7"
+    assert result2["result"].unique_id == MOCK_SERIAL
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -327,7 +329,7 @@ async def test_form_unsupported_device(
 
     # Simulate a gen 3 secondary hub
     with patch(
-        "homeassistant.components.hunterdouglas_powerview.Hub.request_raw_data",
+        "homeassistant.components.hunterdouglas_powerview.util.Hub.request_raw_data",
         return_value=load_json_object_fixture("gen3/gateway/secondary.json", DOMAIN),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -347,6 +349,57 @@ async def test_form_unsupported_device(
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == f"Powerview Generation {api_version}"
     assert result3["data"] == {CONF_HOST: "1.2.3.4", CONF_API_VERSION: api_version}
-    assert result3["result"].unique_id == "A1B2C3D4E5G6H7"
+    assert result3["result"].unique_id == MOCK_SERIAL
 
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("mock_hunterdouglas_hub")
+@pytest.mark.parametrize("api_version", [1, 2, 3])
+async def test_migrate_entry(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    api_version: int,
+) -> None:
+    """Test migrate to newest version."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"host": "1.2.3.4"},
+        unique_id=MOCK_SERIAL,
+        version=1,
+        minor_version=1,
+    )
+    entry.add_to_hass(hass)
+
+    # Add entries with int unique_id
+    entity_registry.async_get_or_create(
+        domain="cover",
+        platform="hunterdouglas_powerview",
+        unique_id=123,
+        config_entry=entry,
+    )
+    # Add entries with a str unique_id not starting with entry.unique_id
+    entity_registry.async_get_or_create(
+        domain="cover",
+        platform="hunterdouglas_powerview",
+        unique_id="old_unique_id",
+        config_entry=entry,
+    )
+
+    assert entry.version == 1
+    assert entry.minor_version == 1
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.version == 1
+    assert entry.minor_version == 2
+
+    # Reload the registry entries
+    registry_entries = er.async_entries_for_config_entry(
+        entity_registry, entry.entry_id
+    )
+
+    # Ensure the IDs have been migrated
+    for reg_entry in registry_entries:
+        assert reg_entry.unique_id.startswith(f"{entry.unique_id}_")

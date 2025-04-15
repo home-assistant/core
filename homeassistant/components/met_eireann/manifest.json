@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/met_eireann",
   "iot_class": "cloud_polling",
   "loggers": ["meteireann"],
-  "requirements": ["PyMetEireann==2021.8.0"]
+  "requirements": ["PyMetEireann==2024.11.0"]
 }

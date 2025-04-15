@@ -19,8 +19,8 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "not_ipv4_address": "No IPv4 address in ssdp discovery information",
-      "no_serial": "No serial number in ssdp discovery information"
+      "not_ipv4_address": "No IPv4 address in SSDP discovery information",
+      "no_serial": "No serial number in SSDP discovery information"
     }
   },
   "options": {
@@ -48,7 +48,7 @@
         "name": "SSID"
       },
       "access_point_mac": {
-        "name": "Access point mac"
+        "name": "Access point MAC"
       },
       "upload_today": {
         "name": "Upload today"

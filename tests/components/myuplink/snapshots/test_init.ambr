@@ -1,0 +1,100 @@
+# serializer version: 1
+# name: test_device_info[alfred-multi]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'myuplink',
+        'alfred-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'Jäspi',
+    'model': 'Tehowatti Air',
+    'model_id': None,
+    'name': 'Gotham City',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': '10001',
+    'suggested_area': None,
+    'sw_version': '9682R7A',
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_info[batman-multi]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'myuplink',
+        'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'Nibe',
+    'model': 'F730',
+    'model_id': None,
+    'name': 'Batcave',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': '10002',
+    'suggested_area': None,
+    'sw_version': '9682R7B',
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_info[robin-multi]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'myuplink',
+        'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'Nibe',
+    'model': 'SMO 20',
+    'model_id': None,
+    'name': 'Duckburg',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': '10003',
+    'suggested_area': None,
+    'sw_version': '9682R7C',
+    'via_device_id': None,
+  })
+# ---

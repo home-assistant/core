@@ -5,6 +5,7 @@ from datetime import timedelta
 
 from streamlabswater.streamlabswater import StreamlabsClient
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -25,15 +26,19 @@ class StreamlabsData:
 class StreamlabsCoordinator(DataUpdateCoordinator[dict[str, StreamlabsData]]):
     """Coordinator for Streamlabs."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: ConfigEntry,
         client: StreamlabsClient,
     ) -> None:
         """Coordinator for Streamlabs."""
         super().__init__(
             hass,
             LOGGER,
+            config_entry=config_entry,
             name="Streamlabs",
             update_interval=timedelta(seconds=60),
         )

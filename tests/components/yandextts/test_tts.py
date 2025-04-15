@@ -1,6 +1,8 @@
 """The tests for the Yandex SpeechKit speech platform."""
 
 from http import HTTPStatus
+from pathlib import Path
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -22,14 +24,13 @@ URL = "https://tts.voicetech.yandex.net/generate?"
 
 
 @pytest.fixture(autouse=True)
-def tts_mutagen_mock_fixture_autouse(tts_mutagen_mock):
+def tts_mutagen_mock_fixture_autouse(tts_mutagen_mock: MagicMock) -> None:
     """Mock writing tags."""
 
 
 @pytest.fixture(autouse=True)
-def mock_tts_cache_dir_autouse(mock_tts_cache_dir):
+def mock_tts_cache_dir_autouse(mock_tts_cache_dir: Path) -> None:
     """Mock the TTS cache dir with empty dir."""
-    return mock_tts_cache_dir
 
 
 async def test_setup_component(hass: HomeAssistant) -> None:
@@ -222,7 +223,7 @@ async def test_service_say_timeout(
     assert len(calls) == 1
     assert (
         await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
-        == HTTPStatus.NOT_FOUND
+        == HTTPStatus.INTERNAL_SERVER_ERROR
     )
 
     assert len(aioclient_mock.mock_calls) == 1
@@ -268,7 +269,7 @@ async def test_service_say_http_error(
     assert len(calls) == 1
     assert (
         await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
-        == HTTPStatus.NOT_FOUND
+        == HTTPStatus.INTERNAL_SERVER_ERROR
     )
 
 

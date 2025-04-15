@@ -1,0 +1,71 @@
+rules:
+  # Bronze
+  action-setup:
+    status: done
+    comment: |
+      play_chime service is setup in async_setup
+      ptz_move service is setup in async_setup_entry since it is a entity_service
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+  # Silver
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates:
+    status: done
+    comment: |
+      Coordinators are used and asyncio mutex locks ensure safe operation in the upstream lib
+      Parallel_update=0 set on all platforms
+  reauthentication-flow: done
+  test-coverage: done
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery-update-info: done
+  discovery: done
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices: done
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow: done
+  repair-issues: done
+  stale-devices:
+    status: done
+    comment: |
+      For standalone cameras this does not apply: the integration should be removed.
+      For cameras connected to a NVR/Hub: the entities of a device are marked unavailable when power is unplugged. They can be removed using async_remove_config_entry_device.
+      Chimes can be uncoupled from the doorbell and removed from HA using async_remove_config_entry_device
+      Automatic removal lead to many user issues when a device was temporarily out of wifi range or disconnected from power, so not implemented anymore.
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done

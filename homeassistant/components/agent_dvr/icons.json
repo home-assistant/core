@@ -1,9 +1,19 @@
 {
   "services": {
-    "start_recording": "mdi:record-rec",
-    "stop_recording": "mdi:stop",
-    "enable_alerts": "mdi:bell-alert",
-    "disable_alerts": "mdi:bell-off",
-    "snapshot": "mdi:camera"
+    "start_recording": {
+      "service": "mdi:record-rec"
+    },
+    "stop_recording": {
+      "service": "mdi:stop"
+    },
+    "enable_alerts": {
+      "service": "mdi:bell-alert"
+    },
+    "disable_alerts": {
+      "service": "mdi:bell-off"
+    },
+    "snapshot": {
+      "service": "mdi:camera"
+    }
   }
 }

@@ -19,6 +19,8 @@ _LOGGER = logging.getLogger(__name__)
 class GoodweUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Gather data for the energy device."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -29,6 +31,7 @@ class GoodweUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=entry.title,
             update_interval=SCAN_INTERVAL,
         )

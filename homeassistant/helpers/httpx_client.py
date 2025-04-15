@@ -4,8 +4,12 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 import sys
+from types import TracebackType
 from typing import Any, Self
 
+# httpx dynamically imports httpcore, so we need to import it
+# to avoid it being imported later when the event loop is running
+import httpcore  # noqa: F401
 import httpx
 
 from homeassistant.const import APPLICATION_NAME, EVENT_HOMEASSISTANT_CLOSE, __version__
@@ -58,7 +62,12 @@ class HassHttpXAsyncClient(httpx.AsyncClient):
         """Prevent an integration from reopen of the client via context manager."""
         return self
 
-    async def __aexit__(self, *args: object) -> None:
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None = None,
+        exc_value: BaseException | None = None,
+        traceback: TracebackType | None = None,
+    ) -> None:
         """Prevent an integration from close of the client via context manager."""
 
 

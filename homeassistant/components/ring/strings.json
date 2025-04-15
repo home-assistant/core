@@ -6,12 +6,19 @@
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "Your Ring account username.",
+          "password": "Your Ring account password."
         }
       },
       "2fa": {
         "title": "Two-factor authentication",
         "data": {
           "2fa": "Two-factor code"
+        },
+        "data_description": {
+          "2fa": "Account verification code via the method selected in your Ring account settings."
         }
       },
       "reauth_confirm": {
@@ -19,6 +26,19 @@
         "description": "The Ring integration needs to re-authenticate your account {username}",
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "[%key:component::ring::config::step::user::data_description::password%]"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure Ring integration",
+        "description": "Will create a new Authorized Device for {username} at ring.com",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "[%key:component::ring::config::step::user::data_description::password%]"
         }
       }
     },
@@ -27,14 +47,23 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "entity": {
     "binary_sensor": {
       "ding": {
         "name": "Ding"
+      }
+    },
+    "event": {
+      "ding": {
+        "name": "Ding"
+      },
+      "intercom_unlock": {
+        "name": "Intercom unlock"
       }
     },
     "button": {
@@ -45,6 +74,20 @@
     "light": {
       "light": {
         "name": "[%key:component::light::title%]"
+      }
+    },
+    "number": {
+      "volume": {
+        "name": "Volume"
+      },
+      "doorbell_volume": {
+        "name": "Doorbell volume"
+      },
+      "mic_volume": {
+        "name": "Mic volume"
+      },
+      "voice_volume": {
+        "name": "Voice volume"
       }
     },
     "siren": {
@@ -76,34 +119,46 @@
       },
       "wifi_signal_category": {
         "name": "Wi-Fi signal category"
-      },
-      "wifi_signal_strength": {
-        "name": "Wi-Fi signal strength"
       }
     },
     "switch": {
       "siren": {
         "name": "[%key:component::siren::title%]"
+      },
+      "in_home_chime": {
+        "name": "In-home chime"
+      },
+      "motion_detection": {
+        "name": "Motion detection"
+      }
+    },
+    "camera": {
+      "live_view": {
+        "name": "Live view"
+      },
+      "last_recording": {
+        "name": "Last recording"
       }
     }
   },
-  "services": {
-    "update": {
-      "name": "Update",
-      "description": "Updates the data we have for all your ring devices."
+  "exceptions": {
+    "api_authentication": {
+      "message": "Authentication error communicating with Ring API"
+    },
+    "api_timeout": {
+      "message": "Timeout communicating with Ring API"
+    },
+    "api_error": {
+      "message": "Error communicating with Ring API"
+    },
+    "sdp_m_line_index_required": {
+      "message": "Error negotiating stream for {device}"
     }
   },
   "issues": {
-    "deprecated_service_ring_update": {
-      "title": "Detected use of deprecated service `ring.update`",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "[%key:component::ring::issues::deprecated_service_ring_update::title%]",
-            "description": "Use `homeassistant.update_entity` instead which will update all ring entities.\n\nPlease replace calls to this service and adjust your automations and scripts and select **submit** to close this issue."
-          }
-        }
-      }
+    "deprecated_entity": {
+      "title": "Detected deprecated {platform} entity usage",
+      "description": "We detected that entity `{entity}` is being used in `{info}`\n\nWe have created a new `{new_platform}` entity and you should migrate `{info}` to use this new entity.\n\nWhen you are done migrating `{info}` and are ready to have the deprecated `{entity}` entity removed, disable the entity and restart Home Assistant."
     }
   }
 }

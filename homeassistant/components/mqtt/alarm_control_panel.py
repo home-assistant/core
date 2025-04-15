@@ -2,32 +2,20 @@
 
 from __future__ import annotations
 
-from functools import partial
 import logging
 
 import voluptuous as vol
 
-import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_CODE,
-    CONF_NAME,
-    CONF_VALUE_TEMPLATE,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_ARMED_VACATION,
-    STATE_ALARM_ARMING,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_DISARMING,
-    STATE_ALARM_PENDING,
-    STATE_ALARM_TRIGGERED,
+from homeassistant.components import alarm_control_panel as alarm
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
 )
-from homeassistant.core import HassJobType, HomeAssistant
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_CODE, CONF_NAME, CONF_VALUE_TEMPLATE
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
 from . import subscription
@@ -35,19 +23,19 @@ from .config import DEFAULT_RETAIN, MQTT_BASE_SCHEMA
 from .const import (
     CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
-    CONF_ENCODING,
-    CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
     CONF_SUPPORTED_FEATURES,
     PAYLOAD_NONE,
 )
-from .mixins import MqttEntity, async_setup_entity_entry_helper
+from .entity import MqttEntity, async_setup_entity_entry_helper
 from .models import MqttCommandTemplate, MqttValueTemplate, ReceiveMessage
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 _SUPPORTED_FEATURES = {
     "arm_home": AlarmControlPanelEntityFeature.ARM_HOME,
@@ -127,10 +115,10 @@ DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MQTT alarm control panel through YAML and through MQTT discovery."""
-    await async_setup_entity_entry_helper(
+    async_setup_entity_entry_helper(
         hass,
         config_entry,
         MqttAlarm,
@@ -185,44 +173,30 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
             )
             return
         if payload == PAYLOAD_NONE:
-            self._attr_state = None
+            self._attr_alarm_state = None
             return
         if payload not in (
-            STATE_ALARM_DISARMED,
-            STATE_ALARM_ARMED_HOME,
-            STATE_ALARM_ARMED_AWAY,
-            STATE_ALARM_ARMED_NIGHT,
-            STATE_ALARM_ARMED_VACATION,
-            STATE_ALARM_ARMED_CUSTOM_BYPASS,
-            STATE_ALARM_PENDING,
-            STATE_ALARM_ARMING,
-            STATE_ALARM_DISARMING,
-            STATE_ALARM_TRIGGERED,
+            AlarmControlPanelState.DISARMED,
+            AlarmControlPanelState.ARMED_HOME,
+            AlarmControlPanelState.ARMED_AWAY,
+            AlarmControlPanelState.ARMED_NIGHT,
+            AlarmControlPanelState.ARMED_VACATION,
+            AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
+            AlarmControlPanelState.PENDING,
+            AlarmControlPanelState.ARMING,
+            AlarmControlPanelState.DISARMING,
+            AlarmControlPanelState.TRIGGERED,
         ):
             _LOGGER.warning("Received unexpected payload: %s", msg.payload)
             return
-        self._attr_state = str(payload)
+        assert isinstance(payload, str)
+        self._attr_alarm_state = AlarmControlPanelState(payload)
 
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-
-        self._sub_state = subscription.async_prepare_subscribe_topics(
-            self.hass,
-            self._sub_state,
-            {
-                "state_topic": {
-                    "topic": self._config[CONF_STATE_TOPIC],
-                    "msg_callback": partial(
-                        self._message_callback,
-                        self._state_message_received,
-                        {"_attr_state"},
-                    ),
-                    "entity_id": self.entity_id,
-                    "qos": self._config[CONF_QOS],
-                    "encoding": self._config[CONF_ENCODING] or None,
-                    "job_type": HassJobType.Callback,
-                }
-            },
+        self.add_subscription(
+            CONF_STATE_TOPIC, self._state_message_received, {"_attr_alarm_state"}
         )
 
     async def _subscribe_topics(self) -> None:

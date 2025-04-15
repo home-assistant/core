@@ -4,6 +4,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -22,8 +23,10 @@
       }),
       'manufacturer': 'VeSync',
       'model': 'LV-PUR131S',
+      'model_id': None,
       'name': 'Air Purifier 131s',
       'name_by_user': None,
+      'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
       'sw_version': None,
@@ -44,6 +47,7 @@
         ]),
       }),
       'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
       'disabled_by': None,
@@ -64,8 +68,8 @@
       'original_name': None,
       'platform': 'vesync',
       'previous_unique_id': None,
-      'supported_features': <FanEntityFeature: 9>,
-      'translation_key': None,
+      'supported_features': <FanEntityFeature: 57>,
+      'translation_key': 'vesync',
       'unique_id': 'air-purifier',
       'unit_of_measurement': None,
     }),
@@ -74,19 +78,25 @@
 # name: test_fan_state[Air Purifier 131s][fan.air_purifier_131s]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'active_time': 0,
       'friendly_name': 'Air Purifier 131s',
+      'mode': 'sleep',
+      'percentage': None,
+      'percentage_step': 33.333333333333336,
+      'preset_mode': 'sleep',
       'preset_modes': list([
         'auto',
         'sleep',
       ]),
-      'supported_features': <FanEntityFeature: 9>,
+      'screen_status': 'on',
+      'supported_features': <FanEntityFeature: 57>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.air_purifier_131s',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'on',
   })
 # ---
 # name: test_fan_state[Air Purifier 200s][devices]
@@ -94,6 +104,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -112,8 +123,10 @@
       }),
       'manufacturer': 'VeSync',
       'model': 'Core200S',
+      'model_id': None,
       'name': 'Air Purifier 200s',
       'name_by_user': None,
+      'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
       'sw_version': None,
@@ -133,6 +146,7 @@
         ]),
       }),
       'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
       'disabled_by': None,
@@ -153,8 +167,8 @@
       'original_name': None,
       'platform': 'vesync',
       'previous_unique_id': None,
-      'supported_features': <FanEntityFeature: 9>,
-      'translation_key': None,
+      'supported_features': <FanEntityFeature: 57>,
+      'translation_key': 'vesync',
       'unique_id': 'asd_sdfKIHG7IJHGwJGJ7GJ_ag5h3G55',
       'unit_of_measurement': None,
     }),
@@ -174,7 +188,7 @@
         'sleep',
       ]),
       'screen_status': True,
-      'supported_features': <FanEntityFeature: 9>,
+      'supported_features': <FanEntityFeature: 57>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.air_purifier_200s',
@@ -189,6 +203,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -207,8 +222,10 @@
       }),
       'manufacturer': 'VeSync',
       'model': 'LAP-C401S-WJP',
+      'model_id': None,
       'name': 'Air Purifier 400s',
       'name_by_user': None,
+      'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
       'sw_version': None,
@@ -229,6 +246,7 @@
         ]),
       }),
       'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
       'disabled_by': None,
@@ -249,8 +267,8 @@
       'original_name': None,
       'platform': 'vesync',
       'previous_unique_id': None,
-      'supported_features': <FanEntityFeature: 9>,
-      'translation_key': None,
+      'supported_features': <FanEntityFeature: 57>,
+      'translation_key': 'vesync',
       'unique_id': '400s-purifier',
       'unit_of_measurement': None,
     }),
@@ -271,7 +289,7 @@
         'sleep',
       ]),
       'screen_status': True,
-      'supported_features': <FanEntityFeature: 9>,
+      'supported_features': <FanEntityFeature: 57>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.air_purifier_400s',
@@ -286,6 +304,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -304,8 +323,10 @@
       }),
       'manufacturer': 'VeSync',
       'model': 'LAP-C601S-WUS',
+      'model_id': None,
       'name': 'Air Purifier 600s',
       'name_by_user': None,
+      'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
       'sw_version': None,
@@ -326,6 +347,7 @@
         ]),
       }),
       'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
       'disabled_by': None,
@@ -346,8 +368,8 @@
       'original_name': None,
       'platform': 'vesync',
       'previous_unique_id': None,
-      'supported_features': <FanEntityFeature: 9>,
-      'translation_key': None,
+      'supported_features': <FanEntityFeature: 57>,
+      'translation_key': 'vesync',
       'unique_id': '600s-purifier',
       'unit_of_measurement': None,
     }),
@@ -368,7 +390,7 @@
         'sleep',
       ]),
       'screen_status': True,
-      'supported_features': <FanEntityFeature: 9>,
+      'supported_features': <FanEntityFeature: 57>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.air_purifier_600s',
@@ -383,6 +405,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -401,8 +424,10 @@
       }),
       'manufacturer': 'VeSync',
       'model': 'ESL100',
+      'model_id': None,
       'name': 'Dimmable Light',
       'name_by_user': None,
+      'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
       'sw_version': None,
@@ -419,6 +444,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -437,8 +463,10 @@
       }),
       'manufacturer': 'VeSync',
       'model': 'ESWD16',
+      'model_id': None,
       'name': 'Dimmer Switch',
       'name_by_user': None,
+      'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
       'sw_version': None,
@@ -452,6 +480,37 @@
 # ---
 # name: test_fan_state[Humidifier 200s][devices]
   list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          '200s-humidifier4321',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'Classic200S',
+      'model_id': None,
+      'name': 'Humidifier 200s',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
   ])
 # ---
 # name: test_fan_state[Humidifier 200s][entities]
@@ -460,6 +519,37 @@
 # ---
 # name: test_fan_state[Humidifier 600S][devices]
   list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          '600s-humidifier',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'LUH-A602S-WUS',
+      'model_id': None,
+      'name': 'Humidifier 600S',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
   ])
 # ---
 # name: test_fan_state[Humidifier 600S][entities]
@@ -471,6 +561,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -489,8 +580,10 @@
       }),
       'manufacturer': 'VeSync',
       'model': 'wifi-switch-1.3',
+      'model_id': None,
       'name': 'Outlet',
       'name_by_user': None,
+      'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
       'sw_version': None,
@@ -502,11 +595,117 @@
   list([
   ])
 # ---
+# name: test_fan_state[SmartTowerFan][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          'smarttowerfan',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'LTF-F422S-KEU',
+      'model_id': None,
+      'name': 'SmartTowerFan',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_fan_state[SmartTowerFan][entities]
+  list([
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': dict({
+        'preset_modes': list([
+          'advancedSleep',
+          'auto',
+          'turbo',
+          'normal',
+        ]),
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'fan',
+      'entity_category': None,
+      'entity_id': 'fan.smarttowerfan',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': None,
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'supported_features': <FanEntityFeature: 57>,
+      'translation_key': 'vesync',
+      'unique_id': 'smarttowerfan',
+      'unit_of_measurement': None,
+    }),
+  ])
+# ---
+# name: test_fan_state[SmartTowerFan][fan.smarttowerfan]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'child_lock': False,
+      'friendly_name': 'SmartTowerFan',
+      'mode': 'normal',
+      'night_light': 'off',
+      'percentage': None,
+      'percentage_step': 7.6923076923076925,
+      'preset_mode': None,
+      'preset_modes': list([
+        'advancedSleep',
+        'auto',
+        'turbo',
+        'normal',
+      ]),
+      'screen_status': False,
+      'supported_features': <FanEntityFeature: 57>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'fan.smarttowerfan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_fan_state[Temperature Light][devices]
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -525,8 +724,10 @@
       }),
       'manufacturer': 'VeSync',
       'model': 'ESL100CW',
+      'model_id': None,
       'name': 'Temperature Light',
       'name_by_user': None,
+      'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
       'sw_version': None,
@@ -543,6 +744,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -561,8 +763,10 @@
       }),
       'manufacturer': 'VeSync',
       'model': 'ESWL01',
+      'model_id': None,
       'name': 'Wall Switch',
       'name_by_user': None,
+      'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
       'sw_version': None,

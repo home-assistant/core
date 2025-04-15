@@ -15,8 +15,12 @@ import voluptuous as vol
 from homeassistant.components import http, websocket_api
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, integration_platform
-from homeassistant.helpers.device_registry import DeviceEntry, async_get
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    integration_platform,
+)
+from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.json import (
     ExtendedJSONEncoder,
     find_paths_unserializable_data,
@@ -29,6 +33,7 @@ from homeassistant.loader import (
     async_get_integration,
 )
 from homeassistant.setup import async_get_domain_setup_times
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import format_unserializable_data
 
 from .const import DOMAIN, REDACTED, DiagnosticsSubType, DiagnosticsType
@@ -40,6 +45,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+_DIAGNOSTICS_DATA: HassKey[DiagnosticsData] = HassKey(DOMAIN)
 
 
 @dataclass(slots=True)
@@ -68,7 +74,7 @@ class DiagnosticsData:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Diagnostics from a config entry."""
-    hass.data[DOMAIN] = DiagnosticsData()
+    hass.data[_DIAGNOSTICS_DATA] = DiagnosticsData()
 
     await integration_platform.async_process_integration_platforms(
         hass, DOMAIN, _register_diagnostics_platform
@@ -100,7 +106,7 @@ def _register_diagnostics_platform(
     hass: HomeAssistant, integration_domain: str, platform: DiagnosticsProtocol
 ) -> None:
     """Register a diagnostics platform."""
-    diagnostics_data: DiagnosticsData = hass.data[DOMAIN]
+    diagnostics_data = hass.data[_DIAGNOSTICS_DATA]
     diagnostics_data.platforms[integration_domain] = DiagnosticsPlatformData(
         getattr(platform, "async_get_config_entry_diagnostics", None),
         getattr(platform, "async_get_device_diagnostics", None),
@@ -114,7 +120,7 @@ def handle_info(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """List all possible diagnostic handlers."""
-    diagnostics_data: DiagnosticsData = hass.data[DOMAIN]
+    diagnostics_data = hass.data[_DIAGNOSTICS_DATA]
     result = [
         {
             "domain": domain,
@@ -141,7 +147,7 @@ def handle_get(
 ) -> None:
     """List all diagnostic handlers for a domain."""
     domain = msg["domain"]
-    diagnostics_data: DiagnosticsData = hass.data[DOMAIN]
+    diagnostics_data = hass.data[_DIAGNOSTICS_DATA]
 
     if (info := diagnostics_data.platforms.get(domain)) is None:
         connection.send_error(
@@ -263,7 +269,7 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
         if (config_entry := hass.config_entries.async_get_entry(d_id)) is None:
             return web.Response(status=HTTPStatus.NOT_FOUND)
 
-        diagnostics_data: DiagnosticsData = hass.data[DOMAIN]
+        diagnostics_data = hass.data[_DIAGNOSTICS_DATA]
         if (info := diagnostics_data.platforms.get(config_entry.domain)) is None:
             return web.Response(status=HTTPStatus.NOT_FOUND)
 
@@ -280,7 +286,7 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
             )
 
         # Device diagnostics
-        dev_reg = async_get(hass)
+        dev_reg = dr.async_get(hass)
         if sub_id is None:
             return web.Response(status=HTTPStatus.BAD_REQUEST)
 

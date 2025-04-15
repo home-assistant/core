@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from functools import partial
 import logging
 from typing import Any
 
@@ -26,10 +25,9 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import CALLBACK_TYPE, HassJobType, HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.helpers.event as evt
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv, event as evt
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
@@ -37,12 +35,14 @@ from homeassistant.util import dt as dt_util
 
 from . import subscription
 from .config import MQTT_RO_SCHEMA
-from .const import CONF_ENCODING, CONF_QOS, CONF_STATE_TOPIC, PAYLOAD_NONE
-from .mixins import MqttAvailabilityMixin, MqttEntity, async_setup_entity_entry_helper
+from .const import CONF_STATE_TOPIC, PAYLOAD_NONE
+from .entity import MqttAvailabilityMixin, MqttEntity, async_setup_entity_entry_helper
 from .models import MqttValueTemplate, ReceiveMessage
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 DEFAULT_NAME = "MQTT Binary sensor"
 CONF_OFF_DELAY = "off_delay"
@@ -69,10 +69,10 @@ DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MQTT binary sensor through YAML and through MQTT discovery."""
-    await async_setup_entity_entry_helper(
+    async_setup_entity_entry_helper(
         hass,
         config_entry,
         MqttBinarySensor,
@@ -231,26 +231,11 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
                 self.hass, off_delay, self._off_delay_listener
             )
 
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-
-        self._sub_state = subscription.async_prepare_subscribe_topics(
-            self.hass,
-            self._sub_state,
-            {
-                "state_topic": {
-                    "topic": self._config[CONF_STATE_TOPIC],
-                    "msg_callback": partial(
-                        self._message_callback,
-                        self._state_message_received,
-                        {"_attr_is_on", "_expired"},
-                    ),
-                    "entity_id": self.entity_id,
-                    "qos": self._config[CONF_QOS],
-                    "encoding": self._config[CONF_ENCODING] or None,
-                    "job_type": HassJobType.Callback,
-                }
-            },
+        self.add_subscription(
+            CONF_STATE_TOPIC, self._state_message_received, {"_attr_is_on", "_expired"}
         )
 
     async def _subscribe_topics(self) -> None:

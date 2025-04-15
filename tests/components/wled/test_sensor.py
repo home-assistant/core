@@ -44,7 +44,7 @@ async def test_sensors(
         == UnitOfElectricCurrent.MILLIAMPERE
     )
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.CURRENT
-    assert state.state == "470"
+    assert state.state == "515"
 
     assert (
         entry := entity_registry.async_get("sensor.wled_rgb_light_estimated_current")
@@ -55,7 +55,7 @@ async def test_sensors(
     assert (state := hass.states.get("sensor.wled_rgb_light_uptime"))
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TIMESTAMP
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
-    assert state.state == "2019-11-11T09:10:00+00:00"
+    assert state.state == "2019-11-11T08:54:26+00:00"
 
     assert (entry := entity_registry.async_get("sensor.wled_rgb_light_uptime"))
     assert entry.unique_id == "aabbccddeeff_uptime"
@@ -64,7 +64,7 @@ async def test_sensors(
     assert (state := hass.states.get("sensor.wled_rgb_light_free_memory"))
     assert state.attributes.get(ATTR_ICON) is None
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfInformation.BYTES
-    assert state.state == "14600"
+    assert state.state == "198384"
     assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
     assert (entry := entity_registry.async_get("sensor.wled_rgb_light_free_memory"))
@@ -74,7 +74,7 @@ async def test_sensors(
     assert (state := hass.states.get("sensor.wled_rgb_light_wi_fi_signal"))
     assert state.attributes.get(ATTR_ICON) is None
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
-    assert state.state == "76"
+    assert state.state == "100"
     assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
     assert (entry := entity_registry.async_get("sensor.wled_rgb_light_wi_fi_signal"))
@@ -87,7 +87,7 @@ async def test_sensors(
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == SIGNAL_STRENGTH_DECIBELS_MILLIWATT
     )
-    assert state.state == "-62"
+    assert state.state == "-43"
 
     assert (entry := entity_registry.async_get("sensor.wled_rgb_light_wi_fi_rssi"))
     assert entry.unique_id == "aabbccddeeff_wifi_rssi"

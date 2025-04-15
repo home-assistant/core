@@ -1,5 +1,7 @@
 """Test init."""
 
+from unittest.mock import MagicMock
+
 import httpx
 
 from homeassistant.config_entries import ConfigEntryState
@@ -8,8 +10,12 @@ from homeassistant.setup import async_setup_component
 
 from . import INPUT_SENSOR
 
+from tests.common import MockConfigEntry
 
-async def test_setup_unload(hass: HomeAssistant, mock_iotawatt, entry) -> None:
+
+async def test_setup_unload(
+    hass: HomeAssistant, mock_iotawatt: MagicMock, entry: MockConfigEntry
+) -> None:
     """Test we can setup and unload an entry."""
     mock_iotawatt.getSensors.return_value["sensors"]["my_sensor_key"] = INPUT_SENSOR
     assert await async_setup_component(hass, "iotawatt", {})
@@ -18,7 +24,7 @@ async def test_setup_unload(hass: HomeAssistant, mock_iotawatt, entry) -> None:
 
 
 async def test_setup_connection_failed(
-    hass: HomeAssistant, mock_iotawatt, entry
+    hass: HomeAssistant, mock_iotawatt: MagicMock, entry: MockConfigEntry
 ) -> None:
     """Test connection error during startup."""
     mock_iotawatt.connect.side_effect = httpx.ConnectError("")
@@ -27,7 +33,9 @@ async def test_setup_connection_failed(
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_setup_auth_failed(hass: HomeAssistant, mock_iotawatt, entry) -> None:
+async def test_setup_auth_failed(
+    hass: HomeAssistant, mock_iotawatt: MagicMock, entry: MockConfigEntry
+) -> None:
     """Test auth error during startup."""
     mock_iotawatt.connect.return_value = False
     assert await async_setup_component(hass, "iotawatt", {})

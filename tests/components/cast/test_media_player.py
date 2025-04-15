@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 import json
+from typing import Any
 from unittest.mock import ANY, AsyncMock, MagicMock, Mock, patch
 from uuid import UUID
 
@@ -25,13 +27,13 @@ from homeassistant.components.media_player import (
     MediaClass,
     MediaPlayerEntityFeature,
 )
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CAST_APP_ID_HOMEASSISTANT_LOVELACE,
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er, network
 from homeassistant.helpers.dispatcher import (
@@ -112,7 +114,9 @@ def get_fake_zconf(host="192.168.178.42", port=8009):
     return zconf
 
 
-async def async_setup_cast(hass, config=None):
+async def async_setup_cast(
+    hass: HomeAssistant, config: dict[str, Any] | None = None
+) -> MagicMock:
     """Set up the cast platform."""
     if config is None:
         config = {}
@@ -128,7 +132,20 @@ async def async_setup_cast(hass, config=None):
     return add_entities
 
 
-async def async_setup_cast_internal_discovery(hass, config=None):
+async def async_setup_cast_internal_discovery(
+    hass: HomeAssistant, config: dict[str, Any] | None = None
+) -> tuple[
+    Callable[
+        [
+            pychromecast.discovery.HostServiceInfo
+            | pychromecast.discovery.MDNSServiceInfo,
+            ChromecastInfo,
+        ],
+        None,
+    ],
+    Callable[[str, ChromecastInfo], None],
+    MagicMock,
+]:
     """Set up the cast platform and the discovery."""
     browser = MagicMock(devices={}, zc={})
 
@@ -1892,6 +1909,7 @@ async def test_group_media_control(
     )
 
 
+@pytest.mark.usefixtures("mock_tts_cache_dir")
 async def test_failed_cast_on_idle(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -1922,6 +1940,7 @@ async def test_failed_cast_on_idle(
     assert "Failed to cast media http://example.com:8123/tts.mp3." in caplog.text
 
 
+@pytest.mark.usefixtures("mock_tts_cache_dir")
 async def test_failed_cast_other_url(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -1946,6 +1965,7 @@ async def test_failed_cast_other_url(
     assert "Failed to cast media http://example.com:8123/tts.mp3." in caplog.text
 
 
+@pytest.mark.usefixtures("mock_tts_cache_dir")
 async def test_failed_cast_internal_url(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -1975,6 +1995,7 @@ async def test_failed_cast_internal_url(
     )
 
 
+@pytest.mark.usefixtures("mock_tts_cache_dir")
 async def test_failed_cast_external_url(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:

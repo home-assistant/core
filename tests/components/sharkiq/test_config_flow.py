@@ -96,18 +96,18 @@ async def test_form_error(hass: HomeAssistant, exc: Exception, base_error: str) 
 
 async def test_reauth_success(hass: HomeAssistant) -> None:
     """Test reauth flow."""
-    with patch("sharkiq.AylaApi.async_sign_in", return_value=True):
-        mock_config = MockConfigEntry(domain=DOMAIN, unique_id=UNIQUE_ID, data=CONFIG)
-        mock_config.add_to_hass(hass)
+    mock_config = MockConfigEntry(domain=DOMAIN, unique_id=UNIQUE_ID, data=CONFIG)
+    mock_config.add_to_hass(hass)
 
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_REAUTH, "unique_id": UNIQUE_ID},
-            data=CONFIG,
+    result = await mock_config.start_reauth_flow(hass)
+
+    with patch("sharkiq.AylaApi.async_sign_in", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=CONFIG
         )
 
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "reauth_successful"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
 
 
 @pytest.mark.parametrize(
@@ -127,13 +127,15 @@ async def test_reauth(
     msg: str,
 ) -> None:
     """Test reauth failures."""
-    with patch("sharkiq.AylaApi.async_sign_in", side_effect=side_effect):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_REAUTH, "unique_id": UNIQUE_ID},
-            data=CONFIG,
-        )
+    mock_config = MockConfigEntry(domain=DOMAIN, unique_id=UNIQUE_ID, data=CONFIG)
+    mock_config.add_to_hass(hass)
 
+    result = await mock_config.start_reauth_flow(hass)
+
+    with patch("sharkiq.AylaApi.async_sign_in", side_effect=side_effect):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=CONFIG
+        )
         msg_value = result[msg_field]
         if msg_field == "errors":
             msg_value = msg_value.get("base")

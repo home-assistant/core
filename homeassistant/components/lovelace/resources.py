@@ -8,6 +8,7 @@ import uuid
 
 import voluptuous as vol
 
+from homeassistant.components import websocket_api
 from homeassistant.const import CONF_ID, CONF_RESOURCES, CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -21,6 +22,7 @@ from .const import (
     RESOURCE_UPDATE_FIELDS,
 )
 from .dashboard import LovelaceConfig
+from .websocket import websocket_lovelace_resources_impl
 
 RESOURCE_STORAGE_KEY = f"{DOMAIN}_resources"
 RESOURCES_STORAGE_VERSION = 1
@@ -32,11 +34,11 @@ class ResourceYAMLCollection:
 
     loaded = True
 
-    def __init__(self, data):
+    def __init__(self, data: list[dict[str, Any]]) -> None:
         """Initialize a resource YAML collection."""
         self.data = data
 
-    async def async_get_info(self):
+    async def async_get_info(self) -> dict[str, int]:
         """Return the resources info for YAML mode."""
         return {"resources": len(self.async_items() or [])}
 
@@ -60,7 +62,7 @@ class ResourceStorageCollection(collection.DictStorageCollection):
         )
         self.ll_config = ll_config
 
-    async def async_get_info(self):
+    async def async_get_info(self) -> dict[str, int]:
         """Return the resources info for YAML mode."""
         if not self.loaded:
             await self.async_load()
@@ -125,3 +127,33 @@ class ResourceStorageCollection(collection.DictStorageCollection):
             update_data[CONF_TYPE] = update_data.pop(CONF_RESOURCE_TYPE_WS)
 
         return {**item, **update_data}
+
+
+class ResourceStorageCollectionWebsocket(collection.DictStorageCollectionWebsocket):
+    """Class to expose storage collection management over websocket."""
+
+    @callback
+    def async_setup(self, hass: HomeAssistant) -> None:
+        """Set up the websocket commands."""
+        super().async_setup(hass)
+
+        # Register lovelace/resources for backwards compatibility, remove in
+        # Home Assistant Core 2025.1
+        websocket_api.async_register_command(
+            hass,
+            self.api_prefix,
+            self.ws_list_item,
+            websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
+                {vol.Required("type"): f"{self.api_prefix}"}
+            ),
+        )
+
+    @staticmethod
+    @websocket_api.async_response
+    async def ws_list_item(
+        hass: HomeAssistant,
+        connection: websocket_api.ActiveConnection,
+        msg: dict[str, Any],
+    ) -> None:
+        """Send Lovelace UI resources over WebSocket connection."""
+        await websocket_lovelace_resources_impl(hass, connection, msg)

@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Collection
+from dataclasses import dataclass
 import datetime
+from functools import partial
 from ipaddress import IPv4Network, IPv6Network, ip_network
 import logging
 import os
@@ -19,7 +22,6 @@ from aiohttp.streams import StreamReader
 from aiohttp.typedefs import JSONDecoder, StrOrURL
 from aiohttp.web_exceptions import HTTPMovedPermanently, HTTPRedirection
 from aiohttp.web_protocol import RequestHandler
-from aiohttp_fast_url_dispatcher import FastUrlDispatcher, attach_fast_url_dispatcher
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -28,13 +30,21 @@ import voluptuous as vol
 from yarl import URL
 
 from homeassistant.components.network import async_get_source_ip
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, SERVER_PORT
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP,
+    SERVER_PORT,
+)
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import storage
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import (
+    config_validation as cv,
+    frame,
+    issue_registry as ir,
+    storage,
+)
 from homeassistant.helpers.http import (
-    KEY_ALLOW_CONFIGRED_CORS,
+    KEY_ALLOW_CONFIGURED_CORS,
     KEY_AUTHENTICATED,  # noqa: F401
     KEY_HASS,
     HomeAssistantView,
@@ -132,6 +142,21 @@ HTTP_SCHEMA: Final = vol.All(
 )
 
 CONFIG_SCHEMA: Final = vol.Schema({DOMAIN: HTTP_SCHEMA}, extra=vol.ALLOW_EXTRA)
+
+
+@dataclass(slots=True)
+class StaticPathConfig:
+    """Configuration for a static path."""
+
+    url_path: str
+    path: str
+    cache_headers: bool = True
+
+
+_STATIC_CLASSES = {
+    True: CachingStaticResource,
+    False: web.StaticResource,
+}
 
 
 class ConfData(TypedDict, total=False):
@@ -247,6 +272,32 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         local_ip, host, server_port, ssl_certificate is not None
     )
 
+    @callback
+    def _async_check_ssl_issue(_: Event) -> None:
+        if (
+            ssl_certificate is not None
+            and (hass.config.external_url or hass.config.internal_url) is None
+        ):
+            # pylint: disable-next=import-outside-toplevel
+            from homeassistant.components.cloud import (
+                CloudNotAvailable,
+                async_remote_ui_url,
+            )
+
+            try:
+                async_remote_ui_url(hass)
+            except CloudNotAvailable:
+                ir.async_create_issue(
+                    hass,
+                    DOMAIN,
+                    "ssl_configured_without_configured_urls",
+                    is_fixable=False,
+                    severity=ir.IssueSeverity.ERROR,
+                    translation_key="ssl_configured_without_configured_urls",
+                )
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_check_ssl_issue)
+
     return True
 
 
@@ -279,9 +330,20 @@ class HomeAssistantApplication(web.Application):
             protocol,
             writer,
             task,
-            loop=self._loop,
+            # loop will never be None when called from aiohttp
+            loop=self._loop,  # type: ignore[arg-type]
             client_max_size=self._client_max_size,
         )
+
+
+async def _serve_file_with_cache_headers(
+    path: str, request: web.Request
+) -> web.FileResponse:
+    return web.FileResponse(path, headers=CACHE_HEADERS)
+
+
+async def _serve_file(path: str, request: web.Request) -> web.FileResponse:
+    return web.FileResponse(path)
 
 
 class HomeAssistantHTTP:
@@ -307,10 +369,6 @@ class HomeAssistantHTTP:
                 "max_field_size": MAX_LINE_SIZE,
             },
         )
-        # By default aiohttp does a linear search for routing rules,
-        # we have a lot of routes, so use a dict lookup with a fallback
-        # to the linear search.
-        attach_fast_url_dispatcher(self.app, FastUrlDispatcher())
         self.hass = hass
         self.ssl_certificate = ssl_certificate
         self.ssl_peer_certificate = ssl_peer_certificate
@@ -399,34 +457,71 @@ class HomeAssistantHTTP:
             # Should be instance of aiohttp.web_exceptions._HTTPMove.
             raise redirect_exc(redirect_to)  # type: ignore[arg-type,misc]
 
-        self.app[KEY_ALLOW_CONFIGRED_CORS](
+        self.app[KEY_ALLOW_CONFIGURED_CORS](
             self.app.router.add_route("GET", url, redirect)
         )
+
+    def _make_static_resources(
+        self, configs: Collection[StaticPathConfig]
+    ) -> dict[str, CachingStaticResource | web.StaticResource | None]:
+        """Create a list of static resources."""
+        return {
+            config.url_path: _STATIC_CLASSES[config.cache_headers](
+                config.url_path, config.path
+            )
+            if os.path.isdir(config.path)
+            else None
+            for config in configs
+        }
+
+    async def async_register_static_paths(
+        self, configs: Collection[StaticPathConfig]
+    ) -> None:
+        """Register a folder or file to serve as a static path."""
+        resources = await self.hass.async_add_executor_job(
+            self._make_static_resources, configs
+        )
+        self._async_register_static_paths(configs, resources)
+
+    @callback
+    def _async_register_static_paths(
+        self,
+        configs: Collection[StaticPathConfig],
+        resources: dict[str, CachingStaticResource | web.StaticResource | None],
+    ) -> None:
+        """Register a folders or files to serve as a static path."""
+        app = self.app
+        allow_cors = app[KEY_ALLOW_CONFIGURED_CORS]
+        for config in configs:
+            if resource := resources[config.url_path]:
+                app.router.register_resource(resource)
+                allow_cors(resource)
+
+            target = (
+                _serve_file_with_cache_headers if config.cache_headers else _serve_file
+            )
+            allow_cors(
+                self.app.router.add_route(
+                    "GET", config.url_path, partial(target, config.path)
+                )
+            )
 
     def register_static_path(
         self, url_path: str, path: str, cache_headers: bool = True
     ) -> None:
         """Register a folder or file to serve as a static path."""
-        if os.path.isdir(path):
-            if cache_headers:
-                resource: CachingStaticResource | web.StaticResource = (
-                    CachingStaticResource(url_path, path)
-                )
-            else:
-                resource = web.StaticResource(url_path, path)
-            self.app.router.register_resource(resource)
-            self.app[KEY_ALLOW_CONFIGRED_CORS](resource)
-            return
-
-        async def serve_file(request: web.Request) -> web.FileResponse:
-            """Serve file from disk."""
-            if cache_headers:
-                return web.FileResponse(path, headers=CACHE_HEADERS)
-            return web.FileResponse(path)
-
-        self.app[KEY_ALLOW_CONFIGRED_CORS](
-            self.app.router.add_route("GET", url_path, serve_file)
+        frame.report_usage(
+            "calls hass.http.register_static_path which is deprecated because "
+            "it does blocking I/O in the event loop, instead "
+            "call `await hass.http.async_register_static_paths("
+            f'[StaticPathConfig("{url_path}", "{path}", {cache_headers})])`',
+            exclude_integrations={"http"},
+            core_behavior=frame.ReportBehavior.LOG,
+            breaks_in_ha_version="2025.7",
         )
+        configs = [StaticPathConfig(url_path, path, cache_headers)]
+        resources = self._make_static_resources(configs)
+        self._async_register_static_paths(configs, resources)
 
     def _create_ssl_context(self) -> ssl.SSLContext | None:
         context: ssl.SSLContext | None = None

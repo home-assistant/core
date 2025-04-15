@@ -12,7 +12,7 @@ import pytest
 from homeassistant.components.srp_energy.const import DOMAIN, PHOENIX_TIME_ZONE
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from . import MOCK_USAGE, TEST_CONFIG_HOME
 
@@ -48,7 +48,7 @@ def fixture_mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture(name="mock_srp_energy")
-def fixture_mock_srp_energy() -> Generator[None, MagicMock, None]:
+def fixture_mock_srp_energy() -> Generator[MagicMock]:
     """Return a mocked SrpEnergyClient client."""
     with patch(
         "homeassistant.components.srp_energy.SrpEnergyClient", autospec=True
@@ -60,7 +60,7 @@ def fixture_mock_srp_energy() -> Generator[None, MagicMock, None]:
 
 
 @pytest.fixture(name="mock_srp_energy_config_flow")
-def fixture_mock_srp_energy_config_flow() -> Generator[None, MagicMock, None]:
+def fixture_mock_srp_energy_config_flow() -> Generator[MagicMock]:
     """Return a mocked config_flow SrpEnergyClient client."""
     with patch(
         "homeassistant.components.srp_energy.config_flow.SrpEnergyClient", autospec=True

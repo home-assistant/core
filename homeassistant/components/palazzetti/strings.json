@@ -1,0 +1,139 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The host name or the IP address of the Palazzetti CBox"
+        }
+      },
+      "discovery_confirm": {
+        "description": "Do you want to add {name} ({host}) to Home Assistant?"
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    }
+  },
+  "exceptions": {
+    "on_off_not_available": {
+      "message": "The appliance cannot be turned on or off."
+    },
+    "invalid_fan_mode": {
+      "message": "Fan mode {value} is invalid."
+    },
+    "invalid_fan_speed": {
+      "message": "Fan {name} speed {value} is invalid."
+    },
+    "invalid_target_temperature": {
+      "message": "Target temperature {value} is invalid."
+    },
+    "invalid_combustion_power": {
+      "message": "Combustion power {value} is invalid."
+    },
+    "cannot_connect": {
+      "message": "Could not connect to the device."
+    }
+  },
+  "entity": {
+    "button": {
+      "silent": {
+        "name": "Silent"
+      }
+    },
+    "climate": {
+      "palazzetti": {
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "silent": "Silent",
+              "auto": "[%key:common::state::auto%]",
+              "high": "[%key:common::state::high%]"
+            }
+          }
+        }
+      }
+    },
+    "number": {
+      "combustion_power": {
+        "name": "Combustion power"
+      },
+      "fan_left_speed": {
+        "name": "Left fan speed"
+      },
+      "fan_right_speed": {
+        "name": "Right fan speed"
+      }
+    },
+    "sensor": {
+      "status": {
+        "name": "Status",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "off_timer": "Timer-regulated switch off",
+          "test_fire": "Ignition test",
+          "heatup": "Pellet feed",
+          "fueling": "Ignition",
+          "ign_test": "Fuel check",
+          "burning": "Operating",
+          "burning_mod": "Operating - Modulating",
+          "unknown": "Unknown",
+          "cool_fluid": "[%key:common::state::standby%]",
+          "fire_stop": "Switch off",
+          "clean_fire": "Burn pot cleaning",
+          "cooling": "Cooling in progress",
+          "cleanup": "Final cleaning",
+          "ecomode": "Ecomode",
+          "chimney_alarm": "Chimney alarm",
+          "grate_error": "Grate error",
+          "pellet_water_error": "Pellet probe or return water error",
+          "t05_error": "T05 error disconnected or faulty probe",
+          "hatch_door_open": "Feed hatch or door open",
+          "pressure_error": "Safety pressure switch error",
+          "main_probe_failure": "Main probe failure",
+          "flue_probe_failure": "Flue gas probe failure",
+          "exhaust_temp_high": "Too high exhaust gas temperature",
+          "pellet_finished": "Pellets finished or ignition failed",
+          "firewood_finished": "Firewood finished",
+          "general_error": "General error",
+          "door_open": "Door open",
+          "temp_too_high": "Temperature too high",
+          "cleaning_warning": "Cleaning warning",
+          "fuel_error": "Fuel error"
+        }
+      },
+      "pellet_quantity": {
+        "name": "Pellet quantity"
+      },
+      "pellet_level": {
+        "name": "Pellet level"
+      },
+      "air_outlet_temperature": {
+        "name": "Air outlet temperature"
+      },
+      "wood_combustion_temperature": {
+        "name": "Wood combustion temperature"
+      },
+      "room_temperature": {
+        "name": "Room temperature"
+      },
+      "return_water_temperature": {
+        "name": "Return water temperature"
+      },
+      "tank_water_temperature": {
+        "name": "Tank water temperature"
+      },
+      "t1_hydro": {
+        "name": "Hydro temperature 1"
+      },
+      "t2_hydro": {
+        "name": "Hydro temperature 2"
+      }
+    }
+  }
+}

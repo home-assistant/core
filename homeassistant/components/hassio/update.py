@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from aiohasupervisor import SupervisorError
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 
 from homeassistant.components.update import (
@@ -15,7 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ICON, ATTR_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     ADDONS_COORDINATOR,
@@ -34,16 +35,10 @@ from .entity import (
     HassioOSEntity,
     HassioSupervisorEntity,
 )
-from .handler import (
-    HassioAPIError,
-    async_update_addon,
-    async_update_core,
-    async_update_os,
-    async_update_supervisor,
-)
+from .update_helper import update_addon, update_core, update_os
 
 ENTITY_DESCRIPTION = UpdateEntityDescription(
-    name="Update",
+    translation_key="update",
     key=ATTR_VERSION_LATEST,
 )
 
@@ -51,7 +46,7 @@ ENTITY_DESCRIPTION = UpdateEntityDescription(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Supervisor update based on a config entry."""
     coordinator = hass.data[ADDONS_COORDINATOR]
@@ -164,11 +159,9 @@ class SupervisorAddonUpdateEntity(HassioAddonEntity, UpdateEntity):
         **kwargs: Any,
     ) -> None:
         """Install an update."""
-        try:
-            await async_update_addon(self.hass, slug=self._addon_slug, backup=backup)
-        except HassioAPIError as err:
-            raise HomeAssistantError(f"Error updating {self.title}: {err}") from err
-
+        await update_addon(
+            self.hass, self._addon_slug, backup, self.title, self.installed_version
+        )
         await self.coordinator.force_info_update_supervisor()
 
 
@@ -176,7 +169,9 @@ class SupervisorOSUpdateEntity(HassioOSEntity, UpdateEntity):
     """Update entity to handle updates for the Home Assistant Operating System."""
 
     _attr_supported_features = (
-        UpdateEntityFeature.INSTALL | UpdateEntityFeature.SPECIFIC_VERSION
+        UpdateEntityFeature.INSTALL
+        | UpdateEntityFeature.SPECIFIC_VERSION
+        | UpdateEntityFeature.BACKUP
     )
     _attr_title = "Home Assistant Operating System"
 
@@ -209,12 +204,7 @@ class SupervisorOSUpdateEntity(HassioOSEntity, UpdateEntity):
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install an update."""
-        try:
-            await async_update_os(self.hass, version)
-        except HassioAPIError as err:
-            raise HomeAssistantError(
-                f"Error updating Home Assistant Operating System: {err}"
-            ) from err
+        await update_os(self.hass, version, backup)
 
 
 class SupervisorSupervisorUpdateEntity(HassioSupervisorEntity, UpdateEntity):
@@ -256,8 +246,8 @@ class SupervisorSupervisorUpdateEntity(HassioSupervisorEntity, UpdateEntity):
     ) -> None:
         """Install an update."""
         try:
-            await async_update_supervisor(self.hass)
-        except HassioAPIError as err:
+            await self.coordinator.supervisor_client.supervisor.update()
+        except SupervisorError as err:
             raise HomeAssistantError(
                 f"Error updating Home Assistant Supervisor: {err}"
             ) from err
@@ -300,9 +290,4 @@ class SupervisorCoreUpdateEntity(HassioCoreEntity, UpdateEntity):
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install an update."""
-        try:
-            await async_update_core(self.hass, version=version, backup=backup)
-        except HassioAPIError as err:
-            raise HomeAssistantError(
-                f"Error updating Home Assistant Core {err}"
-            ) from err
+        await update_core(self.hass, version, backup)

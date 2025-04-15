@@ -35,10 +35,10 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, VolSchemaType
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .climate import MqttTemperatureControlEntity
@@ -65,12 +65,14 @@ from .const import (
     DEFAULT_OPTIMISTIC,
     PAYLOAD_NONE,
 )
-from .mixins import async_setup_entity_entry_helper
+from .entity import async_setup_entity_entry_helper
 from .models import MqttCommandTemplate, MqttValueTemplate, ReceiveMessage
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 DEFAULT_NAME = "MQTT Water Heater"
 
@@ -164,10 +166,10 @@ DISCOVERY_SCHEMA = vol.All(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MQTT water heater device through YAML and through MQTT discovery."""
-    await async_setup_entity_entry_helper(
+    async_setup_entity_entry_helper(
         hass,
         config_entry,
         MqttWaterHeater,
@@ -188,7 +190,7 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):
     _attr_target_temperature_high: float | None = None
 
     @staticmethod
-    def config_schema() -> vol.Schema:
+    def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
@@ -281,18 +283,17 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):
                 assert isinstance(payload, str)
             self._attr_current_operation = payload
 
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        topics: dict[str, dict[str, Any]] = {}
-
+        # add subscriptions for WaterHeaterEntity
         self.add_subscription(
-            topics,
             CONF_MODE_STATE_TOPIC,
             self._handle_current_mode_received,
             {"_attr_current_operation"},
         )
-
-        self.prepare_subscribe_topics(topics)
+        # add subscriptions for MqttTemperatureControlEntity
+        self.prepare_subscribe_topics()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""

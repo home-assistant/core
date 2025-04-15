@@ -7,7 +7,6 @@ import pytest
 from regenmaschine.errors import RainMachineError
 
 from homeassistant import config_entries, setup
-from homeassistant.components import zeroconf
 from homeassistant.components.rainmachine import (
     CONF_ALLOW_INACTIVE_ZONES_TO_RUN,
     CONF_DEFAULT_ZONE_RUN_TIME,
@@ -18,6 +17,7 @@ from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT, CONF_
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 
 async def test_duplicate_error(hass: HomeAssistant, config, config_entry) -> None:
@@ -59,6 +59,7 @@ async def test_invalid_password(hass: HomeAssistant, config) -> None:
 )
 async def test_migrate_1_2(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     client,
     config,
     config_entry,
@@ -69,10 +70,8 @@ async def test_migrate_1_2(
     platform,
 ) -> None:
     """Test migration from version 1 to 2 (consistent unique IDs)."""
-    ent_reg = er.async_get(hass)
-
     # Create entity RegistryEntry using old unique ID format:
-    entity_entry = ent_reg.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         platform,
         DOMAIN,
         old_unique_id,
@@ -96,9 +95,9 @@ async def test_migrate_1_2(
         await hass.async_block_till_done()
 
     # Check that new RegistryEntry is using new unique ID format
-    entity_entry = ent_reg.async_get(entity_id)
+    entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry.unique_id == new_unique_id
-    assert ent_reg.async_get_entity_id(platform, DOMAIN, old_unique_id) is None
+    assert entity_registry.async_get_entity_id(platform, DOMAIN, old_unique_id) is None
 
 
 async def test_options_flow(hass: HomeAssistant, config, config_entry) -> None:
@@ -169,7 +168,7 @@ async def test_step_homekit_zeroconf_ip_already_exists(
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": source},
-            data=zeroconf.ZeroconfServiceInfo(
+            data=ZeroconfServiceInfo(
                 ip_address=ip_address("192.168.1.100"),
                 ip_addresses=[ip_address("192.168.1.100")],
                 hostname="mock_hostname",
@@ -197,7 +196,7 @@ async def test_step_homekit_zeroconf_ip_change(
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": source},
-            data=zeroconf.ZeroconfServiceInfo(
+            data=ZeroconfServiceInfo(
                 ip_address=ip_address("192.168.1.2"),
                 ip_addresses=[ip_address("192.168.1.2")],
                 hostname="mock_hostname",
@@ -226,7 +225,7 @@ async def test_step_homekit_zeroconf_new_controller_when_some_exist(
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": source},
-            data=zeroconf.ZeroconfServiceInfo(
+            data=ZeroconfServiceInfo(
                 ip_address=ip_address("192.168.1.100"),
                 ip_addresses=[ip_address("192.168.1.100")],
                 hostname="mock_hostname",
@@ -280,7 +279,7 @@ async def test_discovery_by_homekit_and_zeroconf_same_time(
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
-            data=zeroconf.ZeroconfServiceInfo(
+            data=ZeroconfServiceInfo(
                 ip_address=ip_address("192.168.1.100"),
                 ip_addresses=[ip_address("192.168.1.100")],
                 hostname="mock_hostname",
@@ -300,7 +299,7 @@ async def test_discovery_by_homekit_and_zeroconf_same_time(
         result2 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_HOMEKIT},
-            data=zeroconf.ZeroconfServiceInfo(
+            data=ZeroconfServiceInfo(
                 ip_address=ip_address("192.168.1.100"),
                 ip_addresses=[ip_address("192.168.1.100")],
                 hostname="mock_hostname",

@@ -1,4 +1,4 @@
-"""Test the Ruckus Unleashed config flow."""
+"""Test the config flow."""
 
 from copy import deepcopy
 from datetime import timedelta
@@ -83,15 +83,7 @@ async def test_form_user_reauth(hass: HomeAssistant) -> None:
     entry = mock_config_entry()
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-            "unique_id": entry.unique_id,
-        },
-        data=entry.data,
-    )
+    result = await entry.start_reauth_flow(hass)
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
@@ -121,15 +113,7 @@ async def test_form_user_reauth_different_unique_id(hass: HomeAssistant) -> None
     entry = mock_config_entry()
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-            "unique_id": entry.unique_id,
-        },
-        data=entry.data,
-    )
+    result = await entry.start_reauth_flow(hass)
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
@@ -161,15 +145,7 @@ async def test_form_user_reauth_invalid_auth(hass: HomeAssistant) -> None:
     entry = mock_config_entry()
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-            "unique_id": entry.unique_id,
-        },
-        data=entry.data,
-    )
+    result = await entry.start_reauth_flow(hass)
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
@@ -201,15 +177,7 @@ async def test_form_user_reauth_cannot_connect(hass: HomeAssistant) -> None:
     entry = mock_config_entry()
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-            "unique_id": entry.unique_id,
-        },
-        data=entry.data,
-    )
+    result = await entry.start_reauth_flow(hass)
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
@@ -241,15 +209,7 @@ async def test_form_user_reauth_general_exception(hass: HomeAssistant) -> None:
     entry = mock_config_entry()
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-            "unique_id": entry.unique_id,
-        },
-        data=entry.data,
-    )
+    result = await entry.start_reauth_flow(hass)
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1

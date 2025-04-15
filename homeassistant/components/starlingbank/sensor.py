@@ -9,10 +9,13 @@ import requests
 from starlingbank import StarlingAccount
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -41,7 +44,7 @@ ACCOUNT_SCHEMA = vol.Schema(
     }
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_ACCOUNTS): vol.Schema([ACCOUNT_SCHEMA])}
 )
 
@@ -89,9 +92,8 @@ class StarlingBalanceSensor(SensorEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(
-            self._account_name, self._balance_data_type.replace("_", " ").capitalize()
-        )
+        balance_data_type = self._balance_data_type.replace("_", " ").capitalize()
+        return f"{self._account_name} {balance_data_type}"
 
     @property
     def native_value(self):

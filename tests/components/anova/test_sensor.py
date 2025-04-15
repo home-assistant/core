@@ -3,6 +3,7 @@
 import logging
 
 from anova_wifi import AnovaApi
+import pytest
 
 from homeassistant.core import HomeAssistant
 
@@ -40,7 +41,8 @@ async def test_sensors(hass: HomeAssistant, anova_api: AnovaApi) -> None:
     )
 
 
-async def test_no_data_sensors(hass: HomeAssistant, anova_api_no_data: AnovaApi):
+@pytest.mark.usefixtures("anova_api_no_data")
+async def test_no_data_sensors(hass: HomeAssistant) -> None:
     """Test that if we have no data for the device, and we have not set it up previously, It is not immediately set up."""
     await async_init_integration(hass)
     assert hass.states.get("sensor.anova_precision_cooker_triac_temperature") is None

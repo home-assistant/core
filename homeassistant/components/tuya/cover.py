@@ -17,11 +17,11 @@ from homeassistant.components.cover import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
-from .base import IntegerTypeData, TuyaEntity
 from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
+from .entity import IntegerTypeData, TuyaEntity
 
 
 @dataclass(frozen=True)
@@ -46,7 +46,7 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
             key=DPCode.CONTROL,
             translation_key="curtain",
             current_state=DPCode.SITUATION_SET,
-            current_position=(DPCode.PERCENT_CONTROL, DPCode.PERCENT_STATE),
+            current_position=(DPCode.PERCENT_STATE, DPCode.PERCENT_CONTROL),
             set_position=DPCode.PERCENT_CONTROL,
             device_class=CoverDeviceClass.CURTAIN,
         ),
@@ -142,7 +142,9 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: TuyaConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TuyaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tuya cover dynamically through Tuya discovery."""
     hass_data = entry.runtime_data

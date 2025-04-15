@@ -3,13 +3,14 @@
 from http import HTTPStatus
 from unittest.mock import patch
 
+import pytest
 from toonapi import Agreement, ToonError
 
-from homeassistant.components.toon.const import CONF_AGREEMENT, CONF_MIGRATE, DOMAIN
-from homeassistant.config import async_process_ha_core_config
+from homeassistant.components.toon.const import CONF_AGREEMENT, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
@@ -19,7 +20,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
 
-async def setup_component(hass):
+async def setup_component(hass: HomeAssistant) -> None:
     """Set up Toon component."""
     await async_process_ha_core_config(
         hass,
@@ -45,11 +46,11 @@ async def test_abort_if_no_configuration(hass: HomeAssistant) -> None:
     assert result["reason"] == "missing_configuration"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_full_flow_implementation(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
 ) -> None:
     """Test registering an integration and finishing flow works."""
     await setup_component(hass)
@@ -111,11 +112,11 @@ async def test_full_flow_implementation(
     }
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_no_agreements(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
 ) -> None:
     """Test abort when there are no displays."""
     await setup_component(hass)
@@ -153,11 +154,11 @@ async def test_no_agreements(
     assert result3["reason"] == "no_agreements"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_multiple_agreements(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
 ) -> None:
     """Test abort when there are no displays."""
     await setup_component(hass)
@@ -205,11 +206,11 @@ async def test_multiple_agreements(
         assert result4["data"]["agreement_id"] == 1
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_agreement_already_set_up(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
 ) -> None:
     """Test showing display form again if display already exists."""
     await setup_component(hass)
@@ -248,11 +249,11 @@ async def test_agreement_already_set_up(
         assert result3["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_toon_abort(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
 ) -> None:
     """Test we abort on Toon error."""
     await setup_component(hass)
@@ -290,7 +291,8 @@ async def test_toon_abort(
         assert result2["reason"] == "connection_error"
 
 
-async def test_import(hass: HomeAssistant, current_request_with_host: None) -> None:
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_import(hass: HomeAssistant) -> None:
     """Test if importing step works."""
     await setup_component(hass)
 
@@ -304,11 +306,11 @@ async def test_import(hass: HomeAssistant, current_request_with_host: None) -> N
     assert result["reason"] == "already_in_progress"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_import_migration(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
 ) -> None:
     """Test if importing step with migration works."""
     old_entry = MockConfigEntry(domain=DOMAIN, unique_id=123, version=1)
@@ -322,7 +324,8 @@ async def test_import_migration(
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
-    assert flows[0]["context"][CONF_MIGRATE] == old_entry.entry_id
+    flow = hass.config_entries.flow._progress[flows[0]["flow_id"]]
+    assert flow.migrate_entry == old_entry.entry_id
 
     state = config_entry_oauth2_flow._encode_jwt(
         hass,

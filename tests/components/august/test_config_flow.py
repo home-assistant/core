@@ -2,9 +2,9 @@
 
 from unittest.mock import patch
 
-from yalexs.authenticator import ValidationResult
+from yalexs.authenticator_common import ValidationResult
+from yalexs.manager.exceptions import CannotConnect, InvalidAuth, RequireValidation
 
-from homeassistant import config_entries
 from homeassistant.components.august.const import (
     CONF_ACCESS_TOKEN_CACHE_FILE,
     CONF_BRAND,
@@ -13,11 +13,7 @@ from homeassistant.components.august.const import (
     DOMAIN,
     VERIFICATION_CODE_KEY,
 )
-from homeassistant.components.august.exceptions import (
-    CannotConnect,
-    InvalidAuth,
-    RequireValidation,
-)
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -29,7 +25,7 @@ async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
@@ -70,7 +66,7 @@ async def test_form(hass: HomeAssistant) -> None:
 async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     with patch(
@@ -94,7 +90,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
 async def test_user_unexpected_exception(hass: HomeAssistant) -> None:
     """Test we handle an unexpected exception."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     with patch(
@@ -119,7 +115,7 @@ async def test_user_unexpected_exception(hass: HomeAssistant) -> None:
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     with patch(
@@ -142,7 +138,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 async def test_form_needs_validate(hass: HomeAssistant) -> None:
     """Test we present validation when we need to validate."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     with (
@@ -151,7 +147,7 @@ async def test_form_needs_validate(hass: HomeAssistant) -> None:
             side_effect=RequireValidation,
         ),
         patch(
-            "homeassistant.components.august.gateway.AuthenticatorAsync.async_send_verification_code",
+            "yalexs.manager.gateway.AuthenticatorAsync.async_send_verification_code",
             return_value=True,
         ) as mock_send_verification_code,
     ):
@@ -176,11 +172,11 @@ async def test_form_needs_validate(hass: HomeAssistant) -> None:
             side_effect=RequireValidation,
         ),
         patch(
-            "homeassistant.components.august.gateway.AuthenticatorAsync.async_validate_verification_code",
+            "yalexs.manager.gateway.AuthenticatorAsync.async_validate_verification_code",
             return_value=ValidationResult.INVALID_VERIFICATION_CODE,
         ) as mock_validate_verification_code,
         patch(
-            "homeassistant.components.august.gateway.AuthenticatorAsync.async_send_verification_code",
+            "yalexs.manager.gateway.AuthenticatorAsync.async_send_verification_code",
             return_value=True,
         ) as mock_send_verification_code,
     ):
@@ -204,11 +200,11 @@ async def test_form_needs_validate(hass: HomeAssistant) -> None:
             return_value=True,
         ),
         patch(
-            "homeassistant.components.august.gateway.AuthenticatorAsync.async_validate_verification_code",
+            "yalexs.manager.gateway.AuthenticatorAsync.async_validate_verification_code",
             return_value=ValidationResult.VALIDATED,
         ) as mock_validate_verification_code,
         patch(
-            "homeassistant.components.august.gateway.AuthenticatorAsync.async_send_verification_code",
+            "yalexs.manager.gateway.AuthenticatorAsync.async_send_verification_code",
             return_value=True,
         ) as mock_send_verification_code,
         patch(
@@ -252,9 +248,7 @@ async def test_form_reauth(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=entry.data
-    )
+    result = await entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
@@ -298,9 +292,7 @@ async def test_form_reauth_with_2fa(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=entry.data
-    )
+    result = await entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
@@ -310,7 +302,7 @@ async def test_form_reauth_with_2fa(hass: HomeAssistant) -> None:
             side_effect=RequireValidation,
         ),
         patch(
-            "homeassistant.components.august.gateway.AuthenticatorAsync.async_send_verification_code",
+            "yalexs.manager.gateway.AuthenticatorAsync.async_send_verification_code",
             return_value=True,
         ) as mock_send_verification_code,
     ):
@@ -334,11 +326,11 @@ async def test_form_reauth_with_2fa(hass: HomeAssistant) -> None:
             return_value=True,
         ),
         patch(
-            "homeassistant.components.august.gateway.AuthenticatorAsync.async_validate_verification_code",
+            "yalexs.manager.gateway.AuthenticatorAsync.async_validate_verification_code",
             return_value=ValidationResult.VALIDATED,
         ) as mock_validate_verification_code,
         patch(
-            "homeassistant.components.august.gateway.AuthenticatorAsync.async_send_verification_code",
+            "yalexs.manager.gateway.AuthenticatorAsync.async_send_verification_code",
             return_value=True,
         ) as mock_send_verification_code,
         patch(
@@ -375,7 +367,7 @@ async def test_switching_brands(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
@@ -393,7 +385,7 @@ async def test_switching_brands(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_BRAND: "yale_home",
+                CONF_BRAND: "yale_access",
                 CONF_LOGIN_METHOD: "email",
                 CONF_USERNAME: "my@email.tld",
                 CONF_PASSWORD: "test-password",
@@ -404,4 +396,4 @@ async def test_switching_brands(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
     assert len(mock_setup_entry.mock_calls) == 1
-    assert entry.data[CONF_BRAND] == "yale_home"
+    assert entry.data[CONF_BRAND] == "yale_access"

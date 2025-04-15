@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/buienradar",
   "iot_class": "cloud_polling",
   "loggers": ["buienradar", "vincenty"],
-  "requirements": ["buienradar==1.0.5"]
+  "requirements": ["buienradar==1.0.6"]
 }

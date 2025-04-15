@@ -19,7 +19,7 @@ from homeassistant.const import (
     CONF_NAME,
 )
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 
 from .const import (
     CONFIG_FLOW_VERSION,
@@ -30,7 +30,7 @@ from .const import (
     LANGUAGES,
     OWM_MODES,
 )
-from .utils import validate_api_key
+from .utils import build_data_and_options, validate_api_key
 
 
 class OpenWeatherMapConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -44,7 +44,7 @@ class OpenWeatherMapConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> OpenWeatherMapOptionsFlow:
         """Get the options flow for this handler."""
-        return OpenWeatherMapOptionsFlow(config_entry)
+        return OpenWeatherMapOptionsFlow()
 
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
@@ -64,8 +64,9 @@ class OpenWeatherMapConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
             if not errors:
+                data, options = build_data_and_options(user_input)
                 return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=user_input
+                    title=user_input[CONF_NAME], data=data, options=options
                 )
 
         schema = vol.Schema(
@@ -95,10 +96,6 @@ class OpenWeatherMapConfigFlow(ConfigFlow, domain=DOMAIN):
 
 class OpenWeatherMapOptionsFlow(OptionsFlow):
     """Handle options."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(self, user_input: dict | None = None) -> ConfigFlowResult:
         """Manage the options."""

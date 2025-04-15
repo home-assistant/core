@@ -5,14 +5,14 @@ import hmac
 import json
 import logging
 
+from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.components import webhook
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_DOMAIN, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_entry_flow
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_entry_flow, config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
@@ -48,13 +48,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def handle_webhook(hass, webhook_id, request):
+async def handle_webhook(
+    hass: HomeAssistant, webhook_id: str, request: web.Request
+) -> None:
     """Handle incoming webhook with Mailgun inbound messages."""
     body = await request.text()
     try:
         data = json.loads(body) if body else {}
     except ValueError:
-        return None
+        return
 
     if (
         isinstance(data, dict)

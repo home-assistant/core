@@ -1,0 +1,238 @@
+{
+  "config": {
+    "step": {
+      "init": {
+        "data": {
+          "url": "URL of the Music Assistant server"
+        }
+      },
+      "manual": {
+        "title": "Manually add Music Assistant server",
+        "description": "Enter the URL to your already running Music Assistant server. If you do not have the Music Assistant server running, you should install it first.",
+        "data": {
+          "url": "URL of the Music Assistant server"
+        }
+      },
+      "discovery_confirm": {
+        "description": "Do you want to add the Music Assistant server `{url}` to Home Assistant?",
+        "title": "Discovered Music Assistant server"
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_server_version": "The Music Assistant server is not the correct version",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "Configuration flow is already in progress",
+      "reconfiguration_successful": "Successfully reconfigured the Music Assistant integration.",
+      "cannot_connect": "Failed to connect",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    }
+  },
+  "issues": {
+    "invalid_server_version": {
+      "title": "The Music Assistant server is not the correct version",
+      "description": "Check if there are updates available for the Music Assistant server and/or integration."
+    }
+  },
+  "services": {
+    "play_media": {
+      "name": "Play media",
+      "description": "Plays media on a Music Assistant player with more fine-grained control options.",
+      "fields": {
+        "media_id": {
+          "name": "Media ID(s)",
+          "description": "URI or name of the item you want to play. Specify a list if you want to play/enqueue multiple items."
+        },
+        "media_type": {
+          "name": "Media type",
+          "description": "The type of the content to play. Such as artist, album, track or playlist. Will be auto-determined if omitted."
+        },
+        "enqueue": {
+          "name": "Enqueue",
+          "description": "If the content should be played now or added to the queue."
+        },
+        "artist": {
+          "name": "Artist name",
+          "description": "When specifying a track or album by name in the Media ID field, you can optionally restrict results by this artist name."
+        },
+        "album": {
+          "name": "Album name",
+          "description": "When specifying a track by name in the Media ID field, you can optionally restrict results by this album name."
+        },
+        "radio_mode": {
+          "name": "Enable radio mode",
+          "description": "Enable radio mode to auto-generate a playlist based on the selection."
+        }
+      }
+    },
+    "play_announcement": {
+      "name": "Play announcement",
+      "description": "Plays an announcement on a Music Assistant player with more fine-grained control options.",
+      "fields": {
+        "url": {
+          "name": "URL",
+          "description": "URL to the notification sound."
+        },
+        "use_pre_announce": {
+          "name": "Use pre-announce",
+          "description": "Use pre-announcement sound for the announcement. Omit to use the player default."
+        },
+        "announce_volume": {
+          "name": "Announce volume",
+          "description": "Use a forced volume level for the announcement. Omit to use player default."
+        }
+      }
+    },
+    "transfer_queue": {
+      "name": "Transfer queue",
+      "description": "Transfers a player's queue to another player.",
+      "fields": {
+        "source_player": {
+          "name": "Source media player",
+          "description": "The source media player which has the queue you want to transfer. When omitted, the first playing player will be used."
+        },
+        "auto_play": {
+          "name": "Auto play",
+          "description": "Start playing the queue on the target player. Omit to use the default behavior."
+        }
+      }
+    },
+    "get_queue": {
+      "name": "Get playerQueue details (advanced)",
+      "description": "Retrieves the details of the currently active queue of a Music Assistant player."
+    },
+    "search": {
+      "name": "Search Music Assistant",
+      "description": "Performs a global search on the Music Assistant library and all providers.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Music Assistant instance",
+          "description": "Select the Music Assistant instance to perform the search on."
+        },
+        "name": {
+          "name": "Search name",
+          "description": "The name/title to search for."
+        },
+        "media_type": {
+          "name": "Media type(s)",
+          "description": "The type of the content to search. Such as artist, album, track, radio, or playlist. All types if omitted."
+        },
+        "artist": {
+          "name": "Artist name",
+          "description": "When specifying a track or album name in the name field, you can optionally restrict results by this artist name."
+        },
+        "album": {
+          "name": "Album name",
+          "description": "When specifying a track name in the name field, you can optionally restrict results by this album name."
+        },
+        "limit": {
+          "name": "Limit",
+          "description": "Maximum number of items to return (per media type)."
+        },
+        "library_only": {
+          "name": "Only library items",
+          "description": "Only include results that are in the library."
+        }
+      }
+    },
+    "get_library": {
+      "name": "Get library items",
+      "description": "Retrieves items from a Music Assistant library.",
+      "fields": {
+        "config_entry_id": {
+          "name": "[%key:component::music_assistant::services::search::fields::config_entry_id::name%]",
+          "description": "[%key:component::music_assistant::services::search::fields::config_entry_id::description%]"
+        },
+        "media_type": {
+          "name": "Media type",
+          "description": "The media type for which to request details for."
+        },
+        "favorite": {
+          "name": "Favorites only",
+          "description": "Filter items so only favorites items are returned."
+        },
+        "search": {
+          "name": "Search",
+          "description": "Optional search string to search through this library."
+        },
+        "limit": {
+          "name": "Limit",
+          "description": "Maximum number of items to return."
+        },
+        "offset": {
+          "name": "Offset",
+          "description": "Offset to start the list from."
+        },
+        "order_by": {
+          "name": "Order by",
+          "description": "Sort the list by this field."
+        },
+        "album_type": {
+          "name": "Album type filter (albums library only)",
+          "description": "Filter albums by type."
+        },
+        "album_artists_only": {
+          "name": "Enable album artists filter (only for artist library)",
+          "description": "Only return album artists when listing the artists library items."
+        }
+      }
+    }
+  },
+  "selector": {
+    "enqueue": {
+      "options": {
+        "play": "Play",
+        "next": "Play next",
+        "add": "Add to queue",
+        "replace": "Play now and clear queue",
+        "replace_next": "Play next and clear queue"
+      }
+    },
+    "media_type": {
+      "options": {
+        "artist": "Artist",
+        "album": "Album",
+        "audiobook": "Audiobook",
+        "folder": "Folder",
+        "track": "Track",
+        "playlist": "Playlist",
+        "podcast": "Podcast",
+        "radio": "Radio"
+      }
+    },
+    "order_by": {
+      "options": {
+        "name": "Name",
+        "name_desc": "Name (desc)",
+        "sort_name": "Sort name",
+        "sort_name_desc": "Sort name (desc)",
+        "timestamp_added": "Added",
+        "timestamp_added_desc": "Added (desc)",
+        "last_played": "Last played",
+        "last_played_desc": "Last played (desc)",
+        "play_count": "Play count",
+        "play_count_desc": "Play count (desc)",
+        "year": "Year",
+        "year_desc": "Year (desc)",
+        "position": "Position",
+        "position_desc": "Position (desc)",
+        "artist_name": "Artist name",
+        "artist_name_desc": "Artist name (desc)",
+        "random": "Random",
+        "random_play_count": "Random + least played"
+      }
+    },
+    "album_type": {
+      "options": {
+        "album": "Album",
+        "single": "Single",
+        "ep": "EP",
+        "compilation": "Compilation",
+        "unknown": "Unknown"
+      }
+    }
+  }
+}

@@ -24,11 +24,11 @@ async def test_setup(hass: HomeAssistant, init_integration: MockConfigEntry) -> 
 
 
 async def test_unique_id(
-    hass: HomeAssistant, init_integration: MockConfigEntry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    init_integration: MockConfigEntry,
 ) -> None:
     """Test unique id."""
-    entity_registry = er.async_get(hass)
-
     main = entity_registry.async_get(MAIN_ENTITY_ID)
     assert main.unique_id == UPNP_SERIAL
 

@@ -12,8 +12,9 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
+from . import setup_with_selected_platforms
+
 from tests.common import MockConfigEntry
-from tests.components.rova import setup_with_selected_platforms
 
 
 async def test_reload(

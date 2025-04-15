@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from functools import partial
 import logging
 from typing import Any
 
@@ -30,11 +29,12 @@ from homeassistant.const import (
     CONF_PAYLOAD_ON,
     CONF_STATE,
 )
-from homeassistant.core import HassJobType, HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, VolSchemaType
 
 from . import subscription
 from .config import MQTT_RW_SCHEMA
@@ -45,22 +45,21 @@ from .const import (
     CONF_COMMAND_TOPIC,
     CONF_CURRENT_HUMIDITY_TEMPLATE,
     CONF_CURRENT_HUMIDITY_TOPIC,
-    CONF_ENCODING,
-    CONF_QOS,
     CONF_STATE_TOPIC,
     CONF_STATE_VALUE_TEMPLATE,
     PAYLOAD_NONE,
 )
-from .mixins import MqttEntity, async_setup_entity_entry_helper
+from .entity import MqttEntity, async_setup_entity_entry_helper
 from .models import (
     MqttCommandTemplate,
     MqttValueTemplate,
     PublishPayloadType,
     ReceiveMessage,
-    ReceivePayloadType,
 )
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_publish_topic, valid_subscribe_topic
+
+PARALLEL_UPDATES = 0
 
 CONF_AVAILABLE_MODES_LIST = "modes"
 CONF_DEVICE_CLASS = "device_class"
@@ -184,10 +183,10 @@ TOPICS = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MQTT humidifier through YAML and through MQTT discovery."""
-    await async_setup_entity_entry_helper(
+    async_setup_entity_entry_helper(
         hass,
         config_entry,
         MqttHumidifier,
@@ -215,7 +214,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
     _topic: dict[str, Any]
 
     @staticmethod
-    def config_schema() -> vol.Schema:
+    def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
@@ -273,27 +272,6 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
             ).async_render_with_possible_json_value
             for key, tpl in value_templates.items()
         }
-
-    def add_subscription(
-        self,
-        topics: dict[str, dict[str, Any]],
-        topic: str,
-        msg_callback: Callable[[ReceiveMessage], None],
-        tracked_attributes: set[str],
-    ) -> None:
-        """Add a subscription."""
-        qos: int = self._config[CONF_QOS]
-        if topic in self._topic and self._topic[topic] is not None:
-            topics[topic] = {
-                "topic": self._topic[topic],
-                "msg_callback": partial(
-                    self._message_callback, msg_callback, tracked_attributes
-                ),
-                "entity_id": self.entity_id,
-                "qos": qos,
-                "encoding": self._config[CONF_ENCODING] or None,
-                "job_type": HassJobType.Callback,
-            }
 
     @callback
     def _state_received(self, msg: ReceiveMessage) -> None:
@@ -415,34 +393,25 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
 
         self._attr_mode = mode
 
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        topics: dict[str, Any] = {}
-
+        self.add_subscription(CONF_STATE_TOPIC, self._state_received, {"_attr_is_on"})
         self.add_subscription(
-            topics, CONF_STATE_TOPIC, self._state_received, {"_attr_is_on"}
+            CONF_ACTION_TOPIC, self._action_received, {"_attr_action"}
         )
         self.add_subscription(
-            topics, CONF_ACTION_TOPIC, self._action_received, {"_attr_action"}
-        )
-        self.add_subscription(
-            topics,
             CONF_CURRENT_HUMIDITY_TOPIC,
             self._current_humidity_received,
             {"_attr_current_humidity"},
         )
         self.add_subscription(
-            topics,
             CONF_TARGET_HUMIDITY_STATE_TOPIC,
             self._target_humidity_received,
             {"_attr_target_humidity"},
         )
         self.add_subscription(
-            topics, CONF_MODE_STATE_TOPIC, self._mode_received, {"_attr_mode"}
-        )
-
-        self._sub_state = subscription.async_prepare_subscribe_topics(
-            self.hass, self._sub_state, topics
+            CONF_MODE_STATE_TOPIC, self._mode_received, {"_attr_mode"}
         )
 
     async def _subscribe_topics(self) -> None:

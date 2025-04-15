@@ -2,7 +2,15 @@
 
 from __future__ import annotations
 
-from asyncio import AbstractEventLoop, Future, Semaphore, Task, gather, get_running_loop
+from asyncio import (
+    AbstractEventLoop,
+    Future,
+    Semaphore,
+    Task,
+    TimerHandle,
+    gather,
+    get_running_loop,
+)
 from collections.abc import Awaitable, Callable, Coroutine
 import concurrent.futures
 import logging
@@ -31,7 +39,7 @@ def create_eager_task[_T](
             # pylint: disable-next=import-outside-toplevel
             from homeassistant.helpers import frame
 
-            frame.report("attempted to create an asyncio task from a thread")
+            frame.report_usage("attempted to create an asyncio task from a thread")
             raise
 
     return Task(coro, loop=loop, name=name, eager_start=True)
@@ -49,7 +57,7 @@ def run_callback_threadsafe[_T, *_Ts](
 
     Return a concurrent.futures.Future to access the result.
     """
-    if (ident := loop.__dict__.get("_thread_ident")) and ident == threading.get_ident():
+    if (ident := loop.__dict__.get("_thread_id")) and ident == threading.get_ident():
         raise RuntimeError("Cannot be called from within the event loop")
 
     future: concurrent.futures.Future[_T] = concurrent.futures.Future()
@@ -124,3 +132,9 @@ def shutdown_run_callback_threadsafe(loop: AbstractEventLoop) -> None:
     python is going to exit.
     """
     setattr(loop, _SHUTDOWN_RUN_CALLBACK_THREADSAFE, True)
+
+
+def get_scheduled_timer_handles(loop: AbstractEventLoop) -> list[TimerHandle]:
+    """Return a list of scheduled TimerHandles."""
+    handles: list[TimerHandle] = loop._scheduled  # type: ignore[attr-defined] # noqa: SLF001
+    return handles

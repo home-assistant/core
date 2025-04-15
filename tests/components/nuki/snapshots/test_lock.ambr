@@ -6,6 +6,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -35,9 +36,7 @@
 # name: test_locks[lock.community_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'battery_critical': False,
       'friendly_name': 'Community door',
-      'nuki_id': 2,
       'supported_features': <LockEntityFeature: 1>,
     }),
     'context': <ANY>,
@@ -55,6 +54,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -84,9 +84,7 @@
 # name: test_locks[lock.home-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'battery_critical': False,
       'friendly_name': 'Home',
-      'nuki_id': 1,
       'supported_features': <LockEntityFeature: 1>,
     }),
     'context': <ANY>,

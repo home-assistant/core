@@ -1,0 +1,63 @@
+# serializer version: 1
+# name: test_entities[select][select.peblar_ev_charger_smart_charging-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'default',
+        'fast_solar',
+        'pure_solar',
+        'scheduled',
+        'smart_solar',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.peblar_ev_charger_smart_charging',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Smart charging',
+    'platform': 'peblar',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'smart_charging',
+    'unique_id': '23-45-A4O-MOF_smart_charging',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[select][select.peblar_ev_charger_smart_charging-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Peblar EV Charger Smart charging',
+      'options': list([
+        'default',
+        'fast_solar',
+        'pure_solar',
+        'scheduled',
+        'smart_solar',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.peblar_ev_charger_smart_charging',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'pure_solar',
+  })
+# ---

@@ -5,5 +5,5 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/arve",
   "iot_class": "cloud_polling",
-  "requirements": ["asyncarve==0.0.9"]
+  "requirements": ["asyncarve==0.1.1"]
 }

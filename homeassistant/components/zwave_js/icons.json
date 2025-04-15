@@ -57,17 +57,41 @@
     }
   },
   "services": {
-    "bulk_set_partial_config_parameters": "mdi:cogs",
-    "clear_lock_usercode": "mdi:eraser",
-    "invoke_cc_api": "mdi:api",
-    "multicast_set_value": "mdi:list-box",
-    "ping": "mdi:crosshairs-gps",
-    "refresh_notifications": "mdi:bell",
-    "refresh_value": "mdi:refresh",
-    "reset_meter": "mdi:meter-electric",
-    "set_config_parameter": "mdi:cog",
-    "set_lock_configuration": "mdi:shield-lock",
-    "set_lock_usercode": "mdi:lock-smart",
-    "set_value": "mdi:form-textbox"
+    "bulk_set_partial_config_parameters": {
+      "service": "mdi:cogs"
+    },
+    "clear_lock_usercode": {
+      "service": "mdi:eraser"
+    },
+    "invoke_cc_api": {
+      "service": "mdi:api"
+    },
+    "multicast_set_value": {
+      "service": "mdi:list-box"
+    },
+    "ping": {
+      "service": "mdi:crosshairs-gps"
+    },
+    "refresh_notifications": {
+      "service": "mdi:bell"
+    },
+    "refresh_value": {
+      "service": "mdi:refresh"
+    },
+    "reset_meter": {
+      "service": "mdi:meter-electric"
+    },
+    "set_config_parameter": {
+      "service": "mdi:cog"
+    },
+    "set_lock_configuration": {
+      "service": "mdi:shield-lock"
+    },
+    "set_lock_usercode": {
+      "service": "mdi:lock-smart"
+    },
+    "set_value": {
+      "service": "mdi:form-textbox"
+    }
   }
 }

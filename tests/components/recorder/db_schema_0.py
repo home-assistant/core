@@ -19,10 +19,11 @@ from sqlalchemy import (
     distinct,
 )
 from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm.session import Session
 
 from homeassistant.core import Event, EventOrigin, State, split_entity_id
 from homeassistant.helpers.json import JSONEncoder
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 # SQLAlchemy Schema
 Base = declarative_base()
@@ -141,8 +142,6 @@ class RecorderRuns(Base):  # type: ignore[valid-type,misc]
         Specify point_in_time if you want to know which existed at that point
         in time inside the run.
         """
-        from sqlalchemy.orm.session import Session
-
         session = Session.object_session(self)
 
         assert session is not None, "RecorderRuns need to be persisted"

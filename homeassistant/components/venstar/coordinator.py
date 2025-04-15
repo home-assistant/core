@@ -8,6 +8,7 @@ from datetime import timedelta
 from requests import RequestException
 from venstarcolortouch import VenstarColorTouch
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import update_coordinator
 
@@ -17,16 +18,19 @@ from .const import _LOGGER, DOMAIN, VENSTAR_SLEEP
 class VenstarDataUpdateCoordinator(update_coordinator.DataUpdateCoordinator[None]):
     """Class to manage fetching Venstar data."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
-        *,
+        config_entry: ConfigEntry,
         venstar_connection: VenstarColorTouch,
     ) -> None:
         """Initialize global Venstar data updater."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=60),
         )

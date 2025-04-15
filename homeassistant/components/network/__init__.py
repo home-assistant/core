@@ -4,12 +4,14 @@ from __future__ import annotations
 
 from ipaddress import IPv4Address, IPv6Address, ip_interface
 import logging
+from pathlib import Path
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
 from homeassistant.loader import bind_hass
+from homeassistant.util import package
 
 from . import util
 from .const import (
@@ -20,11 +22,24 @@ from .const import (
     PUBLIC_TARGET_IP,
 )
 from .models import Adapter
-from .network import Network, async_get_network
+from .network import Network, async_get_loaded_network, async_get_network
 
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
+
+def _check_docker_without_host_networking() -> bool:
+    """Check if we are not using host networking in Docker."""
+    if not package.is_docker_env():
+        # We are not in Docker, so we don't need to check for host networking
+        return True
+
+    if Path("/proc/sys/net/ipv4/ip_forward").exists():
+        # If we can read this file, we likely have host networking
+        return True
+
+    return False
 
 
 @bind_hass
@@ -32,6 +47,12 @@ async def async_get_adapters(hass: HomeAssistant) -> list[Adapter]:
     """Get the network adapter configuration."""
     network: Network = await async_get_network(hass)
     return network.adapters
+
+
+@callback
+def async_get_loaded_adapters(hass: HomeAssistant) -> list[Adapter]:
+    """Get the network adapter configuration."""
+    return async_get_loaded_network(hass).adapters
 
 
 @bind_hass
@@ -74,7 +95,14 @@ async def async_get_enabled_source_ips(
     hass: HomeAssistant,
 ) -> list[IPv4Address | IPv6Address]:
     """Build the list of enabled source ips."""
-    adapters = await async_get_adapters(hass)
+    return async_get_enabled_source_ips_from_adapters(await async_get_adapters(hass))
+
+
+@callback
+def async_get_enabled_source_ips_from_adapters(
+    adapters: list[Adapter],
+) -> list[IPv4Address | IPv6Address]:
+    """Build the list of enabled source ips."""
     sources: list[IPv4Address | IPv6Address] = []
     for adapter in adapters:
         if not adapter["enabled"]:
@@ -150,6 +178,22 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     from .websocket import (  # pylint: disable=import-outside-toplevel
         async_register_websocket_commands,
     )
+
+    await async_get_network(hass)
+
+    if not await hass.async_add_executor_job(_check_docker_without_host_networking):
+        docs_url = "https://docs.docker.com/network/network-tutorial-host/"
+        install_url = "https://www.home-assistant.io/installation/linux#install-home-assistant-container"
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "docker_host_network",
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="docker_host_network",
+            learn_more_url=install_url,
+            translation_placeholders={"docs_url": docs_url, "install_url": install_url},
+        )
 
     async_register_websocket_commands(hass)
     return True

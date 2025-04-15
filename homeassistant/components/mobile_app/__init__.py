@@ -1,16 +1,18 @@
 """Integrates Native Apps to Home Assistant."""
 
 from contextlib import suppress
+from functools import partial
 from typing import Any
 
-from homeassistant.components import cloud, notify as hass_notify
+from homeassistant.auth import EVENT_USER_REMOVED
+from homeassistant.components import cloud, intent, notify as hass_notify
 from homeassistant.components.webhook import (
     async_register as webhook_register,
     async_unregister as webhook_unregister,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_ID, CONF_WEBHOOK_ID, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -35,6 +37,7 @@ from .const import (
     ATTR_MODEL,
     ATTR_OS_VERSION,
     CONF_CLOUDHOOK_URL,
+    CONF_USER_ID,
     DATA_CONFIG_ENTRIES,
     DATA_DELETED_IDS,
     DATA_DEVICES,
@@ -46,7 +49,8 @@ from .const import (
 )
 from .helpers import savable_state
 from .http_api import RegistrationsView
-from .util import async_create_cloud_hook
+from .timers import async_handle_timer_event
+from .util import async_create_cloud_hook, supports_push
 from .webhook import handle_webhook
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.DEVICE_TRACKER, Platform.SENSOR]
@@ -88,6 +92,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     websocket_api.async_setup_commands(hass)
 
+    async def _handle_user_removed(event: Event) -> None:
+        """Remove an entry when the user is removed."""
+        user_id = event.data["user_id"]
+        for entry in hass.config_entries.async_entries(DOMAIN):
+            if entry.data[CONF_USER_ID] == user_id:
+                await hass.config_entries.async_remove(entry.entry_id)
+
+    hass.bus.async_listen(EVENT_USER_REMOVED, _handle_user_removed)
+
     return True
 
 
@@ -122,16 +135,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ):
             await async_create_cloud_hook(hass, webhook_id, entry)
 
-    if (
-        CONF_CLOUDHOOK_URL not in entry.data
-        and cloud.async_active_subscription(hass)
-        and cloud.async_is_connected(hass)
-    ):
-        await async_create_cloud_hook(hass, webhook_id, entry)
+    if cloud.async_is_logged_in(hass):
+        if (
+            CONF_CLOUDHOOK_URL not in entry.data
+            and cloud.async_active_subscription(hass)
+            and cloud.async_is_connected(hass)
+        ):
+            await async_create_cloud_hook(hass, webhook_id, entry)
+    elif CONF_CLOUDHOOK_URL in entry.data:
+        # If we have a cloudhook but no longer logged in to the cloud, remove it from the entry
+        data = dict(entry.data)
+        data.pop(CONF_CLOUDHOOK_URL)
+        hass.config_entries.async_update_entry(entry, data=data)
 
     entry.async_on_unload(cloud.async_listen_connection_change(hass, manage_cloudhook))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    if supports_push(hass, webhook_id):
+        entry.async_on_unload(
+            intent.async_register_timer_handler(
+                hass, device.id, partial(async_handle_timer_event, hass, entry)
+            )
+        )
 
     await hass_notify.async_reload(hass, DOMAIN)
 

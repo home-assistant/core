@@ -23,7 +23,7 @@ TEST_USER_UUID = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.notion.async_setup_entry", return_value=True

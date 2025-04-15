@@ -9,6 +9,7 @@ import it.
 
 from __future__ import annotations
 
+# pylint: disable-next=hass-deprecated-import
 from functools import cached_property as _cached_property, partial
 
 from homeassistant.helpers.deprecation import (

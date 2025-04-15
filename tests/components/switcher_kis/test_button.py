@@ -42,7 +42,7 @@ async def test_assume_button(
     assert hass.states.get(SWING_OFF_EID) is None
 
     with patch(
-        "homeassistant.components.switcher_kis.climate.SwitcherType2Api.control_breeze_device",
+        "homeassistant.components.switcher_kis.entity.SwitcherApi.control_breeze_device",
     ) as mock_control_device:
         await hass.services.async_call(
             BUTTON_DOMAIN,
@@ -63,7 +63,12 @@ async def test_assume_button(
 )
 @pytest.mark.parametrize("mock_bridge", [[DEVICE]], indirect=True)
 async def test_swing_button(
-    hass: HomeAssistant, entity, swing, mock_bridge, mock_api, monkeypatch
+    hass: HomeAssistant,
+    entity,
+    swing,
+    mock_bridge,
+    mock_api,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test vertical swing on/off button."""
     monkeypatch.setattr(DEVICE, "remote_id", "ELEC7022")
@@ -74,7 +79,7 @@ async def test_swing_button(
     assert hass.states.get(SWING_OFF_EID) is not None
 
     with patch(
-        "homeassistant.components.switcher_kis.climate.SwitcherType2Api.control_breeze_device",
+        "homeassistant.components.switcher_kis.entity.SwitcherApi.control_breeze_device",
     ) as mock_control_device:
         await hass.services.async_call(
             BUTTON_DOMAIN,
@@ -88,7 +93,7 @@ async def test_swing_button(
 
 @pytest.mark.parametrize("mock_bridge", [[DEVICE]], indirect=True)
 async def test_control_device_fail(
-    hass: HomeAssistant, mock_bridge, mock_api, monkeypatch
+    hass: HomeAssistant, mock_bridge, mock_api, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test control device fail."""
     await init_integration(hass)
@@ -98,7 +103,7 @@ async def test_control_device_fail(
 
     # Test exception during set hvac mode
     with patch(
-        "homeassistant.components.switcher_kis.climate.SwitcherType2Api.control_breeze_device",
+        "homeassistant.components.switcher_kis.entity.SwitcherApi.control_breeze_device",
         side_effect=RuntimeError("fake error"),
     ) as mock_control_device:
         with pytest.raises(HomeAssistantError):
@@ -125,7 +130,7 @@ async def test_control_device_fail(
 
     # Test error response during turn on
     with patch(
-        "homeassistant.components.switcher_kis.climate.SwitcherType2Api.control_breeze_device",
+        "homeassistant.components.switcher_kis.entity.SwitcherApi.control_breeze_device",
         return_value=SwitcherBaseResponse(None),
     ) as mock_control_device:
         with pytest.raises(HomeAssistantError):

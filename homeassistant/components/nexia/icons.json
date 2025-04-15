@@ -20,8 +20,17 @@
     }
   },
   "services": {
-    "set_aircleaner_mode": "mdi:air-filter",
-    "set_humidify_setpoint": "mdi:water-percent",
-    "set_hvac_run_mode": "mdi:hvac"
+    "set_aircleaner_mode": {
+      "service": "mdi:air-filter"
+    },
+    "set_humidify_setpoint": {
+      "service": "mdi:water-percent"
+    },
+    "set_dehumidify_setpoint": {
+      "service": "mdi:water-percent"
+    },
+    "set_hvac_run_mode": {
+      "service": "mdi:hvac"
+    }
   }
 }

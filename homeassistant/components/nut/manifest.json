@@ -1,12 +1,12 @@
 {
   "domain": "nut",
   "name": "Network UPS Tools (NUT)",
-  "codeowners": ["@bdraco", "@ollo69", "@pestevez"],
+  "codeowners": ["@bdraco", "@ollo69", "@pestevez", "@tdfountain"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/nut",
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["aionut"],
-  "requirements": ["aionut==4.3.2"],
+  "requirements": ["aionut==4.3.4"],
   "zeroconf": ["_nut._tcp.local."]
 }

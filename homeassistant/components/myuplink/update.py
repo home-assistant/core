@@ -5,12 +5,10 @@ from homeassistant.components.update import (
     UpdateEntity,
     UpdateEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import MyUplinkDataCoordinator
-from .const import DOMAIN
+from .coordinator import MyUplinkConfigEntry, MyUplinkDataCoordinator
 from .entity import MyUplinkEntity
 
 UPDATE_DESCRIPTION = UpdateEntityDescription(
@@ -21,11 +19,11 @@ UPDATE_DESCRIPTION = UpdateEntityDescription(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: MyUplinkConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up update entity."""
-    coordinator: MyUplinkDataCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     async_add_entities(
         MyUplinkDeviceUpdate(

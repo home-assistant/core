@@ -3,6 +3,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -21,8 +22,10 @@
     }),
     'manufacturer': 'Ondilo',
     'model': 'ICO',
+    'model_id': None,
     'name': 'Pool 1',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': '1.7.1-stable',
@@ -33,6 +36,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -51,8 +55,10 @@
     }),
     'manufacturer': 'Ondilo',
     'model': 'ICO',
+    'model_id': None,
     'name': 'Pool 2',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': '1.7.1-stable',

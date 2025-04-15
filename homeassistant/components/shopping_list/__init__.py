@@ -17,7 +17,7 @@ from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_NAME, Platform
 from homeassistant.core import Context, HomeAssistant, ServiceCall, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import save_json
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.json import JsonValueType, load_json_array
@@ -320,15 +320,15 @@ class ShoppingData:
             # Remove the item from mapping after it's appended in the result array.
             del all_items_mapping[item_id]
         # Append the rest of the items
-        for key in all_items_mapping:
+        for value in all_items_mapping.values():
             # All the unchecked items must be passed in the item_ids array,
             # so all items left in the mapping should be checked items.
-            if all_items_mapping[key]["complete"] is False:
+            if value["complete"] is False:
                 raise vol.Invalid(
                     "The item ids array doesn't contain all the unchecked shopping list"
                     " items."
                 )
-            new_items.append(all_items_mapping[key])
+            new_items.append(value)
         self.items = new_items
         self.hass.async_add_executor_job(self.save)
         self._async_notify()
@@ -582,12 +582,12 @@ def websocket_handle_reorder(
     except NoMatchingShoppingListItem:
         connection.send_error(
             msg_id,
-            websocket_api.const.ERR_NOT_FOUND,
+            websocket_api.ERR_NOT_FOUND,
             "One or more item id(s) not found.",
         )
         return
     except vol.Invalid as err:
-        connection.send_error(msg_id, websocket_api.const.ERR_INVALID_FORMAT, f"{err}")
+        connection.send_error(msg_id, websocket_api.ERR_INVALID_FORMAT, f"{err}")
         return
 
     connection.send_result(msg_id)

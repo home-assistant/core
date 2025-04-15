@@ -1,6 +1,6 @@
 """Tests for the Nextcloud config flow."""
 
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 from nextcloudmonitor import (
     NextcloudMonitorAuthorizationError,
@@ -10,26 +10,21 @@ from nextcloudmonitor import (
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.nextcloud import DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
-from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, CONF_VERIFY_SSL
+from homeassistant.components.nextcloud.const import DOMAIN
+from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
+from .const import VALID_CONFIG
 
 from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
-VALID_CONFIG = {
-    CONF_URL: "nc_url",
-    CONF_USERNAME: "nc_user",
-    CONF_PASSWORD: "nc_pass",
-    CONF_VERIFY_SSL: True,
-}
-
 
 async def test_user_create_entry(
-    hass: HomeAssistant, mock_nextcloud_monitor: Mock, snapshot: SnapshotAssertion
+    hass: HomeAssistant, snapshot: SnapshotAssertion
 ) -> None:
     """Test that the user step works."""
     # start user flow
@@ -85,7 +80,7 @@ async def test_user_create_entry(
     # test success
     with patch(
         "homeassistant.components.nextcloud.config_flow.NextcloudMonitor",
-        return_value=mock_nextcloud_monitor,
+        return_value=True,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -94,17 +89,15 @@ async def test_user_create_entry(
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "nc_url"
+    assert result["title"] == "https://my.nc_url.local"
     assert result["data"] == snapshot
 
 
-async def test_user_already_configured(
-    hass: HomeAssistant, mock_nextcloud_monitor: Mock
-) -> None:
+async def test_user_already_configured(hass: HomeAssistant) -> None:
     """Test that errors are shown when duplicates are added."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        title="nc_url",
+        title="https://my.nc_url.local",
         unique_id="nc_url",
         data=VALID_CONFIG,
     )
@@ -119,7 +112,7 @@ async def test_user_already_configured(
 
     with patch(
         "homeassistant.components.nextcloud.config_flow.NextcloudMonitor",
-        return_value=mock_nextcloud_monitor,
+        return_value=True,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -131,24 +124,18 @@ async def test_user_already_configured(
     assert result["reason"] == "already_configured"
 
 
-async def test_reauth(
-    hass: HomeAssistant, mock_nextcloud_monitor: Mock, snapshot: SnapshotAssertion
-) -> None:
+async def test_reauth(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
     """Test that the re-auth flow works."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        title="nc_url",
+        title="https://my.nc_url.local",
         unique_id="nc_url",
         data=VALID_CONFIG,
     )
     entry.add_to_hass(hass)
 
     # start reauth flow
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id},
-        data=entry.data,
-    )
+    result = await entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
@@ -206,7 +193,7 @@ async def test_reauth(
     # test success
     with patch(
         "homeassistant.components.nextcloud.config_flow.NextcloudMonitor",
-        return_value=mock_nextcloud_monitor,
+        return_value=True,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],

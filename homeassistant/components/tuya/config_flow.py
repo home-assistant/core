@@ -8,7 +8,7 @@ from typing import Any
 from tuya_sharing import LoginControl
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.helpers import selector
 
 from .const import (
@@ -32,7 +32,6 @@ class TuyaConfigFlow(ConfigFlow, domain=DOMAIN):
 
     __user_code: str
     __qr_code: str
-    __reauth_entry: ConfigEntry | None = None
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -135,9 +134,9 @@ class TuyaConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_ENDPOINT: info[CONF_ENDPOINT],
         }
 
-        if self.__reauth_entry:
+        if self.source == SOURCE_REAUTH:
             return self.async_update_reload_and_abort(
-                self.__reauth_entry,
+                self._get_reauth_entry(),
                 data=entry_data,
             )
 
@@ -146,16 +145,12 @@ class TuyaConfigFlow(ConfigFlow, domain=DOMAIN):
             data=entry_data,
         )
 
-    async def async_step_reauth(self, _: Mapping[str, Any]) -> ConfigFlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle initiation of re-authentication with Tuya."""
-        self.__reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
-
-        if self.__reauth_entry and CONF_USER_CODE in self.__reauth_entry.data:
-            success, _ = await self.__async_get_qr_code(
-                self.__reauth_entry.data[CONF_USER_CODE]
-            )
+        if CONF_USER_CODE in entry_data:
+            success, _ = await self.__async_get_qr_code(entry_data[CONF_USER_CODE])
             if success:
                 return await self.async_step_scan()
 

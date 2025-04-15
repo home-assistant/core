@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -12,7 +14,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_API_KEY, CONF_LANGUAGE, CONF_MODE, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
@@ -48,6 +50,20 @@ from .const import (
     UNITS_METRIC,
 )
 from .helpers import InvalidApiKeyException, UnknownException, validate_config_entry
+
+RECONFIGURE_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_API_KEY): cv.string,
+        vol.Required(CONF_DESTINATION): cv.string,
+        vol.Required(CONF_ORIGIN): cv.string,
+    }
+)
+
+CONFIG_SCHEMA = RECONFIGURE_SCHEMA.extend(
+    {
+        vol.Required(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    }
+)
 
 OPTIONS_SCHEMA = vol.Schema(
     {
@@ -132,10 +148,6 @@ def default_options(hass: HomeAssistant) -> dict[str, str]:
 class GoogleOptionsFlow(OptionsFlow):
     """Handle an options flow for Google Travel Time."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize google options flow."""
-        self.config_entry = config_entry
-
     async def async_step_init(self, user_input=None) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is not None:
@@ -164,6 +176,28 @@ class GoogleOptionsFlow(OptionsFlow):
         )
 
 
+async def validate_input(
+    hass: HomeAssistant, user_input: dict[str, Any]
+) -> dict[str, str] | None:
+    """Validate the user input allows us to connect."""
+    try:
+        await hass.async_add_executor_job(
+            validate_config_entry,
+            hass,
+            user_input[CONF_API_KEY],
+            user_input[CONF_ORIGIN],
+            user_input[CONF_DESTINATION],
+        )
+    except InvalidApiKeyException:
+        return {"base": "invalid_auth"}
+    except TimeoutError:
+        return {"base": "timeout_connect"}
+    except UnknownException:
+        return {"base": "cannot_connect"}
+
+    return None
+
+
 class GoogleTravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Google Maps Travel Time."""
 
@@ -175,44 +209,43 @@ class GoogleTravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> GoogleOptionsFlow:
         """Get the options flow for this handler."""
-        return GoogleOptionsFlow(config_entry)
+        return GoogleOptionsFlow()
 
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Handle the initial step."""
-        errors = {}
+        errors: dict[str, str] | None = None
         user_input = user_input or {}
         if user_input:
-            try:
-                await self.hass.async_add_executor_job(
-                    validate_config_entry,
-                    self.hass,
-                    user_input[CONF_API_KEY],
-                    user_input[CONF_ORIGIN],
-                    user_input[CONF_DESTINATION],
-                )
+            errors = await validate_input(self.hass, user_input)
+            if not errors:
                 return self.async_create_entry(
                     title=user_input.get(CONF_NAME, DEFAULT_NAME),
                     data=user_input,
                     options=default_options(self.hass),
                 )
-            except InvalidApiKeyException:
-                errors["base"] = "invalid_auth"
-            except TimeoutError:
-                errors["base"] = "timeout_connect"
-            except UnknownException:
-                errors["base"] = "cannot_connect"
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_NAME, default=user_input.get(CONF_NAME, DEFAULT_NAME)
-                    ): cv.string,
-                    vol.Required(CONF_API_KEY): cv.string,
-                    vol.Required(CONF_DESTINATION): cv.string,
-                    vol.Required(CONF_ORIGIN): cv.string,
-                }
+            data_schema=self.add_suggested_values_to_schema(CONFIG_SCHEMA, user_input),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration."""
+        errors: dict[str, str] | None = None
+        if user_input is not None:
+            errors = await validate_input(self.hass, user_input)
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    self._get_reconfigure_entry(), data=user_input
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                RECONFIGURE_SCHEMA, self._get_reconfigure_entry().data
             ),
             errors=errors,
         )

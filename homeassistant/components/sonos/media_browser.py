@@ -46,6 +46,32 @@ _LOGGER = logging.getLogger(__name__)
 type GetBrowseImageUrlType = Callable[[str, str, str | None], str]
 
 
+def fix_image_url(url: str) -> str:
+    """Update the image url to fully encode characters to allow image display in media_browser UI.
+
+    Images whose file path contains characters such as ',()+ are not loaded without escaping them.
+    """
+
+    # Before parsing encode the plus sign; otherwise it'll be interpreted as a space.
+    original_url: str = urllib.parse.unquote(url).replace("+", "%2B")
+    parsed_url = urllib.parse.urlparse(original_url)
+    query_params = urllib.parse.parse_qsl(parsed_url.query)
+    new_url = urllib.parse.urlunsplit(
+        (
+            parsed_url.scheme,
+            parsed_url.netloc,
+            parsed_url.path,
+            urllib.parse.urlencode(
+                query_params, quote_via=urllib.parse.quote, safe="/:"
+            ),
+            "",
+        )
+    )
+    if original_url != new_url:
+        _LOGGER.debug("fix_sonos_image_url original: %s new: %s", original_url, new_url)
+    return new_url
+
+
 def get_thumbnail_url_full(
     media: SonosMedia,
     is_internal: bool,
@@ -63,7 +89,7 @@ def get_thumbnail_url_full(
                 media_content_id,
                 media_content_type,
             )
-        return urllib.parse.unquote(getattr(item, "album_art_uri", ""))
+        return fix_image_url(getattr(item, "album_art_uri", ""))
 
     return urllib.parse.unquote(
         get_browse_image_url(
@@ -139,6 +165,8 @@ async def async_browse_media(
             favorites_folder_payload,
             speaker.favorites,
             media_content_id,
+            media,
+            get_browse_image_url,
         )
 
     payload = {
@@ -417,7 +445,10 @@ def favorites_payload(favorites: SonosFavorites) -> BrowseMedia:
 
 
 def favorites_folder_payload(
-    favorites: SonosFavorites, media_content_id: str
+    favorites: SonosFavorites,
+    media_content_id: str,
+    media: SonosMedia,
+    get_browse_image_url: GetBrowseImageUrlType,
 ) -> BrowseMedia:
     """Create response payload to describe all items of a type of favorite.
 
@@ -437,7 +468,14 @@ def favorites_folder_payload(
                 media_content_type="favorite_item_id",
                 can_play=True,
                 can_expand=False,
-                thumbnail=getattr(favorite, "album_art_uri", None),
+                thumbnail=get_thumbnail_url_full(
+                    media=media,
+                    is_internal=True,
+                    media_content_type="favorite_item_id",
+                    media_content_id=favorite.item_id,
+                    get_browse_image_url=get_browse_image_url,
+                    item=favorite,
+                ),
             )
         )
 

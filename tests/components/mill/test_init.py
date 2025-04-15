@@ -147,5 +147,5 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
 
         assert await hass.config_entries.async_unload(entry.entry_id)
 
-        assert unload_entry.call_count == 2
+        assert unload_entry.call_count == 3
         assert entry.entry_id not in hass.data[mill.DOMAIN]

@@ -146,20 +146,19 @@ class PassiveBluetoothDataUpdate[_T]:
         """
         device_change = False
         changed_entity_keys: set[PassiveBluetoothEntityKey] = set()
-        for key, device_info in new_data.devices.items():
-            if device_change or self.devices.get(key, UNDEFINED) != device_info:
+        for device_key, device_info in new_data.devices.items():
+            if device_change or self.devices.get(device_key, UNDEFINED) != device_info:
                 device_change = True
-                self.devices[key] = device_info
+                self.devices[device_key] = device_info
         for incoming, current in (
             (new_data.entity_descriptions, self.entity_descriptions),
             (new_data.entity_names, self.entity_names),
             (new_data.entity_data, self.entity_data),
         ):
-            # mypy can't seem to work this out
-            for key, data in incoming.items():  # type: ignore[attr-defined]
-                if current.get(key, UNDEFINED) != data:  # type: ignore[attr-defined]
-                    changed_entity_keys.add(key)  # type: ignore[arg-type]
-                    current[key] = data  # type: ignore[index]
+            for key, data in incoming.items():
+                if current.get(key, UNDEFINED) != data:
+                    changed_entity_keys.add(key)
+                    current[key] = data  # type: ignore[assignment]
         # If the device changed we don't need to return the changed
         # entity keys as all entities will be updated
         return None if device_change else changed_entity_keys
@@ -375,6 +374,27 @@ class PassiveBluetoothProcessorCoordinator[_DataT](BasePassiveBluetoothCoordinat
             self.logger.exception("Unexpected error updating %s data", self.name)
             return
 
+        self._process_update(update, was_available)
+
+    @callback
+    def async_set_updated_data(self, update: _DataT) -> None:
+        """Manually update the processor with new data.
+
+        If the data comes in via a different method, like a
+        notification, this method can be used to update the
+        processor with the new data.
+
+        This is useful for devices that retrieve
+        some of their data via notifications.
+        """
+        was_available = self._available
+        self._available = True
+        self._process_update(update, was_available)
+
+    def _process_update(
+        self, update: _DataT, was_available: bool | None = None
+    ) -> None:
+        """Process the update from the bluetooth device."""
         if not self.last_update_success:
             self.last_update_success = True
             self.logger.info("Coordinator %s recovered", self.name)
@@ -598,6 +618,7 @@ class PassiveBluetoothDataProcessor[_T, _DataT]:
         self.async_update_listeners(new_data, was_available, changed_entity_keys)
 
 
+# pylint: disable-next=hass-enforce-class-module
 class PassiveBluetoothProcessorEntity[
     _PassiveBluetoothDataProcessorT: PassiveBluetoothDataProcessor[Any, Any]
 ](Entity):

@@ -1,0 +1,20 @@
+{
+  "entity": {
+    "device_tracker": {
+      "car": {
+        "default": "mdi:car"
+      }
+    },
+    "sensor": {
+      "address": {
+        "default": "mdi:map-marker"
+      },
+      "battery_voltage": {
+        "default": "mdi:car-battery"
+      },
+      "heading": {
+        "default": "mdi:compass"
+      }
+    }
+  }
+}

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.cover import CoverEntity
 from homeassistant.const import (
@@ -37,17 +37,15 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up cover controlled by shell commands."""
+    if not discovery_info:
+        return
 
     covers = []
-    discovery_info = cast(DiscoveryInfoType, discovery_info)
     entities: dict[str, dict[str, Any]] = {
         slugify(discovery_info[CONF_NAME]): discovery_info
     }
 
     for device_name, cover_config in entities.items():
-        if value_template := cover_config.get(CONF_VALUE_TEMPLATE):
-            value_template.hass = hass
-
         trigger_entity_config = {
             CONF_NAME: Template(cover_config.get(CONF_NAME, device_name), hass),
             **{k: v for k, v in cover_config.items() if k in TRIGGER_ENTITY_OPTIONS},
@@ -60,7 +58,7 @@ async def async_setup_platform(
                 cover_config[CONF_COMMAND_CLOSE],
                 cover_config[CONF_COMMAND_STOP],
                 cover_config.get(CONF_COMMAND_STATE),
-                value_template,
+                cover_config.get(CONF_VALUE_TEMPLATE),
                 cover_config[CONF_COMMAND_TIMEOUT],
                 cover_config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL),
             )
@@ -113,7 +111,7 @@ class CommandCover(ManualTriggerEntity, CoverEntity):
 
     async def _async_move_cover(self, command: str) -> bool:
         """Execute the actual commands."""
-        LOGGER.info("Running command: %s", command)
+        LOGGER.debug("Running command: %s", command)
 
         returncode = await async_call_shell_with_timeout(command, self._timeout)
         success = returncode == 0
@@ -142,11 +140,10 @@ class CommandCover(ManualTriggerEntity, CoverEntity):
 
     async def _async_query_state(self) -> str | None:
         """Query for the state."""
-        if self._command_state:
-            LOGGER.info("Running state value command: %s", self._command_state)
-            return await async_check_output_or_log(self._command_state, self._timeout)
         if TYPE_CHECKING:
-            return None
+            assert self._command_state
+        LOGGER.debug("Running state value command: %s", self._command_state)
+        return await async_check_output_or_log(self._command_state, self._timeout)
 
     async def _update_entity_state(self, now: datetime | None = None) -> None:
         """Update the state of the entity."""

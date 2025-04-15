@@ -26,9 +26,11 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.google.const import (
+    CONF_CALENDAR_ACCESS,
     CONF_CREDENTIAL_TYPE,
     DOMAIN,
     CredentialType,
+    FeatureAccess,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -50,9 +52,8 @@ OAUTH2_TOKEN = "https://oauth2.googleapis.com/token"
 
 
 @pytest.fixture(autouse=True)
-async def request_setup(current_request_with_host) -> None:
+async def request_setup(current_request_with_host: None) -> None:
     """Request setup."""
-    return
 
 
 @pytest.fixture(autouse=True)
@@ -117,7 +118,7 @@ async def primary_calendar_status() -> HTTPStatus | None:
 
 @pytest.fixture(autouse=True)
 async def primary_calendar(
-    mock_calendar_get: Callable[[...], None],
+    mock_calendar_get: Callable[..., None],
     primary_calendar_error: ClientError | None,
     primary_calendar_status: HTTPStatus | None,
     primary_calendar_email: str,
@@ -131,7 +132,7 @@ async def primary_calendar(
     )
 
 
-async def fire_alarm(hass, point_in_time):
+async def fire_alarm(hass: HomeAssistant, point_in_time: datetime.datetime) -> None:
     """Fire an alarm and wait for callbacks to run."""
     with freeze_time(point_in_time):
         async_fire_time_changed(hass, point_in_time)
@@ -475,10 +476,27 @@ async def test_wrong_configuration(
     assert result.get("reason") == "oauth_error"
 
 
+@pytest.mark.parametrize(
+    ("options"),
+    [
+        ({}),
+        (
+            {
+                CONF_CALENDAR_ACCESS: FeatureAccess.read_write.name,
+            }
+        ),
+        (
+            {
+                CONF_CALENDAR_ACCESS: FeatureAccess.read_only.name,
+            }
+        ),
+    ],
+)
 async def test_reauth_flow(
     hass: HomeAssistant,
     mock_code_flow: Mock,
     mock_exchange: Mock,
+    options: dict[str, Any] | None,
 ) -> None:
     """Test reauth of an existing config entry."""
     config_entry = MockConfigEntry(
@@ -487,6 +505,7 @@ async def test_reauth_flow(
             "auth_implementation": DOMAIN,
             "token": {"access_token": "OLD_ACCESS_TOKEN"},
         },
+        options=options,
     )
     config_entry.add_to_hass(hass)
     await async_import_client_credential(
@@ -498,14 +517,7 @@ async def test_reauth_flow(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": config_entry.entry_id,
-        },
-        data=config_entry.data,
-    )
+    result = await config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
@@ -548,6 +560,8 @@ async def test_reauth_flow(
         },
         "credential_type": "device_auth",
     }
+    # Options are preserved during reauth
+    assert entries[0].options == options
 
     assert len(mock_setup.mock_calls) == 1
 
@@ -656,9 +670,9 @@ async def test_options_flow_no_changes(
     assert config_entry.options == {"calendar_access": "read_write"}
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_web_auth_compatibility(
     hass: HomeAssistant,
-    current_request_with_host: None,
     mock_code_flow: Mock,
     aioclient_mock: AiohttpClientMocker,
     hass_client_no_auth: ClientSessionGenerator,
@@ -762,14 +776,7 @@ async def test_web_reauth_flow(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": config_entry.entry_id,
-        },
-        data=config_entry.data,
-    )
+    result = await config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 

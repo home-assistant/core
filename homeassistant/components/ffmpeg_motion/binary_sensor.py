@@ -9,7 +9,7 @@ import haffmpeg.sensor as ffmpeg_sensor
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
@@ -23,7 +23,7 @@ from homeassistant.components.ffmpeg import (
 )
 from homeassistant.const import CONF_NAME, CONF_REPEAT
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -34,7 +34,7 @@ CONF_REPEAT_TIME = "repeat_time"
 DEFAULT_NAME = "FFmpeg Motion"
 DEFAULT_INIT_STATE = True
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_INPUT): cv.string,
         vol.Optional(CONF_INITIAL_STATE, default=DEFAULT_INIT_STATE): cv.boolean,

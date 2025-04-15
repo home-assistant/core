@@ -18,7 +18,15 @@
   },
   "entity": {
     "sensor": {
+      "latitude": { "name": "[%key:common::config_flow::data::latitude%]" },
+      "longitude": { "name": "[%key:common::config_flow::data::longitude%]" },
+      "elevation": { "name": "[%key:common::config_flow::data::elevation%]" },
+      "time": {
+        "name": "[%key:component::time_date::selector::display_options::options::time%]"
+      },
+      "climb": { "name": "Climb" },
       "mode": {
+        "name": "[%key:common::config_flow::data::mode%]",
         "state": {
           "2d_fix": "2D Fix",
           "3d_fix": "3D Fix"
@@ -28,12 +36,28 @@
           "longitude": {
             "name": "[%key:common::config_flow::data::longitude%]"
           },
-          "elevation": { "name": "Elevation" },
-          "gps_time": { "name": "Time" },
-          "speed": { "name": "Speed" },
-          "climb": { "name": "Climb" },
-          "mode": { "name": "Mode" }
+          "elevation": {
+            "name": "[%key:common::config_flow::data::elevation%]"
+          },
+          "gps_time": {
+            "name": "[%key:component::time_date::selector::display_options::options::time%]"
+          },
+          "speed": {
+            "name": "[%key:component::sensor::entity_component::speed::name%]"
+          },
+          "climb": {
+            "name": "[%key:component::gpsd::entity::sensor::climb::name%]"
+          },
+          "mode": { "name": "[%key:common::config_flow::data::mode%]" }
         }
+      },
+      "total_satellites": {
+        "name": "Total satellites",
+        "unit_of_measurement": "satellites"
+      },
+      "used_satellites": {
+        "name": "Used satellites",
+        "unit_of_measurement": "satellites"
       }
     }
   }

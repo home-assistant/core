@@ -10,6 +10,7 @@ from deebot_client.capabilities import Capabilities
 from deebot_client.device import Device
 from deebot_client.events import AvailabilityEvent
 from deebot_client.events.base import Event
+from sucks import EventListener, VacBot
 
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -18,11 +19,10 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from .const import DOMAIN
 
 CapabilityEntity = TypeVar("CapabilityEntity")
-CapabilityDevice = TypeVar("CapabilityDevice", bound=Capabilities)
 EventT = TypeVar("EventT", bound=Event)
 
 
-class EcovacsEntity(Entity, Generic[CapabilityDevice, CapabilityEntity]):
+class EcovacsEntity(Entity, Generic[CapabilityEntity]):
     """Ecovacs entity."""
 
     _attr_should_poll = False
@@ -31,7 +31,7 @@ class EcovacsEntity(Entity, Generic[CapabilityDevice, CapabilityEntity]):
 
     def __init__(
         self,
-        device: Device[CapabilityDevice],
+        device: Device,
         capability: CapabilityEntity,
         **kwargs: Any,
     ) -> None:
@@ -54,6 +54,7 @@ class EcovacsEntity(Entity, Generic[CapabilityDevice, CapabilityEntity]):
             manufacturer="Ecovacs",
             sw_version=self._device.fw_version,
             serial_number=device_info["name"],
+            model_id=device_info["class"],
         )
 
         if nick := device_info.get("nick"):
@@ -97,12 +98,12 @@ class EcovacsEntity(Entity, Generic[CapabilityDevice, CapabilityEntity]):
             self._device.events.request_refresh(event_type)
 
 
-class EcovacsDescriptionEntity(EcovacsEntity[CapabilityDevice, CapabilityEntity]):
+class EcovacsDescriptionEntity(EcovacsEntity[CapabilityEntity]):
     """Ecovacs entity."""
 
     def __init__(
         self,
-        device: Device[CapabilityDevice],
+        device: Device,
         capability: CapabilityEntity,
         entity_description: EntityDescription,
         **kwargs: Any,
@@ -115,9 +116,46 @@ class EcovacsDescriptionEntity(EcovacsEntity[CapabilityDevice, CapabilityEntity]
 @dataclass(kw_only=True, frozen=True)
 class EcovacsCapabilityEntityDescription(
     EntityDescription,
-    Generic[CapabilityDevice, CapabilityEntity],
+    Generic[CapabilityEntity],
 ):
     """Ecovacs entity description."""
 
-    device_capabilities: type[CapabilityDevice]
-    capability_fn: Callable[[CapabilityDevice], CapabilityEntity | None]
+    capability_fn: Callable[[Capabilities], CapabilityEntity | None]
+
+
+class EcovacsLegacyEntity(Entity):
+    """Ecovacs legacy bot entity."""
+
+    _attr_has_entity_name = True
+    _attr_should_poll = False
+
+    def __init__(self, device: VacBot) -> None:
+        """Initialize the legacy Ecovacs entity."""
+        self.device = device
+        vacuum = device.vacuum
+
+        self.error: str | None = None
+        self._attr_unique_id = vacuum["did"]
+
+        if (name := vacuum.get("nick")) is None:
+            name = vacuum["did"]
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, vacuum["did"])},
+            manufacturer="Ecovacs",
+            model=vacuum.get("deviceName"),
+            name=name,
+            serial_number=vacuum["did"],
+        )
+
+        self._event_listeners: list[EventListener] = []
+
+    @property
+    def available(self) -> bool:
+        """Return True if the entity is available."""
+        return super().available and self.state is not None
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Remove event listeners on entity remove."""
+        for listener in self._event_listeners:
+            listener.unsubscribe()

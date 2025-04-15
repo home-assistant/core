@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
+from monzopy import InvalidMonzoAPIResponseError
 import pytest
 from syrupy import SnapshotAssertion
 
@@ -123,14 +124,21 @@ async def test_update_failed(
     monzo: AsyncMock,
     polling_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test all entities."""
     await setup_integration(hass, polling_config_entry)
 
-    monzo.user_account.accounts.side_effect = Exception
+    monzo.user_account.accounts.side_effect = InvalidMonzoAPIResponseError(
+        {"acc_id": None}, "account_id"
+    )
     freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
+
+    assert "Invalid Monzo API response." in caplog.text
+    assert "account_id" in caplog.text
+    assert "acc_id" in caplog.text
 
     entity_id = await async_get_entity_id(
         hass, TEST_ACCOUNTS[0]["id"], ACCOUNT_SENSORS[0]

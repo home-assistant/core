@@ -12,7 +12,7 @@ from homeassistant.data_entry_flow import FlowResultType
 class MockSW16Client:
     """Class to mock the SW16Client client."""
 
-    def __init__(self, fail):
+    def __init__(self, fail) -> None:
         """Initialise client with failure modes."""
         self.fail = fail
         self.disconnect_callback = None

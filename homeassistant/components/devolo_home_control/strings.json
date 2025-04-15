@@ -12,16 +12,37 @@
       "user": {
         "data": {
           "username": "Email / devolo ID",
-          "password": "[%key:common::config_flow::data::password%]",
-          "mydevolo_url": "mydevolo URL"
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "Email address you used to register the central unit at mydevolo.",
+          "password": "Password of your mydevolo account."
         }
       },
       "zeroconf_confirm": {
         "data": {
           "username": "[%key:component::devolo_home_control::config::step::user::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]",
-          "mydevolo_url": "[%key:component::devolo_home_control::config::step::user::data::mydevolo_url%]"
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "[%key:component::devolo_home_control::config::step::user::data_description::username%]",
+          "password": "[%key:component::devolo_home_control::config::step::user::data_description::password%]"
         }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "button": {
+        "name": "Button {key}"
+      },
+      "overload": {
+        "name": "Overload"
+      }
+    },
+    "sensor": {
+      "brightness": {
+        "name": "Brightness"
       }
     }
   }

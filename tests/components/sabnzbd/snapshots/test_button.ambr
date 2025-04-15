@@ -1,0 +1,95 @@
+# serializer version: 1
+# name: test_button_setup[button.sabnzbd_pause-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.sabnzbd_pause',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Pause',
+    'platform': 'sabnzbd',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'pause',
+    'unique_id': '01JD2YVVPBC62D620DGYNG2R8H_pause',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_setup[button.sabnzbd_pause-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Sabnzbd Pause',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.sabnzbd_pause',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_setup[button.sabnzbd_resume-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.sabnzbd_resume',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Resume',
+    'platform': 'sabnzbd',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'resume',
+    'unique_id': '01JD2YVVPBC62D620DGYNG2R8H_resume',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_setup[button.sabnzbd_resume-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Sabnzbd Resume',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.sabnzbd_resume',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

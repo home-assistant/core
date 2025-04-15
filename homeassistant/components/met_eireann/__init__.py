@@ -12,7 +12,7 @@ from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE, P
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 
@@ -46,6 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=config_entry,
         name=DOMAIN,
         update_method=_async_update_data,
         update_interval=UPDATE_INTERVAL,

@@ -3,24 +3,27 @@
 from velbusaio.channels import SelectedProgram
 
 from homeassistant.components.select import SelectEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from . import VelbusConfigEntry
 from .entity import VelbusEntity, api_call
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: VelbusConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Velbus select based on config_entry."""
-    await hass.data[DOMAIN][entry.entry_id]["tsk"]
-    cntrl = hass.data[DOMAIN][entry.entry_id]["cntrl"]
-    async_add_entities(VelbusSelect(channel) for channel in cntrl.get_all("select"))
+    await entry.runtime_data.scan_task
+    async_add_entities(
+        VelbusSelect(channel)
+        for channel in entry.runtime_data.controller.get_all_select()
+    )
 
 
 class VelbusSelect(VelbusEntity, SelectEntity):

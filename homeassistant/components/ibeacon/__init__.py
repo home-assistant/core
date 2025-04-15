@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntry, async_get
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceEntry
 
 from .const import DOMAIN, PLATFORMS
 from .coordinator import IBeaconCoordinator
@@ -14,7 +15,9 @@ type IBeaconConfigEntry = ConfigEntry[IBeaconCoordinator]
 
 async def async_setup_entry(hass: HomeAssistant, entry: IBeaconConfigEntry) -> bool:
     """Set up Bluetooth LE Tracker from a config entry."""
-    entry.runtime_data = coordinator = IBeaconCoordinator(hass, entry, async_get(hass))
+    entry.runtime_data = coordinator = IBeaconCoordinator(
+        hass, entry, dr.async_get(hass)
+    )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     await coordinator.async_start()
     return True

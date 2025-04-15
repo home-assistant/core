@@ -8,6 +8,7 @@ from py_nightscout.models import SGV, ServerStatus
 
 from homeassistant.components.nightscout.const import DOMAIN
 from homeassistant.const import CONF_URL
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -30,7 +31,7 @@ SERVER_STATUS_STATUS_ONLY = ServerStatus.new_from_json_dict(
 )
 
 
-async def init_integration(hass) -> MockConfigEntry:
+async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
     """Set up the Nightscout integration in Home Assistant."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -53,7 +54,7 @@ async def init_integration(hass) -> MockConfigEntry:
     return entry
 
 
-async def init_integration_unavailable(hass) -> MockConfigEntry:
+async def init_integration_unavailable(hass: HomeAssistant) -> MockConfigEntry:
     """Set up the Nightscout integration in Home Assistant."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -76,7 +77,7 @@ async def init_integration_unavailable(hass) -> MockConfigEntry:
     return entry
 
 
-async def init_integration_empty_response(hass) -> MockConfigEntry:
+async def init_integration_empty_response(hass: HomeAssistant) -> MockConfigEntry:
     """Set up the Nightscout integration in Home Assistant."""
     entry = MockConfigEntry(
         domain=DOMAIN,

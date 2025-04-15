@@ -25,7 +25,7 @@ from tests.common import MockConfigEntry
 @pytest.mark.parametrize(
     "hosts", ["1.1.1.1", "192.168.1.0/24", "192.168.1.0/24,192.168.2.0/24"]
 )
-async def test_form(hass: HomeAssistant, hosts: str, mock_get_source_ip) -> None:
+async def test_form(hass: HomeAssistant, hosts: str) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -64,7 +64,7 @@ async def test_form(hass: HomeAssistant, hosts: str, mock_get_source_ip) -> None
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_range(hass: HomeAssistant, mock_get_source_ip) -> None:
+async def test_form_range(hass: HomeAssistant) -> None:
     """Test we get the form and can take an ip range."""
 
     result = await hass.config_entries.flow.async_init(
@@ -100,7 +100,7 @@ async def test_form_range(hass: HomeAssistant, mock_get_source_ip) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_hosts(hass: HomeAssistant, mock_get_source_ip) -> None:
+async def test_form_invalid_hosts(hass: HomeAssistant) -> None:
     """Test invalid hosts passed in."""
 
     result = await hass.config_entries.flow.async_init(
@@ -124,7 +124,7 @@ async def test_form_invalid_hosts(hass: HomeAssistant, mock_get_source_ip) -> No
     assert result2["errors"] == {CONF_HOSTS: "invalid_hosts"}
 
 
-async def test_form_already_configured(hass: HomeAssistant, mock_get_source_ip) -> None:
+async def test_form_already_configured(hass: HomeAssistant) -> None:
     """Test duplicate host list."""
 
     config_entry = MockConfigEntry(
@@ -159,7 +159,7 @@ async def test_form_already_configured(hass: HomeAssistant, mock_get_source_ip) 
     assert result2["reason"] == "already_configured"
 
 
-async def test_form_invalid_excludes(hass: HomeAssistant, mock_get_source_ip) -> None:
+async def test_form_invalid_excludes(hass: HomeAssistant) -> None:
     """Test invalid excludes passed in."""
 
     result = await hass.config_entries.flow.async_init(
@@ -183,7 +183,7 @@ async def test_form_invalid_excludes(hass: HomeAssistant, mock_get_source_ip) ->
     assert result2["errors"] == {CONF_EXCLUDE: "invalid_hosts"}
 
 
-async def test_options_flow(hass: HomeAssistant, mock_get_source_ip) -> None:
+async def test_options_flow(hass: HomeAssistant) -> None:
     """Test we can edit options."""
 
     config_entry = MockConfigEntry(

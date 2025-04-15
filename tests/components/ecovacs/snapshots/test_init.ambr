@@ -3,6 +3,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -21,8 +22,10 @@
     }),
     'manufacturer': 'Ecovacs',
     'model': 'DEEBOT OZMO 950 Series',
+    'model_id': 'yna5xi',
     'name': 'Ozmo 950',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': 'E1234567890000000001',
     'suggested_area': None,
     'sw_version': None,

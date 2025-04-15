@@ -5,17 +5,18 @@ from unittest.mock import AsyncMock, MagicMock, create_autospec, patch
 
 import pytest
 import serial.tools.list_ports
+from zha.application.const import RadioType
 from zigpy.backups import BackupManager
 import zigpy.config
 from zigpy.config import CONF_DEVICE_PATH
 import zigpy.types
 
-from homeassistant.components.usb import UsbServiceInfo
 from homeassistant.components.zha import radio_manager
-from homeassistant.components.zha.core.const import DOMAIN, RadioType
+from homeassistant.components.zha.const import DOMAIN
 from homeassistant.components.zha.radio_manager import ProbeResult, ZhaRadioManager
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 from tests.common import MockConfigEntry
 
@@ -87,7 +88,7 @@ def com_port(device="/dev/ttyUSB1234"):
 
 
 @pytest.fixture
-def mock_connect_zigpy_app() -> Generator[MagicMock, None, None]:
+def mock_connect_zigpy_app() -> Generator[MagicMock]:
     """Mock the radio connection."""
 
     mock_connect_app = MagicMock()

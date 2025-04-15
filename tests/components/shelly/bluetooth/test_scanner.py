@@ -12,7 +12,9 @@ from homeassistant.core import HomeAssistant
 from .. import init_integration, inject_rpc_device_event
 
 
-async def test_scanner_v1(hass: HomeAssistant, mock_rpc_device, monkeypatch) -> None:
+async def test_scanner_v1(
+    hass: HomeAssistant, mock_rpc_device, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Test injecting data into the scanner v1."""
     await init_integration(
         hass, 2, options={CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE}
@@ -50,7 +52,9 @@ async def test_scanner_v1(hass: HomeAssistant, mock_rpc_device, monkeypatch) -> 
     assert ble_device is None
 
 
-async def test_scanner_v2(hass: HomeAssistant, mock_rpc_device, monkeypatch) -> None:
+async def test_scanner_v2(
+    hass: HomeAssistant, mock_rpc_device, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Test injecting data into the scanner v2."""
     await init_integration(
         hass, 2, options={CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE}
@@ -93,7 +97,7 @@ async def test_scanner_v2(hass: HomeAssistant, mock_rpc_device, monkeypatch) -> 
 
 
 async def test_scanner_ignores_non_ble_events(
-    hass: HomeAssistant, mock_rpc_device, monkeypatch
+    hass: HomeAssistant, mock_rpc_device, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test injecting non ble data into the scanner."""
     await init_integration(
@@ -119,7 +123,10 @@ async def test_scanner_ignores_non_ble_events(
 
 
 async def test_scanner_ignores_wrong_version_and_logs(
-    hass: HomeAssistant, mock_rpc_device, monkeypatch, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    mock_rpc_device,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test injecting wrong version of ble data into the scanner."""
     await init_integration(
@@ -152,7 +159,10 @@ async def test_scanner_ignores_wrong_version_and_logs(
 
 
 async def test_scanner_warns_on_corrupt_event(
-    hass: HomeAssistant, mock_rpc_device, monkeypatch, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    mock_rpc_device,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test injecting garbage ble data into the scanner."""
     await init_integration(

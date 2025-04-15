@@ -7,5 +7,6 @@
   "documentation": "https://www.home-assistant.io/integrations/canary",
   "iot_class": "cloud_polling",
   "loggers": ["canary"],
-  "requirements": ["py-canary==0.5.3"]
+  "requirements": ["py-canary==0.5.4"],
+  "single_config_entry": true
 }

@@ -6,18 +6,24 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
+    BinarySensorEntity,
+)
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import BINARY_SENSORS, DATA_RAINCLOUD, ICON_MAP, RainCloudEntity
+from .const import DATA_RAINCLOUD, ICON_MAP
+from .entity import RainCloudEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+BINARY_SENSORS = ["is_watering", "status"]
+
+PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_MONITORED_CONDITIONS, default=list(BINARY_SENSORS)): vol.All(
             cv.ensure_list, [vol.In(BINARY_SENSORS)]

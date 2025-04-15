@@ -1,0 +1,67 @@
+{
+  "dailySchedules": [
+    {
+      "dayOfWeek": "Monday",
+      "switchpoints": [
+        { "heatSetpoint": 18.1, "timeOfDay": "07:00:00" },
+        { "heatSetpoint": 16.0, "timeOfDay": "08:00:00" },
+        { "heatSetpoint": 18.6, "timeOfDay": "22:10:00" },
+        { "heatSetpoint": 15.9, "timeOfDay": "23:00:00" }
+      ]
+    },
+    {
+      "dayOfWeek": "Tuesday",
+      "switchpoints": [
+        { "heatSetpoint": 18.1, "timeOfDay": "07:00:00" },
+        { "heatSetpoint": 16.0, "timeOfDay": "08:00:00" },
+        { "heatSetpoint": 18.6, "timeOfDay": "22:10:00" },
+        { "heatSetpoint": 15.9, "timeOfDay": "23:00:00" }
+      ]
+    },
+    {
+      "dayOfWeek": "Wednesday",
+      "switchpoints": [
+        { "heatSetpoint": 18.1, "timeOfDay": "07:00:00" },
+        { "heatSetpoint": 16.0, "timeOfDay": "08:00:00" },
+        { "heatSetpoint": 18.6, "timeOfDay": "22:10:00" },
+        { "heatSetpoint": 15.9, "timeOfDay": "23:00:00" }
+      ]
+    },
+    {
+      "dayOfWeek": "Thursday",
+      "switchpoints": [
+        { "heatSetpoint": 18.1, "timeOfDay": "07:00:00" },
+        { "heatSetpoint": 16.0, "timeOfDay": "08:00:00" },
+        { "heatSetpoint": 18.6, "timeOfDay": "22:10:00" },
+        { "heatSetpoint": 15.9, "timeOfDay": "23:00:00" }
+      ]
+    },
+    {
+      "dayOfWeek": "Friday",
+      "switchpoints": [
+        { "heatSetpoint": 18.1, "timeOfDay": "07:00:00" },
+        { "heatSetpoint": 16.0, "timeOfDay": "08:00:00" },
+        { "heatSetpoint": 18.6, "timeOfDay": "22:10:00" },
+        { "heatSetpoint": 15.9, "timeOfDay": "23:00:00" }
+      ]
+    },
+    {
+      "dayOfWeek": "Saturday",
+      "switchpoints": [
+        { "heatSetpoint": 18.5, "timeOfDay": "07:00:00" },
+        { "heatSetpoint": 16.0, "timeOfDay": "08:30:00" },
+        { "heatSetpoint": 18.6, "timeOfDay": "22:10:00" },
+        { "heatSetpoint": 15.9, "timeOfDay": "23:00:00" }
+      ]
+    },
+    {
+      "dayOfWeek": "Sunday",
+      "switchpoints": [
+        { "heatSetpoint": 18.5, "timeOfDay": "07:00:00" },
+        { "heatSetpoint": 16.0, "timeOfDay": "08:30:00" },
+        { "heatSetpoint": 18.6, "timeOfDay": "22:10:00" },
+        { "heatSetpoint": 15.9, "timeOfDay": "23:00:00" }
+      ]
+    }
+  ]
+}

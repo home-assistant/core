@@ -1,0 +1,8 @@
+{
+  "issues": {
+    "recommended_version": {
+      "title": "Outdated go2rtc server detected",
+      "description": "We detected that you are using an outdated go2rtc server version. For the best experience, we recommend updating the go2rtc server to version `{recommended_version}`.\nCurrently you are using version `{current_version}`."
+    }
+  }
+}

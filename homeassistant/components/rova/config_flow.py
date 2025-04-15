@@ -59,31 +59,3 @@ class RovaConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
-
-    async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
-        """Import the yaml config."""
-        zip_code = user_input[CONF_ZIP_CODE]
-        number = user_input[CONF_HOUSE_NUMBER]
-        suffix = user_input[CONF_HOUSE_NUMBER_SUFFIX]
-
-        await self.async_set_unique_id(f"{zip_code}{number}{suffix}".strip())
-        self._abort_if_unique_id_configured()
-
-        api = Rova(zip_code, number, suffix)
-
-        try:
-            result = await self.hass.async_add_executor_job(api.is_rova_area)
-
-            if result:
-                return self.async_create_entry(
-                    title=f"{zip_code} {number} {suffix}".strip(),
-                    data={
-                        CONF_ZIP_CODE: zip_code,
-                        CONF_HOUSE_NUMBER: number,
-                        CONF_HOUSE_NUMBER_SUFFIX: suffix,
-                    },
-                )
-            return self.async_abort(reason="invalid_rova_area")
-
-        except (ConnectTimeout, HTTPError):
-            return self.async_abort(reason="cannot_connect")

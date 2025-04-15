@@ -2,7 +2,7 @@
 """Inspect all component SCHEMAS."""
 
 import importlib
-import os
+from pathlib import Path
 import pkgutil
 
 from homeassistant.config import _identify_config_schema
@@ -20,7 +20,7 @@ def explore_module(package):
 
 def main():
     """Run the script."""
-    if not os.path.isfile("requirements_all.txt"):
+    if not Path("requirements_all.txt").is_file():
         print("Run this from HA root dir")
         return
 
@@ -57,7 +57,9 @@ def main():
         )
 
     for key in sorted(msg):
-        print("\n{}\n - {}".format(key, "\n - ".join(msg[key])))
+        print(f"\n{key}")
+        for val in msg[key]:
+            print(f" - {val}")
 
 
 if __name__ == "__main__":

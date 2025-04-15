@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import DOMAIN
@@ -62,7 +62,7 @@ class AprilaireConfigFlow(ConfigFlow, domain=DOMAIN):
 
             self._abort_if_unique_id_configured()
 
-            return self.async_create_entry(title="Aprilaire", data=user_input)
+            return self.async_create_entry(title="AprilAire", data=user_input)
 
         return self.async_show_form(
             step_id="user",

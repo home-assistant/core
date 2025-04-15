@@ -8,7 +8,7 @@ from homeassistant.setup import async_setup_component
 
 
 @pytest.fixture(autouse=True)
-async def setup_media_source(hass):
+async def setup_media_source(hass: HomeAssistant) -> None:
     """Set up media source."""
     assert await async_setup_component(hass, "media_source", {})
 

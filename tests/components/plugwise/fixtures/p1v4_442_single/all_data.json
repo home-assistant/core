@@ -10,6 +10,7 @@
       "location": "a455b61e52394b2db5081ce025a430f3",
       "mac_address": "012345670001",
       "model": "Gateway",
+      "model_id": "smile",
       "name": "Smile P1",
       "vendor": "Plugwise"
     },
@@ -42,8 +43,9 @@
   },
   "gateway": {
     "gateway_id": "a455b61e52394b2db5081ce025a430f3",
-    "item_count": 31,
+    "item_count": 32,
     "notifications": {},
+    "reboot": true,
     "smile_name": "Smile P1"
   }
 }

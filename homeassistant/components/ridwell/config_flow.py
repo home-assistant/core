@@ -93,6 +93,9 @@ class RidwellConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle re-auth completion."""
         if not user_input:
+            if TYPE_CHECKING:
+                assert self._username
+
             return self.async_show_form(
                 step_id="reauth_confirm",
                 data_schema=STEP_REAUTH_CONFIRM_DATA_SCHEMA,

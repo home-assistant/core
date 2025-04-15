@@ -4,6 +4,7 @@ import asyncio
 from datetime import timedelta
 import logging
 from unittest.mock import AsyncMock, Mock
+import weakref
 
 import pytest
 
@@ -11,7 +12,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import debounce
 from homeassistant.util.dt import utcnow
 
-from ..common import async_fire_time_changed
+from tests.common import async_fire_time_changed
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -529,3 +530,37 @@ async def test_background(
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=1))
     await hass.async_block_till_done(wait_background_tasks=False)
     assert len(calls) == 2
+
+
+async def test_shutdown_releases_parent_class(hass: HomeAssistant) -> None:
+    """Test shutdown releases parent class.
+
+    See https://github.com/home-assistant/core/issues/137237
+    """
+    calls = []
+
+    class SomeClass:
+        def run_func(self) -> None:
+            calls.append(None)
+
+    my_class = SomeClass()
+    my_class_weak_ref = weakref.ref(my_class)
+
+    debouncer = debounce.Debouncer(
+        hass,
+        _LOGGER,
+        cooldown=0.01,
+        immediate=True,
+        function=my_class.run_func,
+    )
+
+    # Debouncer keeps a reference to the function, prevening GC
+    del my_class
+    await debouncer.async_call()
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert my_class_weak_ref() is not None
+
+    # Debouncer shutdown releases the class
+    debouncer.async_shutdown()
+    assert my_class_weak_ref() is None

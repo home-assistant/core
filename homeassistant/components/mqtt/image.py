@@ -5,7 +5,6 @@ from __future__ import annotations
 from base64 import b64decode
 import binascii
 from collections.abc import Callable
-from functools import partial
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -16,21 +15,19 @@ from homeassistant.components import image
 from homeassistant.components.image import DEFAULT_CONTENT_TYPE, ImageEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
-from homeassistant.core import HassJobType, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, VolSchemaType
 from homeassistant.util import dt as dt_util
 
 from . import subscription
 from .config import MQTT_BASE_SCHEMA
-from .const import CONF_ENCODING, CONF_QOS
-from .mixins import MqttEntity, async_setup_entity_entry_helper
+from .entity import MqttEntity, async_setup_entity_entry_helper
 from .models import (
     DATA_MQTT,
-    MessageCallbackType,
     MqttValueTemplate,
     MqttValueTemplateException,
     ReceiveMessage,
@@ -39,6 +36,8 @@ from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 CONF_CONTENT_TYPE = "content_type"
 CONF_IMAGE_ENCODING = "image_encoding"
@@ -83,10 +82,10 @@ DISCOVERY_SCHEMA = vol.All(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MQTT image through YAML and through MQTT discovery."""
-    await async_setup_entity_entry_helper(
+    async_setup_entity_entry_helper(
         hass,
         config_entry,
         MqttImage,
@@ -120,7 +119,7 @@ class MqttImage(MqttEntity, ImageEntity):
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
-    def config_schema() -> vol.Schema:
+    def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
@@ -182,35 +181,14 @@ class MqttImage(MqttEntity, ImageEntity):
         self._cached_image = None
         self.hass.data[DATA_MQTT].state_write_requests.write_state_request(self)
 
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-
-        topics: dict[str, Any] = {}
-
-        def add_subscribe_topic(topic: str, msg_callback: MessageCallbackType) -> bool:
-            """Add a topic to subscribe to."""
-            encoding: str | None
-            encoding = (
-                None
-                if CONF_IMAGE_TOPIC in self._config
-                else self._config[CONF_ENCODING] or None
-            )
-            if has_topic := self._topic[topic] is not None:
-                topics[topic] = {
-                    "topic": self._topic[topic],
-                    "msg_callback": partial(self._message_callback, msg_callback, None),
-                    "entity_id": self.entity_id,
-                    "qos": self._config[CONF_QOS],
-                    "encoding": encoding,
-                    "job_type": HassJobType.Callback,
-                }
-            return has_topic
-
-        add_subscribe_topic(CONF_IMAGE_TOPIC, self._image_data_received)
-        add_subscribe_topic(CONF_URL_TOPIC, self._image_from_url_request_received)
-
-        self._sub_state = subscription.async_prepare_subscribe_topics(
-            self.hass, self._sub_state, topics
+        self.add_subscription(
+            CONF_IMAGE_TOPIC, self._image_data_received, None, disable_encoding=True
+        )
+        self.add_subscription(
+            CONF_URL_TOPIC, self._image_from_url_request_received, None
         )
 
     async def _subscribe_topics(self) -> None:

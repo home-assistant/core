@@ -8,7 +8,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AdvantageAirDataConfigEntry
 from .entity import AdvantageAirAcEntity, AdvantageAirZoneEntity
@@ -20,7 +20,7 @@ PARALLEL_UPDATES = 0
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: AdvantageAirDataConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up AdvantageAir Binary Sensor platform."""
 
@@ -66,7 +66,7 @@ class AdvantageAirZoneMotion(AdvantageAirZoneEntity, BinarySensorEntity):
     def __init__(self, instance: AdvantageAirData, ac_key: str, zone_key: str) -> None:
         """Initialize an Advantage Air Zone Motion sensor."""
         super().__init__(instance, ac_key, zone_key)
-        self._attr_name = f'{self._zone["name"]} motion'
+        self._attr_name = f"{self._zone['name']} motion"
         self._attr_unique_id += "-motion"
 
     @property
@@ -84,7 +84,7 @@ class AdvantageAirZoneMyZone(AdvantageAirZoneEntity, BinarySensorEntity):
     def __init__(self, instance: AdvantageAirData, ac_key: str, zone_key: str) -> None:
         """Initialize an Advantage Air Zone MyZone sensor."""
         super().__init__(instance, ac_key, zone_key)
-        self._attr_name = f'{self._zone["name"]} myZone'
+        self._attr_name = f"{self._zone['name']} myZone"
         self._attr_unique_id += "-myzone"
 
     @property

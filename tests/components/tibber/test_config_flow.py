@@ -5,7 +5,11 @@ from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 from aiohttp import ClientError
 import pytest
-from tibber import FatalHttpException, InvalidLogin, RetryableHttpException
+from tibber import (
+    FatalHttpExceptionError,
+    InvalidLoginError,
+    RetryableHttpExceptionError,
+)
 
 from homeassistant import config_entries
 from homeassistant.components.recorder import Recorder
@@ -66,9 +70,9 @@ async def test_create_entry(recorder_mock: Recorder, hass: HomeAssistant) -> Non
     [
         (TimeoutError, ERR_TIMEOUT),
         (ClientError, ERR_CLIENT),
-        (InvalidLogin(401), ERR_TOKEN),
-        (RetryableHttpException(503), ERR_CLIENT),
-        (FatalHttpException(404), ERR_CLIENT),
+        (InvalidLoginError(401), ERR_TOKEN),
+        (RetryableHttpExceptionError(503), ERR_CLIENT),
+        (FatalHttpExceptionError(404), ERR_CLIENT),
     ],
 )
 async def test_create_entry_exceptions(

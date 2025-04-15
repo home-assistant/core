@@ -20,11 +20,12 @@ from . import FAKE_MAC, FAKE_SOCKET, async_push_update, async_setup_integration
 from tests.common import async_fire_time_changed
 
 
-async def test_switch_operation(hass: HomeAssistant) -> None:
+async def test_switch_operation(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test switch operation."""
     switch, _ = await async_setup_integration(hass, bulb_type=FAKE_SOCKET)
     entity_id = "switch.mock_title"
-    entity_registry = er.async_get(hass)
     assert entity_registry.async_get(entity_id).unique_id == FAKE_MAC
     assert hass.states.get(entity_id).state == STATE_ON
 
@@ -45,11 +46,12 @@ async def test_switch_operation(hass: HomeAssistant) -> None:
     assert hass.states.get(entity_id).state == STATE_ON
 
 
-async def test_update_fails(hass: HomeAssistant) -> None:
+async def test_update_fails(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test switch update fails when push updates are not working."""
     switch, _ = await async_setup_integration(hass, bulb_type=FAKE_SOCKET)
     entity_id = "switch.mock_title"
-    entity_registry = er.async_get(hass)
     assert entity_registry.async_get(entity_id).unique_id == FAKE_MAC
     assert hass.states.get(entity_id).state == STATE_ON
 

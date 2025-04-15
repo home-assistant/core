@@ -23,14 +23,14 @@
       }
     },
     "error": {
-      "discovery_error": "Failed to discover a Denon AVR Network Receiver"
+      "discovery_error": "Failed to discover a Denon AVR network receiver"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
-      "cannot_connect": "Failed to connect, please try again, disconnecting mains power and ethernet cables and reconnecting them may help",
-      "not_denonavr_manufacturer": "Not a Denon AVR Network Receiver, discovered manufacturer did not match",
-      "not_denonavr_missing": "Not a Denon AVR Network Receiver, discovery information not complete"
+      "cannot_connect": "Failed to connect, please try again, disconnecting mains power and Ethernet cables and reconnecting them may help",
+      "not_denonavr_manufacturer": "Not a Denon AVR network receiver, discovered manufacturer did not match",
+      "not_denonavr_missing": "Not a Denon AVR network receiver, discovery information not complete"
     }
   },
   "options": {
@@ -50,7 +50,7 @@
   "services": {
     "get_command": {
       "name": "Get command",
-      "description": "Send sa generic HTTP get command.",
+      "description": "Sends a generic HTTP get command.",
       "fields": {
         "command": {
           "name": "Command",
@@ -64,7 +64,7 @@
       "fields": {
         "dynamic_eq": {
           "name": "Dynamic equalizer",
-          "description": "True/false for enable/disable."
+          "description": "Whether DynamicEQ should be enabled or disabled."
         }
       }
     },

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-import json
 import logging
 from os import PathLike
 from typing import Any
@@ -12,18 +10,16 @@ import orjson
 
 from homeassistant.exceptions import HomeAssistantError
 
-from .file import WriteError  # noqa: F401
-
 _SENTINEL = object()
 _LOGGER = logging.getLogger(__name__)
 
-JsonValueType = (
-    dict[str, "JsonValueType"] | list["JsonValueType"] | str | int | float | bool | None
+type JsonValueType = (
+    dict[str, JsonValueType] | list[JsonValueType] | str | int | float | bool | None
 )
 """Any data that can be returned by the standard JSON deserializing process."""
-JsonArrayType = list[JsonValueType]
+type JsonArrayType = list[JsonValueType]
 """List that can be returned by the standard JSON deserializing process."""
-JsonObjectType = dict[str, JsonValueType]
+type JsonObjectType = dict[str, JsonValueType]
 """Dictionary that can be returned by the standard JSON deserializing process."""
 
 JSON_ENCODE_EXCEPTIONS = (TypeError, ValueError)
@@ -34,34 +30,32 @@ class SerializationError(HomeAssistantError):
     """Error serializing the data to JSON."""
 
 
-def json_loads(__obj: bytes | bytearray | memoryview | str) -> JsonValueType:
+def json_loads(obj: bytes | bytearray | memoryview | str, /) -> JsonValueType:
     """Parse JSON data.
 
     This adds a workaround for orjson not handling subclasses of str,
     https://github.com/ijl/orjson/issues/445.
     """
     # Avoid isinstance overhead for the common case
-    if type(__obj) not in (bytes, bytearray, memoryview, str) and isinstance(
-        __obj, str
-    ):
-        return orjson.loads(str(__obj))  # type:ignore[no-any-return]
-    return orjson.loads(__obj)  # type:ignore[no-any-return]
+    if type(obj) not in (bytes, bytearray, memoryview, str) and isinstance(obj, str):
+        return orjson.loads(str(obj))  # type:ignore[no-any-return]
+    return orjson.loads(obj)  # type:ignore[no-any-return]
 
 
-def json_loads_array(__obj: bytes | bytearray | memoryview | str) -> JsonArrayType:
+def json_loads_array(obj: bytes | bytearray | memoryview | str, /) -> JsonArrayType:
     """Parse JSON data and ensure result is a list."""
-    value: JsonValueType = json_loads(__obj)
+    value: JsonValueType = json_loads(obj)
     # Avoid isinstance overhead as we are not interested in list subclasses
-    if type(value) is list:  # noqa: E721
+    if type(value) is list:
         return value
     raise ValueError(f"Expected JSON to be parsed as a list got {type(value)}")
 
 
-def json_loads_object(__obj: bytes | bytearray | memoryview | str) -> JsonObjectType:
+def json_loads_object(obj: bytes | bytearray | memoryview | str, /) -> JsonObjectType:
     """Parse JSON data and ensure result is a dictionary."""
-    value: JsonValueType = json_loads(__obj)
+    value: JsonValueType = json_loads(obj)
     # Avoid isinstance overhead as we are not interested in dict subclasses
-    if type(value) is dict:  # noqa: E721
+    if type(value) is dict:
         return value
     raise ValueError(f"Expected JSON to be parsed as a dict got {type(value)}")
 
@@ -101,7 +95,7 @@ def load_json_array(
         default = []
     value: JsonValueType = load_json(filename, default=default)
     # Avoid isinstance overhead as we are not interested in list subclasses
-    if type(value) is list:  # noqa: E721
+    if type(value) is list:
         return value
     _LOGGER.exception(
         "Expected JSON to be parsed as a list got %s in: %s", {type(value)}, filename
@@ -121,41 +115,12 @@ def load_json_object(
         default = {}
     value: JsonValueType = load_json(filename, default=default)
     # Avoid isinstance overhead as we are not interested in dict subclasses
-    if type(value) is dict:  # noqa: E721
+    if type(value) is dict:
         return value
     _LOGGER.exception(
         "Expected JSON to be parsed as a dict got %s in: %s", {type(value)}, filename
     )
     raise HomeAssistantError(f"Expected JSON to be parsed as a dict got {type(value)}")
-
-
-def save_json(
-    filename: str,
-    data: list | dict,
-    private: bool = False,
-    *,
-    encoder: type[json.JSONEncoder] | None = None,
-    atomic_writes: bool = False,
-) -> None:
-    """Save JSON data to a file."""
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.helpers.frame import report
-
-    report(
-        (
-            "uses save_json from homeassistant.util.json module."
-            " This is deprecated and will stop working in Home Assistant 2022.4, it"
-            " should be updated to use homeassistant.helpers.json module instead"
-        ),
-        error_if_core=False,
-    )
-
-    # pylint: disable-next=import-outside-toplevel
-    import homeassistant.helpers.json as json_helper
-
-    json_helper.save_json(
-        filename, data, private, encoder=encoder, atomic_writes=atomic_writes
-    )
 
 
 def format_unserializable_data(data: dict[str, Any]) -> str:
@@ -164,28 +129,3 @@ def format_unserializable_data(data: dict[str, Any]) -> str:
     Format is comma separated: <path>=<value>(<type>)
     """
     return ", ".join(f"{path}={value}({type(value)}" for path, value in data.items())
-
-
-def find_paths_unserializable_data(
-    bad_data: Any, *, dump: Callable[[Any], str] = json.dumps
-) -> dict[str, Any]:
-    """Find the paths to unserializable data.
-
-    This method is slow! Only use for error handling.
-    """
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.helpers.frame import report
-
-    report(
-        (
-            "uses find_paths_unserializable_data from homeassistant.util.json module."
-            " This is deprecated and will stop working in Home Assistant 2022.4, it"
-            " should be updated to use homeassistant.helpers.json module instead"
-        ),
-        error_if_core=False,
-    )
-
-    # pylint: disable-next=import-outside-toplevel
-    import homeassistant.helpers.json as json_helper
-
-    return json_helper.find_paths_unserializable_data(bad_data, dump=dump)

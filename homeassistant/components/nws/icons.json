@@ -1,0 +1,7 @@
+{
+  "services": {
+    "get_forecasts_extra": {
+      "service": "mdi:weather-cloudy-clock"
+    }
+  }
+}

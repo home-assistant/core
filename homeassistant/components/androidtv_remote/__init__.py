@@ -30,20 +30,17 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: AndroidTVRemoteConfigEntry
 ) -> bool:
     """Set up Android TV Remote from a config entry."""
+    _LOGGER.debug("async_setup_entry: %s", entry.data)
     api = create_api(hass, entry.data[CONF_HOST], get_enable_ime(entry))
 
     @callback
     def is_available_updated(is_available: bool) -> None:
-        if is_available:
-            _LOGGER.info(
-                "Reconnected to %s at %s", entry.data[CONF_NAME], entry.data[CONF_HOST]
-            )
-        else:
-            _LOGGER.warning(
-                "Disconnected from %s at %s",
-                entry.data[CONF_NAME],
-                entry.data[CONF_HOST],
-            )
+        _LOGGER.info(
+            "%s %s at %s",
+            "Reconnected to" if is_available else "Disconnected from",
+            entry.data[CONF_NAME],
+            entry.data[CONF_HOST],
+        )
 
     api.add_is_available_updated_callback(is_available_updated)
 
@@ -79,7 +76,7 @@ async def async_setup_entry(
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
     )
-    entry.async_on_unload(entry.add_update_listener(update_listener))
+    entry.async_on_unload(entry.add_update_listener(async_update_options))
     entry.async_on_unload(api.disconnect)
 
     return True
@@ -87,9 +84,13 @@ async def async_setup_entry(
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
+    _LOGGER.debug("async_unload_entry: %s", entry.data)
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_update_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
+    _LOGGER.debug(
+        "async_update_options: data: %s options: %s", entry.data, entry.options
+    )
     await hass.config_entries.async_reload(entry.entry_id)

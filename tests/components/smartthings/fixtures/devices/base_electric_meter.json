@@ -1,0 +1,61 @@
+{
+  "items": [
+    {
+      "deviceId": "68e786a6-7f61-4c3a-9e13-70b803cf782b",
+      "name": "base-electric-meter",
+      "label": "Aeon Energy Monitor",
+      "manufacturerName": "SmartThingsCommunity",
+      "presentationId": "8e619cd9-c271-3ba0-9015-62bc074bc47f",
+      "deviceManufacturerCode": "0086-0002-0009",
+      "locationId": "c4d3b2a1-09f8-765e-4d3c-2b1a09f8e7d6 ",
+      "ownerId": "d47f2b19-3a6e-4c8d-bf21-9e8a7c5d134e",
+      "roomId": "7715151d-0314-457a-a82c-5ce48900e065",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "powerMeter",
+              "version": 1
+            },
+            {
+              "id": "energyMeter",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "CurbPowerMeter",
+              "categoryType": "manufacturer"
+            }
+          ]
+        }
+      ],
+      "createTime": "2023-06-03T16:23:57.284Z",
+      "profile": {
+        "id": "d382796f-8ed5-3088-8735-eb03e962203b"
+      },
+      "zwave": {
+        "networkId": "2A",
+        "driverId": "4fb7ec02-2697-4d73-977d-2b1c65c4484f",
+        "executingLocally": true,
+        "hubId": "074fa784-8be8-4c70-8e22-6f5ed6f81b7e",
+        "networkSecurityLevel": "ZWAVE_LEGACY_NON_SECURE",
+        "provisioningState": "PROVISIONED",
+        "manufacturerId": 134,
+        "productType": 2,
+        "productId": 9
+      },
+      "type": "ZWAVE",
+      "restrictionTier": 0,
+      "allowed": [],
+      "executionContext": "LOCAL"
+    }
+  ],
+  "_links": {}
+}

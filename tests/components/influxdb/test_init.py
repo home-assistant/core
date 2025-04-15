@@ -1,5 +1,6 @@
 """The tests for the InfluxDB component."""
 
+from collections.abc import Generator
 from dataclasses import dataclass
 import datetime
 from http import HTTPStatus
@@ -42,7 +43,7 @@ class FilterTest:
 
 
 @pytest.fixture(autouse=True)
-def mock_batch_timeout(hass, monkeypatch):
+def mock_batch_timeout(monkeypatch: pytest.MonkeyPatch) -> None:
     """Mock the event bus listener and the batch timeout for tests."""
     monkeypatch.setattr(
         f"{INFLUX_PATH}.InfluxThread.batch_timeout",
@@ -51,7 +52,9 @@ def mock_batch_timeout(hass, monkeypatch):
 
 
 @pytest.fixture(name="mock_client")
-def mock_client_fixture(request):
+def mock_client_fixture(
+    request: pytest.FixtureRequest,
+) -> Generator[MagicMock]:
     """Patch the InfluxDBClient object with mock for version under test."""
     if request.param == influxdb.API_VERSION_2:
         client_target = f"{INFLUX_CLIENT_PATH}V2"
@@ -63,7 +66,7 @@ def mock_client_fixture(request):
 
 
 @pytest.fixture(name="get_mock_call")
-def get_mock_call_fixture(request):
+def get_mock_call_fixture(request: pytest.FixtureRequest):
     """Get version specific lambda to make write API call mock."""
 
     def v2_call(body, precision):
@@ -76,7 +79,6 @@ def get_mock_call_fixture(request):
 
     if request.param == influxdb.API_VERSION_2:
         return lambda body, precision=None: v2_call(body, precision)
-    # pylint: disable-next=unnecessary-lambda
     return lambda body, precision=None: call(body, time_precision=precision)
 
 
@@ -332,7 +334,9 @@ async def test_invalid_config(
     assert not await async_setup_component(hass, influxdb.DOMAIN, config)
 
 
-async def _setup(hass, mock_influx_client, config_ext, get_write_api):
+async def _setup(
+    hass: HomeAssistant, mock_influx_client, config_ext, get_write_api
+) -> None:
     """Prepare client for next test and return event handler method."""
     config = {
         "influxdb": {

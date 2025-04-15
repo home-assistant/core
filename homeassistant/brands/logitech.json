@@ -1,5 +1,5 @@
 {
   "domain": "logitech",
   "name": "Logitech",
-  "integrations": ["harmony", "ue_smart_radio", "squeezebox"]
+  "integrations": ["harmony", "squeezebox"]
 }

@@ -1,8 +1,16 @@
 {
   "services": {
-    "purge": "mdi:database-sync",
-    "purge_entities": "mdi:database-sync",
-    "disable": "mdi:database-off",
-    "enable": "mdi:database"
+    "purge": {
+      "service": "mdi:database-sync"
+    },
+    "purge_entities": {
+      "service": "mdi:database-sync"
+    },
+    "disable": {
+      "service": "mdi:database-off"
+    },
+    "enable": {
+      "service": "mdi:database"
+    }
   }
 }

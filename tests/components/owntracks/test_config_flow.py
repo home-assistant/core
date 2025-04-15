@@ -8,9 +8,9 @@ from homeassistant import config_entries
 from homeassistant.components.owntracks import config_flow
 from homeassistant.components.owntracks.config_flow import CONF_CLOUDHOOK, CONF_SECRET
 from homeassistant.components.owntracks.const import DOMAIN
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
 
@@ -51,7 +51,7 @@ def mock_not_supports_encryption():
         yield
 
 
-async def init_config_flow(hass):
+async def init_config_flow(hass: HomeAssistant) -> config_flow.OwnTracksFlow:
     """Init a configuration flow."""
     await async_process_ha_core_config(
         hass,
@@ -94,13 +94,14 @@ async def test_import_setup(hass: HomeAssistant) -> None:
 
 async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
     """Test that we can't add more than one instance."""
-    flow = await init_config_flow(hass)
-
     MockConfigEntry(domain=DOMAIN, data={}).add_to_hass(hass)
     assert hass.config_entries.async_entries(DOMAIN)
 
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
     # Should fail, already setup (flow)
-    result = await flow.async_step_user({})
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
 

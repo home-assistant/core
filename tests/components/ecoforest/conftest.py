@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from pyecoforest.models.device import Alarm, Device, OperationMode, State
 import pytest
 
-from homeassistant.components.ecoforest import DOMAIN
+from homeassistant.components.ecoforest.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
@@ -14,7 +14,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.ecoforest.async_setup_entry", return_value=True

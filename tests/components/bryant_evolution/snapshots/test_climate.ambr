@@ -1,0 +1,84 @@
+# serializer version: 1
+# name: test_setup_integration_success[climate.system_1_zone_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'fan_modes': list([
+        'auto',
+        'low',
+        'med',
+        'high',
+      ]),
+      'hvac_modes': list([
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 95,
+      'min_temp': 45,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.system_1_zone_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'bryant_evolution',
+    'previous_unique_id': None,
+    'supported_features': <ClimateEntityFeature: 395>,
+    'translation_key': None,
+    'unique_id': '01J3XJZSTEF6G5V0QJX6HBC94T-S1-Z1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup_integration_success[climate.system_1_zone_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 75,
+      'fan_mode': 'auto',
+      'fan_modes': list([
+        'auto',
+        'low',
+        'med',
+        'high',
+      ]),
+      'friendly_name': 'System 1 Zone 1',
+      'hvac_action': <HVACAction.OFF: 'off'>,
+      'hvac_modes': list([
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 95,
+      'min_temp': 45,
+      'supported_features': <ClimateEntityFeature: 395>,
+      'target_temp_high': None,
+      'target_temp_low': None,
+      'temperature': 72,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.system_1_zone_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'cool',
+  })
+# ---

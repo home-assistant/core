@@ -9,16 +9,16 @@ from meteoalertapi import Meteoalert
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,9 +30,9 @@ CONF_PROVINCE = "province"
 
 DEFAULT_NAME = "meteoalarm"
 
-SCAN_INTERVAL = timedelta(minutes=30)
+SCAN_INTERVAL = timedelta(minutes=5)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_COUNTRY): cv.string,
         vol.Required(CONF_PROVINCE): cv.string,

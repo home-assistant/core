@@ -6,15 +6,19 @@ from flexit_bacnet import DecodingError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
-from homeassistant.components.number.const import ATTR_VALUE, SERVICE_SET_VALUE
+from homeassistant.components.number import (
+    ATTR_VALUE,
+    DOMAIN as NUMBER_DOMAIN,
+    SERVICE_SET_VALUE,
+)
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
+from . import setup_with_selected_platforms
+
 from tests.common import MockConfigEntry, snapshot_platform
-from tests.components.flexit_bacnet import setup_with_selected_platforms
 
 ENTITY_ID = "number.device_name_fireplace_supply_fan_setpoint"
 
@@ -60,21 +64,21 @@ async def test_numbers_implementation(
     assert len(mocked_method.mock_calls) == 1
     assert hass.states.get(ENTITY_ID).state == "60"
 
-    mock_flexit_bacnet.fan_setpoint_supply_air_fire = 10
+    mock_flexit_bacnet.fan_setpoint_supply_air_fire = 40
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
         {
             ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_VALUE: 10,
+            ATTR_VALUE: 40,
         },
         blocking=True,
     )
 
     mocked_method = getattr(mock_flexit_bacnet, "set_fan_setpoint_supply_air_fire")
     assert len(mocked_method.mock_calls) == 2
-    assert hass.states.get(ENTITY_ID).state == "10"
+    assert hass.states.get(ENTITY_ID).state == "40"
 
     # Error recovery, when setting the value
     mock_flexit_bacnet.set_fan_setpoint_supply_air_fire.side_effect = DecodingError
@@ -85,7 +89,7 @@ async def test_numbers_implementation(
             SERVICE_SET_VALUE,
             {
                 ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_VALUE: 10,
+                ATTR_VALUE: 40,
             },
             blocking=True,
         )

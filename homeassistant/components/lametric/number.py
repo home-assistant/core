@@ -6,13 +6,13 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any
 
-from demetriek import Device, LaMetricDevice
+from demetriek import Device, LaMetricDevice, Range
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import LaMetricDataUpdateCoordinator
@@ -25,6 +25,8 @@ class LaMetricNumberEntityDescription(NumberEntityDescription):
     """Class describing LaMetric number entities."""
 
     value_fn: Callable[[Device], int | None]
+    range_fn: Callable[[Device], Range | None]
+    has_fn: Callable[[Device], bool] = lambda device: True
     set_value_fn: Callable[[LaMetricDevice, float], Awaitable[Any]]
 
 
@@ -32,11 +34,9 @@ NUMBERS = [
     LaMetricNumberEntityDescription(
         key="brightness",
         translation_key="brightness",
-        name="Brightness",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
-        native_min_value=0,
-        native_max_value=100,
+        range_fn=lambda device: device.display.brightness_limit,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda device: device.display.brightness,
         set_value_fn=lambda device, bri: device.display(brightness=int(bri)),
@@ -44,12 +44,12 @@ NUMBERS = [
     LaMetricNumberEntityDescription(
         key="volume",
         translation_key="volume",
-        name="Volume",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
-        native_min_value=0,
-        native_max_value=100,
-        value_fn=lambda device: device.audio.volume,
+        range_fn=lambda device: device.audio.volume_range if device.audio else None,
+        native_unit_of_measurement=PERCENTAGE,
+        has_fn=lambda device: bool(device.audio and device.audio.available),
+        value_fn=lambda device: device.audio.volume if device.audio else 0,
         set_value_fn=lambda api, volume: api.audio(volume=int(volume)),
     ),
 ]
@@ -58,7 +58,7 @@ NUMBERS = [
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up LaMetric number based on a config entry."""
     coordinator: LaMetricDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
@@ -90,6 +90,20 @@ class LaMetricNumberEntity(LaMetricEntity, NumberEntity):
     def native_value(self) -> int | None:
         """Return the number value."""
         return self.entity_description.value_fn(self.coordinator.data)
+
+    @property
+    def native_min_value(self) -> int:
+        """Return the min range."""
+        if limits := self.entity_description.range_fn(self.coordinator.data):
+            return limits.range_min
+        return 0
+
+    @property
+    def native_max_value(self) -> int:
+        """Return the max range."""
+        if limits := self.entity_description.range_fn(self.coordinator.data):
+            return limits.range_max
+        return 100
 
     @lametric_exception_handler
     async def async_set_native_value(self, value: float) -> None:

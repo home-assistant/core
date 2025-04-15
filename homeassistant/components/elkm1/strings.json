@@ -53,7 +53,7 @@
       "fields": {
         "code": {
           "name": "Code",
-          "description": "An code to authorize the bypass of the alarm control panel."
+          "description": "Alarm code to authorize the bypass of the alarm control panel."
         }
       }
     },
@@ -63,17 +63,17 @@
       "fields": {
         "code": {
           "name": "Code",
-          "description": "An code to authorize the bypass clear of the alarm control panel."
+          "description": "Alarm code to authorize the bypass clear of the alarm control panel."
         }
       }
     },
     "alarm_arm_home_instant": {
-      "name": "Alarm are home instant",
+      "name": "Alarm arm home instant",
       "description": "Arms the ElkM1 in home instant mode.",
       "fields": {
         "code": {
           "name": "Code",
-          "description": "An code to arm the alarm control panel."
+          "description": "Alarm code to arm the alarm control panel."
         }
       }
     },
@@ -89,7 +89,7 @@
     },
     "alarm_arm_vacation": {
       "name": "Alarm arm vacation",
-      "description": "Arm the ElkM1 in vacation mode.",
+      "description": "Arms the ElkM1 in vacation mode.",
       "fields": {
         "code": {
           "name": "Code",
@@ -181,13 +181,26 @@
       "fields": {
         "code": {
           "name": "Code",
-          "description": "An code to authorize the bypass of the zone."
+          "description": "Alarm code to authorize the bypass of the zone."
         }
       }
     },
     "sensor_zone_trigger": {
       "name": "Sensor zone trigger",
       "description": "Triggers zone."
+    }
+  },
+  "issues": {
+    "migrate_aux_heat": {
+      "title": "Migration of Elk-M1 set_aux_heat action",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "The Elk-M1 `set_aux_heat` action has been migrated. A new emergency heat switch entity is available for each thermostat.\n\nUpdate any automations to use the new emergency heat switch entity. When this is done, select **Submit** to fix this issue.",
+            "title": "[%key:component::elkm1::issues::migrate_aux_heat::title%]"
+          }
+        }
+      }
     }
   }
 }

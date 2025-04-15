@@ -26,7 +26,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[None, None, None]:
+def mock_setup_entry() -> Generator[None]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.luftdaten.async_setup_entry", return_value=True
@@ -35,7 +35,7 @@ def mock_setup_entry() -> Generator[None, None, None]:
 
 
 @pytest.fixture
-def mock_luftdaten() -> Generator[None, MagicMock, None]:
+def mock_luftdaten() -> Generator[MagicMock]:
     """Return a mocked Luftdaten client."""
     with (
         patch(

@@ -14,7 +14,6 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
@@ -22,8 +21,8 @@
     "step": {
       "init": {
         "data": {
-          "ffmpeg_arguments": "Arguments passed to ffmpeg for cameras",
-          "timeout": "Request Timeout (seconds)"
+          "ffmpeg_arguments": "Arguments passed to FFmpeg for cameras",
+          "timeout": "Request timeout (seconds)"
         }
       }
     }

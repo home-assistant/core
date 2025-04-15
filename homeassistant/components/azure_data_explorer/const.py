@@ -16,9 +16,8 @@ CONF_APP_REG_SECRET = "client_secret"
 CONF_AUTHORITY_ID = "authority_id"
 CONF_SEND_INTERVAL = "send_interval"
 CONF_MAX_DELAY = "max_delay"
-CONF_FILTER = DATA_FILTER = "filter"
-CONF_USE_FREE = "use_queued_ingestion"
-DATA_HUB = "hub"
+CONF_FILTER = "filter"
+CONF_USE_QUEUED_CLIENT = "use_queued_ingestion"
 STEP_USER = "user"
 
 

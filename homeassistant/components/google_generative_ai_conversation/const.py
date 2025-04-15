@@ -5,11 +5,10 @@ import logging
 DOMAIN = "google_generative_ai_conversation"
 LOGGER = logging.getLogger(__package__)
 CONF_PROMPT = "prompt"
-DEFAULT_PROMPT = "Answer in plain text. Keep it simple and to the point."
 
 CONF_RECOMMENDED = "recommended"
 CONF_CHAT_MODEL = "chat_model"
-RECOMMENDED_CHAT_MODEL = "models/gemini-1.5-flash-latest"
+RECOMMENDED_CHAT_MODEL = "models/gemini-2.0-flash"
 CONF_TEMPERATURE = "temperature"
 RECOMMENDED_TEMPERATURE = 1.0
 CONF_TOP_P = "top_p"
@@ -23,3 +22,7 @@ CONF_HATE_BLOCK_THRESHOLD = "hate_block_threshold"
 CONF_SEXUAL_BLOCK_THRESHOLD = "sexual_block_threshold"
 CONF_DANGEROUS_BLOCK_THRESHOLD = "dangerous_block_threshold"
 RECOMMENDED_HARM_BLOCK_THRESHOLD = "BLOCK_MEDIUM_AND_ABOVE"
+CONF_USE_GOOGLE_SEARCH_TOOL = "enable_google_search_tool"
+RECOMMENDED_USE_GOOGLE_SEARCH_TOOL = False
+
+TIMEOUT_MILLIS = 10000

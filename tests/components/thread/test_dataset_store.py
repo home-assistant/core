@@ -2,7 +2,7 @@
 
 import asyncio
 from typing import Any
-from unittest.mock import ANY, AsyncMock, patch
+from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 import pytest
 from python_otbr_api.tlv_parser import TLVError
@@ -213,7 +213,9 @@ async def test_add_bad_dataset(hass: HomeAssistant, dataset, error) -> None:
         await dataset_store.async_add_dataset(hass, "test", dataset)
 
 
-async def test_update_dataset_newer(hass: HomeAssistant, caplog) -> None:
+async def test_update_dataset_newer(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test updating a dataset."""
     await dataset_store.async_add_dataset(hass, "test", DATASET_1)
     await dataset_store.async_add_dataset(hass, "test", DATASET_1_LARGER_TIMESTAMP)
@@ -232,7 +234,9 @@ async def test_update_dataset_newer(hass: HomeAssistant, caplog) -> None:
     )
 
 
-async def test_update_dataset_older(hass: HomeAssistant, caplog) -> None:
+async def test_update_dataset_older(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test updating a dataset."""
     await dataset_store.async_add_dataset(hass, "test", DATASET_1_LARGER_TIMESTAMP)
     await dataset_store.async_add_dataset(hass, "test", DATASET_1)
@@ -354,7 +358,7 @@ async def test_loading_datasets_from_storage(
 
 
 async def test_migrate_drop_bad_datasets(
-    hass: HomeAssistant, hass_storage: dict[str, Any], caplog
+    hass: HomeAssistant, hass_storage: dict[str, Any], caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test migrating the dataset store when the store has bad datasets."""
     hass_storage[dataset_store.STORAGE_KEY] = {
@@ -398,7 +402,7 @@ async def test_migrate_drop_bad_datasets(
 
 
 async def test_migrate_drop_bad_datasets_preferred(
-    hass: HomeAssistant, hass_storage: dict[str, Any], caplog
+    hass: HomeAssistant, hass_storage: dict[str, Any], caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test migrating the dataset store when the store has bad datasets."""
     hass_storage[dataset_store.STORAGE_KEY] = {
@@ -429,7 +433,7 @@ async def test_migrate_drop_bad_datasets_preferred(
 
 
 async def test_migrate_drop_duplicate_datasets(
-    hass: HomeAssistant, hass_storage: dict[str, Any], caplog
+    hass: HomeAssistant, hass_storage: dict[str, Any], caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test migrating the dataset store when the store has duplicated datasets."""
     hass_storage[dataset_store.STORAGE_KEY] = {
@@ -466,7 +470,7 @@ async def test_migrate_drop_duplicate_datasets(
 
 
 async def test_migrate_drop_duplicate_datasets_2(
-    hass: HomeAssistant, hass_storage: dict[str, Any], caplog
+    hass: HomeAssistant, hass_storage: dict[str, Any], caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test migrating the dataset store when the store has duplicated datasets."""
     hass_storage[dataset_store.STORAGE_KEY] = {
@@ -503,7 +507,7 @@ async def test_migrate_drop_duplicate_datasets_2(
 
 
 async def test_migrate_drop_duplicate_datasets_preferred(
-    hass: HomeAssistant, hass_storage: dict[str, Any], caplog
+    hass: HomeAssistant, hass_storage: dict[str, Any], caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test migrating the dataset store when the store has duplicated datasets."""
     hass_storage[dataset_store.STORAGE_KEY] = {
@@ -540,7 +544,7 @@ async def test_migrate_drop_duplicate_datasets_preferred(
 
 
 async def test_migrate_set_default_border_agent_id(
-    hass: HomeAssistant, hass_storage: dict[str, Any], caplog
+    hass: HomeAssistant, hass_storage: dict[str, Any], caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test migrating the dataset store adds default border agent."""
     hass_storage[dataset_store.STORAGE_KEY] = {
@@ -706,7 +710,7 @@ async def test_set_preferred_extended_address(hass: HomeAssistant) -> None:
 
 
 async def test_automatically_set_preferred_dataset(
-    hass: HomeAssistant, mock_async_zeroconf: None
+    hass: HomeAssistant, mock_async_zeroconf: MagicMock
 ) -> None:
     """Test automatically setting the first dataset as the preferred dataset."""
     add_service_listener_called = asyncio.Event()
@@ -771,7 +775,7 @@ async def test_automatically_set_preferred_dataset(
 
 
 async def test_automatically_set_preferred_dataset_own_and_other_router(
-    hass: HomeAssistant, mock_async_zeroconf: None
+    hass: HomeAssistant, mock_async_zeroconf: MagicMock
 ) -> None:
     """Test automatically setting the first dataset as the preferred dataset.
 
@@ -850,7 +854,7 @@ async def test_automatically_set_preferred_dataset_own_and_other_router(
 
 
 async def test_automatically_set_preferred_dataset_other_router(
-    hass: HomeAssistant, mock_async_zeroconf: None
+    hass: HomeAssistant, mock_async_zeroconf: MagicMock
 ) -> None:
     """Test automatically setting the first dataset as the preferred dataset.
 
@@ -918,7 +922,7 @@ async def test_automatically_set_preferred_dataset_other_router(
 
 
 async def test_automatically_set_preferred_dataset_no_router(
-    hass: HomeAssistant, mock_async_zeroconf: None
+    hass: HomeAssistant, mock_async_zeroconf: MagicMock
 ) -> None:
     """Test automatically setting the first dataset as the preferred dataset.
 

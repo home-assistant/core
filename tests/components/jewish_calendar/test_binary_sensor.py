@@ -3,16 +3,23 @@
 from datetime import datetime as dt, timedelta
 import logging
 
+from freezegun import freeze_time
 import pytest
 
-from homeassistant.components import jewish_calendar
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.components.jewish_calendar.const import (
+    CONF_CANDLE_LIGHT_MINUTES,
+    CONF_DIASPORA,
+    CONF_HAVDALAH_OFFSET_MINUTES,
+    DEFAULT_NAME,
+    DOMAIN,
+)
+from homeassistant.const import CONF_LANGUAGE, CONF_PLATFORM, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
-from . import alter_time, make_jerusalem_test_params, make_nyc_test_params
+from . import make_jerusalem_test_params, make_nyc_test_params
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -185,14 +192,15 @@ async def test_issur_melacha_sensor(
     hass.config.latitude = latitude
     hass.config.longitude = longitude
 
-    with alter_time(test_time):
+    with freeze_time(test_time):
         entry = MockConfigEntry(
-            domain=jewish_calendar.DOMAIN,
+            title=DEFAULT_NAME,
+            domain=DOMAIN,
             data={
-                "language": "english",
-                "diaspora": diaspora,
-                "candle_lighting_minutes_before_sunset": candle_lighting,
-                "havdalah_minutes_after_sunset": havdalah,
+                CONF_LANGUAGE: "english",
+                CONF_DIASPORA: diaspora,
+                CONF_CANDLE_LIGHT_MINUTES: candle_lighting,
+                CONF_HAVDALAH_OFFSET_MINUTES: havdalah,
             },
         )
         entry.add_to_hass(hass)
@@ -206,7 +214,7 @@ async def test_issur_melacha_sensor(
             == result["state"]
         )
 
-        with alter_time(result["update"]):
+        with freeze_time(result["update"]):
             async_fire_time_changed(hass, result["update"])
             await hass.async_block_till_done()
             assert (
@@ -257,14 +265,15 @@ async def test_issur_melacha_sensor_update(
     hass.config.latitude = latitude
     hass.config.longitude = longitude
 
-    with alter_time(test_time):
+    with freeze_time(test_time):
         entry = MockConfigEntry(
-            domain=jewish_calendar.DOMAIN,
+            title=DEFAULT_NAME,
+            domain=DOMAIN,
             data={
-                "language": "english",
-                "diaspora": diaspora,
-                "candle_lighting_minutes_before_sunset": candle_lighting,
-                "havdalah_minutes_after_sunset": havdalah,
+                CONF_LANGUAGE: "english",
+                CONF_DIASPORA: diaspora,
+                CONF_CANDLE_LIGHT_MINUTES: candle_lighting,
+                CONF_HAVDALAH_OFFSET_MINUTES: havdalah,
             },
         )
         entry.add_to_hass(hass)
@@ -278,7 +287,7 @@ async def test_issur_melacha_sensor_update(
         )
 
     test_time += timedelta(microseconds=1)
-    with alter_time(test_time):
+    with freeze_time(test_time):
         async_fire_time_changed(hass, test_time)
         await hass.async_block_till_done()
         assert (
@@ -297,7 +306,7 @@ async def test_no_discovery_info(
     assert await async_setup_component(
         hass,
         BINARY_SENSOR_DOMAIN,
-        {BINARY_SENSOR_DOMAIN: {"platform": jewish_calendar.DOMAIN}},
+        {BINARY_SENSOR_DOMAIN: {CONF_PLATFORM: DOMAIN}},
     )
     await hass.async_block_till_done()
     assert BINARY_SENSOR_DOMAIN in hass.config.components

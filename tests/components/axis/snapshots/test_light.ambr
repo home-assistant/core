@@ -1,0 +1,58 @@
+# serializer version: 1
+# name: test_lights[api_discovery_items0][light.home_ir_light_0-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'supported_color_modes': list([
+        <ColorMode.BRIGHTNESS: 'brightness'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': None,
+    'entity_id': 'light.home_ir_light_0',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'IR Light 0',
+    'platform': 'axis',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00:40:8c:12:34:56-tns1:Device/tnsaxis:Light/Status-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_lights[api_discovery_items0][light.home_ir_light_0-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'brightness': 170,
+      'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
+      'friendly_name': 'home IR Light 0',
+      'supported_color_modes': list([
+        <ColorMode.BRIGHTNESS: 'brightness'>,
+      ]),
+      'supported_features': <LightEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.home_ir_light_0',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

@@ -1,6 +1,7 @@
 """Tests for the link user flow."""
 
 from http import HTTPStatus
+from typing import Any
 from unittest.mock import patch
 
 from homeassistant.core import HomeAssistant
@@ -11,7 +12,9 @@ from tests.common import CLIENT_ID, CLIENT_REDIRECT_URI
 from tests.typing import ClientSessionGenerator
 
 
-async def async_get_code(hass, aiohttp_client):
+async def async_get_code(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> dict[str, Any]:
     """Return authorization code for link user tests."""
     config = [
         {

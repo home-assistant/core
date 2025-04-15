@@ -12,7 +12,7 @@
         "description": "[%key:component::bluetooth::config::step::bluetooth_confirm::description%]"
       },
       "reauth_confirm": {
-        "description": "The activation code is no longer valid, a new unused activation code is needed.\n\n"
+        "description": "The activation code is no longer valid, a new unused activation code is needed."
       },
       "associate": {
         "description": "Provide an unused activation code.\n\nTo create an activation code, create a new key in the dKey admin app, then choose to share the key and share an activation code.\n\nMake sure to close the dKey admin app before proceeding.",

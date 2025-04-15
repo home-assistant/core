@@ -61,6 +61,9 @@
       "total_cleaning_area": {
         "default": "mdi:texture-box"
       },
+      "total_cleaning_count": {
+        "default": "mdi:counter"
+      },
       "vacuum_error": {
         "default": "mdi:alert-circle"
       },
@@ -75,6 +78,18 @@
       },
       "dock_error": {
         "default": "mdi:garage-open"
+      },
+      "zeo_error": {
+        "default": "mdi:alert-circle"
+      },
+      "zeo_state": {
+        "default": "mdi:information-outline"
+      },
+      "washing_left": {
+        "default": "mdi:clock-outline"
+      },
+      "countdown": {
+        "default": "mdi:clock-outline"
       }
     },
     "switch": {
@@ -107,6 +122,14 @@
     }
   },
   "services": {
-    "get_maps": "mdi:floor-plan"
+    "get_maps": {
+      "service": "mdi:floor-plan"
+    },
+    "set_vacuum_goto_position": {
+      "service": "mdi:map-marker"
+    },
+    "get_vacuum_current_position": {
+      "service": "mdi:map-marker"
+    }
   }
 }

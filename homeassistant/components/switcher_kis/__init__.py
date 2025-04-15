@@ -8,15 +8,18 @@ from aioswitcher.bridge import SwitcherBridge
 from aioswitcher.device import SwitcherBase
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.const import CONF_TOKEN, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 
+from .const import DOMAIN
 from .coordinator import SwitcherDataUpdateCoordinator
 
 PLATFORMS = [
     Platform.BUTTON,
     Platform.CLIMATE,
     Platform.COVER,
+    Platform.LIGHT,
     Platform.SENSOR,
     Platform.SWITCH,
 ]
@@ -29,6 +32,8 @@ type SwitcherConfigEntry = ConfigEntry[dict[str, SwitcherDataUpdateCoordinator]]
 
 async def async_setup_entry(hass: HomeAssistant, entry: SwitcherConfigEntry) -> bool:
     """Set up Switcher from a config entry."""
+
+    token = entry.data.get(CONF_TOKEN)
 
     @callback
     def on_device_data_callback(device: SwitcherBase) -> None:
@@ -43,13 +48,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitcherConfigEntry) -> 
 
         # New device - create device
         _LOGGER.info(
-            "Discovered Switcher device - id: %s, key: %s, name: %s, type: %s (%s)",
+            "Discovered Switcher device - id: %s, key: %s, name: %s, type: %s (%s), is_token_needed: %s",
             device.device_id,
             device.device_key,
             device.name,
             device.device_type.value,
             device.device_type.hex_rep,
+            device.token_needed,
         )
+
+        if device.token_needed and not token:
+            entry.async_start_reauth(hass)
+            return
 
         coordinator = SwitcherDataUpdateCoordinator(hass, entry, device)
         coordinator.async_setup()
@@ -77,3 +87,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitcherConfigEntry) -> 
 async def async_unload_entry(hass: HomeAssistant, entry: SwitcherConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: SwitcherConfigEntry, device_entry: dr.DeviceEntry
+) -> bool:
+    """Remove a config entry from a device."""
+    return not device_entry.identifiers.intersection(
+        (DOMAIN, device_id) for device_id in config_entry.runtime_data
+    )

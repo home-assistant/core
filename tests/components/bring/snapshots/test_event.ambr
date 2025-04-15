@@ -1,0 +1,169 @@
+# serializer version: 1
+# name: test_setup[event.baumarkt_activities-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'list_items_changed',
+        'list_items_added',
+        'list_items_removed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.baumarkt_activities',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Activities',
+    'platform': 'bring',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'activities',
+    'unique_id': '00000000-00000000-00000000-00000000_b4776778-7f6c-496e-951b-92a35d3db0dd_activities',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[event.baumarkt_activities-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://api.getbring.com/rest/v2/bringusers/profilepictures/9a21fdfc-63a4-441a-afc1-ef3030605a9d',
+      'event_type': 'list_items_changed',
+      'event_types': list([
+        'list_items_changed',
+        'list_items_added',
+        'list_items_removed',
+      ]),
+      'friendly_name': 'Baumarkt Activities',
+      'items': list([
+      ]),
+      'last_activity_by': 'Bring',
+      'publicUserUuid': '9a21fdfc-63a4-441a-afc1-ef3030605a9d',
+      'purchase': list([
+        dict({
+          'attributes': list([
+          ]),
+          'itemId': 'Gurke',
+          'specification': '',
+          'uuid': '658a3770-1a03-4ee0-94a6-10362a642377',
+        }),
+      ]),
+      'recently': list([
+        dict({
+          'attributes': list([
+          ]),
+          'itemId': 'Milch',
+          'specification': '',
+          'uuid': '1ed22d3d-f19b-4530-a518-19872da3fd3e',
+        }),
+      ]),
+      'sessionDate': HAFakeDatetime(2025, 1, 1, 3, 9, 33, 36000, tzinfo=datetime.timezone.utc),
+      'uuid': '673594a9-f92d-4cb6-adf1-d2f7a83207a4',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.baumarkt_activities',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-01-01T03:30:00.000+00:00',
+  })
+# ---
+# name: test_setup[event.einkauf_activities-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'list_items_changed',
+        'list_items_added',
+        'list_items_removed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.einkauf_activities',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Activities',
+    'platform': 'bring',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'activities',
+    'unique_id': '00000000-00000000-00000000-00000000_e542eef6-dba7-4c31-a52c-29e6ab9d83a5_activities',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[event.einkauf_activities-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://api.getbring.com/rest/v2/bringusers/profilepictures/9a21fdfc-63a4-441a-afc1-ef3030605a9d',
+      'event_type': 'list_items_changed',
+      'event_types': list([
+        'list_items_changed',
+        'list_items_added',
+        'list_items_removed',
+      ]),
+      'friendly_name': 'Einkauf Activities',
+      'items': list([
+      ]),
+      'last_activity_by': 'Bring',
+      'publicUserUuid': '9a21fdfc-63a4-441a-afc1-ef3030605a9d',
+      'purchase': list([
+        dict({
+          'attributes': list([
+          ]),
+          'itemId': 'Gurke',
+          'specification': '',
+          'uuid': '658a3770-1a03-4ee0-94a6-10362a642377',
+        }),
+      ]),
+      'recently': list([
+        dict({
+          'attributes': list([
+          ]),
+          'itemId': 'Milch',
+          'specification': '',
+          'uuid': '1ed22d3d-f19b-4530-a518-19872da3fd3e',
+        }),
+      ]),
+      'sessionDate': HAFakeDatetime(2025, 1, 1, 3, 9, 33, 36000, tzinfo=datetime.timezone.utc),
+      'uuid': '673594a9-f92d-4cb6-adf1-d2f7a83207a4',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.einkauf_activities',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-01-01T03:30:00.000+00:00',
+  })
+# ---

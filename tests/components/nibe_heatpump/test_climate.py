@@ -66,6 +66,7 @@ def _setup_climate_group(
         (Model.F730, "s1", "climate.climate_system_s1"),
     ],
 )
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_basic(
     hass: HomeAssistant,
     mock_connection: MockConnection,
@@ -73,7 +74,6 @@ async def test_basic(
     climate_id: str,
     entity_id: str,
     coils: dict[int, Any],
-    entity_registry_enabled_by_default: None,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test setting of value."""
@@ -113,6 +113,7 @@ async def test_basic(
         (Model.F1155, "s3", "climate.climate_system_s3"),
     ],
 )
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_active_accessory(
     hass: HomeAssistant,
     mock_connection: MockConnection,
@@ -120,7 +121,6 @@ async def test_active_accessory(
     climate_id: str,
     entity_id: str,
     coils: dict[int, Any],
-    entity_registry_enabled_by_default: None,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test climate groups that can be deactivated by configuration."""
@@ -141,6 +141,7 @@ async def test_active_accessory(
         (Model.F1155, "s2", "climate.climate_system_s2"),
     ],
 )
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_set_temperature_supported_cooling(
     hass: HomeAssistant,
     mock_connection: MockConnection,
@@ -148,7 +149,6 @@ async def test_set_temperature_supported_cooling(
     climate_id: str,
     entity_id: str,
     coils: dict[int, Any],
-    entity_registry_enabled_by_default: None,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test setting temperature for models with cooling support."""
@@ -234,6 +234,7 @@ async def test_set_temperature_supported_cooling(
         (Model.F730, "s1", "climate.climate_system_s1"),
     ],
 )
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_set_temperature_unsupported_cooling(
     hass: HomeAssistant,
     mock_connection: MockConnection,
@@ -241,7 +242,6 @@ async def test_set_temperature_unsupported_cooling(
     climate_id: str,
     entity_id: str,
     coils: dict[int, Any],
-    entity_registry_enabled_by_default: None,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test setting temperature for models that do not support cooling."""
@@ -300,6 +300,7 @@ async def test_set_temperature_unsupported_cooling(
         (Model.F730, "s1", "climate.climate_system_s1"),
     ],
 )
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_set_hvac_mode(
     hass: HomeAssistant,
     mock_connection: MockConnection,
@@ -310,7 +311,6 @@ async def test_set_hvac_mode(
     use_room_sensor: str,
     hvac_mode: HVACMode,
     coils: dict[int, Any],
-    entity_registry_enabled_by_default: None,
 ) -> None:
     """Test setting a hvac mode."""
     climate, unit = _setup_climate_group(coils, model, climate_id)
@@ -349,6 +349,7 @@ async def test_set_hvac_mode(
         (Model.F730, "s1", "climate.climate_system_s1", HVACMode.COOL),
     ],
 )
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_set_invalid_hvac_mode(
     hass: HomeAssistant,
     mock_connection: MockConnection,
@@ -357,7 +358,6 @@ async def test_set_invalid_hvac_mode(
     entity_id: str,
     unsupported_mode: str,
     coils: dict[int, Any],
-    entity_registry_enabled_by_default: None,
 ) -> None:
     """Test setting an invalid hvac mode."""
     _setup_climate_group(coils, model, climate_id)
@@ -373,6 +373,5 @@ async def test_set_invalid_hvac_mode(
             },
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     assert mock_connection.write_coil.mock_calls == []

@@ -15,6 +15,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
     UnitOfElectricPotential,
     UnitOfPower,
     UnitOfTime,
@@ -25,7 +26,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import slugify
 from homeassistant.util.dt import utcnow
 
-from . import MOCK_STATUS, async_init_integration
+from . import MOCK_MINIMAL_STATUS, MOCK_STATUS, async_init_integration
 
 from tests.common import async_fire_time_changed
 
@@ -237,3 +238,37 @@ async def test_multiple_manual_update_entity(hass: HomeAssistant) -> None:
             blocking=True,
         )
         assert mock_request_status.call_count == 1
+
+
+async def test_sensor_unknown(hass: HomeAssistant) -> None:
+    """Test if our integration can properly certain sensors as unknown when it becomes so."""
+    await async_init_integration(hass, status=MOCK_MINIMAL_STATUS)
+
+    ups_mode_id = "sensor.apc_ups_mode"
+    last_self_test_id = "sensor.apc_ups_last_self_test"
+
+    assert hass.states.get(ups_mode_id).state == MOCK_MINIMAL_STATUS["UPSMODE"]
+    # Last self test sensor should be added even if our status does not report it initially (it is
+    # a sensor that appears only after a periodical or manual self test is performed).
+    assert hass.states.get(last_self_test_id) is not None
+    assert hass.states.get(last_self_test_id).state == STATE_UNKNOWN
+
+    # Simulate an event (a self test) such that "LASTSTEST" field is being reported, the state of
+    # the sensor should be properly updated with the corresponding value.
+    with patch("aioapcaccess.request_status") as mock_request_status:
+        mock_request_status.return_value = MOCK_MINIMAL_STATUS | {
+            "LASTSTEST": "1970-01-01 00:00:00 0000"
+        }
+        future = utcnow() + timedelta(minutes=2)
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+    assert hass.states.get(last_self_test_id).state == "1970-01-01 00:00:00 0000"
+
+    # Simulate another event (e.g., daemon restart) such that "LASTSTEST" is no longer reported.
+    with patch("aioapcaccess.request_status") as mock_request_status:
+        mock_request_status.return_value = MOCK_MINIMAL_STATUS
+        future = utcnow() + timedelta(minutes=2)
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+    # The state should become unknown again.
+    assert hass.states.get(last_self_test_id).state == STATE_UNKNOWN

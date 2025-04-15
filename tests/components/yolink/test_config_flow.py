@@ -3,6 +3,7 @@
 from http import HTTPStatus
 from unittest.mock import patch
 
+import pytest
 from yolink.const import OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 
 from homeassistant import config_entries, setup
@@ -40,11 +41,11 @@ async def test_abort_if_existing_entry(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
 ) -> None:
     """Check full flow."""
     assert await setup.async_setup_component(
@@ -115,9 +116,8 @@ async def test_full_flow(
     assert len(mock_setup.mock_calls) == 1
 
 
-async def test_abort_if_authorization_timeout(
-    hass: HomeAssistant, current_request_with_host: None
-) -> None:
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_abort_if_authorization_timeout(hass: HomeAssistant) -> None:
     """Check yolink authorization timeout."""
     assert await setup.async_setup_component(
         hass,
@@ -142,11 +142,11 @@ async def test_abort_if_authorization_timeout(
     assert result["reason"] == "authorize_url_timeout"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_reauthentication(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
 ) -> None:
     """Test yolink reauthentication."""
     await setup.async_setup_component(
@@ -172,15 +172,7 @@ async def test_reauthentication(
     )
     old_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "unique_id": old_entry.unique_id,
-            "entry_id": old_entry.entry_id,
-        },
-        data=old_entry.data,
-    )
+    result = await old_entry.start_reauth_flow(hass)
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1

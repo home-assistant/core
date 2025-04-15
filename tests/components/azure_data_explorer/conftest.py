@@ -4,7 +4,7 @@ from collections.abc import Generator
 from datetime import timedelta
 import logging
 from typing import Any
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -94,7 +94,7 @@ async def mock_entry_with_one_event(
 
 # Fixtures for config_flow tests
 @pytest.fixture
-def mock_setup_entry() -> Generator[MockConfigEntry, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock the setup entry call, used for config flow tests."""
     with patch(
         f"{AZURE_DATA_EXPLORER_PATH}.async_setup_entry", return_value=True
@@ -104,7 +104,7 @@ def mock_setup_entry() -> Generator[MockConfigEntry, None, None]:
 
 # Fixtures for mocking the Azure Data Explorer SDK calls.
 @pytest.fixture(autouse=True)
-def mock_managed_streaming() -> Generator[mock_entry_fixture_managed, Any, Any]:
+def mock_managed_streaming() -> Generator[MagicMock]:
     """mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data."""
     with patch(
         "azure.kusto.ingest.ManagedStreamingIngestClient.ingest_from_stream",
@@ -114,7 +114,7 @@ def mock_managed_streaming() -> Generator[mock_entry_fixture_managed, Any, Any]:
 
 
 @pytest.fixture(autouse=True)
-def mock_queued_ingest() -> Generator[mock_entry_fixture_queued, Any, Any]:
+def mock_queued_ingest() -> Generator[MagicMock]:
     """mock_azure_data_explorer_QueuedIngestClient_ingest_data."""
     with patch(
         "azure.kusto.ingest.QueuedIngestClient.ingest_from_stream",
@@ -124,7 +124,7 @@ def mock_queued_ingest() -> Generator[mock_entry_fixture_queued, Any, Any]:
 
 
 @pytest.fixture(autouse=True)
-def mock_execute_query() -> Generator[Mock, Any, Any]:
+def mock_execute_query() -> Generator[MagicMock]:
     """Mock KustoClient execute_query."""
     with patch(
         "azure.kusto.data.KustoClient.execute_query",

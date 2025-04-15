@@ -19,7 +19,8 @@ from .mocks import HomeControlMock, HomeControlMockBinarySensor
 from tests.typing import WebSocketGenerator
 
 
-async def test_setup_entry(hass: HomeAssistant, mock_zeroconf: None) -> None:
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_setup_entry(hass: HomeAssistant) -> None:
     """Test setup entry."""
     entry = configure_integration(hass)
     with patch("homeassistant.components.devolo_home_control.HomeControl"):
@@ -43,7 +44,8 @@ async def test_setup_entry_maintenance(hass: HomeAssistant) -> None:
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_setup_gateway_offline(hass: HomeAssistant, mock_zeroconf: None) -> None:
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_setup_gateway_offline(hass: HomeAssistant) -> None:
     """Test setup entry fails on gateway offline."""
     entry = configure_integration(hass)
     with patch(

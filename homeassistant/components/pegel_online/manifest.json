@@ -7,5 +7,5 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["aiopegelonline"],
-  "requirements": ["aiopegelonline==0.0.10"]
+  "requirements": ["aiopegelonline==0.1.1"]
 }

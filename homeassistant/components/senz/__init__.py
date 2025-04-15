@@ -57,9 +57,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except RequestError as err:
         raise ConfigEntryNotReady from err
 
-    coordinator = SENZDataUpdateCoordinator(
+    coordinator: SENZDataUpdateCoordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=entry,
         name=account.username,
         update_interval=UPDATE_INTERVAL,
         update_method=update_thermostats,

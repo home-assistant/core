@@ -10,7 +10,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-async def test_config_flow(hass: HomeAssistant, mock_get_source_ip) -> None:
+async def test_config_flow(hass: HomeAssistant) -> None:
     """Test we can finish a config flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -25,7 +25,7 @@ async def test_config_flow(hass: HomeAssistant, mock_get_source_ip) -> None:
     assert state
 
 
-async def test_already_setup(hass: HomeAssistant, mock_get_source_ip) -> None:
+async def test_already_setup(hass: HomeAssistant) -> None:
     """Test we abort if already setup."""
     MockConfigEntry(
         domain=DOMAIN,

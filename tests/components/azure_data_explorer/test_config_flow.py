@@ -1,5 +1,7 @@
 """Test the Azure Data Explorer config flow."""
 
+from unittest.mock import AsyncMock, MagicMock
+
 from azure.kusto.data.exceptions import KustoAuthenticationError, KustoServiceError
 import pytest
 
@@ -10,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from .const import BASE_CONFIG
 
 
-async def test_config_flow(hass, mock_setup_entry) -> None:
+async def test_config_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=None
@@ -23,7 +25,7 @@ async def test_config_flow(hass, mock_setup_entry) -> None:
         BASE_CONFIG.copy(),
     )
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result2["title"] == "cluster.region.kusto.windows.net"
     mock_setup_entry.assert_called_once()
 
@@ -36,10 +38,10 @@ async def test_config_flow(hass, mock_setup_entry) -> None:
     ],
 )
 async def test_config_flow_errors(
-    test_input,
-    expected,
+    test_input: Exception,
+    expected: str,
     hass: HomeAssistant,
-    mock_execute_query,
+    mock_execute_query: MagicMock,
 ) -> None:
     """Test we handle connection KustoServiceError."""
     result = await hass.config_entries.flow.async_init(
@@ -57,12 +59,12 @@ async def test_config_flow_errors(
         result["flow_id"],
         BASE_CONFIG.copy(),
     )
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["errors"] == {"base": expected}
 
     await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
 
     # Retest error handling if error is corrected and connection is successful
 
@@ -75,4 +77,4 @@ async def test_config_flow_errors(
 
     await hass.async_block_till_done()
 
-    assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result3["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY

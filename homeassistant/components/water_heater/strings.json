@@ -1,4 +1,5 @@
 {
+  "title": "Water heater",
   "device_automation": {
     "action_type": {
       "turn_on": "[%key:common::device_automation::action_type::turn_on%]",
@@ -7,17 +8,35 @@
   },
   "entity_component": {
     "_": {
-      "name": "Water heater",
+      "name": "[%key:component::water_heater::title%]",
       "state": {
         "off": "[%key:common::state::off%]",
         "eco": "Eco",
         "electric": "Electric",
         "gas": "Gas",
-        "high_demand": "High Demand",
-        "heat_pump": "Heat Pump",
+        "high_demand": "High demand",
+        "heat_pump": "Heat pump",
         "performance": "Performance"
       },
       "state_attributes": {
+        "current_operation": {
+          "name": "Current operation"
+        },
+        "current_temperature": {
+          "name": "Current temperature"
+        },
+        "max_temp": {
+          "name": "Max target temperature"
+        },
+        "min_temp": {
+          "name": "Min target temperature"
+        },
+        "target_temp_high": {
+          "name": "Upper target temperature"
+        },
+        "target_temp_low": {
+          "name": "Lower target temperature"
+        },
         "away_mode": {
           "name": "Away mode",
           "state": {

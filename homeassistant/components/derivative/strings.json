@@ -3,7 +3,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Add Derivative sensor",
+        "title": "Create Derivative sensor",
         "description": "Create a sensor that estimates the derivative of a sensor.",
         "data": {
           "name": "[%key:common::config_flow::data::name%]",

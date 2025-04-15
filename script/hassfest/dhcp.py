@@ -32,19 +32,15 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
     if config.specific_integrations:
         return
 
-    with open(str(dhcp_path)) as fp:
-        current = fp.read()
-        if current != content:
-            config.add_error(
-                "dhcp",
-                "File dhcp.py is not up to date. Run python3 -m script.hassfest",
-                fixable=True,
-            )
-        return
+    if dhcp_path.read_text() != content:
+        config.add_error(
+            "dhcp",
+            "File dhcp.py is not up to date. Run python3 -m script.hassfest",
+            fixable=True,
+        )
 
 
 def generate(integrations: dict[str, Integration], config: Config) -> None:
     """Generate dhcp file."""
     dhcp_path = config.root / "homeassistant/generated/dhcp.py"
-    with open(str(dhcp_path), "w") as fp:
-        fp.write(f"{config.cache['dhcp']}")
+    dhcp_path.write_text(f"{config.cache['dhcp']}")

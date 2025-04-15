@@ -3,10 +3,15 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from pprint import pformat
 from typing import Any
 
+from monzopy import AuthorisationExpiredError, InvalidMonzoAPIResponseError
+
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import AuthenticatedMonzoAPI
 from .const import DOMAIN
@@ -25,11 +30,16 @@ class MonzoData:
 class MonzoCoordinator(DataUpdateCoordinator[MonzoData]):
     """Class to manage fetching Monzo data from the API."""
 
-    def __init__(self, hass: HomeAssistant, api: AuthenticatedMonzoAPI) -> None:
+    config_entry: ConfigEntry
+
+    def __init__(
+        self, hass: HomeAssistant, config_entry: ConfigEntry, api: AuthenticatedMonzoAPI
+    ) -> None:
         """Initialize."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(minutes=1),
         )
@@ -37,6 +47,21 @@ class MonzoCoordinator(DataUpdateCoordinator[MonzoData]):
 
     async def _async_update_data(self) -> MonzoData:
         """Fetch data from Monzo API."""
-        accounts = await self.api.user_account.accounts()
-        pots = await self.api.user_account.pots()
+        try:
+            accounts = await self.api.user_account.accounts()
+            pots = await self.api.user_account.pots()
+        except AuthorisationExpiredError as err:
+            raise ConfigEntryAuthFailed from err
+        except InvalidMonzoAPIResponseError as err:
+            message = "Invalid Monzo API response."
+            if err.missing_key:
+                _LOGGER.debug(
+                    "%s\nMissing key: %s\nResponse:\n%s",
+                    message,
+                    err.missing_key,
+                    pformat(err.response),
+                )
+                message += " Enabling debug logging for details."
+            raise UpdateFailed(message) from err
+
         return MonzoData(accounts, pots)

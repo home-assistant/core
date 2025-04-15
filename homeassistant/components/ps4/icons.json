@@ -7,6 +7,8 @@
     }
   },
   "services": {
-    "send_command": "mdi:console"
+    "send_command": {
+      "service": "mdi:console"
+    }
   }
 }

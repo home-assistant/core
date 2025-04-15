@@ -1,6 +1,6 @@
 """Test BMW numbers."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from bimmer_connected.models import MyBMWAPIError, MyBMWRemoteServiceError
 from bimmer_connected.vehicle.remote_services import RemoteServices
@@ -8,24 +8,38 @@ import pytest
 import respx
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 
-from . import check_remote_service_call, setup_mocked_integration
+from . import (
+    REMOTE_SERVICE_EXC_REASON,
+    REMOTE_SERVICE_EXC_TRANSLATION,
+    check_remote_service_call,
+    setup_mocked_integration,
+)
+
+from tests.common import snapshot_platform
 
 
+@pytest.mark.usefixtures("bmw_fixture")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_entity_state_attrs(
     hass: HomeAssistant,
-    bmw_fixture: respx.Router,
     snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test number options and values.."""
+    """Test number options and values."""
 
     # Setup component
-    assert await setup_mocked_integration(hass)
+    with patch(
+        "homeassistant.components.bmw_connected_drive.PLATFORMS",
+        [Platform.NUMBER],
+    ):
+        mock_config_entry = await setup_mocked_integration(hass)
 
-    # Get all number entities
-    assert hass.states.async_all("number") == snapshot
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 @pytest.mark.parametrize(
@@ -61,6 +75,7 @@ async def test_service_call_success(
     assert hass.states.get(entity_id).state == new_value
 
 
+@pytest.mark.usefixtures("bmw_fixture")
 @pytest.mark.parametrize(
     ("entity_id", "value"),
     [
@@ -71,7 +86,6 @@ async def test_service_call_invalid_input(
     hass: HomeAssistant,
     entity_id: str,
     value: str,
-    bmw_fixture: respx.Router,
 ) -> None:
     """Test not allowed values for number inputs."""
 
@@ -80,7 +94,10 @@ async def test_service_call_invalid_input(
     old_value = hass.states.get(entity_id).state
 
     # Test
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError,
+        match="Target SoC must be an integer between 20 and 100 that is a multiple of 5.",
+    ):
         await hass.services.async_call(
             "number",
             "set_value",
@@ -91,19 +108,34 @@ async def test_service_call_invalid_input(
     assert hass.states.get(entity_id).state == old_value
 
 
+@pytest.mark.usefixtures("bmw_fixture")
 @pytest.mark.parametrize(
-    ("raised", "expected"),
+    ("raised", "expected", "exc_translation"),
     [
-        (MyBMWRemoteServiceError, HomeAssistantError),
-        (MyBMWAPIError, HomeAssistantError),
-        (ValueError, ValueError),
+        (
+            MyBMWRemoteServiceError(REMOTE_SERVICE_EXC_REASON),
+            HomeAssistantError,
+            REMOTE_SERVICE_EXC_TRANSLATION,
+        ),
+        (
+            MyBMWAPIError(REMOTE_SERVICE_EXC_REASON),
+            HomeAssistantError,
+            REMOTE_SERVICE_EXC_TRANSLATION,
+        ),
+        (
+            ValueError(
+                "Target SoC must be an integer between 20 and 100 that is a multiple of 5."
+            ),
+            ValueError,
+            "Target SoC must be an integer between 20 and 100 that is a multiple of 5.",
+        ),
     ],
 )
 async def test_service_call_fail(
     hass: HomeAssistant,
     raised: Exception,
     expected: Exception,
-    bmw_fixture: respx.Router,
+    exc_translation: str,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test exception handling."""
@@ -121,7 +153,7 @@ async def test_service_call_fail(
     )
 
     # Test
-    with pytest.raises(expected):
+    with pytest.raises(expected, match=exc_translation):
         await hass.services.async_call(
             "number",
             "set_value",

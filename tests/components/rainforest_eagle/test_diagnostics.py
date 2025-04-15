@@ -27,7 +27,7 @@ async def test_entry_diagnostics(
     config_entry_dict["data"][CONF_CLOUD_ID] = REDACTED
 
     assert result == {
-        "config_entry": config_entry_dict,
+        "config_entry": config_entry_dict | {"discovery_keys": {}},
         "data": {
             var["Name"]: var["Value"]
             for var in MOCK_200_RESPONSE_WITHOUT_PRICE.values()

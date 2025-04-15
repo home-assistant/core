@@ -1,6 +1,10 @@
 {
   "services": {
-    "request_area_preset": "mdi:texture-box",
-    "request_channel_level": "mdi:satellite-uplink"
+    "request_area_preset": {
+      "service": "mdi:texture-box"
+    },
+    "request_channel_level": {
+      "service": "mdi:satellite-uplink"
+    }
   }
 }

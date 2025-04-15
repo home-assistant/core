@@ -1,0 +1,76 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: |
+      No custom actions are defined.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: |
+      No custom actions are defined.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: |
+      No explicit event subscriptions.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry:
+    status: done
+    comment: |
+      Handled by a setting in manifest.json as there is no account information in API
+
+  # Silver
+  action-exceptions: todo
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: No configuration parameters
+  docs-installation-parameters: todo
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: todo
+  parallel-updates:
+    status: exempt
+    comment: Handled by coordinator
+  reauthentication-flow: done
+  test-coverage: todo
+
+  # Gold
+  devices: todo
+  diagnostics: todo
+  discovery-update-info: todo
+  discovery: todo
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: done
+  dynamic-devices: todo
+  entity-category: todo
+  entity-device-class: todo
+  entity-disabled-by-default: todo
+  entity-translations: todo
+  exception-translations: todo
+  icon-translations: todo
+  reconfiguration-flow: done
+  repair-issues: todo
+  stale-devices: todo
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: todo

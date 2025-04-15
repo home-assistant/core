@@ -1,5 +1,6 @@
 """Tests for Fritz!Tools config flow."""
 
+from copy import deepcopy
 import dataclasses
 from unittest.mock import patch
 
@@ -20,15 +21,10 @@ from homeassistant.components.fritz.const import (
     ERROR_AUTH_INVALID,
     ERROR_CANNOT_CONNECT,
     ERROR_UNKNOWN,
+    ERROR_UPNP_NOT_CONFIGURED,
     FRITZ_AUTH_EXCEPTIONS,
 )
-from homeassistant.components.ssdp import ATTR_UPNP_UDN
-from homeassistant.config_entries import (
-    SOURCE_REAUTH,
-    SOURCE_RECONFIGURE,
-    SOURCE_SSDP,
-    SOURCE_USER,
-)
+from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -38,8 +34,15 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_UDN,
+    SsdpServiceInfo,
+)
 
+from .conftest import FritzConnectionMock
 from .const import (
+    MOCK_FB_SERVICES,
     MOCK_FIRMWARE_INFO,
     MOCK_IPS,
     MOCK_REQUEST,
@@ -93,7 +96,6 @@ from tests.common import MockConfigEntry
 async def test_user(
     hass: HomeAssistant,
     fc_class_mock,
-    mock_get_source_ip,
     show_advanced_options: bool,
     user_input: dict,
     expected_config: dict,
@@ -156,7 +158,6 @@ async def test_user(
 async def test_user_already_configured(
     hass: HomeAssistant,
     fc_class_mock,
-    mock_get_source_ip,
     show_advanced_options: bool,
     user_input,
 ) -> None:
@@ -218,7 +219,6 @@ async def test_user_already_configured(
 )
 async def test_exception_security(
     hass: HomeAssistant,
-    mock_get_source_ip,
     error,
     show_advanced_options: bool,
     user_input,
@@ -251,7 +251,6 @@ async def test_exception_security(
 )
 async def test_exception_connection(
     hass: HomeAssistant,
-    mock_get_source_ip,
     show_advanced_options: bool,
     user_input,
 ) -> None:
@@ -282,7 +281,7 @@ async def test_exception_connection(
     [(True, MOCK_USER_INPUT_ADVANCED), (False, MOCK_USER_INPUT_SIMPLE)],
 )
 async def test_exception_unknown(
-    hass: HomeAssistant, mock_get_source_ip, show_advanced_options: bool, user_input
+    hass: HomeAssistant, show_advanced_options: bool, user_input
 ) -> None:
     """Test starting a flow by user with an unknown exception."""
 
@@ -309,12 +308,14 @@ async def test_exception_unknown(
 async def test_reauth_successful(
     hass: HomeAssistant,
     fc_class_mock,
-    mock_get_source_ip,
 ) -> None:
     """Test starting a reauthentication flow."""
 
     mock_config = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
     mock_config.add_to_hass(hass)
+    result = await mock_config.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
 
     with (
         patch(
@@ -339,15 +340,6 @@ async def test_reauth_successful(
         mock_request_get.return_value.content = MOCK_REQUEST
         mock_request_post.return_value.status_code = 200
         mock_request_post.return_value.text = MOCK_REQUEST
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_REAUTH, "entry_id": mock_config.entry_id},
-            data=mock_config.data,
-        )
-
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "reauth_confirm"
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -374,7 +366,6 @@ async def test_reauth_successful(
 async def test_reauth_not_successful(
     hass: HomeAssistant,
     fc_class_mock,
-    mock_get_source_ip,
     side_effect,
     error,
 ) -> None:
@@ -382,20 +373,14 @@ async def test_reauth_not_successful(
 
     mock_config = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
     mock_config.add_to_hass(hass)
+    result = await mock_config.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
 
     with patch(
         "homeassistant.components.fritz.config_flow.FritzConnection",
         side_effect=side_effect,
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_REAUTH, "entry_id": mock_config.entry_id},
-            data=mock_config.data,
-        )
-
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "reauth_confirm"
-
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
@@ -442,7 +427,6 @@ async def test_reauth_not_successful(
 async def test_reconfigure_successful(
     hass: HomeAssistant,
     fc_class_mock,
-    mock_get_source_ip,
     show_advanced_options: bool,
     user_input: dict,
     expected_config: dict,
@@ -476,18 +460,13 @@ async def test_reconfigure_successful(
         mock_request_post.return_value.status_code = 200
         mock_request_post.return_value.text = MOCK_REQUEST
 
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": SOURCE_RECONFIGURE,
-                "entry_id": mock_config.entry_id,
-                "show_advanced_options": show_advanced_options,
-            },
-            data=mock_config.data,
+        result = await mock_config.start_reconfigure_flow(
+            hass,
+            show_advanced_options=show_advanced_options,
         )
 
         assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "reconfigure_confirm"
+        assert result["step_id"] == "reconfigure"
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -508,7 +487,6 @@ async def test_reconfigure_successful(
 async def test_reconfigure_not_successful(
     hass: HomeAssistant,
     fc_class_mock,
-    mock_get_source_ip,
 ) -> None:
     """Test starting a reconfigure flow but no connection found."""
 
@@ -539,14 +517,10 @@ async def test_reconfigure_not_successful(
         mock_request_post.return_value.status_code = 200
         mock_request_post.return_value.text = MOCK_REQUEST
 
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config.entry_id},
-            data=mock_config.data,
-        )
+        result = await mock_config.start_reconfigure_flow(hass)
 
         assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "reconfigure_confirm"
+        assert result["step_id"] == "reconfigure"
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -557,7 +531,7 @@ async def test_reconfigure_not_successful(
         )
 
         assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "reconfigure_confirm"
+        assert result["step_id"] == "reconfigure"
         assert result["errors"]["base"] == ERROR_CANNOT_CONNECT
 
         result = await hass.config_entries.flow.async_configure(
@@ -579,9 +553,7 @@ async def test_reconfigure_not_successful(
         }
 
 
-async def test_ssdp_already_configured(
-    hass: HomeAssistant, fc_class_mock, mock_get_source_ip
-) -> None:
+async def test_ssdp_already_configured(hass: HomeAssistant, fc_class_mock) -> None:
     """Test starting a flow from discovery with an already configured device."""
 
     mock_config = MockConfigEntry(
@@ -608,9 +580,7 @@ async def test_ssdp_already_configured(
         assert result["reason"] == "already_configured"
 
 
-async def test_ssdp_already_configured_host(
-    hass: HomeAssistant, fc_class_mock, mock_get_source_ip
-) -> None:
+async def test_ssdp_already_configured_host(hass: HomeAssistant, fc_class_mock) -> None:
     """Test starting a flow from discovery with an already configured host."""
 
     mock_config = MockConfigEntry(
@@ -638,7 +608,7 @@ async def test_ssdp_already_configured_host(
 
 
 async def test_ssdp_already_configured_host_uuid(
-    hass: HomeAssistant, fc_class_mock, mock_get_source_ip
+    hass: HomeAssistant, fc_class_mock
 ) -> None:
     """Test starting a flow from discovery with an already configured uuid."""
 
@@ -667,7 +637,7 @@ async def test_ssdp_already_configured_host_uuid(
 
 
 async def test_ssdp_already_in_progress_host(
-    hass: HomeAssistant, fc_class_mock, mock_get_source_ip
+    hass: HomeAssistant, fc_class_mock
 ) -> None:
     """Test starting a flow from discovery twice."""
     with patch(
@@ -690,7 +660,7 @@ async def test_ssdp_already_in_progress_host(
         assert result["reason"] == "already_in_progress"
 
 
-async def test_ssdp(hass: HomeAssistant, fc_class_mock, mock_get_source_ip) -> None:
+async def test_ssdp(hass: HomeAssistant, fc_class_mock) -> None:
     """Test starting a flow from discovery."""
     with (
         patch(
@@ -732,7 +702,7 @@ async def test_ssdp(hass: HomeAssistant, fc_class_mock, mock_get_source_ip) -> N
     assert mock_setup_entry.called
 
 
-async def test_ssdp_exception(hass: HomeAssistant, mock_get_source_ip) -> None:
+async def test_ssdp_exception(hass: HomeAssistant) -> None:
     """Test starting a flow from discovery but no device found."""
     with patch(
         "homeassistant.components.fritz.config_flow.FritzConnection",
@@ -775,3 +745,74 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         CONF_OLD_DISCOVERY: False,
         CONF_CONSIDER_HOME: 37,
     }
+
+
+async def test_ssdp_ipv6_link_local(hass: HomeAssistant) -> None:
+    """Test ignoring ipv6-link-local while ssdp discovery."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_SSDP},
+        data=SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location="https://[fe80::1ff:fe23:4567:890a]:12345/test",
+            upnp={
+                ATTR_UPNP_FRIENDLY_NAME: "fake_name",
+                ATTR_UPNP_UDN: "uuid:only-a-test",
+            },
+        ),
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "ignore_ip6_link_local"
+
+
+async def test_upnp_not_enabled(hass: HomeAssistant) -> None:
+    """Test if UPNP service is enabled on the router."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    # Disable UPnP
+    services = deepcopy(MOCK_FB_SERVICES)
+    services["X_AVM-DE_UPnP1"]["GetInfo"]["NewEnable"] = False
+
+    with patch(
+        "homeassistant.components.fritz.config_flow.FritzConnection",
+        return_value=FritzConnectionMock(services),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_USER_INPUT_SIMPLE
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+        assert result["errors"]["base"] == ERROR_UPNP_NOT_CONFIGURED
+
+    # Enable UPnP
+    services["X_AVM-DE_UPnP1"]["GetInfo"]["NewEnable"] = True
+
+    with (
+        patch(
+            "homeassistant.components.fritz.config_flow.FritzConnection",
+            return_value=FritzConnectionMock(services),
+        ),
+        patch(
+            "homeassistant.components.fritz.config_flow.socket.gethostbyname",
+            return_value=MOCK_IPS["fritz.box"],
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_USER_INPUT_SIMPLE
+        )
+
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["data"][CONF_HOST] == "fake_host"
+        assert result["data"][CONF_PASSWORD] == "fake_pass"
+        assert result["data"][CONF_USERNAME] == "fake_user"
+        assert result["data"][CONF_PORT] == 49000
+        assert result["data"][CONF_SSL] is False

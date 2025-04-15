@@ -17,13 +17,16 @@ FLOW_SMILE: Final = "smile (Adam/Anna/P1)"
 FLOW_STRETCH: Final = "stretch (Stretch)"
 FLOW_TYPE: Final = "flow_type"
 GATEWAY: Final = "gateway"
+LOCATION: Final = "location"
 PW_TYPE: Final = "plugwise_type"
+REBOOT: Final = "reboot"
 SMILE: Final = "smile"
 STRETCH: Final = "stretch"
 STRETCH_USERNAME: Final = "stretch"
 
 PLATFORMS: Final[list[str]] = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.CLIMATE,
     Platform.NUMBER,
     Platform.SELECT,

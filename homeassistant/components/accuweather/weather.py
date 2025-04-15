@@ -7,6 +7,7 @@ from typing import cast
 from homeassistant.components.weather import (
     ATTR_FORECAST_CLOUD_COVERAGE,
     ATTR_FORECAST_CONDITION,
+    ATTR_FORECAST_HUMIDITY,
     ATTR_FORECAST_NATIVE_APPARENT_TEMP,
     ATTR_FORECAST_NATIVE_PRECIPITATION,
     ATTR_FORECAST_NATIVE_TEMP,
@@ -29,10 +30,9 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utc_from_timestamp
 
-from . import AccuWeatherConfigEntry, AccuWeatherData
 from .const import (
     API_METRIC,
     ATTR_DIRECTION,
@@ -42,7 +42,9 @@ from .const import (
     CONDITION_MAP,
 )
 from .coordinator import (
+    AccuWeatherConfigEntry,
     AccuWeatherDailyForecastDataUpdateCoordinator,
+    AccuWeatherData,
     AccuWeatherObservationDataUpdateCoordinator,
 )
 
@@ -52,7 +54,7 @@ PARALLEL_UPDATES = 1
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AccuWeatherConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add a AccuWeather weather entity from a config_entry."""
     async_add_entities([AccuWeatherEntity(entry.runtime_data)])
@@ -183,6 +185,7 @@ class AccuWeatherEntity(
             {
                 ATTR_FORECAST_TIME: utc_from_timestamp(item["EpochDate"]).isoformat(),
                 ATTR_FORECAST_CLOUD_COVERAGE: item["CloudCoverDay"],
+                ATTR_FORECAST_HUMIDITY: item["RelativeHumidityDay"]["Average"],
                 ATTR_FORECAST_NATIVE_TEMP: item["TemperatureMax"][ATTR_VALUE],
                 ATTR_FORECAST_NATIVE_TEMP_LOW: item["TemperatureMin"][ATTR_VALUE],
                 ATTR_FORECAST_NATIVE_APPARENT_TEMP: item["RealFeelTemperatureMax"][

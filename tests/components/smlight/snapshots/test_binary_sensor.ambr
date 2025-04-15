@@ -1,0 +1,193 @@
+# serializer version: 1
+# name: test_all_binary_sensors[binary_sensor.mock_title_ethernet-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.mock_title_ethernet',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
+    'original_icon': None,
+    'original_name': 'Ethernet',
+    'platform': 'smlight',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'ethernet',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_ethernet',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_binary_sensors[binary_sensor.mock_title_ethernet-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'friendly_name': 'Mock Title Ethernet',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.mock_title_ethernet',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_binary_sensors[binary_sensor.mock_title_internet-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.mock_title_internet',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
+    'original_icon': None,
+    'original_name': 'Internet',
+    'platform': 'smlight',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'internet',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_internet',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_binary_sensors[binary_sensor.mock_title_internet-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'friendly_name': 'Mock Title Internet',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.mock_title_internet',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_binary_sensors[binary_sensor.mock_title_vpn-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.mock_title_vpn',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
+    'original_icon': None,
+    'original_name': 'VPN',
+    'platform': 'smlight',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'vpn',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_vpn',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_binary_sensors[binary_sensor.mock_title_vpn-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'friendly_name': 'Mock Title VPN',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.mock_title_vpn',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_binary_sensors[binary_sensor.mock_title_wi_fi-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.mock_title_wi_fi',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
+    'original_icon': None,
+    'original_name': 'Wi-Fi',
+    'platform': 'smlight',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'wifi',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_wifi',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_binary_sensors[binary_sensor.mock_title_wi_fi-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'friendly_name': 'Mock Title Wi-Fi',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.mock_title_wi_fi',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

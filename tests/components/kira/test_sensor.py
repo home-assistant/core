@@ -5,6 +5,8 @@ from unittest.mock import MagicMock, patch
 from homeassistant.components.kira import sensor as kira
 from homeassistant.core import HomeAssistant
 
+from tests.common import MockEntityPlatform
+
 TEST_CONFIG = {kira.DOMAIN: {"sensors": [{"host": "127.0.0.1", "port": 17324}]}}
 
 DISCOVERY_INFO = {"name": "kira", "device": "kira"}
@@ -29,6 +31,8 @@ def test_kira_sensor_callback(
     kira.setup_platform(hass, TEST_CONFIG, add_entities, DISCOVERY_INFO)
     assert len(DEVICES) == 1
     sensor = DEVICES[0]
+    sensor.hass = hass
+    sensor.platform = MockEntityPlatform(hass)
 
     assert sensor.name == "kira"
 

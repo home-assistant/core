@@ -11,7 +11,7 @@ from .common import NUMATO_CFG, mockup_raise, mockup_return
 
 
 async def test_setup_no_devices(
-    hass: HomeAssistant, numato_fixture, monkeypatch
+    hass: HomeAssistant, numato_fixture, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test handling of an 'empty' discovery.
 
@@ -24,7 +24,7 @@ async def test_setup_no_devices(
 
 
 async def test_fail_setup_raising_discovery(
-    hass: HomeAssistant, numato_fixture, caplog: pytest.LogCaptureFixture, monkeypatch
+    hass: HomeAssistant, numato_fixture, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test handling of an exception during discovery.
 
@@ -47,15 +47,17 @@ async def test_hass_numato_api_wrong_port_directions(
     api = numato.NumatoAPI()
     api.setup_output(0, 5)
     api.setup_input(0, 2)
-    api.setup_input(0, 6)
+    api.setup_output(0, 6)
     with pytest.raises(NumatoGpioError):
         api.read_adc_input(0, 5)  # adc_read from output
+    with pytest.raises(NumatoGpioError):
         api.read_input(0, 6)  # read from output
+    with pytest.raises(NumatoGpioError):
         api.write_output(0, 2, 1)  # write to input
 
 
 async def test_hass_numato_api_errors(
-    hass: HomeAssistant, numato_fixture, monkeypatch
+    hass: HomeAssistant, numato_fixture, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test whether Home Assistant numato API (re-)raises errors."""
     numato_fixture.discover()
@@ -66,8 +68,11 @@ async def test_hass_numato_api_errors(
     api = numato.NumatoAPI()
     with pytest.raises(NumatoGpioError):
         api.setup_input(0, 5)
+    with pytest.raises(NumatoGpioError):
         api.read_adc_input(0, 1)
+    with pytest.raises(NumatoGpioError):
         api.read_input(0, 2)
+    with pytest.raises(NumatoGpioError):
         api.write_output(0, 2, 1)
 
 

@@ -81,6 +81,12 @@ async def test_public_weather_sensor(
     assert hass.states.get(f"{prefix}humidity").state == "76"
     assert hass.states.get(f"{prefix}atmospheric_pressure").state == "1014.4"
 
+    prefix = "sensor.home_min_"
+
+    assert hass.states.get(f"{prefix}temperature").state == "19.8"
+    assert hass.states.get(f"{prefix}humidity").state == "56"
+    assert hass.states.get(f"{prefix}atmospheric_pressure").state == "1005.4"
+
     prefix = "sensor.home_avg_"
 
     assert hass.states.get(f"{prefix}temperature").state == "22.7"
@@ -147,7 +153,7 @@ async def test_process_health(health: int, expected: str) -> None:
     ("uid", "name", "expected"),
     [
         ("12:34:56:03:1b:e4-reachable", "villa_garden_reachable", "True"),
-        ("12:34:56:03:1b:e4-rf_status", "villa_garden_radio", "Full"),
+        ("12:34:56:03:1b:e4-rf_status", "villa_garden_rf_strength", "Full"),
         (
             "12:34:56:80:bb:26-wifi_status",
             "villa_wifi_strength",
@@ -199,7 +205,7 @@ async def test_process_health(health: int, expected: str) -> None:
         ),
         (
             "12:34:56:26:68:92-wifi_status",
-            "baby_bedroom_wifi",
+            "baby_bedroom_wifi_strength",
             "High",
         ),
         ("Home-max-windangle_value", "home_max_wind_angle", "17"),
@@ -210,6 +216,7 @@ async def test_process_health(health: int, expected: str) -> None:
 )
 async def test_weather_sensor_enabling(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     config_entry: MockConfigEntry,
     uid: str,
     name: str,
@@ -221,8 +228,7 @@ async def test_weather_sensor_enabling(
         states_before = len(hass.states.async_all())
         assert hass.states.get(f"sensor.{name}") is None
 
-        registry = er.async_get(hass)
-        registry.async_get_or_create(
+        entity_registry.async_get_or_create(
             "sensor",
             "netatmo",
             uid,

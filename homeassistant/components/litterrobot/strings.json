@@ -5,6 +5,10 @@
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "The email address of your Whisker account.",
+          "password": "The password of your Whisker account."
         }
       },
       "reauth_confirm": {
@@ -12,6 +16,9 @@
         "title": "[%key:common::config_flow::title::reauth%]",
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "[%key:component::litterrobot::config::step::user::data_description::password%]"
         }
       }
     },
@@ -38,6 +45,9 @@
       }
     },
     "button": {
+      "reset": {
+        "name": "Reset"
+      },
       "reset_waste_drawer": {
         "name": "Reset waste drawer"
       },
@@ -67,31 +77,31 @@
       "status_code": {
         "name": "Status code",
         "state": {
-          "br": "Bonnet Removed",
-          "ccc": "Clean Cycle Complete",
-          "ccp": "Clean Cycle In Progress",
-          "cd": "Cat Detected",
-          "csf": "Cat Sensor Fault",
-          "csi": "Cat Sensor Interrupted",
-          "cst": "Cat Sensor Timing",
-          "df1": "Drawer Almost Full - 2 Cycles Left",
-          "df2": "Drawer Almost Full - 1 Cycle Left",
-          "dfs": "Drawer Full",
-          "dhf": "Dump + Home Position Fault",
-          "dpf": "Dump Position Fault",
-          "ec": "Empty Cycle",
-          "hpf": "Home Position Fault",
+          "br": "Bonnet removed",
+          "ccc": "Clean cycle complete",
+          "ccp": "Clean cycle in progress",
+          "cd": "Cat detected",
+          "csf": "Cat sensor fault",
+          "csi": "Cat sensor interrupted",
+          "cst": "Cat sensor timing",
+          "df1": "Drawer almost full - 2 cycles left",
+          "df2": "Drawer almost full - 1 cycle left",
+          "dfs": "Drawer full",
+          "dhf": "Dump + home position fault",
+          "dpf": "Dump position fault",
+          "ec": "Empty cycle",
+          "hpf": "Home position fault",
           "off": "[%key:common::state::off%]",
           "offline": "Offline",
-          "otf": "Over Torque Fault",
+          "otf": "Over torque fault",
           "p": "[%key:common::state::paused%]",
-          "pd": "Pinch Detect",
-          "pwrd": "Powering Down",
-          "pwru": "Powering Up",
+          "pd": "Pinch detect",
+          "pwrd": "Powering down",
+          "pwru": "Powering up",
           "rdy": "Ready",
-          "scf": "Cat Sensor Fault At Startup",
-          "sdf": "Drawer Full At Startup",
-          "spf": "Pinch Detect At Startup"
+          "scf": "Cat sensor fault at startup",
+          "sdf": "Drawer full at startup",
+          "spf": "Pinch detect at startup"
         }
       },
       "waste_drawer": {
@@ -108,9 +118,9 @@
       "brightness_level": {
         "name": "Panel brightness",
         "state": {
-          "low": "Low",
-          "medium": "Medium",
-          "high": "High"
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]"
         }
       }
     },

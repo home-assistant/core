@@ -24,7 +24,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.forecast_solar.async_setup_entry", return_value=True
@@ -57,7 +57,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_forecast_solar(hass) -> Generator[None, MagicMock, None]:
+def mock_forecast_solar(hass: HomeAssistant) -> Generator[MagicMock]:
     """Return a mocked Forecast.Solar client.
 
     hass fixture included because it sets the time zone.

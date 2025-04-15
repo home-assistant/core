@@ -1,0 +1,10 @@
+{
+  "exp": 1749261108,
+  "hostname": "na.teslemetry.com",
+  "port": 4431,
+  "prefer_typed": true,
+  "pending": false,
+  "fields": {
+    "ChargeAmps": { "interval_seconds": 60 }
+  }
+}

@@ -8,15 +8,15 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    AREA_SQUARE_METERS,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
+    UnitOfArea,
     UnitOfLength,
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import RomyVacuumCoordinator
@@ -61,7 +61,7 @@ SENSORS: list[SensorEntityDescription] = [
         key="total_area_cleaned",
         translation_key="total_area_cleaned",
         state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement=AREA_SQUARE_METERS,
+        native_unit_of_measurement=UnitOfArea.SQUARE_METERS,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
@@ -77,7 +77,7 @@ SENSORS: list[SensorEntityDescription] = [
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up ROMY vacuum cleaner."""
 

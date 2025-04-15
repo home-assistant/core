@@ -8,20 +8,19 @@ from homeassistant.components.octoprint.const import (
     SERVICE_CONNECT,
 )
 from homeassistant.const import ATTR_DEVICE_ID, CONF_PORT, CONF_PROFILE_NAME
-from homeassistant.helpers.device_registry import (
-    async_entries_for_config_entry,
-    async_get as async_get_dev_reg,
-)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from . import init_integration
 
 
-async def test_connect_default(hass) -> None:
+async def test_connect_default(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test the connect to printer service."""
     await init_integration(hass, "sensor")
 
-    dev_reg = async_get_dev_reg(hass)
-    device = async_entries_for_config_entry(dev_reg, "uuid")[0]
+    device = dr.async_entries_for_config_entry(device_registry, "uuid")[0]
 
     # Test pausing the printer when it is printing
     with patch("pyoctoprintapi.OctoprintClient.connect") as connect_command:
@@ -40,12 +39,13 @@ async def test_connect_default(hass) -> None:
         )
 
 
-async def test_connect_all_arguments(hass) -> None:
+async def test_connect_all_arguments(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test the connect to printer service."""
     await init_integration(hass, "sensor")
 
-    dev_reg = async_get_dev_reg(hass)
-    device = async_entries_for_config_entry(dev_reg, "uuid")[0]
+    device = dr.async_entries_for_config_entry(device_registry, "uuid")[0]
 
     # Test pausing the printer when it is printing
     with patch("pyoctoprintapi.OctoprintClient.connect") as connect_command:

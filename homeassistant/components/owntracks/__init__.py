@@ -5,7 +5,7 @@ import json
 import logging
 import re
 
-from aiohttp.web import json_response
+from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.components import cloud, mqtt, webhook
@@ -18,7 +18,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -153,7 +153,9 @@ async def async_connect_mqtt(hass, component):
     return True
 
 
-async def handle_webhook(hass, webhook_id, request):
+async def handle_webhook(
+    hass: HomeAssistant, webhook_id: str, request: web.Request
+) -> web.Response:
     """Handle webhook callback.
 
     iOS sets the "topic" as part of the payload.
@@ -166,7 +168,7 @@ async def handle_webhook(hass, webhook_id, request):
         message = await request.json()
     except ValueError:
         _LOGGER.warning("Received invalid JSON from OwnTracks")
-        return json_response([])
+        return web.json_response([])
 
     # Android doesn't populate topic
     if "topic" not in message:
@@ -183,7 +185,7 @@ async def handle_webhook(hass, webhook_id, request):
                 " set a username in Connection -> Identification"
             )
             # Keep it as a 200 response so the incorrect packet is discarded
-            return json_response([])
+            return web.json_response([])
 
     async_dispatcher_send(hass, DOMAIN, hass, context, message)
 
@@ -200,7 +202,7 @@ async def handle_webhook(hass, webhook_id, request):
     ]
 
     if message["_type"] == "encrypted" and context.secret:
-        return json_response(
+        return web.json_response(
             {
                 "_type": "encrypted",
                 "data": encrypt_message(
@@ -209,7 +211,7 @@ async def handle_webhook(hass, webhook_id, request):
             }
         )
 
-    return json_response(response)
+    return web.json_response(response)
 
 
 class OwnTracksContext:
@@ -259,7 +261,7 @@ class OwnTracksContext:
             return False
 
         if self.max_gps_accuracy is not None and acc > self.max_gps_accuracy:
-            _LOGGER.info(
+            _LOGGER.warning(
                 "Ignoring %s update because expected GPS accuracy %s is not met: %s",
                 message["_type"],
                 self.max_gps_accuracy,

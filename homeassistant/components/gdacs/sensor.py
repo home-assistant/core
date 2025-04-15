@@ -14,7 +14,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import GdacsFeedEntityManager
@@ -37,7 +37,9 @@ PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the GDACS Feed platform."""
     manager: GdacsFeedEntityManager = hass.data[DOMAIN][FEED][entry.entry_id]
@@ -133,16 +135,16 @@ class GdacsSensor(SensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
-        attributes: dict[str, Any] = {}
-        for key, value in (
-            (ATTR_STATUS, self._status),
-            (ATTR_LAST_UPDATE, self._last_update),
-            (ATTR_LAST_UPDATE_SUCCESSFUL, self._last_update_successful),
-            (ATTR_LAST_TIMESTAMP, self._last_timestamp),
-            (ATTR_CREATED, self._created),
-            (ATTR_UPDATED, self._updated),
-            (ATTR_REMOVED, self._removed),
-        ):
-            if value or isinstance(value, bool):
-                attributes[key] = value
-        return attributes
+        return {
+            key: value
+            for key, value in (
+                (ATTR_STATUS, self._status),
+                (ATTR_LAST_UPDATE, self._last_update),
+                (ATTR_LAST_UPDATE_SUCCESSFUL, self._last_update_successful),
+                (ATTR_LAST_TIMESTAMP, self._last_timestamp),
+                (ATTR_CREATED, self._created),
+                (ATTR_UPDATED, self._updated),
+                (ATTR_REMOVED, self._removed),
+            )
+            if value or isinstance(value, bool)
+        }

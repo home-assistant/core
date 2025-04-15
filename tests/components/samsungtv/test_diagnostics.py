@@ -16,6 +16,7 @@ from .const import (
     SAMPLE_DEVICE_INFO_WIFI,
 )
 
+from tests.common import ANY
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
@@ -29,6 +30,7 @@ async def test_entry_diagnostics(
 
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
         "entry": {
+            "created_at": ANY,
             "data": {
                 "host": "fake_host",
                 "ip_address": "test",
@@ -40,13 +42,16 @@ async def test_entry_diagnostics(
                 "token": REDACTED,
             },
             "disabled_by": None,
+            "discovery_keys": {},
             "domain": "samsungtv",
             "entry_id": "123456",
             "minor_version": 2,
+            "modified_at": ANY,
             "options": {},
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "source": "user",
+            "subentries": [],
             "title": "Mock Title",
             "unique_id": "any",
             "version": 2,
@@ -65,6 +70,7 @@ async def test_entry_diagnostics_encrypted(
 
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
         "entry": {
+            "created_at": ANY,
             "data": {
                 "host": "fake_host",
                 "ip_address": "test",
@@ -77,13 +83,16 @@ async def test_entry_diagnostics_encrypted(
                 "session_id": REDACTED,
             },
             "disabled_by": None,
+            "discovery_keys": {},
             "domain": "samsungtv",
             "entry_id": "123456",
             "minor_version": 2,
+            "modified_at": ANY,
             "options": {},
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "source": "user",
+            "subentries": [],
             "title": "Mock Title",
             "unique_id": "any",
             "version": 2,
@@ -102,6 +111,7 @@ async def test_entry_diagnostics_encrypte_offline(
 
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
         "entry": {
+            "created_at": ANY,
             "data": {
                 "host": "fake_host",
                 "ip_address": "test",
@@ -113,13 +123,16 @@ async def test_entry_diagnostics_encrypte_offline(
                 "session_id": REDACTED,
             },
             "disabled_by": None,
+            "discovery_keys": {},
             "domain": "samsungtv",
             "entry_id": "123456",
             "minor_version": 2,
+            "modified_at": ANY,
             "options": {},
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "source": "user",
+            "subentries": [],
             "title": "Mock Title",
             "unique_id": "any",
             "version": 2,

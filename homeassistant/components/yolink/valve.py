@@ -17,7 +17,7 @@ from homeassistant.components.valve import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DEV_MODEL_WATER_METER_YS5007, DOMAIN
 from .coordinator import YoLinkCoordinator
@@ -37,7 +37,7 @@ DEVICE_TYPES: tuple[YoLinkValveEntityDescription, ...] = (
         key="valve_state",
         translation_key="meter_valve_state",
         device_class=ValveDeviceClass.WATER,
-        value=lambda value: value == "closed" if value is not None else None,
+        value=lambda value: value != "open" if value is not None else None,
         exists_fn=lambda device: device.device_type
         == ATTR_DEVICE_WATER_METER_CONTROLLER
         and not device.device_model_name.startswith(DEV_MODEL_WATER_METER_YS5007),
@@ -50,7 +50,7 @@ DEVICE_TYPE = [ATTR_DEVICE_WATER_METER_CONTROLLER]
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up YoLink valve from a config entry."""
     device_coordinators = hass.data[DOMAIN][config_entry.entry_id].device_coordinators

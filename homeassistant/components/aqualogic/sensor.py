@@ -7,7 +7,7 @@ from dataclasses import dataclass
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -19,7 +19,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -104,7 +104,7 @@ SENSOR_TYPES: tuple[AquaLogicSensorEntityDescription, ...] = (
 
 SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_MONITORED_CONDITIONS, default=SENSOR_KEYS): vol.All(
             cv.ensure_list, [vol.In(SENSOR_KEYS)]

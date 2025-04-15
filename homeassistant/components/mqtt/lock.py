@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from functools import partial
 import logging
 import re
 from typing import Any
@@ -19,9 +18,10 @@ from homeassistant.const import (
     CONF_OPTIMISTIC,
     CONF_VALUE_TEMPLATE,
 )
-from homeassistant.core import HassJobType, HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from . import subscription
@@ -29,24 +29,23 @@ from .config import MQTT_RW_SCHEMA
 from .const import (
     CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
-    CONF_ENCODING,
     CONF_PAYLOAD_RESET,
-    CONF_QOS,
     CONF_STATE_OPEN,
     CONF_STATE_OPENING,
     CONF_STATE_TOPIC,
 )
-from .mixins import MqttEntity, async_setup_entity_entry_helper
+from .entity import MqttEntity, async_setup_entity_entry_helper
 from .models import (
     MqttCommandTemplate,
     MqttValueTemplate,
     PublishPayloadType,
     ReceiveMessage,
-    ReceivePayloadType,
 )
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 CONF_CODE_FORMAT = "code_format"
 
@@ -117,10 +116,10 @@ STATE_CONFIG_KEYS = [
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MQTT lock through YAML and through MQTT discovery."""
-    await async_setup_entity_entry_helper(
+    async_setup_entity_entry_helper(
         hass,
         config_entry,
         MqttLock,
@@ -203,42 +202,20 @@ class MqttLock(MqttEntity, LockEntity):
             self._attr_is_unlocking = payload == self._config[CONF_STATE_UNLOCKING]
             self._attr_is_jammed = payload == self._config[CONF_STATE_JAMMED]
 
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        topics: dict[str, dict[str, Any]]
-        qos: int = self._config[CONF_QOS]
-        encoding: str | None = self._config[CONF_ENCODING] or None
-
-        if self._config.get(CONF_STATE_TOPIC) is None:
-            # Force into optimistic mode.
-            self._optimistic = True
-            return
-        topics = {
-            CONF_STATE_TOPIC: {
-                "topic": self._config.get(CONF_STATE_TOPIC),
-                "msg_callback": partial(
-                    self._message_callback,
-                    self._message_received,
-                    {
-                        "_attr_is_jammed",
-                        "_attr_is_locked",
-                        "_attr_is_locking",
-                        "_attr_is_open",
-                        "_attr_is_opening",
-                        "_attr_is_unlocking",
-                    },
-                ),
-                "entity_id": self.entity_id,
-                CONF_QOS: qos,
-                CONF_ENCODING: encoding,
-                "job_type": HassJobType.Callback,
-            }
-        }
-
-        self._sub_state = subscription.async_prepare_subscribe_topics(
-            self.hass,
-            self._sub_state,
-            topics,
+        self.add_subscription(
+            CONF_STATE_TOPIC,
+            self._message_received,
+            {
+                "_attr_is_jammed",
+                "_attr_is_locked",
+                "_attr_is_locking",
+                "_attr_is_open",
+                "_attr_is_opening",
+                "_attr_is_unlocking",
+            },
         )
 
     async def _subscribe_topics(self) -> None:

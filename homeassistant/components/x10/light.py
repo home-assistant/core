@@ -10,19 +10,19 @@ import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
     ColorMode,
     LightEntity,
 )
 from homeassistant.const import CONF_DEVICES, CONF_ID, CONF_NAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_DEVICES): vol.All(
             cv.ensure_list,
@@ -54,7 +54,7 @@ def setup_platform(
     try:
         x10_command("info")
     except CalledProcessError as err:
-        _LOGGER.info("Assuming that the device is CM17A: %s", err.output)
+        _LOGGER.warning("Assuming that the device is CM17A: %s", err.output)
         is_cm11a = False
 
     add_entities(X10Light(light, is_cm11a) for light in config[CONF_DEVICES])
@@ -81,8 +81,15 @@ class X10Light(LightEntity):
 
     @property
     def brightness(self):
-        """Return the brightness of the light."""
+        """Return the brightness of the light, scaled to base class 0..255.
+
+        This needs to be scaled from 0..x for use with X10 dimmers.
+        """
         return self._brightness
+
+    def normalize_x10_brightness(self, brightness: float) -> float:
+        """Return calculated brightness values."""
+        return int((brightness / 255) * 32)
 
     @property
     def is_on(self):
@@ -91,11 +98,37 @@ class X10Light(LightEntity):
 
     def turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
-        if self._is_cm11a:
-            x10_command(f"on {self._id}")
-        else:
-            x10_command(f"fon {self._id}")
+        old_brightness = self._brightness
+        if old_brightness == 0:
+            # Dim down from max if applicable, also avoids a "dim" command if an "on" is more appropriate
+            old_brightness = 255
         self._brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
+        brightness_diff = self.normalize_x10_brightness(
+            self._brightness
+        ) - self.normalize_x10_brightness(old_brightness)
+        command_suffix = ""
+        # heyu has quite a messy command structure - we'll just deal with it here
+        if brightness_diff == 0:
+            if self._is_cm11a:
+                command_prefix = "on"
+            else:
+                command_prefix = "fon"
+        elif brightness_diff > 0:
+            if self._is_cm11a:
+                command_prefix = "bright"
+            else:
+                command_prefix = "fbright"
+            command_suffix = f" {brightness_diff}"
+        else:
+            if self._is_cm11a:
+                if self._state:
+                    command_prefix = "dim"
+                else:
+                    command_prefix = "dimb"
+            else:
+                command_prefix = "fdim"
+            command_suffix = f" {-brightness_diff}"
+        x10_command(f"{command_prefix} {self._id}{command_suffix}")
         self._state = True
 
     def turn_off(self, **kwargs: Any) -> None:
@@ -104,6 +137,7 @@ class X10Light(LightEntity):
             x10_command(f"off {self._id}")
         else:
             x10_command(f"foff {self._id}")
+        self._brightness = 0
         self._state = False
 
     def update(self) -> None:

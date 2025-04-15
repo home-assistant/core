@@ -5,6 +5,5 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/vulcan",
   "iot_class": "cloud_polling",
-  "quality_scale": "silver",
   "requirements": ["vulcan-api==2.3.2"]
 }

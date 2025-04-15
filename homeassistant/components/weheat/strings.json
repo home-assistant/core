@@ -1,0 +1,122 @@
+{
+  "config": {
+    "step": {
+      "pick_implementation": {
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      },
+      "find_devices": {
+        "title": "Select your heat pump"
+      },
+      "reauth_confirm": {
+        "title": "Re-authenticate with WeHeat",
+        "description": "You need to re-authenticate with WeHeat to continue"
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
+      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "no_devices_found": "Could not find any heat pumps on this account",
+      "wrong_account": "You can only reauthenticate this account with the same user."
+    },
+    "create_entry": {
+      "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "indoor_unit_water_pump_state": {
+        "name": "Indoor unit water pump"
+      },
+      "indoor_unit_auxiliary_pump_state": {
+        "name": "Indoor unit auxiliary water pump"
+      },
+      "indoor_unit_dhw_valve_or_pump_state": {
+        "name": "Indoor unit DHW valve or water pump"
+      },
+      "indoor_unit_gas_boiler_state": {
+        "name": "Indoor unit gas boiler heating allowed"
+      },
+      "indoor_unit_electric_heater_state": {
+        "name": "Indoor unit electric heater"
+      }
+    },
+    "sensor": {
+      "power_output": {
+        "name": "Output power"
+      },
+      "power_input": {
+        "name": "Input power"
+      },
+      "cop": {
+        "name": "COP"
+      },
+      "water_inlet_temperature": {
+        "name": "Water inlet temperature"
+      },
+      "water_outlet_temperature": {
+        "name": "Water outlet temperature"
+      },
+      "ch_inlet_temperature": {
+        "name": "Central heating inlet temperature"
+      },
+      "outside_temperature": {
+        "name": "Outside temperature"
+      },
+      "thermostat_water_setpoint": {
+        "name": "Water target temperature"
+      },
+      "thermostat_room_temperature": {
+        "name": "Current room temperature"
+      },
+      "thermostat_room_temperature_setpoint": {
+        "name": "Room temperature setpoint"
+      },
+      "dhw_top_temperature": {
+        "name": "DHW top temperature"
+      },
+      "dhw_bottom_temperature": {
+        "name": "DHW bottom temperature"
+      },
+      "dhw_flow_volume": {
+        "name": "DHW pump flow"
+      },
+      "central_heating_flow_volume": {
+        "name": "Central heating pump flow"
+      },
+      "heat_pump_state": {
+        "state": {
+          "standby": "[%key:common::state::standby%]",
+          "water_check": "Checking water temperature",
+          "heating": "Heating",
+          "cooling": "Cooling",
+          "dhw": "Heating DHW",
+          "legionella_prevention": "Legionella prevention",
+          "defrosting": "Defrosting",
+          "self_test": "Self test",
+          "manual_control": "Manual control"
+        }
+      },
+      "electricity_used": {
+        "name": "Electricity used"
+      },
+      "energy_output": {
+        "name": "Total energy output"
+      },
+      "compressor_rpm": {
+        "name": "Compressor speed"
+      },
+      "compressor_percentage": {
+        "name": "Compressor usage"
+      }
+    }
+  }
+}

@@ -4,19 +4,23 @@ from unittest.mock import patch
 
 from homeassistant.components import dynalite
 from homeassistant.components.cover import DEVICE_CLASSES
-from homeassistant.const import CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+from tests.typing import WebSocketGenerator
 
 
-async def test_get_config(hass, hass_ws_client):
+async def test_get_config(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Get the config via websocket."""
     host = "1.2.3.4"
     port = 765
 
     entry = MockConfigEntry(
         domain=dynalite.DOMAIN,
-        data={dynalite.CONF_HOST: host, CONF_PORT: port},
+        data={CONF_HOST: host, CONF_PORT: port},
     )
     entry.add_to_hass(hass)
     with patch(
@@ -40,7 +44,7 @@ async def test_get_config(hass, hass_ws_client):
     result = msg["result"]
     entry_id = entry.entry_id
     assert result == {
-        "config": {entry_id: {dynalite.CONF_HOST: host, CONF_PORT: port}},
+        "config": {entry_id: {CONF_HOST: host, CONF_PORT: port}},
         "default": {
             "DEFAULT_NAME": dynalite.const.DEFAULT_NAME,
             "DEFAULT_PORT": dynalite.const.DEFAULT_PORT,
@@ -49,7 +53,9 @@ async def test_get_config(hass, hass_ws_client):
     }
 
 
-async def test_save_config(hass, hass_ws_client):
+async def test_save_config(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Save the config via websocket."""
     host1 = "1.2.3.4"
     port1 = 765
@@ -60,7 +66,7 @@ async def test_save_config(hass, hass_ws_client):
 
     entry1 = MockConfigEntry(
         domain=dynalite.DOMAIN,
-        data={dynalite.CONF_HOST: host1, CONF_PORT: port1},
+        data={CONF_HOST: host1, CONF_PORT: port1},
     )
     entry1.add_to_hass(hass)
     with patch(
@@ -71,7 +77,7 @@ async def test_save_config(hass, hass_ws_client):
         await hass.async_block_till_done()
     entry2 = MockConfigEntry(
         domain=dynalite.DOMAIN,
-        data={dynalite.CONF_HOST: host2, CONF_PORT: port2},
+        data={CONF_HOST: host2, CONF_PORT: port2},
     )
     entry2.add_to_hass(hass)
     with patch(
@@ -88,7 +94,7 @@ async def test_save_config(hass, hass_ws_client):
             "id": 24,
             "type": "dynalite/save-config",
             "entry_id": entry2.entry_id,
-            "config": {dynalite.CONF_HOST: host3, CONF_PORT: port3},
+            "config": {CONF_HOST: host3, CONF_PORT: port3},
         }
     )
 
@@ -97,13 +103,15 @@ async def test_save_config(hass, hass_ws_client):
     assert msg["result"] == {}
 
     existing_entry = hass.config_entries.async_get_entry(entry1.entry_id)
-    assert existing_entry.data == {dynalite.CONF_HOST: host1, CONF_PORT: port1}
+    assert existing_entry.data == {CONF_HOST: host1, CONF_PORT: port1}
     modified_entry = hass.config_entries.async_get_entry(entry2.entry_id)
-    assert modified_entry.data[dynalite.CONF_HOST] == host3
+    assert modified_entry.data[CONF_HOST] == host3
     assert modified_entry.data[CONF_PORT] == port3
 
 
-async def test_save_config_invalid_entry(hass, hass_ws_client):
+async def test_save_config_invalid_entry(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Try to update nonexistent entry."""
     host1 = "1.2.3.4"
     port1 = 765
@@ -112,7 +120,7 @@ async def test_save_config_invalid_entry(hass, hass_ws_client):
 
     entry = MockConfigEntry(
         domain=dynalite.DOMAIN,
-        data={dynalite.CONF_HOST: host1, CONF_PORT: port1},
+        data={CONF_HOST: host1, CONF_PORT: port1},
     )
     entry.add_to_hass(hass)
     with patch(
@@ -128,7 +136,7 @@ async def test_save_config_invalid_entry(hass, hass_ws_client):
             "id": 24,
             "type": "dynalite/save-config",
             "entry_id": "junk",
-            "config": {dynalite.CONF_HOST: host2, CONF_PORT: port2},
+            "config": {CONF_HOST: host2, CONF_PORT: port2},
         }
     )
 
@@ -137,4 +145,4 @@ async def test_save_config_invalid_entry(hass, hass_ws_client):
     assert msg["result"] == {"error": True}
 
     existing_entry = hass.config_entries.async_get_entry(entry.entry_id)
-    assert existing_entry.data == {dynalite.CONF_HOST: host1, CONF_PORT: port1}
+    assert existing_entry.data == {CONF_HOST: host1, CONF_PORT: port1}

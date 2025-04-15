@@ -22,7 +22,9 @@ from tests.common import MockConfigEntry
 
 
 async def test_init(
-    hass: HomeAssistant, vera_component_factory: ComponentFactory
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    vera_component_factory: ComponentFactory,
 ) -> None:
     """Test function."""
     vera_device1: pv.VeraBinarySensor = MagicMock(spec=pv.VeraBinarySensor)
@@ -42,14 +44,15 @@ async def test_init(
         ),
     )
 
-    entity_registry = er.async_get(hass)
     entry1 = entity_registry.async_get(entity1_id)
     assert entry1
     assert entry1.unique_id == "vera_first_serial_1"
 
 
 async def test_init_from_file(
-    hass: HomeAssistant, vera_component_factory: ComponentFactory
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    vera_component_factory: ComponentFactory,
 ) -> None:
     """Test function."""
     vera_device1: pv.VeraBinarySensor = MagicMock(spec=pv.VeraBinarySensor)
@@ -69,7 +72,6 @@ async def test_init_from_file(
         ),
     )
 
-    entity_registry = er.async_get(hass)
     entry1 = entity_registry.async_get(entity1_id)
     assert entry1
     assert entry1.unique_id == "vera_first_serial_1"
@@ -77,8 +79,8 @@ async def test_init_from_file(
 
 async def test_multiple_controllers_with_legacy_one(
     hass: HomeAssistant,
-    vera_component_factory: ComponentFactory,
     entity_registry: er.EntityRegistry,
+    vera_component_factory: ComponentFactory,
 ) -> None:
     """Test multiple controllers with one legacy controller."""
     vera_device1: pv.VeraBinarySensor = MagicMock(spec=pv.VeraBinarySensor)
@@ -119,8 +121,6 @@ async def test_multiple_controllers_with_legacy_one(
             devices=(vera_device2,),
         ),
     )
-
-    entity_registry = er.async_get(hass)
 
     entry1 = entity_registry.async_get(entity1_id)
     assert entry1

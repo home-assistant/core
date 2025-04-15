@@ -2,15 +2,20 @@
   "config": {
     "step": {
       "user": {
-        "title": "Setup your Azure Data Explorer integration",
-        "description": "Enter connection details.",
+        "title": "Set up Azure Data Explorer",
+        "description": "Enter connection details",
         "data": {
-          "clusteringesturi": "Cluster Ingest URI",
-          "database": "Database name",
-          "table": "Table name",
+          "cluster_ingest_uri": "Cluster ingestion URI",
+          "authority_id": "Authority ID",
           "client_id": "Client ID",
           "client_secret": "Client secret",
-          "authority_id": "Authority ID"
+          "database": "Database name",
+          "table": "Table name",
+          "use_queued_ingestion": "Use queued ingestion"
+        },
+        "data_description": {
+          "cluster_ingest_uri": "Ingestion URI of the cluster",
+          "use_queued_ingestion": "Must be enabled when using ADX free cluster"
         }
       }
     },

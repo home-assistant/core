@@ -97,12 +97,6 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_active_accessory[Model.S320-s2-climate.climate_system_21][initial]
-  None
-# ---
-# name: test_active_accessory[Model.S320-s2-climate.climate_system_s1][initial]
-  None
-# ---
 # name: test_basic[Model.F1155-s2-climate.climate_system_s2][cooling]
   StateSnapshot({
     'attributes': ReadOnlyDict({

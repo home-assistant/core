@@ -14,6 +14,12 @@
           "on": "mdi:cup-water",
           "off": "mdi:cup-off"
         }
+      },
+      "backflush_enabled": {
+        "default": "mdi:water-off",
+        "state": {
+          "on": "mdi:water"
+        }
       }
     },
     "button": {
@@ -26,10 +32,7 @@
         "default": "mdi:thermometer-water"
       },
       "dose": {
-        "default": "mdi:weight-kilogram"
-      },
-      "steam_temp": {
-        "default": "mdi:thermometer-water"
+        "default": "mdi:cup-water"
       },
       "prebrew_off": {
         "default": "mdi:water-off"
@@ -40,11 +43,34 @@
       "preinfusion_off": {
         "default": "mdi:water"
       },
+      "scale_target": {
+        "default": "mdi:scale-balance"
+      },
+      "smart_standby_time": {
+        "default": "mdi:timer"
+      },
+      "steam_temp": {
+        "default": "mdi:thermometer-water"
+      },
       "tea_water_duration": {
         "default": "mdi:timer-sand"
       }
     },
     "select": {
+      "active_bbw": {
+        "default": "mdi:alpha-u",
+        "state": {
+          "a": "mdi:alpha-a",
+          "b": "mdi:alpha-b"
+        }
+      },
+      "smart_standby_mode": {
+        "default": "mdi:power",
+        "state": {
+          "poweron": "mdi:power",
+          "lastbrewing": "mdi:coffee"
+        }
+      },
       "steam_temp_select": {
         "default": "mdi:thermometer",
         "state": {
@@ -58,7 +84,7 @@
         "state": {
           "disabled": "mdi:water-pump-off",
           "prebrew": "mdi:water-pump",
-          "preinfusion": "mdi:water-pump"
+          "typeb": "mdi:water-pump"
         }
       }
     },
@@ -68,6 +94,9 @@
       },
       "drink_stats_flushing": {
         "default": "mdi:chart-line"
+      },
+      "drink_stats_coffee_key": {
+        "default": "mdi:chart-scatter-plot"
       },
       "shot_timer": {
         "default": "mdi:timer"
@@ -92,6 +121,12 @@
         "state": {
           "on": "mdi:alarm",
           "off": "mdi:alarm-off"
+        }
+      },
+      "smart_standby_enabled": {
+        "state": {
+          "on": "mdi:sleep",
+          "off": "mdi:sleep-off"
         }
       },
       "steam_boiler": {

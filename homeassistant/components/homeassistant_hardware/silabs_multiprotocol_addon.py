@@ -17,7 +17,6 @@ from homeassistant.components.hassio import (
     AddonManager,
     AddonState,
     hostname_from_addon_slug,
-    is_hassio,
 )
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -28,6 +27,7 @@ from homeassistant.config_entries import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
 )
@@ -318,7 +318,6 @@ class OptionsFlowHandler(OptionsFlow, ABC):
         self.start_task: asyncio.Task | None = None
         self.stop_task: asyncio.Task | None = None
         self._zha_migration_mgr: ZhaMultiPANMigrationHelper | None = None
-        self.config_entry = config_entry
         self.original_addon_config: dict[str, Any] | None = None
         self.revert_reason: str | None = None
 

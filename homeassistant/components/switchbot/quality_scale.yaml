@@ -1,0 +1,96 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: |
+      No custom actions
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: todo
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: |
+      No custom actions
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: todo
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters: todo
+  docs-installation-parameters: todo
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: todo
+  parallel-updates:
+    status: todo
+    comment: |
+      set `PARALLEL_UPDATES` in lock.py
+  reauthentication-flow: todo
+  test-coverage:
+    status: todo
+    comment: |
+      Consider using snapshots for fixating all the entities a device creates.
+
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery-update-info:
+    status: exempt
+    comment: |
+      No network discovery.
+  discovery:
+    status: done
+    comment: |
+      Can be improved: Device type scan filtering is applied to only show devices that are actually supported.
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: done
+  docs-supported-functions: todo
+  docs-troubleshooting: done
+  docs-use-cases: todo
+  dynamic-devices:
+    status: exempt
+    comment: |
+      Only one device per config entry. New devices are set up as new entries.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations:
+    status: todo
+    comment: |
+      Needs to provide translations for hub2 temperature entity
+  exception-translations: todo
+  icon-translations:
+    status: exempt
+    comment: |
+      No custom icons.
+  reconfiguration-flow:
+    status: exempt
+    comment: |
+      No need for reconfiguration flow.
+  repair-issues:
+    status: exempt
+    comment: |
+      No repairs/issues.
+  stale-devices:
+    status: exempt
+    comment: |
+      Device type integration.
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: todo

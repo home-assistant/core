@@ -2,21 +2,17 @@
 
 from datetime import datetime, timedelta
 import logging
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 from azure.kusto.data.exceptions import KustoAuthenticationError, KustoServiceError
 from azure.kusto.ingest import StreamDescriptor
 import pytest
 
 from homeassistant.components import azure_data_explorer
-from homeassistant.components.azure_data_explorer.const import (
-    CONF_SEND_INTERVAL,
-    DOMAIN,
-)
+from homeassistant.components.azure_data_explorer.const import CONF_SEND_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from . import FilterTest
@@ -28,11 +24,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @pytest.mark.freeze_time("2024-01-01 00:00:00")
+@pytest.mark.usefixtures("entry_managed")
 async def test_put_event_on_queue_with_managed_client(
-    hass: HomeAssistant,
-    entry_managed,
-    mock_managed_streaming: Mock,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mock_managed_streaming: Mock
 ) -> None:
     """Test listening to events from Hass. and writing to ADX with managed client."""
 
@@ -59,12 +53,12 @@ async def test_put_event_on_queue_with_managed_client(
     ],
     ids=["KustoServiceError", "KustoAuthenticationError"],
 )
+@pytest.mark.usefixtures("entry_managed")
 async def test_put_event_on_queue_with_managed_client_with_errors(
     hass: HomeAssistant,
-    entry_managed,
     mock_managed_streaming: Mock,
-    sideeffect,
-    log_message,
+    sideeffect: Exception,
+    log_message: str,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test listening to events from Hass. and writing to ADX with managed client."""
@@ -83,7 +77,7 @@ async def test_put_event_on_queue_with_managed_client_with_errors(
 
 async def test_put_event_on_queue_with_queueing_client(
     hass: HomeAssistant,
-    entry_queued,
+    entry_queued: MockConfigEntry,
     mock_queued_ingest: Mock,
 ) -> None:
     """Test listening to events from Hass. and writing to ADX with managed client."""
@@ -101,30 +95,9 @@ async def test_put_event_on_queue_with_queueing_client(
     assert type(mock_queued_ingest.call_args.args[0]) is StreamDescriptor
 
 
-async def test_import(hass: HomeAssistant) -> None:
-    """Test the popping of the filter and further import of the config."""
-    config = {
-        DOMAIN: {
-            "filter": {
-                "include_domains": ["light"],
-                "include_entity_globs": ["sensor.included_*"],
-                "include_entities": ["binary_sensor.included"],
-                "exclude_domains": ["light"],
-                "exclude_entity_globs": ["sensor.excluded_*"],
-                "exclude_entities": ["binary_sensor.excluded"],
-            },
-        }
-    }
-
-    assert await async_setup_component(hass, DOMAIN, config)
-    await hass.async_block_till_done()
-
-    assert "filter" in hass.data[DOMAIN]
-
-
 async def test_unload_entry(
     hass: HomeAssistant,
-    entry_managed,
+    entry_managed: MockConfigEntry,
     mock_managed_streaming: Mock,
 ) -> None:
     """Test being able to unload an entry.
@@ -140,11 +113,8 @@ async def test_unload_entry(
 
 
 @pytest.mark.freeze_time("2024-01-01 00:00:00")
-async def test_late_event(
-    hass: HomeAssistant,
-    entry_with_one_event,
-    mock_managed_streaming: Mock,
-) -> None:
+@pytest.mark.usefixtures("entry_with_one_event")
+async def test_late_event(hass: HomeAssistant, mock_managed_streaming: Mock) -> None:
     """Test the check on late events."""
     with patch(
         f"{AZURE_DATA_EXPLORER_PATH}.utcnow",
@@ -225,8 +195,8 @@ async def test_late_event(
 )
 async def test_filter(
     hass: HomeAssistant,
-    entry_managed,
-    tests,
+    entry_managed: MockConfigEntry,
+    tests: list[FilterTest],
     mock_managed_streaming: Mock,
 ) -> None:
     """Test different filters.
@@ -244,7 +214,6 @@ async def test_filter(
         )
         await hass.async_block_till_done()
         assert mock_managed_streaming.called == test.expect_called
-        assert "filter" in hass.data[DOMAIN]
 
 
 @pytest.mark.parametrize(
@@ -254,9 +223,9 @@ async def test_filter(
 )
 async def test_event(
     hass: HomeAssistant,
-    entry_managed,
+    entry_managed: MockConfigEntry,
     mock_managed_streaming: Mock,
-    event,
+    event: str | None,
 ) -> None:
     """Test listening to events from Hass. and getting an event with a newline in the state."""
 
@@ -279,7 +248,9 @@ async def test_event(
     ],
     ids=["KustoServiceError", "KustoAuthenticationError", "Exception"],
 )
-async def test_connection(hass, mock_execute_query, sideeffect) -> None:
+async def test_connection(
+    hass: HomeAssistant, mock_execute_query: MagicMock, sideeffect: Exception
+) -> None:
     """Test Error when no getting proper connection with Exception."""
     entry = MockConfigEntry(
         domain=azure_data_explorer.DOMAIN,

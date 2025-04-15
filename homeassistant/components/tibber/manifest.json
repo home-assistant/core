@@ -7,6 +7,5 @@
   "documentation": "https://www.home-assistant.io/integrations/tibber",
   "iot_class": "cloud_polling",
   "loggers": ["tibber"],
-  "quality_scale": "silver",
-  "requirements": ["pyTibber==0.28.2"]
+  "requirements": ["pyTibber==0.30.8"]
 }

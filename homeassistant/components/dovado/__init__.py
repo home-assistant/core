@@ -1,9 +1,10 @@
 """Support for Dovado router."""
 
+# mypy: ignore-errors
 from datetime import timedelta
 import logging
 
-import dovado
+# import dovado
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -14,7 +15,7 @@ from homeassistant.const import (
     DEVICE_DEFAULT_NAME,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 

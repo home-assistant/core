@@ -4,82 +4,46 @@ from __future__ import annotations
 
 import logging
 
-import voluptuous as vol
-
 from homeassistant.components.device_tracker import (
-    PLATFORM_SCHEMA as BASE_PLATFORM_SCHEMA,
-    DeviceScanner,
-    SourceType,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
     TrackerEntity,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, STATE_HOME, STATE_NOT_HOME
+from homeassistant.const import STATE_HOME, STATE_NOT_HOME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResultType
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType
-
-from . import TadoConnector
-from .const import CONF_HOME_ID, DATA, DOMAIN, SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED
-
-_LOGGER = logging.getLogger(__name__)
-
-PLATFORM_SCHEMA = BASE_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_HOME_ID): cv.string,
-    }
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
 )
 
+from . import TadoConfigEntry
+from .const import DOMAIN
+from .coordinator import TadoMobileDeviceUpdateCoordinator
 
-async def async_get_scanner(
-    hass: HomeAssistant, config: ConfigType
-) -> DeviceScanner | None:
-    """Configure the Tado device scanner."""
-    device_config = config["device_tracker"]
-    import_result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={
-            CONF_USERNAME: device_config[CONF_USERNAME],
-            CONF_PASSWORD: device_config[CONF_PASSWORD],
-            CONF_HOME_ID: device_config.get(CONF_HOME_ID),
-        },
-    )
-
-    translation_key = "deprecated_yaml_import_device_tracker"
-    if import_result.get("type") == FlowResultType.ABORT:
-        translation_key = "import_aborted"
-        if import_result.get("reason") == "import_failed":
-            translation_key = "import_failed"
-        if import_result.get("reason") == "import_failed_invalid_auth":
-            translation_key = "import_failed_invalid_auth"
-
-    async_create_issue(
-        hass,
-        DOMAIN,
-        "deprecated_yaml_import_device_tracker",
-        breaks_in_ha_version="2024.7.0",
-        is_fixable=False,
-        severity=IssueSeverity.WARNING,
-        translation_key=translation_key,
-    )
-    return None
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: TadoConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Tado device scannery entity."""
     _LOGGER.debug("Setting up Tado device scanner entity")
-    tado = hass.data[DOMAIN][entry.entry_id][DATA]
+    tado = entry.runtime_data.mobile_coordinator
     tracked: set = set()
+
+    # Fix non-string unique_id for device trackers
+    # Can be removed in 2025.1
+    entity_registry = er.async_get(hass)
+    for device_key in tado.data["mobile_device"]:
+        if entity_id := entity_registry.async_get_entity_id(
+            DEVICE_TRACKER_DOMAIN, DOMAIN, device_key
+        ):
+            entity_registry.async_update_entity(
+                entity_id, new_unique_id=str(device_key)
+            )
 
     @callback
     def update_devices() -> None:
@@ -88,59 +52,55 @@ async def async_setup_entry(
 
     update_devices()
 
-    entry.async_on_unload(
-        async_dispatcher_connect(
-            hass,
-            SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED.format(tado.home_id),
-            update_devices,
-        )
-    )
-
 
 @callback
 def add_tracked_entities(
     hass: HomeAssistant,
-    tado: TadoConnector,
-    async_add_entities: AddEntitiesCallback,
+    coordinator: TadoMobileDeviceUpdateCoordinator,
+    async_add_entities: AddConfigEntryEntitiesCallback,
     tracked: set[str],
 ) -> None:
     """Add new tracker entities from Tado."""
     _LOGGER.debug("Fetching Tado devices from API for (newly) tracked entities")
     new_tracked = []
-    for device_key, device in tado.data["mobile_device"].items():
+    for device_key, device in coordinator.data["mobile_device"].items():
         if device_key in tracked:
             continue
 
         _LOGGER.debug(
             "Adding Tado device %s with deviceID %s", device["name"], device_key
         )
-        new_tracked.append(TadoDeviceTrackerEntity(device_key, device["name"], tado))
+        new_tracked.append(
+            TadoDeviceTrackerEntity(device_key, device["name"], coordinator)
+        )
         tracked.add(device_key)
 
     async_add_entities(new_tracked)
 
 
-class TadoDeviceTrackerEntity(TrackerEntity):
+class TadoDeviceTrackerEntity(CoordinatorEntity[DataUpdateCoordinator], TrackerEntity):
     """A Tado Device Tracker entity."""
 
-    _attr_should_poll = False
     _attr_available = False
 
     def __init__(
         self,
         device_id: str,
         device_name: str,
-        tado: TadoConnector,
+        coordinator: TadoMobileDeviceUpdateCoordinator,
     ) -> None:
         """Initialize a Tado Device Tracker entity."""
-        super().__init__()
-        self._attr_unique_id = device_id
+        super().__init__(coordinator)
+        self._attr_unique_id = str(device_id)
         self._device_id = device_id
         self._device_name = device_name
-        self._tado = tado
         self._active = False
-        self._latitude = None
-        self._longitude = None
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self.update_state()
+        super()._handle_coordinator_update()
 
     @callback
     def update_state(self) -> None:
@@ -150,7 +110,7 @@ class TadoDeviceTrackerEntity(TrackerEntity):
             self._device_name,
             self._device_id,
         )
-        device = self._tado.data["mobile_device"][self._device_id]
+        device = self.coordinator.data["mobile_device"][self._device_id]
 
         self._attr_available = False
         _LOGGER.debug(
@@ -170,25 +130,6 @@ class TadoDeviceTrackerEntity(TrackerEntity):
         else:
             _LOGGER.debug("Tado device %s is not at home", device["name"])
 
-    @callback
-    def on_demand_update(self) -> None:
-        """Update state on demand."""
-        self.update_state()
-        self.async_write_ha_state()
-
-    async def async_added_to_hass(self) -> None:
-        """Register state update callback."""
-        _LOGGER.debug("Registering Tado device tracker entity")
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED.format(self._tado.home_id),
-                self.on_demand_update,
-            )
-        )
-
-        self.update_state()
-
     @property
     def name(self) -> str:
         """Return the name of the device."""
@@ -198,18 +139,3 @@ class TadoDeviceTrackerEntity(TrackerEntity):
     def location_name(self) -> str:
         """Return the state of the device."""
         return STATE_HOME if self._active else STATE_NOT_HOME
-
-    @property
-    def latitude(self) -> None:
-        """Return latitude value of the device."""
-        return None
-
-    @property
-    def longitude(self) -> None:
-        """Return longitude value of the device."""
-        return None
-
-    @property
-    def source_type(self) -> SourceType:
-        """Return the source type."""
-        return SourceType.GPS

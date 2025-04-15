@@ -8,17 +8,19 @@ from homeassistant.components import button
 from homeassistant.components.button import DEVICE_CLASSES_SCHEMA, ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
-from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
 from .config import DEFAULT_RETAIN, MQTT_BASE_SCHEMA
 from .const import CONF_COMMAND_TEMPLATE, CONF_COMMAND_TOPIC, CONF_RETAIN
-from .mixins import MqttEntity, async_setup_entity_entry_helper
+from .entity import MqttEntity, async_setup_entity_entry_helper
 from .models import MqttCommandTemplate
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_publish_topic
+
+PARALLEL_UPDATES = 0
 
 CONF_PAYLOAD_PRESS = "payload_press"
 DEFAULT_NAME = "MQTT Button"
@@ -41,10 +43,10 @@ DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MQTT button through YAML and through MQTT discovery."""
-    await async_setup_entity_entry_helper(
+    async_setup_entity_entry_helper(
         hass,
         config_entry,
         MqttButton,
@@ -73,6 +75,7 @@ class MqttButton(MqttEntity, ButtonEntity):
         ).async_render
         self._attr_device_class = self._config.get(CONF_DEVICE_CLASS)
 
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
 

@@ -3,8 +3,6 @@
 from http import HTTPStatus
 from unittest.mock import patch
 
-import pytest
-
 from homeassistant.components import media_source, spotify
 from homeassistant.components.forked_daapd.browse_media import (
     MediaContent,
@@ -12,20 +10,23 @@ from homeassistant.components.forked_daapd.browse_media import (
     is_owntone_media_content_id,
 )
 from homeassistant.components.media_player import BrowseMedia, MediaClass, MediaType
-from homeassistant.components.spotify.const import (
+from homeassistant.components.spotify.const import (  # pylint: disable=hass-component-root-import
     MEDIA_PLAYER_PREFIX as SPOTIFY_MEDIA_PLAYER_PREFIX,
 )
-from homeassistant.components.websocket_api.const import TYPE_RESULT
+from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 TEST_MASTER_ENTITY_NAME = "media_player.owntone_server"
 
 
 async def test_async_browse_media(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, config_entry
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test browse media."""
 
@@ -33,7 +34,7 @@ async def test_async_browse_media(
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.forked_daapd.media_player.ForkedDaapdAPI",
+        "homeassistant.components.forked_daapd.ForkedDaapdAPI",
         autospec=True,
     ) as mock_api:
         mock_api.return_value.get_request.return_value = {"websocket_port": 2}
@@ -203,7 +204,9 @@ async def test_async_browse_media(
 
 
 async def test_async_browse_media_not_found(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, config_entry
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test browse media not found."""
 
@@ -211,7 +214,7 @@ async def test_async_browse_media_not_found(
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.forked_daapd.media_player.ForkedDaapdAPI",
+        "homeassistant.components.forked_daapd.ForkedDaapdAPI",
         autospec=True,
     ) as mock_api:
         mock_api.return_value.get_request.return_value = {"websocket_port": 2}
@@ -261,7 +264,9 @@ async def test_async_browse_media_not_found(
 
 
 async def test_async_browse_spotify(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, config_entry
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test browsing spotify."""
 
@@ -313,7 +318,9 @@ async def test_async_browse_spotify(
 
 
 async def test_async_browse_media_source(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, config_entry
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test browsing media_source."""
 
@@ -361,12 +368,14 @@ async def test_async_browse_media_source(
 
 
 async def test_async_browse_image(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator, config_entry
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test browse media images."""
 
     with patch(
-        "homeassistant.components.forked_daapd.media_player.ForkedDaapdAPI",
+        "homeassistant.components.forked_daapd.ForkedDaapdAPI",
         autospec=True,
     ) as mock_api:
         mock_api.return_value.get_request.return_value = {"websocket_port": 2}
@@ -416,13 +425,12 @@ async def test_async_browse_image(
 async def test_async_browse_image_missing(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    config_entry,
-    caplog: pytest.LogCaptureFixture,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test browse media images with no image available."""
 
     with patch(
-        "homeassistant.components.forked_daapd.media_player.ForkedDaapdAPI",
+        "homeassistant.components.forked_daapd.ForkedDaapdAPI",
         autospec=True,
     ) as mock_api:
         mock_api.return_value.get_request.return_value = {"websocket_port": 2}

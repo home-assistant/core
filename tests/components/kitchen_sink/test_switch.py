@@ -1,5 +1,6 @@
 """The tests for the demo switch component."""
 
+from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
@@ -20,7 +21,7 @@ SWITCH_ENTITY_IDS = ["switch.outlet_1", "switch.outlet_2"]
 
 
 @pytest.fixture
-async def switch_only() -> None:
+def switch_only() -> Generator[None]:
     """Enable only the switch platform."""
     with patch(
         "homeassistant.components.kitchen_sink.COMPONENTS_WITH_DEMO_PLATFORM",
@@ -30,7 +31,7 @@ async def switch_only() -> None:
 
 
 @pytest.fixture(autouse=True)
-async def setup_comp(hass, switch_only):
+async def setup_comp(hass: HomeAssistant, switch_only: None) -> None:
     """Set up demo component."""
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()
@@ -55,7 +56,7 @@ async def test_state(
 
 
 @pytest.mark.parametrize("switch_entity_id", SWITCH_ENTITY_IDS)
-async def test_turn_on(hass: HomeAssistant, switch_entity_id) -> None:
+async def test_turn_on(hass: HomeAssistant, switch_entity_id: str) -> None:
     """Test switch turn on method."""
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -79,7 +80,7 @@ async def test_turn_on(hass: HomeAssistant, switch_entity_id) -> None:
 
 
 @pytest.mark.parametrize("switch_entity_id", SWITCH_ENTITY_IDS)
-async def test_turn_off(hass: HomeAssistant, switch_entity_id) -> None:
+async def test_turn_off(hass: HomeAssistant, switch_entity_id: str) -> None:
     """Test switch turn off method."""
     await hass.services.async_call(
         SWITCH_DOMAIN,

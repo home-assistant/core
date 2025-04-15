@@ -34,7 +34,7 @@ from homeassistant.components.profiler.const import DOMAIN
 from homeassistant.const import CONF_SCAN_INTERVAL, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -176,12 +176,12 @@ async def test_dump_log_object(
     await hass.async_block_till_done()
 
     class DumpLogDummy:
-        def __init__(self, fail):
+        def __init__(self, fail) -> None:
             self.fail = fail
 
         def __repr__(self):
             if self.fail:
-                raise Exception("failed")
+                raise Exception("failed")  # noqa: TRY002
             return "<DumpLogDummy success>"
 
     obj1 = DumpLogDummy(False)
@@ -189,9 +189,10 @@ async def test_dump_log_object(
 
     assert hass.services.has_service(DOMAIN, SERVICE_DUMP_LOG_OBJECTS)
 
-    await hass.services.async_call(
-        DOMAIN, SERVICE_DUMP_LOG_OBJECTS, {CONF_TYPE: "DumpLogDummy"}, blocking=True
-    )
+    with patch("objgraph.by_type", return_value=[obj1, obj2]):
+        await hass.services.async_call(
+            DOMAIN, SERVICE_DUMP_LOG_OBJECTS, {CONF_TYPE: "DumpLogDummy"}, blocking=True
+        )
 
     assert "<DumpLogDummy success>" in caplog.text
     assert "Failed to serialize" in caplog.text
@@ -284,14 +285,14 @@ async def test_lru_stats(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) 
         return 1
 
     class DomainData:
-        def __init__(self):
+        def __init__(self) -> None:
             self._data = LRU(1)
 
     domain_data = DomainData()
     assert hass.services.has_service(DOMAIN, SERVICE_LRU_STATS)
 
     class LRUCache:
-        def __init__(self):
+        def __init__(self) -> None:
             self._data = {"sqlalchemy_test": 1}
 
     sqlalchemy_lru_cache = LRUCache()

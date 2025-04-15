@@ -40,7 +40,7 @@ async def test_user_step_discovered_devices(
 ) -> None:
     """Test we properly handle device picking."""
 
-    with patch_async_discovered_service_info():
+    with patch_async_discovered_service_info([FAKE_SERVICE_INFO_1]):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},

@@ -10,19 +10,19 @@ import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_TARGET,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
 from homeassistant.components.twilio import DATA_TWILIO
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_FROM_NUMBER = "from_number"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_FROM_NUMBER): vol.All(
             cv.string, vol.Match(r"^\+?[1-9]\d{1,14}$")
@@ -53,7 +53,7 @@ class TwilioCallNotificationService(BaseNotificationService):
     def send_message(self, message="", **kwargs):
         """Call to specified target users."""
         if not (targets := kwargs.get(ATTR_TARGET)):
-            _LOGGER.info("At least 1 target is required")
+            _LOGGER.warning("At least 1 target is required")
             return
 
         if message.startswith(("http://", "https://")):

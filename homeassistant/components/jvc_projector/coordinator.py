@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Any
 
 from jvcprojector import (
     JvcProjector,
@@ -12,6 +13,7 @@ from jvcprojector import (
     const,
 )
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.device_registry import format_mac
@@ -24,15 +26,22 @@ _LOGGER = logging.getLogger(__name__)
 INTERVAL_SLOW = timedelta(seconds=10)
 INTERVAL_FAST = timedelta(seconds=5)
 
+type JVCConfigEntry = ConfigEntry[JvcProjectorDataUpdateCoordinator]
+
 
 class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
     """Data update coordinator for the JVC Projector integration."""
 
-    def __init__(self, hass: HomeAssistant, device: JvcProjector) -> None:
+    config_entry: JVCConfigEntry
+
+    def __init__(
+        self, hass: HomeAssistant, config_entry: JVCConfigEntry, device: JvcProjector
+    ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass=hass,
             logger=_LOGGER,
+            config_entry=config_entry,
             name=NAME,
             update_interval=INTERVAL_SLOW,
         )
@@ -40,7 +49,7 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
         self.device = device
         self.unique_id = format_mac(device.mac)
 
-    async def _async_update_data(self) -> dict[str, str]:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Get the latest state data."""
         try:
             state = await self.device.get_state()

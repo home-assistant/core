@@ -14,7 +14,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_apiclient() -> Generator[ApiClient, None, None]:
+def mock_apiclient() -> Generator[ApiClient]:
     """Return a mocked ApiClient class."""
     with patch(
         "homeassistant.components.kostal_plenticore.coordinator.ExtendedApiClient",

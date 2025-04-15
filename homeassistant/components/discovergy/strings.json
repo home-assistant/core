@@ -5,12 +5,10 @@
         "data": {
           "email": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
-        }
-      },
-      "reauth": {
-        "data": {
-          "email": "[%key:common::config_flow::data::email%]",
-          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "email": "The email address used to log in to your inexogy account.",
+          "password": "The password used to log in to your inexogy account."
         }
       }
     },
@@ -21,12 +19,13 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "account_mismatch": "The inexogy account authenticated with does not match the account that needed re-authentication.",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
   "system_health": {
     "info": {
-      "api_endpoint_reachable": "Discovergy API endpoint reachable"
+      "api_endpoint_reachable": "inexogy API endpoint reachable"
     }
   },
   "entity": {

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from asyncio import timeout
 from datetime import timedelta
-from logging import Logger
+import logging
 
 from elmax_api.exceptions import (
     ElmaxApiError,
@@ -17,34 +17,46 @@ from elmax_api.http import Elmax, GenericElmax
 from elmax_api.model.actuator import Actuator
 from elmax_api.model.area import Area
 from elmax_api.model.cover import Cover
+from elmax_api.model.endpoint import DeviceEndpoint
 from elmax_api.model.panel import PanelEntry, PanelStatus
+from elmax_api.push.push import PushNotificationHandler
 from httpx import ConnectError, ConnectTimeout
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_TIMEOUT
+from .const import DEFAULT_TIMEOUT, POLLING_SECONDS
+
+_LOGGER = logging.getLogger(__name__)
+
+type ElmaxConfigEntry = ConfigEntry[ElmaxCoordinator]
 
 
 class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):
     """Coordinator helper to handle Elmax API polling."""
 
+    _state_by_endpoint: dict[str, Actuator | Area | Cover | DeviceEndpoint]
+
     def __init__(
         self,
         hass: HomeAssistant,
-        logger: Logger,
+        entry: ElmaxConfigEntry,
         elmax_api_client: GenericElmax,
         panel: PanelEntry,
-        name: str,
-        update_interval: timedelta,
     ) -> None:
         """Instantiate the object."""
         self._client = elmax_api_client
         self._panel_entry = panel
-        self._state_by_endpoint = None
+        self._state_by_endpoint = {}
+        self._push_notification_handler = None
         super().__init__(
-            hass=hass, logger=logger, name=name, update_interval=update_interval
+            hass=hass,
+            config_entry=entry,
+            logger=_LOGGER,
+            name=f"Elmax Cloud {entry.entry_id}",
+            update_interval=timedelta(seconds=POLLING_SECONDS),
         )
 
     @property
@@ -93,12 +105,6 @@ class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):
                 # We handle this case in the following exception blocks.
                 status = await self._client.get_current_panel_status()
 
-                # Store a dictionary for fast endpoint state access
-                self._state_by_endpoint = {
-                    k.endpoint_id: k for k in status.all_endpoints
-                }
-                return status
-
         except ElmaxBadPinError as err:
             raise ConfigEntryAuthFailed("Control panel pin was refused") from err
         except ElmaxBadLoginError as err:
@@ -122,3 +128,48 @@ class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):
                 "Make sure the panel is online and that  "
                 "your firewall allows communication with it."
             ) from err
+
+        # Store a dictionary for fast endpoint state access
+        self._state_by_endpoint = {k.endpoint_id: k for k in status.all_endpoints}
+
+        # If panel supports it and a it hasn't been registered yet, register the push notification handler
+        if status.push_feature and self._push_notification_handler is None:
+            self._register_push_notification_handler()
+
+        self._fire_data_update(status)
+        return status
+
+    def _fire_data_update(self, status: PanelStatus):
+        # Store a dictionary for fast endpoint state access
+        self._state_by_endpoint = {k.endpoint_id: k for k in status.all_endpoints}
+        self.async_set_updated_data(status)
+
+    def _register_push_notification_handler(self):
+        ws_ep = (
+            f"{'wss' if self.http_client.base_url.scheme == 'https' else 'ws'}"
+            f"://{self.http_client.base_url.host}"
+            f":{self.http_client.base_url.port}"
+            f"{self.http_client.base_url.path}/push"
+        )
+        self._push_notification_handler = PushNotificationHandler(
+            endpoint=str(ws_ep),
+            http_client=self.http_client,
+            ssl_context=self.http_client.ssl_context,
+        )
+        self._push_notification_handler.register_push_notification_handler(
+            self._push_handler
+        )
+        self._push_notification_handler.start(loop=self.hass.loop)
+
+    async def _push_handler(self, status: PanelStatus) -> None:
+        self._fire_data_update(status)
+
+    async def async_shutdown(self) -> None:
+        """Cancel any scheduled call, and ignore new runs."""
+        if self._push_notification_handler is not None:
+            self._push_notification_handler.unregister_push_notification_handler(
+                self._push_handler
+            )
+            self._push_notification_handler.stop()
+        self._push_notification_handler = None
+        return await super().async_shutdown()

@@ -10,7 +10,9 @@ from homeassistant.helpers import entity_registry as er
 from . import MAC, Capabilities, setup_onvif_integration
 
 
-async def test_wiper_switch(hass: HomeAssistant) -> None:
+async def test_wiper_switch(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test states of the Wiper switch."""
     _config, _camera, device = await setup_onvif_integration(hass)
     device.profiles = device.async_get_profiles()
@@ -19,8 +21,7 @@ async def test_wiper_switch(hass: HomeAssistant) -> None:
     assert state
     assert state.state == STATE_UNKNOWN
 
-    registry = er.async_get(hass)
-    entry = registry.async_get("switch.testcamera_wiper")
+    entry = entity_registry.async_get("switch.testcamera_wiper")
     assert entry
     assert entry.unique_id == f"{MAC}_wiper"
 
@@ -71,7 +72,9 @@ async def test_turn_wiper_switch_off(hass: HomeAssistant) -> None:
     assert state.state == STATE_OFF
 
 
-async def test_autofocus_switch(hass: HomeAssistant) -> None:
+async def test_autofocus_switch(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test states of the autofocus switch."""
     _config, _camera, device = await setup_onvif_integration(hass)
     device.profiles = device.async_get_profiles()
@@ -80,8 +83,7 @@ async def test_autofocus_switch(hass: HomeAssistant) -> None:
     assert state
     assert state.state == STATE_UNKNOWN
 
-    registry = er.async_get(hass)
-    entry = registry.async_get("switch.testcamera_autofocus")
+    entry = entity_registry.async_get("switch.testcamera_autofocus")
     assert entry
     assert entry.unique_id == f"{MAC}_autofocus"
 
@@ -132,7 +134,9 @@ async def test_turn_autofocus_switch_off(hass: HomeAssistant) -> None:
     assert state.state == STATE_OFF
 
 
-async def test_infrared_switch(hass: HomeAssistant) -> None:
+async def test_infrared_switch(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test states of the autofocus switch."""
     _config, _camera, device = await setup_onvif_integration(hass)
     device.profiles = device.async_get_profiles()
@@ -141,8 +145,7 @@ async def test_infrared_switch(hass: HomeAssistant) -> None:
     assert state
     assert state.state == STATE_UNKNOWN
 
-    registry = er.async_get(hass)
-    entry = registry.async_get("switch.testcamera_ir_lamp")
+    entry = entity_registry.async_get("switch.testcamera_ir_lamp")
     assert entry
     assert entry.unique_id == f"{MAC}_ir_lamp"
 

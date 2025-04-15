@@ -42,6 +42,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
@@ -54,6 +55,12 @@ from .common import (
     CLIMATE_RADIO_THERMOSTAT_ENTITY,
     replace_value_of_zwave_value,
 )
+
+
+@pytest.fixture
+def platforms() -> list[str]:
+    """Fixture to specify platforms to test."""
+    return [Platform.CLIMATE]
 
 
 async def test_thermostat_v2(
@@ -812,8 +819,8 @@ async def test_thermostat_heatit_z_trm2fx(
         | ClimateEntityFeature.TURN_OFF
         | ClimateEntityFeature.TURN_ON
     )
-    assert state.attributes[ATTR_MIN_TEMP] == 7
-    assert state.attributes[ATTR_MAX_TEMP] == 35
+    assert state.attributes[ATTR_MIN_TEMP] == 0
+    assert state.attributes[ATTR_MAX_TEMP] == 50
 
     # Try switching to external sensor
     event = Event(

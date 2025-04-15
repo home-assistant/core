@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from typing import Any
 
+from whirlpool.appliance import Appliance
+
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from . import WhirlpoolData
-from .const import DOMAIN
+from . import WhirlpoolConfigEntry
 
 TO_REDACT = {
     "SERIAL_NUMBER",
@@ -24,22 +24,29 @@ TO_REDACT = {
 
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: WhirlpoolConfigEntry,
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
 
-    whirlpool: WhirlpoolData = hass.data[DOMAIN][config_entry.entry_id]
+    def get_appliance_diagnostics(appliance: Appliance) -> dict[str, Any]:
+        return {
+            "data_model": appliance.appliance_info.data_model,
+            "category": appliance.appliance_info.category,
+            "model_number": appliance.appliance_info.model_number,
+        }
+
+    appliances_manager = config_entry.runtime_data
     diagnostics_data = {
-        "Washer_dryers": {
-            wd["NAME"]: dict(wd.items())
-            for wd in whirlpool.appliances_manager.washer_dryers
+        "washer_dryers": {
+            wd.name: get_appliance_diagnostics(wd)
+            for wd in appliances_manager.washer_dryers
         },
         "aircons": {
-            ac["NAME"]: dict(ac.items()) for ac in whirlpool.appliances_manager.aircons
+            ac.name: get_appliance_diagnostics(ac) for ac in appliances_manager.aircons
         },
         "ovens": {
-            oven["NAME"]: dict(oven.items())
-            for oven in whirlpool.appliances_manager.ovens
+            oven.name: get_appliance_diagnostics(oven)
+            for oven in appliances_manager.ovens
         },
     }
 

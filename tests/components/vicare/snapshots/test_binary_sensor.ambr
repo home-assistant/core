@@ -1,4 +1,434 @@
 # serializer version: 1
+# name: test_all_entities[binary_sensor.model0_burner-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.model0_burner',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_icon': None,
+    'original_name': 'Burner',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'burner',
+    'unique_id': 'gateway0_deviceSerialVitodens300W-burner_active-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.model0_burner-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'running',
+      'friendly_name': 'model0 Burner',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.model0_burner',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[binary_sensor.model0_circulation_pump-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.model0_circulation_pump',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_icon': None,
+    'original_name': 'Circulation pump',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'circulation_pump',
+    'unique_id': 'gateway0_deviceSerialVitodens300W-circulationpump_active-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.model0_circulation_pump-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'running',
+      'friendly_name': 'model0 Circulation pump',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.model0_circulation_pump',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[binary_sensor.model0_circulation_pump_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.model0_circulation_pump_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_icon': None,
+    'original_name': 'Circulation pump',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'circulation_pump',
+    'unique_id': 'gateway0_deviceSerialVitodens300W-circulationpump_active-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.model0_circulation_pump_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'running',
+      'friendly_name': 'model0 Circulation pump',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.model0_circulation_pump_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[binary_sensor.model0_dhw_charging-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.model0_dhw_charging',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_icon': None,
+    'original_name': 'DHW charging',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'domestic_hot_water_charging',
+    'unique_id': 'gateway0_deviceSerialVitodens300W-charging_active',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.model0_dhw_charging-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'running',
+      'friendly_name': 'model0 DHW charging',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.model0_dhw_charging',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[binary_sensor.model0_dhw_circulation_pump-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.model0_dhw_circulation_pump',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_icon': None,
+    'original_name': 'DHW circulation pump',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'domestic_hot_water_circulation_pump',
+    'unique_id': 'gateway0_deviceSerialVitodens300W-dhw_circulationpump_active',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.model0_dhw_circulation_pump-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'running',
+      'friendly_name': 'model0 DHW circulation pump',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.model0_dhw_circulation_pump',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[binary_sensor.model0_dhw_pump-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.model0_dhw_pump',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_icon': None,
+    'original_name': 'DHW pump',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'domestic_hot_water_pump',
+    'unique_id': 'gateway0_deviceSerialVitodens300W-dhw_pump_active',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.model0_dhw_pump-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'running',
+      'friendly_name': 'model0 DHW pump',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.model0_dhw_pump',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[binary_sensor.model0_frost_protection-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.model0_frost_protection',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Frost protection',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'frost_protection',
+    'unique_id': 'gateway0_deviceSerialVitodens300W-frost_protection_active-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.model0_frost_protection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'model0 Frost protection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.model0_frost_protection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[binary_sensor.model0_frost_protection_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.model0_frost_protection_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Frost protection',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'frost_protection',
+    'unique_id': 'gateway0_deviceSerialVitodens300W-frost_protection_active-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.model0_frost_protection_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'model0 Frost protection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.model0_frost_protection_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[binary_sensor.model0_one_time_charge-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.model0_one_time_charge',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_icon': None,
+    'original_name': 'One-time charge',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'one_time_charge',
+    'unique_id': 'gateway0_deviceSerialVitodens300W-one_time_charge',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.model0_one_time_charge-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'running',
+      'friendly_name': 'model0 One-time charge',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.model0_one_time_charge',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_binary_sensors[burner]
   StateSnapshot({
     'attributes': ReadOnlyDict({

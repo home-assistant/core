@@ -1,4 +1,240 @@
 # serializer version: 1
+# name: test_select[select.energy_site_allow_export-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        <EnergyExportMode.NEVER: 'never'>,
+        <EnergyExportMode.BATTERY_OK: 'battery_ok'>,
+        <EnergyExportMode.PV_ONLY: 'pv_only'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.energy_site_allow_export',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Allow export',
+    'platform': 'tessie',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'components_customer_preferred_export_rule',
+    'unique_id': '123456-components_customer_preferred_export_rule',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select[select.energy_site_allow_export-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Energy Site Allow export',
+      'options': list([
+        <EnergyExportMode.NEVER: 'never'>,
+        <EnergyExportMode.BATTERY_OK: 'battery_ok'>,
+        <EnergyExportMode.PV_ONLY: 'pv_only'>,
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.energy_site_allow_export',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'pv_only',
+  })
+# ---
+# name: test_select[select.energy_site_operation_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        <EnergyOperationMode.AUTONOMOUS: 'autonomous'>,
+        <EnergyOperationMode.BACKUP: 'backup'>,
+        <EnergyOperationMode.SELF_CONSUMPTION: 'self_consumption'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.energy_site_operation_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Operation mode',
+    'platform': 'tessie',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'default_real_mode',
+    'unique_id': '123456-default_real_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select[select.energy_site_operation_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Energy Site Operation mode',
+      'options': list([
+        <EnergyOperationMode.AUTONOMOUS: 'autonomous'>,
+        <EnergyOperationMode.BACKUP: 'backup'>,
+        <EnergyOperationMode.SELF_CONSUMPTION: 'self_consumption'>,
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.energy_site_operation_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'self_consumption',
+  })
+# ---
+# name: test_select[select.test_seat_cooler_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        <TessieSeatCoolerOptions.OFF: 'off'>,
+        <TessieSeatCoolerOptions.LOW: 'low'>,
+        <TessieSeatCoolerOptions.MEDIUM: 'medium'>,
+        <TessieSeatCoolerOptions.HIGH: 'high'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.test_seat_cooler_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Seat cooler left',
+    'platform': 'tessie',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'climate_state_seat_fan_front_left',
+    'unique_id': 'VINVINVIN-climate_state_seat_fan_front_left',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select[select.test_seat_cooler_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Seat cooler left',
+      'options': list([
+        <TessieSeatCoolerOptions.OFF: 'off'>,
+        <TessieSeatCoolerOptions.LOW: 'low'>,
+        <TessieSeatCoolerOptions.MEDIUM: 'medium'>,
+        <TessieSeatCoolerOptions.HIGH: 'high'>,
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_seat_cooler_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_select[select.test_seat_cooler_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        <TessieSeatCoolerOptions.OFF: 'off'>,
+        <TessieSeatCoolerOptions.LOW: 'low'>,
+        <TessieSeatCoolerOptions.MEDIUM: 'medium'>,
+        <TessieSeatCoolerOptions.HIGH: 'high'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.test_seat_cooler_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Seat cooler right',
+    'platform': 'tessie',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'climate_state_seat_fan_front_right',
+    'unique_id': 'VINVINVIN-climate_state_seat_fan_front_right',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select[select.test_seat_cooler_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Seat cooler right',
+      'options': list([
+        <TessieSeatCoolerOptions.OFF: 'off'>,
+        <TessieSeatCoolerOptions.LOW: 'low'>,
+        <TessieSeatCoolerOptions.MEDIUM: 'medium'>,
+        <TessieSeatCoolerOptions.HIGH: 'high'>,
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_seat_cooler_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_select[select.test_seat_heater_left-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -13,6 +249,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -72,6 +309,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -131,6 +369,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -190,6 +429,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -249,6 +489,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,

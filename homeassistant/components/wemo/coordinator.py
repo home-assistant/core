@@ -24,11 +24,8 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import (
-    CONNECTION_UPNP,
-    DeviceInfo,
-    async_get as async_get_device_registry,
-)
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import CONNECTION_UPNP, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, WEMO_SUBSCRIPTION_EVENT
@@ -91,13 +88,17 @@ class Options:
 class DeviceCoordinator(DataUpdateCoordinator[None]):
     """Home Assistant wrapper for a pyWeMo device."""
 
+    config_entry: ConfigEntry
     options: Options | None = None
 
-    def __init__(self, hass: HomeAssistant, wemo: WeMoDevice) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: ConfigEntry, wemo: WeMoDevice
+    ) -> None:
         """Initialize DeviceCoordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=wemo.name,
             update_interval=timedelta(seconds=30),
         )
@@ -278,6 +279,7 @@ def _device_info(wemo: WeMoDevice) -> DeviceInfo:
         identifiers={(DOMAIN, wemo.serial_number)},
         manufacturer="Belkin",
         model=wemo.model_name,
+        model_id=wemo.model,
         name=wemo.name,
         sw_version=wemo.firmware_version,
     )
@@ -287,11 +289,11 @@ async def async_register_device(
     hass: HomeAssistant, config_entry: ConfigEntry, wemo: WeMoDevice
 ) -> DeviceCoordinator:
     """Register a device with home assistant and enable pywemo event callbacks."""
-    device = DeviceCoordinator(hass, wemo)
+    device = DeviceCoordinator(hass, config_entry, wemo)
     await device.async_refresh()
     if not device.last_update_success and device.last_exception:
         raise device.last_exception
-    device_registry = async_get_device_registry(hass)
+    device_registry = dr.async_get(hass)
     entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id, **_create_device_info(wemo)
     )

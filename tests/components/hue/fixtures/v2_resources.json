@@ -1288,7 +1288,9 @@
   },
   {
     "button": {
-      "last_event": "short_release"
+      "button_report": {
+        "event": "short_release"
+      }
     },
     "id": "c658d3d8-a013-4b81-8ac6-78b248537e70",
     "id_v1": "/sensors/50",
@@ -1327,7 +1329,9 @@
   },
   {
     "button": {
-      "last_event": "short_release"
+      "button_report": {
+        "event": "short_release"
+      }
     },
     "id": "7f1ab9f6-cc2b-4b40-9011-65e2af153f75",
     "id_v1": "/sensors/10",
@@ -1366,7 +1370,9 @@
   },
   {
     "button": {
-      "last_event": "short_release"
+      "button_report": {
+        "event": "short_release"
+      }
     },
     "id": "31cffcda-efc2-401f-a152-e10db3eed232",
     "id_v1": "/sensors/5",
@@ -1487,6 +1493,10 @@
     "on": {
       "on": true
     },
+    "owner": {
+      "rid": "7cee478d-6455-483a-9e32-9f9fdcbcc4f6",
+      "rtype": "zone"
+    },
     "type": "grouped_light"
   },
   {
@@ -1498,6 +1508,10 @@
     "on": {
       "on": true
     },
+    "owner": {
+      "rid": "7cee478d-6455-483a-9e32-9f9fdcbcc4f6",
+      "rtype": "zone"
+    },
     "type": "grouped_light"
   },
   {
@@ -1508,6 +1522,10 @@
     "id_v1": "/groups/3",
     "on": {
       "on": false
+    },
+    "owner": {
+      "rid": "7cee478d-6455-483a-9e32-9f9fdcbcc4f6",
+      "rtype": "zone"
     },
     "type": "grouped_light"
   },

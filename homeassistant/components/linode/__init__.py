@@ -8,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
@@ -45,7 +45,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     _linode = Linode(access_token)
 
     try:
-        _LOGGER.info("Linode Profile %s", _linode.manager.get_profile().username)
+        _LOGGER.debug("Linode Profile %s", _linode.manager.get_profile().username)
     except linode.errors.ApiError as _ex:
         _LOGGER.error(_ex)
         return False

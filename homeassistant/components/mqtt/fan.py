@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from functools import partial
 import logging
 import math
 from typing import Any
@@ -27,11 +26,12 @@ from homeassistant.const import (
     CONF_PAYLOAD_ON,
     CONF_STATE,
 )
-from homeassistant.core import HassJobType, HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, VolSchemaType
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
     ranged_value_to_percentage,
@@ -43,23 +43,21 @@ from .config import MQTT_RW_SCHEMA
 from .const import (
     CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
-    CONF_ENCODING,
-    CONF_QOS,
     CONF_STATE_TOPIC,
     CONF_STATE_VALUE_TEMPLATE,
     PAYLOAD_NONE,
 )
-from .mixins import MqttEntity, async_setup_entity_entry_helper
+from .entity import MqttEntity, async_setup_entity_entry_helper
 from .models import (
-    MessageCallbackType,
     MqttCommandTemplate,
     MqttValueTemplate,
     PublishPayloadType,
     ReceiveMessage,
-    ReceivePayloadType,
 )
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_publish_topic, valid_subscribe_topic
+
+PARALLEL_UPDATES = 0
 
 CONF_DIRECTION_STATE_TOPIC = "direction_state_topic"
 CONF_DIRECTION_COMMAND_TOPIC = "direction_command_topic"
@@ -192,10 +190,10 @@ DISCOVERY_SCHEMA = vol.All(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MQTT fan through YAML and through MQTT discovery."""
-    await async_setup_entity_entry_helper(
+    async_setup_entity_entry_helper(
         hass,
         config_entry,
         MqttFan,
@@ -230,7 +228,7 @@ class MqttFan(MqttEntity, FanEntity):
     _speed_range: tuple[int, int]
 
     @staticmethod
-    def config_schema() -> vol.Schema:
+    def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
@@ -293,7 +291,9 @@ class MqttFan(MqttEntity, FanEntity):
             optimistic or self._topic[CONF_PRESET_MODE_STATE_TOPIC] is None
         )
 
-        self._attr_supported_features = FanEntityFeature(0)
+        self._attr_supported_features = (
+            FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
+        )
         self._attr_supported_features |= (
             self._topic[CONF_OSCILLATION_COMMAND_TOPIC] is not None
             and FanEntityFeature.OSCILLATE
@@ -429,50 +429,28 @@ class MqttFan(MqttEntity, FanEntity):
             return
         self._attr_current_direction = str(direction)
 
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        topics: dict[str, Any] = {}
-
-        def add_subscribe_topic(
-            topic: str, msg_callback: MessageCallbackType, tracked_attributes: set[str]
-        ) -> bool:
-            """Add a topic to subscribe to."""
-            if has_topic := self._topic[topic] is not None:
-                topics[topic] = {
-                    "topic": self._topic[topic],
-                    "msg_callback": partial(
-                        self._message_callback, msg_callback, tracked_attributes
-                    ),
-                    "entity_id": self.entity_id,
-                    "qos": self._config[CONF_QOS],
-                    "encoding": self._config[CONF_ENCODING] or None,
-                    "job_type": HassJobType.Callback,
-                }
-            return has_topic
-
-        add_subscribe_topic(CONF_STATE_TOPIC, self._state_received, {"_attr_is_on"})
-        add_subscribe_topic(
+        self.add_subscription(CONF_STATE_TOPIC, self._state_received, {"_attr_is_on"})
+        self.add_subscription(
             CONF_PERCENTAGE_STATE_TOPIC, self._percentage_received, {"_attr_percentage"}
         )
-        add_subscribe_topic(
+        self.add_subscription(
             CONF_PRESET_MODE_STATE_TOPIC,
             self._preset_mode_received,
             {"_attr_preset_mode"},
         )
-        if add_subscribe_topic(
+        if self.add_subscription(
             CONF_OSCILLATION_STATE_TOPIC,
             self._oscillation_received,
             {"_attr_oscillating"},
         ):
             self._attr_oscillating = False
-        add_subscribe_topic(
+        self.add_subscription(
             CONF_DIRECTION_STATE_TOPIC,
             self._direction_received,
             {"_attr_current_direction"},
-        )
-
-        self._sub_state = subscription.async_prepare_subscribe_topics(
-            self.hass, self._sub_state, topics
         )
 
     async def _subscribe_topics(self) -> None:

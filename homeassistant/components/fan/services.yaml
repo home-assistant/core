@@ -31,6 +31,8 @@ turn_on:
   target:
     entity:
       domain: fan
+      supported_features:
+        - fan.FanEntityFeature.TURN_ON
   fields:
     percentage:
       filter:
@@ -53,6 +55,8 @@ turn_off:
   target:
     entity:
       domain: fan
+      supported_features:
+        - fan.FanEntityFeature.TURN_OFF
 
 oscillate:
   target:

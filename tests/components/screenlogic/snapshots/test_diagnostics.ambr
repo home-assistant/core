@@ -7,6 +7,8 @@
         'port': 80,
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'screenlogic',
       'entry_id': 'screenlogictest',
       'minor_version': 1,
@@ -16,6 +18,8 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': 'Pentair: DD-EE-FF',
       'unique_id': 'aa:bb:cc:dd:ee:ff',
       'version': 1,

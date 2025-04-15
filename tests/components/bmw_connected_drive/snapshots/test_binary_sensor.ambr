@@ -1,0 +1,1483 @@
+# serializer version: 1
+# name: test_entity_state_attrs[binary_sensor.i3_rex_charging_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.i3_rex_charging_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.BATTERY_CHARGING: 'battery_charging'>,
+    'original_icon': None,
+    'original_name': 'Charging status',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'charging_status',
+    'unique_id': 'WBY00000000REXI01-charging_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.i3_rex_charging_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery_charging',
+      'friendly_name': 'i3 (+ REX) Charging status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.i3_rex_charging_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.i3_rex_check_control_messages-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.i3_rex_check_control_messages',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Check control messages',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'check_control_messages',
+    'unique_id': 'WBY00000000REXI01-check_control_messages',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.i3_rex_check_control_messages-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'i3 (+ REX) Check control messages',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.i3_rex_check_control_messages',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.i3_rex_condition_based_services-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.i3_rex_condition_based_services',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Condition based services',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'condition_based_services',
+    'unique_id': 'WBY00000000REXI01-condition_based_services',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.i3_rex_condition_based_services-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'brake_fluid': 'OK',
+      'brake_fluid_date': '2022-10-01',
+      'device_class': 'problem',
+      'friendly_name': 'i3 (+ REX) Condition based services',
+      'vehicle_check': 'OK',
+      'vehicle_check_date': '2023-05-01',
+      'vehicle_tuv': 'OK',
+      'vehicle_tuv_date': '2023-05-01',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.i3_rex_condition_based_services',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.i3_rex_connection_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.i3_rex_connection_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PLUG: 'plug'>,
+    'original_icon': None,
+    'original_name': 'Connection status',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'connection_status',
+    'unique_id': 'WBY00000000REXI01-connection_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.i3_rex_connection_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'plug',
+      'friendly_name': 'i3 (+ REX) Connection status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.i3_rex_connection_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.i3_rex_door_lock_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.i3_rex_door_lock_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.LOCK: 'lock'>,
+    'original_icon': None,
+    'original_name': 'Door lock state',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_lock_state',
+    'unique_id': 'WBY00000000REXI01-door_lock_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.i3_rex_door_lock_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'lock',
+      'door_lock_state': 'UNLOCKED',
+      'friendly_name': 'i3 (+ REX) Door lock state',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.i3_rex_door_lock_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.i3_rex_lids-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.i3_rex_lids',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
+    'original_icon': None,
+    'original_name': 'Lids',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'lids',
+    'unique_id': 'WBY00000000REXI01-lids',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.i3_rex_lids-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'opening',
+      'friendly_name': 'i3 (+ REX) Lids',
+      'hood': 'CLOSED',
+      'leftFront': 'CLOSED',
+      'leftRear': 'CLOSED',
+      'rightFront': 'CLOSED',
+      'rightRear': 'CLOSED',
+      'sunRoof': 'CLOSED',
+      'trunk': 'CLOSED',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.i3_rex_lids',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.i3_rex_pre_entry_climatization-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.i3_rex_pre_entry_climatization',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Pre entry climatization',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'is_pre_entry_climatization_enabled',
+    'unique_id': 'WBY00000000REXI01-is_pre_entry_climatization_enabled',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.i3_rex_pre_entry_climatization-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'i3 (+ REX) Pre entry climatization',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.i3_rex_pre_entry_climatization',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.i3_rex_windows-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.i3_rex_windows',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
+    'original_icon': None,
+    'original_name': 'Windows',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'windows',
+    'unique_id': 'WBY00000000REXI01-windows',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.i3_rex_windows-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'opening',
+      'friendly_name': 'i3 (+ REX) Windows',
+      'leftFront': 'CLOSED',
+      'rightFront': 'CLOSED',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.i3_rex_windows',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.i4_edrive40_charging_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.i4_edrive40_charging_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.BATTERY_CHARGING: 'battery_charging'>,
+    'original_icon': None,
+    'original_name': 'Charging status',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'charging_status',
+    'unique_id': 'WBA00000000DEMO02-charging_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.i4_edrive40_charging_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery_charging',
+      'friendly_name': 'i4 eDrive40 Charging status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.i4_edrive40_charging_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.i4_edrive40_check_control_messages-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.i4_edrive40_check_control_messages',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Check control messages',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'check_control_messages',
+    'unique_id': 'WBA00000000DEMO02-check_control_messages',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.i4_edrive40_check_control_messages-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'i4 eDrive40 Check control messages',
+      'tire_pressure': 'LOW',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.i4_edrive40_check_control_messages',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.i4_edrive40_condition_based_services-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.i4_edrive40_condition_based_services',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Condition based services',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'condition_based_services',
+    'unique_id': 'WBA00000000DEMO02-condition_based_services',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.i4_edrive40_condition_based_services-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'brake_fluid': 'OK',
+      'brake_fluid_date': '2024-12-01',
+      'brake_fluid_distance': '50000 km',
+      'device_class': 'problem',
+      'friendly_name': 'i4 eDrive40 Condition based services',
+      'tire_wear_front': 'OK',
+      'tire_wear_rear': 'OK',
+      'vehicle_check': 'OK',
+      'vehicle_check_date': '2024-12-01',
+      'vehicle_check_distance': '50000 km',
+      'vehicle_tuv': 'OK',
+      'vehicle_tuv_date': '2024-12-01',
+      'vehicle_tuv_distance': '50000 km',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.i4_edrive40_condition_based_services',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.i4_edrive40_connection_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.i4_edrive40_connection_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PLUG: 'plug'>,
+    'original_icon': None,
+    'original_name': 'Connection status',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'connection_status',
+    'unique_id': 'WBA00000000DEMO02-connection_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.i4_edrive40_connection_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'plug',
+      'friendly_name': 'i4 eDrive40 Connection status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.i4_edrive40_connection_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.i4_edrive40_door_lock_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.i4_edrive40_door_lock_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.LOCK: 'lock'>,
+    'original_icon': None,
+    'original_name': 'Door lock state',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_lock_state',
+    'unique_id': 'WBA00000000DEMO02-door_lock_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.i4_edrive40_door_lock_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'lock',
+      'door_lock_state': 'LOCKED',
+      'friendly_name': 'i4 eDrive40 Door lock state',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.i4_edrive40_door_lock_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.i4_edrive40_lids-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.i4_edrive40_lids',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
+    'original_icon': None,
+    'original_name': 'Lids',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'lids',
+    'unique_id': 'WBA00000000DEMO02-lids',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.i4_edrive40_lids-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'opening',
+      'friendly_name': 'i4 eDrive40 Lids',
+      'hood': 'CLOSED',
+      'leftFront': 'CLOSED',
+      'leftRear': 'CLOSED',
+      'rightFront': 'CLOSED',
+      'rightRear': 'CLOSED',
+      'trunk': 'CLOSED',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.i4_edrive40_lids',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.i4_edrive40_pre_entry_climatization-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.i4_edrive40_pre_entry_climatization',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Pre entry climatization',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'is_pre_entry_climatization_enabled',
+    'unique_id': 'WBA00000000DEMO02-is_pre_entry_climatization_enabled',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.i4_edrive40_pre_entry_climatization-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'i4 eDrive40 Pre entry climatization',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.i4_edrive40_pre_entry_climatization',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.i4_edrive40_windows-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.i4_edrive40_windows',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
+    'original_icon': None,
+    'original_name': 'Windows',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'windows',
+    'unique_id': 'WBA00000000DEMO02-windows',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.i4_edrive40_windows-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'opening',
+      'friendly_name': 'i4 eDrive40 Windows',
+      'leftFront': 'CLOSED',
+      'leftRear': 'CLOSED',
+      'rear': 'CLOSED',
+      'rightFront': 'CLOSED',
+      'rightRear': 'CLOSED',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.i4_edrive40_windows',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.ix_xdrive50_charging_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.ix_xdrive50_charging_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.BATTERY_CHARGING: 'battery_charging'>,
+    'original_icon': None,
+    'original_name': 'Charging status',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'charging_status',
+    'unique_id': 'WBA00000000DEMO01-charging_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.ix_xdrive50_charging_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery_charging',
+      'friendly_name': 'iX xDrive50 Charging status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.ix_xdrive50_charging_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.ix_xdrive50_check_control_messages-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.ix_xdrive50_check_control_messages',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Check control messages',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'check_control_messages',
+    'unique_id': 'WBA00000000DEMO01-check_control_messages',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.ix_xdrive50_check_control_messages-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'iX xDrive50 Check control messages',
+      'tire_pressure': 'LOW',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.ix_xdrive50_check_control_messages',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.ix_xdrive50_condition_based_services-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.ix_xdrive50_condition_based_services',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Condition based services',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'condition_based_services',
+    'unique_id': 'WBA00000000DEMO01-condition_based_services',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.ix_xdrive50_condition_based_services-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'brake_fluid': 'OK',
+      'brake_fluid_date': '2024-12-01',
+      'brake_fluid_distance': '50000 km',
+      'device_class': 'problem',
+      'friendly_name': 'iX xDrive50 Condition based services',
+      'tire_wear_front': 'OK',
+      'tire_wear_rear': 'OK',
+      'vehicle_check': 'OK',
+      'vehicle_check_date': '2024-12-01',
+      'vehicle_check_distance': '50000 km',
+      'vehicle_tuv': 'OK',
+      'vehicle_tuv_date': '2024-12-01',
+      'vehicle_tuv_distance': '50000 km',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.ix_xdrive50_condition_based_services',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.ix_xdrive50_connection_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.ix_xdrive50_connection_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PLUG: 'plug'>,
+    'original_icon': None,
+    'original_name': 'Connection status',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'connection_status',
+    'unique_id': 'WBA00000000DEMO01-connection_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.ix_xdrive50_connection_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'plug',
+      'friendly_name': 'iX xDrive50 Connection status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.ix_xdrive50_connection_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.ix_xdrive50_door_lock_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.ix_xdrive50_door_lock_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.LOCK: 'lock'>,
+    'original_icon': None,
+    'original_name': 'Door lock state',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_lock_state',
+    'unique_id': 'WBA00000000DEMO01-door_lock_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.ix_xdrive50_door_lock_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'lock',
+      'door_lock_state': 'LOCKED',
+      'friendly_name': 'iX xDrive50 Door lock state',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.ix_xdrive50_door_lock_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.ix_xdrive50_lids-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.ix_xdrive50_lids',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
+    'original_icon': None,
+    'original_name': 'Lids',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'lids',
+    'unique_id': 'WBA00000000DEMO01-lids',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.ix_xdrive50_lids-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'opening',
+      'friendly_name': 'iX xDrive50 Lids',
+      'hood': 'CLOSED',
+      'leftFront': 'CLOSED',
+      'leftRear': 'CLOSED',
+      'rightFront': 'CLOSED',
+      'rightRear': 'CLOSED',
+      'sunRoof': 'CLOSED',
+      'trunk': 'CLOSED',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.ix_xdrive50_lids',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.ix_xdrive50_pre_entry_climatization-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.ix_xdrive50_pre_entry_climatization',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Pre entry climatization',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'is_pre_entry_climatization_enabled',
+    'unique_id': 'WBA00000000DEMO01-is_pre_entry_climatization_enabled',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.ix_xdrive50_pre_entry_climatization-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'iX xDrive50 Pre entry climatization',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.ix_xdrive50_pre_entry_climatization',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.ix_xdrive50_windows-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.ix_xdrive50_windows',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
+    'original_icon': None,
+    'original_name': 'Windows',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'windows',
+    'unique_id': 'WBA00000000DEMO01-windows',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.ix_xdrive50_windows-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'opening',
+      'friendly_name': 'iX xDrive50 Windows',
+      'leftFront': 'CLOSED',
+      'leftRear': 'CLOSED',
+      'rear': 'CLOSED',
+      'rightFront': 'CLOSED',
+      'rightRear': 'CLOSED',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.ix_xdrive50_windows',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.m340i_xdrive_check_control_messages-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.m340i_xdrive_check_control_messages',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Check control messages',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'check_control_messages',
+    'unique_id': 'WBA00000000DEMO03-check_control_messages',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.m340i_xdrive_check_control_messages-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'engine_oil': 'LOW',
+      'friendly_name': 'M340i xDrive Check control messages',
+      'tire_pressure': 'LOW',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.m340i_xdrive_check_control_messages',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.m340i_xdrive_condition_based_services-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.m340i_xdrive_condition_based_services',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Condition based services',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'condition_based_services',
+    'unique_id': 'WBA00000000DEMO03-condition_based_services',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.m340i_xdrive_condition_based_services-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'brake_fluid': 'OK',
+      'brake_fluid_date': '2024-12-01',
+      'brake_fluid_distance': '50000 km',
+      'device_class': 'problem',
+      'friendly_name': 'M340i xDrive Condition based services',
+      'oil': 'OK',
+      'oil_date': '2024-12-01',
+      'oil_distance': '50000 km',
+      'tire_wear_front': 'OK',
+      'tire_wear_rear': 'OK',
+      'vehicle_check': 'OK',
+      'vehicle_check_date': '2024-12-01',
+      'vehicle_check_distance': '50000 km',
+      'vehicle_tuv': 'OK',
+      'vehicle_tuv_date': '2024-12-01',
+      'vehicle_tuv_distance': '50000 km',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.m340i_xdrive_condition_based_services',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.m340i_xdrive_door_lock_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.m340i_xdrive_door_lock_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.LOCK: 'lock'>,
+    'original_icon': None,
+    'original_name': 'Door lock state',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_lock_state',
+    'unique_id': 'WBA00000000DEMO03-door_lock_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.m340i_xdrive_door_lock_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'lock',
+      'door_lock_state': 'LOCKED',
+      'friendly_name': 'M340i xDrive Door lock state',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.m340i_xdrive_door_lock_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.m340i_xdrive_lids-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.m340i_xdrive_lids',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
+    'original_icon': None,
+    'original_name': 'Lids',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'lids',
+    'unique_id': 'WBA00000000DEMO03-lids',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.m340i_xdrive_lids-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'opening',
+      'friendly_name': 'M340i xDrive Lids',
+      'hood': 'CLOSED',
+      'leftFront': 'CLOSED',
+      'leftRear': 'CLOSED',
+      'rightFront': 'CLOSED',
+      'rightRear': 'CLOSED',
+      'trunk': 'CLOSED',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.m340i_xdrive_lids',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.m340i_xdrive_windows-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.m340i_xdrive_windows',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
+    'original_icon': None,
+    'original_name': 'Windows',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'windows',
+    'unique_id': 'WBA00000000DEMO03-windows',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_state_attrs[binary_sensor.m340i_xdrive_windows-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'opening',
+      'friendly_name': 'M340i xDrive Windows',
+      'leftFront': 'CLOSED',
+      'leftRear': 'CLOSED',
+      'rear': 'CLOSED',
+      'rightFront': 'CLOSED',
+      'rightRear': 'CLOSED',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.m340i_xdrive_windows',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

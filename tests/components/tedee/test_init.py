@@ -5,7 +5,7 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 from urllib.parse import urlparse
 
-from pytedee_async.exception import (
+from aiotedee.exception import (
     TedeeAuthException,
     TedeeClientException,
     TedeeWebhookException,
@@ -20,6 +20,7 @@ from homeassistant.const import CONF_HOST, CONF_WEBHOOK_ID, EVENT_HOMEASSISTANT_
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
+from . import setup_integration
 from .conftest import WEBHOOK_ID
 
 from tests.common import MockConfigEntry
@@ -32,9 +33,7 @@ async def test_load_unload_config_entry(
     mock_tedee: MagicMock,
 ) -> None:
     """Test loading and unloading the integration."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
@@ -56,9 +55,7 @@ async def test_config_entry_not_ready(
     """Test the Tedee configuration entry not ready."""
     mock_tedee.get_locks.side_effect = side_effect
 
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
 
     assert len(mock_tedee.get_locks.mock_calls) == 1
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
@@ -70,9 +67,7 @@ async def test_cleanup_on_shutdown(
     mock_tedee: MagicMock,
 ) -> None:
     """Test the webhook is cleaned up on shutdown."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
@@ -88,9 +83,7 @@ async def test_webhook_cleanup_errors(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the webhook is cleaned up on shutdown."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
@@ -110,9 +103,7 @@ async def test_webhook_registration_errors(
 ) -> None:
     """Test the webhook is cleaned up on shutdown."""
     mock_tedee.register_webhook.side_effect = TedeeWebhookException("")
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
@@ -128,14 +119,27 @@ async def test_webhook_registration_cleanup_errors(
 ) -> None:
     """Test the errors during webhook cleanup during registration."""
     mock_tedee.cleanup_webhooks_by_host.side_effect = TedeeWebhookException("")
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     mock_tedee.cleanup_webhooks_by_host.assert_called_once()
     assert "Failed to cleanup Tedee webhooks by host:" in caplog.text
+
+
+async def test_lock_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_tedee: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Ensure the lock device is registered."""
+    await setup_integration(hass, mock_config_entry)
+
+    device = device_registry.async_get_device({(mock_config_entry.domain, "12345")})
+    assert device
+    assert device == snapshot
 
 
 async def test_bridge_device(
@@ -146,9 +150,7 @@ async def test_bridge_device(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Ensure the bridge device is registered."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
 
     device = device_registry.async_get_device(
         {(mock_config_entry.domain, mock_tedee.get_local_bridge.return_value.serial)}
@@ -192,9 +194,7 @@ async def test_webhook_post(
 ) -> None:
     """Test webhook callback."""
 
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
 
     client = await hass_client_no_auth()
     webhook_url = async_generate_url(hass, WEBHOOK_ID)
@@ -241,9 +241,7 @@ async def test_migration(
         "homeassistant.components.tedee.webhook_generate_id",
         return_value=WEBHOOK_ID,
     ):
-        mock_config_entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+        await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.version == 1
     assert mock_config_entry.minor_version == 2

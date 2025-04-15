@@ -6,6 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/pvoutput",
   "integration_type": "device",
   "iot_class": "cloud_polling",
-  "quality_scale": "platinum",
-  "requirements": ["pvo==2.1.1"]
+  "requirements": ["pvo==2.2.1"]
 }

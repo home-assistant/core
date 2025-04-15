@@ -60,7 +60,7 @@ def client_fixture():
         yield mock_client_class.return_value
 
 
-async def setup_denonavr(hass):
+async def setup_denonavr(hass: HomeAssistant) -> None:
     """Initialize media_player for tests."""
     entry_data = {
         CONF_HOST: TEST_HOST,

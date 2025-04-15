@@ -21,13 +21,13 @@ from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
-async def setup_integration(recorder_mock, hass):
+async def setup_integration(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Set up the integration."""
     assert await async_setup_component(hass, "energy", {})
 
 
 @pytest.fixture
-def mock_energy_platform(hass):
+def mock_energy_platform(hass: HomeAssistant) -> None:
     """Mock an energy platform."""
     hass.config.components.add("some_domain")
     mock_platform(
@@ -149,7 +149,13 @@ async def test_save_preferences(
                 "stat_energy_to": "my_battery_charging",
             },
         ],
-        "device_consumption": [{"stat_consumption": "some_device_usage"}],
+        "device_consumption": [
+            {
+                "stat_consumption": "some_device_usage",
+                "name": "My Device",
+                "included_in_stat": "sensor.some_other_device",
+            }
+        ],
     }
 
     await client.send_json({"id": 6, "type": "energy/save_prefs", **new_prefs})

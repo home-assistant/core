@@ -1,0 +1,49 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "Your ElevenLabs API key."
+        }
+      }
+    },
+    "error": {
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "voice": "Voice",
+          "model": "Model",
+          "configure_voice": "Configure advanced voice settings"
+        },
+        "data_description": {
+          "voice": "Voice to use for the TTS.",
+          "model": "ElevenLabs model to use. Please note that not all models support all languages equally well.",
+          "configure_voice": "Configure advanced voice settings. Find more information in the ElevenLabs documentation."
+        }
+      },
+      "voice_settings": {
+        "data": {
+          "stability": "Stability",
+          "similarity": "Similarity",
+          "optimize_streaming_latency": "Latency",
+          "style": "Style",
+          "use_speaker_boost": "Speaker boost"
+        },
+        "data_description": {
+          "stability": "Stability of the generated audio. Higher values lead to less emotional audio.",
+          "similarity": "Similarity of the generated audio to the original voice. Higher values may result in more similar audio, but may also introduce background noise.",
+          "optimize_streaming_latency": "Optimize the model for streaming. This may reduce the quality of the generated audio.",
+          "style": "Style of the generated audio. Recommended to keep at 0 for most almost all use cases.",
+          "use_speaker_boost": "Use speaker boost to increase the similarity of the generated audio to the original voice."
+        }
+      }
+    }
+  }
+}

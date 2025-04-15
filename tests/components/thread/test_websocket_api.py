@@ -1,6 +1,6 @@
 """Test the thread websocket API."""
 
-from unittest.mock import ANY, AsyncMock
+from unittest.mock import ANY, AsyncMock, MagicMock
 
 from zeroconf.asyncio import AsyncServiceInfo
 
@@ -315,7 +315,9 @@ async def test_set_preferred_dataset_wrong_id(
 
 
 async def test_discover_routers(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, mock_async_zeroconf: None
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_async_zeroconf: MagicMock,
 ) -> None:
     """Test discovering thread routers."""
     mock_async_zeroconf.async_add_service_listener = AsyncMock()
@@ -351,6 +353,7 @@ async def test_discover_routers(
     assert msg == {
         "event": {
             "data": {
+                "instance_name": "HomeAssistant OpenThreadBorderRouter #0BBF",
                 "addresses": ["192.168.0.115"],
                 "border_agent_id": "230c6a1ac57f6f4be262acf32e5ef52c",
                 "brand": "homeassistant",
@@ -386,6 +389,7 @@ async def test_discover_routers(
                 "brand": "google",
                 "extended_address": "f6a99b425a67abed",
                 "extended_pan_id": "9e75e256f61409a3",
+                "instance_name": "Google-Nest-Hub-#ABED",
                 "model_name": "Google Nest Hub",
                 "network_name": "NEST-PAN-E1AF",
                 "server": "2d99f293-cd8e-2770-8dd2-6675de9fa000.local.",

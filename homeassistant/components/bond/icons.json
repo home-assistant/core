@@ -84,6 +84,12 @@
       },
       "decrease_position": {
         "default": "mdi:minus-box"
+      },
+      "open_next": {
+        "default": "mdi:plus-box"
+      },
+      "close_next": {
+        "default": "mdi:minus-box"
       }
     },
     "light": {
@@ -96,12 +102,26 @@
     }
   },
   "services": {
-    "set_fan_speed_tracked_state": "mdi:fan",
-    "set_switch_power_tracked_state": "mdi:toggle-switch-variant",
-    "set_light_power_tracked_state": "mdi:lightbulb",
-    "set_light_brightness_tracked_state": "mdi:lightbulb-on",
-    "start_increasing_brightness": "mdi:brightness-7",
-    "start_decreasing_brightness": "mdi:brightness-1",
-    "stop": "mdi:stop"
+    "set_fan_speed_tracked_state": {
+      "service": "mdi:fan"
+    },
+    "set_switch_power_tracked_state": {
+      "service": "mdi:toggle-switch-variant"
+    },
+    "set_light_power_tracked_state": {
+      "service": "mdi:lightbulb"
+    },
+    "set_light_brightness_tracked_state": {
+      "service": "mdi:lightbulb-on"
+    },
+    "start_increasing_brightness": {
+      "service": "mdi:brightness-7"
+    },
+    "start_decreasing_brightness": {
+      "service": "mdi:brightness-1"
+    },
+    "stop": {
+      "service": "mdi:stop"
+    }
   }
 }

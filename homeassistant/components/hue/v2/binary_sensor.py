@@ -30,7 +30,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from ..bridge import HueBridge
 from ..const import DOMAIN
@@ -49,7 +49,7 @@ type ControllerType = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Hue Sensors from Config Entry."""
     bridge: HueBridge = hass.data[DOMAIN][config_entry.entry_id]
@@ -82,6 +82,7 @@ async def async_setup_entry(
     register_items(api.sensors.tamper, HueTamperSensor)
 
 
+# pylint: disable-next=hass-enforce-class-module
 class HueMotionSensor(HueBaseEntity, BinarySensorEntity):
     """Representation of a Hue Motion sensor."""
 
@@ -103,6 +104,7 @@ class HueMotionSensor(HueBaseEntity, BinarySensorEntity):
         return self.resource.motion.value
 
 
+# pylint: disable-next=hass-enforce-class-module
 class HueEntertainmentActiveSensor(HueBaseEntity, BinarySensorEntity):
     """Representation of a Hue Entertainment Configuration as binary sensor."""
 
@@ -126,6 +128,7 @@ class HueEntertainmentActiveSensor(HueBaseEntity, BinarySensorEntity):
         return self.resource.metadata.name
 
 
+# pylint: disable-next=hass-enforce-class-module
 class HueContactSensor(HueBaseEntity, BinarySensorEntity):
     """Representation of a Hue Contact sensor."""
 
@@ -147,6 +150,7 @@ class HueContactSensor(HueBaseEntity, BinarySensorEntity):
         return self.resource.contact_report.state != ContactState.CONTACT
 
 
+# pylint: disable-next=hass-enforce-class-module
 class HueTamperSensor(HueBaseEntity, BinarySensorEntity):
     """Representation of a Hue Tamper sensor."""
 

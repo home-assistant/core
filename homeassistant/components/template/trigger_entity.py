@@ -3,13 +3,19 @@
 from __future__ import annotations
 
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.template import TemplateStateFromEntityId
 from homeassistant.helpers.trigger_template_entity import TriggerBaseEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import TriggerUpdateCoordinator
+from .entity import AbstractTemplateEntity
 
 
-class TriggerEntity(TriggerBaseEntity, CoordinatorEntity[TriggerUpdateCoordinator]):
+class TriggerEntity(  # pylint: disable=hass-enforce-class-module
+    TriggerBaseEntity,
+    CoordinatorEntity[TriggerUpdateCoordinator],
+    AbstractTemplateEntity,
+):
     """Template entity based on trigger data."""
 
     def __init__(
@@ -21,6 +27,7 @@ class TriggerEntity(TriggerBaseEntity, CoordinatorEntity[TriggerUpdateCoordinato
         """Initialize the entity."""
         CoordinatorEntity.__init__(self, coordinator)
         TriggerBaseEntity.__init__(self, hass, config)
+        AbstractTemplateEntity.__init__(self, hass)
 
     async def async_added_to_hass(self) -> None:
         """Handle being added to Home Assistant."""
@@ -35,15 +42,25 @@ class TriggerEntity(TriggerBaseEntity, CoordinatorEntity[TriggerUpdateCoordinato
         else:
             self._unique_id = unique_id
 
+    @property
+    def referenced_blueprint(self) -> str | None:
+        """Return referenced blueprint or None."""
+        return self.coordinator.referenced_blueprint
+
+    @callback
+    def _render_script_variables(self) -> dict:
+        """Render configured variables."""
+        return self.coordinator.data["run_variables"]
+
     @callback
     def _process_data(self) -> None:
         """Process new data."""
 
-        this = None
-        if state := self.hass.states.get(self.entity_id):
-            this = state.as_dict()
         run_variables = self.coordinator.data["run_variables"]
-        variables = {"this": this, **(run_variables or {})}
+        variables = {
+            "this": TemplateStateFromEntityId(self.hass, self.entity_id),
+            **(run_variables or {}),
+        }
 
         self._render_templates(variables)
 

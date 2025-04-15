@@ -7,7 +7,7 @@ from typing import Any
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 PRESET_MODE_AUTO = "auto"
 PRESET_MODE_SMART = "smart"
@@ -15,15 +15,21 @@ PRESET_MODE_SLEEP = "sleep"
 PRESET_MODE_ON = "on"
 
 FULL_SUPPORT = (
-    FanEntityFeature.SET_SPEED | FanEntityFeature.OSCILLATE | FanEntityFeature.DIRECTION
+    FanEntityFeature.SET_SPEED
+    | FanEntityFeature.OSCILLATE
+    | FanEntityFeature.DIRECTION
+    | FanEntityFeature.TURN_OFF
+    | FanEntityFeature.TURN_ON
 )
-LIMITED_SUPPORT = FanEntityFeature.SET_SPEED
+LIMITED_SUPPORT = (
+    FanEntityFeature.SET_SPEED | FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
+)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Demo config entry."""
     async_add_entities(
@@ -75,7 +81,9 @@ async def async_setup_entry(
                 hass,
                 "fan5",
                 "Preset Only Limited Fan",
-                FanEntityFeature.PRESET_MODE,
+                FanEntityFeature.PRESET_MODE
+                | FanEntityFeature.TURN_OFF
+                | FanEntityFeature.TURN_ON,
                 [
                     PRESET_MODE_AUTO,
                     PRESET_MODE_SMART,

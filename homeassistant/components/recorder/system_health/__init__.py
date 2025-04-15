@@ -40,7 +40,7 @@ def _get_db_stats(instance: Recorder, database_name: str) -> dict[str, Any]:
             and (get_size := DIALECT_TO_GET_SIZE.get(dialect_name))
             and (db_bytes := get_size(session, database_name))
         ):
-            db_stats["estimated_db_size"] = f"{db_bytes/1024/1024:.2f} MiB"
+            db_stats["estimated_db_size"] = f"{db_bytes / 1024 / 1024:.2f} MiB"
     return db_stats
 
 

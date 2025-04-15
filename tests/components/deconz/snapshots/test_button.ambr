@@ -1,0 +1,97 @@
+# serializer version: 1
+# name: test_button[deconz_payload0-expected0][button.light_group_scene_store_current_scene-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.light_group_scene_store_current_scene',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:inbox-arrow-down',
+    'original_name': 'Scene Store Current Scene',
+    'platform': 'deconz',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '01234E56789A/groups/1/scenes/1-store',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button[deconz_payload0-expected0][button.light_group_scene_store_current_scene-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Light group Scene Store Current Scene',
+      'icon': 'mdi:inbox-arrow-down',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.light_group_scene_store_current_scene',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button[deconz_payload1-expected1][button.aqara_fp1_reset_presence-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.aqara_fp1_reset_presence',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
+    'original_icon': None,
+    'original_name': 'Aqara FP1 Reset Presence',
+    'platform': 'deconz',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'xx:xx:xx:xx:xx:xx:xx:xx-01-0406-reset_presence',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button[deconz_payload1-expected1][button.aqara_fp1_reset_presence-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'restart',
+      'friendly_name': 'Aqara FP1 Reset Presence',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.aqara_fp1_reset_presence',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

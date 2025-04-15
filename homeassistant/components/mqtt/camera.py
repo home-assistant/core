@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from base64 import b64decode
-from functools import partial
 import logging
 from typing import TYPE_CHECKING
 
@@ -13,20 +12,22 @@ from homeassistant.components import camera
 from homeassistant.components.camera import Camera
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
-from homeassistant.core import HassJobType, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import subscription
 from .config import MQTT_BASE_SCHEMA
-from .const import CONF_QOS, CONF_TOPIC
-from .mixins import MqttEntity, async_setup_entity_entry_helper
+from .const import CONF_TOPIC
+from .entity import MqttEntity, async_setup_entity_entry_helper
 from .models import ReceiveMessage
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 CONF_IMAGE_ENCODING = "image_encoding"
 
@@ -59,10 +60,10 @@ DISCOVERY_SCHEMA = PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MQTT camera through YAML and through MQTT discovery."""
-    await async_setup_entity_entry_helper(
+    async_setup_entity_entry_helper(
         hass,
         config_entry,
         MqttCamera,
@@ -107,26 +108,12 @@ class MqttCamera(MqttEntity, Camera):
                 assert isinstance(msg.payload, bytes)
             self._last_image = msg.payload
 
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
 
-        self._sub_state = subscription.async_prepare_subscribe_topics(
-            self.hass,
-            self._sub_state,
-            {
-                "state_topic": {
-                    "topic": self._config[CONF_TOPIC],
-                    "msg_callback": partial(
-                        self._message_callback,
-                        self._image_received,
-                        None,
-                    ),
-                    "entity_id": self.entity_id,
-                    "qos": self._config[CONF_QOS],
-                    "encoding": None,
-                    "job_type": HassJobType.Callback,
-                }
-            },
+        self.add_subscription(
+            CONF_TOPIC, self._image_received, None, disable_encoding=True
         )
 
     async def _subscribe_topics(self) -> None:

@@ -140,8 +140,8 @@
       "electricity_tariff": {
         "name": "Electricity tariff",
         "state": {
-          "low": "Low",
-          "high": "High"
+          "low": "[%key:common::state::low%]",
+          "high": "[%key:common::state::high%]"
         }
       },
       "power_failure_count": {
@@ -258,6 +258,12 @@
       "quarter_hour_peak_end_time": {
         "name": "Quarter-hour peak end time"
       }
+    }
+  },
+  "issues": {
+    "cannot_subscribe_mqtt_topic": {
+      "title": "Cannot subscribe to MQTT topic {topic_title}",
+      "description": "The DSMR Reader integration cannot subscribe to the MQTT topic: `{topic}`. Please check the configuration of the MQTT broker and the topic.\nDSMR Reader needs to be running, before starting this integration."
     }
   }
 }

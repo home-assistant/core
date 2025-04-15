@@ -1,0 +1,95 @@
+# serializer version: 1
+# name: test_all_entities[switch.1p7k_500006_authentication-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.1p7k_500006_authentication',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Authentication',
+    'platform': 'lektrico',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'authentication',
+    'unique_id': '500006_authentication',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[switch.1p7k_500006_authentication-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': '1p7k_500006 Authentication',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.1p7k_500006_authentication',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[switch.1p7k_500006_lock-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.1p7k_500006_lock',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Lock',
+    'platform': 'lektrico',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'lock',
+    'unique_id': '500006_lock',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[switch.1p7k_500006_lock-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': '1p7k_500006 Lock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.1p7k_500006_lock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

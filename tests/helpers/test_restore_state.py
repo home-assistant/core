@@ -6,8 +6,6 @@ import logging
 from typing import Any
 from unittest.mock import Mock, patch
 
-import pytest
-
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CoreState, HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
@@ -92,20 +90,6 @@ async def test_caching_data(hass: HomeAssistant) -> None:
     assert state.state == "on"
 
     assert mock_write_data.called
-
-
-async def test_async_get_instance_backwards_compatibility(hass: HomeAssistant) -> None:
-    """Test async_get_instance backwards compatibility."""
-    await async_load(hass)
-    data = async_get(hass)
-    # When called from core it should raise
-    with pytest.raises(RuntimeError):
-        await RestoreStateData.async_get_instance(hass)
-
-    # When called from a component it should not raise
-    # but it should report
-    with patch("homeassistant.helpers.restore_state.report"):
-        assert data is await RestoreStateData.async_get_instance(hass)
 
 
 async def test_periodic_write(hass: HomeAssistant) -> None:
@@ -484,12 +468,12 @@ async def test_restore_entity_end_to_end(
     class MockRestoreEntity(RestoreEntity):
         """Mock restore entity."""
 
-        def __init__(self):
+        def __init__(self) -> None:
             """Initialize the mock entity."""
             self._state: str | None = None
 
         @property
-        def state(self):
+        def state(self) -> str | None:
             """Return the state."""
             return self._state
 

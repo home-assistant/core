@@ -4,8 +4,8 @@ from unittest import mock
 
 import pytest
 
-import homeassistant.components.mfi.switch as mfi
-import homeassistant.components.switch as switch_component
+from homeassistant.components import switch as switch_component
+from homeassistant.components.mfi import switch as mfi
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 

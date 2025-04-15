@@ -1,8 +1,0 @@
-{
-  "domain": "asterisk_cdr",
-  "name": "Asterisk Call Detail Records",
-  "codeowners": [],
-  "dependencies": ["asterisk_mbox"],
-  "documentation": "https://www.home-assistant.io/integrations/asterisk_cdr",
-  "iot_class": "local_polling"
-}

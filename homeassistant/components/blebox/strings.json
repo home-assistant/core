@@ -15,7 +15,9 @@
         "description": "Set up your BleBox to integrate with Home Assistant.",
         "data": {
           "host": "[%key:common::config_flow::data::ip%]",
-          "port": "[%key:common::config_flow::data::port%]"
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "username": "[%key:common::config_flow::data::username%]"
         },
         "title": "Set up your BleBox device"
       }

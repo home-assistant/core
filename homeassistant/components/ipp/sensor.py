@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any
 
 from pyipp import Marker, Printer
@@ -17,11 +17,9 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import ATTR_LOCATION, PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.util.dt import utcnow
 
-from . import IPPConfigEntry
 from .const import (
     ATTR_COMMAND_SET,
     ATTR_INFO,
@@ -33,6 +31,7 @@ from .const import (
     ATTR_STATE_REASON,
     ATTR_URI_SUPPORTED,
 )
+from .coordinator import IPPConfigEntry
 from .entity import IPPEntity
 
 
@@ -80,7 +79,7 @@ PRINTER_SENSORS: tuple[IPPSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda printer: (utcnow() - timedelta(seconds=printer.info.uptime)),
+        value_fn=lambda printer: printer.booted_at,
     ),
 )
 
@@ -88,7 +87,7 @@ PRINTER_SENSORS: tuple[IPPSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: IPPConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up IPP sensor based on a config entry."""
     coordinator = entry.runtime_data

@@ -1,32 +1,39 @@
 """Test the init file code."""
 
-import pytest
+from unittest.mock import patch
 
-import homeassistant.components.zeversolar.__init__ as init
-from homeassistant.components.zeversolar.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PORT
+from zeversolar import ZeverSolarData
+from zeversolar.exceptions import ZeverSolarTimeout
+
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 
-from tests.common import MockConfigEntry, MockModule, mock_integration
-
-MOCK_HOST_ZEVERSOLAR = "zeversolar-fake-host"
-MOCK_PORT_ZEVERSOLAR = 10200
+from tests.common import MockConfigEntry
 
 
-async def test_async_setup_entry_fails(hass: HomeAssistant) -> None:
-    """Test the sensor setup."""
-    mock_integration(hass, MockModule(DOMAIN))
+async def test_async_setup_entry_fails(
+    hass: HomeAssistant, config_entry: MockConfigEntry, zeversolar_data: ZeverSolarData
+) -> None:
+    """Test to load/unload the integration."""
 
-    config = MockConfigEntry(
-        data={
-            CONF_HOST: MOCK_HOST_ZEVERSOLAR,
-            CONF_PORT: MOCK_PORT_ZEVERSOLAR,
-        },
-        domain=DOMAIN,
-    )
+    config_entry.add_to_hass(hass)
 
-    config.add_to_hass(hass)
+    with (
+        patch("zeversolar.ZeverSolarClient.get_data", side_effect=ZeverSolarTimeout),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
-    with pytest.raises(ConfigEntryNotReady):
-        await init.async_setup_entry(hass, config)
+    with (
+        patch("homeassistant.components.zeversolar.PLATFORMS", []),
+        patch("zeversolar.ZeverSolarClient.get_data", return_value=zeversolar_data),
+    ):
+        hass.config_entries.async_schedule_reload(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    with (
+        patch("homeassistant.components.zeversolar.PLATFORMS", []),
+    ):
+        result = await hass.config_entries.async_unload(config_entry.entry_id)
+    assert result is True
+    assert config_entry.state is ConfigEntryState.NOT_LOADED

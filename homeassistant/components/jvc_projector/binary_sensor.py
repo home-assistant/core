@@ -5,22 +5,22 @@ from __future__ import annotations
 from jvcprojector import const
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import JvcProjectorDataUpdateCoordinator
-from .const import DOMAIN
+from .coordinator import JVCConfigEntry, JvcProjectorDataUpdateCoordinator
 from .entity import JvcProjectorEntity
 
 ON_STATUS = (const.ON, const.WARMING)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: JVCConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the JVC Projector platform from a config entry."""
-    coordinator: JvcProjectorDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     async_add_entities([JvcBinarySensor(coordinator)])
 

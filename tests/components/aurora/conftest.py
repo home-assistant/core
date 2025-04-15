@@ -12,7 +12,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.aurora.async_setup_entry",
@@ -22,7 +22,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_aurora_client() -> Generator[AsyncMock, None, None]:
+def mock_aurora_client() -> Generator[AsyncMock]:
     """Mock a Homeassistant Analytics client."""
     with (
         patch(

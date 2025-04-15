@@ -4,6 +4,7 @@ import copy
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import Any
 from unittest import mock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -21,7 +22,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed, mock_restore_cache
 
@@ -36,11 +37,12 @@ TEST_PORT_SERIAL = "usb01"
 class ReadResult:
     """Storage class for register read results."""
 
-    def __init__(self, register_words):
+    def __init__(self, register_words) -> None:
         """Init."""
         self.registers = register_words
         self.bits = register_words
         self.value = register_words
+        self.count = len(register_words) if register_words is not None else 0
 
     def isError(self):
         """Set error state."""
@@ -56,11 +58,11 @@ def check_config_loaded_fixture():
 @pytest.fixture(name="register_words")
 def register_words_fixture():
     """Set default for register_words."""
-    return [0x00, 0x00]
+    return [0x00]
 
 
 @pytest.fixture(name="config_addon")
-def config_addon_fixture():
+def config_addon_fixture() -> dict[str, Any] | None:
     """Add extra configuration items."""
     return None
 
@@ -117,7 +119,12 @@ def mock_pymodbus_fixture(do_exception, register_words):
 
 @pytest.fixture(name="mock_modbus")
 async def mock_modbus_fixture(
-    hass, caplog, check_config_loaded, config_addon, do_config, mock_pymodbus
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    check_config_loaded,
+    config_addon,
+    do_config,
+    mock_pymodbus,
 ):
     """Load integration modbus using mocked pymodbus."""
     conf = copy.deepcopy(do_config)
@@ -177,14 +184,18 @@ async def do_next_cycle(
 
 
 @pytest.fixture(name="mock_test_state")
-async def mock_test_state_fixture(hass, request):
+async def mock_test_state_fixture(
+    hass: HomeAssistant, request: pytest.FixtureRequest
+) -> Any:
     """Mock restore cache."""
     mock_restore_cache(hass, request.param)
     return request.param
 
 
 @pytest.fixture(name="mock_modbus_ha")
-async def mock_modbus_ha_fixture(hass, mock_modbus):
+async def mock_modbus_ha_fixture(
+    hass: HomeAssistant, mock_modbus: mock.AsyncMock
+) -> mock.AsyncMock:
     """Load homeassistant to allow service calls."""
     assert await async_setup_component(hass, "homeassistant", {})
     await hass.async_block_till_done()
@@ -192,6 +203,6 @@ async def mock_modbus_ha_fixture(hass, mock_modbus):
 
 
 @pytest.fixture(name="caplog_setup_text")
-async def caplog_setup_text_fixture(caplog):
+async def caplog_setup_text_fixture(caplog: pytest.LogCaptureFixture) -> str:
     """Return setup log of integration."""
     return caplog.text

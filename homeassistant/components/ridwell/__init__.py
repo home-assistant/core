@@ -17,7 +17,7 @@ PLATFORMS: list[Platform] = [Platform.CALENDAR, Platform.SENSOR, Platform.SWITCH
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Ridwell from a config entry."""
-    coordinator = RidwellDataUpdateCoordinator(hass, name=entry.title)
+    coordinator = RidwellDataUpdateCoordinator(hass, entry)
     await coordinator.async_initialize()
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
@@ -55,6 +55,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         await er.async_migrate_entries(hass, entry.entry_id, migrate_unique_id)
 
-    LOGGER.info("Migration to version %s successful", version)
+    LOGGER.debug("Migration to version %s successful", version)
 
     return True

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from functools import partial
 import logging
 from typing import Any, cast
 
@@ -28,12 +27,13 @@ from homeassistant.const import (
     CONF_PAYLOAD_OFF,
     CONF_PAYLOAD_ON,
 )
-from homeassistant.core import HassJobType, HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.json import json_dumps
+from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import ConfigType, TemplateVarsType
+from homeassistant.helpers.typing import ConfigType, TemplateVarsType, VolSchemaType
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads_object
 
 from . import subscription
@@ -41,22 +41,21 @@ from .config import MQTT_RW_SCHEMA
 from .const import (
     CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
-    CONF_ENCODING,
-    CONF_QOS,
     CONF_STATE_TOPIC,
     CONF_STATE_VALUE_TEMPLATE,
     PAYLOAD_EMPTY_JSON,
     PAYLOAD_NONE,
 )
-from .mixins import MqttEntity, async_setup_entity_entry_helper
+from .entity import MqttEntity, async_setup_entity_entry_helper
 from .models import (
     MqttCommandTemplate,
     MqttValueTemplate,
     PublishPayloadType,
     ReceiveMessage,
-    ReceivePayloadType,
 )
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
+
+PARALLEL_UPDATES = 0
 
 DEFAULT_NAME = "MQTT Siren"
 DEFAULT_PAYLOAD_ON = "ON"
@@ -114,10 +113,10 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MQTT siren through YAML and through MQTT discovery."""
-    await async_setup_entity_entry_helper(
+    async_setup_entity_entry_helper(
         hass,
         config_entry,
         MqttSiren,
@@ -145,7 +144,7 @@ class MqttSiren(MqttEntity, SirenEntity):
     _optimistic: bool
 
     @staticmethod
-    def config_schema() -> vol.Schema:
+    def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
@@ -218,10 +217,7 @@ class MqttSiren(MqttEntity, SirenEntity):
             try:
                 json_payload = json_loads_object(payload)
                 _LOGGER.debug(
-                    (
-                        "JSON payload detected after processing payload '%s' on"
-                        " topic %s"
-                    ),
+                    "JSON payload detected after processing payload '%s' on topic %s",
                     json_payload,
                     msg.topic,
                 )
@@ -261,30 +257,17 @@ class MqttSiren(MqttEntity, SirenEntity):
             self._extra_attributes = dict(self._extra_attributes)
             self._update(process_turn_on_params(self, params))
 
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        if self._config.get(CONF_STATE_TOPIC) is None:
+        if not self.add_subscription(
+            CONF_STATE_TOPIC,
+            self._state_message_received,
+            {"_attr_is_on", "_extra_attributes"},
+        ):
             # Force into optimistic mode.
             self._optimistic = True
             return
-        self._sub_state = subscription.async_prepare_subscribe_topics(
-            self.hass,
-            self._sub_state,
-            {
-                CONF_STATE_TOPIC: {
-                    "topic": self._config.get(CONF_STATE_TOPIC),
-                    "msg_callback": partial(
-                        self._message_callback,
-                        self._state_message_received,
-                        {"_attr_is_on", "_extra_attributes"},
-                    ),
-                    "entity_id": self.entity_id,
-                    "qos": self._config[CONF_QOS],
-                    "encoding": self._config[CONF_ENCODING] or None,
-                    "job_type": HassJobType.Callback,
-                }
-            },
-        )
 
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""

@@ -96,6 +96,7 @@ class DPCode(StrEnum):
     """
 
     AIR_QUALITY = "air_quality"
+    AIR_QUALITY_INDEX = "air_quality_index"
     ALARM_SWITCH = "alarm_switch"  # Alarm switch
     ALARM_TIME = "alarm_time"  # Alarm time
     ALARM_VOLUME = "alarm_volume"  # Alarm volume
@@ -113,6 +114,7 @@ class DPCode(StrEnum):
     BASIC_OSD = "basic_osd"
     BASIC_PRIVATE = "basic_private"
     BASIC_WDR = "basic_wdr"
+    BATTERY = "battery"  # Used by non-standard contact sensor implementations
     BATTERY_PERCENTAGE = "battery_percentage"  # Battery percentage
     BATTERY_STATE = "battery_state"  # Battery state
     BATTERY_VALUE = "battery_value"  # Battery value
@@ -165,6 +167,7 @@ class DPCode(StrEnum):
     CRY_DETECTION_SWITCH = "cry_detection_switch"
     CUP_NUMBER = "cup_number"  # NUmber of cups
     CUR_CURRENT = "cur_current"  # Actual current
+    CUR_NEUTRAL = "cur_neutral"  # Total reverse energy
     CUR_POWER = "cur_power"  # Actual power
     CUR_VOLTAGE = "cur_voltage"  # Actual voltage
     DECIBEL_SENSITIVITY = "decibel_sensitivity"
@@ -252,9 +255,11 @@ class DPCode(StrEnum):
     POWDER_SET = "powder_set"  # Powder
     POWER = "power"
     POWER_GO = "power_go"
+    POWER_TOTAL = "power_total"
     PRESENCE_STATE = "presence_state"
     PRESSURE_STATE = "pressure_state"
     PRESSURE_VALUE = "pressure_value"
+    PUMP = "pump"
     PUMP_RESET = "pump_reset"  # Water pump reset
     OXYGEN = "oxygen"  # Oxygen bar
     RECORD_MODE = "record_mode"
@@ -266,6 +271,7 @@ class DPCode(StrEnum):
     RESET_FILTER = "reset_filter"
     RESET_MAP = "reset_map"
     RESET_ROLL_BRUSH = "reset_roll_brush"
+    REVERSE_ENERGY_TOTAL = "reverse_energy_total"
     ROLL_BRUSH = "roll_brush"
     SEEK = "seek"
     SENSITIVITY = "sensitivity"  # Sensitivity
@@ -320,12 +326,19 @@ class DPCode(StrEnum):
     SWITCH_USB6 = "switch_usb6"  # USB 6
     SWITCH_VERTICAL = "switch_vertical"  # Vertical swing flap switch
     SWITCH_VOICE = "switch_voice"  # Voice switch
+    TARGET_DIS_CLOSEST = "target_dis_closest"  # Closest target distance
     TEMP = "temp"  # Temperature setting
     TEMP_BOILING_C = "temp_boiling_c"
     TEMP_BOILING_F = "temp_boiling_f"
     TEMP_CONTROLLER = "temp_controller"
     TEMP_CURRENT = "temp_current"  # Current temperature in °C
     TEMP_CURRENT_F = "temp_current_f"  # Current temperature in °F
+    TEMP_CURRENT_EXTERNAL = (
+        "temp_current_external"  # Current external temperature in Celsius
+    )
+    TEMP_CURRENT_EXTERNAL_F = (
+        "temp_current_external_f"  # Current external temperature in Fahrenheit
+    )
     TEMP_INDOOR = "temp_indoor"  # Indoor temperature in °C
     TEMP_SET = "temp_set"  # Set the temperature in °C
     TEMP_SET_F = "temp_set_f"  # Set the temperature in °F
@@ -341,6 +354,7 @@ class DPCode(StrEnum):
     TOTAL_FORWARD_ENERGY = "total_forward_energy"
     TOTAL_TIME = "total_time"
     TOTAL_PM = "total_pm"
+    TOTAL_POWER = "total_power"
     TVOC = "tvoc"
     UPPER_TEMP = "upper_temp"
     UPPER_TEMP_F = "upper_temp_f"
@@ -441,7 +455,7 @@ UNITS = (
     ),
     UnitOfMeasurement(
         unit=UnitOfEnergy.KILO_WATT_HOUR,
-        aliases={"kwh", "kilowatt-hour", "kW·h"},
+        aliases={"kwh", "kilowatt-hour", "kW·h", "kW.h"},
         device_classes={SensorDeviceClass.ENERGY},
     ),
     UnitOfMeasurement(

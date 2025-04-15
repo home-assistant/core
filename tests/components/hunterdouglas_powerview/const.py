@@ -3,31 +3,36 @@
 from ipaddress import IPv4Address
 
 from homeassistant import config_entries
-from homeassistant.components import dhcp, zeroconf
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.zeroconf import (
+    ATTR_PROPERTIES_ID,
+    ZeroconfServiceInfo,
+)
 
 MOCK_MAC = "AA::BB::CC::DD::EE::FF"
+MOCK_SERIAL = "A1B2C3D4E5G6H7"
 
-HOMEKIT_DISCOVERY_GEN2 = zeroconf.ZeroconfServiceInfo(
+HOMEKIT_DISCOVERY_GEN2 = ZeroconfServiceInfo(
     ip_address="1.2.3.4",
     ip_addresses=[IPv4Address("1.2.3.4")],
     hostname="mock_hostname",
     name="Powerview Generation 2._hap._tcp.local.",
     port=None,
-    properties={zeroconf.ATTR_PROPERTIES_ID: MOCK_MAC},
+    properties={ATTR_PROPERTIES_ID: MOCK_MAC},
     type="mock_type",
 )
 
-HOMEKIT_DISCOVERY_GEN3 = zeroconf.ZeroconfServiceInfo(
+HOMEKIT_DISCOVERY_GEN3 = ZeroconfServiceInfo(
     ip_address="1.2.3.4",
     ip_addresses=[IPv4Address("1.2.3.4")],
     hostname="mock_hostname",
     name="Powerview Generation 3._hap._tcp.local.",
     port=None,
-    properties={zeroconf.ATTR_PROPERTIES_ID: MOCK_MAC},
+    properties={ATTR_PROPERTIES_ID: MOCK_MAC},
     type="mock_type",
 )
 
-ZEROCONF_DISCOVERY_GEN2 = zeroconf.ZeroconfServiceInfo(
+ZEROCONF_DISCOVERY_GEN2 = ZeroconfServiceInfo(
     ip_address="1.2.3.4",
     ip_addresses=[IPv4Address("1.2.3.4")],
     hostname="mock_hostname",
@@ -37,29 +42,29 @@ ZEROCONF_DISCOVERY_GEN2 = zeroconf.ZeroconfServiceInfo(
     type="mock_type",
 )
 
-ZEROCONF_DISCOVERY_GEN3 = zeroconf.ZeroconfServiceInfo(
+ZEROCONF_DISCOVERY_GEN3 = ZeroconfServiceInfo(
     ip_address="1.2.3.4",
     ip_addresses=[IPv4Address("1.2.3.4")],
     hostname="mock_hostname",
-    name="Powerview Generation 3._powerview-g3._tcp.local.",
+    name="Powerview Generation 3._PowerView-G3._tcp.local.",
     port=None,
     properties={},
     type="mock_type",
 )
 
-DHCP_DISCOVERY_GEN2 = dhcp.DhcpServiceInfo(
+DHCP_DISCOVERY_GEN2 = DhcpServiceInfo(
     hostname="Powerview Generation 2",
     ip="1.2.3.4",
     macaddress="aabbccddeeff",
 )
 
-DHCP_DISCOVERY_GEN2_NO_NAME = dhcp.DhcpServiceInfo(
+DHCP_DISCOVERY_GEN2_NO_NAME = DhcpServiceInfo(
     hostname="",
     ip="1.2.3.4",
     macaddress="aabbccddeeff",
 )
 
-DHCP_DISCOVERY_GEN3 = dhcp.DhcpServiceInfo(
+DHCP_DISCOVERY_GEN3 = DhcpServiceInfo(
     hostname="Powerview Generation 3",
     ip="1.2.3.4",
     macaddress="aabbccddeeff",

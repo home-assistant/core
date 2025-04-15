@@ -1,4 +1,4 @@
-"""Tests for the Ruckus Unleashed integration."""
+"""Tests for the Ruckus integration."""
 
 from __future__ import annotations
 
@@ -78,7 +78,7 @@ DEFAULT_UNIQUEID = DEFAULT_SYSTEM_INFO[API_SYS_SYSINFO][API_SYS_SYSINFO_SERIAL]
 
 
 def mock_config_entry() -> MockConfigEntry:
-    """Return a Ruckus Unleashed mock config entry."""
+    """Return a Ruckus mock config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
         title=DEFAULT_TITLE,
@@ -89,7 +89,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
-    """Set up the Ruckus Unleashed integration in Home Assistant."""
+    """Set up the Ruckus integration in Home Assistant."""
     entry = mock_config_entry()
     entry.add_to_hass(hass)
     # Make device tied to other integration so device tracker entities get enabled

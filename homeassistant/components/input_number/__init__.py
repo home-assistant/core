@@ -19,13 +19,12 @@ from homeassistant.const import (
     SERVICE_RELOAD,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.helpers import collection
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import collection, config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, VolDictType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,7 +63,7 @@ def _cv_input_number(cfg):
     return cfg
 
 
-STORAGE_FIELDS = {
+STORAGE_FIELDS: VolDictType = {
     vol.Required(CONF_NAME): vol.All(str, vol.Length(min=1)),
     vol.Required(CONF_MIN): vol.Coerce(float),
     vol.Required(CONF_MAX): vol.Coerce(float),
@@ -157,9 +156,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         "async_set_value",
     )
 
-    component.async_register_entity_service(SERVICE_INCREMENT, {}, "async_increment")
+    component.async_register_entity_service(SERVICE_INCREMENT, None, "async_increment")
 
-    component.async_register_entity_service(SERVICE_DECREMENT, {}, "async_decrement")
+    component.async_register_entity_service(SERVICE_DECREMENT, None, "async_decrement")
 
     return True
 

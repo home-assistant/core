@@ -1,5 +1,7 @@
 {
   "services": {
-    "checkin": "mdi:map-marker"
+    "checkin": {
+      "service": "mdi:map-marker"
+    }
   }
 }

@@ -5,8 +5,6 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import DEFAULT_NAME, DOMAIN
 
@@ -24,24 +22,3 @@ class FastdotcomConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(title=DEFAULT_NAME, data={})
 
         return self.async_show_form(step_id="user")
-
-    async def async_step_import(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle a flow initiated by configuration file."""
-        async_create_issue(
-            self.hass,
-            HOMEASSISTANT_DOMAIN,
-            f"deprecated_yaml_{DOMAIN}",
-            breaks_in_ha_version="2024.6.0",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_yaml",
-            translation_placeholders={
-                "domain": DOMAIN,
-                "integration_title": "Fast.com",
-            },
-        )
-
-        return await self.async_step_user(user_input)

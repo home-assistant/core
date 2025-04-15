@@ -1,31 +1,30 @@
 {
-  "config": {
-    "step": {},
-    "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
-    }
-  },
   "system_health": {
     "info": {
-      "can_reach_cert_server": "Reach Certificate Server",
+      "can_reach_cert_server": "Reach certificate server",
       "can_reach_cloud": "Reach Home Assistant Cloud",
-      "can_reach_cloud_auth": "Reach Authentication Server",
-      "certificate_status": "Certificate Status",
-      "relayer_connected": "Relayer Connected",
-      "relayer_region": "Relayer Region",
-      "remote_connected": "Remote Connected",
-      "remote_enabled": "Remote Enabled",
-      "remote_server": "Remote Server",
-      "alexa_enabled": "Alexa Enabled",
-      "google_enabled": "Google Enabled",
+      "can_reach_cloud_auth": "Reach authentication server",
+      "certificate_status": "Certificate status",
+      "relayer_connected": "Relayer connected",
+      "relayer_region": "Relayer region",
+      "remote_connected": "Remote connected",
+      "remote_enabled": "Remote enabled",
+      "remote_server": "Remote server",
+      "alexa_enabled": "Alexa enabled",
+      "google_enabled": "Google enabled",
       "logged_in": "Logged In",
       "instance_id": "Instance ID",
-      "subscription_expiration": "Subscription Expiration"
+      "subscription_expiration": "Subscription expiration"
+    }
+  },
+  "exceptions": {
+    "backup_size_too_large": {
+      "message": "The backup size of {size}GB is too large to be uploaded to Home Assistant Cloud."
     }
   },
   "issues": {
     "deprecated_gender": {
-      "title": "The `{deprecated_option}` text-to-speech option is deprecated",
+      "title": "The {deprecated_option} text-to-speech option is deprecated",
       "fix_flow": {
         "step": {
           "confirm": {
@@ -74,12 +73,12 @@
   },
   "services": {
     "remote_connect": {
-      "name": "Remote connect",
-      "description": "Makes the instance UI accessible from outside of the local network by using Home Assistant Cloud."
+      "name": "Enable remote access",
+      "description": "Makes the instance UI accessible from outside of the local network by enabling your Home Assistant Cloud connection."
     },
     "remote_disconnect": {
-      "name": "Remote disconnect",
-      "description": "Disconnects the Home Assistant UI from the Home Assistant Cloud. You will no longer be able to access your Home Assistant instance from outside your local network."
+      "name": "Disable remote access",
+      "description": "Disconnects the instance UI from Home Assistant Cloud. This disables access to it from outside your local network."
     }
   }
 }

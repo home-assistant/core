@@ -18,12 +18,12 @@ from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_MESSAGE,
     ATTR_TARGET,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
 from homeassistant.const import CONF_API_KEY, CONF_SENDER
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 DOMAIN = "sinch"
@@ -37,7 +37,7 @@ DEFAULT_SENDER = "Home Assistant"
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
         vol.Required(CONF_SERVICE_PLAN_ID): cv.string,

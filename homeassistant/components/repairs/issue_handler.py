@@ -9,12 +9,9 @@ import voluptuous as vol
 from homeassistant import data_entry_flow
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
-)
-from homeassistant.helpers.issue_registry import (
-    async_delete_issue,
-    async_get as async_get_issue_registry,
 )
 
 from .const import DOMAIN
@@ -37,7 +34,7 @@ class ConfirmRepairFlow(RepairsFlow):
         if user_input is not None:
             return self.async_create_entry(data={})
 
-        issue_registry = async_get_issue_registry(self.hass)
+        issue_registry = ir.async_get(self.hass)
         description_placeholders = None
         if issue := issue_registry.async_get_issue(self.handler, self.issue_id):
             description_placeholders = issue.translation_placeholders
@@ -56,14 +53,14 @@ class RepairsFlowManager(data_entry_flow.FlowManager):
         self,
         handler_key: str,
         *,
-        context: dict[str, Any] | None = None,
+        context: data_entry_flow.FlowContext | None = None,
         data: dict[str, Any] | None = None,
     ) -> RepairsFlow:
         """Create a flow. platform is a repairs module."""
         assert data and "issue_id" in data
         issue_id = data["issue_id"]
 
-        issue_registry = async_get_issue_registry(self.hass)
+        issue_registry = ir.async_get(self.hass)
         issue = issue_registry.async_get_issue(handler_key, issue_id)
         if issue is None or not issue.is_fixable:
             raise data_entry_flow.UnknownStep
@@ -85,9 +82,13 @@ class RepairsFlowManager(data_entry_flow.FlowManager):
     async def async_finish_flow(
         self, flow: data_entry_flow.FlowHandler, result: data_entry_flow.FlowResult
     ) -> data_entry_flow.FlowResult:
-        """Complete a fix flow."""
+        """Complete a fix flow.
+
+        This method is called when a flow step returns FlowResultType.ABORT or
+        FlowResultType.CREATE_ENTRY.
+        """
         if result.get("type") != data_entry_flow.FlowResultType.ABORT:
-            async_delete_issue(self.hass, flow.handler, flow.init_data["issue_id"])
+            ir.async_delete_issue(self.hass, flow.handler, flow.init_data["issue_id"])
         if "result" not in result:
             result["result"] = None
         return result

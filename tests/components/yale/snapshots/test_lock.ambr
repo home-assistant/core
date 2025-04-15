@@ -1,0 +1,38 @@
+# serializer version: 1
+# name: test_lock_device_registry
+  DeviceRegistryEntrySnapshot({
+    'area_id': 'online_with_doorsense_name',
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.aaecosystem.com',
+    'connections': set({
+      tuple(
+        'bluetooth',
+        '12:22',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'yale',
+        'online_with_doorsense',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'Yale Home Inc.',
+    'model': 'AUG-MD01',
+    'model_id': None,
+    'name': 'online_with_doorsense Name',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': 'online_with_doorsense Name',
+    'sw_version': 'undefined-4.3.0-1.8.14',
+    'via_device_id': None,
+  })
+# ---

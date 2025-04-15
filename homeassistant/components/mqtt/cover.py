@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from contextlib import suppress
-from functools import partial
 import logging
 from typing import Any
 
@@ -16,6 +15,7 @@ from homeassistant.components.cover import (
     DEVICE_CLASSES_SCHEMA,
     CoverEntity,
     CoverEntityFeature,
+    CoverState,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -28,11 +28,11 @@ from homeassistant.const import (
     STATE_OPEN,
     STATE_OPENING,
 )
-from homeassistant.core import HassJobType, HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, VolSchemaType
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
@@ -43,13 +43,11 @@ from . import subscription
 from .config import MQTT_BASE_SCHEMA
 from .const import (
     CONF_COMMAND_TOPIC,
-    CONF_ENCODING,
     CONF_PAYLOAD_CLOSE,
     CONF_PAYLOAD_OPEN,
     CONF_PAYLOAD_STOP,
     CONF_POSITION_CLOSED,
     CONF_POSITION_OPEN,
-    CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_CLOSED,
     CONF_STATE_CLOSING,
@@ -64,12 +62,14 @@ from .const import (
     DEFAULT_RETAIN,
     PAYLOAD_NONE,
 )
-from .mixins import MqttEntity, async_setup_entity_entry_helper
+from .entity import MqttEntity, async_setup_entity_entry_helper
 from .models import MqttCommandTemplate, MqttValueTemplate, ReceiveMessage
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 CONF_GET_POSITION_TOPIC = "position_topic"
 CONF_GET_POSITION_TEMPLATE = "position_template"
@@ -81,6 +81,7 @@ CONF_TILT_STATUS_TOPIC = "tilt_status_topic"
 CONF_TILT_STATUS_TEMPLATE = "tilt_status_template"
 
 CONF_STATE_STOPPED = "state_stopped"
+CONF_PAYLOAD_STOP_TILT = "payload_stop_tilt"
 CONF_TILT_CLOSED_POSITION = "tilt_closed_value"
 CONF_TILT_MAX = "tilt_max"
 CONF_TILT_MIN = "tilt_min"
@@ -203,6 +204,9 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_GET_POSITION_TEMPLATE): cv.template,
         vol.Optional(CONF_TILT_COMMAND_TEMPLATE): cv.template,
+        vol.Optional(CONF_PAYLOAD_STOP_TILT, default=DEFAULT_PAYLOAD_STOP): vol.Any(
+            cv.string, None
+        ),
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
@@ -220,10 +224,10 @@ DISCOVERY_SCHEMA = vol.All(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MQTT cover through YAML and through MQTT discovery."""
-    await async_setup_entity_entry_helper(
+    async_setup_entity_entry_helper(
         hass,
         config_entry,
         MqttCover,
@@ -249,7 +253,7 @@ class MqttCover(MqttEntity, CoverEntity):
     _tilt_range: tuple[int, int]
 
     @staticmethod
-    def config_schema() -> vol.Schema:
+    def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
@@ -357,9 +361,9 @@ class MqttCover(MqttEntity, CoverEntity):
             # Reset the state to `unknown`
             self._attr_is_closed = None
         else:
-            self._attr_is_closed = state == STATE_CLOSED
-        self._attr_is_opening = state == STATE_OPENING
-        self._attr_is_closing = state == STATE_CLOSING
+            self._attr_is_closed = state == CoverState.CLOSED
+        self._attr_is_opening = state == CoverState.OPENING
+        self._attr_is_closing = state == CoverState.CLOSING
 
     @callback
     def _tilt_message_received(self, msg: ReceiveMessage) -> None:
@@ -385,24 +389,24 @@ class MqttCover(MqttEntity, CoverEntity):
         if payload == self._config[CONF_STATE_STOPPED]:
             if self._config.get(CONF_GET_POSITION_TOPIC) is not None:
                 state = (
-                    STATE_CLOSED
+                    CoverState.CLOSED
                     if self._attr_current_cover_position == DEFAULT_POSITION_CLOSED
-                    else STATE_OPEN
+                    else CoverState.OPEN
                 )
             else:
                 state = (
-                    STATE_CLOSED
-                    if self.state in [STATE_CLOSED, STATE_CLOSING]
-                    else STATE_OPEN
+                    CoverState.CLOSED
+                    if self.state in [CoverState.CLOSED, CoverState.CLOSING]
+                    else CoverState.OPEN
                 )
         elif payload == self._config[CONF_STATE_OPENING]:
-            state = STATE_OPENING
+            state = CoverState.OPENING
         elif payload == self._config[CONF_STATE_CLOSING]:
-            state = STATE_CLOSING
+            state = CoverState.CLOSING
         elif payload == self._config[CONF_STATE_OPEN]:
-            state = STATE_OPEN
+            state = CoverState.OPEN
         elif payload == self._config[CONF_STATE_CLOSED]:
-            state = STATE_CLOSED
+            state = CoverState.CLOSED
         elif payload == PAYLOAD_NONE:
             state = None
         else:
@@ -454,63 +458,34 @@ class MqttCover(MqttEntity, CoverEntity):
         self._attr_current_cover_position = min(100, max(0, percentage_payload))
         if self._config.get(CONF_STATE_TOPIC) is None:
             self._update_state(
-                STATE_CLOSED if self.current_cover_position == 0 else STATE_OPEN
+                CoverState.CLOSED
+                if self.current_cover_position == 0
+                else CoverState.OPEN
             )
 
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        topics = {}
-
-        if self._config.get(CONF_GET_POSITION_TOPIC):
-            topics["get_position_topic"] = {
-                "topic": self._config.get(CONF_GET_POSITION_TOPIC),
-                "msg_callback": partial(
-                    self._message_callback,
-                    self._position_message_received,
-                    {
-                        "_attr_current_cover_position",
-                        "_attr_current_cover_tilt_position",
-                        "_attr_is_closed",
-                        "_attr_is_closing",
-                        "_attr_is_opening",
-                    },
-                ),
-                "entity_id": self.entity_id,
-                "qos": self._config[CONF_QOS],
-                "encoding": self._config[CONF_ENCODING] or None,
-                "job_type": HassJobType.Callback,
-            }
-
-        if self._config.get(CONF_STATE_TOPIC):
-            topics["state_topic"] = {
-                "topic": self._config.get(CONF_STATE_TOPIC),
-                "msg_callback": partial(
-                    self._message_callback,
-                    self._state_message_received,
-                    {"_attr_is_closed", "_attr_is_closing", "_attr_is_opening"},
-                ),
-                "entity_id": self.entity_id,
-                "qos": self._config[CONF_QOS],
-                "encoding": self._config[CONF_ENCODING] or None,
-                "job_type": HassJobType.Callback,
-            }
-
-        if self._config.get(CONF_TILT_STATUS_TOPIC) is not None:
-            topics["tilt_status_topic"] = {
-                "topic": self._config.get(CONF_TILT_STATUS_TOPIC),
-                "msg_callback": partial(
-                    self._message_callback,
-                    self._tilt_message_received,
-                    {"_attr_current_cover_tilt_position"},
-                ),
-                "entity_id": self.entity_id,
-                "qos": self._config[CONF_QOS],
-                "encoding": self._config[CONF_ENCODING] or None,
-                "job_type": HassJobType.Callback,
-            }
-
-        self._sub_state = subscription.async_prepare_subscribe_topics(
-            self.hass, self._sub_state, topics
+        self.add_subscription(
+            CONF_GET_POSITION_TOPIC,
+            self._position_message_received,
+            {
+                "_attr_current_cover_position",
+                "_attr_current_cover_tilt_position",
+                "_attr_is_closed",
+                "_attr_is_closing",
+                "_attr_is_opening",
+            },
+        )
+        self.add_subscription(
+            CONF_STATE_TOPIC,
+            self._state_message_received,
+            {"_attr_is_closed", "_attr_is_closing", "_attr_is_opening"},
+        )
+        self.add_subscription(
+            CONF_TILT_STATUS_TOPIC,
+            self._tilt_message_received,
+            {"_attr_current_cover_tilt_position"},
         )
 
     async def _subscribe_topics(self) -> None:
@@ -527,7 +502,7 @@ class MqttCover(MqttEntity, CoverEntity):
         )
         if self._optimistic:
             # Optimistically assume that cover has changed state.
-            self._update_state(STATE_OPEN)
+            self._update_state(CoverState.OPEN)
             if self._config.get(CONF_GET_POSITION_TOPIC):
                 self._attr_current_cover_position = 100
             self.async_write_ha_state()
@@ -542,7 +517,7 @@ class MqttCover(MqttEntity, CoverEntity):
         )
         if self._optimistic:
             # Optimistically assume that cover has changed state.
-            self._update_state(STATE_CLOSED)
+            self._update_state(CoverState.CLOSED)
             if self._config.get(CONF_GET_POSITION_TOPIC):
                 self._attr_current_cover_position = 0
             self.async_write_ha_state()
@@ -621,6 +596,12 @@ class MqttCover(MqttEntity, CoverEntity):
             self._attr_current_cover_tilt_position = tilt_percentage
             self.async_write_ha_state()
 
+    async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
+        """Stop moving the cover tilt."""
+        await self.async_publish_with_config(
+            self._config[CONF_TILT_COMMAND_TOPIC], self._config[CONF_PAYLOAD_STOP_TILT]
+        )
+
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         position_percentage = kwargs[ATTR_POSITION]
@@ -643,9 +624,9 @@ class MqttCover(MqttEntity, CoverEntity):
         )
         if self._optimistic:
             self._update_state(
-                STATE_CLOSED
+                CoverState.CLOSED
                 if position_percentage <= self._config[CONF_POSITION_CLOSED]
-                else STATE_OPEN
+                else CoverState.OPEN
             )
             self._attr_current_cover_position = position_percentage
             self.async_write_ha_state()
