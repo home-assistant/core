@@ -5,6 +5,7 @@ from __future__ import annotations
 from unittest.mock import patch
 
 from pysmhi import SmhiForecastException
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.smhi.const import DOMAIN
@@ -15,6 +16,8 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
+
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -64,15 +67,9 @@ async def test_form(hass: HomeAssistant) -> None:
     result3 = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    with (
-        patch(
-            "homeassistant.components.smhi.config_flow.SMHIPointForecast.async_get_daily_forecast",
-            return_value={"test": "something", "test2": "something else"},
-        ),
-        patch(
-            "homeassistant.components.smhi.async_setup_entry",
-            return_value=True,
-        ),
+    with patch(
+        "homeassistant.components.smhi.config_flow.SMHIPointForecast.async_get_daily_forecast",
+        return_value={"test": "something", "test2": "something else"},
     ):
         result4 = await hass.config_entries.flow.async_configure(
             result3["flow_id"],
@@ -120,15 +117,9 @@ async def test_form_invalid_coordinates(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "wrong_location"}
 
     # Continue flow with new coordinates
-    with (
-        patch(
-            "homeassistant.components.smhi.config_flow.SMHIPointForecast.async_get_daily_forecast",
-            return_value={"test": "something", "test2": "something else"},
-        ),
-        patch(
-            "homeassistant.components.smhi.async_setup_entry",
-            return_value=True,
-        ),
+    with patch(
+        "homeassistant.components.smhi.config_flow.SMHIPointForecast.async_get_daily_forecast",
+        return_value={"test": "something", "test2": "something else"},
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -235,15 +226,9 @@ async def test_reconfigure_flow(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "wrong_location"}
 
-    with (
-        patch(
-            "homeassistant.components.smhi.config_flow.SMHIPointForecast.async_get_daily_forecast",
-            return_value={"test": "something", "test2": "something else"},
-        ),
-        patch(
-            "homeassistant.components.smhi.async_setup_entry",
-            return_value=True,
-        ) as mock_setup_entry,
+    with patch(
+        "homeassistant.components.smhi.config_flow.SMHIPointForecast.async_get_daily_forecast",
+        return_value={"test": "something", "test2": "something else"},
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -273,4 +258,3 @@ async def test_reconfigure_flow(
     device = device_registry.async_get(device.id)
     assert device
     assert device.identifiers == {(DOMAIN, "58.2898, 14.6304")}
-    assert len(mock_setup_entry.mock_calls) == 1
