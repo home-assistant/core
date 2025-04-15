@@ -96,7 +96,9 @@ TEST_PARAMS = [
                 "device_class": "enum",
                 "friendly_name": "Jewish Calendar Parshat Hashavua",
                 "icon": "mdi:book-open-variant",
-                "options": list(Parasha),
+                "options": [
+                    str(p) for p in [p.set_language("hebrew") or p for p in Parasha]
+                ],
             },
         },
         "hebrew",

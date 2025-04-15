@@ -1,5 +1,8 @@
 """Entity representing a Jewish Calendar sensor."""
 
+from hdate.hebrew_date import Months
+from hdate.parasha import Parasha
+
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
 
@@ -32,3 +35,7 @@ class JewishCalendarEntity(Entity):
         self._candle_lighting_offset = config.candle_lighting_offset
         self._havdalah_offset = config.havdalah_offset
         self._diaspora = config.diaspora
+        for month in Months:
+            month.set_language(config.language)
+        for p in Parasha:
+            p.set_language(config.language)
