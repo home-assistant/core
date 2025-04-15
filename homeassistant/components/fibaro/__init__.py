@@ -176,18 +176,18 @@ class FibaroController:
             platform = Platform.LIGHT
         return platform
 
-    def _create_device_info(self, master_device: DeviceModel) -> None:
-        """Create the device info for a master device."""
+    def _create_device_info(self, main_device: DeviceModel) -> None:
+        """Create the device info for a main device."""
 
-        if "zwaveCompany" in master_device.properties:
-            manufacturer = master_device.properties.get("zwaveCompany")
+        if "zwaveCompany" in main_device.properties:
+            manufacturer = main_device.properties.get("zwaveCompany")
         else:
             manufacturer = None
 
-        self._device_infos[master_device.fibaro_id] = DeviceInfo(
-            identifiers={(DOMAIN, master_device.fibaro_id)},
+        self._device_infos[main_device.fibaro_id] = DeviceInfo(
+            identifiers={(DOMAIN, main_device.fibaro_id)},
             manufacturer=manufacturer,
-            name=master_device.name,
+            name=main_device.name,
             via_device=(DOMAIN, self.hub_serial),
         )
 
@@ -223,8 +223,8 @@ class FibaroController:
         """Read and process the device list."""
         devices = self._fibaro_device_manager.get_devices()
 
-        for master_device in find_master_devices(devices):
-            self._create_device_info(master_device)
+        for main_device in find_master_devices(devices):
+            self._create_device_info(main_device)
 
         self._device_map = {}
         last_climate_parent = None
