@@ -492,7 +492,14 @@ class MielePhaseSensor(MieleSensor):
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return STATE_PROGRAM_PHASE.get(int(self.device.state_program_phase))
+        ret_val = STATE_PROGRAM_PHASE.get(int(self.device.state_program_phase))
+        if ret_val is None:
+            _LOGGER.debug(
+                "Unknown program phase: %s on device type: %s",
+                self.device.state_program_phase,
+                self.device.device_type,
+            )
+        return ret_val
 
 
 class MieleTypeSensor(MieleSensor):
@@ -501,7 +508,14 @@ class MieleTypeSensor(MieleSensor):
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return STATE_PROGRAM_TYPE.get(int(self.device.state_program_type))
+        ret_val = STATE_PROGRAM_TYPE.get(int(self.device.state_program_type))
+        if ret_val is None:
+            _LOGGER.debug(
+                "Unknown program type: %s on device type: %s",
+                self.device.state_program_type,
+                self.device.device_type,
+            )
+        return ret_val
 
 
 class MieleProgramIdSensor(MieleSensor):
@@ -510,9 +524,16 @@ class MieleProgramIdSensor(MieleSensor):
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return STATE_PROGRAM_ID.get(self.device.device_type, {}).get(
+        ret_val = STATE_PROGRAM_ID.get(self.device.device_type, {}).get(
             self.device.state_program_id
         )
+        if ret_val is None:
+            _LOGGER.debug(
+                "Unknown program id: %s on device type: %s",
+                self.device.state_program_id,
+                self.device.device_type,
+            )
+        return ret_val
 
 
 class MieleDurationSensor(MieleSensor):

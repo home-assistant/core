@@ -218,7 +218,7 @@ STATE_PROGRAM_PHASE = {
     1800: "finished",
     1801: "pre_dishwash",
     # Oven
-    3073: "heating-up",  # in common with coffee system and warming drawer
+    3073: "heating_up",  # in common with coffee system and warming drawer
     3074: "process_running",
     3078: "process_finished",
     3084: "energy_save",
