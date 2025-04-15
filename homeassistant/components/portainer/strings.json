@@ -17,5 +17,17 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "type": {
+        "name": "Type"
+      }
+    },
+    "binary_sensor": {
+      "status": {
+        "name": "Status"
+      }
+    }
   }
 }

@@ -58,13 +58,14 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[str, dict]]):
         )
         self.portainer = portainer
         self.config_entry = config_entry
+        self.endpoints: dict[int, PortainerCoordinatorData] = {}
 
     async def _async_update_data(self):
         """Fetch data from Portainer API."""
-
         _LOGGER.debug(
             "Fetching data from Portainer API: %s", self.config_entry.data[CONF_HOST]
         )
+
         try:
             endpoints = await self.portainer.get_endpoints()
         except PortainerAuthenticationError as err:
@@ -78,7 +79,7 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[str, dict]]):
         if not endpoints:
             raise UpdateFailed("No endpoints found")
 
-        coordinator_data: list[PortainerCoordinatorData] = []
+        mapped_endpoints: dict[int, PortainerCoordinatorData] = {}
         for endpoint in endpoints:
             assert endpoint.id
             try:
@@ -92,13 +93,12 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[str, dict]]):
                     f"Invalid Portainer authentication. Error: {err}"
                 ) from err
 
-            coordinator_data.append(
-                PortainerCoordinatorData(
-                    id=endpoint.id,
-                    name=endpoint.name,
-                    endpoint=endpoint,
-                    containers=containers,
-                )
+            mapped_endpoints[endpoint.id] = PortainerCoordinatorData(
+                id=endpoint.id,
+                name=endpoint.name,
+                endpoint=endpoint,
+                containers=containers,
             )
 
-        return coordinator_data
+        self.endpoints = mapped_endpoints
+        return self.endpoints
