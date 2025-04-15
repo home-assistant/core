@@ -17,6 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import FlexitConfigEntry, FlexitCoordinator
 from .entity import FlexitEntity
 
@@ -68,6 +69,9 @@ async def async_setup_entry(
     )
 
 
+PARALLEL_UPDATES = 1
+
+
 class FlexitSwitch(FlexitEntity, SwitchEntity):
     """Representation of a Flexit Switch."""
 
@@ -94,19 +98,31 @@ class FlexitSwitch(FlexitEntity, SwitchEntity):
         return self.entity_description.is_on_fn(self.coordinator.data)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn electric heater on."""
+        """Turn switch on."""
         try:
             await self.entity_description.turn_on_fn(self.coordinator.data)
         except (asyncio.exceptions.TimeoutError, ConnectionError, DecodingError) as exc:
-            raise HomeAssistantError from exc
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="switch_turn",
+                translation_placeholders={
+                    "state": "on",
+                },
+            ) from exc
         finally:
             await self.coordinator.async_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn electric heater off."""
+        """Turn switch off."""
         try:
             await self.entity_description.turn_off_fn(self.coordinator.data)
         except (asyncio.exceptions.TimeoutError, ConnectionError, DecodingError) as exc:
-            raise HomeAssistantError from exc
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="switch_turn",
+                translation_placeholders={
+                    "state": "off",
+                },
+            ) from exc
         finally:
             await self.coordinator.async_refresh()

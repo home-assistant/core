@@ -815,7 +815,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -836,7 +838,7 @@
         'suggested_display_precision': 0,
       }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.WIND_DIRECTION: 'wind_direction'>,
     'original_icon': None,
     'original_name': 'Wind direction',
     'platform': 'ambient_network',
@@ -851,8 +853,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by ambientnetwork.net',
+      'device_class': 'wind_direction',
       'friendly_name': 'Station A Wind direction',
       'last_measured': HAFakeDatetime(2023, 11, 8, 12, 12, 0, 914000, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
+      'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
       'unit_of_measurement': '°',
     }),
     'context': <ANY>,
@@ -1799,7 +1803,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -1820,7 +1826,7 @@
         'suggested_display_precision': 0,
       }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.WIND_DIRECTION: 'wind_direction'>,
     'original_icon': None,
     'original_name': 'Wind direction',
     'platform': 'ambient_network',
@@ -1835,8 +1841,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by ambientnetwork.net',
+      'device_class': 'wind_direction',
       'friendly_name': 'Station C Wind direction',
       'last_measured': HAFakeDatetime(2024, 6, 6, 8, 28, 3, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
+      'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
       'unit_of_measurement': '°',
     }),
     'context': <ANY>,
@@ -2720,7 +2728,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -2741,7 +2751,7 @@
         'suggested_display_precision': 0,
       }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.WIND_DIRECTION: 'wind_direction'>,
     'original_icon': None,
     'original_name': 'Wind direction',
     'platform': 'ambient_network',
@@ -2756,7 +2766,9 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by ambientnetwork.net',
+      'device_class': 'wind_direction',
       'friendly_name': 'Station D Wind direction',
+      'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
       'unit_of_measurement': '°',
     }),
     'context': <ANY>,

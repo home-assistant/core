@@ -123,7 +123,7 @@ DSL_SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription[DslInfo], ...] = (
         entity_registry_enabled_default=False,
         options=[
             "no_defect",
-            "of_frame",
+            "loss_of_frame",
             "loss_of_signal",
             "loss_of_power",
             "loss_of_signal_quality",

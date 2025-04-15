@@ -20,6 +20,9 @@ CONNECTION_TEST_DATA: HassKey[dict[str, asyncio.Event]] = HassKey(
     f"{DOMAIN}_connection_tests"
 )
 
+PREANNOUNCE_FILENAME = "preannounce.mp3"
+PREANNOUNCE_URL = f"/api/assist_satellite/static/{PREANNOUNCE_FILENAME}"
+
 
 class AssistSatelliteEntityFeature(IntFlag):
     """Supported features of Assist satellite entity."""

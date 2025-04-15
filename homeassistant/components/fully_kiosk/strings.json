@@ -1,8 +1,8 @@
 {
   "common": {
-    "data_description_password": "The Remote Admin Password from the Fully Kiosk Browser app settings.",
+    "data_description_password": "The Remote Admin password from the Fully Kiosk Browser app settings.",
     "data_description_ssl": "Is the Fully Kiosk app configured to require SSL for the connection?",
-    "data_description_verify_ssl": "Should SSL certificartes be verified? This should be off for self-signed certificates."
+    "data_description_verify_ssl": "Should SSL certificates be verified? This should be off for self-signed certificates."
   },
   "config": {
     "step": {
@@ -151,7 +151,7 @@
       }
     },
     "set_config": {
-      "name": "Set Configuration",
+      "name": "Set configuration",
       "description": "Sets a configuration parameter on Fully Kiosk Browser.",
       "fields": {
         "key": {
@@ -165,7 +165,7 @@
       }
     },
     "start_application": {
-      "name": "Start Application",
+      "name": "Start application",
       "description": "Starts an application on the device running Fully Kiosk Browser.",
       "fields": {
         "application": {
