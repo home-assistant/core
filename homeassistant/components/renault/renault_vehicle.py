@@ -91,13 +91,7 @@ class RenaultVehicleProxy:
         self._scan_interval = scan_interval
         self._hub = hub
 
-    @property
-    def update_interval(self) -> timedelta:
-        """Return the scan interval for the vehicle."""
-        return self._scan_interval
-
-    @update_interval.setter
-    def update_interval(self, scan_interval: timedelta) -> None:
+    def update_scan_interval(self, scan_interval: timedelta) -> None:
         """Set the scan interval for the vehicle."""
         if scan_interval != self._scan_interval:
             self._scan_interval = scan_interval

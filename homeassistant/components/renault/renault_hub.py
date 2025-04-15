@@ -126,7 +126,7 @@ class RenaultHub:
                 # we need to change the vehicles with the right scan interval
                 for vehicle_link in vehicles.vehicleLinks:
                     vehicle = self._vehicles[str(vehicle_link.vin)]
-                    vehicle.update_interval = new_scan_interval
+                    vehicle.update_scan_interval(new_scan_interval)
 
     async def async_initialise_vehicle(
         self,
