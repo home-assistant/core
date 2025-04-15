@@ -9,9 +9,7 @@ rules:
   config-flow-test-coverage:
     status: todo
     comment: fix name and docstring
-  config-flow:
-    status: todo
-    comment: PR in progress
+  config-flow: done
   dependency-transparency: done
   docs-actions:
     status: exempt
