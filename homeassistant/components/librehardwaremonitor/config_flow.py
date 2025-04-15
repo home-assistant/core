@@ -18,18 +18,17 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
 )
-from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_PORT
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.selector import selector
 
-from .const import DEFAULT_HOST, DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import DEFAULT_HOST, DEFAULT_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_CONFIG_VALUES = {
     CONF_HOST: DEFAULT_HOST,
     CONF_PORT: DEFAULT_PORT,
-    CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
 }
 
 
@@ -55,9 +54,6 @@ class LibreHardwareMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
             {
                 vol.Required(CONF_HOST, default=defaults[CONF_HOST]): str,
                 vol.Required(CONF_PORT, default=defaults[CONF_PORT]): int,
-                vol.Optional(
-                    CONF_SCAN_INTERVAL, default=defaults[CONF_SCAN_INTERVAL]
-                ): vol.All(vol.Coerce(int), vol.Range(min=5, max=30)),
             }
         )
         errors = {}
