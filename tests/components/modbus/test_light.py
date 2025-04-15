@@ -543,5 +543,5 @@ class TestModbusConvectors:
         """Test conversion of Modbus percentage (0–100) to brightness (0–255)."""
         percent = 20
         expected_brightness = 51
-        result = await ModbusLight._convert_modbus_to_brightness(percent)
+        result = await ModbusLight._convert_modbus_percent_to_brightness(percent)
         assert result == expected_brightness
