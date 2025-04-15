@@ -2,10 +2,10 @@
 
 from fing_agent_api.models import Device
 
-from homeassistant.components.device_tracker import ScannerEntity, SourceType
+from homeassistant.components.device_tracker import ScannerEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import FingConfigEntry
@@ -16,7 +16,7 @@ from .utils import get_icon_from_type
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: FingConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add sensors for passed config_entry in HA."""
     coordinator = config_entry.runtime_data
@@ -71,21 +71,10 @@ class FingTrackedDevice(CoordinatorEntity[FingDataUpdateCoordinator], ScannerEnt
         self._device = coordinator.data.devices[device.mac]
         self._network_id = coordinator.data.network_id
         self._attr_name = self._device.name
-
-    @property
-    def mac_address(self) -> str:
-        """Return mac_address."""
-        return self._mac
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return unique ID of the entity."""
-        return f"{self._network_id}-{self.mac_address}"
-
-    @property
-    def icon(self) -> str | None:
-        """Return the icon."""
-        return get_icon_from_type(self._device.type)
+        self._attr_mac_address = self._mac
+        self._attr_unique_id = f"{self._network_id}-{self.mac_address}"
+        self._attr_icon = get_icon_from_type(self._device.type)
+        self._attr_entity_registry_enabled_default = True
 
     @property
     def ip_address(self) -> str | None:
@@ -105,19 +94,9 @@ class FingTrackedDevice(CoordinatorEntity[FingDataUpdateCoordinator], ScannerEnt
         return attrs
 
     @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if entity is enabled by default."""
-        return True
-
-    @property
     def is_connected(self) -> bool:
         """Return true if the device is connected to the network."""
         return self._device.active
-
-    @property
-    def source_type(self) -> SourceType:
-        """Return source type."""
-        return SourceType.ROUTER
 
     @callback
     def _handle_coordinator_update(self) -> None:

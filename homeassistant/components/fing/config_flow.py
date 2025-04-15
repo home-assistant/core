@@ -51,25 +51,23 @@ class FingConfigFlow(ConfigFlow, domain=DOMAIN):
         description_placeholders: dict[str, str] = {}
 
         if user_input is not None:
+            response = None
+
+            existing_entries = [
+                entry
+                for entry in self._async_current_entries()
+                if entry.data.get(AGENT_IP) == user_input[AGENT_IP]
+            ]
+
+            if existing_entries:
+                return self.async_abort(reason="already_configured")
+
+            fing_api = FingAgent(
+                user_input[AGENT_IP], user_input[AGENT_PORT], user_input[AGENT_KEY]
+            )
+
             try:
-                existing_entries = [
-                    entry
-                    for entry in self._async_current_entries()
-                    if entry.data.get(AGENT_IP) == user_input[AGENT_IP]
-                ]
-                if existing_entries:
-                    return self.async_abort(reason="already_configured")
-
-                fing_api = FingAgent(
-                    user_input[AGENT_IP], user_input[AGENT_PORT], user_input[AGENT_KEY]
-                )
                 response = await fing_api.get_devices()
-                if response.network_id is not None:
-                    return self.async_create_entry(
-                        title=f"Fing Agent {user_input.get(AGENT_IP)}", data=user_input
-                    )
-
-                errors["base"] = "api_version_error"
             except httpx.NetworkError as _:
                 errors["base"] = "cannot_connect"
             except httpx.TimeoutException as _:
@@ -92,6 +90,13 @@ class FingConfigFlow(ConfigFlow, domain=DOMAIN):
                 Exception,
             ) as _:
                 errors["base"] = "unexpected_error"
+
+            if response is not None:
+                if response.network_id is not None and len(response.network_id) > 0:
+                    return self.async_create_entry(
+                        title=f"Fing Agent {user_input.get(AGENT_IP)}", data=user_input
+                    )
+                errors["base"] = "api_version_error"
 
         return self.async_show_form(
             step_id="user",

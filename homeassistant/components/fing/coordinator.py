@@ -32,7 +32,6 @@ class FingDataUpdateCoordinator(DataUpdateCoordinator[FingDataObject]):
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize global Fing updater."""
-        self._hass = hass
         self._fing = FingAgent(
             config_entry.data[AGENT_IP],
             int(config_entry.data[AGENT_PORT]),
@@ -43,11 +42,9 @@ class FingDataUpdateCoordinator(DataUpdateCoordinator[FingDataObject]):
 
     async def _async_update_data(self) -> FingDataObject:
         """Fetch data from Fing Agent."""
+        response = None
         try:
             response = await self._fing.get_devices()
-            return FingDataObject(
-                response.network_id, {device.mac: device for device in response.devices}
-            )
         except httpx.NetworkError as err:
             raise UpdateFailed("Failed to connect") from err
         except httpx.TimeoutException as err:
@@ -67,3 +64,10 @@ class FingDataUpdateCoordinator(DataUpdateCoordinator[FingDataObject]):
             httpx.StreamError,
         ) as err:
             raise UpdateFailed("Unexpected error from HTTP request") from err
+
+        if response is not None:
+            return FingDataObject(
+                response.network_id, {device.mac: device for device in response.devices}
+            )
+
+        raise UpdateFailed("get_device failed. Response is None")
