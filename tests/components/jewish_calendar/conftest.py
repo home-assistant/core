@@ -1,6 +1,6 @@
 """Common fixtures for the jewish_calendar tests."""
 
-from collections.abc import Generator, Iterable
+from collections.abc import AsyncGenerator, Generator, Iterable
 import datetime as dt
 from typing import NamedTuple
 from unittest.mock import AsyncMock, patch
@@ -142,9 +142,10 @@ def config_entry(
 @pytest.fixture
 async def setup_at_time(
     test_time: dt.datetime, hass: HomeAssistant, config_entry: MockConfigEntry
-) -> None:
+) -> AsyncGenerator[None]:
     """Set up the jewish_calendar integration at a specific time."""
     with freeze_time(test_time):
         config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
+        yield

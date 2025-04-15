@@ -130,17 +130,14 @@ async def test_issur_melacha_sensor(
 )
 @pytest.mark.usefixtures("setup_at_time")
 async def test_issur_melacha_sensor_update(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    test_time: dt,
-    results: list[str],
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, results: list[str]
 ) -> None:
     """Test Issur Melacha sensor output."""
     sensor_id = "binary_sensor.jewish_calendar_issur_melacha_in_effect"
     assert hass.states.get(sensor_id).state == results[0]
 
-    freezer.move_to(test_time + timedelta(microseconds=1))
-    async_fire_time_changed(hass, test_time)
+    freezer.tick(timedelta(microseconds=1))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert hass.states.get(sensor_id).state == results[1]
 
