@@ -4,13 +4,18 @@ from pymodbus.exceptions import ModbusException
 import pytest
 
 from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP_KELVIN,
+    DOMAIN as LIGHT_DOMAIN,
+)
 from homeassistant.components.modbus.const import (
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
-    CONF_COLOR_TEMP_KELVIN,
+    CONF_BRIGHTNESS_REGISTER,
+    CONF_COLOR_TEMP_REGISTER,
     CONF_DEVICE_ADDRESS,
     CONF_INPUT_TYPE,
     CONF_STATE_OFF,
@@ -27,8 +32,6 @@ from homeassistant.components.modbus.light import ModbusLight
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_ADDRESS,
-    CONF_BRIGHTNESS,
-    CONF_COLOR_TEMP,
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
     CONF_LIGHTS,
@@ -265,8 +268,6 @@ async def test_restore_state_light(
                     CONF_ADDRESS: 18,
                     CONF_WRITE_TYPE: CALL_TYPE_REGISTER_HOLDING,
                     CONF_SCAN_INTERVAL: 0,
-                    CONF_BRIGHTNESS: 1,
-                    CONF_COLOR_TEMP: 2,
                     CONF_VERIFY: {},
                 },
             ],
@@ -281,7 +282,6 @@ async def test_light_service_turn(
     """Run test for service turn_on/turn_off."""
 
     assert MODBUS_DOMAIN in hass.config.components
-
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
     await hass.services.async_call(
         LIGHT_DOMAIN, SERVICE_TURN_ON, service_data={ATTR_ENTITY_ID: ENTITY_ID}
@@ -324,8 +324,8 @@ async def test_light_service_turn(
                 {
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 1234,
-                    CONF_BRIGHTNESS: 1,
-                    CONF_COLOR_TEMP: 2,
+                    CONF_BRIGHTNESS_REGISTER: 1,
+                    CONF_COLOR_TEMP_REGISTER: 2,
                     CONF_WRITE_TYPE: CALL_TYPE_COIL,
                     CONF_VERIFY: {},
                 }
@@ -362,11 +362,11 @@ async def test_service_light_update(hass: HomeAssistant, mock_modbus_ha) -> None
         blocking=True,
     )
     assert (
-        hass.states.get(ENTITY_ID).attributes.get(CONF_BRIGHTNESS)
+        hass.states.get(ENTITY_ID).attributes.get(ATTR_BRIGHTNESS)
         == expected_brightness
     )
     assert (
-        hass.states.get(ENTITY_ID).attributes.get(CONF_COLOR_TEMP_KELVIN)
+        hass.states.get(ENTITY_ID).attributes.get(ATTR_COLOR_TEMP_KELVIN)
         == expected_color_temp
     )
     assert hass
@@ -396,7 +396,7 @@ async def test_no_discovery_info_light(
                     CONF_ADDRESS: 1234,
                     CONF_WRITE_TYPE: CALL_TYPE_REGISTER_HOLDING,
                     CONF_SCAN_INTERVAL: 0,
-                    CONF_BRIGHTNESS: 1,
+                    CONF_BRIGHTNESS_REGISTER: 1,
                 }
             ]
         }
@@ -413,7 +413,7 @@ async def test_brightness_light(hass: HomeAssistant, mock_modbus_ha) -> None:
         SERVICE_TURN_ON,
         service_data={
             ATTR_ENTITY_ID: ENTITY_ID,
-            CONF_BRIGHTNESS: 128,
+            ATTR_BRIGHTNESS: 128,
         },
         blocking=True,
     )
@@ -448,8 +448,8 @@ async def test_brightness_light(hass: HomeAssistant, mock_modbus_ha) -> None:
                     CONF_ADDRESS: 1234,
                     CONF_WRITE_TYPE: CALL_TYPE_REGISTER_HOLDING,
                     CONF_SCAN_INTERVAL: 0,
-                    CONF_BRIGHTNESS: 1,
-                    CONF_COLOR_TEMP: 2,
+                    CONF_BRIGHTNESS_REGISTER: 1,
+                    CONF_COLOR_TEMP_REGISTER: 2,
                 }
             ]
         }
@@ -466,8 +466,8 @@ async def test_color_temp_light(hass: HomeAssistant, mock_modbus_ha) -> None:
         SERVICE_TURN_ON,
         service_data={
             ATTR_ENTITY_ID: ENTITY_ID,
-            CONF_BRIGHTNESS: 128,
-            CONF_COLOR_TEMP_KELVIN: 2000,
+            ATTR_BRIGHTNESS: 128,
+            ATTR_COLOR_TEMP_KELVIN: 2000,
         },
         blocking=True,
     )
@@ -531,7 +531,11 @@ class TestModbusConvectors:
         expected_kelvin = 3000
         result = round(
             DEFAULT_MIN_KELVIN
-            + (percent / MODBUS_SCALE_MAX * (DEFAULT_MAX_KELVIN - DEFAULT_MIN_KELVIN))
+            + (
+                percent
+                / (MODBUS_SCALE_MAX - MODBUS_SCALE_MIN)
+                * (DEFAULT_MAX_KELVIN - DEFAULT_MIN_KELVIN)
+            )
         )
         assert result == expected_kelvin
 
@@ -539,5 +543,5 @@ class TestModbusConvectors:
         """Test conversion of Modbus percentage (0–100) to brightness (0–255)."""
         percent = 20
         expected_brightness = 51
-        result = await ModbusLight._percent_to_brightness(percent)
+        result = await ModbusLight._convert_modbus_to_brightness(percent)
         assert result == expected_brightness
