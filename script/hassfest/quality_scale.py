@@ -360,7 +360,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "epson",
     "eq3btsmart",
     "escea",
-    "esphome",
     "etherscan",
     "eufy",
     "eufylife_ble",
