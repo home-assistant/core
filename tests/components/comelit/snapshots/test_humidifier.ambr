@@ -1,0 +1,133 @@
+# serializer version: 1
+# name: test_all_entities[humidifier.climate0_dehumidifier-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'available_modes': list([
+        'normal',
+        'auto',
+      ]),
+      'max_humidity': 90,
+      'min_humidity': 10,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'humidifier',
+    'entity_category': None,
+    'entity_id': 'humidifier.climate0_dehumidifier',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <HumidifierDeviceClass.DEHUMIDIFIER: 'dehumidifier'>,
+    'original_icon': None,
+    'original_name': 'Dehumidifier',
+    'platform': 'comelit',
+    'previous_unique_id': None,
+    'supported_features': <HumidifierEntityFeature: 1>,
+    'translation_key': 'dehumidifier',
+    'unique_id': 'serial_bridge_config_entry_id-0-dehumidifier',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[humidifier.climate0_dehumidifier-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'action': <HumidifierAction.OFF: 'off'>,
+      'available_modes': list([
+        'normal',
+        'auto',
+      ]),
+      'current_humidity': 65.0,
+      'device_class': 'dehumidifier',
+      'friendly_name': 'Climate0 Dehumidifier',
+      'humidity': 50.0,
+      'max_humidity': 90,
+      'min_humidity': 10,
+      'mode': 'normal',
+      'supported_features': <HumidifierEntityFeature: 1>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'humidifier.climate0_dehumidifier',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[humidifier.climate0_humidifier-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'available_modes': list([
+        'normal',
+        'auto',
+      ]),
+      'max_humidity': 90,
+      'min_humidity': 10,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'humidifier',
+    'entity_category': None,
+    'entity_id': 'humidifier.climate0_humidifier',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <HumidifierDeviceClass.HUMIDIFIER: 'humidifier'>,
+    'original_icon': None,
+    'original_name': 'Humidifier',
+    'platform': 'comelit',
+    'previous_unique_id': None,
+    'supported_features': <HumidifierEntityFeature: 1>,
+    'translation_key': 'humidifier',
+    'unique_id': 'serial_bridge_config_entry_id-0-humidifier',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[humidifier.climate0_humidifier-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'action': <HumidifierAction.IDLE: 'idle'>,
+      'available_modes': list([
+        'normal',
+        'auto',
+      ]),
+      'current_humidity': 65.0,
+      'device_class': 'humidifier',
+      'friendly_name': 'Climate0 Humidifier',
+      'humidity': 50.0,
+      'max_humidity': 90,
+      'min_humidity': 10,
+      'mode': 'normal',
+      'supported_features': <HumidifierEntityFeature: 1>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'humidifier.climate0_humidifier',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
