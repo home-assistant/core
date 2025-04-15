@@ -8,5 +8,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["ical"],
   "quality_scale": "silver",
-  "requirements": ["ical==9.0.1"]
+  "requirements": ["ical==9.1.0"]
 }

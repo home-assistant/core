@@ -1,23 +1,78 @@
 """The tests for the Template vacuum platform."""
 
+from typing import Any
+
 import pytest
 
 from homeassistant import setup
-from homeassistant.components.vacuum import ATTR_BATTERY_LEVEL, VacuumActivity
+from homeassistant.components import vacuum
+from homeassistant.components.vacuum import (
+    ATTR_BATTERY_LEVEL,
+    VacuumActivity,
+    VacuumEntityFeature,
+)
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_component import async_update_entity
+from homeassistant.setup import async_setup_component
+
+from .conftest import ConfigurationStyle
 
 from tests.common import assert_setup_component
 from tests.components.vacuum import common
 
-_TEST_VACUUM = "vacuum.test_vacuum"
+_TEST_OBJECT_ID = "test_vacuum"
+_TEST_VACUUM = f"vacuum.{_TEST_OBJECT_ID}"
 _STATE_INPUT_SELECT = "input_select.state"
 _SPOT_CLEANING_INPUT_BOOLEAN = "input_boolean.spot_cleaning"
 _LOCATING_INPUT_BOOLEAN = "input_boolean.locating"
 _FAN_SPEED_INPUT_SELECT = "input_select.fan_speed"
 _BATTERY_LEVEL_INPUT_NUMBER = "input_number.battery_level"
+
+
+async def async_setup_legacy_format(
+    hass: HomeAssistant, count: int, vacuum_config: dict[str, Any]
+) -> None:
+    """Do setup of number integration via new format."""
+    config = {"vacuum": {"platform": "template", "vacuums": vacuum_config}}
+
+    with assert_setup_component(count, vacuum.DOMAIN):
+        assert await async_setup_component(
+            hass,
+            vacuum.DOMAIN,
+            config,
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+
+@pytest.fixture
+async def setup_vacuum(
+    hass: HomeAssistant,
+    count: int,
+    style: ConfigurationStyle,
+    vacuum_config: dict[str, Any],
+) -> None:
+    """Do setup of number integration."""
+    if style == ConfigurationStyle.LEGACY:
+        await async_setup_legacy_format(hass, count, vacuum_config)
+
+
+@pytest.fixture
+async def setup_test_vacuum_with_extra_config(
+    hass: HomeAssistant,
+    count: int,
+    style: ConfigurationStyle,
+    vacuum_config: dict[str, Any],
+    extra_config: dict[str, Any],
+) -> None:
+    """Do setup of number integration."""
+    config = {_TEST_OBJECT_ID: {**vacuum_config, **extra_config}}
+    if style == ConfigurationStyle.LEGACY:
+        await async_setup_legacy_format(hass, count, config)
 
 
 @pytest.mark.parametrize(("count", "domain"), [(1, "vacuum")])
@@ -697,3 +752,71 @@ async def _register_components(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(
+    ("style", "vacuum_config"),
+    [
+        (
+            ConfigurationStyle.LEGACY,
+            {
+                "start": [],
+            },
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    ("extra_config", "supported_features"),
+    [
+        (
+            {
+                "pause": [],
+            },
+            VacuumEntityFeature.PAUSE,
+        ),
+        (
+            {
+                "stop": [],
+            },
+            VacuumEntityFeature.STOP,
+        ),
+        (
+            {
+                "return_to_base": [],
+            },
+            VacuumEntityFeature.RETURN_HOME,
+        ),
+        (
+            {
+                "clean_spot": [],
+            },
+            VacuumEntityFeature.CLEAN_SPOT,
+        ),
+        (
+            {
+                "locate": [],
+            },
+            VacuumEntityFeature.LOCATE,
+        ),
+        (
+            {
+                "set_fan_speed": [],
+            },
+            VacuumEntityFeature.FAN_SPEED,
+        ),
+    ],
+)
+async def test_empty_action_config(
+    hass: HomeAssistant,
+    supported_features: VacuumEntityFeature,
+    setup_test_vacuum_with_extra_config,
+) -> None:
+    """Test configuration with empty script."""
+    await common.async_start(hass, _TEST_VACUUM)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(_TEST_VACUUM)
+    assert state.attributes["supported_features"] == (
+        VacuumEntityFeature.STATE | VacuumEntityFeature.START | supported_features
+    )
