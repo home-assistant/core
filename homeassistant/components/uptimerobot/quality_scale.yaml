@@ -75,8 +75,8 @@ rules:
   exception-translations: done
   icon-translations: done
   reconfiguration-flow:
-    status: exempt
-    comment: no known use cases for reconfiguration flows, yet
+    status: todo
+    comment: handle API key change/update
   repair-issues:
     status: exempt
     comment: no known use cases for repair issues or flows, yet
