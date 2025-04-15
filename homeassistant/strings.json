@@ -118,6 +118,7 @@
     },
     "state": {
       "active": "Active",
+      "auto": "Auto",
       "charging": "Charging",
       "closed": "Closed",
       "closing": "Closing",
@@ -131,6 +132,7 @@
       "idle": "Idle",
       "locked": "Locked",
       "low": "Low",
+      "manual": "Manual",
       "medium": "Medium",
       "no": "No",
       "normal": "Normal",
