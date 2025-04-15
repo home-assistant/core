@@ -19,7 +19,7 @@ from homeassistant.const import CONF_LANGUAGE, CONF_TIME_ZONE
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry
 
 
 class _LocationData(NamedTuple):
@@ -147,8 +147,4 @@ async def setup_at_time(
     with freeze_time(test_time):
         config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-        future = test_time + dt.timedelta(seconds=30)
-        async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
