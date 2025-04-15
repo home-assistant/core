@@ -24,25 +24,38 @@
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]"
         },
+        "data_description": {
+          "host": "IP address or hostname of the ESPHome device",
+          "port": "Port that the native API is running on"
+        },
         "description": "Please enter connection settings of your ESPHome device."
       },
       "authenticate": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
         },
-        "description": "Please enter the password you set in your configuration for {name}."
+        "data_description": {
+          "password": "Passwords are deprecated and will be removed in a future version. Please update your ESPHome device YAML configuration to use an encryption key instead."
+        },
+        "description": "Please enter the password you set in your ESPHome device YAML configuration for {name}."
       },
       "encryption_key": {
         "data": {
           "noise_psk": "Encryption key"
         },
-        "description": "Please enter the encryption key for {name}. You can find it in the ESPHome Dashboard or in your device configuration."
+        "data_description": {
+          "noise_psk": "The encryption key is used to encrypt the connection between Home Assistant and the ESPHome device. You can find this in the api: section of your ESPHome device YAML configuration."
+        },
+        "description": "Please enter the encryption key for {name}. You can find it in the ESPHome Dashboard or in your ESPHome device YAML configuration."
       },
       "reauth_confirm": {
         "data": {
           "noise_psk": "[%key:component::esphome::config::step::encryption_key::data::noise_psk%]"
         },
-        "description": "The ESPHome device {name} enabled transport encryption or changed the encryption key. Please enter the updated key. You can find it in the ESPHome Dashboard or in your device configuration."
+        "data_description": {
+          "noise_psk": "[%key:component::esphome::config::step::encryption_key::data_description::noise_psk%]"
+        },
+        "description": "The ESPHome device {name} enabled transport encryption or changed the encryption key. Please enter the updated key. You can find it in the ESPHome Dashboard or in your ESPHome device YAML configuration."
       },
       "reauth_encryption_removed_confirm": {
         "description": "The ESPHome device {name} disabled transport encryption. Please confirm that you want to remove the encryption key and allow unencrypted connections."
@@ -53,7 +66,7 @@
       },
       "name_conflict": {
         "title": "Name conflict",
-        "description": "**The name `{name}` is already being used by another device: {existing_title} (MAC address: `{existing_mac}`)**\n\nTo continue, please choose one of the following options:\n\n**Migrate Configuration to New Device:** If this is a replacement, migrate the existing settings to the new device (`{mac}`).\n**Overwrite the Existing Configuration:** If this is not a replacement, delete the old configuration for `{existing_mac}` and use the new device instead.",
+        "description": "**The name `{name}` is already being used by another device: {existing_title} (MAC address: `{existing_mac}`)**\n\nTo continue, please choose one of the following options:\n\n**Migrate configuration to new device:** If this is a replacement, migrate the existing settings to the new device (`{mac}`).\n**Overwrite the existing configuration:** If this is not a replacement, delete the old configuration for `{existing_mac}` and use the new device instead.",
         "menu_options": {
           "name_conflict_migrate": "Migrate configuration to new device",
           "name_conflict_overwrite": "Overwrite the existing configuration"
@@ -67,7 +80,11 @@
       "init": {
         "data": {
           "allow_service_calls": "Allow the device to perform Home Assistant actions.",
-          "subscribe_logs": "Subscribe to logs from the device. When enabled, the device will send logs to Home Assistant and you can view them in the logs panel."
+          "subscribe_logs": "Subscribe to logs from the device."
+        },
+        "data_description": {
+          "allow_service_calls": "When enabled, ESPHome devices can perform Home Assistant actions, such as calling services or sending events. Only enable this if you trust the device.",
+          "subscribe_logs": "When enabled, the device will send logs to Home Assistant and you can view them in the logs panel."
         }
       }
     }
