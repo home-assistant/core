@@ -1200,8 +1200,7 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
 
     async def _async_restore_network_backup(self) -> None:
         """Restore the backup."""
-        if self.backup_data is None:
-            raise AbortFlow("No backup data")
+        assert self.backup_data is not None
 
         # Reload the config entry to reconnect the client after the addon restart
         await self.hass.config_entries.async_reload(self.config_entry.entry_id)
