@@ -9,7 +9,7 @@ import logging
 import growattServer
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
@@ -45,10 +45,17 @@ def get_device_list(api, config):
     # Log in to api and fetch first plant if no plant id is defined.
     login_response = api.login(config[CONF_USERNAME], config[CONF_PASSWORD])
     if not login_response["success"]:
+        config.state = ConfigEntryState.SETUP_ERROR
         if login_response["msg"] == LOGIN_INVALID_AUTH_CODE:
+            _LOGGER.error("Login failed, please check your username and password")
             raise ConfigEntryError("Username, Password or URL may be incorrect!")
         if login_response["msg"] == LOGIN_LOCKED_CODE:
+            _LOGGER.error(
+                "Login failed, account has been locked for %s hours",
+                login_response["lockDuration"],
+            )
             raise ConfigEntryError(login_response["error"])
+        _LOGGER.error("Unknown error, server responds: %s", login_response["error"])
         raise ConfigEntryError(
             f"Unknown error, server responds: {login_response['error']}"
         )
