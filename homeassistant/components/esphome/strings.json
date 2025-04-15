@@ -10,7 +10,7 @@
       "mqtt_missing_api": "Missing API port in MQTT properties.",
       "mqtt_missing_ip": "Missing IP address in MQTT properties.",
       "mqtt_missing_payload": "Missing MQTT Payload.",
-      "name_conflict_migrated": "The device `{name}` has been migrated to a new device with MAC address `{mac}` from `{existing_mac}`."
+      "name_conflict_migrated": "The configuration for `{name}` has been migrated to a new device with MAC address `{mac}` from `{existing_mac}`."
     },
     "error": {
       "resolve_error": "Can't resolve address of the ESP. If this error persists, please set a static IP address",
