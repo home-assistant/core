@@ -219,8 +219,8 @@ async def test_abort_aborted_flow(manager: MockFlowManager) -> None:
             manager.async_abort(self.flow_id)
             return self.async_abort(reason="blah")
 
-    with pytest.raises(data_entry_flow.UnknownFlow):
-        await manager.async_init("test")
+    form = await manager.async_init("test")
+    assert form["reason"] == "blah"
     assert len(manager.async_progress()) == 0
     assert len(manager.mock_created_entries) == 0
 
@@ -238,6 +238,23 @@ async def test_abort_calls_async_remove(manager: MockFlowManager) -> None:
     await manager.async_init("test")
 
     TestFlow.async_remove.assert_called_once()
+
+    assert len(manager.async_progress()) == 0
+    assert len(manager.mock_created_entries) == 0
+
+
+async def test_abort_calls_async_flow_removed(manager: MockFlowManager) -> None:
+    """Test abort calling the async_flow_removed FlowManager method."""
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            return self.async_abort(reason="reason")
+
+    manager.async_flow_removed = Mock()
+    await manager.async_init("test")
+
+    manager.async_flow_removed.assert_called_once()
 
     assert len(manager.async_progress()) == 0
     assert len(manager.mock_created_entries) == 0
@@ -288,13 +305,7 @@ async def test_create_saves_data(manager: MockFlowManager) -> None:
 
 
 async def test_create_aborted_flow(manager: MockFlowManager) -> None:
-    """Test return create_entry from aborted flow.
-
-    Note: The entry is created even if the flow is already aborted, then the
-    flow raises an UnknownFlow exception. This behavior is not logical, and
-    we should consider changing it to not create the entry if the flow is
-    aborted.
-    """
+    """Test return create_entry from aborted flow."""
 
     @manager.mock_reg_handler("test")
     class TestFlow(data_entry_flow.FlowHandler):
@@ -308,14 +319,25 @@ async def test_create_aborted_flow(manager: MockFlowManager) -> None:
         await manager.async_init("test")
     assert len(manager.async_progress()) == 0
 
-    # The entry is created even if the flow is aborted
-    assert len(manager.mock_created_entries) == 1
+    # No entry should be created if the flow is aborted
+    assert len(manager.mock_created_entries) == 0
 
-    entry = manager.mock_created_entries[0]
-    assert entry["handler"] == "test"
-    assert entry["title"] == "Test Title"
-    assert entry["data"] == "Test Data"
-    assert entry["source"] is None
+
+async def test_create_calls_async_flow_removed(manager: MockFlowManager) -> None:
+    """Test create calling the async_flow_removed FlowManager method."""
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            return self.async_create_entry(title="Test Title", data="Test Data")
+
+    manager.async_flow_removed = Mock()
+    await manager.async_init("test")
+
+    manager.async_flow_removed.assert_called_once()
+
+    assert len(manager.async_progress()) == 0
+    assert len(manager.mock_created_entries) == 1
 
 
 async def test_discovery_init_flow(manager: MockFlowManager) -> None:
@@ -442,6 +464,9 @@ async def test_show_progress(hass: HomeAssistant, manager: MockFlowManager) -> N
     """Test show progress logic."""
     manager.hass = hass
     events = []
+    progress_update_events = async_capture_events(
+        hass, data_entry_flow.EVENT_DATA_ENTRY_FLOW_PROGRESS_UPDATE
+    )
     task_one_evt = asyncio.Event()
     task_two_evt = asyncio.Event()
     event_received_evt = asyncio.Event()
@@ -464,7 +489,9 @@ async def test_show_progress(hass: HomeAssistant, manager: MockFlowManager) -> N
                 await task_one_evt.wait()
 
             async def long_running_job_two() -> None:
+                self.async_update_progress(0.25)
                 await task_two_evt.wait()
+                self.async_update_progress(0.75)
                 self.data = {"title": "Hello"}
 
             uncompleted_task: asyncio.Task[None] | None = None
@@ -523,6 +550,12 @@ async def test_show_progress(hass: HomeAssistant, manager: MockFlowManager) -> N
     result = await manager.async_configure(result["flow_id"])
     assert result["type"] == data_entry_flow.FlowResultType.SHOW_PROGRESS
     assert result["progress_action"] == "task_two"
+    assert len(progress_update_events) == 1
+    assert progress_update_events[0].data == {
+        "handler": "test",
+        "flow_id": result["flow_id"],
+        "progress": 0.25,
+    }
 
     # Set task two done and wait for event
     task_two_evt.set()
@@ -533,6 +566,12 @@ async def test_show_progress(hass: HomeAssistant, manager: MockFlowManager) -> N
         "handler": "test",
         "flow_id": result["flow_id"],
         "refresh": True,
+    }
+    assert len(progress_update_events) == 2
+    assert progress_update_events[1].data == {
+        "handler": "test",
+        "flow_id": result["flow_id"],
+        "progress": 0.75,
     }
 
     # Frontend refreshes the flow
@@ -930,12 +969,34 @@ async def test_configure_raises_unknown_flow_if_not_in_progress(
         await manager.async_configure("wrong_flow_id")
 
 
-async def test_abort_raises_unknown_flow_if_not_in_progress(
+async def test_manager_abort_raises_unknown_flow_if_not_in_progress(
     manager: MockFlowManager,
 ) -> None:
     """Test abort raises UnknownFlow if the flow is not in progress."""
     with pytest.raises(data_entry_flow.UnknownFlow):
-        await manager.async_abort("wrong_flow_id")
+        manager.async_abort("wrong_flow_id")
+
+
+async def test_manager_abort_calls_async_flow_removed(manager: MockFlowManager) -> None:
+    """Test abort calling the async_flow_removed FlowManager method."""
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            return self.async_show_form(step_id="init")
+
+    manager.async_flow_removed = Mock()
+    result = await manager.async_init("test")
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    manager.async_flow_removed.assert_not_called()
+
+    manager.async_abort(result["flow_id"])
+    manager.async_flow_removed.assert_called_once()
+
+    assert len(manager.async_progress()) == 0
+    assert len(manager.mock_created_entries) == 0
 
 
 @pytest.mark.parametrize(

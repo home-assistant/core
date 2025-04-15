@@ -35,7 +35,7 @@ async def validate_input(data):
         lon = weather_data.lon
 
     return {
-        CONF_TITLE: weather_data.metadata.get("location"),
+        CONF_TITLE: weather_data.metadata.location,
         CONF_STATION: weather_data.station_id,
         CONF_LATITUDE: lat,
         CONF_LONGITUDE: lon,
