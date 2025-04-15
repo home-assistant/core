@@ -65,7 +65,7 @@ rules:
   docs-use-cases: done
   dynamic-devices:
     status: todo
-    comment: recheck dynamic devices logic
+    comment: create entities on runtime instead of triggering a reload
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default:
