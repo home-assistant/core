@@ -101,7 +101,7 @@ HEATER_DESCRIPTIONS: tuple[EheimDigitalNumberDescription[EheimDigitalHeater], ..
         device_class=NumberDeviceClass.TEMPERATURE,
         uom_fn=lambda device: (
             UnitOfTemperature.CELSIUS
-            if device.temperature_unit == HeaterUnit.CELSIUS
+            if device.temperature_unit is HeaterUnit.CELSIUS
             else UnitOfTemperature.FAHRENHEIT
         ),
         value_fn=lambda device: device.night_temperature_offset,
