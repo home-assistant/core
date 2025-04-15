@@ -434,7 +434,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
                 self._reauth_entry, data=self._reauth_entry.data | config_data
             )
 
-        assert self._name is not None       
+        assert self._name is not None
         return self.async_create_entry(
             title=self._name,
             data=config_data,
