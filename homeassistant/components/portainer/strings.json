@@ -22,6 +22,9 @@
     "sensor": {
       "type": {
         "name": "Type"
+      },
+      "status": {
+        "name": "Status"
       }
     },
     "binary_sensor": {

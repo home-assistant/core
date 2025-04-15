@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import logging
 from typing import Any
+
+from pyportainer.models.docker import DockerContainer
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.const import EntityCategory
@@ -14,13 +15,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import PortainerConfigEntry
-from .coordinator import (
-    PortainerCoordinator,
-    PortainerCoordinatorData,  # Import the correct type
-)
-from .entity import PortainerEndpointEntity
-
-_LOGGER = logging.getLogger(__name__)
+from .coordinator import PortainerCoordinator, PortainerCoordinatorData
+from .entity import PortainerContainerEntity, PortainerEndpointEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -41,6 +37,16 @@ def get_type(data: PortainerCoordinatorData) -> str:
         3: "Azure",
     }.get(data.endpoint.type, "Unknown")
 
+
+CONTAINER_SENSORS: tuple[PortainerSensorEntityDescription, ...] = (
+    PortainerSensorEntityDescription(
+        key="status",
+        translation_key="status",
+        icon="mdi:timer",
+        state_fn=lambda data: data.status,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+)
 
 UTILIZATION_SENSORS: tuple[PortainerSensorEntityDescription, ...] = (
     PortainerSensorEntityDescription(
@@ -75,6 +81,21 @@ async def async_setup_entry(
             ]
         )
 
+        for index, container in enumerate(endpoint.containers):
+            entities.extend(
+                [
+                    PortainerContainerSensor(
+                        coordinator=portainer,
+                        entry=entry,
+                        entity_description=entity_description,
+                        device_info=container,
+                        via_device=endpoint,
+                        key=index,
+                    )
+                    for entity_description in CONTAINER_SENSORS
+                ]
+            )
+
     async_add_entities(entities, True)
 
 
@@ -105,6 +126,46 @@ class PortainerEndpointSensor(PortainerEndpointEntity, SensorEntity):
         except KeyError:
             return
 
+        self._attr_native_value = self.entity_description.state_fn(self._device_info)
+        if self.entity_description.attributes_fn is not None:
+            self._attr_extra_state_attributes = self.entity_description.attributes_fn(
+                self._device_info
+            )
+
+        super()._handle_coordinator_update()
+
+
+class PortainerContainerSensor(PortainerContainerEntity, SensorEntity):
+    """Representation of a Portainer container sensor."""
+
+    entity_description: PortainerSensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: PortainerCoordinator,
+        entry: PortainerConfigEntry,
+        entity_description: PortainerSensorEntityDescription,
+        device_info: DockerContainer,
+        via_device: PortainerCoordinatorData,
+        key: int,
+    ) -> None:
+        """Initialize the Portainer container sensor."""
+        self.entity_description = entity_description
+        super().__init__(device_info, entry, coordinator, via_device, key)
+
+        self._attr_unique_id = f"{entity_description.key} {device_info.id}"
+
+    @callback
+    def _handle_coordinator_update(self):
+        """Handle updated data from the coordinator."""
+        try:
+            self._device_info = self.coordinator.endpoints[self.endpoint_id].containers[
+                self.key
+            ]
+        except (KeyError, IndexError):
+            return
+
+        # Update the native value and extra state attributes
         self._attr_native_value = self.entity_description.state_fn(self._device_info)
         if self.entity_description.attributes_fn is not None:
             self._attr_extra_state_attributes = self.entity_description.attributes_fn(
