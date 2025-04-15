@@ -73,7 +73,7 @@ def mock_power_sensor() -> Mock:
     sensor.raw_data = {
         "fibaro_id": 1,
         "name": "Test sensor",
-        "properties": {"power": 6.6},
+        "properties": {"power": 6.6, "password": "mysecret"},
     }
     value_mock = Mock()
     value_mock.has_value = False

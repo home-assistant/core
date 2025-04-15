@@ -48,6 +48,7 @@
         'fibaro_id': 1,
         'name': 'Test sensor',
         'properties': dict({
+          'password': '**REDACTED**',
           'power': 6.6,
         }),
       }),
