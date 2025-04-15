@@ -53,7 +53,7 @@
       },
       "name_conflict": {
         "title": "Name conflict",
-        "description": "**The name `{name}` (MAC address: `{mac}`) is already being used by another device: {existing_title} (MAC address: `{existing_mac}`)**\n\nTo continue, please choose one of the following options:\n\n**Migrate Configuration to New Device:** If this is a replacement, migrate the existing settings to the new device (`{mac}`).\n**Overwrite the Existing Configuration:** If this is not a replacement, delete the old configuration and use the new device instead.",
+        "description": "**The name `{name}` is already being used by another device: {existing_title} (MAC address: `{existing_mac}`)**\n\nTo continue, please choose one of the following options:\n\n**Migrate Configuration to New Device:** If this is a replacement, migrate the existing settings to the new device (`{mac}`).\n**Overwrite the Existing Configuration:** If this is not a replacement, delete the old configuration for `{existing_mac}` and use the new device instead.",
         "menu_options": {
           "name_conflict_migrate": "Migrate configuration to new device",
           "name_conflict_overwrite": "Overwrite the existing configuration"
