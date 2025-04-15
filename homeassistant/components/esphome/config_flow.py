@@ -370,7 +370,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             description_placeholders={
                 "existing_mac": format_mac(self._entry_with_name_conflict.unique_id),
                 "existing_title": self._entry_with_name_conflict.title,
-                "new_mac": format_mac(self.unique_id),
+                "mac": format_mac(self.unique_id),
                 "name": self._device_name,
             },
         )
@@ -386,6 +386,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         assert self._host is not None
         old_mac = format_mac(self._entry_with_name_conflict.unique_id)
         new_mac = format_mac(self.unique_id)
+        entry_id = self._entry_with_name_conflict.entry_id
         self.hass.config_entries.async_update_entry(
             self._entry_with_name_conflict,
             data={
@@ -396,9 +397,8 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_NOISE_PSK: self._noise_psk or "",
             },
         )
-        await async_replace_device(
-            self.hass, self._entry_with_name_conflict.entry_id, old_mac, new_mac
-        )
+        await async_replace_device(self.hass, entry_id, old_mac, new_mac)
+        self.hass.config_entries.async_schedule_reload(entry_id)
         return self.async_abort(
             reason="name_conflict_migrated",
             description_placeholders={
