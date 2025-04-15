@@ -236,7 +236,6 @@ async def test_data_cap_issues(
 
 async def test_1_1_to_1_2_migration(
     hass: HomeAssistant,
-    mock_onedrive_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     mock_folder: Folder,
 ) -> None:
@@ -251,12 +250,34 @@ async def test_1_1_to_1_2_migration(
         },
     )
 
+    await setup_integration(hass, old_config_entry)
+    assert old_config_entry.data[CONF_FOLDER_ID] == mock_folder.id
+    assert old_config_entry.data[CONF_FOLDER_NAME] == mock_folder.name
+    assert old_config_entry.minor_version == 2
+
+
+async def test_1_1_to_1_2_migration_failure(
+    hass: HomeAssistant,
+    mock_onedrive_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test migration from 1.1 to 1.2 failure."""
+    old_config_entry = MockConfigEntry(
+        unique_id="mock_drive_id",
+        title="John Doe's OneDrive",
+        domain=DOMAIN,
+        data={
+            "auth_implementation": mock_config_entry.data["auth_implementation"],
+            "token": mock_config_entry.data["token"],
+        },
+    )
+
     # will always 404 after migration, because of dummy id
     mock_onedrive_client.get_drive_item.side_effect = NotFoundError(404, "Not found")
 
     await setup_integration(hass, old_config_entry)
-    assert old_config_entry.data[CONF_FOLDER_ID] == mock_folder.id
-    assert old_config_entry.data[CONF_FOLDER_NAME] == mock_folder.name
+    assert old_config_entry.state is ConfigEntryState.MIGRATION_ERROR
+    assert old_config_entry.minor_version == 1
 
 
 async def test_migration_guard_against_major_downgrade(

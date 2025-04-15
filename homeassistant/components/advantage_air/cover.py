@@ -41,7 +41,7 @@ async def async_setup_entry(
                 entities.append(
                     AdvantageAirThingCover(instance, thing, CoverDeviceClass.BLIND)
                 )
-            elif thing["channelDipState"] == 3:  # 3 = "Garage door"
+            elif thing["channelDipState"] in [3, 10]:  # 3 & 10 = "Garage door"
                 entities.append(
                     AdvantageAirThingCover(instance, thing, CoverDeviceClass.GARAGE)
                 )

@@ -1,0 +1,173 @@
+{
+  "components": {
+    "main": {
+      "mediaPlayback": {
+        "supportedPlaybackCommands": {
+          "value": ["play", "pause", "stop"],
+          "timestamp": "2025-03-23T01:10:02.207Z"
+        },
+        "playbackStatus": {
+          "value": "playing",
+          "timestamp": "2025-03-23T01:19:44.622Z"
+        }
+      },
+      "samsungvd.groupInfo": {
+        "role": {
+          "value": "none",
+          "timestamp": "2025-03-23T01:17:10.965Z"
+        },
+        "channel": {
+          "value": "all",
+          "timestamp": "2025-03-23T01:17:10.965Z"
+        },
+        "masterName": {
+          "value": "",
+          "timestamp": "2025-03-23T01:17:10.965Z"
+        },
+        "status": {
+          "value": "single",
+          "timestamp": "2025-03-23T01:17:10.965Z"
+        }
+      },
+      "audioVolume": {
+        "volume": {
+          "value": 1,
+          "unit": "%",
+          "timestamp": "2025-03-23T01:17:13.754Z"
+        }
+      },
+      "ocf": {
+        "st": {
+          "value": "NONE",
+          "timestamp": "2024-12-18T21:07:25.406Z"
+        },
+        "mndt": {
+          "value": "2018-01-01",
+          "timestamp": "2024-12-18T21:07:25.406Z"
+        },
+        "mnfv": {
+          "value": "HW-Q80RWWB-1012.6",
+          "timestamp": "2024-12-18T21:07:25.406Z"
+        },
+        "mnhw": {
+          "value": "0-0",
+          "timestamp": "2024-12-18T21:07:25.406Z"
+        },
+        "di": {
+          "value": "afcf3b91-48fe-4c3b-ab44-ddff2a0a6577",
+          "timestamp": "2024-12-18T21:07:25.406Z"
+        },
+        "mnsl": {
+          "value": "http://www.samsung.com/sec/audio-video/",
+          "timestamp": "2024-12-18T21:07:25.406Z"
+        },
+        "dmv": {
+          "value": "res.1.1.0,sh.1.1.0",
+          "timestamp": "2024-12-18T21:07:25.406Z"
+        },
+        "n": {
+          "value": "[AV] Samsung Soundbar Q80R",
+          "timestamp": "2024-12-18T21:07:25.406Z"
+        },
+        "mnmo": {
+          "value": "Q80R",
+          "timestamp": "2024-12-18T21:07:25.406Z"
+        },
+        "vid": {
+          "value": "VD-NetworkAudio-001S",
+          "timestamp": "2024-12-18T21:07:25.406Z"
+        },
+        "mnmn": {
+          "value": "Samsung Electronics",
+          "timestamp": "2024-12-18T21:07:25.406Z"
+        },
+        "mnml": {
+          "value": "http://www.samsung.com",
+          "timestamp": "2024-12-18T21:07:25.406Z"
+        },
+        "mnpv": {
+          "value": "Tizen 4.0",
+          "timestamp": "2024-12-18T21:07:25.406Z"
+        },
+        "mnos": {
+          "value": "4.1.10",
+          "timestamp": "2024-12-18T21:07:25.406Z"
+        },
+        "pi": {
+          "value": "afcf3b91-48fe-4c3b-ab44-ddff2a0a6577",
+          "timestamp": "2024-12-18T21:07:25.406Z"
+        },
+        "icv": {
+          "value": "core.1.1.0",
+          "timestamp": "2024-12-18T21:07:25.406Z"
+        }
+      },
+      "mediaInputSource": {
+        "supportedInputSources": {
+          "value": ["wifi", "bluetooth", "HDMI1", "HDMI2", "digital"],
+          "timestamp": "2025-03-23T01:18:01.663Z"
+        },
+        "inputSource": {
+          "value": "wifi",
+          "timestamp": "2025-03-23T01:18:01.663Z"
+        }
+      },
+      "refresh": {},
+      "audioNotification": {},
+      "audioMute": {
+        "mute": {
+          "value": "unmuted",
+          "timestamp": "2025-03-23T01:17:11.024Z"
+        }
+      },
+      "execute": {
+        "data": {
+          "value": {
+            "payload": {
+              "rt": ["x.com.samsung.networkaudio.soundmode"],
+              "if": ["oic.if.a", "oic.if.baseline"],
+              "x.com.samsung.networkaudio.soundmode": "standard"
+            }
+          },
+          "data": {
+            "href": "/sec/networkaudio/soundmode"
+          },
+          "timestamp": "2023-07-16T23:16:55.582Z"
+        }
+      },
+      "samsungvd.audioInputSource": {
+        "supportedInputSources": {
+          "value": ["wifi", "bluetooth", "HDMI1", "HDMI2", "digital"],
+          "timestamp": "2025-03-23T01:18:01.663Z"
+        },
+        "inputSource": {
+          "value": "wificp",
+          "timestamp": "2025-03-23T01:18:01.663Z"
+        }
+      },
+      "switch": {
+        "switch": {
+          "value": "on",
+          "timestamp": "2025-03-23T01:19:44.837Z"
+        }
+      },
+      "audioTrackData": {
+        "totalTime": {
+          "value": null,
+          "timestamp": "2020-07-30T16:09:09.109Z"
+        },
+        "audioTrackData": {
+          "value": {
+            "title": "Never Gonna Give You Up",
+            "artist": "Rick Astley"
+          },
+          "timestamp": "2025-03-23T01:19:15.067Z"
+        },
+        "elapsedTime": {
+          "value": null,
+          "timestamp": "2020-07-30T16:09:09.109Z"
+        }
+      }
+    }
+  }
+}

@@ -23,11 +23,17 @@
       "gas_concentration": {
         "default": "mdi:gauge"
       },
+      "gas_detected": {
+        "default": "mdi:gas-burner"
+      },
       "lamp_life": {
         "default": "mdi:progress-wrench"
       },
       "operation": {
         "default": "mdi:cog-transfer"
+      },
+      "self_test": {
+        "default": "mdi:progress-wrench"
       },
       "tilt": {
         "default": "mdi:angle-acute"

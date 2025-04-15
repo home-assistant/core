@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from led_ble import LEDBLE
 
@@ -83,7 +83,7 @@ class LEDBLEEntity(CoordinatorEntity[DataUpdateCoordinator[None]], LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
-        brightness = kwargs.get(ATTR_BRIGHTNESS, self.brightness)
+        brightness = cast(int, kwargs.get(ATTR_BRIGHTNESS, self.brightness))
         if effect := kwargs.get(ATTR_EFFECT):
             await self._async_set_effect(effect, brightness)
             return

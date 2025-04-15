@@ -15,11 +15,13 @@ from homeassistant.components.webhook import (
     Response,
     async_generate_url,
     async_register,
+    async_unregister,
 )
 from homeassistant.const import CONF_IP_ADDRESS, CONF_WEBHOOK_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import DOMAIN
+from .const import AUTO_SHUT_OFF_EVENT_NAME, DOMAIN
 from .coordinator import WatergateConfigEntry, WatergateDataCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,8 +30,10 @@ WEBHOOK_TELEMETRY_TYPE = "telemetry"
 WEBHOOK_VALVE_TYPE = "valve"
 WEBHOOK_WIFI_CHANGED_TYPE = "wifi-changed"
 WEBHOOK_POWER_SUPPLY_CHANGED_TYPE = "power-supply-changed"
+WEBHOOK_AUTO_SHUT_OFF = "auto-shut-off-report"
 
 PLATFORMS: list[Platform] = [
+    Platform.EVENT,
     Platform.SENSOR,
     Platform.VALVE,
 ]
@@ -72,7 +76,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WatergateConfigEntry) ->
 async def async_unload_entry(hass: HomeAssistant, entry: WatergateConfigEntry) -> bool:
     """Unload a config entry."""
     webhook_id = entry.data[CONF_WEBHOOK_ID]
-    hass.components.webhook.async_unregister(webhook_id)
+    async_unregister(hass, webhook_id)
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
@@ -120,6 +124,10 @@ def get_webhook_handler(
             coordinator_data.networking.rssi = data.rssi
         elif body_type == WEBHOOK_POWER_SUPPLY_CHANGED_TYPE:
             coordinator_data.state.power_supply = data.supply
+        elif body_type == WEBHOOK_AUTO_SHUT_OFF:
+            async_dispatcher_send(
+                hass, AUTO_SHUT_OFF_EVENT_NAME.format(data.type.lower()), data
+            )
 
         coordinator.async_set_updated_data(coordinator_data)
 
