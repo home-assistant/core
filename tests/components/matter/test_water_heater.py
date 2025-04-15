@@ -58,12 +58,6 @@ async def test_water_heater(
     )
     assert state.attributes["supported_features"] & mask == mask
 
-    # test BoostState update from device
-    set_node_attribute(matter_node, 2, 148, 5, 1)
-    await trigger_subscription_callback(hass, matter_client)
-    state = hass.states.get("water_heater.water_heater")
-    assert state.state == STATE_HIGH_DEMAND
-
 
 @pytest.mark.parametrize("node_fixture", ["silabs_water_heater"])
 async def test_water_heater_set_temperature(
@@ -95,21 +89,46 @@ async def test_water_heater_set_temperature(
     )
     matter_client.write_attribute.reset_mock()
 
-    # test change mode to off
-    await hass.services.async_call(
-        "water_heater",
-        "set_operation_mode",
-        {"entity_id": "water_heater.water_heater", "operation_mode": STATE_OFF},
-        blocking=True,
+    @pytest.mark.parametrize("node_fixture", ["silabs_water_heater"])
+    @pytest.mark.parametrize(
+        ("operation_mode", "matter_attribute_value"),
+        [(STATE_OFF, 0), (STATE_ECO, 4), (STATE_HIGH_DEMAND, 4)],
     )
+    async def test_water_heater_set_operation_mode(
+        hass: HomeAssistant,
+        matter_client: MagicMock,
+        matter_node: MatterNode,
+        operation_mode: str,
+        matter_attribute_value: int,
+    ) -> None:
+        """Test water_heater set operation mode service."""
+        state = hass.states.get("water_heater.water_heater")
 
-    assert matter_client.write_attribute.call_count == 1
-    assert matter_client.write_attribute.call_args == call(
-        node_id=matter_node.node_id,
-        attribute_path=create_attribute_path_from_attribute(
-            endpoint_id=2,
-            attribute=clusters.Thermostat.Attributes.SystemMode,
-        ),
-        value=0,
-    )
-    matter_client.send_device_command.reset_mock()
+        assert state
+
+        # test change mode to each operation_mode
+        await hass.services.async_call(
+            "water_heater",
+            "set_operation_mode",
+            {
+                "entity_id": "water_heater.water_heater",
+                "operation_mode": operation_mode,
+            },
+            blocking=True,
+        )
+        assert matter_client.write_attribute.call_count == 1
+        assert matter_client.write_attribute.call_args == call(
+            node_id=matter_node.node_id,
+            attribute_path=create_attribute_path_from_attribute(
+                endpoint_id=2,
+                attribute=clusters.Thermostat.Attributes.SystemMode,
+            ),
+            value=matter_attribute_value,
+        )
+        matter_client.send_device_command.reset_mock()
+
+        # test BoostState update from device
+        set_node_attribute(matter_node, 2, 148, 5, 1)
+        await trigger_subscription_callback(hass, matter_client)
+        state = hass.states.get("water_heater.water_heater")
+        assert state.state == STATE_HIGH_DEMAND
