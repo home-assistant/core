@@ -120,6 +120,7 @@ class AppleTvMediaPlayer(
         """Initialize the Apple TV media player."""
         super().__init__(name, identifier, manager)
         self._playing: Playing | None = None
+        self._playing_last_updated: datetime | None = None
         self._app_list: dict[str, str] = {}
 
     @callback
