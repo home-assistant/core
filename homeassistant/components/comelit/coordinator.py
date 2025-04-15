@@ -104,7 +104,6 @@ class ComelitBaseCoordinator(DataUpdateCoordinator[T]):
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_authenticate",
-                translation_placeholders={"error": repr(err)},
             ) from err
 
     @abstractmethod
