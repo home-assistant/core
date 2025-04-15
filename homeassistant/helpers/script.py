@@ -629,6 +629,10 @@ class _ScriptRun:
         self, script: Script, *, parallel: bool = False
     ) -> None:
         """Execute a script."""
+        if not script.enabled:
+            self._log("Skipping disabled script: %s", script.name)
+            trace_set_result(enabled=False)
+            return
         result = await self._async_run_long_action(
             self._hass.async_create_task_internal(
                 script.async_run(
@@ -653,10 +657,6 @@ class _ScriptRun:
             """Run a script with a trace path."""
             trace_path_stack_cv.set(copy(trace_path_stack_cv.get()))
             with trace_path([str(idx), "sequence"]):
-                if not script.enabled:
-                    self._log("Skipping disabled parallel script: %s", script.name)
-                    trace_set_result(enabled=False)
-                    return
                 await self._async_run_script(script, parallel=True)
 
         results = await asyncio.gather(
