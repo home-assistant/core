@@ -168,10 +168,10 @@
           'target_heat_temperature': 16.0,
         }),
         'setpoints': dict({
-          'next_sp_from': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
-          'next_sp_temp': 18.6,
-          'this_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
-          'this_sp_temp': 16.0,
+          'next_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='America/Santiago')),
+          'next_sp_temp': 16.0,
+          'this_sp_from': HAFakeDatetime(2024, 7, 10, 7, 0, tzinfo=zoneinfo.ZoneInfo(key='America/Santiago')),
+          'this_sp_temp': 18.1,
         }),
         'temperature_status': dict({
           'is_available': True,
@@ -215,10 +215,10 @@
           'target_heat_temperature': 17.0,
         }),
         'setpoints': dict({
-          'next_sp_from': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
-          'next_sp_temp': 18.6,
-          'this_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
-          'this_sp_temp': 16.0,
+          'next_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='America/Santiago')),
+          'next_sp_temp': 16.0,
+          'this_sp_from': HAFakeDatetime(2024, 7, 10, 7, 0, tzinfo=zoneinfo.ZoneInfo(key='America/Santiago')),
+          'this_sp_temp': 18.1,
         }),
         'temperature_status': dict({
           'is_available': False,
@@ -257,19 +257,19 @@
         'activeFaults': tuple(
           dict({
             'fault_type': 'TempZoneActuatorLowBattery',
-            'since': '2022-03-02T04:50:20+00:00',
+            'since': '2022-03-02T04:50:20-03:00',
           }),
         ),
         'setpoint_status': dict({
           'setpoint_mode': 'TemporaryOverride',
           'target_heat_temperature': 21.0,
-          'until': '2022-03-07T19:00:00+00:00',
+          'until': '2022-03-07T16:00:00-03:00',
         }),
         'setpoints': dict({
-          'next_sp_from': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
-          'next_sp_temp': 18.6,
-          'this_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
-          'this_sp_temp': 16.0,
+          'next_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='America/Santiago')),
+          'next_sp_temp': 16.0,
+          'this_sp_from': HAFakeDatetime(2024, 7, 10, 7, 0, tzinfo=zoneinfo.ZoneInfo(key='America/Santiago')),
+          'this_sp_temp': 18.1,
         }),
         'temperature_status': dict({
           'is_available': True,
@@ -313,10 +313,10 @@
           'target_heat_temperature': 17.0,
         }),
         'setpoints': dict({
-          'next_sp_from': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
-          'next_sp_temp': 18.6,
-          'this_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
-          'this_sp_temp': 16.0,
+          'next_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='America/Santiago')),
+          'next_sp_temp': 16.0,
+          'this_sp_from': HAFakeDatetime(2024, 7, 10, 7, 0, tzinfo=zoneinfo.ZoneInfo(key='America/Santiago')),
+          'this_sp_temp': 18.1,
         }),
         'temperature_status': dict({
           'is_available': True,
@@ -360,10 +360,10 @@
           'target_heat_temperature': 17.0,
         }),
         'setpoints': dict({
-          'next_sp_from': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
-          'next_sp_temp': 18.6,
-          'this_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
-          'this_sp_temp': 16.0,
+          'next_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='America/Santiago')),
+          'next_sp_temp': 16.0,
+          'this_sp_from': HAFakeDatetime(2024, 7, 10, 7, 0, tzinfo=zoneinfo.ZoneInfo(key='America/Santiago')),
+          'this_sp_temp': 18.1,
         }),
         'temperature_status': dict({
           'is_available': True,
@@ -407,10 +407,10 @@
           'target_heat_temperature': 16.0,
         }),
         'setpoints': dict({
-          'next_sp_from': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
-          'next_sp_temp': 18.6,
-          'this_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
-          'this_sp_temp': 16.0,
+          'next_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='America/Santiago')),
+          'next_sp_temp': 16.0,
+          'this_sp_from': HAFakeDatetime(2024, 7, 10, 7, 0, tzinfo=zoneinfo.ZoneInfo(key='America/Santiago')),
+          'this_sp_temp': 18.1,
         }),
         'temperature_status': dict({
           'is_available': True,
@@ -450,7 +450,7 @@
         'activeFaults': tuple(
           dict({
             'fault_type': 'TempZoneActuatorCommunicationLost',
-            'since': '2022-03-02T15:56:01+00:00',
+            'since': '2022-03-02T15:56:01-03:00',
           }),
         ),
         'setpoint_status': dict({
@@ -458,10 +458,10 @@
           'target_heat_temperature': 17.0,
         }),
         'setpoints': dict({
-          'next_sp_from': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
-          'next_sp_temp': 18.6,
-          'this_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
-          'this_sp_temp': 16.0,
+          'next_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='America/Santiago')),
+          'next_sp_temp': 16.0,
+          'this_sp_from': HAFakeDatetime(2024, 7, 10, 7, 0, tzinfo=zoneinfo.ZoneInfo(key='America/Santiago')),
+          'this_sp_temp': 18.1,
         }),
         'temperature_status': dict({
           'is_available': True,

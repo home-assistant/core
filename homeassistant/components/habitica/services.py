@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict
-from datetime import datetime, time
+from datetime import UTC, date, datetime, time
 import logging
 from typing import TYPE_CHECKING, Any, cast
 from uuid import UUID, uuid4
@@ -17,6 +17,7 @@ from habiticalib import (
     NotAuthorizedError,
     NotFoundError,
     Reminders,
+    Repeat,
     Skill,
     Task,
     TaskData,
@@ -39,6 +40,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.selector import ConfigEntrySelector
+from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTR_ADD_CHECKLIST_ITEM,
@@ -53,6 +55,7 @@ from .const import (
     ATTR_DATA,
     ATTR_DIRECTION,
     ATTR_FREQUENCY,
+    ATTR_INTERVAL,
     ATTR_ITEM,
     ATTR_KEYWORD,
     ATTR_NOTES,
@@ -62,8 +65,12 @@ from .const import (
     ATTR_REMOVE_CHECKLIST_ITEM,
     ATTR_REMOVE_REMINDER,
     ATTR_REMOVE_TAG,
+    ATTR_REPEAT,
+    ATTR_REPEAT_MONTHLY,
     ATTR_SCORE_CHECKLIST_ITEM,
     ATTR_SKILL,
+    ATTR_START_DATE,
+    ATTR_STREAK,
     ATTR_TAG,
     ATTR_TARGET,
     ATTR_TASK,
@@ -77,8 +84,10 @@ from .const import (
     SERVICE_API_CALL,
     SERVICE_CANCEL_QUEST,
     SERVICE_CAST_SKILL,
+    SERVICE_CREATE_DAILY,
     SERVICE_CREATE_HABIT,
     SERVICE_CREATE_REWARD,
+    SERVICE_CREATE_TODO,
     SERVICE_GET_TASKS,
     SERVICE_LEAVE_QUEST,
     SERVICE_REJECT_QUEST,
@@ -86,9 +95,11 @@ from .const import (
     SERVICE_SCORE_REWARD,
     SERVICE_START_QUEST,
     SERVICE_TRANSFORMATION,
+    SERVICE_UPDATE_DAILY,
     SERVICE_UPDATE_HABIT,
     SERVICE_UPDATE_REWARD,
     SERVICE_UPDATE_TODO,
+    WEEK_DAYS,
 )
 from .coordinator import HabiticaConfigEntry
 
@@ -151,13 +162,24 @@ BASE_TASK_SCHEMA = vol.Schema(
         vol.Optional(ATTR_FREQUENCY): vol.Coerce(Frequency),
         vol.Optional(ATTR_DATE): cv.date,
         vol.Optional(ATTR_CLEAR_DATE): cv.boolean,
-        vol.Optional(ATTR_REMINDER): vol.All(cv.ensure_list, [cv.datetime]),
-        vol.Optional(ATTR_REMOVE_REMINDER): vol.All(cv.ensure_list, [cv.datetime]),
+        vol.Optional(ATTR_REMINDER): vol.All(
+            cv.ensure_list, [vol.Any(cv.datetime, cv.time)]
+        ),
+        vol.Optional(ATTR_REMOVE_REMINDER): vol.All(
+            cv.ensure_list, [vol.Any(cv.datetime, cv.time)]
+        ),
         vol.Optional(ATTR_CLEAR_REMINDER): cv.boolean,
         vol.Optional(ATTR_ADD_CHECKLIST_ITEM): vol.All(cv.ensure_list, [str]),
         vol.Optional(ATTR_REMOVE_CHECKLIST_ITEM): vol.All(cv.ensure_list, [str]),
         vol.Optional(ATTR_SCORE_CHECKLIST_ITEM): vol.All(cv.ensure_list, [str]),
         vol.Optional(ATTR_UNSCORE_CHECKLIST_ITEM): vol.All(cv.ensure_list, [str]),
+        vol.Optional(ATTR_START_DATE): cv.date,
+        vol.Optional(ATTR_INTERVAL): vol.All(int, vol.Range(0)),
+        vol.Optional(ATTR_REPEAT): vol.All(cv.ensure_list, [vol.In(WEEK_DAYS)]),
+        vol.Optional(ATTR_REPEAT_MONTHLY): vol.All(
+            cv.string, vol.In({"day_of_month", "day_of_week"})
+        ),
+        vol.Optional(ATTR_STREAK): vol.All(int, vol.Range(0)),
     }
 )
 
@@ -173,6 +195,12 @@ SERVICE_CREATE_TASK_SCHEMA = BASE_TASK_SCHEMA.extend(
         vol.Required(ATTR_NAME): cv.string,
     }
 )
+
+SERVICE_DAILY_SCHEMA = {
+    vol.Optional(ATTR_REMINDER): vol.All(cv.ensure_list, [cv.time]),
+    vol.Optional(ATTR_REMOVE_REMINDER): vol.All(cv.ensure_list, [cv.time]),
+}
+
 
 SERVICE_GET_TASKS_SCHEMA = vol.Schema(
     {
@@ -214,6 +242,9 @@ SERVICE_TASK_TYPE_MAP = {
     SERVICE_UPDATE_HABIT: TaskType.HABIT,
     SERVICE_CREATE_HABIT: TaskType.HABIT,
     SERVICE_UPDATE_TODO: TaskType.TODO,
+    SERVICE_CREATE_TODO: TaskType.TODO,
+    SERVICE_UPDATE_DAILY: TaskType.DAILY,
+    SERVICE_CREATE_DAILY: TaskType.DAILY,
 }
 
 
@@ -603,7 +634,9 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
             SERVICE_UPDATE_HABIT,
             SERVICE_UPDATE_REWARD,
             SERVICE_UPDATE_TODO,
+            SERVICE_UPDATE_DAILY,
         )
+        task_type = SERVICE_TASK_TYPE_MAP[call.service]
         current_task = None
 
         if is_update:
@@ -612,7 +645,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
                     task
                     for task in coordinator.data.tasks
                     if call.data[ATTR_TASK] in (str(task.id), task.alias, task.text)
-                    and task.Type is SERVICE_TASK_TYPE_MAP[call.service]
+                    and task.Type is task_type
                 )
             except StopIteration as e:
                 raise ServiceValidationError(
@@ -624,7 +657,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         data = Task()
 
         if not is_update:
-            data["type"] = SERVICE_TASK_TYPE_MAP[call.service]
+            data["type"] = task_type
 
         if (text := call.data.get(ATTR_RENAME)) or (text := call.data.get(ATTR_NAME)):
             data["text"] = text
@@ -700,6 +733,8 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
 
         if frequency := call.data.get(ATTR_FREQUENCY):
             data["frequency"] = frequency
+        else:
+            frequency = current_task.frequency if current_task else Frequency.WEEKLY
 
         if up_down := call.data.get(ATTR_UP_DOWN):
             data["up"] = "up" in up_down
@@ -750,29 +785,93 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         reminders = current_task.reminders if current_task else []
 
         if add_reminders := call.data.get(ATTR_REMINDER):
-            existing_reminder_datetimes = {
-                r.time.replace(tzinfo=None) for r in reminders
-            }
+            if task_type is TaskType.TODO:
+                existing_reminder_datetimes = {
+                    r.time.replace(tzinfo=None) for r in reminders
+                }
 
-            reminders.extend(
-                Reminders(id=uuid4(), time=r)
-                for r in add_reminders
-                if r not in existing_reminder_datetimes
-            )
+                reminders.extend(
+                    Reminders(id=uuid4(), time=r)
+                    for r in add_reminders
+                    if r not in existing_reminder_datetimes
+                )
+            if task_type is TaskType.DAILY:
+                existing_reminder_times = {
+                    r.time.time().replace(microsecond=0, second=0) for r in reminders
+                }
+
+                reminders.extend(
+                    Reminders(
+                        id=uuid4(),
+                        time=datetime.combine(date.today(), r, tzinfo=UTC),
+                    )
+                    for r in add_reminders
+                    if r not in existing_reminder_times
+                )
 
         if remove_reminder := call.data.get(ATTR_REMOVE_REMINDER):
-            reminders = list(
-                filter(
-                    lambda r: r.time.replace(tzinfo=None) not in remove_reminder,
-                    reminders,
+            if task_type is TaskType.TODO:
+                reminders = list(
+                    filter(
+                        lambda r: r.time.replace(tzinfo=None) not in remove_reminder,
+                        reminders,
+                    )
                 )
-            )
+            if task_type is TaskType.DAILY:
+                reminders = list(
+                    filter(
+                        lambda r: r.time.time().replace(second=0, microsecond=0)
+                        not in remove_reminder,
+                        reminders,
+                    )
+                )
 
         if clear_reminders := call.data.get(ATTR_CLEAR_REMINDER):
             reminders = []
 
         if add_reminders or remove_reminder or clear_reminders:
             data["reminders"] = reminders
+
+        if start_date := call.data.get(ATTR_START_DATE):
+            data["startDate"] = datetime.combine(start_date, time())
+        else:
+            start_date = (
+                current_task.startDate
+                if current_task and current_task.startDate
+                else dt_util.start_of_local_day()
+            )
+        if repeat := call.data.get(ATTR_REPEAT):
+            if frequency is Frequency.WEEKLY:
+                data["repeat"] = Repeat(**{d: d in repeat for d in WEEK_DAYS})
+            else:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="frequency_not_weekly",
+                )
+        if repeat_monthly := call.data.get(ATTR_REPEAT_MONTHLY):
+            if frequency is not Frequency.MONTHLY:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="frequency_not_monthly",
+                )
+
+            if repeat_monthly == "day_of_week":
+                weekday = start_date.weekday()
+                data["weeksOfMonth"] = [(start_date.day - 1) // 7]
+                data["repeat"] = Repeat(
+                    **{day: i == weekday for i, day in enumerate(WEEK_DAYS)}
+                )
+                data["daysOfMonth"] = []
+
+            else:
+                data["daysOfMonth"] = [start_date.day]
+                data["weeksOfMonth"] = []
+
+        if interval := call.data.get(ATTR_INTERVAL):
+            data["everyX"] = interval
+
+        if streak := call.data.get(ATTR_STREAK):
+            data["streak"] = streak
 
         try:
             if is_update:
@@ -803,7 +902,12 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         else:
             return response.data.to_dict(omit_none=True)
 
-    for service in (SERVICE_UPDATE_TODO, SERVICE_UPDATE_REWARD, SERVICE_UPDATE_HABIT):
+    for service in (
+        SERVICE_UPDATE_DAILY,
+        SERVICE_UPDATE_HABIT,
+        SERVICE_UPDATE_REWARD,
+        SERVICE_UPDATE_TODO,
+    ):
         hass.services.async_register(
             DOMAIN,
             service,
@@ -811,20 +915,19 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
             schema=SERVICE_UPDATE_TASK_SCHEMA,
             supports_response=SupportsResponse.ONLY,
         )
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_CREATE_REWARD,
-        create_or_update_task,
-        schema=SERVICE_CREATE_TASK_SCHEMA,
-        supports_response=SupportsResponse.ONLY,
-    )
-    hass.services.async_register(
-        DOMAIN,
+    for service in (
+        SERVICE_CREATE_DAILY,
         SERVICE_CREATE_HABIT,
-        create_or_update_task,
-        schema=SERVICE_CREATE_TASK_SCHEMA,
-        supports_response=SupportsResponse.ONLY,
-    )
+        SERVICE_CREATE_REWARD,
+        SERVICE_CREATE_TODO,
+    ):
+        hass.services.async_register(
+            DOMAIN,
+            service,
+            create_or_update_task,
+            schema=SERVICE_CREATE_TASK_SCHEMA,
+            supports_response=SupportsResponse.ONLY,
+        )
     hass.services.async_register(
         DOMAIN,
         SERVICE_API_CALL,

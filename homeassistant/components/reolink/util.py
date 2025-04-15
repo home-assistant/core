@@ -27,6 +27,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.storage import Store
+from homeassistant.helpers.translation import async_get_exception_message
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
@@ -78,11 +79,15 @@ def get_device_uid_and_ch(
     device: dr.DeviceEntry, host: ReolinkHost
 ) -> tuple[list[str], int | None, bool]:
     """Get the channel and the split device_uid from a reolink DeviceEntry."""
-    device_uid = [
-        dev_id[1].split("_") for dev_id in device.identifiers if dev_id[0] == DOMAIN
-    ][0]
-
+    device_uid = []
     is_chime = False
+
+    for dev_id in device.identifiers:
+        if dev_id[0] == DOMAIN:
+            device_uid = dev_id[1].split("_")
+            if device_uid[0] == host.unique_id:
+                break
+
     if len(device_uid) < 2:
         # NVR itself
         ch = None
@@ -95,6 +100,30 @@ def get_device_uid_and_ch(
         device_uid_part = "_".join(device_uid[1:])
         ch = host.api.channel_for_uid(device_uid_part)
     return (device_uid, ch, is_chime)
+
+
+def check_translation_key(err: ReolinkError) -> str | None:
+    """Check if the translation key from the upstream library is present."""
+    if not err.translation_key:
+        return None
+    if async_get_exception_message(DOMAIN, err.translation_key) == err.translation_key:
+        # translation key not found in strings.json
+        return None
+    return err.translation_key
+
+
+_EXCEPTION_TO_TRANSLATION_KEY = {
+    ApiError: "api_error",
+    InvalidContentTypeError: "invalid_content_type",
+    CredentialsInvalidError: "invalid_credentials",
+    LoginError: "login_error",
+    NoDataError: "no_data",
+    UnexpectedDataError: "unexpected_data",
+    NotSupportedError: "not_supported",
+    SubscriptionError: "subscription_error",
+    ReolinkConnectionError: "connection_error",
+    ReolinkTimeoutError: "timeout",
+}
 
 
 # Decorators
@@ -110,73 +139,14 @@ def raise_translated_error[**P, R](
         except InvalidParameterError as err:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key="invalid_parameter",
-                translation_placeholders={"err": str(err)},
-            ) from err
-        except ApiError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="api_error",
-                translation_placeholders={"err": str(err)},
-            ) from err
-        except InvalidContentTypeError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="invalid_content_type",
-                translation_placeholders={"err": str(err)},
-            ) from err
-        except CredentialsInvalidError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="invalid_credentials",
-                translation_placeholders={"err": str(err)},
-            ) from err
-        except LoginError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="login_error",
-                translation_placeholders={"err": str(err)},
-            ) from err
-        except NoDataError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="no_data",
-                translation_placeholders={"err": str(err)},
-            ) from err
-        except UnexpectedDataError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="unexpected_data",
-                translation_placeholders={"err": str(err)},
-            ) from err
-        except NotSupportedError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="not_supported",
-                translation_placeholders={"err": str(err)},
-            ) from err
-        except SubscriptionError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="subscription_error",
-                translation_placeholders={"err": str(err)},
-            ) from err
-        except ReolinkConnectionError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="connection_error",
-                translation_placeholders={"err": str(err)},
-            ) from err
-        except ReolinkTimeoutError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="timeout",
+                translation_key=check_translation_key(err) or "invalid_parameter",
                 translation_placeholders={"err": str(err)},
             ) from err
         except ReolinkError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="unexpected",
+                translation_key=check_translation_key(err)
+                or _EXCEPTION_TO_TRANSLATION_KEY.get(type(err), "unexpected"),
                 translation_placeholders={"err": str(err)},
             ) from err
 

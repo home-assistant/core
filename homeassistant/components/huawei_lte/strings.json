@@ -272,8 +272,8 @@
       "operator_search_mode": {
         "name": "Operator search mode",
         "state": {
-          "0": "Auto",
-          "1": "Manual"
+          "0": "[%key:common::state::auto%]",
+          "1": "[%key:common::state::manual%]"
         }
       },
       "preferred_network_mode": {

@@ -4,7 +4,7 @@ import pytest
 
 from homeassistant import setup
 from homeassistant.components import lock
-from homeassistant.components.lock import LockState
+from homeassistant.components.lock import LockEntityFeature, LockState
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_ENTITY_ID,
@@ -14,6 +14,8 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
+
+from tests.common import assert_setup_component
 
 OPTIMISTIC_LOCK_CONFIG = {
     "platform": "template",
@@ -718,3 +720,50 @@ async def test_unique_id(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all("lock")) == 1
+
+
+async def test_emtpy_action_config(hass: HomeAssistant) -> None:
+    """Test configuration with empty script."""
+    with assert_setup_component(1, lock.DOMAIN):
+        assert await setup.async_setup_component(
+            hass,
+            lock.DOMAIN,
+            {
+                lock.DOMAIN: {
+                    "platform": "template",
+                    "value_template": "{{ 0 == 1 }}",
+                    "lock": [],
+                    "unlock": [],
+                    "open": [],
+                    "name": "test_template_lock",
+                    "optimistic": True,
+                },
+            },
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("lock.test_template_lock")
+    assert state.attributes["supported_features"] == LockEntityFeature.OPEN
+
+    await hass.services.async_call(
+        lock.DOMAIN,
+        lock.SERVICE_UNLOCK,
+        {ATTR_ENTITY_ID: "lock.test_template_lock"},
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("lock.test_template_lock")
+    assert state.state == LockState.UNLOCKED
+
+    await hass.services.async_call(
+        lock.DOMAIN,
+        lock.SERVICE_LOCK,
+        {ATTR_ENTITY_ID: "lock.test_template_lock"},
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("lock.test_template_lock")
+    assert state.state == LockState.LOCKED

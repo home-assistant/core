@@ -1,6 +1,7 @@
 """Entity for Text-to-Speech."""
 
-from collections.abc import Mapping
+from collections.abc import AsyncGenerator, Mapping
+from dataclasses import dataclass
 from functools import partial
 from typing import Any, final
 
@@ -16,6 +17,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import dt as dt_util
 
@@ -29,6 +31,23 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
     "supported_languages",
     "supported_options",
 }
+
+
+@dataclass
+class TTSAudioRequest:
+    """Request to get TTS audio."""
+
+    language: str
+    options: dict[str, Any]
+    message_gen: AsyncGenerator[str]
+
+
+@dataclass
+class TTSAudioResponse:
+    """Response containing TTS audio stream."""
+
+    extension: str
+    data_gen: AsyncGenerator[bytes]
 
 
 class TextToSpeechEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
@@ -128,18 +147,36 @@ class TextToSpeechEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH
         )
 
     @final
-    async def internal_async_get_tts_audio(
-        self, message: str, language: str, options: dict[str, Any]
-    ) -> TtsAudioType:
+    async def internal_async_stream_tts_audio(
+        self, request: TTSAudioRequest
+    ) -> TTSAudioResponse:
         """Process an audio stream to TTS service.
 
         Only streaming content is allowed!
         """
         self.__last_tts_loaded = dt_util.utcnow().isoformat()
         self.async_write_ha_state()
-        return await self.async_get_tts_audio(
-            message=message, language=language, options=options
+        return await self.async_stream_tts_audio(request)
+
+    async def async_stream_tts_audio(
+        self, request: TTSAudioRequest
+    ) -> TTSAudioResponse:
+        """Generate speech from an incoming message.
+
+        The default implementation is backwards compatible with async_get_tts_audio.
+        """
+        message = "".join([chunk async for chunk in request.message_gen])
+        extension, data = await self.async_get_tts_audio(
+            message, request.language, request.options
         )
+
+        if extension is None or data is None:
+            raise HomeAssistantError(f"No TTS from {self.entity_id} for '{message}'")
+
+        async def data_gen() -> AsyncGenerator[bytes]:
+            yield data
+
+        return TTSAudioResponse(extension, data_gen())
 
     def get_tts_audio(
         self, message: str, language: str, options: dict[str, Any]

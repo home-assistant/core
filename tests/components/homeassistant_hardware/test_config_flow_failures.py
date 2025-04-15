@@ -45,6 +45,7 @@ async def fixture_mock_supervisor_client(supervisor_client: AsyncMock):
         STEP_PICK_FIRMWARE_THREAD,
     ],
 )
+@pytest.mark.usefixtures("addon_store_info")
 async def test_config_flow_cannot_probe_firmware(
     next_step: str, hass: HomeAssistant
 ) -> None:
@@ -660,6 +661,7 @@ async def test_options_flow_zigbee_to_thread_zha_configured(
     "ignore_translations_for_mock_domains",
     ["test_firmware_domain"],
 )
+@pytest.mark.usefixtures("addon_store_info")
 async def test_options_flow_thread_to_zigbee_otbr_configured(
     hass: HomeAssistant,
 ) -> None:

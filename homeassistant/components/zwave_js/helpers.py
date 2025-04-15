@@ -187,7 +187,7 @@ async def async_disable_server_logging_if_needed(
             old_server_log_level,
         )
         await driver.async_update_log_config(LogConfig(level=old_server_log_level))
-    await driver.client.disable_server_logging()
+    driver.client.disable_server_logging()
     LOGGER.info("Zwave-js-server logging is enabled")
 
 

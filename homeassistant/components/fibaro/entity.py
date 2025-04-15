@@ -36,9 +36,13 @@ class FibaroEntity(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
-        self.controller.register(self.fibaro_device.fibaro_id, self._update_callback)
+        self.async_on_remove(
+            self.controller.register(
+                self.fibaro_device.fibaro_id, self._update_callback
+            )
+        )
 
-    def _update_callback(self) -> None:
+    def _update_callback(self, fibaro_device: DeviceModel) -> None:
         """Update the state."""
         self.schedule_update_ha_state(True)
 

@@ -1,15 +1,13 @@
 """Tests for AVM Fritz!Box switch component."""
 
 from datetime import timedelta
-from unittest.mock import Mock, call
+from unittest.mock import Mock, call, patch
 
-from homeassistant.components.cover import (
-    ATTR_CURRENT_POSITION,
-    ATTR_POSITION,
-    DOMAIN as COVER_DOMAIN,
-    CoverState,
-)
+from syrupy import SnapshotAssertion
+
+from homeassistant.components.cover import ATTR_POSITION, DOMAIN as COVER_DOMAIN
 from homeassistant.components.fritzbox.const import DOMAIN as FB_DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICES,
@@ -18,8 +16,10 @@ from homeassistant.const import (
     SERVICE_SET_COVER_POSITION,
     SERVICE_STOP_COVER,
     STATE_UNKNOWN,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import (
@@ -30,28 +30,32 @@ from . import (
 )
 from .const import CONF_FAKE_NAME, MOCK_CONFIG
 
-from tests.common import async_fire_time_changed
+from tests.common import async_fire_time_changed, snapshot_platform
 
 ENTITY_ID = f"{COVER_DOMAIN}.{CONF_FAKE_NAME}"
 
 
-async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
+async def test_setup(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    fritz: Mock,
+) -> None:
     """Test setup of platform."""
     device = FritzDeviceCoverMock()
-    assert await setup_config_entry(
-        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
-    )
+    with patch("homeassistant.components.fritzbox.PLATFORMS", [Platform.COVER]):
+        entry = await setup_config_entry(
+            hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+        )
+    assert entry.state is ConfigEntryState.LOADED
 
-    state = hass.states.get(ENTITY_ID)
-    assert state
-    assert state.state == CoverState.OPEN
-    assert state.attributes[ATTR_CURRENT_POSITION] == 100
+    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
 
 async def test_unknown_position(hass: HomeAssistant, fritz: Mock) -> None:
     """Test cover with unknown position."""
     device = FritzDeviceCoverUnknownPositionMock()
-    assert await setup_config_entry(
+    await setup_config_entry(
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
@@ -63,7 +67,7 @@ async def test_unknown_position(hass: HomeAssistant, fritz: Mock) -> None:
 async def test_open_cover(hass: HomeAssistant, fritz: Mock) -> None:
     """Test opening the cover."""
     device = FritzDeviceCoverMock()
-    assert await setup_config_entry(
+    await setup_config_entry(
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
@@ -76,7 +80,7 @@ async def test_open_cover(hass: HomeAssistant, fritz: Mock) -> None:
 async def test_close_cover(hass: HomeAssistant, fritz: Mock) -> None:
     """Test closing the device."""
     device = FritzDeviceCoverMock()
-    assert await setup_config_entry(
+    await setup_config_entry(
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
@@ -89,7 +93,7 @@ async def test_close_cover(hass: HomeAssistant, fritz: Mock) -> None:
 async def test_set_position_cover(hass: HomeAssistant, fritz: Mock) -> None:
     """Test stopping the device."""
     device = FritzDeviceCoverMock()
-    assert await setup_config_entry(
+    await setup_config_entry(
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
@@ -105,7 +109,7 @@ async def test_set_position_cover(hass: HomeAssistant, fritz: Mock) -> None:
 async def test_stop_cover(hass: HomeAssistant, fritz: Mock) -> None:
     """Test stopping the device."""
     device = FritzDeviceCoverMock()
-    assert await setup_config_entry(
+    await setup_config_entry(
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
@@ -118,7 +122,7 @@ async def test_stop_cover(hass: HomeAssistant, fritz: Mock) -> None:
 async def test_discover_new_device(hass: HomeAssistant, fritz: Mock) -> None:
     """Test adding new discovered devices during runtime."""
     device = FritzDeviceCoverMock()
-    assert await setup_config_entry(
+    await setup_config_entry(
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 

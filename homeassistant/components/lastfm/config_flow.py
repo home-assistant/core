@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from pylast import LastFMNetwork, PyLastError, User, WSError
@@ -32,6 +33,8 @@ CONFIG_SCHEMA: vol.Schema = vol.Schema(
     }
 )
 
+_LOGGER = logging.getLogger(__name__)
+
 
 def get_lastfm_user(api_key: str, username: str) -> tuple[User, dict[str, str]]:
     """Get and validate lastFM User."""
@@ -49,7 +52,8 @@ def get_lastfm_user(api_key: str, username: str) -> tuple[User, dict[str, str]]:
             errors["base"] = "invalid_auth"
         else:
             errors["base"] = "unknown"
-    except Exception:  # noqa: BLE001
+    except Exception:
+        _LOGGER.exception("Unexpected exception")
         errors["base"] = "unknown"
     return user, errors
 

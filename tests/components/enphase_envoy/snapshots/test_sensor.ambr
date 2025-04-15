@@ -361,7 +361,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'balanced net power consumption',
+    'original_name': 'Balanced net power consumption',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -374,7 +374,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Envoy 1234 balanced net power consumption',
+      'friendly_name': 'Envoy 1234 Balanced net power consumption',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
@@ -1456,7 +1456,7 @@
     'state': '0.3',
   })
 # ---
-# name: test_sensor[envoy_1p_metered][sensor.envoy_1234_powerfactor_net_consumption_ct-entry]
+# name: test_sensor[envoy_1p_metered][sensor.envoy_1234_power_factor_net_consumption_ct-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1471,7 +1471,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.envoy_1234_powerfactor_net_consumption_ct',
+    'entity_id': 'sensor.envoy_1234_power_factor_net_consumption_ct',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1486,7 +1486,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
-    'original_name': 'Powerfactor net consumption CT',
+    'original_name': 'Power factor net consumption CT',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1495,22 +1495,22 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[envoy_1p_metered][sensor.envoy_1234_powerfactor_net_consumption_ct-state]
+# name: test_sensor[envoy_1p_metered][sensor.envoy_1234_power_factor_net_consumption_ct-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power_factor',
-      'friendly_name': 'Envoy 1234 Powerfactor net consumption CT',
+      'friendly_name': 'Envoy 1234 Power factor net consumption CT',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.envoy_1234_powerfactor_net_consumption_ct',
+    'entity_id': 'sensor.envoy_1234_power_factor_net_consumption_ct',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.21',
   })
 # ---
-# name: test_sensor[envoy_1p_metered][sensor.envoy_1234_powerfactor_production_ct-entry]
+# name: test_sensor[envoy_1p_metered][sensor.envoy_1234_power_factor_production_ct-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1525,7 +1525,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct',
+    'entity_id': 'sensor.envoy_1234_power_factor_production_ct',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1540,7 +1540,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
-    'original_name': 'powerfactor production CT',
+    'original_name': 'Power factor production CT',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1549,15 +1549,15 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[envoy_1p_metered][sensor.envoy_1234_powerfactor_production_ct-state]
+# name: test_sensor[envoy_1p_metered][sensor.envoy_1234_power_factor_production_ct-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power_factor',
-      'friendly_name': 'Envoy 1234 powerfactor production CT',
+      'friendly_name': 'Envoy 1234 Power factor production CT',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct',
+    'entity_id': 'sensor.envoy_1234_power_factor_production_ct',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2519,7 +2519,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'balanced net power consumption',
+    'original_name': 'Balanced net power consumption',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -2532,7 +2532,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Envoy 1234 balanced net power consumption',
+      'friendly_name': 'Envoy 1234 Balanced net power consumption',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
@@ -5374,7 +5374,7 @@
     'state': '0.3',
   })
 # ---
-# name: test_sensor[envoy_acb_batt][sensor.envoy_1234_powerfactor_net_consumption_ct-entry]
+# name: test_sensor[envoy_acb_batt][sensor.envoy_1234_power_factor_net_consumption_ct-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5389,7 +5389,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.envoy_1234_powerfactor_net_consumption_ct',
+    'entity_id': 'sensor.envoy_1234_power_factor_net_consumption_ct',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -5404,7 +5404,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
-    'original_name': 'Powerfactor net consumption CT',
+    'original_name': 'Power factor net consumption CT',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -5413,22 +5413,22 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[envoy_acb_batt][sensor.envoy_1234_powerfactor_net_consumption_ct-state]
+# name: test_sensor[envoy_acb_batt][sensor.envoy_1234_power_factor_net_consumption_ct-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power_factor',
-      'friendly_name': 'Envoy 1234 Powerfactor net consumption CT',
+      'friendly_name': 'Envoy 1234 Power factor net consumption CT',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.envoy_1234_powerfactor_net_consumption_ct',
+    'entity_id': 'sensor.envoy_1234_power_factor_net_consumption_ct',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.21',
   })
 # ---
-# name: test_sensor[envoy_acb_batt][sensor.envoy_1234_powerfactor_net_consumption_ct_l1-entry]
+# name: test_sensor[envoy_acb_batt][sensor.envoy_1234_power_factor_net_consumption_ct_l1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5443,7 +5443,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.envoy_1234_powerfactor_net_consumption_ct_l1',
+    'entity_id': 'sensor.envoy_1234_power_factor_net_consumption_ct_l1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -5458,7 +5458,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
-    'original_name': 'Powerfactor net consumption CT l1',
+    'original_name': 'Power factor net consumption CT l1',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -5467,22 +5467,22 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[envoy_acb_batt][sensor.envoy_1234_powerfactor_net_consumption_ct_l1-state]
+# name: test_sensor[envoy_acb_batt][sensor.envoy_1234_power_factor_net_consumption_ct_l1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power_factor',
-      'friendly_name': 'Envoy 1234 Powerfactor net consumption CT l1',
+      'friendly_name': 'Envoy 1234 Power factor net consumption CT l1',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.envoy_1234_powerfactor_net_consumption_ct_l1',
+    'entity_id': 'sensor.envoy_1234_power_factor_net_consumption_ct_l1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.22',
   })
 # ---
-# name: test_sensor[envoy_acb_batt][sensor.envoy_1234_powerfactor_net_consumption_ct_l2-entry]
+# name: test_sensor[envoy_acb_batt][sensor.envoy_1234_power_factor_net_consumption_ct_l2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5497,7 +5497,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.envoy_1234_powerfactor_net_consumption_ct_l2',
+    'entity_id': 'sensor.envoy_1234_power_factor_net_consumption_ct_l2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -5512,7 +5512,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
-    'original_name': 'Powerfactor net consumption CT l2',
+    'original_name': 'Power factor net consumption CT l2',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -5521,22 +5521,22 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[envoy_acb_batt][sensor.envoy_1234_powerfactor_net_consumption_ct_l2-state]
+# name: test_sensor[envoy_acb_batt][sensor.envoy_1234_power_factor_net_consumption_ct_l2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power_factor',
-      'friendly_name': 'Envoy 1234 Powerfactor net consumption CT l2',
+      'friendly_name': 'Envoy 1234 Power factor net consumption CT l2',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.envoy_1234_powerfactor_net_consumption_ct_l2',
+    'entity_id': 'sensor.envoy_1234_power_factor_net_consumption_ct_l2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.23',
   })
 # ---
-# name: test_sensor[envoy_acb_batt][sensor.envoy_1234_powerfactor_net_consumption_ct_l3-entry]
+# name: test_sensor[envoy_acb_batt][sensor.envoy_1234_power_factor_net_consumption_ct_l3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5551,7 +5551,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.envoy_1234_powerfactor_net_consumption_ct_l3',
+    'entity_id': 'sensor.envoy_1234_power_factor_net_consumption_ct_l3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -5566,7 +5566,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
-    'original_name': 'Powerfactor net consumption CT l3',
+    'original_name': 'Power factor net consumption CT l3',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -5575,22 +5575,22 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[envoy_acb_batt][sensor.envoy_1234_powerfactor_net_consumption_ct_l3-state]
+# name: test_sensor[envoy_acb_batt][sensor.envoy_1234_power_factor_net_consumption_ct_l3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power_factor',
-      'friendly_name': 'Envoy 1234 Powerfactor net consumption CT l3',
+      'friendly_name': 'Envoy 1234 Power factor net consumption CT l3',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.envoy_1234_powerfactor_net_consumption_ct_l3',
+    'entity_id': 'sensor.envoy_1234_power_factor_net_consumption_ct_l3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.24',
   })
 # ---
-# name: test_sensor[envoy_acb_batt][sensor.envoy_1234_powerfactor_production_ct-entry]
+# name: test_sensor[envoy_acb_batt][sensor.envoy_1234_power_factor_production_ct-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5605,7 +5605,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct',
+    'entity_id': 'sensor.envoy_1234_power_factor_production_ct',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -5620,7 +5620,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
-    'original_name': 'powerfactor production CT',
+    'original_name': 'Power factor production CT',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -5629,22 +5629,22 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[envoy_acb_batt][sensor.envoy_1234_powerfactor_production_ct-state]
+# name: test_sensor[envoy_acb_batt][sensor.envoy_1234_power_factor_production_ct-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power_factor',
-      'friendly_name': 'Envoy 1234 powerfactor production CT',
+      'friendly_name': 'Envoy 1234 Power factor production CT',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct',
+    'entity_id': 'sensor.envoy_1234_power_factor_production_ct',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.11',
   })
 # ---
-# name: test_sensor[envoy_acb_batt][sensor.envoy_1234_powerfactor_production_ct_l1-entry]
+# name: test_sensor[envoy_acb_batt][sensor.envoy_1234_power_factor_production_ct_l1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5659,7 +5659,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct_l1',
+    'entity_id': 'sensor.envoy_1234_power_factor_production_ct_l1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -5674,7 +5674,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
-    'original_name': 'Powerfactor production CT l1',
+    'original_name': 'Power factor production CT l1',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -5683,22 +5683,22 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[envoy_acb_batt][sensor.envoy_1234_powerfactor_production_ct_l1-state]
+# name: test_sensor[envoy_acb_batt][sensor.envoy_1234_power_factor_production_ct_l1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power_factor',
-      'friendly_name': 'Envoy 1234 Powerfactor production CT l1',
+      'friendly_name': 'Envoy 1234 Power factor production CT l1',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct_l1',
+    'entity_id': 'sensor.envoy_1234_power_factor_production_ct_l1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.12',
   })
 # ---
-# name: test_sensor[envoy_acb_batt][sensor.envoy_1234_powerfactor_production_ct_l2-entry]
+# name: test_sensor[envoy_acb_batt][sensor.envoy_1234_power_factor_production_ct_l2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5713,7 +5713,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct_l2',
+    'entity_id': 'sensor.envoy_1234_power_factor_production_ct_l2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -5728,7 +5728,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
-    'original_name': 'Powerfactor production CT l2',
+    'original_name': 'Power factor production CT l2',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -5737,22 +5737,22 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[envoy_acb_batt][sensor.envoy_1234_powerfactor_production_ct_l2-state]
+# name: test_sensor[envoy_acb_batt][sensor.envoy_1234_power_factor_production_ct_l2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power_factor',
-      'friendly_name': 'Envoy 1234 Powerfactor production CT l2',
+      'friendly_name': 'Envoy 1234 Power factor production CT l2',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct_l2',
+    'entity_id': 'sensor.envoy_1234_power_factor_production_ct_l2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.13',
   })
 # ---
-# name: test_sensor[envoy_acb_batt][sensor.envoy_1234_powerfactor_production_ct_l3-entry]
+# name: test_sensor[envoy_acb_batt][sensor.envoy_1234_power_factor_production_ct_l3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5767,7 +5767,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct_l3',
+    'entity_id': 'sensor.envoy_1234_power_factor_production_ct_l3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -5782,7 +5782,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
-    'original_name': 'Powerfactor production CT l3',
+    'original_name': 'Power factor production CT l3',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -5791,15 +5791,15 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[envoy_acb_batt][sensor.envoy_1234_powerfactor_production_ct_l3-state]
+# name: test_sensor[envoy_acb_batt][sensor.envoy_1234_power_factor_production_ct_l3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power_factor',
-      'friendly_name': 'Envoy 1234 Powerfactor production CT l3',
+      'friendly_name': 'Envoy 1234 Power factor production CT l3',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct_l3',
+    'entity_id': 'sensor.envoy_1234_power_factor_production_ct_l3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -7026,7 +7026,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'balanced net power consumption',
+    'original_name': 'Balanced net power consumption',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -7039,7 +7039,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Envoy 1234 balanced net power consumption',
+      'friendly_name': 'Envoy 1234 Balanced net power consumption',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
@@ -9881,7 +9881,7 @@
     'state': '0.3',
   })
 # ---
-# name: test_sensor[envoy_eu_batt][sensor.envoy_1234_powerfactor_net_consumption_ct-entry]
+# name: test_sensor[envoy_eu_batt][sensor.envoy_1234_power_factor_net_consumption_ct-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -9896,7 +9896,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.envoy_1234_powerfactor_net_consumption_ct',
+    'entity_id': 'sensor.envoy_1234_power_factor_net_consumption_ct',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -9911,7 +9911,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
-    'original_name': 'Powerfactor net consumption CT',
+    'original_name': 'Power factor net consumption CT',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -9920,22 +9920,22 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[envoy_eu_batt][sensor.envoy_1234_powerfactor_net_consumption_ct-state]
+# name: test_sensor[envoy_eu_batt][sensor.envoy_1234_power_factor_net_consumption_ct-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power_factor',
-      'friendly_name': 'Envoy 1234 Powerfactor net consumption CT',
+      'friendly_name': 'Envoy 1234 Power factor net consumption CT',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.envoy_1234_powerfactor_net_consumption_ct',
+    'entity_id': 'sensor.envoy_1234_power_factor_net_consumption_ct',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.21',
   })
 # ---
-# name: test_sensor[envoy_eu_batt][sensor.envoy_1234_powerfactor_net_consumption_ct_l1-entry]
+# name: test_sensor[envoy_eu_batt][sensor.envoy_1234_power_factor_net_consumption_ct_l1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -9950,7 +9950,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.envoy_1234_powerfactor_net_consumption_ct_l1',
+    'entity_id': 'sensor.envoy_1234_power_factor_net_consumption_ct_l1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -9965,7 +9965,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
-    'original_name': 'Powerfactor net consumption CT l1',
+    'original_name': 'Power factor net consumption CT l1',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -9974,22 +9974,22 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[envoy_eu_batt][sensor.envoy_1234_powerfactor_net_consumption_ct_l1-state]
+# name: test_sensor[envoy_eu_batt][sensor.envoy_1234_power_factor_net_consumption_ct_l1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power_factor',
-      'friendly_name': 'Envoy 1234 Powerfactor net consumption CT l1',
+      'friendly_name': 'Envoy 1234 Power factor net consumption CT l1',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.envoy_1234_powerfactor_net_consumption_ct_l1',
+    'entity_id': 'sensor.envoy_1234_power_factor_net_consumption_ct_l1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.22',
   })
 # ---
-# name: test_sensor[envoy_eu_batt][sensor.envoy_1234_powerfactor_net_consumption_ct_l2-entry]
+# name: test_sensor[envoy_eu_batt][sensor.envoy_1234_power_factor_net_consumption_ct_l2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -10004,7 +10004,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.envoy_1234_powerfactor_net_consumption_ct_l2',
+    'entity_id': 'sensor.envoy_1234_power_factor_net_consumption_ct_l2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -10019,7 +10019,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
-    'original_name': 'Powerfactor net consumption CT l2',
+    'original_name': 'Power factor net consumption CT l2',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -10028,22 +10028,22 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[envoy_eu_batt][sensor.envoy_1234_powerfactor_net_consumption_ct_l2-state]
+# name: test_sensor[envoy_eu_batt][sensor.envoy_1234_power_factor_net_consumption_ct_l2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power_factor',
-      'friendly_name': 'Envoy 1234 Powerfactor net consumption CT l2',
+      'friendly_name': 'Envoy 1234 Power factor net consumption CT l2',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.envoy_1234_powerfactor_net_consumption_ct_l2',
+    'entity_id': 'sensor.envoy_1234_power_factor_net_consumption_ct_l2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.23',
   })
 # ---
-# name: test_sensor[envoy_eu_batt][sensor.envoy_1234_powerfactor_net_consumption_ct_l3-entry]
+# name: test_sensor[envoy_eu_batt][sensor.envoy_1234_power_factor_net_consumption_ct_l3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -10058,7 +10058,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.envoy_1234_powerfactor_net_consumption_ct_l3',
+    'entity_id': 'sensor.envoy_1234_power_factor_net_consumption_ct_l3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -10073,7 +10073,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
-    'original_name': 'Powerfactor net consumption CT l3',
+    'original_name': 'Power factor net consumption CT l3',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -10082,22 +10082,22 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[envoy_eu_batt][sensor.envoy_1234_powerfactor_net_consumption_ct_l3-state]
+# name: test_sensor[envoy_eu_batt][sensor.envoy_1234_power_factor_net_consumption_ct_l3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power_factor',
-      'friendly_name': 'Envoy 1234 Powerfactor net consumption CT l3',
+      'friendly_name': 'Envoy 1234 Power factor net consumption CT l3',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.envoy_1234_powerfactor_net_consumption_ct_l3',
+    'entity_id': 'sensor.envoy_1234_power_factor_net_consumption_ct_l3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.24',
   })
 # ---
-# name: test_sensor[envoy_eu_batt][sensor.envoy_1234_powerfactor_production_ct-entry]
+# name: test_sensor[envoy_eu_batt][sensor.envoy_1234_power_factor_production_ct-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -10112,7 +10112,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct',
+    'entity_id': 'sensor.envoy_1234_power_factor_production_ct',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -10127,7 +10127,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
-    'original_name': 'powerfactor production CT',
+    'original_name': 'Power factor production CT',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -10136,22 +10136,22 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[envoy_eu_batt][sensor.envoy_1234_powerfactor_production_ct-state]
+# name: test_sensor[envoy_eu_batt][sensor.envoy_1234_power_factor_production_ct-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power_factor',
-      'friendly_name': 'Envoy 1234 powerfactor production CT',
+      'friendly_name': 'Envoy 1234 Power factor production CT',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct',
+    'entity_id': 'sensor.envoy_1234_power_factor_production_ct',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.11',
   })
 # ---
-# name: test_sensor[envoy_eu_batt][sensor.envoy_1234_powerfactor_production_ct_l1-entry]
+# name: test_sensor[envoy_eu_batt][sensor.envoy_1234_power_factor_production_ct_l1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -10166,7 +10166,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct_l1',
+    'entity_id': 'sensor.envoy_1234_power_factor_production_ct_l1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -10181,7 +10181,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
-    'original_name': 'Powerfactor production CT l1',
+    'original_name': 'Power factor production CT l1',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -10190,22 +10190,22 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[envoy_eu_batt][sensor.envoy_1234_powerfactor_production_ct_l1-state]
+# name: test_sensor[envoy_eu_batt][sensor.envoy_1234_power_factor_production_ct_l1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power_factor',
-      'friendly_name': 'Envoy 1234 Powerfactor production CT l1',
+      'friendly_name': 'Envoy 1234 Power factor production CT l1',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct_l1',
+    'entity_id': 'sensor.envoy_1234_power_factor_production_ct_l1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.12',
   })
 # ---
-# name: test_sensor[envoy_eu_batt][sensor.envoy_1234_powerfactor_production_ct_l2-entry]
+# name: test_sensor[envoy_eu_batt][sensor.envoy_1234_power_factor_production_ct_l2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -10220,7 +10220,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct_l2',
+    'entity_id': 'sensor.envoy_1234_power_factor_production_ct_l2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -10235,7 +10235,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
-    'original_name': 'Powerfactor production CT l2',
+    'original_name': 'Power factor production CT l2',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -10244,22 +10244,22 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[envoy_eu_batt][sensor.envoy_1234_powerfactor_production_ct_l2-state]
+# name: test_sensor[envoy_eu_batt][sensor.envoy_1234_power_factor_production_ct_l2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power_factor',
-      'friendly_name': 'Envoy 1234 Powerfactor production CT l2',
+      'friendly_name': 'Envoy 1234 Power factor production CT l2',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct_l2',
+    'entity_id': 'sensor.envoy_1234_power_factor_production_ct_l2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.13',
   })
 # ---
-# name: test_sensor[envoy_eu_batt][sensor.envoy_1234_powerfactor_production_ct_l3-entry]
+# name: test_sensor[envoy_eu_batt][sensor.envoy_1234_power_factor_production_ct_l3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -10274,7 +10274,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct_l3',
+    'entity_id': 'sensor.envoy_1234_power_factor_production_ct_l3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -10289,7 +10289,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
-    'original_name': 'Powerfactor production CT l3',
+    'original_name': 'Power factor production CT l3',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -10298,15 +10298,15 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[envoy_eu_batt][sensor.envoy_1234_powerfactor_production_ct_l3-state]
+# name: test_sensor[envoy_eu_batt][sensor.envoy_1234_power_factor_production_ct_l3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power_factor',
-      'friendly_name': 'Envoy 1234 Powerfactor production CT l3',
+      'friendly_name': 'Envoy 1234 Power factor production CT l3',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct_l3',
+    'entity_id': 'sensor.envoy_1234_power_factor_production_ct_l3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -11630,7 +11630,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'balanced net power consumption',
+    'original_name': 'Balanced net power consumption',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -11643,7 +11643,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Envoy 1234 balanced net power consumption',
+      'friendly_name': 'Envoy 1234 Balanced net power consumption',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
@@ -11688,7 +11688,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'balanced net power consumption l1',
+    'original_name': 'Balanced net power consumption l1',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -11701,7 +11701,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Envoy 1234 balanced net power consumption l1',
+      'friendly_name': 'Envoy 1234 Balanced net power consumption l1',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
@@ -11746,7 +11746,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'balanced net power consumption l2',
+    'original_name': 'Balanced net power consumption l2',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -11759,7 +11759,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Envoy 1234 balanced net power consumption l2',
+      'friendly_name': 'Envoy 1234 Balanced net power consumption l2',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
@@ -11804,7 +11804,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'balanced net power consumption l3',
+    'original_name': 'Balanced net power consumption l3',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -11817,7 +11817,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Envoy 1234 balanced net power consumption l3',
+      'friendly_name': 'Envoy 1234 Balanced net power consumption l3',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
@@ -17547,7 +17547,7 @@
     'state': '0.3',
   })
 # ---
-# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_powerfactor_net_consumption_ct-entry]
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_power_factor_net_consumption_ct-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -17562,7 +17562,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.envoy_1234_powerfactor_net_consumption_ct',
+    'entity_id': 'sensor.envoy_1234_power_factor_net_consumption_ct',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -17577,7 +17577,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
-    'original_name': 'Powerfactor net consumption CT',
+    'original_name': 'Power factor net consumption CT',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -17586,22 +17586,22 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_powerfactor_net_consumption_ct-state]
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_power_factor_net_consumption_ct-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power_factor',
-      'friendly_name': 'Envoy 1234 Powerfactor net consumption CT',
+      'friendly_name': 'Envoy 1234 Power factor net consumption CT',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.envoy_1234_powerfactor_net_consumption_ct',
+    'entity_id': 'sensor.envoy_1234_power_factor_net_consumption_ct',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.21',
   })
 # ---
-# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_powerfactor_net_consumption_ct_l1-entry]
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_power_factor_net_consumption_ct_l1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -17616,7 +17616,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.envoy_1234_powerfactor_net_consumption_ct_l1',
+    'entity_id': 'sensor.envoy_1234_power_factor_net_consumption_ct_l1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -17631,7 +17631,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
-    'original_name': 'Powerfactor net consumption CT l1',
+    'original_name': 'Power factor net consumption CT l1',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -17640,22 +17640,22 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_powerfactor_net_consumption_ct_l1-state]
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_power_factor_net_consumption_ct_l1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power_factor',
-      'friendly_name': 'Envoy 1234 Powerfactor net consumption CT l1',
+      'friendly_name': 'Envoy 1234 Power factor net consumption CT l1',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.envoy_1234_powerfactor_net_consumption_ct_l1',
+    'entity_id': 'sensor.envoy_1234_power_factor_net_consumption_ct_l1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.22',
   })
 # ---
-# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_powerfactor_net_consumption_ct_l2-entry]
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_power_factor_net_consumption_ct_l2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -17670,7 +17670,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.envoy_1234_powerfactor_net_consumption_ct_l2',
+    'entity_id': 'sensor.envoy_1234_power_factor_net_consumption_ct_l2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -17685,7 +17685,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
-    'original_name': 'Powerfactor net consumption CT l2',
+    'original_name': 'Power factor net consumption CT l2',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -17694,22 +17694,22 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_powerfactor_net_consumption_ct_l2-state]
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_power_factor_net_consumption_ct_l2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power_factor',
-      'friendly_name': 'Envoy 1234 Powerfactor net consumption CT l2',
+      'friendly_name': 'Envoy 1234 Power factor net consumption CT l2',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.envoy_1234_powerfactor_net_consumption_ct_l2',
+    'entity_id': 'sensor.envoy_1234_power_factor_net_consumption_ct_l2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.23',
   })
 # ---
-# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_powerfactor_net_consumption_ct_l3-entry]
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_power_factor_net_consumption_ct_l3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -17724,7 +17724,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.envoy_1234_powerfactor_net_consumption_ct_l3',
+    'entity_id': 'sensor.envoy_1234_power_factor_net_consumption_ct_l3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -17739,7 +17739,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
-    'original_name': 'Powerfactor net consumption CT l3',
+    'original_name': 'Power factor net consumption CT l3',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -17748,22 +17748,22 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_powerfactor_net_consumption_ct_l3-state]
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_power_factor_net_consumption_ct_l3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power_factor',
-      'friendly_name': 'Envoy 1234 Powerfactor net consumption CT l3',
+      'friendly_name': 'Envoy 1234 Power factor net consumption CT l3',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.envoy_1234_powerfactor_net_consumption_ct_l3',
+    'entity_id': 'sensor.envoy_1234_power_factor_net_consumption_ct_l3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.24',
   })
 # ---
-# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_powerfactor_production_ct-entry]
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_power_factor_production_ct-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -17778,7 +17778,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct',
+    'entity_id': 'sensor.envoy_1234_power_factor_production_ct',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -17793,7 +17793,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
-    'original_name': 'powerfactor production CT',
+    'original_name': 'Power factor production CT',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -17802,22 +17802,22 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_powerfactor_production_ct-state]
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_power_factor_production_ct-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power_factor',
-      'friendly_name': 'Envoy 1234 powerfactor production CT',
+      'friendly_name': 'Envoy 1234 Power factor production CT',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct',
+    'entity_id': 'sensor.envoy_1234_power_factor_production_ct',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.11',
   })
 # ---
-# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_powerfactor_production_ct_l1-entry]
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_power_factor_production_ct_l1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -17832,7 +17832,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct_l1',
+    'entity_id': 'sensor.envoy_1234_power_factor_production_ct_l1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -17847,7 +17847,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
-    'original_name': 'Powerfactor production CT l1',
+    'original_name': 'Power factor production CT l1',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -17856,22 +17856,22 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_powerfactor_production_ct_l1-state]
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_power_factor_production_ct_l1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power_factor',
-      'friendly_name': 'Envoy 1234 Powerfactor production CT l1',
+      'friendly_name': 'Envoy 1234 Power factor production CT l1',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct_l1',
+    'entity_id': 'sensor.envoy_1234_power_factor_production_ct_l1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.12',
   })
 # ---
-# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_powerfactor_production_ct_l2-entry]
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_power_factor_production_ct_l2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -17886,7 +17886,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct_l2',
+    'entity_id': 'sensor.envoy_1234_power_factor_production_ct_l2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -17901,7 +17901,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
-    'original_name': 'Powerfactor production CT l2',
+    'original_name': 'Power factor production CT l2',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -17910,22 +17910,22 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_powerfactor_production_ct_l2-state]
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_power_factor_production_ct_l2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power_factor',
-      'friendly_name': 'Envoy 1234 Powerfactor production CT l2',
+      'friendly_name': 'Envoy 1234 Power factor production CT l2',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct_l2',
+    'entity_id': 'sensor.envoy_1234_power_factor_production_ct_l2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.13',
   })
 # ---
-# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_powerfactor_production_ct_l3-entry]
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_power_factor_production_ct_l3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -17940,7 +17940,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct_l3',
+    'entity_id': 'sensor.envoy_1234_power_factor_production_ct_l3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -17955,7 +17955,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
-    'original_name': 'Powerfactor production CT l3',
+    'original_name': 'Power factor production CT l3',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -17964,22 +17964,22 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_powerfactor_production_ct_l3-state]
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_power_factor_production_ct_l3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power_factor',
-      'friendly_name': 'Envoy 1234 Powerfactor production CT l3',
+      'friendly_name': 'Envoy 1234 Power factor production CT l3',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct_l3',
+    'entity_id': 'sensor.envoy_1234_power_factor_production_ct_l3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.14',
   })
 # ---
-# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_powerfactor_storage_ct-entry]
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_power_factor_storage_ct-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -17994,7 +17994,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.envoy_1234_powerfactor_storage_ct',
+    'entity_id': 'sensor.envoy_1234_power_factor_storage_ct',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -18009,7 +18009,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
-    'original_name': 'Powerfactor storage CT',
+    'original_name': 'Power factor storage CT',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -18018,22 +18018,22 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_powerfactor_storage_ct-state]
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_power_factor_storage_ct-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power_factor',
-      'friendly_name': 'Envoy 1234 Powerfactor storage CT',
+      'friendly_name': 'Envoy 1234 Power factor storage CT',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.envoy_1234_powerfactor_storage_ct',
+    'entity_id': 'sensor.envoy_1234_power_factor_storage_ct',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.23',
   })
 # ---
-# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_powerfactor_storage_ct_l1-entry]
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_power_factor_storage_ct_l1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -18048,7 +18048,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.envoy_1234_powerfactor_storage_ct_l1',
+    'entity_id': 'sensor.envoy_1234_power_factor_storage_ct_l1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -18063,7 +18063,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
-    'original_name': 'Powerfactor storage CT l1',
+    'original_name': 'Power factor storage CT l1',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -18072,22 +18072,22 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_powerfactor_storage_ct_l1-state]
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_power_factor_storage_ct_l1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power_factor',
-      'friendly_name': 'Envoy 1234 Powerfactor storage CT l1',
+      'friendly_name': 'Envoy 1234 Power factor storage CT l1',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.envoy_1234_powerfactor_storage_ct_l1',
+    'entity_id': 'sensor.envoy_1234_power_factor_storage_ct_l1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.32',
   })
 # ---
-# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_powerfactor_storage_ct_l2-entry]
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_power_factor_storage_ct_l2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -18102,7 +18102,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.envoy_1234_powerfactor_storage_ct_l2',
+    'entity_id': 'sensor.envoy_1234_power_factor_storage_ct_l2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -18117,7 +18117,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
-    'original_name': 'Powerfactor storage CT l2',
+    'original_name': 'Power factor storage CT l2',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -18126,22 +18126,22 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_powerfactor_storage_ct_l2-state]
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_power_factor_storage_ct_l2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power_factor',
-      'friendly_name': 'Envoy 1234 Powerfactor storage CT l2',
+      'friendly_name': 'Envoy 1234 Power factor storage CT l2',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.envoy_1234_powerfactor_storage_ct_l2',
+    'entity_id': 'sensor.envoy_1234_power_factor_storage_ct_l2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.23',
   })
 # ---
-# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_powerfactor_storage_ct_l3-entry]
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_power_factor_storage_ct_l3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -18156,7 +18156,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.envoy_1234_powerfactor_storage_ct_l3',
+    'entity_id': 'sensor.envoy_1234_power_factor_storage_ct_l3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -18171,7 +18171,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
-    'original_name': 'Powerfactor storage CT l3',
+    'original_name': 'Power factor storage CT l3',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -18180,15 +18180,15 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_powerfactor_storage_ct_l3-state]
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_power_factor_storage_ct_l3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power_factor',
-      'friendly_name': 'Envoy 1234 Powerfactor storage CT l3',
+      'friendly_name': 'Envoy 1234 Power factor storage CT l3',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.envoy_1234_powerfactor_storage_ct_l3',
+    'entity_id': 'sensor.envoy_1234_power_factor_storage_ct_l3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -19586,7 +19586,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'balanced net power consumption',
+    'original_name': 'Balanced net power consumption',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -19599,7 +19599,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Envoy 1234 balanced net power consumption',
+      'friendly_name': 'Envoy 1234 Balanced net power consumption',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
@@ -19644,7 +19644,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'balanced net power consumption l1',
+    'original_name': 'Balanced net power consumption l1',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -19657,7 +19657,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Envoy 1234 balanced net power consumption l1',
+      'friendly_name': 'Envoy 1234 Balanced net power consumption l1',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
@@ -19702,7 +19702,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'balanced net power consumption l2',
+    'original_name': 'Balanced net power consumption l2',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -19715,7 +19715,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Envoy 1234 balanced net power consumption l2',
+      'friendly_name': 'Envoy 1234 Balanced net power consumption l2',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
@@ -19760,7 +19760,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'balanced net power consumption l3',
+    'original_name': 'Balanced net power consumption l3',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -19773,7 +19773,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Envoy 1234 balanced net power consumption l3',
+      'friendly_name': 'Envoy 1234 Balanced net power consumption l3',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
@@ -24065,7 +24065,7 @@
     'state': '0.3',
   })
 # ---
-# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_powerfactor_net_consumption_ct-entry]
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_power_factor_net_consumption_ct-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -24080,7 +24080,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.envoy_1234_powerfactor_net_consumption_ct',
+    'entity_id': 'sensor.envoy_1234_power_factor_net_consumption_ct',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -24095,7 +24095,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
-    'original_name': 'Powerfactor net consumption CT',
+    'original_name': 'Power factor net consumption CT',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -24104,22 +24104,22 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_powerfactor_net_consumption_ct-state]
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_power_factor_net_consumption_ct-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power_factor',
-      'friendly_name': 'Envoy 1234 Powerfactor net consumption CT',
+      'friendly_name': 'Envoy 1234 Power factor net consumption CT',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.envoy_1234_powerfactor_net_consumption_ct',
+    'entity_id': 'sensor.envoy_1234_power_factor_net_consumption_ct',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.21',
   })
 # ---
-# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_powerfactor_net_consumption_ct_l1-entry]
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_power_factor_net_consumption_ct_l1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -24134,7 +24134,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.envoy_1234_powerfactor_net_consumption_ct_l1',
+    'entity_id': 'sensor.envoy_1234_power_factor_net_consumption_ct_l1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -24149,7 +24149,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
-    'original_name': 'Powerfactor net consumption CT l1',
+    'original_name': 'Power factor net consumption CT l1',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -24158,22 +24158,22 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_powerfactor_net_consumption_ct_l1-state]
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_power_factor_net_consumption_ct_l1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power_factor',
-      'friendly_name': 'Envoy 1234 Powerfactor net consumption CT l1',
+      'friendly_name': 'Envoy 1234 Power factor net consumption CT l1',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.envoy_1234_powerfactor_net_consumption_ct_l1',
+    'entity_id': 'sensor.envoy_1234_power_factor_net_consumption_ct_l1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.22',
   })
 # ---
-# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_powerfactor_net_consumption_ct_l2-entry]
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_power_factor_net_consumption_ct_l2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -24188,7 +24188,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.envoy_1234_powerfactor_net_consumption_ct_l2',
+    'entity_id': 'sensor.envoy_1234_power_factor_net_consumption_ct_l2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -24203,7 +24203,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
-    'original_name': 'Powerfactor net consumption CT l2',
+    'original_name': 'Power factor net consumption CT l2',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -24212,22 +24212,22 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_powerfactor_net_consumption_ct_l2-state]
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_power_factor_net_consumption_ct_l2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power_factor',
-      'friendly_name': 'Envoy 1234 Powerfactor net consumption CT l2',
+      'friendly_name': 'Envoy 1234 Power factor net consumption CT l2',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.envoy_1234_powerfactor_net_consumption_ct_l2',
+    'entity_id': 'sensor.envoy_1234_power_factor_net_consumption_ct_l2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.23',
   })
 # ---
-# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_powerfactor_net_consumption_ct_l3-entry]
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_power_factor_net_consumption_ct_l3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -24242,7 +24242,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.envoy_1234_powerfactor_net_consumption_ct_l3',
+    'entity_id': 'sensor.envoy_1234_power_factor_net_consumption_ct_l3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -24257,7 +24257,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
-    'original_name': 'Powerfactor net consumption CT l3',
+    'original_name': 'Power factor net consumption CT l3',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -24266,22 +24266,22 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_powerfactor_net_consumption_ct_l3-state]
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_power_factor_net_consumption_ct_l3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power_factor',
-      'friendly_name': 'Envoy 1234 Powerfactor net consumption CT l3',
+      'friendly_name': 'Envoy 1234 Power factor net consumption CT l3',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.envoy_1234_powerfactor_net_consumption_ct_l3',
+    'entity_id': 'sensor.envoy_1234_power_factor_net_consumption_ct_l3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.24',
   })
 # ---
-# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_powerfactor_production_ct-entry]
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_power_factor_production_ct-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -24296,7 +24296,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct',
+    'entity_id': 'sensor.envoy_1234_power_factor_production_ct',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -24311,7 +24311,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
-    'original_name': 'powerfactor production CT',
+    'original_name': 'Power factor production CT',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -24320,22 +24320,22 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_powerfactor_production_ct-state]
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_power_factor_production_ct-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power_factor',
-      'friendly_name': 'Envoy 1234 powerfactor production CT',
+      'friendly_name': 'Envoy 1234 Power factor production CT',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct',
+    'entity_id': 'sensor.envoy_1234_power_factor_production_ct',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.11',
   })
 # ---
-# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_powerfactor_production_ct_l1-entry]
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_power_factor_production_ct_l1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -24350,7 +24350,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct_l1',
+    'entity_id': 'sensor.envoy_1234_power_factor_production_ct_l1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -24365,7 +24365,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
-    'original_name': 'Powerfactor production CT l1',
+    'original_name': 'Power factor production CT l1',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -24374,22 +24374,22 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_powerfactor_production_ct_l1-state]
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_power_factor_production_ct_l1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power_factor',
-      'friendly_name': 'Envoy 1234 Powerfactor production CT l1',
+      'friendly_name': 'Envoy 1234 Power factor production CT l1',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct_l1',
+    'entity_id': 'sensor.envoy_1234_power_factor_production_ct_l1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.12',
   })
 # ---
-# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_powerfactor_production_ct_l2-entry]
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_power_factor_production_ct_l2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -24404,7 +24404,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct_l2',
+    'entity_id': 'sensor.envoy_1234_power_factor_production_ct_l2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -24419,7 +24419,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
-    'original_name': 'Powerfactor production CT l2',
+    'original_name': 'Power factor production CT l2',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -24428,22 +24428,22 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_powerfactor_production_ct_l2-state]
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_power_factor_production_ct_l2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power_factor',
-      'friendly_name': 'Envoy 1234 Powerfactor production CT l2',
+      'friendly_name': 'Envoy 1234 Power factor production CT l2',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct_l2',
+    'entity_id': 'sensor.envoy_1234_power_factor_production_ct_l2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.13',
   })
 # ---
-# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_powerfactor_production_ct_l3-entry]
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_power_factor_production_ct_l3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -24458,7 +24458,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct_l3',
+    'entity_id': 'sensor.envoy_1234_power_factor_production_ct_l3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -24473,7 +24473,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
-    'original_name': 'Powerfactor production CT l3',
+    'original_name': 'Power factor production CT l3',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -24482,15 +24482,15 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_powerfactor_production_ct_l3-state]
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_power_factor_production_ct_l3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power_factor',
-      'friendly_name': 'Envoy 1234 Powerfactor production CT l3',
+      'friendly_name': 'Envoy 1234 Power factor production CT l3',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct_l3',
+    'entity_id': 'sensor.envoy_1234_power_factor_production_ct_l3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -25326,7 +25326,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'balanced net power consumption',
+    'original_name': 'Balanced net power consumption',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -25339,7 +25339,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Envoy 1234 balanced net power consumption',
+      'friendly_name': 'Envoy 1234 Balanced net power consumption',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
@@ -25799,7 +25799,7 @@
     'state': 'normal',
   })
 # ---
-# name: test_sensor[envoy_tot_cons_metered][sensor.envoy_1234_powerfactor_production_ct-entry]
+# name: test_sensor[envoy_tot_cons_metered][sensor.envoy_1234_power_factor_production_ct-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -25814,7 +25814,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct',
+    'entity_id': 'sensor.envoy_1234_power_factor_production_ct',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -25829,7 +25829,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
     'original_icon': None,
-    'original_name': 'powerfactor production CT',
+    'original_name': 'Power factor production CT',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -25838,15 +25838,15 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[envoy_tot_cons_metered][sensor.envoy_1234_powerfactor_production_ct-state]
+# name: test_sensor[envoy_tot_cons_metered][sensor.envoy_1234_power_factor_production_ct-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power_factor',
-      'friendly_name': 'Envoy 1234 powerfactor production CT',
+      'friendly_name': 'Envoy 1234 Power factor production CT',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct',
+    'entity_id': 'sensor.envoy_1234_power_factor_production_ct',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
