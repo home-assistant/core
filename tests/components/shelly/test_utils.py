@@ -191,7 +191,7 @@ async def test_get_device_uptime() -> None:
     assert get_device_uptime(
         55 - UPTIME_DEVIATION,
         dt_util.as_utc(dt_util.parse_datetime("2019-01-10 18:42:00+00:00")),
-    ) == dt_util.as_utc(dt_util.parse_datetime("2019-01-10 18:42:20+00:00"))
+    ) == dt_util.as_utc(dt_util.parse_datetime("2019-01-10 18:42:15+00:00"))
 
 
 async def test_get_block_input_triggers(
