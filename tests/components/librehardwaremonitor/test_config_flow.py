@@ -9,7 +9,7 @@ from librehardwaremonitor_api import (
 
 from homeassistant.components.librehardwaremonitor.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
-from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
@@ -123,7 +123,6 @@ async def test_full_flow_with_device_selection(
     assert config_entry.data == {
         CONF_HOST: VALID_CONFIG[CONF_HOST],
         CONF_PORT: VALID_CONFIG[CONF_PORT],
-        CONF_SCAN_INTERVAL: VALID_CONFIG[CONF_SCAN_INTERVAL],
     }
     assert config_entry.options == {
         CONF_DEVICES: ["AMD Ryzen 7 7800X3D", "NVIDIA GeForce RTX 4080 SUPER"]
@@ -144,7 +143,6 @@ async def test_reconfiguration_flow(
     assert result["step_id"] == "user"
 
     updated_config = VALID_CONFIG
-    updated_config[CONF_SCAN_INTERVAL] = 10
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=updated_config
     )
