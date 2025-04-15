@@ -5,6 +5,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/librehardwaremonitor",
   "iot_class": "local_polling",
-  "quality_scale": "bronze",
+  "quality_scale": "silver",
   "requirements": ["librehardwaremonitor-api==1.1.1"]
 }
