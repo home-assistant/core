@@ -70,7 +70,7 @@ def async_get_agent(
     manager = get_agent_manager(hass)
 
     if agent_id is None or agent_id in (HOME_ASSISTANT_AGENT, OLD_HOME_ASSISTANT_AGENT):
-        return manager.default.agent
+        return manager.default_agent
 
     if "." in agent_id:
         return hass.data[DATA_COMPONENT].get_entity(agent_id)
@@ -150,7 +150,8 @@ class AgentManager:
         """Initialize the conversation agents."""
         self.hass = hass
         self._agents: dict[str, AbstractConversationAgent] = {}
-        self.default = DefaultAgentManager(hass)
+        self.default_agent: DefaultAgent | None = None
+        self.triggers_details: list[TriggerDetails] = []
 
     @callback
     def async_get_agent(self, agent_id: str) -> AbstractConversationAgent | None:
@@ -199,35 +200,27 @@ class AgentManager:
         """Unset the agent."""
         self._agents.pop(agent_id, None)
 
-
-class DefaultAgentManager:
-    """Class to manage default conversation agent."""
-
-    def __init__(self, hass: HomeAssistant) -> None:
-        """Initialize the manager."""
-        self.hass = hass
-        self.agent: DefaultAgent | None = None
-        self.triggers_details: list[TriggerDetails] = []
-
-    async def async_setup_agent(self, config: ConfigType, agent: DefaultAgent) -> None:
+    async def async_setup_default_agent(
+        self, config: ConfigType, agent: DefaultAgent
+    ) -> None:
         """Set up the default agent."""
         agent.setup_config_and_trigger_intents(
             config.get(DOMAIN, {}).get("intents", {}), self.triggers_details
         )
-        self.agent = agent
+        self.default_agent = agent
         await self.hass.data[DATA_COMPONENT].async_add_entities([agent])
 
     def register_trigger(self, trigger_details: TriggerDetails) -> CALLBACK_TYPE:
         """Register a trigger."""
         self.triggers_details.append(trigger_details)
-        if self.agent is not None:
-            self.agent.update_triggers(self.triggers_details)
+        if self.default_agent is not None:
+            self.default_agent.update_triggers(self.triggers_details)
 
         @callback
         def unregister_trigger() -> None:
             """Unregister the trigger."""
             self.triggers_details.remove(trigger_details)
-            if self.agent is not None:
-                self.agent.update_triggers(self.triggers_details)
+            if self.default_agent is not None:
+                self.default_agent.update_triggers(self.triggers_details)
 
         return unregister_trigger

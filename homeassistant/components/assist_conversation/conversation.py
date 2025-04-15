@@ -33,7 +33,6 @@ from home_assistant_intents import ErrorKey, get_intents, get_languages
 import yaml
 
 from homeassistant.components.conversation import (
-    DOMAIN as CONVERSATION_DOMAIN,
     AssistantContent,
     ChatLog,
     ConversationEntity,
@@ -73,7 +72,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import language as language_util
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
-from .const import DOMAIN
+from .const import CONVERSATION_DOMAIN, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -191,7 +190,7 @@ async def async_setup_default_agent(
 ) -> None:
     """Set up assist conversation entity."""
     agent = DefaultAgent(hass)
-    await get_agent_manager(hass).default.async_setup_agent(config, agent)
+    await get_agent_manager(hass).async_setup_default_agent(config, agent)
 
     @callback
     def async_entity_state_listener(event: Event[EventStateChangedData]) -> None:

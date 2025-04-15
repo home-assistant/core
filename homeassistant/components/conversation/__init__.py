@@ -81,11 +81,13 @@ __all__ = [
     "UserContent",
     "async_conversation_trace_append",
     "async_converse",
+    "async_get_agent",
     "async_get_agent_info",
     "async_get_chat_log",
     "async_set_agent",
     "async_setup",
     "async_unset_agent",
+    "get_agent_manager",
 ]
 
 _LOGGER = logging.getLogger(__name__)
@@ -232,7 +234,7 @@ async def async_handle_sentence_triggers(
 
     Returns None if no match occurred.
     """
-    default_agent = get_agent_manager(hass).default.agent
+    default_agent = get_agent_manager(hass).default_agent
     assert default_agent is not None
     return await default_agent.async_handle_sentence_triggers(user_input)
 
@@ -247,7 +249,7 @@ async def async_handle_intents(
 
     Returns None if no match occurred.
     """
-    default_agent = get_agent_manager(hass).default.agent
+    default_agent = get_agent_manager(hass).default_agent
     assert default_agent is not None
     return await default_agent.async_handle_intents(
         user_input, intent_filter=intent_filter
@@ -293,7 +295,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def handle_reload(service: ServiceCall) -> None:
         """Reload intents."""
-        agent = get_agent_manager(hass).default.agent
+        agent = get_agent_manager(hass).default_agent
         if agent is not None:
             await agent.async_reload(language=service.data.get(ATTR_LANGUAGE))
 

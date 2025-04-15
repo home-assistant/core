@@ -160,7 +160,7 @@ async def websocket_list_sentences(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """List custom registered sentences."""
-    manager = get_agent_manager(hass).default
+    manager = get_agent_manager(hass)
 
     sentences = []
     for trigger_details in manager.triggers_details:
@@ -182,7 +182,7 @@ async def websocket_hass_agent_debug(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """Return intents that would be matched by the default agent for a list of sentences."""
-    agent = get_agent_manager(hass).default.agent
+    agent = get_agent_manager(hass).default_agent
     assert agent is not None
 
     # Return results for each sentence in the same order as the input.

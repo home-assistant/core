@@ -2,6 +2,7 @@
   "domain": "assist_conversation",
   "name": "Assist Conversation",
   "codeowners": ["@home-assistant/core"],
+  "dependencies": ["conversation"],
   "documentation": "https://www.home-assistant.io/integrations/conversation",
   "integration_type": "system",
   "quality_scale": "internal",

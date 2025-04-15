@@ -137,6 +137,6 @@ async def async_attach_trigger(
         # two trigger copies for who will provide a response.
         return None
 
-    return get_agent_manager(hass).default.register_trigger(
+    return get_agent_manager(hass).register_trigger(
         TriggerDetails(sentences=sentences, callback=call_action)
     )
