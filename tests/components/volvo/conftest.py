@@ -1,13 +1,19 @@
 """Define fixtures for Volvo unit tests."""
 
-from collections.abc import AsyncGenerator, Generator
+from collections.abc import AsyncGenerator, Awaitable, Callable, Generator
 from unittest.mock import AsyncMock, Mock, patch
 
 from _pytest.fixtures import SubRequest
 import pytest
 from volvocarsapi.api import VolvoCarsApi
-from volvocarsapi.auth import AUTHORIZE_URL
-from volvocarsapi.models import VolvoCarsValueField, VolvoCarsVehicle
+from volvocarsapi.auth import AUTHORIZE_URL, TOKEN_URL
+from volvocarsapi.models import (
+    VolvoApiException,
+    VolvoCarsAvailableCommand,
+    VolvoCarsLocation,
+    VolvoCarsValueField,
+    VolvoCarsVehicle,
+)
 from yarl import URL
 
 from homeassistant import config_entries
@@ -17,15 +23,22 @@ from homeassistant.components.application_credentials import (
 )
 from homeassistant.components.volvo.const import CONF_VIN, DOMAIN, SCOPES
 from homeassistant.components.volvo.coordinator import VolvoData
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_API_KEY, CONF_TOKEN
+from homeassistant.const import CONF_API_KEY, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
 from .common import load_json_object_fixture
-from .const import CLIENT_ID, CLIENT_SECRET, REDIRECT_URI
+from .const import (
+    CLIENT_ID,
+    CLIENT_SECRET,
+    MOCK_ACCESS_TOKEN,
+    REDIRECT_URI,
+    SERVER_TOKEN_RESPONSE,
+)
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
 
@@ -56,7 +69,11 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
             "auth_implementation": DOMAIN,
             CONF_API_KEY: "abcdef0123456879abcdef",
             CONF_VIN: "YV1ABCDEFG1234567",
-            CONF_TOKEN: {CONF_ACCESS_TOKEN: "mock-access-token"},
+            CONF_TOKEN: {
+                "access_token": MOCK_ACCESS_TOKEN,
+                "refresh_token": "mock-refresh-token",
+                "expires_at": 123456789,
+            },
         },
     )
 
@@ -67,77 +84,90 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
 
 
 @pytest.fixture(autouse=True)
-async def mock_api(model_from_marker: str) -> AsyncGenerator[VolvoCarsApi]:
-    """Mock API."""
-
-    # marker = request.node.get_closest_marker("use_model")
-    # model = marker.args[0] if marker is not None else "xc40_electric_2024"
+async def mock_api(model_from_marker: str) -> AsyncGenerator[AsyncMock]:
+    """Mock the Volvo API."""
     model = model_from_marker
 
-    with (
-        # patch.object(VolvoCarsAuthApi, "async_refresh_token") as mock_auth_api,
-        patch(
-            "homeassistant.components.volvo.VolvoCarsApi",
-            spec_set=VolvoCarsApi,
-        ) as mock_api,
-        # patch(
-        #     "homeassistant.components.volvo.config_flow.VolvoCarsApi",
-        #     new=mock_api,
-        # ),
-    ):
+    with patch(
+        "homeassistant.components.volvo.VolvoCarsApi",
+        spec_set=VolvoCarsApi,
+    ) as mock_api:
         vehicle_data = load_json_object_fixture("vehicle", model)
         vehicle = VolvoCarsVehicle.from_dict(vehicle_data)
 
-        # commands_data = load_json_object_fixture("commands", model).get("data")
-        # commands = [VolvoCarsAvailableCommand.from_dict(item) for item in commands_data]  # type: ignore[arg-type, union-attr]
+        commands_data = load_json_object_fixture("commands", model).get("data")
+        commands = [VolvoCarsAvailableCommand.from_dict(item) for item in commands_data]  # type: ignore[arg-type, union-attr]
 
-        # location_data = load_json_object_fixture("location", model)
-        # location = {"location": VolvoCarsLocation.from_dict(location_data)}
+        location_data = load_json_object_fixture("location", model)
+        location = {"location": VolvoCarsLocation.from_dict(location_data)}
 
         availability = _get_json_as_value_field("availability", model)
-        # brakes = _get_json_as_value_field("brakes", model)
+        brakes = _get_json_as_value_field("brakes", model)
         diagnostics = _get_json_as_value_field("diagnostics", model)
-        # doors = _get_json_as_value_field("doors", model)
-        # engine_status = _get_json_as_value_field("engine_status", model)
-        # engine_warnings = _get_json_as_value_field("engine_warnings", model)
+        doors = _get_json_as_value_field("doors", model)
+        engine_status = _get_json_as_value_field("engine_status", model)
+        engine_warnings = _get_json_as_value_field("engine_warnings", model)
         fuel_status = _get_json_as_value_field("fuel_status", model)
         odometer = _get_json_as_value_field("odometer", model)
         recharge_status = _get_json_as_value_field("recharge_status", model)
         statistics = _get_json_as_value_field("statistics", model)
-        # tyres = _get_json_as_value_field("tyres", model)
-        # warnings = _get_json_as_value_field("warnings", model)
-        # windows = _get_json_as_value_field("windows", model)
+        tyres = _get_json_as_value_field("tyres", model)
+        warnings = _get_json_as_value_field("warnings", model)
+        windows = _get_json_as_value_field("windows", model)
 
         api: VolvoCarsApi = mock_api.return_value
-        # api.async_get_brakes_status = AsyncMock(return_value=brakes)
+        api.async_get_brakes_status = AsyncMock(return_value=brakes)
         api.async_get_command_accessibility = AsyncMock(return_value=availability)
-        # api.async_get_commands = AsyncMock(return_value=commands)
+        api.async_get_commands = AsyncMock(return_value=commands)
         api.async_get_diagnostics = AsyncMock(return_value=diagnostics)
-        # api.async_get_doors_status = AsyncMock(return_value=doors)
-        # api.async_get_engine_status = AsyncMock(return_value=engine_status)
-        # api.async_get_engine_warnings = AsyncMock(return_value=engine_warnings)
+        api.async_get_doors_status = AsyncMock(return_value=doors)
+        api.async_get_engine_status = AsyncMock(return_value=engine_status)
+        api.async_get_engine_warnings = AsyncMock(return_value=engine_warnings)
         api.async_get_fuel_status = AsyncMock(return_value=fuel_status)
-        # api.async_get_location = AsyncMock(return_value=location)
+        api.async_get_location = AsyncMock(return_value=location)
         api.async_get_odometer = AsyncMock(return_value=odometer)
         api.async_get_recharge_status = AsyncMock(return_value=recharge_status)
         api.async_get_statistics = AsyncMock(return_value=statistics)
-        # api.async_get_tyre_states = AsyncMock(return_value=tyres)
+        api.async_get_tyre_states = AsyncMock(return_value=tyres)
         api.async_get_vehicle_details = AsyncMock(return_value=vehicle)
-        # api.async_get_warnings = AsyncMock(return_value=warnings)
-        # api.async_get_window_states = AsyncMock(return_value=windows)
+        api.async_get_warnings = AsyncMock(return_value=warnings)
+        api.async_get_window_states = AsyncMock(return_value=windows)
 
-        # mock_auth_api.return_value = AuthorizationModel(
-        #     "COMPLETED",
-        #     token=TokenResponse(
-        #         access_token="",
-        #         refresh_token="",
-        #         token_type="Bearer",
-        #         expires_in=1799,
-        #         id_token="",
-        #     ),
-        # )
+        yield mock_api
 
-        yield api
+
+@pytest.fixture
+async def mock_api_failure(model_from_marker: str) -> AsyncGenerator[AsyncMock]:
+    """Mock the Volvo API so that it raises an exception for all calls during coordinator update."""
+    model = model_from_marker
+    vehicle_data = load_json_object_fixture("vehicle", model)
+    vehicle = VolvoCarsVehicle.from_dict(vehicle_data)
+
+    with patch(
+        "homeassistant.components.volvo.VolvoCarsApi",
+        spec_set=VolvoCarsApi,
+    ) as mock_api:
+        api: VolvoCarsApi = mock_api.return_value
+
+        api.async_get_vehicle_details = AsyncMock(return_value=vehicle)
+
+        api.async_get_brakes_status = AsyncMock(side_effect=VolvoApiException())
+        api.async_get_command_accessibility = AsyncMock(side_effect=VolvoApiException())
+        api.async_get_commands = AsyncMock(side_effect=VolvoApiException())
+        api.async_get_diagnostics = AsyncMock(side_effect=VolvoApiException())
+        api.async_get_doors_status = AsyncMock(side_effect=VolvoApiException())
+        api.async_get_engine_status = AsyncMock(side_effect=VolvoApiException())
+        api.async_get_engine_warnings = AsyncMock(side_effect=VolvoApiException())
+        api.async_get_fuel_status = AsyncMock(side_effect=VolvoApiException())
+        api.async_get_location = AsyncMock(side_effect=VolvoApiException())
+        api.async_get_odometer = AsyncMock(side_effect=VolvoApiException())
+        api.async_get_recharge_status = AsyncMock(side_effect=VolvoApiException())
+        api.async_get_statistics = AsyncMock(side_effect=VolvoApiException())
+        api.async_get_tyre_states = AsyncMock(side_effect=VolvoApiException())
+        api.async_get_warnings = AsyncMock(side_effect=VolvoApiException())
+        api.async_get_window_states = AsyncMock(side_effect=VolvoApiException())
+
+        yield mock_api
 
 
 @pytest.fixture(autouse=True)
@@ -184,6 +214,27 @@ async def config_flow(
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
     return result
+
+
+@pytest.fixture
+async def setup_integration(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+) -> Callable[[], Awaitable[bool]]:
+    """Fixture to set up the integration."""
+
+    async def run() -> bool:
+        aioclient_mock.post(
+            TOKEN_URL,
+            json=SERVER_TOKEN_RESPONSE,
+        )
+
+        result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        return result
+
+    return run
 
 
 @pytest.fixture

@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import logging
 
+from aiohttp import ClientResponseError
 from volvocarsapi.api import VolvoCarsApi
 
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
 from .api import VolvoAuth
@@ -30,8 +32,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: VolvoConfigEntry) -> boo
 
     oauth_session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
     web_session = aiohttp_client.async_get_clientsession(hass)
-
     auth = VolvoAuth(web_session, oauth_session)
+
+    try:
+        await auth.async_get_access_token()
+    except ClientResponseError as err:
+        if err.status == 401:
+            raise ConfigEntryAuthFailed from err
+
+        raise ConfigEntryNotReady from err
+
     api = VolvoCarsApi(
         web_session,
         auth,

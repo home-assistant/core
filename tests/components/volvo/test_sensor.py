@@ -1,5 +1,6 @@
 """Test Volvo sensors."""
 
+from collections.abc import Awaitable, Callable
 from unittest.mock import patch
 
 import pytest
@@ -42,6 +43,7 @@ from tests.common import MockConfigEntry
 async def test_fuel_unit_conversion(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    setup_integration: Callable[[], Awaitable[bool]],
     unit: str,
     value: str,
     unit_of_measurement: str,
@@ -51,8 +53,7 @@ async def test_fuel_unit_conversion(
     entity_id = "sensor.volvo_xc90_petrol_2019_tm_avg_fuel_consumption"
 
     with patch("homeassistant.components.volvo.PLATFORMS", [Platform.SENSOR]):
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+        assert await setup_integration()
 
         hass.config_entries.async_update_entry(
             mock_config_entry,
@@ -75,7 +76,7 @@ async def test_fuel_unit_conversion(
 )
 async def test_time_to_service(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    setup_integration: Callable[[], Awaitable[bool]],
     model_from_marker: str,
     expected_state: int,
 ) -> None:
@@ -84,8 +85,7 @@ async def test_time_to_service(
     entity_id = f"sensor.volvo_{model_from_marker}_time_to_service"
 
     with patch("homeassistant.components.volvo.PLATFORMS", [Platform.SENSOR]):
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+        assert await setup_integration()
 
         entity = hass.states.get(entity_id)
         assert entity

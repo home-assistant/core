@@ -24,7 +24,7 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM, UnitSystem
 
 from .conftest import model
-from .const import REDIRECT_URI
+from .const import REDIRECT_URI, SERVER_TOKEN_RESPONSE
 
 from tests.common import METRIC_SYSTEM, MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -76,12 +76,7 @@ async def test_single_vin_flow(
     """Check flow where API returns a single VIN."""
     aioclient_mock.post(
         TOKEN_URL,
-        json={
-            "refresh_token": "mock-refresh-token",
-            "access_token": "mock-access-token",
-            "type": "Bearer",
-            "expires_in": 60,
-        },
+        json=SERVER_TOKEN_RESPONSE,
     )
 
     aioclient_mock.get(
@@ -186,12 +181,7 @@ async def test_api_failure_flow(
     """Check flow where API throws an exception."""
     aioclient_mock.post(
         TOKEN_URL,
-        json={
-            "refresh_token": "mock-refresh-token",
-            "access_token": "mock-access-token",
-            "type": "Bearer",
-            "expires_in": 60,
-        },
+        json=SERVER_TOKEN_RESPONSE,
     )
 
     aioclient_mock.get(
@@ -237,11 +227,13 @@ async def test_options_flow(
 
 @model("xc40_electric_2024")
 async def test_no_options_flow(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: VolvoCarsApi
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: AsyncMock
 ) -> None:
     """Test options flow where no options are available."""
     volvo_data: VolvoData = mock_config_entry.runtime_data
-    volvo_data.coordinator.vehicle = await mock_api.async_get_vehicle_details()
+    api: VolvoCarsApi = mock_api.return_value
+
+    volvo_data.coordinator.vehicle = await api.async_get_vehicle_details()
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
     assert result["type"] is FlowResultType.ABORT
@@ -257,12 +249,7 @@ async def _async_run_flow_to_completion(
 ) -> ConfigFlowResult:
     aioclient_mock.post(
         TOKEN_URL,
-        json={
-            "refresh_token": "mock-refresh-token",
-            "access_token": "mock-access-token",
-            "token_type": "Bearer",
-            "expires_in": 60,
-        },
+        json=SERVER_TOKEN_RESPONSE,
     )
 
     aioclient_mock.get(

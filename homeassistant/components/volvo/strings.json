@@ -18,9 +18,8 @@
           "api_key": "API key"
         },
         "data_description": {
-          "api_key": "The Volvo developers API key (https://developer.volvocars.com/)"
-        },
-        "description": "API"
+          "api_key": "The Volvo developers API key"
+        }
       },
       "vin": {
         "data": {
@@ -28,8 +27,7 @@
         },
         "data_description": {
           "vin": "The Vehicle Identification Number of the vehicle you want to add"
-        },
-        "description": "Vehicle"
+        }
       }
     },
     "abort": {

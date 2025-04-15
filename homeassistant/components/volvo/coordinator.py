@@ -24,7 +24,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_VIN, DATA_BATTERY_CAPACITY, DOMAIN, MANUFACTURER
+from .const import DATA_BATTERY_CAPACITY, DOMAIN, MANUFACTURER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,10 +34,6 @@ class VolvoData:
     """Data for Volvo Cars integration."""
 
     coordinator: VolvoDataCoordinator
-
-    def vin(self) -> str | None:
-        """Vin."""
-        return self.coordinator.config_entry.data.get(CONF_VIN)
 
 
 type VolvoConfigEntry = ConfigEntry[VolvoData]
