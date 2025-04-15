@@ -36,12 +36,12 @@
           "fan_speed": {
             "state": {
               "default": "Default",
-              "auto": "[%key:common::state::auto%]"
+              "auto": "[%key:common::state::auto%]",
               "normal": "[%key:common::state::normal%]",
               "high": "[%key:common::state::high%]",
               "intensive": "Intensive",
               "silent": "Silent",
-              "super_silent": "Super silent",
+              "super_silent": "Super silent"
             }
           }
         }
