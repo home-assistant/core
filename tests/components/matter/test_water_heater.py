@@ -66,13 +66,13 @@ async def test_water_heater(
 
 
 @pytest.mark.parametrize("node_fixture", ["silabs_water_heater"])
-async def test_water_heater_service_calls(
+async def test_water_heater_set_temperature(
     hass: HomeAssistant,
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """Test water_heater platform service calls."""
-    # test single-setpoint temperature adjustment when boost mode is active
+    """Test water_heater set temperature service."""
+    # test single-setpoint temperature adjustment when eco mode is active
     state = hass.states.get("water_heater.water_heater")
 
     assert state
