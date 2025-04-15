@@ -30,7 +30,7 @@ rules:
   # Silver
   action-exceptions:
     status: todo
-    comment: recheck raise in switch.py
+    comment: we should not swallow the exception in switch.py
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
