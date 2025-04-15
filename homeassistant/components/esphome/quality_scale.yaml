@@ -22,12 +22,12 @@ rules:
   test-before-configure: done
   test-before-setup:
     status: exempt
-    comment: ESPHome uses sleepy devices and fast reconnect logic
+    comment: |
+      ESPHome uses sleepy devices and fast reconnect logic
       so we cannot raise ConfigEntryNotReady as we need to use
       the reconnect logic in aioesphomeapi to know when to trigger
       connections.
   unique-config-entry: done
-
   # Silver
   action-exceptions: todo
   config-entry-unloading: done
