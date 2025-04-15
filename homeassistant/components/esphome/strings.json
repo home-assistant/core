@@ -34,7 +34,7 @@
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "password": "Password. Passwords are deprecated and will be removed in a future version. Please use an encryption key instead."
+          "password": "Passwords are deprecated and will be removed in a future version. Please update your ESPHome YAML configuration to use an encryption key instead."
         },
         "description": "Please enter the password you set in your configuration for {name}."
       },
@@ -43,7 +43,7 @@
           "noise_psk": "Encryption key"
         },
         "data_description": {
-          "noise_psk": "Encryption key. This is used to encrypt the connection between Home Assistant and the ESPHome device. You can find this in the api: section of your ESPHome configuration if it is enabled."
+          "noise_psk": "The encryption key is used to encrypt the connection between Home Assistant and the ESPHome device. You can find this in the api: section of your ESPHome configuration if it is enabled."
         },
         "description": "Please enter the encryption key for {name}. You can find it in the ESPHome Dashboard or in your device configuration."
       },
