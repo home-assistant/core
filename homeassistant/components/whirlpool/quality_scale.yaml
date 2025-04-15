@@ -24,3 +24,58 @@ rules:
   test-before-configure: done
   test-before-setup: done
   unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: todo
+    comment: |
+      The calls to the api can be changed to return bool, and services can then raise HomeAssistantError
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: Integration has no configuration parameters
+  docs-installation-parameters: todo
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: todo
+  parallel-updates: todo
+  reauthentication-flow: done
+  test-coverage:
+    status: todo
+    comment: climate is at 94%
+
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery-update-info:
+    status: exempt
+    comment: |
+      This integration is a cloud service and thus does not support discovery.
+  discovery:
+    status: exempt
+    comment: |
+      This integration is a cloud service and thus does not support discovery.
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices: todo
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations: todo
+  icon-translations: done
+  reconfiguration-flow: todo
+  repair-issues:
+    status: exempt
+    comment: no known use cases for repair issues or flows, yet
+  stale-devices: todo
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: todo
