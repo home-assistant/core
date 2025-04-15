@@ -2,7 +2,11 @@ rules:
   # Bronze
   action-setup:
     status: exempt
-    comment: Actions are per device and not per integration.
+    comment: |
+      Actions are per device and not per integration.
+      ESPHome supports user defined actions which come
+      from the device YAML configuration.
+      https://esphome.io/components/api.html#user-defined-actions
   appropriate-polling: done
   brands: done
   common-modules: done
@@ -11,7 +15,11 @@ rules:
   dependency-transparency: done
   docs-actions:
     status: exempt
-    comment: Actions are per device and not per integration.
+    comment: |
+      Actions are per device and not per integration.
+      ESPHome supports user defined actions which come
+      from the device YAML configuration.
+      https://esphome.io/components/api.html#user-defined-actions
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: todo
@@ -58,11 +66,15 @@ rules:
   entity-disabled-by-default: done
   entity-translations:
     status: exempt
-    comment: entities cannot be translated because they are provided by the device.
+    comment: |
+      entities cannot be translated because they are
+      provided by the device YAML configuration.
   exception-translations: todo
   icon-translations:
     status: exempt
-    comment: icons cannot be translated because they are provided by the device.
+    comment: |
+      icons cannot be translated because they are
+      provided by the device YAML configuration.
   reconfiguration-flow: todo
   repair-issues: done
   stale-devices: done
