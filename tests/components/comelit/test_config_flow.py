@@ -284,7 +284,6 @@ async def test_reconfigure_fails(
             CONF_HOST: "192.168.100.60",
             CONF_PORT: BRIDGE_PORT,
             CONF_PIN: BRIDGE_PIN,
-            CONF_TYPE: BRIDGE,
         },
     )
 
