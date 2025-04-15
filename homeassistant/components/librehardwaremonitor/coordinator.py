@@ -13,11 +13,11 @@ from librehardwaremonitor_api import (
 from librehardwaremonitor_api.model import LibreHardwareMonitorData
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,12 +37,12 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
             _LOGGER,
             name=DOMAIN,
             config_entry=config_entry,
-            update_interval=timedelta(seconds=config_entry.data[CONF_SCAN_INTERVAL]),
+            update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
         )
 
         host = config_entry.data[CONF_HOST]
         port = config_entry.data[CONF_PORT]
-        self._scan_interval = timedelta(seconds=config_entry.data[CONF_SCAN_INTERVAL])
+        self._scan_interval = timedelta(seconds=DEFAULT_SCAN_INTERVAL)
         self._selected_main_devices = config_entry.options[CONF_DEVICES]
         self._api = LibreHardwareMonitorClient(host, port)
 
