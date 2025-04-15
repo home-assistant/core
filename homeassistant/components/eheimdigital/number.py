@@ -125,19 +125,19 @@ async def async_setup_entry(
         entities: list[EheimDigitalNumber[EheimDigitalDevice]] = []
         for device in device_address.values():
             if isinstance(device, EheimDigitalClassicVario):
-                entities += [
+                entities.extend(
                     EheimDigitalNumber[EheimDigitalClassicVario](
                         coordinator, device, description
                     )
                     for description in CLASSICVARIO_DESCRIPTIONS
-                ]
+                )
             if isinstance(device, EheimDigitalHeater):
-                entities += [
+                entities.extend(
                     EheimDigitalNumber[EheimDigitalHeater](
                         coordinator, device, description
                     )
                     for description in HEATER_DESCRIPTIONS
-                ]
+                )
 
         async_add_entities(entities)
 
