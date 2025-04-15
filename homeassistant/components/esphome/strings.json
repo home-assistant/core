@@ -53,10 +53,10 @@
       },
       "name_conflict": {
         "title": "Name conflict for {name}",
-        "description": "**The name `{name}` is already being used by another device, {existing_title} with MAC address `{existing_mac}`.**\n\nIf you have multiple devices with the same name, please rename or remove the one with MAC address `{mac}` to avoid conflicts.\n\nIf this is a hardware replacement, please confirm that you would like to migrate the Home Assistant configuration to the new device with MAC address `{mac}`.\n\nIf the new device is not a replacement, and you want to delete the existing configuration, select the option to replace the existing configuration.",
+        "description": "**The name **`{name}`** is already being used by another device: {existing_title} (MAC address: `{existing_mac}`)**\n\nTo continue, please choose one of the following options:\n\n- **Migrate Configuration to New Device:** If this is a replacement, transfer the existing settings to the new device (`{mac}`).\n- **Overwrite the Existing Configuration:** If this is not a replacement, delete the old configuration and use the new device instead.",
         "menu_options": {
           "name_conflict_migrate": "Migrate configuration to new device",
-          "name_conflict_replace": "Replace the existing configuration"
+          "name_conflict_overwrite": "Overwrite the existing configuration"
         }
       }
     },

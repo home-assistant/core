@@ -366,7 +366,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         assert self._device_name is not None
         return self.async_show_menu(
             step_id="name_conflict",
-            menu_options=["migrate", "create"],
+            menu_options=["name_conflict_migrate", "name_conflict_overwrite"],
             description_placeholders={
                 "existing_mac": format_mac(self._entry_with_name_conflict.unique_id),
                 "existing_title": self._entry_with_name_conflict.title,
@@ -383,8 +383,19 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         assert self._entry_with_name_conflict.unique_id is not None
         assert self.unique_id is not None
         assert self._device_name is not None
+        assert self._host is not None
         old_mac = format_mac(self._entry_with_name_conflict.unique_id)
         new_mac = format_mac(self.unique_id)
+        self.hass.config_entries.async_update_entry(
+            self._entry_with_name_conflict,
+            data={
+                **self._entry_with_name_conflict.data,
+                CONF_HOST: self._host,
+                CONF_PORT: self._port or 6053,
+                CONF_PASSWORD: self._password or "",
+                CONF_NOISE_PSK: self._noise_psk or "",
+            },
+        )
         await async_replace_device(
             self.hass, self._entry_with_name_conflict.entry_id, old_mac, new_mac
         )
@@ -397,10 +408,10 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_name_conflict_create(
+    async def async_step_name_conflict_overwrite(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle creating a new entry."""
+        """Handle creating a new entry by removing the old one and creating new."""
         assert self._entry_with_name_conflict is not None
         await self.hass.config_entries.async_remove(
             self._entry_with_name_conflict.entry_id
