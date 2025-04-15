@@ -125,7 +125,6 @@ async def test_water_heater_set_temperature(
             ),
             value=matter_attribute_value,
         )
-        matter_client.send_device_command.reset_mock()
 
         # test BoostState update from device
         set_node_attribute(matter_node, 2, 148, 5, 1)
