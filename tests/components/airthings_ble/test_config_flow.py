@@ -159,7 +159,6 @@ async def test_user_setup_replaces_ignored_device(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         unique_id="cc:cc:cc:cc:cc:cc",
         source=SOURCE_IGNORE,
-        data={CONF_ADDRESS: "cc:cc:cc:cc:cc:cc"},
     )
     entry.add_to_hass(hass)
     with (

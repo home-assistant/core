@@ -29,6 +29,7 @@ from typing import Any, Literal, NoReturn
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa: F401
+from annotatedyaml import load_yaml_dict, loader as yaml_loader
 import pytest
 from syrupy import SnapshotAssertion
 import voluptuous as vol
@@ -109,7 +110,6 @@ from homeassistant.util.json import (
 )
 from homeassistant.util.signal_type import SignalType
 from homeassistant.util.unit_system import METRIC_SYSTEM
-from homeassistant.util.yaml import load_yaml_dict, loader as yaml_loader
 
 from .testing_config.custom_components.test_constant_deprecation import (
     import_deprecated_constant,
