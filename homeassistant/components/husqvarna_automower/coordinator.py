@@ -67,7 +67,6 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
         for mower_id in data:
             if data[mower_id].capabilities.stay_out_zones:
                 self._async_add_remove_stay_out_zones(data)
-        for mower_id in data:
             if data[mower_id].capabilities.work_areas:
                 self._async_add_remove_work_areas(data)
 
