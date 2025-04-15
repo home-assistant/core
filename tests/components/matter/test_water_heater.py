@@ -126,7 +126,6 @@ async def test_water_heater_set_temperature(
             value=matter_attribute_value,
         )
 
-        # test BoostState update from device
         set_node_attribute(matter_node, 2, 148, 5, 1)
         await trigger_subscription_callback(hass, matter_client)
         state = hass.states.get("water_heater.water_heater")
