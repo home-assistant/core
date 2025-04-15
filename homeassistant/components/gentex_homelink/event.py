@@ -1,14 +1,9 @@
-"""Platform for BinarySensor integration."""
+"""Platform for Event integration."""
 
 from __future__ import annotations
 
 import asyncio
-from typing import TYPE_CHECKING, Any
-
-if TYPE_CHECKING:
-    # Import keeps mypy happy but is a circular reference otherwise
-    from .coordinator import HomeLinkCoordinator  # noqa: F401
-
+from typing import Any
 
 from homeassistant.components.event import EventDeviceClass, EventEntity
 from homeassistant.config_entries import ConfigEntry
@@ -21,6 +16,9 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, EVENT_OFF, EVENT_PRESSED, EVENT_TIMEOUT
 
+# Import keeps mypy happy but is a circular reference otherwise
+from .coordinator import HomeLinkCoordinator
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -29,10 +27,17 @@ async def async_setup_entry(
 ) -> None:
     """Add the entities for the binary sensor."""
     coordinator = config_entry.runtime_data.coordinator
+    for device in coordinator.device_data:
+        buttons = [
+            HomeLinkEventEntity(b.id, b.name, device.id, device.name, coordinator)
+            for b in device.buttons
+        ]
+        coordinator.buttons.extend(buttons)
+
     async_add_entities(coordinator.buttons)
 
 
-class HomeLinkEventEntity(CoordinatorEntity["HomeLinkCoordinator"], EventEntity):
+class HomeLinkEventEntity(CoordinatorEntity[HomeLinkCoordinator], EventEntity):
     """Event Entity."""
 
     _attr_has_entity_name = True

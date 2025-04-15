@@ -3,17 +3,17 @@
 from dataclasses import dataclass
 import functools
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homelink.mqtt_provider import MQTTProvider
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.ssl import get_default_context
 
-from .event import HomeLinkEventEntity
+if TYPE_CHECKING:
+    from .event import HomeLinkEventEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,13 +47,14 @@ class HomeLinkCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.provider = provider
         self.last_sync_timestamp = None
         self.last_sync_id = None
+        self.device_data = None
         self.buttons: list[HomeLinkEventEntity] = []
 
     async def async_on_unload(self, _event):
         """Disconnect and unregister when unloaded."""
         await self.provider.disable()
 
-    async def _async_setup(self):
+    async def _async_setup(self) -> None:
         """Set up the coordinator."""
         await self.provider.enable(get_default_context())
 
@@ -63,19 +64,7 @@ class HomeLinkCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def discover_devices(self):
         """Discover devices and build the Entities."""
-        device_data = await self.provider.discover()
-
-        for device in device_data:
-            self.buttons = [
-                HomeLinkEventEntity(b.id, b.name, device.id, device.name, self)
-                for b in device.buttons
-            ]
-
-            if self.buttons[0].device_entry is not None:
-                registry = dr.async_get(self.hass)
-                registry.async_update_device(
-                    self.buttons[0].device_entry.id, name=device.name
-                )
+        self.device_data = await self.provider.discover()
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from API endpoint."""

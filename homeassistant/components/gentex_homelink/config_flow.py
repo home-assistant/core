@@ -22,7 +22,6 @@ class SRPFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
     """Config flow to handle homelink OAuth2 authentication."""
 
     DOMAIN = DOMAIN
-    VERSION = 1
 
     def __init__(self) -> None:
         """Set up the flow handler."""
