@@ -1060,7 +1060,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "upcloud",
     "upnp",
     "uptime",
-    "uptimerobot",
     "usb",
     "usgs_earthquakes_feed",
     "utility_meter",
