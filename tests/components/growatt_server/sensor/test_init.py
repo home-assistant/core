@@ -1,4 +1,4 @@
-"""Tests for the Growatt server sensor integration."""
+"""Tests for the Growatt server sensor integration initialization."""
 
 from unittest.mock import patch
 
