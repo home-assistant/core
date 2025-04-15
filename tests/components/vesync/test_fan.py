@@ -108,18 +108,21 @@ async def test_turn_on_off_raises_error(
 
     # returns False indicating failure in which case raises HomeAssistantError.
     with (
-        patch(command, return_value=False) as method_mock,
+        patch(
+            command,
+            return_value=False,
+        ) as method_mock,
+        pytest.raises(HomeAssistantError),
     ):
-        with pytest.raises(HomeAssistantError):
-            await hass.services.async_call(
-                FAN_DOMAIN,
-                action,
-                {ATTR_ENTITY_ID: ENTITY_FAN},
-                blocking=True,
-            )
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            action,
+            {ATTR_ENTITY_ID: ENTITY_FAN},
+            blocking=True,
+        )
 
-        await hass.async_block_till_done()
-        method_mock.assert_called_once()
+    await hass.async_block_till_done()
+    method_mock.assert_called_once()
 
 
 @pytest.mark.parametrize(
