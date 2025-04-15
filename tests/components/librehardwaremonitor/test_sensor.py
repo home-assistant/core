@@ -1,6 +1,7 @@
 """Test the LibreHardwareMonitor sensor."""
 
 import copy
+from datetime import timedelta
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -37,7 +38,7 @@ async def test_sensors_are_created(
 
     mock_lhm_client.get_data.side_effect = LibreHardwareMonitorConnectionError()
 
-    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    freezer.tick(timedelta(DEFAULT_SCAN_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -47,7 +48,7 @@ async def test_sensors_are_created(
 
     mock_lhm_client.get_data.side_effect = None
 
-    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    freezer.tick(timedelta(DEFAULT_SCAN_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -78,7 +79,7 @@ async def test_sensors_are_updated(
     updated_data.sensor_data["amdcpu-0-temperature-3"].value = "42,1"
     mock_lhm_client.get_data.return_value = updated_data
 
-    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    freezer.tick(timedelta(DEFAULT_SCAN_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -124,7 +125,7 @@ async def test_sensor_state_is_unknown_when_no_sensor_data_is_provided(
 
     del mock_lhm_client.get_data.return_value.sensor_data["amdcpu-0-temperature-3"]
 
-    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    freezer.tick(timedelta(DEFAULT_SCAN_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
