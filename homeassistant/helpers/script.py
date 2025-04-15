@@ -653,6 +653,10 @@ class _ScriptRun:
             """Run a script with a trace path."""
             trace_path_stack_cv.set(copy(trace_path_stack_cv.get()))
             with trace_path([str(idx), "sequence"]):
+                if not script.enabled:
+                    self._log("Skipping disabled parallel script: %s", script.name)
+                    trace_set_result(enabled=False)
+                    return
                 await self._async_run_script(script, parallel=True)
 
         results = await asyncio.gather(
@@ -1442,6 +1446,7 @@ class Script:
         script_mode: str = DEFAULT_SCRIPT_MODE,
         top_level: bool = True,
         variables: ScriptVariables | None = None,
+        enabled: bool = True,
     ) -> None:
         """Initialize the script."""
         if not (all_scripts := hass.data.get(DATA_SCRIPTS)):
@@ -1462,6 +1467,7 @@ class Script:
         self.name = name
         self.unique_id = f"{domain}.{name}-{id(self)}"
         self.domain = domain
+        self.enabled = enabled
         self.running_description = running_description or f"{domain} script"
         self._change_listener = change_listener
         self._change_listener_job = (
@@ -2002,6 +2008,7 @@ class Script:
                 max_runs=self.max_runs,
                 logger=self._logger,
                 top_level=False,
+                enabled=parallel_script.get(CONF_ENABLED, True),
             )
             parallel_script.change_listener = partial(
                 self._chain_change_listener, parallel_script
