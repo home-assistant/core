@@ -1668,6 +1668,7 @@ async def test_user_flow_name_conflict_migrate(
         CONF_NOISE_PSK: "",
         CONF_DEVICE_NAME: "test",
     }
+    assert existing_entry.unique_id == "11:22:33:44:55:aa"
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
@@ -1702,7 +1703,7 @@ async def test_user_flow_name_conflict_overwrite(
     assert result["step_id"] == "name_conflict"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={"next_step_id": "name_conflict_replace"}
+        result["flow_id"], user_input={"next_step_id": "name_conflict_overwrite"}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
