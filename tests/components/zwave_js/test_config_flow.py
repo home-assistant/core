@@ -1728,6 +1728,32 @@ async def test_addon_installed_set_options_failure(
     assert start_addon.call_count == 0
 
 
+async def test_addon_installed_usb_ports_failure(
+    hass: HomeAssistant,
+    supervisor,
+    addon_installed,
+) -> None:
+    """Test usb ports failure when add-on is installed."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "on_supervisor"
+
+    with patch(
+        "homeassistant.components.zwave_js.config_flow.async_get_usb_ports",
+        side_effect=OSError("test_error"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"use_addon": True}
+        )
+
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "usb_ports_failed"
+
+
 @pytest.mark.parametrize(
     "discovery_info",
     [
@@ -3535,36 +3561,125 @@ async def test_get_driver_failure(hass: HomeAssistant, integration, client) -> N
 
 async def test_hard_reset_failure(hass: HomeAssistant, integration, client) -> None:
     """Test hard reset failure."""
-    handler = OptionsFlowHandler()
-    handler.hass = hass
-    handler._config_entry = integration
+    hass.config_entries.async_update_entry(
+        integration, unique_id="1234", data={**integration.data, "use_addon": True}
+    )
 
+    async def mock_backup_nvm_raw():
+        await asyncio.sleep(0)
+        return b"test_nvm_data"
+
+    client.driver.controller.async_backup_nvm_raw = AsyncMock(
+        side_effect=mock_backup_nvm_raw
+    )
     client.driver.async_hard_reset = AsyncMock(
         side_effect=FailedCommand("test_error", "unknown_error")
     )
 
-    result = await handler.async_step_instruct_unplug()
+    result = await hass.config_entries.options.async_init(integration.entry_id)
+
+    assert result["type"] == FlowResultType.MENU
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"next_step_id": "intent_migrate"}
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "intent_migrate"
+
+    result = await hass.config_entries.options.async_configure(result["flow_id"], {})
+
+    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "backup_nvm"
+
+    with patch("pathlib.Path.write_bytes", MagicMock()) as mock_file:
+        await hass.async_block_till_done()
+        assert client.driver.controller.async_backup_nvm_raw.call_count == 1
+        assert mock_file.call_count == 1
+
+    result = await hass.config_entries.options.async_configure(result["flow_id"])
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "reset_failed"
 
 
-async def test_get_usb_ports_failure(
-    hass: HomeAssistant, integration, addon_running
+async def test_choose_serial_port_usb_ports_failure(
+    hass: HomeAssistant, integration, client
 ) -> None:
-    """Test get usb ports failure."""
-    handler = OptionsFlowHandler()
-    handler.hass = hass
-    handler._config_entry = integration
+    """Test choose serial port usb ports failure."""
+    hass.config_entries.async_update_entry(
+        integration, unique_id="1234", data={**integration.data, "use_addon": True}
+    )
+
+    async def mock_backup_nvm_raw():
+        await asyncio.sleep(0)
+        return b"test_nvm_data"
+
+    client.driver.controller.async_backup_nvm_raw = AsyncMock(
+        side_effect=mock_backup_nvm_raw
+    )
+
+    result = await hass.config_entries.options.async_init(integration.entry_id)
+
+    assert result["type"] == FlowResultType.MENU
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"next_step_id": "intent_migrate"}
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "intent_migrate"
+
+    result = await hass.config_entries.options.async_configure(result["flow_id"], {})
+
+    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "backup_nvm"
+
+    with patch("pathlib.Path.write_bytes", MagicMock()) as mock_file:
+        await hass.async_block_till_done()
+        assert client.driver.controller.async_backup_nvm_raw.call_count == 1
+        assert mock_file.call_count == 1
+
+    result = await hass.config_entries.options.async_configure(result["flow_id"])
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "instruct_unplug"
 
     with patch(
         "homeassistant.components.zwave_js.config_flow.async_get_usb_ports",
         side_effect=OSError("test_error"),
     ):
-        result = await handler.async_step_choose_serial_port()
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], {}
+        )
         assert result["type"] == FlowResultType.ABORT
         assert result["reason"] == "usb_ports_failed"
 
-        result = await handler.async_step_configure_addon()
+
+async def test_configure_addon_usb_ports_failure(
+    hass: HomeAssistant, integration, addon_installed, supervisor
+) -> None:
+    """Test configure addon usb ports failure."""
+    result = await hass.config_entries.options.async_init(integration.entry_id)
+
+    assert result["type"] == FlowResultType.MENU
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"next_step_id": "intent_reconfigure"}
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "on_supervisor"
+
+    with patch(
+        "homeassistant.components.zwave_js.config_flow.async_get_usb_ports",
+        side_effect=OSError("test_error"),
+    ):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], {"use_addon": True}
+        )
         assert result["type"] == FlowResultType.ABORT
         assert result["reason"] == "usb_ports_failed"
