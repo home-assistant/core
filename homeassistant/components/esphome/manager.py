@@ -772,11 +772,6 @@ def _async_setup_device_registry(
         sw_version=sw_version,
         suggested_area=suggested_area,
     )
-    if device_entry.name != name:
-        # Update the device name if the name was changed.
-        # we don't overwrite name_by_user in case they
-        # changed it in the UI
-        device_registry.async_update_device(device_entry.id, name=name)
     return device_entry.id
 
 
