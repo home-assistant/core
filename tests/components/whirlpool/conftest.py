@@ -130,16 +130,6 @@ def fixture_mock_aircon2_api():
     return get_aircon_mock(MOCK_SAID2)
 
 
-@pytest.fixture(name="mock_aircon_api_instances", autouse=False)
-def fixture_mock_aircon_api_instances(mock_aircon1_api, mock_aircon2_api):
-    """Set up air conditioner API fixture."""
-    with mock.patch(
-        "homeassistant.components.whirlpool.climate.Aircon"
-    ) as mock_aircon_api:
-        mock_aircon_api.side_effect = [mock_aircon1_api, mock_aircon2_api]
-        yield mock_aircon_api
-
-
 @pytest.fixture
 def mock_washer_api():
     """Get a mock of a washer."""
@@ -191,13 +181,3 @@ def mock_dryer_api():
     mock_dryer.get_cycle_status_washing.return_value = False
 
     return mock_dryer
-
-
-@pytest.fixture(autouse=True)
-def mock_washer_dryer_api_instances(mock_washer_api, mock_dryer_api):
-    """Set up WasherDryer API fixture."""
-    with mock.patch(
-        "homeassistant.components.whirlpool.sensor.WasherDryer"
-    ) as mock_washer_dryer_api:
-        mock_washer_dryer_api.side_effect = [mock_washer_api, mock_dryer_api]
-        yield mock_washer_dryer_api
