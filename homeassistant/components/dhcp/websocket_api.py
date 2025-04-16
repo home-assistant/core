@@ -10,13 +10,13 @@ from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.json import json_bytes
-from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo as _DhcpServiceInfo
 
 from .const import HOSTNAME, IP_ADDRESS
 from .helpers import (
     async_get_address_data_internal,
     async_register_dhcp_callback_internal,
 )
+from .models import DHCPAddressData
 
 
 @callback
@@ -46,22 +46,24 @@ class _DiscoverySubscription:
         connection.subscriptions[self.ws_msg_id] = (
             async_register_dhcp_callback_internal(
                 self.hass,
-                self._async_on_discovery,
+                self._async_send_address_data,
             )
         )
         connection.send_message(
             json_bytes(websocket_api.result_message(self.ws_msg_id))
         )
-        self._async_send_current_address_data()
+        self._async_send_address_data(
+            async_get_address_data_internal(self.hass),
+        )
 
     def _async_event_message(self, message: dict[str, Any]) -> None:
         self.connection.send_message(
             json_bytes(websocket_api.event_message(self.ws_msg_id, message))
         )
 
-    def _async_send_current_address_data(self) -> None:
-        """Send the current address data."""
-        address_data = async_get_address_data_internal(self.hass)
+    def _async_send_address_data(
+        self, address_data: dict[str, DHCPAddressData]
+    ) -> None:
         self._async_event_message(
             {
                 "add": [
@@ -71,21 +73,6 @@ class _DiscoverySubscription:
                         "ip_address": data[IP_ADDRESS],
                     }
                     for mac_address, data in address_data.items()
-                ]
-            }
-        )
-
-    @callback
-    def _async_on_discovery(self, service_info: _DhcpServiceInfo) -> None:
-        """Handle the callback."""
-        self._async_event_message(
-            {
-                "add": [
-                    {
-                        "mac_address": dr.format_mac(service_info.macaddress).upper(),
-                        "hostname": service_info.hostname,
-                        "ip_address": service_info.ip,
-                    }
                 ]
             }
         )

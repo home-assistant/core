@@ -7,7 +7,6 @@ import dataclasses
 from dataclasses import dataclass
 from typing import TypedDict
 
-from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo as _DhcpServiceInfo
 from homeassistant.loader import DHCPMatcher
 from homeassistant.util.hass_dict import HassKey
 
@@ -35,7 +34,7 @@ class DHCPData:
     """Data for the dhcp component."""
 
     integration_matchers: DhcpMatchers
-    callbacks: set[Callable[[_DhcpServiceInfo], None]] = dataclasses.field(
+    callbacks: set[Callable[[dict[str, DHCPAddressData]], None]] = dataclasses.field(
         default_factory=set
     )
     address_data: dict[str, DHCPAddressData] = dataclasses.field(default_factory=dict)

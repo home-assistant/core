@@ -10,7 +10,7 @@ from functools import lru_cache, partial
 import itertools
 import logging
 import re
-from typing import TYPE_CHECKING, Any, Final
+from typing import Any, Final
 
 import aiodhcpwatcher
 from aiodiscover import DiscoverHosts
@@ -124,7 +124,7 @@ def async_index_integration_matchers(
 @callback
 def async_register_dhcp_callback_internal(
     hass: HomeAssistant,
-    callback_: Callable[[_DhcpServiceInfo], None],
+    callback_: Callable[[dict[str, DHCPAddressData]], None],
 ) -> CALLBACK_TYPE:
     """Register a dhcp callback.
 
@@ -293,20 +293,24 @@ class WatcherBase:
             _LOGGER.debug("Matched %s against %s", data, matcher)
             matched_domains.add(domain)
 
+        if self._callbacks:
+            address_data: dict[str, DHCPAddressData] = {
+                mac_address: {
+                    "ip": compressed_ip_address,
+                    "hostname": lowercase_hostname,
+                }
+            }
+            for callback_ in self._callbacks:
+                callback_(address_data)
+
         service_info: _DhcpServiceInfo | None = None
-        if self._callbacks or matched_domains:
-            service_info = _DhcpServiceInfo(
-                ip=ip_address,
-                hostname=lowercase_hostname,
-                macaddress=mac_address,
-            )
-
-        if TYPE_CHECKING:
-            assert service_info is not None
-
-        for callback_ in self._callbacks:
-            callback_(service_info)
-
+        if not matched_domains:
+            return
+        service_info = _DhcpServiceInfo(
+            ip=ip_address,
+            hostname=lowercase_hostname,
+            macaddress=mac_address,
+        )
         discovery_key = DiscoveryKey(
             domain=DOMAIN,
             key=mac_address,
