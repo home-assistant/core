@@ -10,7 +10,11 @@ from volvocarsapi.api import VolvoCarsApi
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    OAuth2Session,
+    async_get_config_entry_implementation,
+)
 
 from .api import VolvoAuth
 from .const import CONF_VIN, PLATFORMS
@@ -24,14 +28,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: VolvoConfigEntry) -> boo
     _LOGGER.debug("%s - Loading entry", entry.entry_id)
 
     # Create APIs
-    implementation = (
-        await config_entry_oauth2_flow.async_get_config_entry_implementation(
-            hass, entry
-        )
-    )
-
-    oauth_session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
-    web_session = aiohttp_client.async_get_clientsession(hass)
+    implementation = await async_get_config_entry_implementation(hass, entry)
+    oauth_session = OAuth2Session(hass, entry, implementation)
+    web_session = async_get_clientsession(hass)
     auth = VolvoAuth(web_session, oauth_session)
 
     try:
@@ -45,14 +44,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: VolvoConfigEntry) -> boo
     api = VolvoCarsApi(
         web_session,
         auth,
-        entry.data.get(CONF_VIN, ""),
-        entry.data.get(CONF_API_KEY, ""),
+        entry.data[CONF_VIN],
+        entry.data[CONF_API_KEY],
     )
 
     # Setup entry
     coordinator = VolvoDataCoordinator(hass, entry, api)
-    entry.runtime_data = VolvoData(coordinator)
     await coordinator.async_config_entry_first_refresh()
+    entry.runtime_data = VolvoData(coordinator)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # Register events

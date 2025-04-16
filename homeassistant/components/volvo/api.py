@@ -8,7 +8,6 @@ from volvocarsapi.auth import AccessTokenManager
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 
 
-# For more info see the docs at https://developers.home-assistant.io/docs/api_lib_auth/#oauth2.
 class VolvoAuth(AccessTokenManager):
     """Provide Volvo authentication tied to an OAuth2 based config entry."""
 

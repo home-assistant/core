@@ -61,7 +61,7 @@ class VolvoDataCoordinator(DataUpdateCoordinator[CoordinatorData]):
             update_interval=timedelta(seconds=135),
         )
 
-        self.api = api
+        self.api: VolvoCarsApi = api
 
         self.vehicle: VolvoCarsVehicle
         self.device: DeviceInfo
@@ -81,18 +81,17 @@ class VolvoDataCoordinator(DataUpdateCoordinator[CoordinatorData]):
 
         try:
             vehicle = await self.api.async_get_vehicle_details()
-
-            if vehicle is None:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN, translation_key="no_vehicle"
-                )
-
         except VolvoAuthException as ex:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="unauthorized",
                 translation_placeholders={"message": ex.message},
             ) from ex
+
+        if vehicle is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="no_vehicle"
+            )
 
         self.vehicle = vehicle
         self.data = self.data or {}
