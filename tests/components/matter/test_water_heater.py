@@ -129,12 +129,73 @@ async def test_water_heater_set_temperature(
         )
 
     @pytest.mark.parametrize("node_fixture", ["silabs_water_heater"])
-    async def test_water_heater_set_on_off(
+    async def test_water_heater_boostmode(
         hass: HomeAssistant,
         matter_client: MagicMock,
         matter_node: MatterNode,
     ) -> None:
         """Test water_heater set operation mode service."""
+        # Boost 1h (3600s)
+        boost_info: type[
+            clusters.WaterHeaterManagement.Structs.WaterHeaterBoostInfoStruct
+        ] = clusters.WaterHeaterManagement.Structs.WaterHeaterBoostInfoStruct(
+            duration=3600
+        )
+        state = hass.states.get("water_heater.water_heater")
+        assert state
+
+        # enable water_heater boostmode
+        await hass.services.async_call(
+            "water_heater",
+            "set_operation_mode",
+            {
+                "entity_id": "water_heater.water_heater",
+                "operation_mode": STATE_HIGH_DEMAND,
+            },
+            blocking=True,
+        )
+
+        state = hass.states.get("water_heater.water_heater")
+        assert state.state == STATE_HIGH_DEMAND
+        assert matter_client.write_attribute.call_count == 1
+        assert matter_client.write_attribute.call_args == call(
+            node_id=matter_node.node_id,
+            attribute_path=create_attribute_path_from_attribute(
+                endpoint_id=2,
+                attribute=clusters.Thermostat.Attributes.SystemMode,
+            ),
+            value=0,
+        )
+        assert matter_client.send_device_command.call_count == 1
+        assert matter_client.send_device_command.call_args == call(
+            node_id=matter_node.node_id,
+            endpoint_id=2,
+            command=clusters.WaterHeaterManagement.Commands.Boost(boostInfo=boost_info),
+            timed_request_timeout_ms=3000,
+        )
+
+    @pytest.mark.parametrize("node_fixture", ["silabs_water_heater"])
+    async def test_update_from_water_heater(
+        hass: HomeAssistant,
+        matter_client: MagicMock,
+        matter_node: MatterNode,
+    ) -> None:
+        """Test enable boost from water heater device side."""
+        state = hass.states.get("water_heater.water_heater")
+        assert state
+
+        set_node_attribute(matter_node, 2, 148, 5, 1)
+        await trigger_subscription_callback(hass, matter_client)
+        state = hass.states.get("water_heater.water_heater")
+        assert state.state == STATE_HIGH_DEMAND
+
+    @pytest.mark.parametrize("node_fixture", ["silabs_water_heater"])
+    async def test_water_heater_turn_on_off(
+        hass: HomeAssistant,
+        matter_client: MagicMock,
+        matter_node: MatterNode,
+    ) -> None:
+        """Test water_heater set turn_off/turn_on."""
         state = hass.states.get("water_heater.water_heater")
         assert state
 
@@ -181,18 +242,3 @@ async def test_water_heater_set_temperature(
             ),
             value=4,
         )
-
-    @pytest.mark.parametrize("node_fixture", ["silabs_water_heater"])
-    async def test_update_from_water_heater(
-        hass: HomeAssistant,
-        matter_client: MagicMock,
-        matter_node: MatterNode,
-    ) -> None:
-        """Test enable boost from water heater device side."""
-        state = hass.states.get("water_heater.water_heater")
-        assert state
-
-        set_node_attribute(matter_node, 2, 148, 5, 1)
-        await trigger_subscription_callback(hass, matter_client)
-        state = hass.states.get("water_heater.water_heater")
-        assert state.state == STATE_HIGH_DEMAND
