@@ -54,10 +54,10 @@ async def test_sensor_setup(
         f"{PLATFORM}.{device_name}_plc_uplink_phy_rate_{PLCNET.devices[1].user_device_name}"
     ).disabled
     assert entity_registry.async_get(
-        f"{PLATFORM}.{device_name}_plc_downlink_phyrate_{PLCNET.devices[2].user_device_name}"
+        f"{PLATFORM}.{device_name}_plc_downlink_phy_rate_{PLCNET.devices[2].user_device_name}"
     ).disabled
     assert entity_registry.async_get(
-        f"{PLATFORM}.{device_name}_plc_uplink_phyrate_{PLCNET.devices[2].user_device_name}"
+        f"{PLATFORM}.{device_name}_plc_uplink_phy_rate_{PLCNET.devices[2].user_device_name}"
     ).disabled
     assert entity_registry.async_get(
         f"{PLATFORM}.{device_name}_last_restart_of_the_device"
