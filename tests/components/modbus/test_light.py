@@ -22,11 +22,11 @@ from homeassistant.components.modbus.const import (
     CONF_STATE_ON,
     CONF_VERIFY,
     CONF_WRITE_TYPE,
-    DEFAULT_MAX_KELVIN,
-    DEFAULT_MIN_KELVIN,
+    LIGHT_DEFAULT_MAX_KELVIN,
+    LIGHT_DEFAULT_MIN_KELVIN,
     MODBUS_DOMAIN,
-    MODBUS_SCALE_MAX,
-    MODBUS_SCALE_MIN,
+    LIGHT_MODBUS_SCALE_MAX,
+    LIGHT_MODBUS_SCALE_MIN,
 )
 from homeassistant.components.modbus.light import ModbusLight
 from homeassistant.const import (
@@ -478,10 +478,10 @@ async def test_color_temp_light(hass: HomeAssistant, mock_modbus_ha) -> None:
     calls = mock_modbus_ha.write_register.call_args_list
     modbus_brightness = await ModbusLight._convert_brightness_to_modbus(brightness=128)
     modbus_temp = round(
-        MODBUS_SCALE_MIN
-        + (2000 - DEFAULT_MIN_KELVIN)
-        * (MODBUS_SCALE_MAX - MODBUS_SCALE_MIN)
-        / (DEFAULT_MAX_KELVIN - DEFAULT_MIN_KELVIN)
+        LIGHT_MODBUS_SCALE_MIN
+        + (2000 - LIGHT_DEFAULT_MIN_KELVIN)
+        * (LIGHT_MODBUS_SCALE_MAX - LIGHT_MODBUS_SCALE_MIN)
+        / (LIGHT_DEFAULT_MAX_KELVIN - LIGHT_DEFAULT_MIN_KELVIN)
     )
 
     assert any(
@@ -518,10 +518,10 @@ class TestModbusConvectors:
         kelvin = 2000
         expected = 0
         result = round(
-            MODBUS_SCALE_MIN
-            + (kelvin - DEFAULT_MIN_KELVIN)
-            * (MODBUS_SCALE_MAX - MODBUS_SCALE_MIN)
-            / (DEFAULT_MAX_KELVIN - DEFAULT_MIN_KELVIN)
+            LIGHT_MODBUS_SCALE_MIN
+            + (kelvin - LIGHT_DEFAULT_MIN_KELVIN)
+            * (LIGHT_MODBUS_SCALE_MAX - LIGHT_MODBUS_SCALE_MIN)
+            / (LIGHT_DEFAULT_MAX_KELVIN - LIGHT_DEFAULT_MIN_KELVIN)
         )
         assert result == expected
 
@@ -530,11 +530,11 @@ class TestModbusConvectors:
         percent = 20
         expected_kelvin = 3000
         result = round(
-            DEFAULT_MIN_KELVIN
+            LIGHT_DEFAULT_MIN_KELVIN
             + (
                 percent
-                / (MODBUS_SCALE_MAX - MODBUS_SCALE_MIN)
-                * (DEFAULT_MAX_KELVIN - DEFAULT_MIN_KELVIN)
+                / (LIGHT_MODBUS_SCALE_MAX - LIGHT_MODBUS_SCALE_MIN)
+                * (LIGHT_DEFAULT_MAX_KELVIN - LIGHT_DEFAULT_MIN_KELVIN)
             )
         )
         assert result == expected_kelvin

@@ -23,12 +23,12 @@ from .const import (
     CONF_COLOR_TEMP_REGISTER,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
-    DEFAULT_BRIGHTNESS,
-    DEFAULT_MAX_KELVIN,
-    DEFAULT_MIN_KELVIN,
-    MAX_BRIGHTNESS,
-    MODBUS_SCALE_MAX,
-    MODBUS_SCALE_MIN,
+    LIGHT_DEFAULT_BRIGHTNESS,
+    LIGHT_DEFAULT_MAX_KELVIN,
+    LIGHT_DEFAULT_MIN_KELVIN,
+    LIGHT_MAX_BRIGHTNESS,
+    LIGHT_MODBUS_SCALE_MAX,
+    LIGHT_MODBUS_SCALE_MIN,
 )
 from .entity import BaseSwitch
 from .modbus import ModbusHub
@@ -57,7 +57,7 @@ class ModbusLight(BaseSwitch, LightEntity):
     ) -> None:
         """Initialize the Modbus light entity."""
         super().__init__(hass, hub, config)
-        self._attr_brightness: int = DEFAULT_BRIGHTNESS
+        self._attr_brightness: int = LIGHT_DEFAULT_BRIGHTNESS
         self._brightness_address: int | None = config.get(CONF_BRIGHTNESS_REGISTER)
         self._color_temp_address: int | None = config.get(CONF_COLOR_TEMP_REGISTER)
         self._attr_color_temp_kelvin: int | None = None
@@ -69,10 +69,10 @@ class ModbusLight(BaseSwitch, LightEntity):
         # Set min/max kelvin values if the mode is COLOR_TEMP
         if self._attr_color_mode == ColorMode.COLOR_TEMP:
             self._attr_min_color_temp_kelvin = config.get(
-                CONF_MIN_TEMP, DEFAULT_MIN_KELVIN
+                CONF_MIN_TEMP, LIGHT_DEFAULT_MIN_KELVIN
             )
             self._attr_max_color_temp_kelvin = config.get(
-                CONF_MAX_TEMP, DEFAULT_MAX_KELVIN
+                CONF_MAX_TEMP, LIGHT_DEFAULT_MAX_KELVIN
             )
 
     @staticmethod
@@ -171,7 +171,7 @@ class ModbusLight(BaseSwitch, LightEntity):
     @staticmethod
     async def _convert_modbus_percent_to_brightness(percent: int) -> int:
         """Convert Modbus scale (0-100) to the brightness (0-255)."""
-        return round(percent / (MODBUS_SCALE_MAX - MODBUS_SCALE_MIN) * MAX_BRIGHTNESS)
+        return round(percent / (LIGHT_MODBUS_SCALE_MAX - LIGHT_MODBUS_SCALE_MIN) * LIGHT_MAX_BRIGHTNESS)
 
     async def _convert_modbus_percent_to_temperature(self, percent: int) -> int:
         """Convert Modbus scale (0-100) to the color temperature in Kelvin (2000-7000 К)."""
@@ -179,7 +179,7 @@ class ModbusLight(BaseSwitch, LightEntity):
             self._attr_min_color_temp_kelvin
             + (
                 percent
-                / (MODBUS_SCALE_MAX - MODBUS_SCALE_MIN)
+                / (LIGHT_MODBUS_SCALE_MAX - LIGHT_MODBUS_SCALE_MIN)
                 * (self._attr_max_color_temp_kelvin - self._attr_min_color_temp_kelvin)
             )
         )
@@ -188,14 +188,14 @@ class ModbusLight(BaseSwitch, LightEntity):
     async def _convert_brightness_to_modbus(brightness: int) -> int:
         """Convert brightness (0-255) to Modbus scale (0-100)."""
         return round(
-            brightness / MAX_BRIGHTNESS * (MODBUS_SCALE_MAX - MODBUS_SCALE_MIN)
+            brightness / LIGHT_MAX_BRIGHTNESS * (LIGHT_MODBUS_SCALE_MAX - LIGHT_MODBUS_SCALE_MIN)
         )
 
     async def _convert_color_temp_to_modbus(self, kelvin: int) -> int:
         """Convert color temperature from Kelvin to the Modbus scale (0-100)."""
         return round(
-            MODBUS_SCALE_MIN
+            LIGHT_MODBUS_SCALE_MIN
             + (kelvin - self._attr_min_color_temp_kelvin)
-            * (MODBUS_SCALE_MAX - MODBUS_SCALE_MIN)
+            * (LIGHT_MODBUS_SCALE_MAX - LIGHT_MODBUS_SCALE_MIN)
             / (self._attr_max_color_temp_kelvin - self._attr_min_color_temp_kelvin)
         )
