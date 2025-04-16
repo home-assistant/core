@@ -4,10 +4,7 @@ rules:
     status: exempt
     comment: |
       The integration does not provide any additional actions.
-  appropriate-polling:
-    status: todo
-    comment: |
-      Move "_attr_should_poll = False" to base entity.
+  appropriate-polling: done
   brands: done
   common-modules: done
   config-flow-test-coverage:
