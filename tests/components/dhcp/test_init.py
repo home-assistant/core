@@ -679,6 +679,19 @@ def _make_device_tracker_watcher(
     )
 
 
+def _make_device_tracker_registered_watcher(
+    hass: HomeAssistant, matchers: list[dhcp.DHCPMatcher]
+) -> dhcp.DeviceTrackerRegisteredWatcher:
+    return dhcp.DeviceTrackerRegisteredWatcher(
+        hass,
+        DHCPData(
+            dhcp.async_index_integration_matchers(matchers),
+            set(),
+            {},
+        ),
+    )
+
+
 def _make_network_watcher(
     hass: HomeAssistant, matchers: list[dhcp.DHCPMatcher]
 ) -> dhcp.NetworkWatcher:
@@ -739,7 +752,7 @@ async def test_device_tracker_hostname_and_macaddress_exists_before_start(
 async def test_device_tracker_registered(hass: HomeAssistant) -> None:
     """Test matching based on hostname and macaddress when registered."""
     with patch.object(hass.config_entries.flow, "async_init") as mock_init:
-        device_tracker_watcher = _make_device_tracker_watcher(
+        device_tracker_watcher = _make_device_tracker_registered_watcher(
             hass,
             [
                 {
