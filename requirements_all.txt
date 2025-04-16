@@ -243,7 +243,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==29.10.0
+aioesphomeapi==30.0.1
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -1957,7 +1957,7 @@ pyenphase==1.25.5
 pyenvisalink==4.7
 
 # homeassistant.components.ephember
-pyephember==0.3.1
+pyephember2==0.4.12
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
@@ -2113,7 +2113,7 @@ pylitterbot==2024.0.0
 pylutron-caseta==0.24.0
 
 # homeassistant.components.lutron
-pylutron==0.2.16
+pylutron==0.2.18
 
 # homeassistant.components.mailgun
 pymailgunner==1.4
@@ -2633,7 +2633,7 @@ renault-api==0.2.9
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.13.1
+reolink-aio==0.13.2
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
@@ -3152,7 +3152,7 @@ zabbix-utils==2.0.2
 zamg==0.3.6
 
 # homeassistant.components.zeroconf
-zeroconf==0.146.0
+zeroconf==0.146.5
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.2

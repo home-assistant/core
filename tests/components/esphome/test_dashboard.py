@@ -106,6 +106,7 @@ async def test_restore_dashboard_storage_skipped_if_addon_uninstalled(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
         assert mock_config_entry.state is ConfigEntryState.LOADED
+        await hass.async_block_till_done()  # wait for dashboard setup
         assert "test-slug is no longer installed" in caplog.text
         assert not mock_dashboard_api.called
 
