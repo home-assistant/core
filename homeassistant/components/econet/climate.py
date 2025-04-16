@@ -23,10 +23,8 @@ from homeassistant.components.climate import (
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.issue_registry import IssueSeverity, create_issue
 
 from . import EconetConfigEntry
-from .const import DOMAIN
 from .entity import EcoNetEntity
 
 ECONET_STATE_TO_HA = {
@@ -211,34 +209,6 @@ class EcoNetThermostat(EcoNetEntity[Thermostat], ClimateEntity):
     def set_fan_mode(self, fan_mode: str) -> None:
         """Set the fan mode."""
         self._econet.set_fan_mode(HA_FAN_STATE_TO_ECONET[fan_mode])
-
-    def turn_aux_heat_on(self) -> None:
-        """Turn auxiliary heater on."""
-        create_issue(
-            self.hass,
-            DOMAIN,
-            "migrate_aux_heat",
-            breaks_in_ha_version="2025.4.0",
-            is_fixable=True,
-            is_persistent=True,
-            translation_key="migrate_aux_heat",
-            severity=IssueSeverity.WARNING,
-        )
-        self._econet.set_mode(ThermostatOperationMode.EMERGENCY_HEAT)
-
-    def turn_aux_heat_off(self) -> None:
-        """Turn auxiliary heater off."""
-        create_issue(
-            self.hass,
-            DOMAIN,
-            "migrate_aux_heat",
-            breaks_in_ha_version="2025.4.0",
-            is_fixable=True,
-            is_persistent=True,
-            translation_key="migrate_aux_heat",
-            severity=IssueSeverity.WARNING,
-        )
-        self._econet.set_mode(ThermostatOperationMode.HEATING)
 
     @property
     def min_temp(self):
