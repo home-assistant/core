@@ -4,15 +4,13 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
-import dataclasses
-from dataclasses import dataclass
 from datetime import timedelta
 from fnmatch import translate
 from functools import lru_cache, partial
 import itertools
 import logging
 import re
-from typing import TYPE_CHECKING, Any, Final, TypedDict
+from typing import TYPE_CHECKING, Any, Final
 
 import aiodhcpwatcher
 from aiodiscover import DiscoverHosts
@@ -67,16 +65,13 @@ from homeassistant.helpers.event import (
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo as _DhcpServiceInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import DHCPMatcher, async_get_dhcp
-from homeassistant.util.hass_dict import HassKey
 
 from . import websocket_api
-from .const import DOMAIN
+from .const import DOMAIN, HOSTNAME, IP_ADDRESS, MAC_ADDRESS
+from .models import DATA_DHCP, DHCPAddressData, DHCPData, DhcpMatchers
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
-HOSTNAME: Final = "hostname"
-MAC_ADDRESS: Final = "macaddress"
-IP_ADDRESS: Final = "ip"
 REGISTERED_DEVICES: Final = "registered_devices"
 SCAN_INTERVAL = timedelta(minutes=60)
 
@@ -89,36 +84,6 @@ _DEPRECATED_DhcpServiceInfo = DeprecatedConstant(
     "homeassistant.helpers.service_info.dhcp.DhcpServiceInfo",
     "2026.2",
 )
-
-
-@dataclass(slots=True)
-class DhcpMatchers:
-    """Prepared info from dhcp entries."""
-
-    registered_devices_domains: set[str]
-    no_oui_matchers: dict[str, list[DHCPMatcher]]
-    oui_matchers: dict[str, list[DHCPMatcher]]
-
-
-class DHCPAddressData(TypedDict):
-    """Typed dict for DHCP address data."""
-
-    hostname: str
-    ip: str
-
-
-@dataclasses.dataclass(slots=True)
-class DHCPData:
-    """Data for the dhcp component."""
-
-    integration_matchers: DhcpMatchers
-    callbacks: set[Callable[[_DhcpServiceInfo], None]] = dataclasses.field(
-        default_factory=set
-    )
-    address_data: dict[str, DHCPAddressData] = dataclasses.field(default_factory=dict)
-
-
-DATA_DHCP: HassKey[DHCPData] = HassKey(DOMAIN)
 
 
 def async_index_integration_matchers(

@@ -9,11 +9,10 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.json import json_bytes
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo as _DhcpServiceInfo
 
-from . import (
-    HOSTNAME,
-    IP_ADDRESS,
-    _DhcpServiceInfo,
+from .const import HOSTNAME, IP_ADDRESS
+from .helpers import (
     async_get_address_data_internal,
     async_register_dhcp_callback_internal,
 )
