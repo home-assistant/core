@@ -21,7 +21,7 @@ from tests.common import MockConfigEntry, snapshot_platform
 TEST_PLATFORM = Platform.LIGHT
 pytestmark = pytest.mark.parametrize("platforms", [(TEST_PLATFORM,)])
 
-ENTITY_ID = "light.oven_light"
+ENTITY_ID = "light.hood_light"
 
 
 async def test_light_states(

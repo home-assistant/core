@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 import logging
 from typing import Any, Final
@@ -17,10 +18,11 @@ from homeassistant.components.light import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from .const import AMBIENT_LIGHT, DOMAIN, LIGHT, LIGHT_OFF, LIGHT_ON, MieleAppliance
-from .coordinator import MieleConfigEntry
-from .entity import MieleEntity
+from .coordinator import MieleConfigEntry, MieleDataUpdateCoordinator
+from .entity import MieleDevice, MieleEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,7 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 class MieleLightDescription(LightEntityDescription):
     """Class describing Miele light entities."""
 
-    data_tag: str
+    value_fn: Callable[[MieleDevice], StateType]
     preset_modes: list | None = None
     supported_features = LightEntityFeature(0)
 
@@ -61,15 +63,15 @@ LIGHT_TYPES: Final[tuple[MieleLightDefinition, ...]] = (
         ),
         description=MieleLightDescription(
             key="light",
-            data_tag="light",
-            # translation_key="light",
+            value_fn=lambda value: value.state_light,
+            translation_key="light",
         ),
     ),
     MieleLightDefinition(
         types=(MieleAppliance.HOOD,),
         description=MieleLightDescription(
             key="ambient_light",
-            data_tag="ambientlight",
+            value_fn=lambda value: value.state_ambient_light,
             translation_key="ambient_light",
         ),
     ),
@@ -101,39 +103,32 @@ class MieleLight(MieleEntity, LightEntity):
     _attr_color_mode = ColorMode.ONOFF
     _attr_supported_color_modes = {ColorMode.ONOFF}
 
-    # def __init__(
-    #     self,
-    #     coordinator: MieleDataUpdateCoordinator,
-    #     device_id: str,
-    #     description: MieleLightDescription,
-    # ) -> None:
-    #     """Initialize the light."""
-    #     super().__init__(coordinator, device_id, description)
-    #     self.api = coordinator.api
+    def __init__(
+        self,
+        coordinator: MieleDataUpdateCoordinator,
+        device_id: str,
+        description: MieleLightDescription,
+    ) -> None:
+        """Initialize the light."""
+        super().__init__(coordinator, device_id, description)
+        self.api = coordinator.api
 
-    #     self._attr_supported_features = self.entity_description.supported_features
+        self._attr_supported_features = self.entity_description.supported_features
 
     @property
     def is_on(self) -> bool | None:
         """Return current on/off state."""
-        return (
-            getattr(
-                self.device,
-                self.entity_description.data_tag,
-                None,
-            )
-            == LIGHT_ON
-        )
+        return self.entity_description.value_fn(self.device) == LIGHT_ON
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
-        await self._async_turn_light(LIGHT_ON)
+        await self.async_turn_light(LIGHT_ON)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
-        await self._async_turn_light(LIGHT_OFF)
+        await self.async_turn_light(LIGHT_OFF)
 
-    async def _async_turn_light(self, mode: int) -> None:
+    async def async_turn_light(self, mode: int) -> None:
         """Set light to mode."""
         light_type = (
             AMBIENT_LIGHT if self.entity_description.key == "ambient_light" else LIGHT
