@@ -6660,10 +6660,10 @@ async def test_calling_service_backwards_compatible(
     )
 
 
-async def test_enabled_seq_in_para(
+async def test_enabled_sequence_in_parallel(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test to ensure seqeuene inside parallel follows enabled tag."""
+    """Test to ensure sequence inside parallel follows enabled tag."""
     sequence = cv.SCRIPT_SCHEMA(
         {
             "parallel": [
