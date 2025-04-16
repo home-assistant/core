@@ -81,7 +81,7 @@ async def async_setup_entry(
             ]
         )
 
-        for container in endpoint.containers:
+        for container in endpoint.containers.values():
             entities.extend(
                 [
                     PortainerContainerSensor(

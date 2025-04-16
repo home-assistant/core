@@ -34,7 +34,7 @@ class PortainerCoordinatorData:
     id: int
     name: str
     endpoint: Endpoint
-    containers: list[DockerContainer]
+    containers: dict[DockerContainer, DockerContainer]
 
 
 class PortainerCoordinator(DataUpdateCoordinator[dict[str, dict]]):
