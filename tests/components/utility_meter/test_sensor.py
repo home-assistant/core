@@ -1640,7 +1640,14 @@ async def _test_self_reset(
     with freeze_time(now):
         # Listen for events and check that state in the first event after reset is actually 0, issue #142053
         events = []
-        unsub = async_track_state_change_event(
+async def handle_energy_bill_event(event):
+    events.append(event)
+
+unsub = async_track_state_change_event(
+    hass,
+    "sensor.energy_bill",
+    handle_energy_bill_event,
+)
             hass,
             "sensor.energy_bill",
             # pylint: disable-next=unnecessary-lambda
