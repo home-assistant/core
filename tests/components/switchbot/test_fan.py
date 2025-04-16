@@ -3,6 +3,8 @@
 from collections.abc import Callable
 from unittest.mock import AsyncMock, patch
 
+import pytest
+
 from homeassistant.components.fan import (
     ATTR_OSCILLATING,
     ATTR_PERCENTAGE,
@@ -27,10 +29,69 @@ from tests.common import MockConfigEntry
 from tests.components.bluetooth import inject_bluetooth_service_info
 
 
+@pytest.mark.parametrize(
+    (
+        "service",
+        "service_data",
+        "mock_method",
+        "expected_attributes",
+        "expected_state",
+        "manufacturer_data",
+    ),
+    [
+        (
+            SERVICE_SET_PRESET_MODE,
+            {ATTR_PRESET_MODE: "BABY"},
+            "set_preset_mode",
+            {ATTR_PRESET_MODE: "BABY"},
+            STATE_ON,
+            b"\xb0\xe9\xfeXY\xa8\xfd\xccWO",
+        ),
+        (
+            SERVICE_SET_PERCENTAGE,
+            {ATTR_PERCENTAGE: 27},
+            "set_percentage",
+            {ATTR_PERCENTAGE: 27},
+            STATE_ON,
+            b"\xb0\xe9\xfeXY\xa8\x02\x9cW\x1b",
+        ),
+        (
+            SERVICE_OSCILLATE,
+            {ATTR_OSCILLATING: True},
+            "set_oscillation",
+            {ATTR_OSCILLATING: True},
+            STATE_ON,
+            b"\xb0\xe9\xfeXY\xa8\x04\x9eU\x1b",
+        ),
+        (
+            SERVICE_TURN_OFF,
+            {},
+            "turn_off",
+            {},
+            STATE_OFF,
+            b"\xb0\xe9\xfeXY\xa8\x06\x1eO\x1b",
+        ),
+        (
+            SERVICE_TURN_ON,
+            {},
+            "turn_on",
+            {},
+            STATE_ON,
+            b"\xb0\xe9\xfeXY\xa8\x07\x9eO\x1b",
+        ),
+    ],
+)
 async def test_circulator_fan_controlling(
-    hass: HomeAssistant, mock_entry_factory: Callable[[str], MockConfigEntry]
+    hass: HomeAssistant,
+    mock_entry_factory: Callable[[str], MockConfigEntry],
+    service: str,
+    service_data: dict,
+    mock_method: str,
+    expected_attributes: dict,
+    expected_state: str,
+    manufacturer_data: bytes,
 ) -> None:
-    """Test setting up the circulator controlling."""
+    """Test controlling the circulator fan with different services."""
     inject_bluetooth_service_info(hass, CIRCULATOR_FAN_SERVICE_INFO)
 
     entry = mock_entry_factory(sensor_type="circulator_fan")
@@ -66,99 +127,35 @@ async def test_circulator_fan_controlling(
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        entity_id = "fan.test_name"
+        data = {ATTR_ENTITY_ID: entity_id}
+        data.update(service_data)
+
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            service,
+            data,
+            blocking=True,
+        )
+
         address = "AA:BB:CC:DD:EE:FF"
-        service_data = b"~\x00R"
-
-        # Test set preset mode
-        manufacturer_data = b"\xb0\xe9\xfeXY\xa8\xfd\xccWO"
-        await hass.services.async_call(
-            FAN_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: "BABY"},
-            blocking=True,
-        )
-
+        adv_service_data = b"~\x00R"
         inject_bluetooth_service_info(
-            hass, make_advertisement(address, manufacturer_data, service_data)
+            hass,
+            make_advertisement(address, manufacturer_data, adv_service_data),
         )
         await hass.async_block_till_done()
 
-        mock_set_preset_mode.assert_awaited_once()
+        mock_mapping = {
+            "set_preset_mode": mock_set_preset_mode,
+            "set_percentage": mock_set_percentage,
+            "set_oscillation": mock_set_oscillation,
+            "turn_on": mock_turn_on,
+            "turn_off": mock_turn_off,
+        }
+        mock_instance = mock_mapping[mock_method]
+        mock_instance.assert_awaited_once()
+
         state = hass.states.get(entity_id)
-        assert state.state == STATE_ON
-        assert state.attributes[ATTR_PRESET_MODE] == "BABY"
-
-        # Test set percentage
-        manufacturer_data = b"\xb0\xe9\xfeXY\xa8\x02\x9cW\x1b"
-        await hass.services.async_call(
-            FAN_DOMAIN,
-            SERVICE_SET_PERCENTAGE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_PERCENTAGE: 27},
-            blocking=True,
-        )
-
-        inject_bluetooth_service_info(
-            hass, make_advertisement(address, manufacturer_data, service_data)
-        )
-        await hass.async_block_till_done()
-
-        mock_set_percentage.assert_awaited_once()
-        state = hass.states.get(entity_id)
-        assert state.state == STATE_ON
-        assert state.attributes[ATTR_PERCENTAGE] == 27
-
-        # Test set oscillate
-        manufacturer_data = b"\xb0\xe9\xfeXY\xa8\x04\x9eU\x1b"
-        await hass.services.async_call(
-            FAN_DOMAIN,
-            SERVICE_OSCILLATE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_OSCILLATING: True},
-            blocking=True,
-        )
-
-        inject_bluetooth_service_info(
-            hass, make_advertisement(address, manufacturer_data, service_data)
-        )
-        await hass.async_block_till_done()
-
-        mock_set_oscillation.assert_awaited_once()
-        state = hass.states.get(entity_id)
-        assert state.state == STATE_ON
-        assert state.attributes[ATTR_OSCILLATING] is True
-
-        # Test turn off
-        manufacturer_data = b"\xb0\xe9\xfeXY\xa8\x06\x1eO\x1b"
-        await hass.services.async_call(
-            FAN_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: entity_id},
-            blocking=True,
-        )
-
-        inject_bluetooth_service_info(
-            hass, make_advertisement(address, manufacturer_data, service_data)
-        )
-        await hass.async_block_till_done()
-
-        mock_turn_off.assert_awaited_once()
-        state = hass.states.get(entity_id)
-        assert state.state == STATE_OFF
-
-        # Test turn on
-        manufacturer_data = b"\xb0\xe9\xfeXY\xa8\x07\x9eO\x1b"
-        await hass.services.async_call(
-            FAN_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_id},
-            blocking=True,
-        )
-
-        inject_bluetooth_service_info(
-            hass, make_advertisement(address, manufacturer_data, service_data)
-        )
-        await hass.async_block_till_done()
-
-        mock_turn_on.assert_awaited_once()
-        state = hass.states.get(entity_id)
-        assert state.state == STATE_ON
+        assert state.state == expected_state
+        for attr, value in expected_attributes.items():
+            assert state.attributes.get(attr) == value
