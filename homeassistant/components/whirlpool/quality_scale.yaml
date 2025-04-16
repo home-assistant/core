@@ -4,10 +4,18 @@ rules:
     status: exempt
     comment: |
       The integration does not provide any additional actions.
-  appropriate-polling: done
+  appropriate-polling:
+    status: todo
+    comment: |
+      Move "_attr_should_poll = False" to base entity.
   brands: done
   common-modules: done
-  config-flow-test-coverage: done
+  config-flow-test-coverage:
+    status: todo
+    comment: |
+      - Assert the unique_id in test_form
+      - Update test_form* test names and docstrings
+      - Make test_form_invalid_auth and test_reauth_flow_invalid_auth, and test_reauth_flow_auth_error finish in an happy flow
   config-flow: done
   dependency-transparency: done
   docs-actions:
@@ -22,14 +30,17 @@ rules:
   has-entity-name: done
   runtime-data: done
   test-before-configure: done
-  test-before-setup: done
+  test-before-setup:
+    status: todo
+    comment: |
+      When fetch_appliances fails, ConfigEntryNotReady should be raised.
   unique-config-entry: done
-
   # Silver
   action-exceptions:
     status: todo
     comment: |
-      The calls to the api can be changed to return bool, and services can then raise HomeAssistantError
+      - The calls to the api can be changed to return bool, and services can then raise HomeAssistantError
+      - Current services raise ValueError and should raise ServiceValidationError instead.
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
@@ -42,7 +53,10 @@ rules:
   reauthentication-flow: done
   test-coverage:
     status: todo
-    comment: climate is at 94%
+    comment: |
+      - Test helper init_integration() does not set a unique_id
+      - Merge test_setup_http_exception and test_setup_auth_account_locked
+      - The climate platform is at 94%
 
   # Gold
   devices: done
@@ -68,11 +82,14 @@ rules:
   entity-disabled-by-default: done
   entity-translations: done
   exception-translations: todo
-  icon-translations: done
+  icon-translations:
+    status: todo
+    comment: |
+      Time remaining sensor still has hardcoded icon.
   reconfiguration-flow: todo
   repair-issues:
     status: exempt
-    comment: no known use cases for repair issues or flows, yet
+    comment: No known use cases for repair issues or flows, yet
   stale-devices: todo
 
   # Platinum

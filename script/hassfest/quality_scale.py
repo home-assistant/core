@@ -2180,6 +2180,7 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "webmin",
     "weheat",
     "wemo",
+    "whirlpool",
     "whois",
     "wiffi",
     "wilight",
