@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, TypedDict
+from typing import Any
 
 import voluptuous as vol
 
@@ -19,28 +19,10 @@ from .helpers import (
 )
 
 
-class DHCPDiscovery(TypedDict):
-    """Typed dict for DHCP discovery."""
-
-    mac_address: str
-    hostname: str
-    ip_address: str
-
-
 @callback
 def async_setup(hass: HomeAssistant) -> None:
     """Set up the DHCP websocket API."""
     websocket_api.async_register_command(hass, ws_subscribe_discovery)
-
-
-def serialize_service_info(service_info: _DhcpServiceInfo) -> DHCPDiscovery:
-    """Serialize a _DhcpServiceInfo object."""
-    serialized: DHCPDiscovery = {
-        "mac_address": dr.format_mac(service_info.macaddress).upper(),
-        "hostname": service_info.hostname,
-        "ip_address": service_info.ip,
-    }
-    return serialized
 
 
 class _DiscoverySubscription:
@@ -93,20 +75,20 @@ class _DiscoverySubscription:
             }
         )
 
-    def _async_added(self, service_infos: list[_DhcpServiceInfo]) -> None:
-        self._async_event_message(
-            {
-                "add": [
-                    serialize_service_info(service_info)
-                    for service_info in service_infos
-                ]
-            }
-        )
-
     @callback
     def _async_on_discovery(self, service_info: _DhcpServiceInfo) -> None:
         """Handle the callback."""
-        self._async_event_message({"add": [serialize_service_info(service_info)]})
+        self._async_event_message(
+            {
+                "add": [
+                    {
+                        "mac_address": dr.format_mac(service_info.macaddress).upper(),
+                        "hostname": service_info.hostname,
+                        "ip_address": service_info.ip,
+                    }
+                ]
+            }
+        )
 
 
 @websocket_api.require_admin
