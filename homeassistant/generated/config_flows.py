@@ -379,6 +379,7 @@ FLOWS = {
         "meteoclimatic",
         "metoffice",
         "microbees",
+        "miele",
         "mikrotik",
         "mill",
         "minecraft_server",

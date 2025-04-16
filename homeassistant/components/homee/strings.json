@@ -136,7 +136,7 @@
         "state_attributes": {
           "preset_mode": {
             "state": {
-              "manual": "Manual"
+              "manual": "[%key:common::state::manual%]"
             }
           }
         }
