@@ -211,6 +211,10 @@ class FibaroController:
         """Return list of scenes."""
         return self._scenes
 
+    def get_all_devices(self) -> list[DeviceModel]:
+        """Return list of all fibaro devices."""
+        return self._fibaro_device_manager.get_devices()
+
     def read_fibaro_info(self) -> InfoModel:
         """Return the general info about the hub."""
         return self._fibaro_info
