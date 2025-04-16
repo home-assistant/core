@@ -82,7 +82,7 @@
       "airpurifier_mode": {
         "state": {
           "silent": "Silent",
-          "auto": "Auto",
+          "auto": "[%key:common::state::auto%]",
           "favorite": "Favorite"
         }
       },

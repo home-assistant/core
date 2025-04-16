@@ -23,7 +23,7 @@ DRYER_ENTITY_ID_BASE = "sensor.dryer"
 
 async def trigger_attr_callback(
     hass: HomeAssistant, mock_api_instance: MagicMock
-) -> State:
+) -> None:
     """Simulate an update trigger from the API."""
 
     for call in mock_api_instance.register_attr_callback.call_args_list:
