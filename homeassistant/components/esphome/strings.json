@@ -180,5 +180,10 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "action_call_failed": {
+      "message": "Failed to execute the action call {call_name} on {device_name}: {error}"
+    }
   }
 }
