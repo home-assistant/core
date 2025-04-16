@@ -294,12 +294,7 @@ class WatcherBase:
             matched_domains.add(domain)
 
         if self._callbacks:
-            address_data: dict[str, DHCPAddressData] = {
-                mac_address: {
-                    "ip": compressed_ip_address,
-                    "hostname": lowercase_hostname,
-                }
-            }
+            address_data = {mac_address: data}
             for callback_ in self._callbacks:
                 callback_(address_data)
 
