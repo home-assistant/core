@@ -6688,3 +6688,11 @@ async def test_enabled_sequence_in_parallel(
 
     assert len(events) == 1
     assert events[0].data["value"] == "enabled"
+
+    expected_trace = {
+        "0": [{"result": {"enabled": False}}],
+        "0/parallel/1/sequence/0": [
+            {"result": {"event": "test_event", "event_data": {"value": "enabled"}}}
+        ],
+    }
+    assert_action_trace(expected_trace)
