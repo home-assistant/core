@@ -119,3 +119,22 @@ async def test_unload_remove(hass: HomeAssistant, router: Mock) -> None:
     assert state_sensor is None
     state_switch = hass.states.get(entity_id_switch)
     assert state_switch is None
+
+async def test_blocking_call_handling(hass: HomeAssistant) -> None:
+    """Test that the blocking call is handled using async_add_executor_job."""
+    with patch("homeassistant.components.freebox.get_api") as mock_get_api, \
+         patch("homeassistant.components.freebox.hass.async_add_executor_job") as mock_executor_job:
+        mock_api = mock_get_api.return_value
+        mock_executor_job.return_value = Mock()
+        
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
+            unique_id=MOCK_HOST,
+        )
+        entry.add_to_hass(hass)
+        
+        await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+        
+        mock_executor_job.assert_called_once_with(mock_api.open, MOCK_HOST, MOCK_PORT)
