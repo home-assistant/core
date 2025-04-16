@@ -48,6 +48,7 @@ from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
+    entity_registry as er,
     template,
 )
 from homeassistant.helpers.device_registry import format_mac
@@ -79,6 +80,8 @@ from .domain_data import DomainData
 
 # Import config flow so that it's added to the registry
 from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
+
+DEVICE_CONFLICT_ISSUE_FORMAT = "device_conflict-{}"
 
 if TYPE_CHECKING:
     from aioesphomeapi.api_pb2 import (  # type: ignore[attr-defined]
@@ -418,7 +421,7 @@ class ESPHomeManager:
         assert reconnect_logic is not None, "Reconnect logic must be set"
         hass = self.hass
         cli = self.cli
-        stored_device_name = entry.data.get(CONF_DEVICE_NAME)
+        stored_device_name: str | None = entry.data.get(CONF_DEVICE_NAME)
         unique_id_is_mac_address = unique_id and ":" in unique_id
         if entry.options.get(CONF_SUBSCRIBE_LOGS):
             self._async_subscribe_logs(self._async_get_equivalent_log_level())
@@ -448,12 +451,36 @@ class ESPHomeManager:
         if not mac_address_matches and not unique_id_is_mac_address:
             hass.config_entries.async_update_entry(entry, unique_id=device_mac)
 
+        issue = DEVICE_CONFLICT_ISSUE_FORMAT.format(entry.entry_id)
         if not mac_address_matches and unique_id_is_mac_address:
             # If the unique id is a mac address
             # and does not match we have the wrong device and we need
             # to abort the connection. This can happen if the DHCP
             # server changes the IP address of the device and we end up
             # connecting to the wrong device.
+            if stored_device_name == device_info.name:
+                # If the device name matches it might be a device replacement
+                # or they made a mistake and flashed the same firmware on
+                # multiple devices. In this case we start a repair flow
+                # to ask them if its a mistake, or if they want to migrate
+                # the config entry to the replacement hardware.
+                shared_data = {
+                    "name": device_info.name,
+                    "mac": format_mac(device_mac),
+                    "stored_mac": format_mac(unique_id),
+                    "model": device_info.model,
+                    "ip": self.host,
+                }
+                async_create_issue(
+                    hass,
+                    DOMAIN,
+                    issue,
+                    is_fixable=True,
+                    severity=IssueSeverity.ERROR,
+                    translation_key="device_conflict",
+                    translation_placeholders=shared_data,
+                    data={**shared_data, "entry_id": entry.entry_id},
+                )
             _LOGGER.error(
                 "Unexpected device found at %s; "
                 "expected `%s` with mac address `%s`, "
@@ -475,6 +502,7 @@ class ESPHomeManager:
             # flow.
             return
 
+        async_delete_issue(hass, DOMAIN, issue)
         # Make sure we have the correct device name stored
         # so we can map the device to ESPHome Dashboard config
         # If we got here, we know the mac address matches or we
@@ -568,7 +596,7 @@ class ESPHomeManager:
 
     async def on_connect_error(self, err: Exception) -> None:
         """Start reauth flow if appropriate connect error type."""
-        if isinstance(
+        if not isinstance(
             err,
             (
                 EncryptionPlaintextAPIError,
@@ -577,7 +605,36 @@ class ESPHomeManager:
                 InvalidAuthAPIError,
             ),
         ):
-            self.entry.async_start_reauth(self.hass)
+            return
+        if isinstance(err, InvalidEncryptionKeyAPIError):
+            if (
+                (received_name := err.received_name)
+                and (received_mac := err.received_mac)
+                and (unique_id := self.entry.unique_id)
+                and ":" in unique_id
+            ):
+                formatted_received_mac = format_mac(received_mac)
+                formatted_expected_mac = format_mac(unique_id)
+                if formatted_received_mac != formatted_expected_mac:
+                    _LOGGER.error(
+                        "Unexpected device found at %s; "
+                        "expected `%s` with mac address `%s`, "
+                        "found `%s` with mac address `%s`",
+                        self.host,
+                        self.entry.data.get(CONF_DEVICE_NAME),
+                        formatted_expected_mac,
+                        received_name,
+                        formatted_received_mac,
+                    )
+                    # If the device comes back online, discovery
+                    # will update the config entry with the new IP address
+                    # and reload which will try again to connect to the device.
+                    # In the mean time we stop the reconnect logic
+                    # so we don't keep trying to connect to the wrong device.
+                    if self.reconnect_logic:
+                        await self.reconnect_logic.stop()
+                    return
+        self.entry.async_start_reauth(self.hass)
 
     @callback
     def _async_handle_logging_changed(self, _event: Event) -> None:
@@ -873,3 +930,40 @@ async def cleanup_instance(
     await data.async_cleanup()
     await data.client.disconnect()
     return data
+
+
+async def async_replace_device(
+    hass: HomeAssistant,
+    entry_id: str,
+    old_mac: str,  # will be lower case (format_mac)
+    new_mac: str,  # will be lower case (format_mac)
+) -> None:
+    """Migrate an ESPHome entry to replace an existing device."""
+    entry = hass.config_entries.async_get_entry(entry_id)
+    assert entry is not None
+    hass.config_entries.async_update_entry(entry, unique_id=new_mac)
+
+    dev_reg = dr.async_get(hass)
+    for device in dr.async_entries_for_config_entry(dev_reg, entry.entry_id):
+        dev_reg.async_update_device(
+            device.id,
+            new_connections={(dr.CONNECTION_NETWORK_MAC, new_mac)},
+        )
+
+    ent_reg = er.async_get(hass)
+    upper_mac = new_mac.upper()
+    old_upper_mac = old_mac.upper()
+    for entity in er.async_entries_for_config_entry(ent_reg, entry.entry_id):
+        # <upper_mac>-<entity type>-<object_id>
+        old_unique_id = entity.unique_id.split("-")
+        new_unique_id = "-".join([upper_mac, *old_unique_id[1:]])
+        if entity.unique_id != new_unique_id and entity.unique_id.startswith(
+            old_upper_mac
+        ):
+            ent_reg.async_update_entity(entity.entity_id, new_unique_id=new_unique_id)
+
+    domain_data = DomainData.get(hass)
+    store = domain_data.get_or_create_store(hass, entry)
+    if data := await store.async_load():
+        data["device_info"]["mac_address"] = upper_mac
+        await store.async_save(data)
