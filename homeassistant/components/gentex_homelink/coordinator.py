@@ -3,8 +3,9 @@
 from dataclasses import dataclass
 import functools
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, TypedDict
 
+from homelink.model.device import Device
 from homelink.mqtt_provider import MQTTProvider
 
 from homeassistant.config_entries import ConfigEntry
@@ -27,7 +28,21 @@ class HomeLinkData:
     last_update_id: str | None
 
 
-class HomeLinkCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+class HomeLinkEventData(TypedDict):
+    """Data for a single event."""
+
+    request_id: str
+    timestamp: int
+
+
+class HomeLinkMQTTMessage(TypedDict):
+    """HomeLink MQTT Event message."""
+
+    type: str
+    data: dict | HomeLinkEventData
+
+
+class HomeLinkCoordinator(DataUpdateCoordinator[dict | HomeLinkEventData]):
     """HomeLink integration coordinator."""
 
     def __init__(
@@ -47,7 +62,7 @@ class HomeLinkCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.provider = provider
         self.last_sync_timestamp = None
         self.last_sync_id = None
-        self.device_data = None
+        self.device_data: list[Device] = []
         self.buttons: list[HomeLinkEventEntity] = []
 
     async def async_on_unload(self, _event):
@@ -66,8 +81,8 @@ class HomeLinkCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Discover devices and build the Entities."""
         self.device_data = await self.provider.discover()
 
-    async def _async_update_data(self) -> dict[str, Any]:
-        """Fetch data from API endpoint."""
+    async def _async_update_data(self) -> dict | HomeLinkEventData:
+        """Fetch data from API endpoint. We only use manual updates so just return an empty dict."""
         return {}
 
     async def async_update_devices(self, message):
@@ -81,7 +96,9 @@ class HomeLinkCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.last_sync_timestamp = message["timestamp"]
 
 
-def on_message(coordinator: HomeLinkCoordinator, _topic, message):
+def on_message(
+    coordinator: HomeLinkCoordinator, _topic: str, message: HomeLinkMQTTMessage
+):
     "MQTT Callback function."
 
     if message["type"] == "state":

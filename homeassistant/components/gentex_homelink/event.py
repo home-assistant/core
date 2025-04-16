@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
 from typing import Any
 
 from homeassistant.components.event import EventDeviceClass, EventEntity
@@ -47,14 +48,20 @@ class HomeLinkEventEntity(CoordinatorEntity[HomeLinkCoordinator], EventEntity):
     ]
     _attr_device_class = EventDeviceClass.BUTTON
 
-    def __init__(self, id, param_name, device_id, device_name, coordinator) -> None:
+    def __init__(
+        self,
+        id: str,
+        param_name: str,
+        device_id: str,
+        device_name: str,
+        coordinator: HomeLinkCoordinator,
+    ) -> None:
         """Initialize the event entity."""
         super().__init__(coordinator, context=id)
 
-        self.id = id
-        name = param_name
-        self._attr_name = name
-        self._attr_unique_id = id
+        self.id: str = id
+        self._attr_name: str = param_name
+        self._attr_unique_id: str = id
         self._attr_device_info = DeviceInfo(
             identifiers={
                 # Serial numbers are unique identifiers within a specific domain
@@ -63,9 +70,9 @@ class HomeLinkEventEntity(CoordinatorEntity[HomeLinkCoordinator], EventEntity):
             name=device_name,
         )
 
-        self.name = name
-        self.unique_id = id
-        self.last_request_id = None
+        self.name: str = param_name
+        self.unique_id: str = id
+        self.last_request_id: str | None = None
         self.button_off_task: asyncio.Task[Any] | None = None
 
     @callback
@@ -87,8 +94,8 @@ class HomeLinkEventEntity(CoordinatorEntity[HomeLinkCoordinator], EventEntity):
 
         if self.last_request_id is None:
             self._trigger_event(EVENT_OFF)
-
-        latest_update = self.coordinator.data[self.id]
+        data: Mapping[str, Any] = self.coordinator.data
+        latest_update = data[self.id]
         # Set button to pressed and then schedule the turnoff
         if latest_update["requestId"] != self.last_request_id:
             self._trigger_event(EVENT_PRESSED)
