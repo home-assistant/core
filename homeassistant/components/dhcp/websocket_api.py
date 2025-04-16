@@ -36,7 +36,7 @@ def async_setup(hass: HomeAssistant) -> None:
 def serialize_service_info(service_info: _DhcpServiceInfo) -> DHCPDiscovery:
     """Serialize a _DhcpServiceInfo object."""
     serialized: DHCPDiscovery = {
-        "mac_address": service_info.macaddress.upper(),
+        "mac_address": dr.format_mac(service_info.macaddress).upper(),
         "hostname": service_info.hostname,
         "ip_address": service_info.ip,
     }
