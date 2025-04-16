@@ -245,6 +245,13 @@ def get_accessory(  # noqa: C901
             a_type = "CarbonDioxideSensor"
         elif device_class == SensorDeviceClass.ILLUMINANCE or unit == LIGHT_LUX:
             a_type = "LightSensor"
+        else:
+            _LOGGER.debug(
+                "%s: Unsupported sensor type (device_class=%s) (unit=%s)",
+                state.entity_id,
+                device_class,
+                unit,
+            )
 
     elif state.domain == "switch":
         if switch_type := config.get(CONF_TYPE):
