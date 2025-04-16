@@ -1,7 +1,5 @@
 """The tests for the media_player platform."""
 
-from contextlib import nullcontext as does_not_raise
-
 import pytest
 
 from homeassistant.components.media_player import (
@@ -227,18 +225,18 @@ async def test_previous_media_player_intent(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("state", "outcome"),
+    "state",
     [
-        (STATE_PLAYING, does_not_raise()),
-        (STATE_PAUSED, does_not_raise()),
-        (STATE_IDLE, does_not_raise()),
-        (STATE_ON, does_not_raise()),
-        (STATE_BUFFERING, pytest.raises(intent.MatchFailedError)),
-        (STATE_STANDBY, pytest.raises(intent.MatchFailedError)),
-        (STATE_OFF, pytest.raises(intent.MatchFailedError)),
+        STATE_PLAYING,
+        STATE_PAUSED,
+        STATE_IDLE,
+        STATE_ON,
+        STATE_BUFFERING,
+        STATE_STANDBY,
+        STATE_OFF,
     ],
 )
-async def test_volume_media_player_intent(hass: HomeAssistant, state, outcome) -> None:
+async def test_volume_media_player_intent(hass: HomeAssistant, state) -> None:
     """Test HassSetVolume intent for media players."""
     await media_player_intent.async_setup_intents(hass)
 
@@ -247,21 +245,20 @@ async def test_volume_media_player_intent(hass: HomeAssistant, state, outcome) -
 
     hass.states.async_set(entity_id, state, attributes=attributes)
     calls = async_mock_service(hass, DOMAIN, SERVICE_VOLUME_SET)
-    with outcome:
-        response = await intent.async_handle(
-            hass,
-            "test",
-            media_player_intent.INTENT_SET_VOLUME,
-            {"volume_level": {"value": 50}},
-        )
-        await hass.async_block_till_done()
+    response = await intent.async_handle(
+        hass,
+        "test",
+        media_player_intent.INTENT_SET_VOLUME,
+        {"volume_level": {"value": 50}},
+    )
+    await hass.async_block_till_done()
 
-        assert response.response_type == intent.IntentResponseType.ACTION_DONE
-        assert len(calls) == 1
-        call = calls[0]
-        assert call.domain == DOMAIN
-        assert call.service == SERVICE_VOLUME_SET
-        assert call.data == {"entity_id": entity_id, "volume_level": 0.5}
+    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert len(calls) == 1
+    call = calls[0]
+    assert call.domain == DOMAIN
+    assert call.service == SERVICE_VOLUME_SET
+    assert call.data == {"entity_id": entity_id, "volume_level": 0.5}
 
 
 async def test_multiple_media_players(

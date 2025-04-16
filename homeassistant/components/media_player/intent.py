@@ -19,11 +19,24 @@ from homeassistant.helpers import intent
 from . import ATTR_MEDIA_VOLUME_LEVEL, DOMAIN, MediaPlayerDeviceClass
 from .const import MediaPlayerEntityFeature, MediaPlayerState
 
+MULTIPLE_PLAYERS_MATCHED_RESPONSE = "multiple_players_matched"
+
 INTENT_MEDIA_PAUSE = "HassMediaPause"
 INTENT_MEDIA_UNPAUSE = "HassMediaUnpause"
 INTENT_MEDIA_NEXT = "HassMediaNext"
 INTENT_MEDIA_PREVIOUS = "HassMediaPrevious"
 INTENT_SET_VOLUME = "HassSetVolume"
+
+
+class MultiplePlayersMatchedError(intent.IntentHandleError):
+    """Error when multiple players were matched but none is playing."""
+
+    def __init__(self) -> None:
+        """Initialize error."""
+        super().__init__(
+            "Multiple media players matched but none is playing",
+            MULTIPLE_PLAYERS_MATCHED_RESPONSE,
+        )
 
 
 @dataclass
@@ -88,18 +101,11 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
     )
     intent.async_register(
         hass,
-        intent.ServiceIntentHandler(
-            INTENT_SET_VOLUME,
-            DOMAIN,
-            SERVICE_VOLUME_SET,
-            required_domains={DOMAIN},
-            required_states={
-                MediaPlayerState.PLAYING,
-                MediaPlayerState.PAUSED,
-                MediaPlayerState.IDLE,
-                MediaPlayerState.ON,
-            },
+        MediaHandler(
+            intent_type=INTENT_SET_VOLUME,
+            service=SERVICE_VOLUME_SET,
             required_features=MediaPlayerEntityFeature.VOLUME_SET,
+            required_states=None,
             required_slots={
                 ATTR_MEDIA_VOLUME_LEVEL: intent.IntentSlotInfo(
                     description="The volume percentage of the media player",
@@ -111,8 +117,6 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
                 ),
             },
             description="Sets the volume percentage of a media player",
-            platforms={DOMAIN},
-            device_classes={MediaPlayerDeviceClass},
         ),
     )
 
@@ -210,6 +214,63 @@ class MediaUnpauseHandler(intent.ServiceIntentHandler):
                     ]
 
             self.last_paused.clear()
+
+        return await super().async_handle_states(
+            intent_obj, match_result, match_constraints
+        )
+
+
+class MediaHandler(intent.ServiceIntentHandler):
+    """Base Handler for most media player intents."""
+
+    def __init__(
+        self,
+        intent_type: str,
+        service: str,
+        required_features: int,
+        required_states: set[str] | None,
+        required_slots: intent.IntentSlotsType | None,
+        description: str,
+    ) -> None:
+        """Initialize handler."""
+        super().__init__(
+            intent_type=intent_type,
+            domain=DOMAIN,
+            service=service,
+            required_domains={DOMAIN},
+            required_features=required_features,
+            required_states=required_states,
+            required_slots=required_slots,
+            description=description,
+            platforms={DOMAIN},
+            device_classes={MediaPlayerDeviceClass},
+        )
+
+    async def async_handle_states(
+        self,
+        intent_obj: intent.Intent,
+        match_result: intent.MatchTargetsResult,
+        match_constraints: intent.MatchTargetsConstraints,
+        match_preferences: intent.MatchTargetsPreferences | None = None,
+    ) -> intent.IntentResponse:
+        """Handle intents for multiple media players."""
+        if match_result.is_match and (not match_constraints.name):
+            if len(match_result.states) == 1:
+                return await super().async_handle_states(
+                    intent_obj, match_result, match_constraints
+                )
+            if len(match_result.states) > 1:
+                playing_players = [
+                    state
+                    for state in match_result.states
+                    if state.state == MediaPlayerState.PLAYING
+                ]
+                if len(playing_players) == 1:
+                    match_result.states = playing_players
+                    return await super().async_handle_states(
+                        intent_obj, match_result, match_constraints
+                    )
+                raise MultiplePlayersMatchedError
 
         return await super().async_handle_states(
             intent_obj, match_result, match_constraints
