@@ -15,6 +15,7 @@ from librehardwaremonitor_api.model import LibreHardwareMonitorData
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
@@ -40,37 +41,22 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
 
         host = config_entry.data[CONF_HOST]
         port = config_entry.data[CONF_PORT]
-        self._selected_main_devices = config_entry.options[CONF_DEVICES]
         self._api = LibreHardwareMonitorClient(host, port)
+        self._previous_devices = set(config_entry.options[CONF_DEVICES])
 
     async def _async_update_data(self):
         try:
             lhm_data = await self._api.get_data()
-            data_for_selected_devices = self._filter_for_selected_devices(lhm_data)
         except LibreHardwareMonitorConnectionError as err:
             raise UpdateFailed(
                 "LibreHardwareMonitor connection failed, will retry"
             ) from err
         except LibreHardwareMonitorNoDevicesError as err:
-            raise UpdateFailed(
-                "No sensor data available for selected devices, will retry"
-            ) from err
+            raise UpdateFailed("No sensor data available, will retry") from err
 
-        return data_for_selected_devices
+        await self._async_handle_changes_in_devices(lhm_data.main_device_names)
 
-    def _filter_for_selected_devices(
-        self, lhm_data: LibreHardwareMonitorData
-    ) -> LibreHardwareMonitorData:
-        sensor_data_for_selected_devices = {
-            sensor_id: sensor_data
-            for sensor_id, sensor_data in lhm_data.sensor_data.items()
-            if sensor_data.device_name in self._selected_main_devices
-        }
-
-        if not sensor_data_for_selected_devices:
-            raise LibreHardwareMonitorNoDevicesError
-
-        return LibreHardwareMonitorData(sensor_data=sensor_data_for_selected_devices)
+        return lhm_data
 
     async def _async_refresh(
         self,
@@ -83,3 +69,35 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
         await super()._async_refresh(
             False, raise_on_auth_failed, scheduled, raise_on_entry_error
         )
+
+    async def _async_handle_changes_in_devices(self, detected_devices: list[str]):
+        """Handle device changes by deleting devices from / adding devices to Home Assistant."""
+        if self._previous_devices == set(detected_devices) or self.config_entry is None:
+            return
+
+        self.hass.config_entries.async_update_entry(
+            entry=self.config_entry,
+            options={CONF_DEVICES: detected_devices},
+        )
+
+        if orphaned_devices := list(self._previous_devices - set(detected_devices)):
+            _LOGGER.info(
+                "Devices no longer present in data, will be removed: %s",
+                orphaned_devices,
+            )
+            device_registry = dr.async_get(self.hass)
+            for device_name in orphaned_devices:
+                device = device_registry.async_get_device(
+                    identifiers={(DOMAIN, device_name)}
+                )
+                if device:
+                    device_registry.async_update_device(
+                        device_id=device.id,
+                        remove_config_entry_id=self.config_entry.entry_id,
+                    )
+
+        if new_devices := list(set(detected_devices) - self._previous_devices):
+            _LOGGER.info("New Device(s) added, reloading integration: %s", new_devices)
+            self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
+
+        self._previous_devices = set(detected_devices)
