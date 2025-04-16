@@ -114,6 +114,11 @@
     }
   },
   "entity": {
+    "light": {
+      "ambient_light": {
+        "name": "Ambient light"
+      }
+    },
     "sensor": {
       "status": {
         "name": "Status",
