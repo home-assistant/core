@@ -1,0 +1,9 @@
+{
+  "domain": "aqara",
+  "name": "Aqara",
+  "documentation": "https://www.home-assistant.io/integrations/aqara",
+  "requirements": ["aqara-iot-py-sdk==1.0.9"],
+  "codeowners": ["@liweifeng2022"],
+  "config_flow": true,
+  "iot_class": "cloud_push"
+}
