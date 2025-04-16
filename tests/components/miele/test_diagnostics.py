@@ -3,6 +3,8 @@
 from collections.abc import Generator
 from unittest.mock import MagicMock
 
+from aiohttp import ClientResponseError
+import pytest
 from syrupy import SnapshotAssertion
 from syrupy.filters import paths
 
@@ -67,3 +69,26 @@ async def test_diagnostics_device(
             "miele_test.entry_id",
         )
     )
+
+
+async def test_api_error(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_miele_client: Generator[MagicMock],
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test for api failure during device diagnostics."""
+
+    TEST_DEVICE = "Dummy_Appliance_1"
+
+    await setup_integration(hass, mock_config_entry)
+    device_registry = dr.async_get(hass)
+    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, TEST_DEVICE)})
+
+    mock_miele_client.get_programs.side_effect = ClientResponseError
+
+    with pytest.raises(AssertionError), pytest.raises(ClientResponseError):
+        await get_diagnostics_for_device(
+            hass, hass_client, mock_config_entry, device_entry
+        )
+    mock_miele_client.get_programs.assert_called_once()
