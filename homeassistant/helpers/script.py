@@ -1448,7 +1448,10 @@ class Script:
         variables: ScriptVariables | None = None,
         enabled: bool = True,
     ) -> None:
-        """Initialize the script."""
+        """Initialize the script.
+
+        enabled attribute is only used for non-top-level scripts.
+        """
         if not (all_scripts := hass.data.get(DATA_SCRIPTS)):
             all_scripts = hass.data[DATA_SCRIPTS] = []
             hass.bus.async_listen_once(
