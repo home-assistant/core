@@ -6,7 +6,7 @@ from datetime import datetime, timedelta, timezone
 from http import HTTPStatus
 import logging
 import re
-from typing import Any
+from typing import Any, Final
 
 import requests
 import voluptuous as vol
@@ -23,25 +23,25 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_ACCESS_CODE = "AccessCode"
-ATTR_AVG_TIME = "AverageTime"
-ATTR_CURRENT_TIME = "CurrentTime"
-ATTR_DESCRIPTION = "Description"
-ATTR_TIME_UPDATED = "TimeUpdated"
-ATTR_TRAVEL_TIME_ID = "TravelTimeID"
+ATTR_ACCESS_CODE: Final[str] = "AccessCode"
+ATTR_AVG_TIME: Final[str] = "AverageTime"
+ATTR_CURRENT_TIME: Final[str] = "CurrentTime"
+ATTR_DESCRIPTION: Final[str] = "Description"
+ATTR_TIME_UPDATED: Final[str] = "TimeUpdated"
+ATTR_TRAVEL_TIME_ID: Final[str] = "TravelTimeID"
 
-ATTRIBUTION = "Data provided by WSDOT"
+ATTRIBUTION: Final[str] = "Data provided by WSDOT"
 
-CONF_TRAVEL_TIMES = "travel_time"
+CONF_TRAVEL_TIMES: Final[str] = "travel_time"
 
-ICON = "mdi:car"
+ICON: Final[str] = "mdi:car"
 
-RESOURCE = (
+RESOURCE: Final[str] = (
     "http://www.wsdot.wa.gov/Traffic/api/TravelTimes/"
     "TravelTimesREST.svc/GetTravelTimeAsJson"
 )
 
-SCAN_INTERVAL = timedelta(minutes=3)
+SCAN_INTERVAL: Final[timedelta] = timedelta(minutes=3)
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
@@ -82,7 +82,7 @@ class WashingtonStateTransportSensor(SensorEntity):
 
     _attr_icon = ICON
 
-    def __init__(self, name, access_code):
+    def __init__(self, name: str, access_code: str) -> None:
         """Initialize the sensor."""
         self._data = {}
         self._access_code = access_code
@@ -90,12 +90,12 @@ class WashingtonStateTransportSensor(SensorEntity):
         self._state = None
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the sensor."""
         return self._name
 
     @property
-    def native_value(self):
+    def native_value(self) -> str | None:
         """Return the state of the sensor."""
         return self._state
 
@@ -106,7 +106,7 @@ class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
     _attr_attribution = ATTRIBUTION
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
 
-    def __init__(self, name, access_code, travel_time_id):
+    def __init__(self, name, access_code: str, travel_time_id: str) -> None:
         """Construct a travel time sensor."""
         self._travel_time_id = travel_time_id
         WashingtonStateTransportSensor.__init__(self, name, access_code)
@@ -144,7 +144,7 @@ class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
         return None
 
 
-def _parse_wsdot_timestamp(timestamp):
+def _parse_wsdot_timestamp(timestamp: str) -> datetime | None:
     """Convert WSDOT timestamp to datetime."""
     if not timestamp:
         return None
