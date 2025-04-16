@@ -42,6 +42,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.setup import async_setup_component
@@ -1121,6 +1122,65 @@ async def test_esphome_user_services_ignores_invalid_arg_types(
     await hass.async_block_till_done()
     assert hass.services.has_service(DOMAIN, "with_dash_simple_service")
     assert not hass.services.has_service(DOMAIN, "with_dash_bad_service")
+
+
+async def test_esphome_user_service_fails(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
+) -> None:
+    """Test executing a user service fails due to disconnect."""
+    entity_info = []
+    states = []
+    service1 = UserService(
+        name="simple_service",
+        key=2,
+        args=[
+            UserServiceArg(name="arg1", type=UserServiceArgType.BOOL),
+        ],
+    )
+    await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=[service1],
+        device_info={"name": "with-dash"},
+        states=states,
+    )
+    await hass.async_block_till_done()
+    assert hass.services.has_service(DOMAIN, "with_dash_simple_service")
+
+    mock_client.execute_service = Mock(side_effect=APIConnectionError("fail"))
+    with pytest.raises(HomeAssistantError) as exc:
+        await hass.services.async_call(
+            DOMAIN, "with_dash_simple_service", {"arg1": True}, blocking=True
+        )
+    assert exc.value.translation_domain == DOMAIN
+    assert exc.value.translation_key == "action_call_failed"
+    assert exc.value.translation_placeholders == {
+        "call_name": "simple_service",
+        "device_name": "with-dash",
+        "error": "fail",
+    }
+    assert (
+        str(exc.value)
+        == "Failed to execute the action call simple_service on with-dash: fail"
+    )
+
+    mock_client.execute_service.assert_has_calls(
+        [
+            call(
+                UserService(
+                    name="simple_service",
+                    key=2,
+                    args=[UserServiceArg(name="arg1", type=UserServiceArgType.BOOL)],
+                ),
+                {"arg1": True},
+            )
+        ]
+    )
 
 
 async def test_esphome_user_services_changes(
