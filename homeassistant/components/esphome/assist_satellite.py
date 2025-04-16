@@ -47,6 +47,8 @@ from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
 from .enum_mapper import EsphomeEnumMapper
 from .ffmpeg_proxy import async_create_proxy_url
 
+PARALLEL_UPDATES = 0
+
 _LOGGER = logging.getLogger(__name__)
 
 _VOICE_ASSISTANT_EVENT_TYPES: EsphomeEnumMapper[
