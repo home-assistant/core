@@ -1,6 +1,6 @@
 """Test the Portainer config flow."""
 
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 from pyportainer.exceptions import (
     PortainerAuthenticationError,
@@ -72,7 +72,7 @@ async def test_form(
 )
 async def test_form_exceptions(
     hass: HomeAssistant,
-    mock_portainer_client: MagicMock,
+    mock_portainer_client: AsyncMock,
     exception: Exception,
     reason: str,
 ) -> None:
@@ -98,7 +98,7 @@ async def test_form_exceptions(
 
 async def test_duplicate_entry(
     hass: HomeAssistant,
-    mock_portainer_client: MagicMock,
+    mock_portainer_client: AsyncMock,
     mock_setup_entry: MagicMock,
 ) -> None:
     """Test we handle duplicate entries."""

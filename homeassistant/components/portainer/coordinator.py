@@ -68,6 +68,7 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[str, dict]]):
 
         try:
             endpoints = await self.portainer.get_endpoints()
+            _LOGGER.debug("Fetched endpoints: %s", endpoints)
         except PortainerAuthenticationError as err:
             _LOGGER.exception("Authentication error")
             raise ConfigEntryAuthFailed(

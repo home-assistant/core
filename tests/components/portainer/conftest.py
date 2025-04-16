@@ -36,23 +36,19 @@ def mock_portainer_client() -> Generator[AsyncMock]:
             "homeassistant.components.portainer.Portainer", autospec=True
         ) as mock_client,
         patch(
-            "homeassistant.components.portainer.config_flow.Portainer"
-        ) as mock_client,
+            "homeassistant.components.portainer.config_flow.Portainer", new=mock_client
+        ),
     ):
         client = mock_client.return_value
 
-        client.get_endpoints = AsyncMock(
-            return_value=[
-                Endpoint.from_dict(endpoint)
-                for endpoint in load_json_array_fixture("endpoints.json", DOMAIN)
-            ]
-        )
-        client.get_containers = AsyncMock(
-            return_value=[
-                DockerContainer.from_dict(container)
-                for container in load_json_array_fixture("containers.json", DOMAIN)
-            ]
-        )
+        client.get_endpoints.return_value = [
+            Endpoint.from_dict(endpoint)
+            for endpoint in load_json_array_fixture("endpoints.json", DOMAIN)
+        ]
+        client.get_containers.return_value = [
+            DockerContainer.from_dict(container)
+            for container in load_json_array_fixture("containers.json", DOMAIN)
+        ]
 
         yield client
 
