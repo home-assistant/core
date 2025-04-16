@@ -41,7 +41,7 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfVolume,
 )
-from homeassistant.core import CoreState, HomeAssistant, State, callback
+from homeassistant.core import CoreState, HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
@@ -1640,19 +1640,16 @@ async def _test_self_reset(
     with freeze_time(now):
         # Listen for events and check that state in the first event after reset is actually 0, issue #142053
         events = []
-async def handle_energy_bill_event(event):
-    events.append(event)
 
-unsub = async_track_state_change_event(
-    hass,
-    "sensor.energy_bill",
-    handle_energy_bill_event,
-)
+        async def handle_energy_bill_event(event):
+            events.append(event)
+
+        unsub = async_track_state_change_event(
             hass,
             "sensor.energy_bill",
-            # pylint: disable-next=unnecessary-lambda
-            callback(lambda event: events.append(event)),
+            handle_energy_bill_event,
         )
+
         async_fire_time_changed(hass, now)
         await hass.async_block_till_done()
         unsub()
