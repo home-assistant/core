@@ -52,7 +52,9 @@
   "device_automation": {
     "trigger_subtype": {
       "away": "[%key:common::state::not_home%]",
+      "home_id": "Home Id",
       "schedule": "Schedule",
+      "schedule_id": "Schedule Id",
       "hg": "Frost guard"
     },
     "trigger_type": {
@@ -89,6 +91,20 @@
         "schedule_name": {
           "name": "[%key:component::netatmo::device_automation::trigger_subtype::schedule%]",
           "description": "Schedule name."
+        }
+      }
+    },
+    "sync_schedule": {
+      "name": "Sync heating schedule",
+      "description": "Syncs the heating schedule for Netatmo climate device.",
+      "fields": {
+        "home_id": {
+          "name": "[%key:component::netatmo::device_automation::trigger_subtype::home_id%]",
+          "description": "Home Id."
+        },
+        "schedule_id": {
+          "name": "[%key:component::netatmo::device_automation::trigger_subtype::schedule_id%]",
+          "description": "Schedule Id."
         }
       }
     },
