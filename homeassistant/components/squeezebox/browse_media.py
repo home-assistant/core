@@ -96,7 +96,6 @@ CONTENT_TYPE_TO_CHILD_TYPE: dict[
     "genres": MediaType.GENRE,
     "favorites": None,  # can only be determined after inspecting the item
     "radios": MediaClass.APP,
-    # "app": None,  # can only be determined after inspecting the item
     "new music": MediaType.ALBUM,
     "album artists": MediaType.ARTIST,
     MediaType.APPS: MediaType.APP,
