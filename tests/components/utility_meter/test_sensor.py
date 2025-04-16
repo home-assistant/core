@@ -1671,7 +1671,7 @@ unsub = async_track_state_change_event(
             state.attributes.get("last_reset") == dt_util.as_utc(now).isoformat()
         )  # last_reset is kept in UTC
         assert state.state == "3"
-        # In first event state should be 0, issue #142053
+        # In first event state should be 0
         assert len(events) == 2
         assert events[0].data.get("new_state").state == "0"
         assert events[1].data.get("new_state").state == "0"
