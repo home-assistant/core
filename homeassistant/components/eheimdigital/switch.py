@@ -31,7 +31,7 @@ async def async_setup_entry(
         entities: list[SwitchEntity] = []
         for device in device_address.values():
             if isinstance(device, EheimDigitalClassicVario):
-                entities.append(EheimDigitalClassicVarioSwitch(coordinator, device))  # noqa: PERF401 # noqa because more if clauses will be added with more devices
+                entities.append(EheimDigitalClassicVarioSwitch(coordinator, device))  # noqa: PERF401
 
         async_add_entities(entities)
 
@@ -54,7 +54,7 @@ class EheimDigitalClassicVarioSwitch(
     ) -> None:
         """Initialize an EHEIM Digital classicVARIO switch entity."""
         super().__init__(coordinator, device)
-        self._attr_unique_id = self._device_address
+        self._attr_unique_id = device.mac_address
         self._async_update_attrs()
 
     @override

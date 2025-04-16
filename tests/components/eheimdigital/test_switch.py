@@ -11,6 +11,8 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -93,11 +95,11 @@ async def test_state_update(
     await hass.async_block_till_done()
 
     assert (state := hass.states.get("switch.mock_classicvario"))
-    assert state.state == "on"
+    assert state.state == STATE_ON
 
     classic_vario_mock.is_active = False
 
     await eheimdigital_hub_mock.call_args.kwargs["receive_callback"]()
 
     assert (state := hass.states.get("switch.mock_classicvario"))
-    assert state.state == "off"
+    assert state.state == STATE_OFF
