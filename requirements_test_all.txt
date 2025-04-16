@@ -672,7 +672,7 @@ devialet==1.5.7
 devolo-home-control-api==0.18.3
 
 # homeassistant.components.devolo_home_network
-devolo-plc-api==1.4.1
+devolo-plc-api==1.5.1
 
 # homeassistant.components.chacon_dio
 dio-chacon-wifi-api==1.2.1
@@ -984,7 +984,7 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.69
+holidays==0.70
 
 # homeassistant.components.frontend
 home-assistant-frontend==20250411.0
@@ -1728,7 +1728,7 @@ pylitterbot==2024.0.0
 pylutron-caseta==0.24.0
 
 # homeassistant.components.lutron
-pylutron==0.2.16
+pylutron==0.2.18
 
 # homeassistant.components.mailgun
 pymailgunner==1.4
@@ -1976,7 +1976,7 @@ python-juicenet==1.1.0
 python-kasa[speedups]==0.10.2
 
 # homeassistant.components.linkplay
-python-linkplay==0.2.2
+python-linkplay==0.2.3
 
 # homeassistant.components.matter
 python-matter-server==7.0.0
@@ -2137,7 +2137,7 @@ renault-api==0.2.9
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.13.1
+reolink-aio==0.13.2
 
 # homeassistant.components.rflink
 rflink==0.0.66
@@ -2548,7 +2548,7 @@ yt-dlp[default]==2025.03.26
 zamg==0.3.6
 
 # homeassistant.components.zeroconf
-zeroconf==0.146.0
+zeroconf==0.146.5
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.2
