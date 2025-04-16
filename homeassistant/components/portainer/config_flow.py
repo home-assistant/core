@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -55,8 +54,6 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str
     _LOGGER.debug("Connected to Portainer API: %s", api_url)
 
     portainer_data: list[dict[str, Any]] = []
-    if not endpoints:
-        raise CannotConnect("No endpoints found")
 
     for endpoint in endpoints:
         assert endpoint.id
@@ -95,34 +92,19 @@ class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
+            except PortainerTimeout:
+                errors["base"] = "timeout_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                # TODO: Check if the entry already exists based on the API_URL and API_KEY
+                await self.async_set_unique_id(api["title"])
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=api["title"], data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
-
-    async def async_step_reauth(
-        self, entry_data: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Perform reauth upon an API authentication error."""
-
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Dialog that informs the user that reauth is required."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="reauth_confirm",
-            )
-
-        return await self.async_step_user()
 
 
 class CannotConnect(HomeAssistantError):
