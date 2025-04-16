@@ -1231,14 +1231,11 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
                 unsub()
 
     def _get_driver(self) -> Driver:
-        client: Client | None
-        if (
-            self.config_entry.state != ConfigEntryState.LOADED
-            or (client := self.config_entry.runtime_data[DATA_CLIENT]) is None
-            or client.driver is None
-        ):
-            raise AbortFlow("Driver not ready")
-        return cast(Driver, client.driver)
+        if self.config_entry.state != ConfigEntryState.LOADED:
+            raise AbortFlow("Configuration entry is not loaded")
+        client: Client = self.config_entry.runtime_data[DATA_CLIENT]
+        assert client.driver is not None
+        return client.driver
 
 
 class CannotConnect(HomeAssistantError):

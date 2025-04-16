@@ -314,7 +314,7 @@ async def test_manual_errors_options_flow(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual"
 
-    result = await getattr(hass.config_entries, "options").async_configure(
+    result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         {
             "url": url,
