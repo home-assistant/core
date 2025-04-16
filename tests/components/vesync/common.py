@@ -15,6 +15,7 @@ ENTITY_HUMIDIFIER_MIST_LEVEL = "number.humidifier_200s_mist_level"
 ENTITY_HUMIDIFIER_HUMIDITY = "sensor.humidifier_200s_humidity"
 ENTITY_HUMIDIFIER_300S_NIGHT_LIGHT_SELECT = "select.humidifier_300s_night_light_level"
 
+ENTITY_LIGHT = "light.dimmer_switch"
 ENTITY_SWITCH_DISPLAY = "switch.humidifier_200s_display"
 
 ALL_DEVICES = load_json_object_fixture("vesync-devices.json", DOMAIN)
