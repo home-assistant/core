@@ -26,25 +26,25 @@
         "name": "Current power in peak"
       },
       "current_power_off_peak": {
-        "name": "Current power in off peak"
+        "name": "Current power in off-peak"
       },
       "current_power_out_peak": {
         "name": "Current power out peak"
       },
       "current_power_out_off_peak": {
-        "name": "Current power out off peak"
+        "name": "Current power out off-peak"
       },
       "energy_consumption_peak_today": {
         "name": "Energy consumption peak today"
       },
       "energy_consumption_off_peak_today": {
-        "name": "Energy consumption off peak today"
+        "name": "Energy consumption off-peak today"
       },
       "energy_production_peak_today": {
         "name": "Energy production peak today"
       },
       "energy_production_off_peak_today": {
-        "name": "Energy production off peak today"
+        "name": "Energy production off-peak today"
       },
       "energy_today": {
         "name": "Energy today"

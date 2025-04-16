@@ -426,11 +426,11 @@
         "state_attributes": {
           "fan_speed": {
             "state": {
-              "auto": "Auto",
+              "off": "[%key:common::state::off%]",
+              "auto": "[%key:common::state::auto%]",
               "balanced": "Balanced",
               "custom": "[%key:component::roborock::entity::select::mop_mode::state::custom%]",
               "gentle": "Gentle",
-              "off": "[%key:common::state::off%]",
               "max": "[%key:component::roborock::entity::select::mop_intensity::state::max%]",
               "max_plus": "Max plus",
               "medium": "[%key:common::state::medium%]",
