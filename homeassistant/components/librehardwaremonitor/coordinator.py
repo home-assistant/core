@@ -21,8 +21,6 @@ from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-RETRY_INTERVAL_WHEN_HOST_UNREACHABLE = 25
-
 
 type LibreHardwareMonitorConfigEntry = ConfigEntry[LibreHardwareMonitorCoordinator]
 
@@ -42,7 +40,6 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
 
         host = config_entry.data[CONF_HOST]
         port = config_entry.data[CONF_PORT]
-        self._scan_interval = timedelta(seconds=DEFAULT_SCAN_INTERVAL)
         self._selected_main_devices = config_entry.options[CONF_DEVICES]
         self._api = LibreHardwareMonitorClient(host, port)
 
@@ -50,11 +47,7 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
         try:
             lhm_data = await self._api.get_data()
             data_for_selected_devices = self._filter_for_selected_devices(lhm_data)
-            self.update_interval = self._scan_interval
         except LibreHardwareMonitorConnectionError as err:
-            self.update_interval = timedelta(
-                seconds=RETRY_INTERVAL_WHEN_HOST_UNREACHABLE
-            )
             raise UpdateFailed(
                 "LibreHardwareMonitor connection failed, will retry"
             ) from err
