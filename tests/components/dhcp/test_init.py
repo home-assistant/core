@@ -1,10 +1,14 @@
 """Test the DHCP discovery integration."""
 
+from __future__ import annotations
+
+from collections.abc import Awaitable, Callable
 import datetime
 import threading
-from typing import Any
+from typing import Any, cast
 from unittest.mock import patch
 
+import aiodhcpwatcher
 import pytest
 from scapy import interfaces
 from scapy.error import Scapy_Exception
@@ -36,8 +40,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from . import async_get_handle_dhcp_packet
 
 from tests.common import (
     MockConfigEntry,
@@ -141,6 +143,32 @@ RAW_DHCP_REQUEST_WITHOUT_HOSTNAME = (
     b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
     b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
 )
+
+
+async def async_get_handle_dhcp_packet(
+    hass: HomeAssistant,
+    integration_matchers: dhcp.DhcpMatchers,
+    address_data: dict | None = None,
+) -> Callable[[Any], Awaitable[None]]:
+    """Make a handler for a dhcp packet."""
+    if address_data is None:
+        address_data = {}
+    dhcp_watcher = dhcp.DHCPWatcher(
+        hass,
+        DHCPData(integration_matchers, set(), address_data),
+    )
+    with patch("aiodhcpwatcher.async_start"):
+        await dhcp_watcher.async_start()
+
+    def _async_handle_dhcp_request(request: aiodhcpwatcher.DHCPRequest) -> None:
+        dhcp_watcher._async_process_dhcp_request(request)
+
+    handler = aiodhcpwatcher.make_packet_handler(_async_handle_dhcp_request)
+
+    async def _async_handle_dhcp_packet(packet):
+        handler(packet)
+
+    return cast("Callable[[Any], Awaitable[None]]", _async_handle_dhcp_packet)
 
 
 async def test_dhcp_match_hostname_and_macaddress(hass: HomeAssistant) -> None:
