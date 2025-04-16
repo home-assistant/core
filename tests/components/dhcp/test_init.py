@@ -145,7 +145,7 @@ RAW_DHCP_REQUEST_WITHOUT_HOSTNAME = (
 )
 
 
-async def async_get_handle_dhcp_packet(
+async def _async_get_handle_dhcp_packet(
     hass: HomeAssistant,
     integration_matchers: dhcp.DhcpMatchers,
     address_data: dict | None = None,
@@ -178,7 +178,7 @@ async def test_dhcp_match_hostname_and_macaddress(hass: HomeAssistant) -> None:
     )
     packet = Ether(RAW_DHCP_REQUEST)
 
-    async_handle_dhcp_packet = await async_get_handle_dhcp_packet(
+    async_handle_dhcp_packet = await _async_get_handle_dhcp_packet(
         hass, integration_matchers
     )
     with patch.object(hass.config_entries.flow, "async_init") as mock_init:
@@ -207,7 +207,7 @@ async def test_dhcp_renewal_match_hostname_and_macaddress(hass: HomeAssistant) -
 
     packet = Ether(RAW_DHCP_RENEWAL)
 
-    async_handle_dhcp_packet = await async_get_handle_dhcp_packet(
+    async_handle_dhcp_packet = await _async_get_handle_dhcp_packet(
         hass, integration_matchers
     )
     with patch.object(hass.config_entries.flow, "async_init") as mock_init:
@@ -257,7 +257,7 @@ async def test_registered_devices(
         name="name",
     )
 
-    async_handle_dhcp_packet = await async_get_handle_dhcp_packet(
+    async_handle_dhcp_packet = await _async_get_handle_dhcp_packet(
         hass, integration_matchers
     )
     with patch.object(hass.config_entries.flow, "async_init") as mock_init:
@@ -286,7 +286,7 @@ async def test_dhcp_match_hostname(hass: HomeAssistant) -> None:
 
     packet = Ether(RAW_DHCP_REQUEST)
 
-    async_handle_dhcp_packet = await async_get_handle_dhcp_packet(
+    async_handle_dhcp_packet = await _async_get_handle_dhcp_packet(
         hass, integration_matchers
     )
     with patch.object(hass.config_entries.flow, "async_init") as mock_init:
@@ -313,7 +313,7 @@ async def test_dhcp_match_macaddress(hass: HomeAssistant) -> None:
 
     packet = Ether(RAW_DHCP_REQUEST)
 
-    async_handle_dhcp_packet = await async_get_handle_dhcp_packet(
+    async_handle_dhcp_packet = await _async_get_handle_dhcp_packet(
         hass, integration_matchers
     )
     with patch.object(hass.config_entries.flow, "async_init") as mock_init:
@@ -343,7 +343,7 @@ async def test_dhcp_multiple_match_only_one_flow(hass: HomeAssistant) -> None:
 
     packet = Ether(RAW_DHCP_REQUEST)
 
-    async_handle_dhcp_packet = await async_get_handle_dhcp_packet(
+    async_handle_dhcp_packet = await _async_get_handle_dhcp_packet(
         hass, integration_matchers
     )
     with patch.object(hass.config_entries.flow, "async_init") as mock_init:
@@ -370,7 +370,7 @@ async def test_dhcp_match_macaddress_without_hostname(hass: HomeAssistant) -> No
 
     packet = Ether(RAW_DHCP_REQUEST_WITHOUT_HOSTNAME)
 
-    async_handle_dhcp_packet = await async_get_handle_dhcp_packet(
+    async_handle_dhcp_packet = await _async_get_handle_dhcp_packet(
         hass, integration_matchers
     )
     with patch.object(hass.config_entries.flow, "async_init") as mock_init:
@@ -397,7 +397,7 @@ async def test_dhcp_nomatch(hass: HomeAssistant) -> None:
 
     packet = Ether(RAW_DHCP_REQUEST)
 
-    async_handle_dhcp_packet = await async_get_handle_dhcp_packet(
+    async_handle_dhcp_packet = await _async_get_handle_dhcp_packet(
         hass, integration_matchers
     )
     with patch.object(hass.config_entries.flow, "async_init") as mock_init:
@@ -414,7 +414,7 @@ async def test_dhcp_nomatch_hostname(hass: HomeAssistant) -> None:
 
     packet = Ether(RAW_DHCP_REQUEST)
 
-    async_handle_dhcp_packet = await async_get_handle_dhcp_packet(
+    async_handle_dhcp_packet = await _async_get_handle_dhcp_packet(
         hass, integration_matchers
     )
     with patch.object(hass.config_entries.flow, "async_init") as mock_init:
@@ -431,7 +431,7 @@ async def test_dhcp_nomatch_non_dhcp_packet(hass: HomeAssistant) -> None:
 
     packet = Ether(b"")
 
-    async_handle_dhcp_packet = await async_get_handle_dhcp_packet(
+    async_handle_dhcp_packet = await _async_get_handle_dhcp_packet(
         hass, integration_matchers
     )
     with patch.object(hass.config_entries.flow, "async_init") as mock_init:
@@ -457,7 +457,7 @@ async def test_dhcp_nomatch_non_dhcp_request_packet(hass: HomeAssistant) -> None
         ("hostname", b"connect"),
     ]
 
-    async_handle_dhcp_packet = await async_get_handle_dhcp_packet(
+    async_handle_dhcp_packet = await _async_get_handle_dhcp_packet(
         hass, integration_matchers
     )
     with patch.object(hass.config_entries.flow, "async_init") as mock_init:
@@ -483,7 +483,7 @@ async def test_dhcp_invalid_hostname(hass: HomeAssistant) -> None:
         ("hostname", "connect"),
     ]
 
-    async_handle_dhcp_packet = await async_get_handle_dhcp_packet(
+    async_handle_dhcp_packet = await _async_get_handle_dhcp_packet(
         hass, integration_matchers
     )
     with patch.object(hass.config_entries.flow, "async_init") as mock_init:
@@ -509,7 +509,7 @@ async def test_dhcp_missing_hostname(hass: HomeAssistant) -> None:
         ("hostname", None),
     ]
 
-    async_handle_dhcp_packet = await async_get_handle_dhcp_packet(
+    async_handle_dhcp_packet = await _async_get_handle_dhcp_packet(
         hass, integration_matchers
     )
     with patch.object(hass.config_entries.flow, "async_init") as mock_init:
@@ -535,7 +535,7 @@ async def test_dhcp_invalid_option(hass: HomeAssistant) -> None:
         "hostname",
     ]
 
-    async_handle_dhcp_packet = await async_get_handle_dhcp_packet(
+    async_handle_dhcp_packet = await _async_get_handle_dhcp_packet(
         hass, integration_matchers
     )
     with patch.object(hass.config_entries.flow, "async_init") as mock_init:
@@ -1244,7 +1244,7 @@ async def test_dhcp_rediscover(
     )
     packet = Ether(RAW_DHCP_REQUEST)
 
-    async_handle_dhcp_packet = await async_get_handle_dhcp_packet(
+    async_handle_dhcp_packet = await _async_get_handle_dhcp_packet(
         hass, integration_matchers, address_data
     )
     rediscovery_watcher = dhcp.RediscoveryWatcher(
@@ -1338,7 +1338,7 @@ async def test_dhcp_rediscover_no_match(
     )
     packet = Ether(RAW_DHCP_REQUEST)
 
-    async_handle_dhcp_packet = await async_get_handle_dhcp_packet(
+    async_handle_dhcp_packet = await _async_get_handle_dhcp_packet(
         hass, integration_matchers, address_data
     )
     rediscovery_watcher = dhcp.RediscoveryWatcher(
