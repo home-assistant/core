@@ -25,16 +25,16 @@ def mock_lhm_client() -> Generator[AsyncMock]:
     ):
         client = mock_client.return_value
         client.get_data.return_value = LHM_SAMPLE_DATA
-        client.get_main_hardware_devices.return_value = [
-            "MSI MAG B650M MORTAR WIFI (MS-7D76)",
-            "AMD Ryzen 7 7800X3D",
-            "NVIDIA GeForce RTX 4080 SUPER",
-        ]
 
         yield client
 
 
 LHM_SAMPLE_DATA = LibreHardwareMonitorData(
+    main_device_names=[
+        "MSI MAG B650M MORTAR WIFI (MS-7D76)",
+        "AMD Ryzen 7 7800X3D",
+        "NVIDIA GeForce RTX 4080 SUPER",
+    ],
     sensor_data={
         "lpc-nct6687d-0-voltage-0": LibreHardwareMonitorSensorData(
             name="+12V Voltage",
@@ -286,5 +286,5 @@ LHM_SAMPLE_DATA = LibreHardwareMonitorData(
             device_type="NVIDIA",
             sensor_id="gpu-nvidia-0-throughput-1",
         ),
-    }
+    },
 )

@@ -7,7 +7,11 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 VALID_CONFIG = {CONF_HOST: "192.168.0.20", CONF_PORT: 8085}
-CONFIGURED_DEVICES = ["MSI MAG B650M MORTAR WIFI (MS-7D76)", "AMD Ryzen 7 7800X3D"]
+CONFIGURED_DEVICES = [
+    "MSI MAG B650M MORTAR WIFI (MS-7D76)",
+    "AMD Ryzen 7 7800X3D",
+    "NVIDIA GeForce RTX 4080 SUPER",
+]
 
 
 async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
