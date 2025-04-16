@@ -760,13 +760,12 @@ def _async_setup_device_registry(
     if device_info.suggested_area:
         suggested_area = device_info.suggested_area
 
-    name = entry_data.friendly_name or entry_data.name
     device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         configuration_url=configuration_url,
         connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)},
-        name=name,
+        name=entry_data.friendly_name or entry_data.name,
         manufacturer=manufacturer,
         model=model,
         sw_version=sw_version,
