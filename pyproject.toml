@@ -21,7 +21,7 @@ classifiers = [
   "Programming Language :: Python :: 3.13",
   "Topic :: Home Automation",
 ]
-requires-python = ">=3.13.0"
+requires-python = ">=3.13.2"
 dependencies = [
   "aiodns==3.2.0",
   # Integrations may depend on hassio integration without listing it to
@@ -123,7 +123,7 @@ dependencies = [
   "voluptuous-openapi==0.0.6",
   "yarl==1.19.0",
   "webrtc-models==0.3.0",
-  "zeroconf==0.146.0",
+  "zeroconf==0.146.5",
 ]
 
 [project.urls]

@@ -47,10 +47,10 @@ from .const import (
     DOMAIN,
 )
 from .dashboard import async_get_or_create_dashboard_manager, async_set_dashboard_info
+from .manager import async_replace_device
 
 ERROR_REQUIRES_ENCRYPTION_KEY = "requires_encryption_key"
 ERROR_INVALID_ENCRYPTION_KEY = "invalid_psk"
-ESPHOME_URL = "https://esphome.io/"
 _LOGGER = logging.getLogger(__name__)
 
 ZERO_NOISE_PSK = "MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA="
@@ -74,6 +74,8 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         self._device_info: DeviceInfo | None = None
         # The ESPHome name as per its config
         self._device_name: str | None = None
+        self._device_mac: str | None = None
+        self._entry_with_name_conflict: ConfigEntry | None = None
 
     async def _async_step_user_base(
         self, user_input: dict[str, Any] | None = None, error: str | None = None
@@ -95,7 +97,6 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(fields),
             errors=errors,
-            description_placeholders={"esphome_url": ESPHOME_URL},
         )
 
     async def async_step_user(
@@ -138,7 +139,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle reauthorization flow when encryption was removed."""
         if user_input is not None:
             self._noise_psk = None
-            return self._async_get_entry()
+            return await self._async_get_entry_or_resolve_conflict()
 
         return self.async_show_form(
             step_id="reauth_encryption_removed_confirm",
@@ -228,7 +229,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             return await self.async_step_authenticate()
 
         self._password = ""
-        return self._async_get_entry()
+        return await self._async_get_entry_or_resolve_conflict()
 
     async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None
@@ -265,11 +266,31 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
         # Check if already configured
         await self.async_set_unique_id(mac_address)
-        self._abort_if_unique_id_configured(
-            updates={CONF_HOST: self._host, CONF_PORT: self._port}
+        await self._async_validate_mac_abort_configured(
+            mac_address, self._host, self._port
         )
 
         return await self.async_step_discovery_confirm()
+
+    async def _async_validate_mac_abort_configured(
+        self, formatted_mac: str, host: str, port: int | None
+    ) -> None:
+        """Validate if the MAC address is already configured."""
+        if not (
+            entry := self.hass.config_entries.async_entry_for_domain_unique_id(
+                self.handler, formatted_mac
+            )
+        ):
+            return
+        configured_port: int | None = entry.data.get(CONF_PORT)
+        configured_psk: str | None = entry.data.get(CONF_NOISE_PSK)
+        await self._fetch_device_info(host, port or configured_port, configured_psk)
+        updates: dict[str, Any] = {}
+        if self._device_mac == formatted_mac:
+            updates[CONF_HOST] = host
+            if port is not None:
+                updates[CONF_PORT] = port
+        self._abort_if_unique_id_configured(updates=updates)
 
     async def async_step_mqtt(
         self, discovery_info: MqttServiceInfo
@@ -314,8 +335,11 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle DHCP discovery."""
-        await self.async_set_unique_id(format_mac(discovery_info.macaddress))
-        self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
+        mac_address = format_mac(discovery_info.macaddress)
+        await self.async_set_unique_id(format_mac(mac_address))
+        await self._async_validate_mac_abort_configured(
+            mac_address, discovery_info.ip, None
+        )
         # This should never happen since we only listen to DHCP requests
         # for configured devices.
         return self.async_abort(reason="already_configured")
@@ -331,6 +355,77 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             discovery_info.config["port"],
         )
         return self.async_abort(reason="service_received")
+
+    async def async_step_name_conflict(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle name conflict resolution."""
+        assert self._entry_with_name_conflict is not None
+        assert self._entry_with_name_conflict.unique_id is not None
+        assert self.unique_id is not None
+        assert self._device_name is not None
+        return self.async_show_menu(
+            step_id="name_conflict",
+            menu_options=["name_conflict_migrate", "name_conflict_overwrite"],
+            description_placeholders={
+                "existing_mac": format_mac(self._entry_with_name_conflict.unique_id),
+                "existing_title": self._entry_with_name_conflict.title,
+                "mac": format_mac(self.unique_id),
+                "name": self._device_name,
+            },
+        )
+
+    async def async_step_name_conflict_migrate(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle migration of existing entry."""
+        assert self._entry_with_name_conflict is not None
+        assert self._entry_with_name_conflict.unique_id is not None
+        assert self.unique_id is not None
+        assert self._device_name is not None
+        assert self._host is not None
+        old_mac = format_mac(self._entry_with_name_conflict.unique_id)
+        new_mac = format_mac(self.unique_id)
+        entry_id = self._entry_with_name_conflict.entry_id
+        self.hass.config_entries.async_update_entry(
+            self._entry_with_name_conflict,
+            data={
+                **self._entry_with_name_conflict.data,
+                CONF_HOST: self._host,
+                CONF_PORT: self._port or 6053,
+                CONF_PASSWORD: self._password or "",
+                CONF_NOISE_PSK: self._noise_psk or "",
+            },
+        )
+        await async_replace_device(self.hass, entry_id, old_mac, new_mac)
+        self.hass.config_entries.async_schedule_reload(entry_id)
+        return self.async_abort(
+            reason="name_conflict_migrated",
+            description_placeholders={
+                "existing_mac": old_mac,
+                "mac": new_mac,
+                "name": self._device_name,
+            },
+        )
+
+    async def async_step_name_conflict_overwrite(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle creating a new entry by removing the old one and creating new."""
+        assert self._entry_with_name_conflict is not None
+        await self.hass.config_entries.async_remove(
+            self._entry_with_name_conflict.entry_id
+        )
+        return self._async_get_entry()
+
+    async def _async_get_entry_or_resolve_conflict(self) -> ConfigFlowResult:
+        """Return the entry or resolve a conflict."""
+        if self.source != SOURCE_REAUTH:
+            for entry in self._async_current_entries(include_ignore=False):
+                if entry.data.get(CONF_DEVICE_NAME) == self._device_name:
+                    self._entry_with_name_conflict = entry
+                    return await self.async_step_name_conflict()
+        return self._async_get_entry()
 
     @callback
     def _async_get_entry(self) -> ConfigFlowResult:
@@ -385,7 +480,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             error = await self.try_login()
             if error:
                 return await self.async_step_authenticate(error=error)
-            return self._async_get_entry()
+            return await self._async_get_entry_or_resolve_conflict()
 
         errors = {}
         if error is not None:
@@ -398,17 +493,17 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def fetch_device_info(self) -> str | None:
+    async def _fetch_device_info(
+        self, host: str, port: int | None, noise_psk: str | None
+    ) -> str | None:
         """Fetch device info from API and return any errors."""
         zeroconf_instance = await zeroconf.async_get_instance(self.hass)
-        assert self._host is not None
-        assert self._port is not None
         cli = APIClient(
-            self._host,
-            self._port,
+            host,
+            port or 6053,
             "",
             zeroconf_instance=zeroconf_instance,
-            noise_psk=self._noise_psk,
+            noise_psk=noise_psk,
         )
 
         try:
@@ -419,6 +514,8 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         except InvalidEncryptionKeyAPIError as ex:
             if ex.received_name:
                 self._device_name = ex.received_name
+                if ex.received_mac:
+                    self._device_mac = format_mac(ex.received_mac)
                 self._name = ex.received_name
             return ERROR_INVALID_ENCRYPTION_KEY
         except ResolveAPIError:
@@ -427,9 +524,20 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             return "connection_error"
         finally:
             await cli.disconnect(force=True)
-
         self._name = self._device_info.friendly_name or self._device_info.name
         self._device_name = self._device_info.name
+        self._device_mac = format_mac(self._device_info.mac_address)
+        return None
+
+    async def fetch_device_info(self) -> str | None:
+        """Fetch device info from API and return any errors."""
+        assert self._host is not None
+        assert self._port is not None
+        if error := await self._fetch_device_info(
+            self._host, self._port, self._noise_psk
+        ):
+            return error
+        assert self._device_info is not None
         mac_address = format_mac(self._device_info.mac_address)
         await self.async_set_unique_id(mac_address, raise_on_progress=False)
         if self.source != SOURCE_REAUTH:
