@@ -8,6 +8,7 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.json import json_bytes
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo as _DhcpServiceInfo
 
@@ -35,7 +36,7 @@ def async_setup(hass: HomeAssistant) -> None:
 def serialize_service_info(service_info: _DhcpServiceInfo) -> DHCPDiscovery:
     """Serialize a _DhcpServiceInfo object."""
     serialized: DHCPDiscovery = {
-        "mac_address": service_info.macaddress,
+        "mac_address": service_info.macaddress.upper(),
         "hostname": service_info.hostname,
         "ip_address": service_info.ip,
     }
@@ -83,7 +84,7 @@ class _DiscoverySubscription:
             {
                 "add": [
                     {
-                        "address": mac_address,
+                        "mac_address": dr.format_mac(mac_address).upper(),
                         "hostname": data[HOSTNAME],
                         "ip_address": data[IP_ADDRESS],
                     }
