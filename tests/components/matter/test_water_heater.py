@@ -129,6 +129,60 @@ async def test_water_heater_set_temperature(
         )
 
     @pytest.mark.parametrize("node_fixture", ["silabs_water_heater"])
+    async def test_water_heater_set_on_off(
+        hass: HomeAssistant,
+        matter_client: MagicMock,
+        matter_node: MatterNode,
+    ) -> None:
+        """Test water_heater set operation mode service."""
+        state = hass.states.get("water_heater.water_heater")
+        assert state
+
+        # turn_off water_heater
+        await hass.services.async_call(
+            "water_heater",
+            "turn_off",
+            {
+                "entity_id": "water_heater.water_heater",
+            },
+            blocking=True,
+        )
+
+        state = hass.states.get("water_heater.water_heater")
+        assert state.state == STATE_OFF
+        assert matter_client.write_attribute.call_count == 1
+        assert matter_client.write_attribute.call_args == call(
+            node_id=matter_node.node_id,
+            attribute_path=create_attribute_path_from_attribute(
+                endpoint_id=2,
+                attribute=clusters.Thermostat.Attributes.SystemMode,
+            ),
+            value=0,
+        )
+
+        # turn_on water_heater
+        await hass.services.async_call(
+            "water_heater",
+            "turn_on",
+            {
+                "entity_id": "water_heater.water_heater",
+            },
+            blocking=True,
+        )
+
+        state = hass.states.get("water_heater.water_heater")
+        assert state.state == STATE_ECO
+        assert matter_client.write_attribute.call_count == 1
+        assert matter_client.write_attribute.call_args == call(
+            node_id=matter_node.node_id,
+            attribute_path=create_attribute_path_from_attribute(
+                endpoint_id=2,
+                attribute=clusters.Thermostat.Attributes.SystemMode,
+            ),
+            value=4,
+        )
+
+    @pytest.mark.parametrize("node_fixture", ["silabs_water_heater"])
     async def test_update_from_water_heater(
         hass: HomeAssistant,
         matter_client: MagicMock,
