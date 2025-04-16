@@ -6664,19 +6664,17 @@ async def test_enabled_sequence_in_parallel(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test to ensure sequence inside parallel follows enabled tag."""
+    event = "test_event"
+    events = async_capture_events(hass, event)
     sequence = cv.SCRIPT_SCHEMA(
         {
             "parallel": [
                 {
-                    "sequence": [
-                        {"event": "test_event", "event_data": {"inside": "disabled"}}
-                    ],
+                    "sequence": [{"event": event, "event_data": {"value": "disabled"}}],
                     "enabled": "false",
                 },
                 {
-                    "sequence": [
-                        {"event": "test_event", "event_data": {"inside": "enabled"}}
-                    ],
+                    "sequence": [{"event": event, "event_data": {"value": "enabled"}}],
                     "enabled": "true",
                 },
             ]
@@ -6688,10 +6686,5 @@ async def test_enabled_sequence_in_parallel(
     await script_obj.async_run(context=Context())
     await hass.async_block_till_done()
 
-    expected_trace = {
-        "0": [{"result": {"enabled": False}}],
-        "0/parallel/1/sequence/0": [
-            {"result": {"event": "test_event", "event_data": {"inside": "enabled"}}}
-        ],
-    }
-    assert_action_trace(expected_trace)
+    assert len(events) == 1
+    assert events[0].data["value"] == "enabled"
