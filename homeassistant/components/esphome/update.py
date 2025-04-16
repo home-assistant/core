@@ -38,6 +38,8 @@ from .entity import (
 )
 from .entry_data import RuntimeEntryData
 
+PARALLEL_UPDATES = 0
+
 KEY_UPDATE_LOCK = "esphome_update_lock"
 
 NO_FEATURES = UpdateEntityFeature(0)
