@@ -5,8 +5,10 @@ import logging
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.conversation import HOME_ASSISTANT_AGENT, default_agent
-from homeassistant.components.conversation.const import DATA_DEFAULT_ENTITY
+from homeassistant.components.conversation import (
+    HOME_ASSISTANT_AGENT,
+    get_agent_manager,
+)
 from homeassistant.components.conversation.models import ConversationInput
 from homeassistant.core import Context, HomeAssistant, ServiceCall
 from homeassistant.helpers import trigger
@@ -20,6 +22,7 @@ async def setup_comp(hass: HomeAssistant) -> None:
     """Initialize components."""
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "conversation", {})
+    assert await async_setup_component(hass, "assist_conversation", {})
 
 
 async def test_if_fires_on_event(
@@ -666,8 +669,8 @@ async def test_trigger_with_device_id(hass: HomeAssistant) -> None:
         },
     )
 
-    agent = hass.data[DATA_DEFAULT_ENTITY]
-    assert isinstance(agent, default_agent.DefaultAgent)
+    agent = get_agent_manager(hass).default_agent
+    assert agent is not None
 
     result = await agent.async_process(
         ConversationInput(

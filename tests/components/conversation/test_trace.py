@@ -17,6 +17,7 @@ async def init_components(hass: HomeAssistant):
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "conversation", {})
     assert await async_setup_component(hass, "intent", {})
+    assert await async_setup_component(hass, "assist_conversation", {})
 
 
 async def test_converation_trace(
@@ -69,7 +70,7 @@ async def test_converation_trace_uncaught_error(
     """Test tracing a conversation that raises an uncaught error."""
     with (
         patch(
-            "homeassistant.components.conversation.default_agent.DefaultAgent.async_process",
+            "homeassistant.components.assist_conversation.conversation.DefaultAgent.async_process",
             side_effect=ValueError("Unexpected error"),
         ),
         pytest.raises(ValueError),
@@ -99,7 +100,7 @@ async def test_converation_trace_homeassistant_error(
     """Test tracing a conversation with a HomeAssistant error."""
     with (
         patch(
-            "homeassistant.components.conversation.default_agent.DefaultAgent.async_process",
+            "homeassistant.components.assist_conversation.conversation.DefaultAgent.async_process",
             side_effect=HomeAssistantError("Failed to talk to agent"),
         ),
     ):

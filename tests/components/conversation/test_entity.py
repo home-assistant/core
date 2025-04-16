@@ -19,6 +19,7 @@ async def test_state_set_and_restore(hass: HomeAssistant) -> None:
 
     await async_setup_component(hass, "homeassistant", {})
     await async_setup_component(hass, "conversation", {})
+    await async_setup_component(hass, "assist_conversation", {})
 
     state = hass.states.get(entity_id)
     assert state
@@ -29,7 +30,7 @@ async def test_state_set_and_restore(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.conversation.default_agent.DefaultAgent.async_process"
+            "homeassistant.components.assist_conversation.conversation.DefaultAgent.async_process"
         ) as mock_process,
         patch("homeassistant.util.dt.utcnow", return_value=now),
     ):

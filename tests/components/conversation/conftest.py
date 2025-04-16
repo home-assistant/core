@@ -11,8 +11,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import MockAgent
+from .common import mock_conversation_agent_fixture_helper
 
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture
+def mock_agent(hass: HomeAssistant) -> MockAgent:
+    """Mock agent."""
+    return mock_conversation_agent_fixture_helper(hass)
 
 
 @pytest.fixture
@@ -52,3 +59,9 @@ async def init_components(hass: HomeAssistant):
     """Initialize relevant components with empty configs."""
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "conversation", {})
+
+
+@pytest.fixture
+async def init_default_agent(hass: HomeAssistant):
+    """Initialize component for default agent."""
+    assert await async_setup_component(hass, "assist_conversation", {})
