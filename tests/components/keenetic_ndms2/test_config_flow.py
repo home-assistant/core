@@ -18,7 +18,14 @@ from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_UDN,
 )
 
-from . import MOCK_DATA, MOCK_NAME, MOCK_OPTIONS, MOCK_SSDP_DISCOVERY_INFO
+from . import (
+    MOCK_DATA,
+    MOCK_IP,
+    MOCK_NAME,
+    MOCK_OPTIONS,
+    MOCK_RECONFIGURE,
+    MOCK_SSDP_DISCOVERY_INFO,
+)
 
 from tests.common import MockConfigEntry
 
@@ -52,7 +59,6 @@ def mock_keenetic_connect_failed():
 
 async def test_flow_works(hass: HomeAssistant, connect) -> None:
     """Test config flow."""
-
     result = await hass.config_entries.flow.async_init(
         keenetic.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -71,6 +77,34 @@ async def test_flow_works(hass: HomeAssistant, connect) -> None:
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == MOCK_NAME
     assert result2["data"] == MOCK_DATA
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_reconfigure(hass: HomeAssistant, connect) -> None:
+    """Test reconfigure flow."""
+    entry = MockConfigEntry(domain=keenetic.DOMAIN, data=MOCK_DATA)
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    with patch(
+        "homeassistant.components.keenetic_ndms2.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=MOCK_RECONFIGURE,
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reconfigure_successful"
+    assert entry.data == {
+        CONF_HOST: MOCK_IP,
+        **MOCK_RECONFIGURE,
+    }
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -146,6 +180,42 @@ async def test_connection_error(hass: HomeAssistant, connect_error) -> None:
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_options_not_initialized(hass: HomeAssistant) -> None:
+    """Test updating options."""
+    entry = MockConfigEntry(domain=keenetic.DOMAIN, data=MOCK_DATA)
+    entry.add_to_hass(hass)
+
+    # no router set
+    hass.data.setdefault(keenetic.DOMAIN, {})
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "not_initialized"
+
+
+async def test_options_connection_error(hass: HomeAssistant) -> None:
+    """Test updating options."""
+    entry = MockConfigEntry(domain=keenetic.DOMAIN, data=MOCK_DATA)
+    entry.add_to_hass(hass)
+
+    def get_interfaces_error():
+        raise ConnectionException("Mocked failure")
+
+    # no router set
+    hass.data.setdefault(keenetic.DOMAIN, {})
+    hass.data[keenetic.DOMAIN][entry.entry_id] = {
+        keenetic.ROUTER: Mock(
+            client=Mock(get_interfaces=Mock(wraps=get_interfaces_error))
+        )
+    }
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
 
 
 async def test_ssdp_works(hass: HomeAssistant, connect) -> None:
