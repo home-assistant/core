@@ -41,8 +41,9 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfVolume,
 )
-from homeassistant.core import CoreState, HomeAssistant, State
+from homeassistant.core import CoreState, HomeAssistant, State, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -1637,8 +1638,16 @@ async def _test_self_reset(
 
     now += timedelta(seconds=30)
     with freeze_time(now):
+        events = []
+        unsub = async_track_state_change_event(
+            hass,
+            "sensor.energy_bill",
+            # pylint: disable-next=unnecessary-lambda
+            callback(lambda event: events.append(event)),
+        )
         async_fire_time_changed(hass, now)
         await hass.async_block_till_done()
+        unsub()
         hass.states.async_set(
             entity_id,
             6,
@@ -1654,6 +1663,9 @@ async def _test_self_reset(
             state.attributes.get("last_reset") == dt_util.as_utc(now).isoformat()
         )  # last_reset is kept in UTC
         assert state.state == "3"
+        assert len(events) == 2
+        assert events[0].data.get("new_state").state == "0"
+        assert events[1].data.get("new_state").state == "0"
     else:
         assert state.attributes.get("last_period") == "0"
         assert state.state == "5"
