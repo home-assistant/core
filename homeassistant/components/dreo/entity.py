@@ -2,6 +2,7 @@
 
 from typing import Any
 
+from hscloud.hscloud import HsCloud
 from hscloud.hscloudexception import (
     HsCloudAccessDeniedException,
     HsCloudBusinessException,
@@ -13,7 +14,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
-from . import DreoConfigEntry
 from .const import DOMAIN
 
 
@@ -25,7 +25,7 @@ class DreoEntity(Entity):
     def __init__(
         self,
         device: dict[str, Any],
-        config_entry: DreoConfigEntry,
+        client: HsCloud,
         unique_id_suffix: str | None = None,
         name: str | None = None,
     ) -> None:
@@ -33,13 +33,13 @@ class DreoEntity(Entity):
 
         Args:
             device: Device information dictionary
-            config_entry: The config entry
+            client: The Dreo HsCloud client
             unique_id_suffix: Optional suffix for unique_id to differentiate multiple entities from same device
             name: Optional entity name, None will use the device name as-is
 
         """
         super().__init__()
-        self._client = config_entry.runtime_data.client
+        self._client = client
         self._model = device.get("model")
         self._device_id = device.get("deviceSn")
         self._attr_name = name

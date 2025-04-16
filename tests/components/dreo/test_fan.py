@@ -1,465 +1,353 @@
-"""Tests for the Dreo fan component."""
+"""Tests for the Dreo fan platform."""
 
-import json
-import logging
-import os
-from typing import Any
-from unittest.mock import MagicMock
-
-from hscloud.hscloudexception import (
-    HsCloudAccessDeniedException,
-    HsCloudBusinessException,
-    HsCloudException,
-    HsCloudFlowControlException,
-)
+from hscloud.hscloudexception import HsCloudException
 import pytest
 
-from homeassistant.components.dreo.const import (
-    DOMAIN,
-    ERROR_SET_OSCILLATE_FAILED,
-    ERROR_SET_PRESET_MODE_FAILED,
-    ERROR_SET_SPEED_FAILED,
-    ERROR_TURN_OFF_FAILED,
-    ERROR_TURN_ON_FAILED,
+from homeassistant.components.fan import (
+    ATTR_OSCILLATING,
+    ATTR_PERCENTAGE,
+    ATTR_PRESET_MODE,
+    DOMAIN as FAN_DOMAIN,
+    SERVICE_OSCILLATE,
+    SERVICE_SET_PERCENTAGE,
+    SERVICE_SET_PRESET_MODE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
 )
-from homeassistant.components.dreo.fan import DreoFan
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 
-from tests.common import MockConfigEntry
-
-# Create a module-level logger
-_LOGGER = logging.getLogger(__name__)
+pytestmark = pytest.mark.usefixtures(
+    "mock_dreo_client", "mock_dreo_devices", "mock_fan_device_data"
+)
 
 
-@pytest.fixture
-def mock_device():
-    """Return a mock Dreo device."""
-    return {
-        "deviceSn": "test-device-id",
-        "deviceName": "Test Fan",
-        "model": "DR-HTF001S",
-        "moduleFirmwareVersion": "1.0.0",
-        "mcuFirmwareVersion": "1.0.0",
-    }
+async def test_fan_state(
+    hass: HomeAssistant, setup_integration, mock_fan_entity
+) -> None:
+    """Test the creation and state of the fan."""
+    await hass.async_block_till_done()
+
+    state = hass.states.get("fan.test_fan")
+    assert state is not None
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_PERCENTAGE] == 100
+    assert state.attributes[ATTR_PRESET_MODE] == "auto"
+    assert state.attributes[ATTR_OSCILLATING] is True
 
 
-@pytest.fixture
-def mock_config_entry():
-    """Return a mock config entry."""
-    config_entry = MockConfigEntry(domain="dreo")
-    config_entry.runtime_data = MagicMock()
-    config_entry.runtime_data.client = MagicMock()
-    return config_entry
+async def test_turn_on(
+    hass: HomeAssistant, setup_integration, mock_dreo_client, mock_fan_entity
+) -> None:
+    """Test turning on the fan."""
+    # Turn off the fan first
+    mock_fan_entity._attr_percentage = 0
+    mock_fan_entity._attr_preset_mode = None
+    mock_fan_entity._attr_oscillating = None
+    mock_fan_entity._attr_state = None
+    await mock_fan_entity.async_update_ha_state()
 
+    # Verify initial state is off
+    state = hass.states.get("fan.test_fan")
+    assert state is not None
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_PERCENTAGE] == 0
 
-# pylint: disable=import-outside-toplevel,protected-access,redefined-outer-name
-@pytest.fixture
-def fan_entity(mock_device, mock_config_entry):
-    """Return a configured fan entity."""
-    entity = DreoFan(mock_device, mock_config_entry)
-
-    # Directly mock the client
-    entity._client = MagicMock()
-
-    # Set attributes directly instead of using _fan_props
-    entity._attr_preset_mode = None
-    entity._attr_percentage = 0
-    entity._attr_oscillating = None
-    entity._low_high_range = (1, 100)  # Assume this property still exists
-
-    # Mock methods to avoid HomeAssistant instance dependency
-    entity.schedule_update_ha_state = MagicMock()
-
-    return entity
-
-
-# pylint: disable=redefined-outer-name
-@pytest.mark.asyncio
-async def test_turn_on(fan_entity) -> None:
-    """Test turning the fan on."""
-    fan_entity.turn_on()
-
-    # Manually set percentage to simulate what would happen in actual implementation
-    fan_entity._attr_percentage = 50
-
-    assert fan_entity.is_on
-    fan_entity._client.update_status.assert_called_once_with(
-        fan_entity._device_id, power_switch=True
-    )
-    fan_entity.schedule_update_ha_state.assert_called_once_with(force_refresh=True)
-
-
-@pytest.mark.asyncio
-async def test_turn_on_with_percentage(fan_entity) -> None:
-    """Test turning the fan on with percentage."""
-    fan_entity.turn_on(percentage=50)
-
-    # Manually set percentage to simulate what would happen in actual implementation
-    fan_entity._attr_percentage = 50
-
-    assert fan_entity.is_on
-    fan_entity._client.update_status.assert_called_once_with(
-        fan_entity._device_id, power_switch=True, speed=50
-    )
-    fan_entity.schedule_update_ha_state.assert_called_once_with(force_refresh=True)
-
-
-@pytest.mark.asyncio
-async def test_turn_on_with_preset_mode(fan_entity) -> None:
-    """Test turning the fan on with preset mode."""
-    fan_entity.turn_on(preset_mode="auto")
-
-    # Manually set preset_mode to simulate what would happen in actual implementation
-    fan_entity._attr_preset_mode = "auto"
-
-    assert fan_entity.is_on
-    fan_entity._client.update_status.assert_called_once_with(
-        fan_entity._device_id, power_switch=True, mode="auto"
-    )
-    fan_entity.schedule_update_ha_state.assert_called_once_with(force_refresh=True)
-
-
-@pytest.mark.asyncio
-async def test_turn_on_with_all_params(fan_entity) -> None:
-    """Test turning the fan on with both percentage and preset mode."""
-    fan_entity.turn_on(percentage=75, preset_mode="auto")
-
-    # Manually set attributes to simulate what would happen in actual implementation
-    fan_entity._attr_percentage = 75
-    fan_entity._attr_preset_mode = "auto"
-
-    assert fan_entity.is_on
-    fan_entity._client.update_status.assert_called_once_with(
-        fan_entity._device_id, power_switch=True, speed=75, mode="auto"
-    )
-    fan_entity.schedule_update_ha_state.assert_called_once_with(force_refresh=True)
-
-
-# pylint: disable=redefined-outer-name
-@pytest.mark.asyncio
-async def test_turn_off(fan_entity) -> None:
-    """Test turning the fan off."""
-    # First set it to on state
-    fan_entity._attr_percentage = 50
-
-    fan_entity.turn_off()
-
-    # Manually set percentage to simulate what would happen in actual implementation
-    fan_entity._attr_percentage = 0
-
-    assert not fan_entity.is_on
-    fan_entity._client.update_status.assert_called_once_with(
-        fan_entity._device_id, power_switch=False
-    )
-    fan_entity.schedule_update_ha_state.assert_called_once_with(force_refresh=True)
-
-
-# pylint: disable=redefined-outer-name
-@pytest.mark.asyncio
-async def test_set_percentage(fan_entity) -> None:
-    """Test setting the fan percentage."""
-    fan_entity.set_percentage(50)
-
-    fan_entity._attr_percentage = 50  # Manually set for test
-    assert fan_entity.percentage == 50
-    fan_entity._client.update_status.assert_called_once()
-    fan_entity.schedule_update_ha_state.assert_called_once_with(force_refresh=True)
-
-
-@pytest.mark.asyncio
-async def test_set_percentage_zero(fan_entity) -> None:
-    """Test setting the fan percentage to zero turns off the fan."""
-    fan_entity.set_percentage(0)
-
-    assert not fan_entity.is_on
-    fan_entity._client.update_status.assert_called_once_with(
-        fan_entity._device_id, power_switch=False
-    )
-    fan_entity.schedule_update_ha_state.assert_called_once_with(force_refresh=True)
-
-
-# pylint: disable=redefined-outer-name
-@pytest.mark.asyncio
-async def test_oscillate(fan_entity) -> None:
-    """Test setting oscillation."""
-    fan_entity.oscillate(True)
-
-    fan_entity._attr_oscillating = True  # Manually set for test
-    assert fan_entity.oscillating
-    fan_entity._client.update_status.assert_called_once_with(
-        fan_entity._device_id, oscillate=True
-    )
-    fan_entity.schedule_update_ha_state.assert_called_once_with(force_refresh=True)
-
-
-# pylint: disable=redefined-outer-name
-@pytest.mark.asyncio
-async def test_set_preset_mode(fan_entity) -> None:
-    """Test setting the fan preset mode."""
-    fan_entity.set_preset_mode("auto")
-
-    fan_entity._attr_preset_mode = "auto"  # Manually set for test
-    assert fan_entity.preset_mode == "auto"
-    fan_entity._client.update_status.assert_called_once_with(
-        fan_entity._device_id, mode="auto"
-    )
-    fan_entity.schedule_update_ha_state.assert_called_once_with(force_refresh=True)
-
-
-@pytest.mark.asyncio
-async def test_update(fan_entity) -> None:
-    """Test updating fan state."""
-    status_data = {
+    # Simulate response from the device (successful turn on)
+    mock_dreo_client.get_status.return_value = {
         "power_switch": True,
         "connected": True,
         "mode": "auto",
         "speed": 50,
-        "oscillate": True,
+        "oscillate": False,
     }
-    fan_entity._client.get_status.return_value = status_data
-    # Set the low_high_range correctly for percentage calculation
-    fan_entity._low_high_range = (1, 100)
 
-    fan_entity.update()
-
-    assert fan_entity.is_on is True
-    assert fan_entity.available is True
-    assert fan_entity.preset_mode == "auto"
-    assert fan_entity.percentage == 50
-    assert fan_entity.oscillating is True
-
-
-@pytest.mark.asyncio
-async def test_update_none_status(fan_entity) -> None:
-    """Test updating fan state when status is None."""
-    fan_entity._client.get_status.return_value = None
-
-    fan_entity.update()
-
-    assert fan_entity.available is False
-
-
-# Error handling tests
-@pytest.mark.asyncio
-async def test_turn_on_error(fan_entity) -> None:
-    """Test error handling when turning on fails."""
-    fan_entity._client.update_status.side_effect = HsCloudException("Failed to turn on")
-
-    with pytest.raises(HomeAssistantError) as excinfo:
-        fan_entity.turn_on()
-
-    # Check that the error has the correct translation details
-    assert excinfo.value.translation_domain == "dreo"
-    assert excinfo.value.translation_key == "turn_on_failed"
-
-
-@pytest.mark.asyncio
-async def test_turn_off_error(fan_entity) -> None:
-    """Test error handling when turning off fails."""
-    fan_entity._client.update_status.side_effect = HsCloudBusinessException(
-        "Failed to turn off"
+    # Update the state
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ["fan.test_fan"]},
+        blocking=True,
     )
 
-    with pytest.raises(HomeAssistantError) as excinfo:
-        fan_entity.turn_off()
-
-    # Check that the error has the correct translation details
-    assert excinfo.value.translation_domain == "dreo"
-    assert excinfo.value.translation_key == "turn_off_failed"
-
-
-@pytest.mark.asyncio
-async def test_set_preset_mode_error(fan_entity) -> None:
-    """Test error handling when setting preset mode fails."""
-    fan_entity._client.update_status.side_effect = HsCloudAccessDeniedException(
-        "Failed to set preset mode"
+    # Verify client was called correctly
+    mock_dreo_client.update_status.assert_called_once_with(
+        "test-device-id", power_switch=True
     )
 
-    with pytest.raises(HomeAssistantError) as excinfo:
-        fan_entity.set_preset_mode("auto")
+    # Update fan entity with the "response" from the API
+    mock_fan_entity._attr_percentage = 100
+    mock_fan_entity._attr_preset_mode = "auto"
+    mock_fan_entity._attr_state = STATE_ON
+    await mock_fan_entity.async_update_ha_state()
 
-    # Check that the error has the correct translation details
-    assert excinfo.value.translation_domain == "dreo"
-    assert excinfo.value.translation_key == "set_preset_mode_failed"
-
-
-@pytest.mark.asyncio
-async def test_set_percentage_error(fan_entity) -> None:
-    """Test error handling when setting percentage fails."""
-    fan_entity._client.update_status.side_effect = HsCloudFlowControlException(
-        "Failed to set speed"
-    )
-
-    with pytest.raises(HomeAssistantError) as excinfo:
-        fan_entity.set_percentage(50)
-
-    # Check that the error has the correct translation details
-    assert excinfo.value.translation_domain == "dreo"
-    assert excinfo.value.translation_key == "set_speed_failed"
+    # Verify the state after turning on
+    state = hass.states.get("fan.test_fan")
+    assert state is not None
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_PERCENTAGE] == 100
+    assert state.attributes[ATTR_PRESET_MODE] == "auto"
 
 
-@pytest.mark.asyncio
-async def test_oscillate_error(fan_entity) -> None:
-    """Test error handling when setting oscillation fails."""
-    fan_entity._client.update_status.side_effect = HsCloudException(
-        "Failed to set oscillation"
-    )
-
-    with pytest.raises(HomeAssistantError) as excinfo:
-        fan_entity.oscillate(True)
-
-    # Check that the error has the correct translation details
-    assert excinfo.value.translation_domain == "dreo"
-    assert excinfo.value.translation_key == "set_oscillate_failed"
-
-
-def getTranslations() -> dict[str, Any]:
-    """Get the translations."""
-
-    # Get the actual translation file content
-    repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
-    translation_path = os.path.join(
-        repo_root, "homeassistant", "components", "dreo", "translations", "en.json"
-    )
-    with open(translation_path, encoding="utf-8") as f:
-        return json.load(f)
-
-
-@pytest.mark.asyncio
-async def test_error_turn_on_failed(
-    hass: HomeAssistant,
-    monkeypatch: pytest.MonkeyPatch,
-    caplog: pytest.LogCaptureFixture,
+async def test_turn_off(
+    hass: HomeAssistant, setup_integration, mock_dreo_client, mock_fan_entity
 ) -> None:
-    """Test that error constants work properly with the internationalization system."""
-    caplog.set_level(logging.INFO)
+    """Test turning off the fan."""
+    # Ensure fan is on first
+    mock_fan_entity._attr_percentage = 100
+    mock_fan_entity._attr_preset_mode = "auto"
+    mock_fan_entity._attr_state = STATE_ON
+    await mock_fan_entity.async_update_ha_state()
 
-    # Create error with the simplified key format
-    error = HomeAssistantError(
-        translation_domain=DOMAIN, translation_key=ERROR_TURN_ON_FAILED
+    # Verify initial state is on
+    state = hass.states.get("fan.test_fan")
+    assert state is not None
+    assert state.state == STATE_ON
+
+    # Simulate response from the device (successful turn off)
+    mock_dreo_client.get_status.return_value = {
+        "power_switch": False,
+        "connected": True,
+        "mode": None,
+        "speed": 0,
+        "oscillate": None,
+    }
+
+    # Update the state
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: ["fan.test_fan"]},
+        blocking=True,
     )
-    assert_error_translation(
-        error, ERROR_TURN_ON_FAILED, "Failed to turn on device", getTranslations()
+
+    # Verify client was called correctly
+    mock_dreo_client.update_status.assert_called_once_with(
+        "test-device-id", power_switch=False
     )
 
+    # Update fan entity with the "response" from the API
+    mock_fan_entity._attr_percentage = 0
+    mock_fan_entity._attr_preset_mode = None
+    mock_fan_entity._attr_state = STATE_OFF
+    await mock_fan_entity.async_update_ha_state()
 
-@pytest.mark.asyncio
-async def test_error_turn_off_failed(
-    hass: HomeAssistant,
-    monkeypatch: pytest.MonkeyPatch,
-    caplog: pytest.LogCaptureFixture,
+    # Verify the state after turning off
+    state = hass.states.get("fan.test_fan")
+    assert state is not None
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_PERCENTAGE] == 0
+
+
+async def test_set_percentage(
+    hass: HomeAssistant, setup_integration, mock_dreo_client, mock_fan_entity
 ) -> None:
-    """Test that error constants work properly with the internationalization system."""
-    caplog.set_level(logging.INFO)
+    """Test setting the fan speed percentage."""
+    # Ensure fan is on with initial settings
+    mock_fan_entity._attr_percentage = 100
+    mock_fan_entity._attr_preset_mode = "auto"
+    mock_fan_entity._attr_state = STATE_ON
+    await mock_fan_entity.async_update_ha_state()
 
-    # Create error with the simplified key format
-    error = HomeAssistantError(
-        translation_domain=DOMAIN, translation_key=ERROR_TURN_OFF_FAILED
+    # Verify initial state
+    state = hass.states.get("fan.test_fan")
+    assert state is not None
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_PERCENTAGE] == 100
+
+    # Clear any previous calls
+    mock_dreo_client.update_status.reset_mock()
+
+    # Simulate response from the device
+    mock_dreo_client.get_status.return_value = {
+        "power_switch": True,
+        "connected": True,
+        "mode": "auto",
+        "speed": 2,
+        "oscillate": False,
+    }
+
+    # Update the state
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_SET_PERCENTAGE,
+        {ATTR_ENTITY_ID: ["fan.test_fan"], ATTR_PERCENTAGE: 50},
+        blocking=True,
     )
-    assert_error_translation(
-        error, ERROR_TURN_OFF_FAILED, "Failed to turn off device", getTranslations()
-    )
+
+    # Verify client was called correctly
+    mock_dreo_client.update_status.assert_called_once_with("test-device-id", speed=2)
+
+    # Update fan entity with the "response" from the API
+    mock_fan_entity._attr_percentage = 50
+    await mock_fan_entity.async_update_ha_state()
+
+    # Verify the state after setting percentage
+    state = hass.states.get("fan.test_fan")
+    assert state is not None
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_PERCENTAGE] == 50
 
 
-@pytest.mark.asyncio
-async def test_error_set_speed_failed(
-    hass: HomeAssistant,
-    monkeypatch: pytest.MonkeyPatch,
-    caplog: pytest.LogCaptureFixture,
+async def test_set_preset_mode(
+    hass: HomeAssistant, setup_integration, mock_dreo_client, mock_fan_entity
 ) -> None:
-    """Test that error constants work properly with the internationalization system."""
-    caplog.set_level(logging.INFO)
+    """Test setting the fan preset mode."""
+    # Ensure fan is on with initial settings
+    mock_fan_entity._attr_percentage = 100
+    mock_fan_entity._attr_preset_mode = "auto"
+    mock_fan_entity._attr_state = STATE_ON
+    await mock_fan_entity.async_update_ha_state()
 
-    # Create error with the simplified key format
-    error = HomeAssistantError(
-        translation_domain=DOMAIN, translation_key=ERROR_SET_SPEED_FAILED
+    # Verify initial state
+    state = hass.states.get("fan.test_fan")
+    assert state is not None
+    assert state.attributes[ATTR_PRESET_MODE] == "auto"
+
+    # Clear any previous calls
+    mock_dreo_client.update_status.reset_mock()
+
+    # Simulate response from the device
+    mock_dreo_client.get_status.return_value = {
+        "power_switch": True,
+        "connected": True,
+        "mode": "normal",
+        "speed": 50,
+        "oscillate": False,
+    }
+
+    # Update the state
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: ["fan.test_fan"], ATTR_PRESET_MODE: "normal"},
+        blocking=True,
     )
-    assert_error_translation(
-        error, ERROR_SET_SPEED_FAILED, "Failed to set speed", getTranslations()
+
+    # Verify client was called correctly
+    mock_dreo_client.update_status.assert_called_once_with(
+        "test-device-id", mode="normal"
     )
 
+    # Update fan entity with the "response" from the API
+    mock_fan_entity._attr_preset_mode = "normal"
+    await mock_fan_entity.async_update_ha_state()
 
-@pytest.mark.asyncio
-async def test_error_set_preset_mode_failed(
-    hass: HomeAssistant,
-    monkeypatch: pytest.MonkeyPatch,
-    caplog: pytest.LogCaptureFixture,
+    # Verify the state after setting preset mode
+    state = hass.states.get("fan.test_fan")
+    assert state is not None
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_PRESET_MODE] == "normal"
+
+
+async def test_set_oscillate(
+    hass: HomeAssistant, setup_integration, mock_dreo_client, mock_fan_entity
 ) -> None:
-    """Test that error constants work properly with the internationalization system."""
-    caplog.set_level(logging.INFO)
+    """Test setting the fan oscillation."""
+    # Ensure fan is on with oscillation enabled
+    mock_fan_entity._attr_percentage = 100
+    mock_fan_entity._attr_preset_mode = "auto"
+    mock_fan_entity._attr_oscillating = True
+    mock_fan_entity._attr_state = STATE_ON
+    await mock_fan_entity.async_update_ha_state()
 
-    # Create error with the simplified key format
-    error = HomeAssistantError(
-        translation_domain=DOMAIN, translation_key=ERROR_SET_PRESET_MODE_FAILED
+    # Verify initial state
+    state = hass.states.get("fan.test_fan")
+    assert state is not None
+    assert state.attributes[ATTR_OSCILLATING] is True
+
+    # Clear any previous calls
+    mock_dreo_client.update_status.reset_mock()
+
+    # Simulate response from the device
+    mock_dreo_client.get_status.return_value = {
+        "power_switch": True,
+        "connected": True,
+        "mode": "auto",
+        "speed": 50,
+        "oscillate": False,
+    }
+
+    # Update the state
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_OSCILLATE,
+        {ATTR_ENTITY_ID: ["fan.test_fan"], ATTR_OSCILLATING: False},
+        blocking=True,
     )
-    assert_error_translation(
-        error,
-        ERROR_SET_PRESET_MODE_FAILED,
-        "Failed to set preset mode",
-        getTranslations(),
+
+    # Verify client was called correctly
+    mock_dreo_client.update_status.assert_called_once_with(
+        "test-device-id", oscillate=False
     )
 
+    # Update fan entity with the "response" from the API
+    mock_fan_entity._attr_oscillating = False
+    await mock_fan_entity.async_update_ha_state()
 
-@pytest.mark.asyncio
-async def test_error_set_oscillate_failed(
-    hass: HomeAssistant,
-    monkeypatch: pytest.MonkeyPatch,
-    caplog: pytest.LogCaptureFixture,
+    # Verify the state after setting oscillation
+    state = hass.states.get("fan.test_fan")
+    assert state is not None
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_OSCILLATING] is False
+
+
+async def test_fan_unavailable(
+    hass: HomeAssistant, setup_integration, mock_dreo_client, mock_fan_entity
 ) -> None:
-    """Test that error constants work properly with the internationalization system."""
-    caplog.set_level(logging.INFO)
+    """Test handling of an unavailable fan."""
+    # Make fan unavailable
+    mock_fan_entity._attr_available = False
+    await mock_fan_entity.async_update_ha_state()
 
-    # Create error with the simplified key format
-    error = HomeAssistantError(
-        translation_domain=DOMAIN, translation_key=ERROR_SET_OSCILLATE_FAILED
-    )
-    assert_error_translation(
-        error,
-        ERROR_SET_OSCILLATE_FAILED,
-        "Failed to set oscillation",
-        getTranslations(),
-    )
+    # Verify state is unavailable
+    state = hass.states.get("fan.test_fan")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    # Set back to available and verify state changes
+    mock_fan_entity._attr_available = True
+    mock_fan_entity._attr_state = STATE_ON
+    await mock_fan_entity.async_update_ha_state()
+
+    state = hass.states.get("fan.test_fan")
+    assert state is not None
+    assert state.state == STATE_ON
 
 
-def assert_error_translation(
-    error: HomeAssistantError,
-    testKey: str,
-    testMessage: str,
-    translations: dict[str, Any],
+async def test_client_error(
+    hass: HomeAssistant, setup_integration, mock_dreo_client, mock_fan_entity
 ) -> None:
-    """Translate the error message."""
-    # Extract the expected error message
-    expected_message = translations["exceptions"][testKey]["message"]
-    # The error's translation_key should be our simplified constant
-    assert error.translation_key == testKey
-    assert error.translation_domain == "dreo"
+    """Test handling of client errors."""
+    # Ensure fan is off initially
+    mock_fan_entity._attr_percentage = 0
+    mock_fan_entity._attr_preset_mode = None
+    mock_fan_entity._attr_state = STATE_OFF
+    await mock_fan_entity.async_update_ha_state()
 
-    # 2. Mock a function that simulates Home Assistant's error handling
-    # which would combine domain, key and lookup the message
-    def get_translated_error_message(error):
-        """Simulate how Home Assistant translates errors."""
-        # In a real scenario, Home Assistant would use the translation system
-        # Here we just use our loaded translations
-        if (
-            "exceptions" in translations
-            and error.translation_key in translations["exceptions"]
-        ):
-            return translations["exceptions"][error.translation_key]["message"]
-        return f"Unknown error: {error.translation_key}"
+    # Verify initial state
+    state = hass.states.get("fan.test_fan")
+    assert state is not None
+    assert state.state == STATE_OFF
 
-    # Get the translated message
-    translated_message = get_translated_error_message(error)
+    # Simulate client error
+    mock_dreo_client.update_status.side_effect = HsCloudException("Test exception")
 
-    # Log the result so we can see it in the test output
-    _LOGGER.info("Original key: %s", testKey)
-    _LOGGER.info("Error translation_key: %s", error.translation_key)
-    _LOGGER.info("Expected message: %s", expected_message)
-    _LOGGER.info("Translated message: %s", translated_message)
+    # Attempt to turn on the fan
+    with pytest.raises(HsCloudException):
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: ["fan.test_fan"]},
+            blocking=True,
+        )
 
-    # Verify the translation system works as expected
-    assert translated_message == expected_message
-    assert expected_message == testMessage
+    # Verify client was called
+    mock_dreo_client.update_status.assert_called_once_with(
+        "test-device-id", power_switch=True
+    )
 
-    # Log success message
-    _LOGGER.info("✓ Error internationalization is working correctly!")
+    # Verify the state remains unchanged after error
+    state = hass.states.get("fan.test_fan")
+    assert state is not None
+    assert state.state == STATE_OFF

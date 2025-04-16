@@ -8,6 +8,7 @@ import math
 from typing import Any
 
 from hscloud.const import DEVICE_TYPE, FAN_DEVICE
+from hscloud.hscloud import HsCloud
 from hscloud.hscloudexception import HsCloudException
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
@@ -42,9 +43,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Fan from a config entry."""
 
+    client = config_entry.runtime_data.client
+
     async_add_entities(
         [
-            DreoFan(device, config_entry)
+            DreoFan(device, client)
             for device in config_entry.runtime_data.devices
             if DEVICE_TYPE.get(device.get("model")) == FAN_DEVICE.get("type")
         ]
@@ -65,11 +68,11 @@ class DreoFan(DreoEntity, FanEntity):
     def __init__(
         self,
         device: dict[str, Any],
-        config_entry: DreoConfigEntry,
+        client: HsCloud,
     ) -> None:
         """Initialize the Dreo fan."""
 
-        super().__init__(device, config_entry, FAN_SUFFIX, None)
+        super().__init__(device, client, FAN_SUFFIX, None)
 
         model_config = FAN_DEVICE.get("config", {}).get(self._model, {})
         speed_range = model_config.get("speed_range")
@@ -119,11 +122,11 @@ class DreoFan(DreoEntity, FanEntity):
             self._send_command_and_update(ERROR_SET_SPEED_FAILED, speed=speed)
 
     def oscillate(self, oscillating: bool) -> None:
-        """Set the Oscillate of fan."""
+        """Set the oscillation of fan."""
         self._send_command_and_update(ERROR_SET_OSCILLATE_FAILED, oscillate=oscillating)
 
     def update(self) -> None:
-        """Update Dreo fan."""
+        """Get updated data from the device."""
         try:
             status = self._client.get_status(self._device_id)
 
@@ -132,14 +135,14 @@ class DreoFan(DreoEntity, FanEntity):
                 return
 
             self._attr_available = status.get("connected")
-            self._attr_preset_mode = status.get("mode")
-            self._attr_oscillating = status.get("oscillate")
 
             if not status.get("power_switch"):
                 self._attr_percentage = 0
                 self._attr_preset_mode = None
                 self._attr_oscillating = None
             else:
+                self._attr_preset_mode = status.get("mode")
+                self._attr_oscillating = status.get("oscillate")
                 self._attr_percentage = ranged_value_to_percentage(
                     self._low_high_range,
                     status.get("speed"),

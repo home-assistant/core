@@ -31,9 +31,6 @@ class DreoFlowHandler(ConfigFlow, domain=DOMAIN):
         self, username: str, password: str
     ) -> tuple[bool, str | None]:
         """Validate login credentials."""
-        if not username or not password:
-            return False, "invalid_auth"
-
         client = HsCloud(username, password)
 
         try:

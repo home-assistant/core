@@ -1,18 +1,21 @@
 """Dreo for Integration."""
 
 from dataclasses import dataclass
+import logging
 
 from hscloud.hscloud import HsCloud
+from hscloud.hscloudexception import HsCloudBusinessException, HsCloudException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-
-from .util import handle_api_exceptions
+from homeassistant.exceptions import ConfigEntryNotReady
 
 type DreoConfigEntry = ConfigEntry[DreoData]
 
 PLATFORMS = [Platform.FAN]
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -34,7 +37,14 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: DreoConfigEntry) 
         client.login()
         return client.get_devices()
 
-    devices = await hass.async_add_executor_job(handle_api_exceptions, setup_client)
+    try:
+        devices = await hass.async_add_executor_job(setup_client)
+    except HsCloudException as ex:
+        _LOGGER.exception("Unable to connect")
+        raise ConfigEntryNotReady("unable to connect") from ex
+    except HsCloudBusinessException as ex:
+        _LOGGER.exception("Invalid username or password")
+        raise ConfigEntryNotReady("invalid username or password") from ex
 
     config_entry.runtime_data = DreoData(client, devices)
 

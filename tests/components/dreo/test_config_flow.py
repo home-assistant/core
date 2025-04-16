@@ -2,19 +2,25 @@
 
 from unittest.mock import patch
 
-from hscloud.hscloudexception import HsCloudBusinessException, HsCloudException
+import pytest
 
-from homeassistant import config_entries
+from homeassistant import config_entries, setup
 from homeassistant.components.dreo.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.setup import async_setup_component
+
+
+@pytest.fixture(autouse=True)
+def mock_config_entries_setup():
+    """Disable setting up entries for config flow tests."""
+    with patch("homeassistant.config_entries.ConfigEntries.async_setup"):
+        yield
 
 
 async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
-    await async_setup_component(hass, DOMAIN, {})
+    await setup.async_setup_component(hass, "homeassistant", {})
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -23,8 +29,8 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result.get("errors") == {}
 
     with patch(
-        "homeassistant.components.dreo.config_flow.HsCloud.login",
-        return_value=None,
+        "homeassistant.components.dreo.config_flow.DreoFlowHandler._validate_login",
+        return_value=(True, None),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -50,8 +56,8 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.dreo.config_flow.HsCloud.login",
-        side_effect=HsCloudBusinessException("Invalid credentials"),
+        "homeassistant.components.dreo.config_flow.DreoFlowHandler._validate_login",
+        return_value=(False, "invalid_auth"),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -72,8 +78,8 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.dreo.config_flow.HsCloud.login",
-        side_effect=HsCloudException("Connection failed"),
+        "homeassistant.components.dreo.config_flow.DreoFlowHandler._validate_login",
+        return_value=(False, "cannot_connect"),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

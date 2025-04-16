@@ -25,16 +25,16 @@
   },
   "exceptions": {
     "turn_on_failed": {
-      "message": "Failed to turn on device"
+      "message": "Failed to turn on the device"
     },
     "turn_off_failed": {
-      "message": "Failed to turn off device"
+      "message": "Failed to turn off the device"
     },
     "set_preset_mode_failed": {
       "message": "Failed to set preset mode"
     },
     "set_speed_failed": {
-      "message": "Failed to set speed"
+      "message": "Failed to set fan speed"
     },
     "set_oscillate_failed": {
       "message": "Failed to set oscillation"
