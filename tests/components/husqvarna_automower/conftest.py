@@ -3,7 +3,7 @@
 import asyncio
 from collections.abc import Generator
 import time
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, create_autospec, patch
 
 from aioautomower.model import MowerAttributes
 from aioautomower.session import AutomowerSession, _MowerCommands
@@ -117,10 +117,10 @@ def mock_automower_client(values) -> Generator[AsyncMock]:
         await listen_block.wait()
         pytest.fail("Listen was not cancelled!")
 
-    mock = AsyncMock(spec=AutomowerSession)
+    mock = create_autospec(AutomowerSession, instance=True)
     mock.auth = AsyncMock(side_effect=ClientWebSocketResponse)
-    mock.commands = AsyncMock(spec_set=_MowerCommands)
-    mock.get_status.return_value = values
+    mock.commands = create_autospec(_MowerCommands, instance=True)
+    mock.get_status = AsyncMock(return_value=values)
     mock.start_listening = AsyncMock(side_effect=listen)
 
     with patch(
