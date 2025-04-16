@@ -97,7 +97,7 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[str, dict]]):
                 id=endpoint.id,
                 name=endpoint.name,
                 endpoint=endpoint,
-                containers=containers,
+                containers={container.id: container for container in containers},
             )
 
         self.endpoints = mapped_endpoints

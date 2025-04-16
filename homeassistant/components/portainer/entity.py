@@ -46,14 +46,12 @@ class PortainerContainerEntity(PortainerCoordinatorEntity):
         entry: PortainerConfigEntry,
         coordinator: PortainerCoordinator,
         via_device: PortainerCoordinatorData,
-        key: int,
     ) -> None:
         """Initialize a Portainer container."""
         super().__init__(coordinator)
         self._device_info = device_info
         self.device_id = self._device_info.id
         self.endpoint_id = via_device.endpoint.id
-        self.key = key
 
         self.device_name = (
             self._device_info.names[0].replace("/", " ")

@@ -81,7 +81,7 @@ async def async_setup_entry(
             ]
         )
 
-        for index, container in enumerate(endpoint.containers):
+        for container in endpoint.containers:
             entities.extend(
                 [
                     PortainerContainerSensor(
@@ -90,7 +90,6 @@ async def async_setup_entry(
                         entity_description=entity_description,
                         device_info=container,
                         via_device=endpoint,
-                        key=index,
                     )
                     for entity_description in CONTAINER_SENSORS
                 ]
@@ -147,11 +146,10 @@ class PortainerContainerSensor(PortainerContainerEntity, SensorEntity):
         entity_description: PortainerSensorEntityDescription,
         device_info: DockerContainer,
         via_device: PortainerCoordinatorData,
-        key: int,
     ) -> None:
         """Initialize the Portainer container sensor."""
         self.entity_description = entity_description
-        super().__init__(device_info, entry, coordinator, via_device, key)
+        super().__init__(device_info, entry, coordinator, via_device)
 
         self._attr_unique_id = f"{entity_description.key} {device_info.id}"
 
@@ -160,7 +158,7 @@ class PortainerContainerSensor(PortainerContainerEntity, SensorEntity):
         """Handle updated data from the coordinator."""
         try:
             self._device_info = self.coordinator.endpoints[self.endpoint_id].containers[
-                self.key
+                self.device_id
             ]
         except (KeyError, IndexError):
             return
