@@ -15,7 +15,6 @@ from aioautomower.exceptions import (
 )
 from aioautomower.model import MowerDictionary
 from aioautomower.session import AutomowerSession
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed

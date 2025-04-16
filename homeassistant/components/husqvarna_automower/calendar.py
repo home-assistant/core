@@ -4,7 +4,6 @@ from datetime import datetime
 import logging
 
 from aioautomower.model import make_name_string
-
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback

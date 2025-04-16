@@ -3,10 +3,10 @@
 import logging
 from typing import cast
 
-from aioautomower.auth import AbstractAuth
-from aioautomower.const import API_BASE_URL
 from aiohttp import ClientSession
 
+from aioautomower.auth import AbstractAuth
+from aioautomower.const import API_BASE_URL
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.helpers import config_entry_oauth2_flow
 

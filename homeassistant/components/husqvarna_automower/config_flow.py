@@ -6,7 +6,6 @@ from typing import Any
 
 from aioautomower.session import AutomowerSession
 from aioautomower.utils import structure_token
-
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME, CONF_TOKEN
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow

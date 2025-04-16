@@ -4,9 +4,9 @@ from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING
 
-from aioautomower.model import MowerActivities, MowerStates, WorkArea
 import voluptuous as vol
 
+from aioautomower.model import MowerActivities, MowerStates, WorkArea
 from homeassistant.components.lawn_mower import (
     LawnMowerActivity,
     LawnMowerEntity,
