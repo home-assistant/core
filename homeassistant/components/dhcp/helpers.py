@@ -29,5 +29,9 @@ def async_register_dhcp_callback_internal(
 def async_get_address_data_internal(
     hass: HomeAssistant,
 ) -> dict[str, DHCPAddressData]:
-    """Get the address data."""
+    """Get the address data.
+
+    For internal use only.
+    This is not intended for use by integrations.
+    """
     return hass.data[DATA_DHCP].address_data

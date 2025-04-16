@@ -37,7 +37,6 @@ from homeassistant.const import (
     STATE_HOME,
 )
 from homeassistant.core import (
-    CALLBACK_TYPE,
     Event,
     EventStateChangedData,
     HomeAssistant,
@@ -119,29 +118,6 @@ def async_index_integration_matchers(
         no_oui_matchers=no_oui_matchers,
         oui_matchers=oui_matchers,
     )
-
-
-@callback
-def async_register_dhcp_callback_internal(
-    hass: HomeAssistant,
-    callback_: Callable[[dict[str, DHCPAddressData]], None],
-) -> CALLBACK_TYPE:
-    """Register a dhcp callback.
-
-    For internal use only.
-    This is not intended for use by integrations.
-    """
-    callbacks = hass.data[DATA_DHCP].callbacks
-    callbacks.add(callback_)
-    return partial(callbacks.remove, callback_)
-
-
-@callback
-def async_get_address_data_internal(
-    hass: HomeAssistant,
-) -> dict[str, DHCPAddressData]:
-    """Get the address data."""
-    return hass.data[DATA_DHCP].address_data
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
