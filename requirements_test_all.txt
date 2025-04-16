@@ -1129,7 +1129,7 @@ letpot==0.4.0
 libpyfoscam==1.2.2
 
 # homeassistant.components.librehardwaremonitor
-librehardwaremonitor-api==1.1.1
+librehardwaremonitor-api==1.1.2
 
 # homeassistant.components.mikrotik
 librouteros==3.2.0
