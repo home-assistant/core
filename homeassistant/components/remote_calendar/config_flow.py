@@ -69,7 +69,10 @@ class RemoteCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             except CalendarParseError as err:
                 errors["base"] = "invalid_ics_file"
-                _LOGGER.debug("Invalid .ics file: %s", err)
+                _LOGGER.error("Error reading the calendar information: %s", err.message)
+                _LOGGER.debug(
+                    "Additional calendar error detail: %s", str(err.detailed_error)
+                )
             else:
                 return self.async_create_entry(
                     title=user_input[CONF_CALENDAR_NAME], data=user_input
