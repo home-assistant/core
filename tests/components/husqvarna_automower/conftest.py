@@ -119,7 +119,7 @@ def mock_automower_client(values: dict[str, MowerAttributes]) -> Generator[Async
 
     mock = create_autospec(AutomowerSession, instance=True)
     mock.auth = AsyncMock(side_effect=ClientWebSocketResponse)
-    mock.commands = create_autospec(_MowerCommands, instance=True)
+    mock.commands = create_autospec(_MowerCommands, instance=True, spec_set=True)
     mock.get_status = AsyncMock(return_value=values)
     mock.start_listening = AsyncMock(side_effect=listen)
 
