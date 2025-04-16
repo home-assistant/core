@@ -148,7 +148,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         netatmo_name="pressure",
         native_unit_of_measurement=UnitOfPressure.MBAR,
         state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+        device_class=SensorDeviceClass.PRESSURE,
         suggested_display_precision=1,
     ),
     NetatmoSensorEntityDescription(
@@ -307,7 +307,7 @@ PUBLIC_WEATHER_STATION_TYPES: tuple[
         key="pressure",
         native_unit_of_measurement=UnitOfPressure.MBAR,
         state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+        device_class=SensorDeviceClass.PRESSURE,
         suggested_display_precision=1,
         value_fn=lambda area: area.get_latest_pressures(),
     ),
