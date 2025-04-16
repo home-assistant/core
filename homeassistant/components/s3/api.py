@@ -1,3 +1,5 @@
+"""Thin aiobotocore wrapper to be used by S3 integration."""
+
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
@@ -12,6 +14,7 @@ from botocore.exceptions import (
 
 @asynccontextmanager
 async def get_client(data: dict[str, str]) -> AsyncGenerator[S3Client]:
+    """Yield S3 client with verified access to the Bucket."""
     session = AioSession()
     try:
         async with session.create_client(

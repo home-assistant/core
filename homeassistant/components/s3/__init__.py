@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 
-from ._api import (
+from .api import (
     CannotConnectError,
     InvalidBucketNameError,
     InvalidCredentialsError,

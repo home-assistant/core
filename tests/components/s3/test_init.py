@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.s3._api import (
+from homeassistant.components.s3.api import (
     CannotConnectError,
     InvalidBucketNameError,
     InvalidCredentialsError,

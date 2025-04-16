@@ -14,7 +14,7 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from ._api import (
+from .api import (
     CannotConnectError,
     InvalidBucketNameError,
     InvalidCredentialsError,

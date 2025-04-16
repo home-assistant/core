@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 import botocore
 import pytest
 
-from homeassistant.components.s3._api import (
+from homeassistant.components.s3.api import (
     CannotConnectError,
     InvalidBucketNameError,
     InvalidCredentialsError,
@@ -35,7 +35,7 @@ def user_input():
 async def mock_create_client():
     """Mock the AioSession.create_client."""
     with patch(
-        "homeassistant.components.s3._api.AioSession.create_client",
+        "homeassistant.components.s3.api.AioSession.create_client",
         autospec=True,
     ) as create_client:
         client = create_client.return_value
