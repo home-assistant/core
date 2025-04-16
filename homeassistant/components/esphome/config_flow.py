@@ -47,6 +47,7 @@ from .const import (
     DOMAIN,
 )
 from .dashboard import async_get_or_create_dashboard_manager, async_set_dashboard_info
+from .manager import async_replace_device
 
 ERROR_REQUIRES_ENCRYPTION_KEY = "requires_encryption_key"
 ERROR_INVALID_ENCRYPTION_KEY = "invalid_psk"
@@ -74,6 +75,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         # The ESPHome name as per its config
         self._device_name: str | None = None
         self._device_mac: str | None = None
+        self._entry_with_name_conflict: ConfigEntry | None = None
 
     async def _async_step_user_base(
         self, user_input: dict[str, Any] | None = None, error: str | None = None
@@ -137,7 +139,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle reauthorization flow when encryption was removed."""
         if user_input is not None:
             self._noise_psk = None
-            return self._async_get_entry()
+            return await self._async_get_entry_or_resolve_conflict()
 
         return self.async_show_form(
             step_id="reauth_encryption_removed_confirm",
@@ -227,7 +229,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             return await self.async_step_authenticate()
 
         self._password = ""
-        return self._async_get_entry()
+        return await self._async_get_entry_or_resolve_conflict()
 
     async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None
@@ -354,6 +356,77 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         )
         return self.async_abort(reason="service_received")
 
+    async def async_step_name_conflict(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle name conflict resolution."""
+        assert self._entry_with_name_conflict is not None
+        assert self._entry_with_name_conflict.unique_id is not None
+        assert self.unique_id is not None
+        assert self._device_name is not None
+        return self.async_show_menu(
+            step_id="name_conflict",
+            menu_options=["name_conflict_migrate", "name_conflict_overwrite"],
+            description_placeholders={
+                "existing_mac": format_mac(self._entry_with_name_conflict.unique_id),
+                "existing_title": self._entry_with_name_conflict.title,
+                "mac": format_mac(self.unique_id),
+                "name": self._device_name,
+            },
+        )
+
+    async def async_step_name_conflict_migrate(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle migration of existing entry."""
+        assert self._entry_with_name_conflict is not None
+        assert self._entry_with_name_conflict.unique_id is not None
+        assert self.unique_id is not None
+        assert self._device_name is not None
+        assert self._host is not None
+        old_mac = format_mac(self._entry_with_name_conflict.unique_id)
+        new_mac = format_mac(self.unique_id)
+        entry_id = self._entry_with_name_conflict.entry_id
+        self.hass.config_entries.async_update_entry(
+            self._entry_with_name_conflict,
+            data={
+                **self._entry_with_name_conflict.data,
+                CONF_HOST: self._host,
+                CONF_PORT: self._port or 6053,
+                CONF_PASSWORD: self._password or "",
+                CONF_NOISE_PSK: self._noise_psk or "",
+            },
+        )
+        await async_replace_device(self.hass, entry_id, old_mac, new_mac)
+        self.hass.config_entries.async_schedule_reload(entry_id)
+        return self.async_abort(
+            reason="name_conflict_migrated",
+            description_placeholders={
+                "existing_mac": old_mac,
+                "mac": new_mac,
+                "name": self._device_name,
+            },
+        )
+
+    async def async_step_name_conflict_overwrite(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle creating a new entry by removing the old one and creating new."""
+        assert self._entry_with_name_conflict is not None
+        await self.hass.config_entries.async_remove(
+            self._entry_with_name_conflict.entry_id
+        )
+        return self._async_get_entry()
+
+    async def _async_get_entry_or_resolve_conflict(self) -> ConfigFlowResult:
+        """Return the entry or resolve a conflict."""
+        if self.source != SOURCE_REAUTH:
+            for entry in self._async_current_entries(include_ignore=False):
+                if entry.data.get(CONF_DEVICE_NAME) == self._device_name:
+                    self._entry_with_name_conflict = entry
+                    return await self.async_step_name_conflict()
+        return self._async_get_entry()
+
     @callback
     def _async_get_entry(self) -> ConfigFlowResult:
         config_data = {
@@ -407,7 +480,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             error = await self.try_login()
             if error:
                 return await self.async_step_authenticate(error=error)
-            return self._async_get_entry()
+            return await self._async_get_entry_or_resolve_conflict()
 
         errors = {}
         if error is not None:
