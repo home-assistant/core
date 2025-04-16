@@ -115,7 +115,7 @@
         "state": {
           "right_handed": "Right-handed",
           "left_handed": "Left-handed",
-          "auto": "Auto"
+          "auto": "[%key:common::state::auto%]"
         }
       },
       "animation_speed": {

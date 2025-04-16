@@ -38,6 +38,8 @@ from .entity import (
     platform_async_setup_entry,
 )
 
+PARALLEL_UPDATES = 0
+
 FLASH_LENGTHS = {FLASH_SHORT: 2, FLASH_LONG: 10}
 
 

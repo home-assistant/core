@@ -704,6 +704,8 @@ build.json @home-assistant/supervisor
 /tests/components/image_upload/ @home-assistant/core
 /homeassistant/components/imap/ @jbouwh
 /tests/components/imap/ @jbouwh
+/homeassistant/components/imeon_inverter/ @Imeon-Energy
+/tests/components/imeon_inverter/ @Imeon-Energy
 /homeassistant/components/imgw_pib/ @bieniu
 /tests/components/imgw_pib/ @bieniu
 /homeassistant/components/improv_ble/ @emontnemery
@@ -935,6 +937,8 @@ build.json @home-assistant/supervisor
 /tests/components/metoffice/ @MrHarcombe @avee87
 /homeassistant/components/microbees/ @microBeesTech
 /tests/components/microbees/ @microBeesTech
+/homeassistant/components/miele/ @astrandb
+/tests/components/miele/ @astrandb
 /homeassistant/components/mikrotik/ @engrbm87
 /tests/components/mikrotik/ @engrbm87
 /homeassistant/components/mill/ @danielhiversen
@@ -1387,7 +1391,6 @@ build.json @home-assistant/supervisor
 /homeassistant/components/siren/ @home-assistant/core @raman325
 /tests/components/siren/ @home-assistant/core @raman325
 /homeassistant/components/sisyphus/ @jkeljo
-/homeassistant/components/sky_hub/ @rogerselwyn
 /homeassistant/components/sky_remote/ @dunnmj @saty9
 /tests/components/sky_remote/ @dunnmj @saty9
 /homeassistant/components/skybell/ @tkdrob
