@@ -169,6 +169,8 @@ browse_media:
   target:
     entity:
       domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.BROWSE_MEDIA
   fields:
     media_content_type:
       required: false
