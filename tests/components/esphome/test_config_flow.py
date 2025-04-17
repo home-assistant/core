@@ -864,6 +864,13 @@ async def test_reauth_attempt_to_change_mac_aborts(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_unique_id_changed"
     assert CONF_NOISE_PSK not in entry.data
+    assert result["description_placeholders"] == {
+        "expected_mac": "11:22:33:44:55:aa",
+        "host": "127.0.0.1",
+        "name": "test",
+        "unexpected_device_name": "test",
+        "unexpected_mac": "11:22:33:44:55:bb",
+    }
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
@@ -1711,7 +1718,11 @@ async def test_user_flow_name_conflict_migrate(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "name_conflict_migrated"
-
+    assert result["description_placeholders"] == {
+        "existing_mac": "11:22:33:44:55:cc",
+        "mac": "11:22:33:44:55:aa",
+        "name": "test",
+    }
     assert existing_entry.data == {
         CONF_HOST: "127.0.0.1",
         CONF_PORT: 6053,
@@ -1869,6 +1880,12 @@ async def test_reconfig_name_conflict_with_existing_entry(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_name_conflict"
+    assert result["description_placeholders"] == {
+        "existing_title": "Mock Title",
+        "expected_mac": "11:22:33:44:55:aa",
+        "host": "127.0.0.3",
+        "name": "test",
+    }
 
 
 @pytest.mark.usefixtures("mock_zeroconf", "mock_setup_entry")
@@ -1900,6 +1917,13 @@ async def test_reconfig_attempt_to_change_mac_aborts(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_unique_id_changed"
     assert CONF_NOISE_PSK not in entry.data
+    assert result["description_placeholders"] == {
+        "expected_mac": "11:22:33:44:55:aa",
+        "host": "127.0.0.2",
+        "name": "test",
+        "unexpected_device_name": "other",
+        "unexpected_mac": "11:22:33:44:55:bb",
+    }
 
 
 @pytest.mark.usefixtures("mock_zeroconf", "mock_setup_entry")
