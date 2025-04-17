@@ -83,14 +83,11 @@ async def test_user_flow(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == config_entries.SOURCE_USER
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        CONFIG_INPUT | {CONF_REGION: region[0], CONF_BRAND: brand[0]},
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], CONFIG_INPUT | {CONF_REGION: region[0], CONF_BRAND: brand[0]}
     )
 
-    assert_successful_user_flow(
-        mock_whirlpool_setup_entry, result2, region[0], brand[0]
-    )
+    assert_successful_user_flow(mock_whirlpool_setup_entry, result, region[0], brand[0])
     mock_backend_selector_api.assert_called_once_with(brand[1], region[1])
 
 
@@ -107,22 +104,18 @@ async def test_user_flow_invalid_auth(
     )
 
     mock_auth_api.return_value.is_access_token_valid.return_value = False
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        CONFIG_INPUT | {CONF_REGION: region[0], CONF_BRAND: brand[0]},
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], CONFIG_INPUT | {CONF_REGION: region[0], CONF_BRAND: brand[0]}
     )
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "invalid_auth"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_auth"}
 
     # Test that it succeeds if the authentication is valid
     mock_auth_api.return_value.is_access_token_valid.return_value = True
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        CONFIG_INPUT | {CONF_REGION: region[0], CONF_BRAND: brand[0]},
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], CONFIG_INPUT | {CONF_REGION: region[0], CONF_BRAND: brand[0]}
     )
-    assert_successful_user_flow(
-        mock_whirlpool_setup_entry, result2, region[0], brand[0]
-    )
+    assert_successful_user_flow(mock_whirlpool_setup_entry, result, region[0], brand[0])
 
 
 @pytest.mark.usefixtures("mock_appliances_manager_api")
@@ -164,8 +157,7 @@ async def test_user_flow_auth_error(
     # Test that it succeeds after the error is cleared
     mock_auth_api.return_value.do_auth.side_effect = None
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        CONFIG_INPUT | {CONF_REGION: region[0], CONF_BRAND: brand[0]},
+        result["flow_id"], CONFIG_INPUT | {CONF_REGION: region[0], CONF_BRAND: brand[0]}
     )
 
     assert_successful_user_flow(mock_whirlpool_setup_entry, result, region[0], brand[0])
@@ -190,17 +182,12 @@ async def test_already_configured(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == config_entries.SOURCE_USER
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        CONFIG_INPUT
-        | {
-            CONF_REGION: region[0],
-            CONF_BRAND: brand[0],
-        },
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], CONFIG_INPUT | {CONF_REGION: region[0], CONF_BRAND: brand[0]}
     )
 
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "already_configured"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 @pytest.mark.usefixtures("mock_auth_api")
@@ -220,13 +207,12 @@ async def test_no_appliances_flow(
 
     mock_appliances_manager_api.return_value.aircons = []
     mock_appliances_manager_api.return_value.washer_dryers = []
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        CONFIG_INPUT | {CONF_REGION: region[0], CONF_BRAND: brand[0]},
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], CONFIG_INPUT | {CONF_REGION: region[0], CONF_BRAND: brand[0]}
     )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "no_appliances"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "no_appliances"}
 
 
 @pytest.mark.usefixtures(
@@ -249,12 +235,11 @@ async def test_reauth_flow(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_PASSWORD: "new-password", CONF_BRAND: brand[0]},
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "new-password", CONF_BRAND: brand[0]}
     )
 
-    assert_successful_reauth_flow(mock_entry, result2, region, brand)
+    assert_successful_reauth_flow(mock_entry, result, region, brand)
 
 
 @pytest.mark.usefixtures("mock_appliances_manager_api", "mock_whirlpool_setup_entry")
@@ -279,22 +264,21 @@ async def test_reauth_flow_invalid_auth(
     assert result["errors"] == {}
 
     mock_auth_api.return_value.is_access_token_valid.return_value = False
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_PASSWORD: "new-password", CONF_BRAND: brand[0]},
     )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "invalid_auth"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_auth"}
 
     # Test that it succeeds if the credentials are valid
     mock_auth_api.return_value.is_access_token_valid.return_value = True
-    result3 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_PASSWORD: "new-password", CONF_BRAND: brand[0]},
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "new-password", CONF_BRAND: brand[0]}
     )
 
-    assert_successful_reauth_flow(mock_entry, result3, region, brand)
+    assert_successful_reauth_flow(mock_entry, result, region, brand)
 
 
 @pytest.mark.usefixtures("mock_appliances_manager_api", "mock_whirlpool_setup_entry")
@@ -331,18 +315,16 @@ async def test_reauth_flow_auth_error(
     assert result["errors"] == {}
 
     mock_auth_api.return_value.do_auth.side_effect = exception
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_PASSWORD: "new-password", CONF_BRAND: brand[0]},
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "new-password", CONF_BRAND: brand[0]}
     )
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": expected_error}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": expected_error}
 
     # Test that it succeeds if the exception is cleared
     mock_auth_api.return_value.do_auth.side_effect = None
-    result3 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_PASSWORD: "new-password", CONF_BRAND: brand[0]},
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "new-password", CONF_BRAND: brand[0]}
     )
 
-    assert_successful_reauth_flow(mock_entry, result3, region, brand)
+    assert_successful_reauth_flow(mock_entry, result, region, brand)
