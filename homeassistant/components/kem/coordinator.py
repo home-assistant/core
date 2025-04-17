@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import logging
 from typing import Any
 
 from aiohttp.client_exceptions import ClientConnectorError
-from aiokem.exceptions import CommunicationError
+from aiokem.exceptions import CommunicationError, ServerError
 from aiokem.main import AioKem
 
 from homeassistant.config_entries import ConfigEntry
@@ -15,6 +16,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 EXCEPTIONS = (CommunicationError, ClientConnectorError)
+
+RETRY_EXCEPTIONS = (
+    CommunicationError,
+    ServerError,
+    ClientConnectorError,
+)
+
+MAX_RETRIES = 3
+RETRY_DELAY = [5000, 10000, 20000]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,9 +60,16 @@ class KemUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
         result = {}
-        try:
-            result = await self.kem.get_generator_data(self.device_id)
-            self.available = True
-        except EXCEPTIONS as error:
-            raise UpdateFailed(error) from error
+        for i in range(MAX_RETRIES):
+            try:
+                result = await self.kem.get_generator_data(self.device_id)
+                self.available = True
+                break
+            except RETRY_EXCEPTIONS as error:
+                _LOGGER.warning("Error communicating with KEM: %s", error)
+            await asyncio.sleep(RETRY_DELAY[i])
+        if not result:
+            _LOGGER.error("Failed to get data after %s retries", MAX_RETRIES)
+            self.available = False
+            raise UpdateFailed("Max retries exceeded")
         return result
