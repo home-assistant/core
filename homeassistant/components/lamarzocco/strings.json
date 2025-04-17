@@ -101,6 +101,15 @@
       },
       "smart_standby_time": {
         "name": "Smart standby time"
+      },
+      "preinfusion_time": {
+        "name": "Preinfusion time"
+      },
+      "prebrew_time_on": {
+        "name": "Prebrew time on"
+      },
+      "prebrew_time_off": {
+        "name": "Prebrew time off"
       }
     },
     "select": {
