@@ -181,6 +181,33 @@ browse_media:
       selector:
         text:
 
+search_media:
+  target:
+    entity:
+      domain: media_player
+  fields:
+    media_content_type:
+      required: false
+      example: "music"
+      selector:
+        text:
+    media_content_id:
+      required: false
+      example: "A:ALBUMARTIST/Beatles"
+      selector:
+        text:
+    search_query:
+      required: true
+      example: "Beatles"
+      selector:
+        text:
+    media_filter_classes:
+      required: false
+      example: ["album", "artist"]
+      selector:
+        text:
+          multiple: true
+
 select_source:
   target:
     entity:
