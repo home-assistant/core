@@ -149,15 +149,19 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensors."""
-    coordinator = config_entry.runtime_data
 
     entities = []
-    for device_id, device_data in coordinator.data.items():
-        for sensor_description in SENSORS:
-            entity = KemSensorEntity(
-                coordinator, device_id, device_data, sensor_description
-            )
-            entities.append(entity)
+
+    homes = config_entry.runtime_data["homes"]
+    for home_data in homes:
+        for device_data in home_data["devices"]:
+            device_id = device_data["id"]
+            coordinator = config_entry.runtime_data["coordinators"][device_id]
+            for sensor_description in SENSORS:
+                entity = KemSensorEntity(
+                    coordinator, device_id, device_data, sensor_description
+                )
+                entities.append(entity)
     async_add_entities(
         entities,
     )

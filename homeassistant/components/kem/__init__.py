@@ -33,16 +33,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except CONNECTION_EXCEPTIONS as ex:
         raise ConfigEntryNotReady from ex
 
-    coordinator = KemUpdateCoordinator(
-        hass=hass,
-        logger=_LOGGER,
-        config_entry=entry,
-        kem=kem,
-        name="kem",  # needs to be unique per entry
-    )
-    await coordinator.async_config_entry_first_refresh()
+    entry.runtime_data = {}
+    entry.runtime_data["coordinators"] = {}
+    entry.runtime_data["kem"] = kem
 
-    entry.runtime_data = coordinator
+    homes = await kem.get_homes()
+    entry.runtime_data["homes"] = homes
+    for home_data in homes:
+        for device_data in home_data["devices"]:
+            device_id = device_data["id"]
+            coordinator = KemUpdateCoordinator(
+                hass=hass,
+                logger=_LOGGER,
+                config_entry=entry,
+                home_data=home_data,
+                device_id=device_id,
+                device_data=device_data,
+                kem=kem,
+                name=f"kem {device_data['displayName']}",
+            )
+            await coordinator.async_config_entry_first_refresh()
+            entry.runtime_data["coordinators"][device_id] = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 

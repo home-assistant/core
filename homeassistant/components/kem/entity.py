@@ -32,10 +32,10 @@ class KemEntity(CoordinatorEntity[KemUpdateCoordinator], Entity):
         self._attr_unique_id = f"{self._device_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, str(self._device_id))},
-            name=device_data["device"]["displayName"],
-            hw_version=device_data["device"]["product"],
-            sw_version=device_data["device"]["firmwareVersion"],
-            model=device_data["device"]["modelDisplayName"],
+            name=device_data["displayName"],
+            hw_version=device_data["product"],
+            sw_version=device_data["firmwareVersion"],
+            model=device_data["modelDisplayName"],
             manufacturer="Kohler",
         )
         splits = self.entity_description.key.split(":")
@@ -49,7 +49,7 @@ class KemEntity(CoordinatorEntity[KemUpdateCoordinator], Entity):
         self._attr_name = self.key
 
         try:
-            mac_address_hex = hex(int(device_data["device"]["macAddress"]))[2:]
+            mac_address_hex = device_data["macAddress"].replace(":", "")
         except ValueError:  # MacAddress may be invalid if the gateway is offline
             return
         self._attr_device_info[ATTR_CONNECTIONS] = {
@@ -59,11 +59,11 @@ class KemEntity(CoordinatorEntity[KemUpdateCoordinator], Entity):
     @property
     def _oncue_value(self) -> str:
         """Return the sensor value."""
-        device = self.coordinator.data[self._device_id]
+        generator_data = self.coordinator.data
         if self.use_device_key:
-            value = device["device"][self.key]
+            value = generator_data["device"][self.key]
         else:
-            value = device[self.key]
+            value = generator_data[self.key]
         return value
 
     @property

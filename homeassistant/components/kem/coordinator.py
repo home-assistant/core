@@ -19,7 +19,7 @@ EXCEPTIONS = (CommunicationError, ClientConnectorError)
 _LOGGER = logging.getLogger(__name__)
 
 
-class KemUpdateCoordinator(DataUpdateCoordinator[dict[int, Any]]):
+class KemUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching KEM data API."""
 
     def __init__(
@@ -28,11 +28,17 @@ class KemUpdateCoordinator(DataUpdateCoordinator[dict[int, Any]]):
         logger: logging.Logger,
         config_entry: ConfigEntry,
         kem: AioKem,
+        home_data: dict[str, Any],
+        device_data: dict[str, Any],
+        device_id: int,
         name: str,
     ) -> None:
         """Initialize."""
         self.kem = kem
-        self.homes: list[dict[str, Any]] = []
+        self.device_data = device_data
+        self.device_id = device_id
+        self.home_data = home_data
+        self.available = False
         super().__init__(
             hass=hass,
             logger=logger,
@@ -41,20 +47,12 @@ class KemUpdateCoordinator(DataUpdateCoordinator[dict[int, Any]]):
             update_interval=timedelta(minutes=1),
         )
 
-    async def _async_update_data(self) -> dict[int, Any]:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
         result = {}
         try:
-            if not self.homes:
-                self.homes = await self.kem.get_homes()
-
-            for home in self.homes:
-                generator_id = home["id"]
-                result[generator_id] = await self.kem.get_generator_data(
-                    generator_id=generator_id
-                )
-
+            result = await self.kem.get_generator_data(self.device_id)
+            self.available = True
         except EXCEPTIONS as error:
             raise UpdateFailed(error) from error
-
         return result
