@@ -179,8 +179,11 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a flow initialized by a reconfig request."""
         self._reconfig_entry = self._get_reconfigure_entry()
-        self._host = self._reconfig_entry.data[CONF_HOST]
-        self._port = self._reconfig_entry.data.get(CONF_PORT, DEFAULT_PORT)
+        data = self._reconfig_entry.data
+        self._host = data[CONF_HOST]
+        self._port = data.get(CONF_PORT, DEFAULT_PORT)
+        self._noise_psk = data.get(CONF_NOISE_PSK)
+        self._device_name = data.get(CONF_DEVICE_NAME)
         return await self._async_step_user_base()
 
     @property
