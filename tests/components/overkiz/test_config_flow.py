@@ -605,7 +605,7 @@ async def test_local_reauth_legacy(hass: HomeAssistant) -> None:
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=TEST_GATEWAY_ID,
-        version=1,  # Old version with username/password
+        version=2,
         data={
             "host": TEST_HOST,
             "username": TEST_EMAIL,
