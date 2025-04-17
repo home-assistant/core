@@ -22,38 +22,12 @@ from tests.components.bluetooth import inject_bluetooth_service_info
 
 
 @pytest.mark.parametrize(
-    (
-        "sensor_type",
-        "service",
-        "mock_method",
-        "service_info",
-    ),
-    [
-        (
-            "lock_pro",
-            SERVICE_UNLOCK,
-            "unlock",
-            WOLOCKPRO_SERVICE_INFO,
-        ),
-        (
-            "lock_pro",
-            SERVICE_LOCK,
-            "lock",
-            WOLOCKPRO_SERVICE_INFO,
-        ),
-        (
-            "lock",
-            SERVICE_UNLOCK,
-            "unlock",
-            LOCK_SERVICE_INFO,
-        ),
-        (
-            "lock",
-            SERVICE_LOCK,
-            "lock",
-            LOCK_SERVICE_INFO,
-        ),
-    ],
+    ("sensor_type", "service_info"),
+    [("lock_pro", WOLOCKPRO_SERVICE_INFO), ("lock", LOCK_SERVICE_INFO)],
+)
+@pytest.mark.parametrize(
+    ("service", "mock_method"),
+    [(SERVICE_UNLOCK, "unlock"), (SERVICE_LOCK, "lock")],
 )
 async def test_lock_services(
     hass: HomeAssistant,
@@ -100,38 +74,12 @@ async def test_lock_services(
 
 
 @pytest.mark.parametrize(
-    (
-        "sensor_type",
-        "service",
-        "mock_method",
-        "service_info",
-    ),
-    [
-        (
-            "lock_pro",
-            SERVICE_UNLOCK,
-            "unlock",
-            WOLOCKPRO_SERVICE_INFO,
-        ),
-        (
-            "lock_pro",
-            SERVICE_OPEN,
-            "open",
-            WOLOCKPRO_SERVICE_INFO,
-        ),
-        (
-            "lock",
-            SERVICE_UNLOCK,
-            "unlock",
-            LOCK_SERVICE_INFO,
-        ),
-        (
-            "lock",
-            SERVICE_OPEN,
-            "open",
-            LOCK_SERVICE_INFO,
-        ),
-    ],
+    ("sensor_type", "service_info"),
+    [("lock_pro", WOLOCKPRO_SERVICE_INFO), ("lock", LOCK_SERVICE_INFO)],
+)
+@pytest.mark.parametrize(
+    ("service", "mock_method"),
+    [(SERVICE_UNLOCK, "unlock"), (SERVICE_OPEN, "open")],
 )
 async def test_lock_services_with_night_latch_enabled(
     hass: HomeAssistant,
@@ -159,7 +107,7 @@ async def test_lock_services_with_night_latch_enabled(
         patch(
             "homeassistant.components.switchbot.lock.switchbot.SwitchbotLock.unlock",
             new=AsyncMock(return_value=True),
-        ) as mock_open,
+        ) as mock_unlock,
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -174,7 +122,7 @@ async def test_lock_services_with_night_latch_enabled(
         )
 
         mock_map = {
-            "open": mock_open,
+            "open": mock_unlock,
             "unlock": mock_unlock_without_unlatch,
         }
         mock_instance = mock_map[mock_method]
