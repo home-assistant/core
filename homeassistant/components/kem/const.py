@@ -1,5 +1,7 @@
 """Constants for the Oncue integration."""
 
+from typing import Final
+
 from aiokem.exceptions import CommunicationError
 
 DOMAIN = "kem"
@@ -9,6 +11,4 @@ CONNECTION_EXCEPTIONS = (
     CommunicationError,
 )
 
-CONNECTION_ESTABLISHED_KEY: str = "NetworkConnectionEstablished"
-
-VALUE_UNAVAILABLE: str = "--"
+RPM: Final = "rpm"
