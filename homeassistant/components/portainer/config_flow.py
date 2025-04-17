@@ -16,18 +16,17 @@ from pyportainer import (
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONF_VERIFY_SSL
+from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from .const import CONF_DEFAULT_PORT, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Optional(CONF_PORT, default=CONF_DEFAULT_PORT): int,
+        vol.Required(CONF_URL): str,
         vol.Required(CONF_API_KEY): str,
         vol.Required(CONF_VERIFY_SSL, default=True): bool,
     }
@@ -36,17 +35,13 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input allows us to connect."""
-
-    api_url = f"{data[CONF_HOST]}:{data[CONF_PORT]}"
-
     session = async_create_clientsession(
         hass,
         data[CONF_VERIFY_SSL],
         cookie_jar=CookieJar(unsafe=True),
     )
-
     client = Portainer(
-        api_url=api_url,
+        api_url=data[CONF_URL],
         api_key=data[CONF_API_KEY],
         session=session,
     )
@@ -60,7 +55,7 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str
     except PortainerTimeoutError as err:
         raise PortainerTimeout from err
 
-    _LOGGER.debug("Connected to Portainer API: %s", api_url)
+    _LOGGER.debug("Connected to Portainer API: %s", data[CONF_URL])
 
     portainer_data: list[dict[str, Any]] = []
 
@@ -79,7 +74,8 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str
         )
 
     return {
-        "unique_id": urlparse(api_url).hostname,
+        "title": data[CONF_URL],
+        "unique_id": urlparse(data[CONF_URL]).hostname,
         "portainer": portainer_data,
     }
 
@@ -94,6 +90,8 @@ class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
 
         errors: dict[str, str] = {}
         if user_input is not None:
+            self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
+
             try:
                 api = await _validate_input(self.hass, user_input)
             except CannotConnect:
@@ -106,9 +104,10 @@ class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                _LOGGER.debug("Erwin title: %s", api["title"])
                 await self.async_set_unique_id(api["unique_id"])
                 self._abort_if_unique_id_configured()
-                return self.async_create_entry(title=api["unique_id"], data=user_input)
+                return self.async_create_entry(title=api["title"], data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors

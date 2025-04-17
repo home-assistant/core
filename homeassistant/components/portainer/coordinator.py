@@ -15,9 +15,8 @@ from pyportainer import (
 from pyportainer.models.docker import DockerContainer
 from pyportainer.models.portainer import Endpoint
 
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -66,7 +65,7 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
     async def _async_update_data(self) -> dict[int, PortainerCoordinatorData]:
         """Fetch data from Portainer API."""
         _LOGGER.debug(
-            "Fetching data from Portainer API: %s", self.config_entry.data[CONF_HOST]
+            "Fetching data from Portainer API: %s", self.config_entry.data[CONF_URL]
         )
 
         try:
@@ -74,14 +73,15 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
             _LOGGER.debug("Fetched endpoints: %s", endpoints)
         except PortainerAuthenticationError as err:
             _LOGGER.exception("Authentication error")
-            raise ConfigEntryAuthFailed(
-                f"Invalid Portainer authentication. Error: {err}"
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
             ) from err
         except PortainerConnectionError as err:
-            raise UpdateFailed(f"Error during Portainer setup: {err}") from err
-
-        if not endpoints:
-            raise UpdateFailed("No endpoints found")
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from err
 
         mapped_endpoints: dict[int, PortainerCoordinatorData] = {}
         for endpoint in endpoints:
@@ -90,11 +90,15 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                 containers = await self.portainer.get_containers(endpoint.id)
             except PortainerConnectionError as err:
                 _LOGGER.exception("Connection error")
-                raise UpdateFailed(f"Error during Portainer setup: {err}") from err
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="cannot_connect",
+                ) from err
             except PortainerAuthenticationError as err:
                 _LOGGER.exception("Authentication error")
                 raise UpdateFailed(
-                    f"Invalid Portainer authentication. Error: {err}"
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_auth",
                 ) from err
 
             mapped_endpoints[endpoint.id] = PortainerCoordinatorData(

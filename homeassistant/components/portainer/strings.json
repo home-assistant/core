@@ -3,14 +3,16 @@
     "step": {
       "user": {
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
+          "url": "[%key:common::config_flow::data::url%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "api_key": "[%key:common::config_flow::data::api_key%]"
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of your Portainer instance. For example: http://192.168.1.1",
+          "url": "The URL of your Portainer instance. For example: https://127.0.0.1:9000",
           "port": "The port number of your Portainer instance",
-          "api_key": "The API key for authenticating with Portainer"
+          "api_key": "The API key for authenticating with Portainer",
+          "verify_ssl": "Verify the SSL certificate of the Portainer instance"
         }
       }
     },

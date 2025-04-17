@@ -12,11 +12,12 @@ from pyportainer import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, Platform
+from homeassistant.const import CONF_API_KEY, CONF_URL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from .const import DOMAIN
 from .coordinator import PortainerCoordinator
 from .models import PortainerData
 
@@ -30,12 +31,10 @@ type PortainerConfigEntry = ConfigEntry[PortainerData]
 async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) -> bool:
     """Set up Portainer from a config entry."""
 
-    _LOGGER.debug("Setting up Portainer API: %s", entry.data[CONF_HOST])
-
-    api_url = f"{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}"
+    _LOGGER.debug("Setting up Portainer API: %s", entry.data[CONF_URL])
 
     client = Portainer(
-        api_url=api_url,
+        api_url=entry.data[CONF_URL],
         api_key=entry.data[CONF_API_KEY],
         session=async_get_clientsession(hass),
     )
@@ -44,14 +43,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) ->
         endpoints = await client.get_endpoints()
     except PortainerAuthenticationError as err:
         raise ConfigEntryError(
-            f"Invalid Portainer authentication. Error: {err}"
+            translation_domain=DOMAIN,
+            translation_key="invalid_auth",
         ) from err
     except PortainerConnectionError as err:
-        raise ConfigEntryNotReady(f"Error during Portainer setup: {err}") from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+        ) from err
     except PortainerTimeoutError as err:
-        raise ConfigEntryNotReady(f"Timeout during Portainer setup: {err}") from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="timeout_connect",
+        ) from err
 
-    _LOGGER.debug("Connected to Portainer API: %s", api_url)
+    _LOGGER.debug("Connected to Portainer API: %s", entry.data[CONF_URL])
 
     assert endpoints
 
