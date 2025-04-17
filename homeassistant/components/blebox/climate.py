@@ -13,7 +13,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BleBoxConfigEntry
 from .entity import BleBoxEntity
@@ -38,7 +38,7 @@ BLEBOX_TO_HVACACTION = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: BleBoxConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a BleBox climate entity."""
     entities = [
@@ -57,7 +57,6 @@ class BleBoxClimateEntity(BleBoxEntity[blebox_uniapi.climate.Climate], ClimateEn
         | ClimateEntityFeature.TURN_ON
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _enable_turn_on_off_backwards_compatibility = False
 
     @property
     def hvac_modes(self):

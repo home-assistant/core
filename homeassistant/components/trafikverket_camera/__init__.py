@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from pytrafikverket.trafikverket_camera import TrafikverketCamera
+from pytrafikverket import TrafikverketCamera
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_ID, CONF_LOCATION
@@ -25,7 +25,7 @@ TVCameraConfigEntry = ConfigEntry[TVDataUpdateCoordinator]
 async def async_setup_entry(hass: HomeAssistant, entry: TVCameraConfigEntry) -> bool:
     """Set up Trafikverket Camera from a config entry."""
 
-    coordinator = TVDataUpdateCoordinator(hass)
+    coordinator = TVDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 
@@ -34,12 +34,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: TVCameraConfigEntry) -> 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: TVCameraConfigEntry) -> bool:
     """Unload Trafikverket Camera config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: TVCameraConfigEntry) -> bool:
     """Migrate old entry."""
     api_key = entry.data[CONF_API_KEY]
     web_session = async_get_clientsession(hass)

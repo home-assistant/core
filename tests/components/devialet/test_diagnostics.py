@@ -31,11 +31,13 @@ async def test_diagnostics(
         "source_list": [
             "Airplay",
             "Bluetooth",
-            "Online",
             "Optical left",
             "Optical right",
             "Raat",
             "Spotify Connect",
+            "UPnP",
         ],
         "source": "spotifyconnect",
+        "upnp_device_type": "Not available",
+        "upnp_device_url": "Not available",
     }

@@ -13,7 +13,7 @@ from homeassistant.components.feedreader.event import (
     ATTR_TITLE,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from . import create_mock_entry
 from .const import VALID_CONFIG_DEFAULT

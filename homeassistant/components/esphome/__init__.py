@@ -5,6 +5,7 @@ from __future__ import annotations
 from aioesphomeapi import APIClient
 
 from homeassistant.components import ffmpeg, zeroconf
+from homeassistant.components.bluetooth import async_remove_scanner
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -12,17 +13,18 @@ from homeassistant.const import (
     __version__ as ha_version,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.issue_registry import async_delete_issue
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_NOISE_PSK, DATA_FFMPEG_PROXY, DOMAIN
+from .const import CONF_BLUETOOTH_MAC_ADDRESS, CONF_NOISE_PSK, DATA_FFMPEG_PROXY, DOMAIN
 from .dashboard import async_setup as async_setup_dashboard
 from .domain_data import DomainData
 
 # Import config flow so that it's added to the registry
 from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
 from .ffmpeg_proxy import FFmpegProxyData, FFmpegProxyView
-from .manager import ESPHomeManager, cleanup_instance
+from .manager import DEVICE_CONFLICT_ISSUE_FORMAT, ESPHomeManager, cleanup_instance
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -86,4 +88,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> 
 
 async def async_remove_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> None:
     """Remove an esphome config entry."""
+    if bluetooth_mac_address := entry.data.get(CONF_BLUETOOTH_MAC_ADDRESS):
+        async_remove_scanner(hass, bluetooth_mac_address.upper())
+    async_delete_issue(
+        hass, DOMAIN, DEVICE_CONFLICT_ISSUE_FORMAT.format(entry.entry_id)
+    )
     await DomainData.get(hass).get_or_create_store(hass, entry).async_remove()

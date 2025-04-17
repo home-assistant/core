@@ -29,10 +29,10 @@
       "public_weather": {
         "data": {
           "area_name": "Name of the area",
-          "lat_ne": "North-East corner latitude",
-          "lon_ne": "North-East corner longitude",
-          "lat_sw": "South-West corner latitude",
-          "lon_sw": "South-West corner longitude",
+          "lat_ne": "Northeast corner latitude",
+          "lon_ne": "Northeast corner longitude",
+          "lat_sw": "Southwest corner latitude",
+          "lon_sw": "Southwest corner longitude",
           "mode": "Calculation",
           "show_on_map": "Show on map"
         },
@@ -175,10 +175,15 @@
             "state": {
               "frost_guard": "Frost guard",
               "schedule": "Schedule",
-              "manual": "Manual"
+              "manual": "[%key:common::state::manual%]"
             }
           }
         }
+      }
+    },
+    "button": {
+      "preferred_position": {
+        "name": "Preferred position"
       }
     },
     "sensor": {
@@ -201,13 +206,13 @@
         "name": "Wind direction",
         "state": {
           "n": "North",
-          "ne": "North-east",
+          "ne": "Northeast",
           "e": "East",
-          "se": "South-east",
+          "se": "Southeast",
           "s": "South",
-          "sw": "South-west",
+          "sw": "Southwest",
           "w": "West",
-          "nw": "North-west"
+          "nw": "Northwest"
         }
       },
       "wind_angle": {
@@ -236,10 +241,10 @@
         "name": "Reachability"
       },
       "rf_strength": {
-        "name": "Radio"
+        "name": "RF strength"
       },
       "wifi_strength": {
-        "name": "Wi-Fi"
+        "name": "Wi-Fi strength"
       },
       "health_idx": {
         "name": "Health index",

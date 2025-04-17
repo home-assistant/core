@@ -9,7 +9,6 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.core import callback
 
-from . import SpeedTestConfigEntry
 from .const import (
     CONF_SERVER_ID,
     CONF_SERVER_NAME,
@@ -17,6 +16,7 @@ from .const import (
     DEFAULT_SERVER,
     DOMAIN,
 )
+from .coordinator import SpeedTestConfigEntry
 
 
 class SpeedTestFlowHandler(ConfigFlow, domain=DOMAIN):

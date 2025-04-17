@@ -24,7 +24,7 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -47,18 +47,21 @@ SENSOR_TYPES = {
         key="type",
         translation_key="link_type",
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "link_rate": SensorEntityDescription(
         key="link_rate",
         translation_key="link_rate",
         native_unit_of_measurement="Mbps",
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "signal": SensorEntityDescription(
         key="signal",
         translation_key="signal_strength",
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "ssid": SensorEntityDescription(
         key="ssid",
@@ -69,6 +72,7 @@ SENSOR_TYPES = {
         key="conn_ap_mac",
         translation_key="access_point_mac",
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
 }
 
@@ -270,7 +274,9 @@ SENSOR_LINK_TYPES = [
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up device tracker for Netgear component."""
     router = hass.data[DOMAIN][entry.entry_id][KEY_ROUTER]
@@ -326,8 +332,6 @@ async def async_setup_entry(
 class NetgearSensorEntity(NetgearDeviceEntity, SensorEntity):
     """Representation of a device connected to a Netgear router."""
 
-    _attr_entity_registry_enabled_default = False
-
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
@@ -341,6 +345,11 @@ class NetgearSensorEntity(NetgearDeviceEntity, SensorEntity):
         self.entity_description = SENSOR_TYPES[attribute]
         self._attr_unique_id = f"{self._mac}-{attribute}"
         self._state = device.get(attribute)
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and self._device.get(self._attribute) is not None
 
     @property
     def native_value(self):

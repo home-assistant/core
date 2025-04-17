@@ -1,0 +1,84 @@
+{
+  "config": {
+    "step": {
+      "discovery_confirm": {
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The host or IP address of your main device. Only needed to change if 'eheimdigital' doesn't work."
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "entity": {
+    "climate": {
+      "heater": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "bio_mode": "Bio mode",
+              "smart_mode": "Smart mode"
+            }
+          }
+        }
+      }
+    },
+    "light": {
+      "channel": {
+        "name": "Channel {channel_id}",
+        "state_attributes": {
+          "effect": {
+            "state": {
+              "daycl_mode": "Daycycle mode"
+            }
+          }
+        }
+      }
+    },
+    "number": {
+      "manual_speed": {
+        "name": "Manual speed"
+      },
+      "day_speed": {
+        "name": "Day speed"
+      },
+      "night_speed": {
+        "name": "Night speed"
+      },
+      "temperature_offset": {
+        "name": "Temperature offset"
+      },
+      "night_temperature_offset": {
+        "name": "Night temperature offset"
+      }
+    },
+    "sensor": {
+      "current_speed": {
+        "name": "Current speed"
+      },
+      "service_hours": {
+        "name": "Remaining hours until service"
+      },
+      "error_code": {
+        "name": "Error code",
+        "state": {
+          "no_error": "No error",
+          "rotor_stuck": "Rotor stuck",
+          "air_in_filter": "Air in filter"
+        }
+      }
+    }
+  }
+}

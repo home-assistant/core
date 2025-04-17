@@ -13,7 +13,7 @@ from homeassistant.components.tts import (
 )
 from homeassistant.const import CONF_API_KEY, CONF_REGION, CONF_TYPE, PERCENTAGE
 from homeassistant.generated.microsoft_tts import SUPPORTED_LANGUAGES
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 
 CONF_GENDER = "gender"
 CONF_OUTPUT = "output"

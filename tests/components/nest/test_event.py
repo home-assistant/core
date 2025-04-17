@@ -2,7 +2,7 @@
 
 import datetime
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
 from google_nest_sdm.event import EventMessage, EventType
@@ -13,7 +13,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import utcnow
 
-from .common import DEVICE_ID, CreateDevice, FakeSubscriber
+from .common import DEVICE_ID, TEST_CLIP_URL, CreateDevice, create_nest_event
 from .conftest import PlatformSetup
 
 EVENT_SESSION_ID = "CjY5Y3VKaTZwR3o4Y19YbTVfMF..."
@@ -29,14 +29,6 @@ ENCODED_EVENT_ID2 = "WyJEalk1WTNWS2FUWndSM280WTE5WWJUVmZNRi4uLiIsICJHV1dWUVZVZEd
 def platforms() -> list[Platform]:
     """Fixture for platforms to setup."""
     return [Platform.EVENT]
-
-
-@pytest.fixture(autouse=True)
-def enable_prefetch(subscriber: FakeSubscriber) -> None:
-    """Fixture to enable media fetching for tests to exercise."""
-    subscriber.cache_policy.fetch = True
-    with patch("homeassistant.components.nest.EVENT_MEDIA_CACHE_SIZE", new=5):
-        yield
 
 
 @pytest.fixture
@@ -80,7 +72,7 @@ def create_event_messages(
     events: dict[str, Any], parameters: dict[str, Any] | None = None
 ) -> EventMessage:
     """Create an EventMessage for events."""
-    return EventMessage.create_event(
+    return create_nest_event(
         {
             "eventId": "some-event-id",
             "timestamp": utcnow().isoformat(timespec="seconds"),
@@ -90,7 +82,6 @@ def create_event_messages(
             },
             **(parameters if parameters else {}),
         },
-        auth=None,
     )
 
 
@@ -152,7 +143,7 @@ def create_event_messages(
 )
 async def test_receive_events(
     hass: HomeAssistant,
-    subscriber: FakeSubscriber,
+    subscriber: AsyncMock,
     setup_platform: PlatformSetup,
     create_device: CreateDevice,
     trait_types: list[TraitType],
@@ -192,7 +183,7 @@ async def test_receive_events(
 @pytest.mark.parametrize(("trait_type"), [(TraitType.DOORBELL_CHIME)])
 async def test_ignore_unrelated_event(
     hass: HomeAssistant,
-    subscriber: FakeSubscriber,
+    subscriber: AsyncMock,
     setup_platform: PlatformSetup,
     create_device: CreateDevice,
     trait_type: TraitType,
@@ -222,7 +213,7 @@ async def test_ignore_unrelated_event(
 @pytest.mark.freeze_time("2024-08-24T12:00:00Z")
 async def test_event_threads(
     hass: HomeAssistant,
-    subscriber: FakeSubscriber,
+    subscriber: AsyncMock,
     setup_platform: PlatformSetup,
     create_device: CreateDevice,
     freezer: FrozenDateTimeFactory,
@@ -275,7 +266,7 @@ async def test_event_threads(
                 },
                 EventType.CAMERA_CLIP_PREVIEW: {
                     "eventSessionId": EVENT_SESSION_ID,
-                    "previewUrl": "http://example",
+                    "previewUrl": TEST_CLIP_URL,
                 },
             },
             parameters={"eventThreadState": "ENDED"},
@@ -306,7 +297,7 @@ async def test_event_threads(
                 },
                 EventType.CAMERA_CLIP_PREVIEW: {
                     "eventSessionId": EVENT_SESSION_ID2,
-                    "previewUrl": "http://example",
+                    "previewUrl": TEST_CLIP_URL,
                 },
             },
             parameters={"eventThreadState": "ENDED"},

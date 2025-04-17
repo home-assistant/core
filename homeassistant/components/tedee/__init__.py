@@ -16,7 +16,6 @@ from homeassistant.components.webhook import (
     async_register as webhook_register,
     async_unregister as webhook_unregister,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_WEBHOOK_ID, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -99,7 +98,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TedeeConfigEntry) -> boo
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: TedeeConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
@@ -131,7 +130,9 @@ def get_webhook_handler(
     return async_webhook_handler
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: TedeeConfigEntry
+) -> bool:
     """Migrate old entry."""
     if config_entry.version > 1:
         # This means the user has downgraded from a future version

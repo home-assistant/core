@@ -21,6 +21,11 @@ async def test_run_history(recorder_mock: Recorder, hass: HomeAssistant) -> None
     two_days_ago = now - timedelta(days=2)
     one_day_ago = now - timedelta(days=1)
 
+    # Test that the first run falls back to the current run
+    assert process_timestamp(
+        instance.recorder_runs_manager.first.start
+    ) == process_timestamp(instance.recorder_runs_manager.current.start)
+
     with instance.get_session() as session:
         session.add(RecorderRuns(start=three_days_ago, created=three_days_ago))
         session.add(RecorderRuns(start=two_days_ago, created=two_days_ago))
@@ -29,32 +34,7 @@ async def test_run_history(recorder_mock: Recorder, hass: HomeAssistant) -> None
         instance.recorder_runs_manager.load_from_db(session)
 
     assert (
-        process_timestamp(
-            instance.recorder_runs_manager.get(
-                three_days_ago + timedelta(microseconds=1)
-            ).start
-        )
-        == three_days_ago
-    )
-    assert (
-        process_timestamp(
-            instance.recorder_runs_manager.get(
-                two_days_ago + timedelta(microseconds=1)
-            ).start
-        )
-        == two_days_ago
-    )
-    assert (
-        process_timestamp(
-            instance.recorder_runs_manager.get(
-                one_day_ago + timedelta(microseconds=1)
-            ).start
-        )
-        == one_day_ago
-    )
-    assert (
-        process_timestamp(instance.recorder_runs_manager.get(now).start)
-        == instance.recorder_runs_manager.recording_start
+        process_timestamp(instance.recorder_runs_manager.first.start) == three_days_ago
     )
 
 

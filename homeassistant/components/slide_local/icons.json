@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "button": {
+      "calibrate": {
+        "default": "mdi:tape-measure"
+      }
+    }
+  }
+}

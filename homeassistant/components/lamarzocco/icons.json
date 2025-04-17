@@ -34,23 +34,8 @@
       "dose": {
         "default": "mdi:cup-water"
       },
-      "prebrew_off": {
-        "default": "mdi:water-off"
-      },
-      "prebrew_on": {
-        "default": "mdi:water"
-      },
-      "preinfusion_off": {
-        "default": "mdi:water"
-      },
       "smart_standby_time": {
         "default": "mdi:timer"
-      },
-      "steam_temp": {
-        "default": "mdi:thermometer-water"
-      },
-      "tea_water_duration": {
-        "default": "mdi:timer-sand"
       }
     },
     "select": {
@@ -76,23 +61,6 @@
           "prebrew": "mdi:water-pump",
           "typeb": "mdi:water-pump"
         }
-      }
-    },
-    "sensor": {
-      "drink_stats_coffee": {
-        "default": "mdi:chart-line"
-      },
-      "drink_stats_flushing": {
-        "default": "mdi:chart-line"
-      },
-      "shot_timer": {
-        "default": "mdi:timer"
-      },
-      "current_temp_coffee": {
-        "default": "mdi:thermometer"
-      },
-      "current_temp_steam": {
-        "default": "mdi:thermometer"
       }
     },
     "switch": {

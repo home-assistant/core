@@ -7,10 +7,10 @@ from pyblu import Player, SyncStatus
 from pyblu.errors import PlayerUnreachableError
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN
 from .media_player import DEFAULT_PORT
@@ -71,31 +71,13 @@ class BluesoundConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
         )
 
-    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Import bluesound config entry from configuration.yaml."""
-        session = async_get_clientsession(self.hass)
-        async with Player(
-            import_data[CONF_HOST], import_data[CONF_PORT], session=session
-        ) as player:
-            try:
-                sync_status = await player.sync_status(timeout=1)
-            except PlayerUnreachableError:
-                return self.async_abort(reason="cannot_connect")
-
-        await self.async_set_unique_id(
-            format_unique_id(sync_status.mac, import_data[CONF_PORT])
-        )
-        self._abort_if_unique_id_configured()
-
-        return self.async_create_entry(
-            title=sync_status.name,
-            data=import_data,
-        )
-
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by zeroconf discovery."""
+        # the player can have an ipv6 address, but the api is only available on ipv4
+        if discovery_info.ip_address.version != 4:
+            return self.async_abort(reason="no_ipv4_address")
         if discovery_info.port is not None:
             self._port = discovery_info.port
 

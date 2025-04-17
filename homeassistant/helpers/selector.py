@@ -164,6 +164,8 @@ DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA = vol.Schema(
         vol.Optional("manufacturer"): str,
         # Model of device
         vol.Optional("model"): str,
+        # Model ID of device
+        vol.Optional("model_id"): str,
         # Device has to contain entities matching this selector
         vol.Optional("entity"): vol.All(
             cv.ensure_list, [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA]
@@ -178,6 +180,7 @@ class DeviceFilterSelectorConfig(TypedDict, total=False):
     integration: str
     manufacturer: str
     model: str
+    model_id: str
 
 
 class ActionSelectorConfig(TypedDict):
@@ -1133,7 +1136,7 @@ class SelectOptionDict(TypedDict):
 
 
 class SelectSelectorMode(StrEnum):
-    """Possible modes for a number selector."""
+    """Possible modes for a select selector."""
 
     LIST = "list"
     DROPDOWN = "dropdown"

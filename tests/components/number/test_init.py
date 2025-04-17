@@ -2,7 +2,7 @@
 
 from collections.abc import Generator
 from typing import Any
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -38,7 +38,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
@@ -836,6 +836,69 @@ async def test_custom_unit_change(
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == default_unit
 
 
+async def test_translated_unit(
+    hass: HomeAssistant,
+) -> None:
+    """Test translated unit."""
+
+    with patch(
+        "homeassistant.helpers.service.translation.async_get_translations",
+        return_value={
+            "component.test.entity.number.test_translation_key.unit_of_measurement": "Tests"
+        },
+    ):
+        entity0 = common.MockNumberEntity(
+            name="Test",
+            native_value=123,
+            unique_id="very_unique",
+        )
+        entity0.entity_description = NumberEntityDescription(
+            "test",
+            translation_key="test_translation_key",
+        )
+        setup_test_component_platform(hass, DOMAIN, [entity0])
+
+        assert await async_setup_component(
+            hass, "number", {"number": {"platform": "test"}}
+        )
+        await hass.async_block_till_done()
+
+        entity_id = entity0.entity_id
+        state = hass.states.get(entity_id)
+        assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "Tests"
+
+
+async def test_translated_unit_with_native_unit_raises(
+    hass: HomeAssistant,
+) -> None:
+    """Test that translated unit."""
+
+    with patch(
+        "homeassistant.helpers.service.translation.async_get_translations",
+        return_value={
+            "component.test.entity.number.test_translation_key.unit_of_measurement": "Tests"
+        },
+    ):
+        entity0 = common.MockNumberEntity(
+            name="Test",
+            native_value=123,
+            unique_id="very_unique",
+        )
+        entity0.entity_description = NumberEntityDescription(
+            "test",
+            translation_key="test_translation_key",
+            native_unit_of_measurement="bad_unit",
+        )
+        setup_test_component_platform(hass, DOMAIN, [entity0])
+
+        assert await async_setup_component(
+            hass, "number", {"number": {"platform": "test"}}
+        )
+        await hass.async_block_till_done()
+        # Setup fails so entity_id is None
+        assert entity0.entity_id is None
+
+
 def test_device_classes_aligned() -> None:
     """Make sure all sensor device classes are also available in NumberDeviceClass."""
 
@@ -911,7 +974,7 @@ async def test_name(hass: HomeAssistant) -> None:
     async def async_setup_entry_platform(
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Set up test number platform via config entry."""
         async_add_entities([entity1, entity2, entity3, entity4])

@@ -12,6 +12,7 @@ from yolink.const import (
     ATTR_DEVICE_LEAK_SENSOR,
     ATTR_DEVICE_MOTION_SENSOR,
     ATTR_DEVICE_VIBRATION_SENSOR,
+    ATTR_DEVICE_WATER_METER_CONTROLLER,
 )
 from yolink.device import YoLinkDevice
 
@@ -22,7 +23,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import YoLinkCoordinator
@@ -44,6 +45,7 @@ SENSOR_DEVICE_TYPE = [
     ATTR_DEVICE_LEAK_SENSOR,
     ATTR_DEVICE_VIBRATION_SENSOR,
     ATTR_DEVICE_CO_SMOKE_SENSOR,
+    ATTR_DEVICE_WATER_METER_CONTROLLER,
 ]
 
 
@@ -84,13 +86,22 @@ SENSOR_TYPES: tuple[YoLinkBinarySensorEntityDescription, ...] = (
         value=lambda state: state.get("smokeAlarm"),
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_CO_SMOKE_SENSOR,
     ),
+    YoLinkBinarySensorEntityDescription(
+        key="pipe_leak_detected",
+        state_key="alarm",
+        device_class=BinarySensorDeviceClass.MOISTURE,
+        value=lambda state: state.get("leak") if state is not None else None,
+        exists_fn=lambda device: (
+            device.device_type == ATTR_DEVICE_WATER_METER_CONTROLLER
+        ),
+    ),
 )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up YoLink Sensor from a config entry."""
     device_coordinators = hass.data[DOMAIN][config_entry.entry_id].device_coordinators

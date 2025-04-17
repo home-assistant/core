@@ -14,7 +14,7 @@ from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_URL, CONF_USERNAM
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import Throttle, dt as dt_util
 
 from ..const import (
@@ -61,7 +61,7 @@ def get_device_list(api, config):
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Growatt sensor."""
     config = {**config_entry.data}

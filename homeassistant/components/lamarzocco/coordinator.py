@@ -2,20 +2,17 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
+from abc import abstractmethod
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from time import time
 from typing import Any
 
-from pylamarzocco.client_bluetooth import LaMarzoccoBluetoothClient
-from pylamarzocco.client_cloud import LaMarzoccoCloudClient
-from pylamarzocco.client_local import LaMarzoccoLocalClient
+from pylamarzocco import LaMarzoccoMachine
 from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
-from pylamarzocco.lm_machine import LaMarzoccoMachine
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MODEL, CONF_NAME, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -23,26 +20,34 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import DOMAIN
 
 SCAN_INTERVAL = timedelta(seconds=30)
-FIRMWARE_UPDATE_INTERVAL = 3600
-STATISTICS_UPDATE_INTERVAL = 300
-
+SETTINGS_UPDATE_INTERVAL = timedelta(hours=1)
+SCHEDULE_UPDATE_INTERVAL = timedelta(minutes=5)
 _LOGGER = logging.getLogger(__name__)
 
-type LaMarzoccoConfigEntry = ConfigEntry[LaMarzoccoUpdateCoordinator]
+
+@dataclass
+class LaMarzoccoRuntimeData:
+    """Runtime data for La Marzocco."""
+
+    config_coordinator: LaMarzoccoConfigUpdateCoordinator
+    settings_coordinator: LaMarzoccoSettingsUpdateCoordinator
+    schedule_coordinator: LaMarzoccoScheduleUpdateCoordinator
+
+
+type LaMarzoccoConfigEntry = ConfigEntry[LaMarzoccoRuntimeData]
 
 
 class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
-    """Class to handle fetching data from the La Marzocco API centrally."""
+    """Base class for La Marzocco coordinators."""
 
+    _default_update_interval = SCAN_INTERVAL
     config_entry: LaMarzoccoConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
         entry: LaMarzoccoConfigEntry,
-        cloud_client: LaMarzoccoCloudClient,
-        local_client: LaMarzoccoLocalClient | None,
-        bluetooth_client: LaMarzoccoBluetoothClient | None,
+        device: LaMarzoccoMachine,
     ) -> None:
         """Initialize coordinator."""
         super().__init__(
@@ -50,45 +55,49 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
             _LOGGER,
             config_entry=entry,
             name=DOMAIN,
-            update_interval=SCAN_INTERVAL,
+            update_interval=self._default_update_interval,
         )
-        self.local_connection_configured = local_client is not None
+        self.device = device
 
-        assert self.config_entry.unique_id
-        self.device = LaMarzoccoMachine(
-            model=self.config_entry.data[CONF_MODEL],
-            serial_number=self.config_entry.unique_id,
-            name=self.config_entry.data[CONF_NAME],
-            cloud_client=cloud_client,
-            local_client=local_client,
-            bluetooth_client=bluetooth_client,
-        )
+    async def _async_update_data(self) -> None:
+        """Do the data update."""
+        try:
+            await self._internal_async_update_data()
+        except AuthFail as ex:
+            _LOGGER.debug("Authentication failed", exc_info=True)
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN, translation_key="authentication_failed"
+            ) from ex
+        except RequestNotSuccessful as ex:
+            _LOGGER.debug(ex, exc_info=True)
+            raise UpdateFailed(
+                translation_domain=DOMAIN, translation_key="api_error"
+            ) from ex
 
-        self._last_firmware_data_update: float | None = None
-        self._last_statistics_data_update: float | None = None
-        self._local_client = local_client
+    @abstractmethod
+    async def _internal_async_update_data(self) -> None:
+        """Actual data update logic."""
 
-    async def _async_setup(self) -> None:
+
+class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
+    """Class to handle fetching data from the La Marzocco API centrally."""
+
+    async def _async_connect_websocket(self) -> None:
         """Set up the coordinator."""
-        if self._local_client is not None:
+        if not self.device.websocket.connected:
             _LOGGER.debug("Init WebSocket in background task")
 
             self.config_entry.async_create_background_task(
                 hass=self.hass,
-                target=self.device.websocket_connect(
-                    notify_callback=lambda: self.async_set_updated_data(None)
+                target=self.device.connect_dashboard_websocket(
+                    update_callback=lambda _: self.async_set_updated_data(None)
                 ),
                 name="lm_websocket_task",
             )
 
             async def websocket_close(_: Any | None = None) -> None:
-                if (
-                    self._local_client is not None
-                    and self._local_client.websocket is not None
-                    and self._local_client.websocket.open
-                ):
-                    self._local_client.terminating = True
-                    await self._local_client.websocket.close()
+                if self.device.websocket.connected:
+                    await self.device.websocket.disconnect()
 
             self.config_entry.async_on_unload(
                 self.hass.bus.async_listen_once(
@@ -97,39 +106,30 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
             )
             self.config_entry.async_on_unload(websocket_close)
 
-    async def _async_update_data(self) -> None:
+    async def _internal_async_update_data(self) -> None:
         """Fetch data from API endpoint."""
-        await self._async_handle_request(self.device.get_config)
+        await self.device.get_dashboard()
+        _LOGGER.debug("Current status: %s", self.device.dashboard.to_dict())
+        await self._async_connect_websocket()
 
-        if (
-            self._last_firmware_data_update is None
-            or (self._last_firmware_data_update + FIRMWARE_UPDATE_INTERVAL) < time()
-        ):
-            await self._async_handle_request(self.device.get_firmware)
-            self._last_firmware_data_update = time()
 
-        if (
-            self._last_statistics_data_update is None
-            or (self._last_statistics_data_update + STATISTICS_UPDATE_INTERVAL) < time()
-        ):
-            await self._async_handle_request(self.device.get_statistics)
-            self._last_statistics_data_update = time()
+class LaMarzoccoSettingsUpdateCoordinator(LaMarzoccoUpdateCoordinator):
+    """Coordinator for La Marzocco settings."""
 
-        _LOGGER.debug("Current status: %s", str(self.device.config))
+    _default_update_interval = SETTINGS_UPDATE_INTERVAL
 
-    async def _async_handle_request[**_P](
-        self,
-        func: Callable[_P, Coroutine[None, None, None]],
-        *args: _P.args,
-        **kwargs: _P.kwargs,
-    ) -> None:
-        try:
-            await func(*args, **kwargs)
-        except AuthFail as ex:
-            _LOGGER.debug("Authentication failed", exc_info=True)
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN, translation_key="authentication_failed"
-            ) from ex
-        except RequestNotSuccessful as ex:
-            _LOGGER.debug(ex, exc_info=True)
-            raise UpdateFailed(f"Querying API failed. Error: {ex}") from ex
+    async def _internal_async_update_data(self) -> None:
+        """Fetch data from API endpoint."""
+        await self.device.get_settings()
+        _LOGGER.debug("Current settings: %s", self.device.settings.to_dict())
+
+
+class LaMarzoccoScheduleUpdateCoordinator(LaMarzoccoUpdateCoordinator):
+    """Coordinator for La Marzocco schedule."""
+
+    _default_update_interval = SCHEDULE_UPDATE_INTERVAL
+
+    async def _internal_async_update_data(self) -> None:
+        """Fetch data from API endpoint."""
+        await self.device.get_schedule()
+        _LOGGER.debug("Current schedule: %s", self.device.schedule.to_dict())

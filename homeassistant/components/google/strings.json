@@ -13,20 +13,22 @@
       }
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",
       "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "missing_credentials": "[%key:common::config_flow::abort::oauth2_missing_credentials%]",
-      "code_expired": "Authentication code expired or credential setup is invalid, please try again.",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]",
-      "api_disabled": "You must enable the Google Calendar API in the Google Cloud Console",
-      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
+      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
-      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]"
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",
+      "code_expired": "Authentication code expired or credential setup is invalid, please try again.",
+      "calendar_api_disabled": "You must [enable the Google Calendar API]({calendar_api_url}) in the Google Cloud Console"
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
@@ -129,6 +131,9 @@
     "calendar": {
       "working_location": {
         "name": "Working location"
+      },
+      "birthdays": {
+        "name": "Birthdays"
       }
     }
   }

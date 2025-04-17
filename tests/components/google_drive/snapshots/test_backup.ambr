@@ -1,0 +1,239 @@
+# serializer version: 1
+# name: test_agents_delete
+  list([
+    tuple(
+      'list_files',
+      tuple(
+      ),
+      dict({
+        'params': dict({
+          'fields': 'files(id,name)',
+          'q': "properties has { key='home_assistant' and value='root' } and properties has { key='instance_id' and value='0a123c' } and trashed=false",
+        }),
+      }),
+    ),
+    tuple(
+      'list_files',
+      tuple(
+      ),
+      dict({
+        'params': dict({
+          'fields': 'files(id)',
+          'q': "properties has { key='home_assistant' and value='backup' } and properties has { key='instance_id' and value='0a123c' } and properties has { key='backup_id' and value='test-backup' }",
+        }),
+      }),
+    ),
+    tuple(
+      'delete_file',
+      tuple(
+        'backup-file-id',
+      ),
+      dict({
+      }),
+    ),
+  ])
+# ---
+# name: test_agents_download
+  list([
+    tuple(
+      'list_files',
+      tuple(
+      ),
+      dict({
+        'params': dict({
+          'fields': 'files(id,name)',
+          'q': "properties has { key='home_assistant' and value='root' } and properties has { key='instance_id' and value='0a123c' } and trashed=false",
+        }),
+      }),
+    ),
+    tuple(
+      'list_files',
+      tuple(
+      ),
+      dict({
+        'params': dict({
+          'fields': 'files(description)',
+          'q': "properties has { key='home_assistant' and value='backup' } and properties has { key='instance_id' and value='0a123c' } and trashed=false",
+        }),
+      }),
+    ),
+    tuple(
+      'list_files',
+      tuple(
+      ),
+      dict({
+        'params': dict({
+          'fields': 'files(id)',
+          'q': "properties has { key='home_assistant' and value='backup' } and properties has { key='instance_id' and value='0a123c' } and properties has { key='backup_id' and value='test-backup' }",
+        }),
+      }),
+    ),
+    tuple(
+      'get_file_content',
+      tuple(
+        'backup-file-id',
+      ),
+      dict({
+        'timeout': dict({
+          'ceil_threshold': 5,
+          'connect': None,
+          'sock_connect': None,
+          'sock_read': None,
+          'total': 43200,
+        }),
+      }),
+    ),
+  ])
+# ---
+# name: test_agents_list_backups
+  list([
+    tuple(
+      'list_files',
+      tuple(
+      ),
+      dict({
+        'params': dict({
+          'fields': 'files(id,name)',
+          'q': "properties has { key='home_assistant' and value='root' } and properties has { key='instance_id' and value='0a123c' } and trashed=false",
+        }),
+      }),
+    ),
+    tuple(
+      'list_files',
+      tuple(
+      ),
+      dict({
+        'params': dict({
+          'fields': 'files(description)',
+          'q': "properties has { key='home_assistant' and value='backup' } and properties has { key='instance_id' and value='0a123c' } and trashed=false",
+        }),
+      }),
+    ),
+  ])
+# ---
+# name: test_agents_upload
+  list([
+    tuple(
+      'list_files',
+      tuple(
+      ),
+      dict({
+        'params': dict({
+          'fields': 'files(id,name)',
+          'q': "properties has { key='home_assistant' and value='root' } and properties has { key='instance_id' and value='0a123c' } and trashed=false",
+        }),
+      }),
+    ),
+    tuple(
+      'list_files',
+      tuple(
+      ),
+      dict({
+        'params': dict({
+          'fields': 'files(id,name)',
+          'q': "properties has { key='home_assistant' and value='root' } and properties has { key='instance_id' and value='0a123c' } and trashed=false",
+        }),
+      }),
+    ),
+    tuple(
+      'resumable_upload_file',
+      tuple(
+        dict({
+          'description': '{"addons": [{"name": "Test", "slug": "test", "version": "1.0.0"}], "backup_id": "test-backup", "date": "2025-01-01T01:23:45.678Z", "database_included": true, "extra_metadata": {"with_automatic_settings": false}, "folders": [], "homeassistant_included": true, "homeassistant_version": "2024.12.0", "name": "Test", "protected": false, "size": 987}',
+          'name': 'Test_2025-01-01_01.23_45678000.tar',
+          'parents': list([
+            'HA folder ID',
+          ]),
+          'properties': dict({
+            'backup_id': 'test-backup',
+            'home_assistant': 'backup',
+            'instance_id': '0a123c',
+          }),
+        }),
+        "CoreBackupReaderWriter.async_receive_backup.<locals>.open_backup() -> 'AsyncIterator[bytes]'",
+        987,
+      ),
+      dict({
+        'timeout': dict({
+          'ceil_threshold': 5,
+          'connect': None,
+          'sock_connect': None,
+          'sock_read': None,
+          'total': 43200,
+        }),
+      }),
+    ),
+  ])
+# ---
+# name: test_agents_upload_create_folder_if_missing
+  list([
+    tuple(
+      'list_files',
+      tuple(
+      ),
+      dict({
+        'params': dict({
+          'fields': 'files(id,name)',
+          'q': "properties has { key='home_assistant' and value='root' } and properties has { key='instance_id' and value='0a123c' } and trashed=false",
+        }),
+      }),
+    ),
+    tuple(
+      'list_files',
+      tuple(
+      ),
+      dict({
+        'params': dict({
+          'fields': 'files(id,name)',
+          'q': "properties has { key='home_assistant' and value='root' } and properties has { key='instance_id' and value='0a123c' } and trashed=false",
+        }),
+      }),
+    ),
+    tuple(
+      'create_file',
+      tuple(
+      ),
+      dict({
+        'json': dict({
+          'mimeType': 'application/vnd.google-apps.folder',
+          'name': 'Home Assistant',
+          'properties': dict({
+            'home_assistant': 'root',
+            'instance_id': '0a123c',
+          }),
+        }),
+        'params': dict({
+          'fields': 'id,name',
+        }),
+      }),
+    ),
+    tuple(
+      'resumable_upload_file',
+      tuple(
+        dict({
+          'description': '{"addons": [{"name": "Test", "slug": "test", "version": "1.0.0"}], "backup_id": "test-backup", "date": "2025-01-01T01:23:45.678Z", "database_included": true, "extra_metadata": {"with_automatic_settings": false}, "folders": [], "homeassistant_included": true, "homeassistant_version": "2024.12.0", "name": "Test", "protected": false, "size": 987}',
+          'name': 'Test_2025-01-01_01.23_45678000.tar',
+          'parents': list([
+            'new folder id',
+          ]),
+          'properties': dict({
+            'backup_id': 'test-backup',
+            'home_assistant': 'backup',
+            'instance_id': '0a123c',
+          }),
+        }),
+        "CoreBackupReaderWriter.async_receive_backup.<locals>.open_backup() -> 'AsyncIterator[bytes]'",
+        987,
+      ),
+      dict({
+        'timeout': dict({
+          'ceil_threshold': 5,
+          'connect': None,
+          'sock_connect': None,
+          'sock_read': None,
+          'total': 43200,
+        }),
+      }),
+    ),
+  ])
+# ---

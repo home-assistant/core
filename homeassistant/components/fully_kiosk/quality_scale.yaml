@@ -15,21 +15,23 @@ rules:
   common-modules: done
   docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions: todo
+  docs-removal-instructions: done
   docs-actions: done
   brands: done
 
   # Silver
   config-entry-unloading: done
-  log-when-unavailable: todo
+  log-when-unavailable: done
   entity-unavailable: done
   action-exceptions: todo
   reauthentication-flow: todo
   parallel-updates: todo
-  test-coverage: todo
+  test-coverage: done
   integration-owner: done
-  docs-installation-parameters: todo
-  docs-configuration-parameters: todo
+  docs-installation-parameters: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: This integration does not utilize an options flow.
 
   # Gold
   entity-translations: todo
@@ -43,7 +45,7 @@ rules:
     comment: Each config entry maps to a single device
   diagnostics: done
   exception-translations: todo
-  icon-translations: todo
+  icon-translations: done
   reconfiguration-flow: todo
   dynamic-devices:
     status: exempt

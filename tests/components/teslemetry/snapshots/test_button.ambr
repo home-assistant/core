@@ -6,6 +6,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -28,7 +29,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'flash_lights',
-    'unique_id': 'LRWXF7EK4KC700000-flash_lights',
+    'unique_id': 'LRW3F7EK4NC700000-flash_lights',
     'unit_of_measurement': None,
   })
 # ---
@@ -52,6 +53,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -74,7 +76,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'homelink',
-    'unique_id': 'LRWXF7EK4KC700000-homelink',
+    'unique_id': 'LRW3F7EK4NC700000-homelink',
     'unit_of_measurement': None,
   })
 # ---
@@ -98,6 +100,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -120,7 +123,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'honk',
-    'unique_id': 'LRWXF7EK4KC700000-honk',
+    'unique_id': 'LRW3F7EK4NC700000-honk',
     'unit_of_measurement': None,
   })
 # ---
@@ -144,6 +147,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -166,7 +170,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'enable_keyless_driving',
-    'unique_id': 'LRWXF7EK4KC700000-enable_keyless_driving',
+    'unique_id': 'LRW3F7EK4NC700000-enable_keyless_driving',
     'unit_of_measurement': None,
   })
 # ---
@@ -190,6 +194,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -212,7 +217,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'boombox',
-    'unique_id': 'LRWXF7EK4KC700000-boombox',
+    'unique_id': 'LRW3F7EK4NC700000-boombox',
     'unit_of_measurement': None,
   })
 # ---
@@ -236,6 +241,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -258,7 +264,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'wake',
-    'unique_id': 'LRWXF7EK4KC700000-wake',
+    'unique_id': 'LRW3F7EK4NC700000-wake',
     'unit_of_measurement': None,
   })
 # ---

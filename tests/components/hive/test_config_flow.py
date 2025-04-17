@@ -25,52 +25,6 @@ MFA_RESEND_CODE = "0000"
 MFA_INVALID_CODE = "HIVE"
 
 
-async def test_import_flow(hass: HomeAssistant) -> None:
-    """Check import flow."""
-
-    with (
-        patch(
-            "homeassistant.components.hive.config_flow.Auth.login",
-            return_value={
-                "ChallengeName": "SUCCESS",
-                "AuthenticationResult": {
-                    "RefreshToken": "mock-refresh-token",
-                    "AccessToken": "mock-access-token",
-                },
-            },
-        ),
-        patch(
-            "homeassistant.components.hive.async_setup", return_value=True
-        ) as mock_setup,
-        patch(
-            "homeassistant.components.hive.async_setup_entry",
-            return_value=True,
-        ) as mock_setup_entry,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
-        )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == USERNAME
-    assert result["data"] == {
-        CONF_USERNAME: USERNAME,
-        CONF_PASSWORD: PASSWORD,
-        "tokens": {
-            "AuthenticationResult": {
-                "AccessToken": "mock-access-token",
-                "RefreshToken": "mock-refresh-token",
-            },
-            "ChallengeName": "SUCCESS",
-        },
-    }
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
 async def test_user_flow(hass: HomeAssistant) -> None:
     """Test the user flow."""
     result = await hass.config_entries.flow.async_init(
@@ -91,9 +45,6 @@ async def test_user_flow(hass: HomeAssistant) -> None:
                 },
             },
         ),
-        patch(
-            "homeassistant.components.hive.async_setup", return_value=True
-        ) as mock_setup,
         patch(
             "homeassistant.components.hive.async_setup_entry",
             return_value=True,
@@ -119,7 +70,6 @@ async def test_user_flow(hass: HomeAssistant) -> None:
         },
     }
 
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
@@ -186,9 +136,6 @@ async def test_user_flow_2fa(hass: HomeAssistant) -> None:
             ],
         ),
         patch(
-            "homeassistant.components.hive.async_setup", return_value=True
-        ) as mock_setup,
-        patch(
             "homeassistant.components.hive.async_setup_entry",
             return_value=True,
         ) as mock_setup_entry,
@@ -220,7 +167,6 @@ async def test_user_flow_2fa(hass: HomeAssistant) -> None:
         ],
     }
 
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
@@ -463,9 +409,6 @@ async def test_user_flow_2fa_send_new_code(hass: HomeAssistant) -> None:
             ],
         ),
         patch(
-            "homeassistant.components.hive.async_setup", return_value=True
-        ) as mock_setup,
-        patch(
             "homeassistant.components.hive.async_setup_entry",
             return_value=True,
         ) as mock_setup_entry,
@@ -493,7 +436,6 @@ async def test_user_flow_2fa_send_new_code(hass: HomeAssistant) -> None:
             "mock-device-password",
         ],
     }
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 

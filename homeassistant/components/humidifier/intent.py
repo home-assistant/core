@@ -6,8 +6,7 @@ import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, STATE_OFF
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import intent
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, intent
 
 from . import (
     ATTR_AVAILABLE_MODES,

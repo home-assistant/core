@@ -9,6 +9,12 @@
           'hostname': 'WifiDevice0',
           'type': 'laptop',
         }),
+        dict({
+          'connected': False,
+          'connection_type': 'lan',
+          'hostname': 'LanDevice1',
+          'type': 'desktop',
+        }),
       ]),
       'last_exception': None,
       'last_update success': True,
@@ -35,6 +41,8 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': 'Mock Title',
       'unique_id': None,
       'version': 1,

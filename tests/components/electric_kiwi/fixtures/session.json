@@ -1,0 +1,23 @@
+{
+  "data": {
+    "data": {
+      "type": "session",
+      "avatar": [],
+      "customer_number": 123456,
+      "customer_name": "Joe Dirt",
+      "email": "joe@dirt.kiwi",
+      "customer_status": "Y",
+      "services": [
+        {
+          "service": "Electricity",
+          "identifier": "00000000DDA",
+          "is_primary_service": true,
+          "service_status": "Y"
+        }
+      ],
+      "res_partner_id": 285554,
+      "nuid": "EK_GUID"
+    }
+  },
+  "status": 1
+}

@@ -23,6 +23,8 @@
     'pref_disable_new_entities': False,
     'pref_disable_polling': False,
     'source': 'user',
+    'subentries': list([
+    ]),
     'title': 'Green House',
     'unique_id': 'unique',
     'version': 2,

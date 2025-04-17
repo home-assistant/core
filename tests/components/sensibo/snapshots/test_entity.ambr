@@ -1,0 +1,141 @@
+# serializer version: 1
+# name: test_device
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': 'hallway',
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': 'https://home.sensibo.com/',
+      'connections': set({
+        tuple(
+          'mac',
+          '00:02:00:b6:00:00',
+        ),
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': 'esp8266ex',
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'sensibo',
+          'ABC999111',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': 'Sensibo',
+      'model': 'skyv2',
+      'model_id': None,
+      'name': 'Hallway',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': '1234567890',
+      'suggested_area': 'Hallway',
+      'sw_version': 'SKY30046',
+      'via_device_id': None,
+    }),
+    DeviceRegistryEntrySnapshot({
+      'area_id': 'kitchen',
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': 'https://home.sensibo.com/',
+      'connections': set({
+        tuple(
+          'mac',
+          '00:01:00:01:00:01',
+        ),
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': 'pure-esp32',
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'sensibo',
+          'AAZZAAZZ',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': 'Sensibo',
+      'model': 'pure',
+      'model_id': None,
+      'name': 'Kitchen',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': '0987654321',
+      'suggested_area': 'Kitchen',
+      'sw_version': 'PUR00111',
+      'via_device_id': None,
+    }),
+    DeviceRegistryEntrySnapshot({
+      'area_id': 'bedroom',
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': 'https://home.sensibo.com/',
+      'connections': set({
+        tuple(
+          'mac',
+          '00:03:00:03:00:03',
+        ),
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': 'pure-esp32',
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'sensibo',
+          'BBZZBBZZ',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': 'Sensibo',
+      'model': 'pure',
+      'model_id': None,
+      'name': 'Bedroom',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': '0987654329',
+      'suggested_area': 'Bedroom',
+      'sw_version': 'PUR00111',
+      'via_device_id': None,
+    }),
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': 'https://home.sensibo.com/',
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': 'nrf52',
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'sensibo',
+          'AABBCC',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': 'Sensibo',
+      'model': 'motion_sensor',
+      'model_id': None,
+      'name': 'Hallway Motion Sensor',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'suggested_area': None,
+      'sw_version': 'V17',
+      'via_device_id': <ANY>,
+    }),
+  ])
+# ---

@@ -7,7 +7,7 @@ from typing import Any
 from homeassistant.components.device_tracker import SourceType, TrackerEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import Trackables, TractiveClient, TractiveConfigEntry
 from .const import (
@@ -21,7 +21,7 @@ from .entity import TractiveEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TractiveConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tractive device trackers."""
     client = entry.runtime_data.client
@@ -55,11 +55,9 @@ class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
 
     @property
     def source_type(self) -> SourceType:
-        """Return the source type, eg gps or router, of the device."""
+        """Return the source type of the device."""
         if self._source_type == "PHONE":
             return SourceType.BLUETOOTH
-        if self._source_type == "KNOWN_WIFI":
-            return SourceType.ROUTER
         return SourceType.GPS
 
     @property

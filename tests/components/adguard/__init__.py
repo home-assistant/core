@@ -1,1 +1,1 @@
-"""Tests for the AdGuard Home component."""
+"""Tests for the AdGuard Home integration."""

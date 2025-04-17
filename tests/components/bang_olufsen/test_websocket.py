@@ -135,7 +135,6 @@ async def test_on_all_notifications_raw(
         },
         "eventType": "WebSocketEventVolume",
     }
-    raw_notification_full = raw_notification
 
     # Get device ID for the modified notification that is sent as an event and in the log
     assert mock_config_entry.unique_id
@@ -144,12 +143,11 @@ async def test_on_all_notifications_raw(
             identifiers={(DOMAIN, mock_config_entry.unique_id)}
         )
     )
-    raw_notification_full.update(
-        {
-            "device_id": device.id,
-            "serial_number": mock_config_entry.unique_id,
-        }
-    )
+    raw_notification_full = {
+        "device_id": device.id,
+        "serial_number": int(mock_config_entry.unique_id),
+        **raw_notification,
+    }
 
     caplog.set_level(logging.DEBUG)
 

@@ -12,7 +12,7 @@ from homeassistant.components.event import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import format_discovered_event_class, format_event_dispatcher_name
 from .const import (
@@ -183,7 +183,7 @@ class XiaomiEventEntity(EventEntity):
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: XiaomiBLEConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Xiaomi event."""
     coordinator = entry.runtime_data

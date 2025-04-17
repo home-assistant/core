@@ -15,6 +15,7 @@ from pyhap.service import Service
 from pyhap.util import callback as pyhap_callback
 
 from homeassistant.components.cover import CoverDeviceClass, CoverEntityFeature
+from homeassistant.components.lawn_mower import LawnMowerEntityFeature
 from homeassistant.components.media_player import MediaPlayerDeviceClass
 from homeassistant.components.remote import RemoteEntityFeature
 from homeassistant.components.sensor import SensorDeviceClass
@@ -84,6 +85,8 @@ from .const import (
     SERV_ACCESSORY_INFO,
     SERV_BATTERY_SERVICE,
     SIGNAL_RELOAD_ENTITIES,
+    TYPE_AIR_PURIFIER,
+    TYPE_FAN,
     TYPE_FAUCET,
     TYPE_OUTLET,
     TYPE_SHOWER,
@@ -110,6 +113,10 @@ SWITCH_TYPES = {
     TYPE_SPRINKLER: "ValveSwitch",
     TYPE_SWITCH: "Switch",
     TYPE_VALVE: "ValveSwitch",
+}
+FAN_TYPES = {
+    TYPE_AIR_PURIFIER: "AirPurifier",
+    TYPE_FAN: "Fan",
 }
 TYPES: Registry[str, type[HomeAccessory]] = Registry()
 
@@ -177,7 +184,10 @@ def get_accessory(  # noqa: C901
             a_type = "WindowCovering"
 
     elif state.domain == "fan":
-        a_type = "Fan"
+        if fan_type := config.get(CONF_TYPE):
+            a_type = FAN_TYPES[fan_type]
+        else:
+            a_type = "Fan"
 
     elif state.domain == "humidifier":
         a_type = "HumidifierDehumidifier"
@@ -235,6 +245,13 @@ def get_accessory(  # noqa: C901
             a_type = "CarbonDioxideSensor"
         elif device_class == SensorDeviceClass.ILLUMINANCE or unit == LIGHT_LUX:
             a_type = "LightSensor"
+        else:
+            _LOGGER.debug(
+                "%s: Unsupported sensor type (device_class=%s) (unit=%s)",
+                state.entity_id,
+                device_class,
+                unit,
+            )
 
     elif state.domain == "switch":
         if switch_type := config.get(CONF_TYPE):
@@ -249,6 +266,13 @@ def get_accessory(  # noqa: C901
 
     elif state.domain == "vacuum":
         a_type = "Vacuum"
+
+    elif (
+        state.domain == "lawn_mower"
+        and features & LawnMowerEntityFeature.DOCK
+        and features & LawnMowerEntityFeature.START_MOWING
+    ):
+        a_type = "LawnMower"
 
     elif state.domain == "remote" and features & RemoteEntityFeature.ACTIVITY:
         a_type = "ActivityRemote"

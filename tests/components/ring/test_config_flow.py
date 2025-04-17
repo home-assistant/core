@@ -6,12 +6,12 @@ import pytest
 import ring_doorbell
 
 from homeassistant import config_entries
-from homeassistant.components import dhcp
 from homeassistant.components.ring import DOMAIN
 from homeassistant.const import CONF_DEVICE_ID, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .conftest import MOCK_HARDWARE_ID
 
@@ -269,9 +269,7 @@ async def test_dhcp_discovery(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
-        data=dhcp.DhcpServiceInfo(
-            ip=ip_address, macaddress=mac_address, hostname=hostname
-        ),
+        data=DhcpServiceInfo(ip=ip_address, macaddress=mac_address, hostname=hostname),
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
@@ -302,9 +300,7 @@ async def test_dhcp_discovery(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
-        data=dhcp.DhcpServiceInfo(
-            ip=ip_address, macaddress=mac_address, hostname=hostname
-        ),
+        data=DhcpServiceInfo(ip=ip_address, macaddress=mac_address, hostname=hostname),
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

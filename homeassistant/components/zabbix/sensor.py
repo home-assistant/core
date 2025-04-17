@@ -6,8 +6,8 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from pyzabbix import ZabbixAPI
 import voluptuous as vol
+from zabbix_utils import ZabbixAPI
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -15,7 +15,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 

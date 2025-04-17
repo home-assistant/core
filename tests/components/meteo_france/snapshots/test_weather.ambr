@@ -1,0 +1,61 @@
+# serializer version: 1
+# name: test_weather[weather.la_clusaz-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'weather',
+    'entity_category': None,
+    'entity_id': 'weather.la_clusaz',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'La Clusaz',
+    'platform': 'meteo_france',
+    'previous_unique_id': None,
+    'supported_features': <WeatherEntityFeature: 3>,
+    'translation_key': None,
+    'unique_id': '45.90417,6.42306',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_weather[weather.la_clusaz-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Météo-France',
+      'friendly_name': 'La Clusaz',
+      'humidity': 75,
+      'precipitation_unit': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+      'pressure': 988.7,
+      'pressure_unit': <UnitOfPressure.HPA: 'hPa'>,
+      'supported_features': <WeatherEntityFeature: 3>,
+      'temperature': 9.1,
+      'temperature_unit': <UnitOfTemperature.CELSIUS: '°C'>,
+      'visibility_unit': <UnitOfLength.KILOMETERS: 'km'>,
+      'wind_bearing': 200,
+      'wind_gust_speed': 64.8,
+      'wind_speed': 28.8,
+      'wind_speed_unit': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'weather.la_clusaz',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'partlycloudy',
+  })
+# ---

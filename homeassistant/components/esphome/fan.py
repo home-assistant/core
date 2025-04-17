@@ -30,6 +30,8 @@ from .entity import (
 )
 from .enum_mapper import EsphomeEnumMapper
 
+PARALLEL_UPDATES = 0
+
 ORDERED_NAMED_FAN_SPEEDS = [FanSpeed.LOW, FanSpeed.MEDIUM, FanSpeed.HIGH]
 
 
@@ -45,7 +47,6 @@ class EsphomeFan(EsphomeEntity[FanInfo, FanState], FanEntity):
     """A fan implementation for ESPHome."""
 
     _supports_speed_levels: bool = True
-    _enable_turn_on_off_backwards_compatibility = False
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""

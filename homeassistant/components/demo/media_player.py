@@ -15,14 +15,14 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Demo config entry."""
     async_add_entities(
@@ -41,6 +41,7 @@ async def async_setup_entry(
             DemoTVShowPlayer(),
             DemoBrowsePlayer("Browse"),
             DemoGroupPlayer("Group"),
+            DemoSearchPlayer("Search"),
         ]
     )
 
@@ -94,6 +95,8 @@ NETFLIX_PLAYER_SUPPORT = (
 )
 
 BROWSE_PLAYER_SUPPORT = MediaPlayerEntityFeature.BROWSE_MEDIA
+
+SEARCH_PLAYER_SUPPORT = MediaPlayerEntityFeature.SEARCH_MEDIA
 
 
 class AbstractDemoPlayer(MediaPlayerEntity):
@@ -398,3 +401,9 @@ class DemoGroupPlayer(AbstractDemoPlayer):
         | MediaPlayerEntityFeature.GROUPING
         | MediaPlayerEntityFeature.TURN_OFF
     )
+
+
+class DemoSearchPlayer(AbstractDemoPlayer):
+    """A Demo media player that supports searching."""
+
+    _attr_supported_features = SEARCH_PLAYER_SUPPORT

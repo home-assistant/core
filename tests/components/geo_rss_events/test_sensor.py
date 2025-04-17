@@ -6,7 +6,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components import sensor
-import homeassistant.components.geo_rss_events.sensor as geo_rss_events
+from homeassistant.components.geo_rss_events import sensor as geo_rss_events
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
@@ -15,7 +15,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import assert_setup_component, async_fire_time_changed
 

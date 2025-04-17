@@ -47,6 +47,7 @@ PLATFORMS = [
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.VACUUM,
+    Platform.WATER_HEATER,
 ]
 
 _LOGGER = logging.getLogger(__name__)
@@ -95,11 +96,12 @@ async def async_setup_coordinators(
         raise ConfigEntryNotReady(exc.message) from exc
 
     if not bridge_list:
+        _LOGGER.warning("No devices registered with the correct profile")
         return
 
     # Setup coordinator per device.
     task_list = [
-        hass.async_create_task(async_setup_device_coordinator(hass, bridge))
+        hass.async_create_task(async_setup_device_coordinator(hass, entry, bridge))
         for bridge in bridge_list
     ]
     task_result = await asyncio.gather(*task_list)

@@ -28,7 +28,7 @@ async def test_hmip_load_all_supported_devices(
         test_devices=None, test_groups=None
     )
 
-    assert len(mock_hap.hmip_device_by_entity_id) == 308
+    assert len(mock_hap.hmip_device_by_entity_id) == 310
 
 
 async def test_hmip_remove_device(
@@ -257,14 +257,14 @@ async def test_hmip_reset_energy_counter_services(
         {"entity_id": "switch.pc"},
         blocking=True,
     )
-    assert hmip_device.mock_calls[-1][0] == "reset_energy_counter"
-    assert len(hmip_device._connection.mock_calls) == 2
+    assert hmip_device.mock_calls[-1][0] == "reset_energy_counter_async"
+    assert len(hmip_device._connection.mock_calls) == 1
 
     await hass.services.async_call(
         "homematicip_cloud", "reset_energy_counter", {"entity_id": "all"}, blocking=True
     )
-    assert hmip_device.mock_calls[-1][0] == "reset_energy_counter"
-    assert len(hmip_device._connection.mock_calls) == 4
+    assert hmip_device.mock_calls[-1][0] == "reset_energy_counter_async"
+    assert len(hmip_device._connection.mock_calls) == 2
 
 
 async def test_hmip_multi_area_device(
