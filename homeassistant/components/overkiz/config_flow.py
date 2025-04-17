@@ -297,12 +297,11 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
                     title=validated_data[CONF_HOST], data=validated_data
                 )
 
-        # Pre-fill data if available (e.g., from discovery or reauth)
         data_schema = vol.Schema(
             {
                 vol.Required(CONF_HOST, default=self._host): str,
                 vol.Required(CONF_TOKEN): str,
-                vol.Required(CONF_VERIFY_SSL, default=True): bool,
+                vol.Required(CONF_VERIFY_SSL, default=self._verify_ssl): bool,
             }
         )
 
@@ -367,6 +366,7 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if self._api_type == APIType.LOCAL:
             self._host = entry_data[CONF_HOST]
+            self._verify_ssl = entry_data[CONF_VERIFY_SSL]
             return await self.async_step_local()
 
         # Cloud API reauth
