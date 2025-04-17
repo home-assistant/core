@@ -14,6 +14,7 @@ from pyoverkiz.enums import (
     UIWidget,
 )
 from pyoverkiz.models import Device
+from pyoverkiz.types import StateType as OverkizStateType
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -66,7 +67,9 @@ class OverkizCoverDescription(CoverEntityDescription):
     current_tilt_position_state: OverkizState | None = None
     set_tilt_position_command: OverkizCommand | None = None
     open_tilt_command: OverkizCommand | None = None
+    open_tilt_command_args: OverkizStateType | list[OverkizStateType] = None
     close_tilt_command: OverkizCommand | None = None
+    close_tilt_command_args: OverkizStateType | list[OverkizStateType] = None
     stop_tilt_command: OverkizCommand | None = None
 
 
@@ -122,8 +125,10 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         open_command=OverkizCommand.OPEN,
         close_command=OverkizCommand.CLOSE,
         stop_command=OverkizCommand.STOP,
-        open_tilt_command=OverkizCommand.TILT_POSITIVE,  # needs 2 params
-        close_tilt_command=OverkizCommand.TILT_NEGATIVE,  # needs 2 params
+        open_tilt_command=OverkizCommand.TILT_POSITIVE,
+        open_tilt_command_args=[15, 1],  # position (1-127), speed (1-15)
+        close_tilt_command=OverkizCommand.TILT_NEGATIVE,
+        close_tilt_command_args=[15, 1],  # position (1-127), speed (1-15)
         stop_tilt_command=OverkizCommand.STOP,
     ),
     ## Default cover behavior (via UIClass)
@@ -437,12 +442,16 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
     async def async_open_tilt_cover(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
         if command := self.entity_description.open_tilt_command:
-            await self.executor.async_execute_command(command)
+            await self.executor.async_execute_command(
+                command, self.entity_description.open_tilt_command_args
+            )
 
     async def async_close_tilt_cover(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
         if command := self.entity_description.close_tilt_command:
-            await self.executor.async_execute_command(command)
+            await self.executor.async_execute_command(
+                command, self.entity_description.close_tilt_command_args
+            )
 
     async def async_stop_tilt_cover(self, **kwargs: Any) -> None:
         """Stop the cover tilt."""
