@@ -2,14 +2,11 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 import math
 from typing import Any
 
 from hscloud.const import DEVICE_TYPE, FAN_DEVICE
-from hscloud.hscloud import HsCloud
-from hscloud.hscloudexception import HsCloudException
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant
@@ -28,11 +25,10 @@ from .const import (
     ERROR_TURN_OFF_FAILED,
     ERROR_TURN_ON_FAILED,
 )
+from .coordinator import DreoDataUpdateCoordinator
 from .entity import DreoEntity
 
 FAN_SUFFIX = "fan"
-SCAN_INTERVAL = timedelta(seconds=10)
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -42,16 +38,27 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Fan from a config entry."""
-
     client = config_entry.runtime_data.client
+    fan_devices = []
 
-    async_add_entities(
-        [
-            DreoFan(device, client)
-            for device in config_entry.runtime_data.devices
-            if DEVICE_TYPE.get(device.get("model")) == FAN_DEVICE.get("type")
-        ]
-    )
+    for device in config_entry.runtime_data.devices:
+        device_model = device.get("model")
+        if DEVICE_TYPE.get(device_model) != FAN_DEVICE.get("type"):
+            continue
+
+        device_id = device.get("deviceSn")
+        if not device_id:
+            continue
+
+        # Create coordinator for this device
+        coordinator = DreoDataUpdateCoordinator(hass, client, device_id)
+
+        # Fetch initial data
+        await coordinator.async_config_entry_first_refresh()
+
+        fan_devices.append(DreoFan(device, coordinator))
+
+    async_add_entities(fan_devices)
 
 
 class DreoFan(DreoEntity, FanEntity):
@@ -68,23 +75,49 @@ class DreoFan(DreoEntity, FanEntity):
     def __init__(
         self,
         device: dict[str, Any],
-        client: HsCloud,
+        coordinator: DreoDataUpdateCoordinator,
     ) -> None:
         """Initialize the Dreo fan."""
-
-        super().__init__(device, client, FAN_SUFFIX, None)
+        super().__init__(device, coordinator, FAN_SUFFIX, None)
 
         model_config = FAN_DEVICE.get("config", {}).get(self._model, {})
         speed_range = model_config.get("speed_range")
 
         self._attr_preset_modes = model_config.get("preset_modes")
-        self._attr_preset_mode = None
         self._low_high_range = speed_range
-        self._attr_speed_count = int_states_in_range(speed_range)
-        self._attr_percentage = 0
-        self._attr_oscillating = None
+        self._attr_speed_count = int_states_in_range(speed_range) if speed_range else 0
 
-    def turn_on(
+    @property
+    def is_on(self) -> bool:
+        """Return true if the entity is on."""
+        return self.coordinator.data.get("is_on", False)
+
+    @property
+    def percentage(self) -> int | None:
+        """Return the current speed percentage."""
+        if not self.is_on:
+            return 0
+
+        speed = self.coordinator.data.get("speed")
+        if speed is not None and self._low_high_range:
+            return ranged_value_to_percentage(self._low_high_range, speed)
+        return None
+
+    @property
+    def preset_mode(self) -> str | None:
+        """Return the current preset mode."""
+        if not self.is_on:
+            return None
+        return self.coordinator.data.get("mode")
+
+    @property
+    def oscillating(self) -> bool | None:
+        """Return oscillation state."""
+        if not self.is_on:
+            return None
+        return self.coordinator.data.get("oscillate")
+
+    async def async_turn_on(
         self,
         percentage: int | None = None,
         preset_mode: str | None = None,
@@ -93,7 +126,7 @@ class DreoFan(DreoEntity, FanEntity):
         """Turn the device on."""
         command_params: dict[str, Any] = {"power_switch": True}
 
-        if percentage is not None and percentage > 0:
+        if percentage is not None and percentage > 0 and self._low_high_range:
             speed = math.ceil(
                 percentage_to_ranged_value(self._low_high_range, percentage)
             )
@@ -101,52 +134,30 @@ class DreoFan(DreoEntity, FanEntity):
         if preset_mode is not None:
             command_params["mode"] = preset_mode
 
-        self._send_command_and_update(ERROR_TURN_ON_FAILED, **command_params)
+        await self._send_command_and_update(ERROR_TURN_ON_FAILED, **command_params)
 
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        self._send_command_and_update(ERROR_TURN_OFF_FAILED, power_switch=False)
+        await self._send_command_and_update(ERROR_TURN_OFF_FAILED, power_switch=False)
 
-    def set_preset_mode(self, preset_mode: str) -> None:
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of fan."""
-        self._send_command_and_update(ERROR_SET_PRESET_MODE_FAILED, mode=preset_mode)
+        await self._send_command_and_update(
+            ERROR_SET_PRESET_MODE_FAILED, mode=preset_mode
+        )
 
-    def set_percentage(self, percentage: int) -> None:
+    async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of fan."""
         if percentage <= 0:
-            self.turn_off()
-        else:
+            await self.async_turn_off()
+        elif self._low_high_range:
             speed = math.ceil(
                 percentage_to_ranged_value(self._low_high_range, percentage)
             )
-            self._send_command_and_update(ERROR_SET_SPEED_FAILED, speed=speed)
+            await self._send_command_and_update(ERROR_SET_SPEED_FAILED, speed=speed)
 
-    def oscillate(self, oscillating: bool) -> None:
-        """Set the oscillation of fan."""
-        self._send_command_and_update(ERROR_SET_OSCILLATE_FAILED, oscillate=oscillating)
-
-    def update(self) -> None:
-        """Get updated data from the device."""
-        try:
-            status = self._client.get_status(self._device_id)
-
-            if status is None:
-                self._attr_available = False
-                return
-
-            self._attr_available = status.get("connected")
-
-            if not status.get("power_switch"):
-                self._attr_percentage = 0
-                self._attr_preset_mode = None
-                self._attr_oscillating = None
-            else:
-                self._attr_preset_mode = status.get("mode")
-                self._attr_oscillating = status.get("oscillate")
-                self._attr_percentage = ranged_value_to_percentage(
-                    self._low_high_range,
-                    status.get("speed"),
-                )
-        except (HsCloudException, Exception):
-            self._attr_available = False
-            _LOGGER.exception("Error getting status for Dreo fan %s", self._device_id)
+    async def async_oscillate(self, oscillating: bool) -> None:
+        """Set the Oscillate of fan."""
+        await self._send_command_and_update(
+            ERROR_SET_OSCILLATE_FAILED, oscillate=oscillating
+        )

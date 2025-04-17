@@ -2,7 +2,6 @@
 
 from typing import Any
 
-from hscloud.hscloud import HsCloud
 from hscloud.hscloudexception import (
     HsCloudAccessDeniedException,
     HsCloudBusinessException,
@@ -12,12 +11,13 @@ from hscloud.hscloudexception import (
 
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
+from .coordinator import DreoDataUpdateCoordinator
 
 
-class DreoEntity(Entity):
+class DreoEntity(CoordinatorEntity[DreoDataUpdateCoordinator]):
     """Representation of a base Dreo Entity."""
 
     _attr_has_entity_name = True
@@ -25,7 +25,7 @@ class DreoEntity(Entity):
     def __init__(
         self,
         device: dict[str, Any],
-        client: HsCloud,
+        coordinator: DreoDataUpdateCoordinator,
         unique_id_suffix: str | None = None,
         name: str | None = None,
     ) -> None:
@@ -33,15 +33,14 @@ class DreoEntity(Entity):
 
         Args:
             device: Device information dictionary
-            client: The Dreo HsCloud client
+            coordinator: The Dreo DataUpdateCoordinator
             unique_id_suffix: Optional suffix for unique_id to differentiate multiple entities from same device
             name: Optional entity name, None will use the device name as-is
 
         """
-        super().__init__()
-        self._client = client
-        self._model = device.get("model")
+        super().__init__(coordinator)
         self._device_id = device.get("deviceSn")
+        self._model = device.get("model")
         self._attr_name = name
 
         if unique_id_suffix:
@@ -58,12 +57,16 @@ class DreoEntity(Entity):
             hw_version=device.get("mcuFirmwareVersion"),
         )
 
-    def _send_command_and_update(self, translation_key: str, **kwargs) -> None:
-        """Call a hscloud device command, handle errors, and update entity state."""
+    @property
+    def available(self) -> bool:
+        """Return device availability."""
+        return self.coordinator.data.get("available", False)
 
+    async def _send_command_and_update(self, translation_key: str, **kwargs) -> None:
+        """Call a hscloud device command, handle errors, and update entity state."""
         try:
-            self._client.update_status(self._device_id, **kwargs)
-            self.schedule_update_ha_state(force_refresh=True)
+            self.coordinator.client.update_status(self._device_id, **kwargs)
+            await self.coordinator.async_request_refresh()
         except (
             HsCloudException,
             HsCloudBusinessException,
