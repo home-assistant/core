@@ -71,4 +71,6 @@ class KemEntity(CoordinatorEntity[KemUpdateCoordinator], Entity):
         """Return if entity is available."""
         if not self.coordinator.available:
             return False
+        if not self.coordinator.data["device"]["isConnected"]:
+            return False
         return super().available
