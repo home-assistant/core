@@ -45,6 +45,7 @@ from .const import (
     CONF_SUBSCRIBE_LOGS,
     DEFAULT_ALLOW_SERVICE_CALLS,
     DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
+    DEFAULT_PORT,
     DOMAIN,
 )
 from .dashboard import async_get_or_create_dashboard_manager, async_set_dashboard_info
@@ -89,7 +90,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
         fields: dict[Any, type] = OrderedDict()
         fields[vol.Required(CONF_HOST, default=self._host or vol.UNDEFINED)] = str
-        fields[vol.Optional(CONF_PORT, default=self._port or 6053)] = int
+        fields[vol.Optional(CONF_PORT, default=self._port or DEFAULT_PORT)] = int
 
         errors = {}
         if error is not None:
@@ -178,8 +179,8 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a flow initialized by a reconfig request."""
         self._reconfig_entry = self._get_reconfigure_entry()
-        self._host = entry_data[CONF_HOST]
-        self._port = entry_data[CONF_PORT]
+        self._host = self._reconfig_entry.data[CONF_HOST]
+        self._port = self._reconfig_entry.data.get(CONF_PORT, DEFAULT_PORT)
         return await self._async_step_user_base()
 
     @property
@@ -403,7 +404,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             data={
                 **self._entry_with_name_conflict.data,
                 CONF_HOST: self._host,
-                CONF_PORT: self._port or 6053,
+                CONF_PORT: self._port or DEFAULT_PORT,
                 CONF_PASSWORD: self._password or "",
                 CONF_NOISE_PSK: self._noise_psk or "",
             },
@@ -528,7 +529,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         zeroconf_instance = await zeroconf.async_get_instance(self.hass)
         cli = APIClient(
             host,
-            port or 6053,
+            port or DEFAULT_PORT,
             "",
             zeroconf_instance=zeroconf_instance,
             noise_psk=noise_psk,
