@@ -192,6 +192,9 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up assist conversation entity."""
+    if discovery_info is None:
+        return
+
     agent = DefaultAgent()
     await get_agent_manager(hass).async_setup_default_agent(discovery_info, agent)
     async_add_entities([agent])
