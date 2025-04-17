@@ -440,7 +440,9 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title=self._name,
             data=self._async_make_config_data(),
-            options=self._async_make_default_options(),
+            options={
+                CONF_ALLOW_SERVICE_CALLS: DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
+            },
         )
 
     @callback
@@ -453,13 +455,6 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             CONF_PASSWORD: self._password or "",
             CONF_NOISE_PSK: self._noise_psk or "",
             CONF_DEVICE_NAME: self._device_name,
-        }
-
-    @callback
-    def _async_make_default_options(self) -> dict[str, Any]:
-        """Return default options for the entry."""
-        return {
-            CONF_ALLOW_SERVICE_CALLS: DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
         }
 
     async def async_step_validated_connection(self) -> ConfigFlowResult:
