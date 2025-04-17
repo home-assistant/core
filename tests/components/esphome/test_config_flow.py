@@ -1903,6 +1903,46 @@ async def test_reconfig_attempt_to_change_mac_aborts(
 
 
 @pytest.mark.usefixtures("mock_zeroconf", "mock_setup_entry")
+async def test_reconfig_name_conflict_other_entry_for_mac(
+    hass: HomeAssistant, mock_client: APIClient
+) -> None:
+    """Test reconfig name conflict when there is already another entry for the mac."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 6053,
+            CONF_PASSWORD: "",
+            CONF_DEVICE_NAME: "test",
+        },
+        unique_id="11:22:33:44:55:aa",
+    )
+    entry.add_to_hass(hass)
+    entry2 = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "127.0.0.2",
+            CONF_PORT: 6053,
+            CONF_PASSWORD: "",
+            CONF_DEVICE_NAME: "test4",
+        },
+        unique_id="11:22:33:44:55:bb",
+    )
+    entry2.add_to_hass(hass)
+    result = await entry.start_reconfigure_flow(hass)
+
+    mock_client.device_info.return_value = DeviceInfo(
+        uses_password=False, name="test", mac_address="11:22:33:44:55:bb"
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "127.0.0.2", CONF_PORT: 6053}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_unique_id_changed"
+
+
+@pytest.mark.usefixtures("mock_zeroconf", "mock_setup_entry")
 async def test_reconfig_name_conflict_migrate(
     hass: HomeAssistant, mock_client: APIClient
 ) -> None:

@@ -485,7 +485,12 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
                         },
                     )
             if self._reconfig_entry.unique_id != format_mac(self.unique_id):
-                if self._reconfig_entry.data[CONF_DEVICE_NAME] == self._device_name:
+                if (
+                    self._reconfig_entry.data[CONF_DEVICE_NAME] == self._device_name
+                    and not self.hass.config_entries.async_entry_for_domain_unique_id(
+                        self.handler, format_mac(self.unique_id)
+                    )
+                ):
                     self._entry_with_name_conflict = self._reconfig_entry
                     return await self.async_step_name_conflict()
                 return self.async_abort(
