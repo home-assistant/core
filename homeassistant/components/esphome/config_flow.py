@@ -457,9 +457,8 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         }
         if self.source == SOURCE_RECONFIGURE:
             assert self.unique_id is not None
-            assert self._reconfig_entry is not None
             assert self._reconfig_entry.unique_id is not None
-            if self._reauth_entry.unique_id != format_mac(self.unique_id):
+            if self._reconfig_entry.unique_id != format_mac(self.unique_id):
                 return self.async_abort(
                     reason="reconfigure_unique_id_changed",
                     description_placeholders={
@@ -470,7 +469,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
                     },
                 )
             return self.async_update_reload_and_abort(
-                self._reconfig_entry, data=self._reauth_entry.data | config_data
+                self._reconfig_entry, data=self._reconfig_entry.data | config_data
             )
         if self.source == SOURCE_REAUTH:
             return self.async_update_reload_and_abort(
