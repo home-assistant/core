@@ -58,7 +58,7 @@ DIRECTION_MAP = {
 }
 
 
-def _get_wind_direction_icon(wind_angle: float | None = None) -> str:
+def _get_wind_direction_icon(wind_angle: int | None = None) -> str:
     """Get the wind direction icon based on the wind angle."""
     if wind_angle is None:
         return "mdi:compass"
