@@ -17,14 +17,8 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, intent, singleton
-from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    DATA_COMPONENT,
-    DOMAIN,
-    HOME_ASSISTANT_AGENT,
-    OLD_HOME_ASSISTANT_AGENT,
-)
+from .const import DATA_COMPONENT, HOME_ASSISTANT_AGENT, OLD_HOME_ASSISTANT_AGENT
 from .entity import ConversationEntity
 from .models import (
     AbstractConversationAgent,
@@ -151,6 +145,7 @@ class AgentManager:
         self.hass = hass
         self._agents: dict[str, AbstractConversationAgent] = {}
         self.default_agent: DefaultAgent | None = None
+        self.config_intents: dict[str, Any] = {}
         self.triggers_details: list[TriggerDetails] = []
 
     @callback
@@ -200,12 +195,10 @@ class AgentManager:
         """Unset the agent."""
         self._agents.pop(agent_id, None)
 
-    async def async_setup_default_agent(
-        self, config: ConfigType, agent: DefaultAgent
-    ) -> None:
+    async def async_setup_default_agent(self, agent: DefaultAgent) -> None:
         """Set up the default agent."""
         agent.setup_config_and_trigger_intents(
-            config.get(DOMAIN, {}).get("intents", {}), self.triggers_details
+            self.config_intents, self.triggers_details
         )
         self.default_agent = agent
 

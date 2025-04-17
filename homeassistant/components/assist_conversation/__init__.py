@@ -12,5 +12,5 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up assist conversation."""
-    await async_load_platform(hass, CONVERSATION_DOMAIN, DOMAIN, config, config)
+    await async_load_platform(hass, CONVERSATION_DOMAIN, DOMAIN, {}, config)
     return True

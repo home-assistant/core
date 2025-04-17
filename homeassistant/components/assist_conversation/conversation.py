@@ -196,7 +196,7 @@ async def async_setup_platform(
         return
 
     agent = DefaultAgent()
-    await get_agent_manager(hass).async_setup_default_agent(discovery_info, agent)
+    await get_agent_manager(hass).async_setup_default_agent(agent)
     async_add_entities([agent])
 
     @callback

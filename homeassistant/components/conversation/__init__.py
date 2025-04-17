@@ -258,6 +258,8 @@ async def async_handle_intents(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Register the process service."""
+    get_agent_manager(hass).config_intents = config.get(DOMAIN, {}).get("intents", {})
+
     component = hass.data[DATA_COMPONENT] = EntityComponent[ConversationEntity](
         _LOGGER, DOMAIN, hass
     )
