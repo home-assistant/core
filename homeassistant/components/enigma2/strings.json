@@ -11,6 +11,14 @@
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "host": "The hostname or address of the device.",
+          "port": "The port number of the OpenWebif instance (default 80 for HTTP and 443 for HTTPS).",
+          "ssl": "Use HTTPS to connect to OpenWebIf.",
+          "username": "The username to connect with (if configured).",
+          "password": "The password to connect with (if configured).",
+          "verify_ssl": "Whether to verify the TLS certificate of the device."
         }
       }
     },
@@ -35,7 +43,9 @@
           "use_channel_icon": "Show channel icon as media image"
         },
         "data_description": {
-          "deep_standby": "Turn off the device to Deep Standby (shutdown) instead of standby mode."
+          "deep_standby": "Turn off the device to Deep Standby (shutdown) instead of standby mode.",
+          "source_bouquet": "The bouquet from which the channels are listed in the sources list.",
+          "use_channel_icon": "Show the channel icon as the media image."
         }
       }
     }
