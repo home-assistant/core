@@ -11,7 +11,11 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "discovery_requires_supervisor": "Discovery requires the supervisor.",
       "not_zwave_device": "Discovered device is not a Z-Wave device.",
-      "not_zwave_js_addon": "Discovered add-on is not the official Z-Wave add-on."
+      "not_zwave_js_addon": "Discovered add-on is not the official Z-Wave add-on.",
+      "backup_failed": "Failed to backup network.",
+      "restore_failed": "Failed to restore network.",
+      "reset_failed": "Failed to reset controller.",
+      "usb_ports_failed": "Failed to get USB devices."
     },
     "error": {
       "addon_start_failed": "Failed to start the Z-Wave add-on. Check the configuration.",
@@ -22,7 +26,9 @@
     "flow_title": "{name}",
     "progress": {
       "install_addon": "Please wait while the Z-Wave add-on installation finishes. This can take several minutes.",
-      "start_addon": "Please wait while the Z-Wave add-on start completes. This may take some seconds."
+      "start_addon": "Please wait while the Z-Wave add-on start completes. This may take some seconds.",
+      "backup_nvm": "Please wait while the network backup completes.",
+      "restore_nvm": "Please wait while the network restore completes."
     },
     "step": {
       "configure_addon": {
@@ -214,9 +220,15 @@
       "addon_install_failed": "[%key:component::zwave_js::config::abort::addon_install_failed%]",
       "addon_set_config_failed": "[%key:component::zwave_js::config::abort::addon_set_config_failed%]",
       "addon_start_failed": "[%key:component::zwave_js::config::abort::addon_start_failed%]",
+      "addon_stop_failed": "Failed to stop the Z-Wave add-on.",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "different_device": "The connected USB device is not the same as previously configured for this config entry. Please instead create a new config entry for the new device."
+      "different_device": "The connected USB device is not the same as previously configured for this config entry. Please instead create a new config entry for the new device.",
+      "addon_required": "The Z-Wave migration flow requires the integration to be configured using the Z-Wave Supervisor add-on. You can still use the Backup and Restore buttons to migrate your network manually.",
+      "backup_failed": "[%key:component::zwave_js::config::abort::backup_failed%]",
+      "restore_failed": "[%key:component::zwave_js::config::abort::restore_failed%]",
+      "reset_failed": "[%key:component::zwave_js::config::abort::reset_failed%]",
+      "usb_ports_failed": "[%key:component::zwave_js::config::abort::usb_ports_failed%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -225,9 +237,27 @@
     },
     "progress": {
       "install_addon": "[%key:component::zwave_js::config::progress::install_addon%]",
-      "start_addon": "[%key:component::zwave_js::config::progress::start_addon%]"
+      "start_addon": "[%key:component::zwave_js::config::progress::start_addon%]",
+      "backup_nvm": "[%key:component::zwave_js::config::progress::backup_nvm%]",
+      "restore_nvm": "[%key:component::zwave_js::config::progress::restore_nvm%]"
     },
     "step": {
+      "init": {
+        "title": "Migrate or re-configure",
+        "description": "Are you migrating to a new controller or re-configuring the current controller?",
+        "menu_options": {
+          "intent_migrate": "Migrate to a new controller",
+          "intent_reconfigure": "Re-configure the current controller"
+        }
+      },
+      "intent_migrate": {
+        "title": "[%key:component::zwave_js::options::step::init::menu_options::intent_migrate%]",
+        "description": "Before setting up your new controller, your old controller needs to be reset. A backup will be performed first.\n\nDo you wish to continue?"
+      },
+      "instruct_unplug": {
+        "title": "Unplug your old controller",
+        "description": "Backup saved to \"{file_path}\"\n\nYour old controller has been reset. If the hardware is no longer needed, you can now unplug it.\n\nPlease make sure your new controller is plugged in before continuing."
+      },
       "configure_addon": {
         "data": {
           "emulate_hardware": "Emulate Hardware",
@@ -240,6 +270,12 @@
         },
         "description": "[%key:component::zwave_js::config::step::configure_addon::description%]",
         "title": "[%key:component::zwave_js::config::step::configure_addon::title%]"
+      },
+      "choose_serial_port": {
+        "data": {
+          "usb_path": "[%key:common::config_flow::data::usb_path%]"
+        },
+        "title": "Select your Z-Wave device"
       },
       "install_addon": {
         "title": "[%key:component::zwave_js::config::step::install_addon::title%]"

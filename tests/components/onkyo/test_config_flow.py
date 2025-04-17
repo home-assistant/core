@@ -1,12 +1,10 @@
 """Test Onkyo config flow."""
 
-from typing import Any
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.onkyo import InputSource
 from homeassistant.components.onkyo.config_flow import OnkyoConfigFlow
 from homeassistant.components.onkyo.const import (
     DOMAIN,
@@ -534,89 +532,6 @@ async def test_reconfigure_new_device(hass: HomeAssistant) -> None:
 
     # unique id should remain unchanged
     assert config_entry.unique_id == old_unique_id
-
-
-@pytest.mark.parametrize(
-    ("user_input", "exception", "error"),
-    [
-        (
-            # No host, and thus no host reachable
-            {
-                CONF_HOST: None,
-                "receiver_max_volume": 100,
-                "max_volume": 100,
-                "sources": {},
-            },
-            None,
-            "cannot_connect",
-        ),
-        (
-            # No host, and connection exception
-            {
-                CONF_HOST: None,
-                "receiver_max_volume": 100,
-                "max_volume": 100,
-                "sources": {},
-            },
-            Exception(),
-            "cannot_connect",
-        ),
-    ],
-)
-async def test_import_fail(
-    hass: HomeAssistant,
-    user_input: dict[str, Any],
-    exception: Exception,
-    error: str,
-) -> None:
-    """Test import flow failed."""
-
-    with patch(
-        "homeassistant.components.onkyo.receiver.pyeiscp.Connection.discover",
-        side_effect=exception,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=user_input
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == error
-
-
-async def test_import_success(
-    hass: HomeAssistant,
-) -> None:
-    """Test import flow succeeded."""
-    info = create_receiver_info(1)
-
-    user_input = {
-        CONF_HOST: info.host,
-        "receiver_max_volume": 80,
-        "max_volume": 110,
-        "sources": {
-            InputSource("00"): "Auxiliary",
-            InputSource("01"): "Video",
-        },
-        "info": info,
-    }
-
-    import_result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=user_input
-    )
-    await hass.async_block_till_done()
-
-    assert import_result["type"] is FlowResultType.CREATE_ENTRY
-    assert import_result["data"] == {"host": "host 1"}
-    assert import_result["options"] == {
-        "volume_resolution": 80,
-        "max_volume": 100,
-        "input_sources": {
-            "00": "Auxiliary",
-            "01": "Video",
-        },
-        "listening_modes": {},
-    }
 
 
 @pytest.mark.parametrize(

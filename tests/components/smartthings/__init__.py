@@ -3,7 +3,7 @@
 from typing import Any
 from unittest.mock import AsyncMock
 
-from pysmartthings.models import Attribute, Capability, DeviceEvent
+from pysmartthings import Attribute, Capability, DeviceEvent
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.smartthings.const import MAIN

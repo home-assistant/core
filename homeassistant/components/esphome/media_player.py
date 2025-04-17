@@ -41,6 +41,8 @@ from .entity import (
 from .enum_mapper import EsphomeEnumMapper
 from .ffmpeg_proxy import async_create_proxy_url
 
+PARALLEL_UPDATES = 0
+
 _LOGGER = logging.getLogger(__name__)
 
 _STATES: EsphomeEnumMapper[EspMediaPlayerState, MediaPlayerState] = EsphomeEnumMapper(

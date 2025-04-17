@@ -852,7 +852,7 @@ def hass_client_no_auth(
 @pytest.fixture
 def current_request() -> Generator[MagicMock]:
     """Mock current request."""
-    with patch("homeassistant.components.http.current_request") as mock_request_context:
+    with patch("homeassistant.helpers.http.current_request") as mock_request_context:
         mocked_request = make_mocked_request(
             "GET",
             "/some/request",

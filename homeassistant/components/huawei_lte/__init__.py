@@ -88,7 +88,7 @@ from .utils import get_device_macs, non_verifying_requests_session
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=10)
+SCAN_INTERVAL = timedelta(seconds=30)
 
 NOTIFY_SCHEMA = vol.Any(
     None,

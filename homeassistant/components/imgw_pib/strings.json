@@ -4,6 +4,9 @@
       "user": {
         "data": {
           "station_id": "Hydrological station"
+        },
+        "data_description": {
+          "station_id": "Select a hydrological station from the list."
         }
       }
     },

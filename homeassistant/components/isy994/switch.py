@@ -157,7 +157,7 @@ class ISYEnableSwitchEntity(ISYAuxControlEntity, SwitchEntity):
             device_info=device_info,
         )
         self._attr_name = description.name  # Override super
-        self._change_handler: EventListener = None
+        self._change_handler: EventListener | None = None
 
     # pylint: disable-next=hass-missing-super-call
     async def async_added_to_hass(self) -> None:

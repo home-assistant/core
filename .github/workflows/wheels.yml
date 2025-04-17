@@ -36,7 +36,7 @@ jobs:
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v5.4.0
+        uses: actions/setup-python@v5.5.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -159,7 +159,7 @@ jobs:
           sed -i "/uv/d" requirements_diff.txt
 
       - name: Build wheels
-        uses: home-assistant/wheels@2025.02.0
+        uses: home-assistant/wheels@2025.03.0
         with:
           abi: ${{ matrix.abi }}
           tag: musllinux_1_2
@@ -219,7 +219,7 @@ jobs:
           sed -i "/uv/d" requirements_diff.txt
 
       - name: Build wheels
-        uses: home-assistant/wheels@2025.02.0
+        uses: home-assistant/wheels@2025.03.0
         with:
           abi: ${{ matrix.abi }}
           tag: musllinux_1_2

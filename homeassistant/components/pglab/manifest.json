@@ -9,6 +9,6 @@
   "loggers": ["pglab"],
   "mqtt": ["pglab/discovery/#"],
   "quality_scale": "bronze",
-  "requirements": ["pypglab==0.0.3"],
+  "requirements": ["pypglab==0.0.5"],
   "single_config_entry": true
 }

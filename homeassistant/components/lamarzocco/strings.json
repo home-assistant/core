@@ -146,7 +146,7 @@
       "prebrew_infusion_select": {
         "name": "Prebrew/-infusion mode",
         "state": {
-          "disabled": "Disabled",
+          "disabled": "[%key:common::state::disabled%]",
           "prebrew": "Prebrew",
           "prebrew_enabled": "Prebrew",
           "preinfusion": "Preinfusion"

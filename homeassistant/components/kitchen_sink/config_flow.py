@@ -147,7 +147,7 @@ class SubentryFlowHandler(ConfigSubentryFlow):
         if user_input is not None:
             title = user_input.pop("name")
             return self.async_update_and_abort(
-                self._get_reconfigure_entry(),
+                self._get_entry(),
                 self._get_reconfigure_subentry(),
                 data=user_input,
                 title=title,

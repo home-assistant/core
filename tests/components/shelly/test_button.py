@@ -27,10 +27,10 @@ async def test_block_button(
     entity_id = "button.test_name_reboot"
 
     # reboot button
-    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNKNOWN
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC_reboot"
 
     await hass.services.async_call(
@@ -54,10 +54,10 @@ async def test_rpc_button(
     entity_id = "button.test_name_reboot"
 
     # reboot button
-    state = hass.states.get(entity_id)
+    assert (state := hass.states.get(entity_id))
     assert state == snapshot(name=f"{entity_id}-state")
 
-    entry = entity_registry.async_get(entity_id)
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry == snapshot(name=f"{entity_id}-entry")
 
     await hass.services.async_call(
@@ -74,11 +74,11 @@ async def test_rpc_button(
     [
         (
             DeviceConnectionError,
-            "Device communication error occurred while calling the entity button.test_name_reboot action for Test name device",
+            "Device communication error occurred while calling action for button.test_name_reboot of Test name",
         ),
         (
             RpcCallError(999),
-            "RPC call error occurred while calling the entity button.test_name_reboot action for Test name device",
+            "RPC call error occurred while calling action for button.test_name_reboot of Test name",
         ),
     ],
 )
@@ -212,11 +212,11 @@ async def test_rpc_blu_trv_button(
     [
         (
             DeviceConnectionError,
-            "Device communication error occurred while calling the entity button.trv_name_calibrate action for Test name device",
+            "Device communication error occurred while calling action for button.trv_name_calibrate of Test name",
         ),
         (
             RpcCallError(999),
-            "RPC call error occurred while calling the entity button.trv_name_calibrate action for Test name device",
+            "RPC call error occurred while calling action for button.trv_name_calibrate of Test name",
         ),
     ],
 )

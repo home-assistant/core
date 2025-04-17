@@ -509,6 +509,15 @@ def aeotec_smart_switch_7_state_fixture() -> NodeDataType:
     )
 
 
+@pytest.fixture(name="zcombo_smoke_co_alarm_state")
+def zcombo_smoke_co_alarm_state_fixture() -> NodeDataType:
+    """Load node with fixture data for ZCombo-G Smoke/CO Alarm."""
+    return cast(
+        NodeDataType,
+        load_json_object_fixture("zcombo_smoke_co_alarm_state.json", DOMAIN),
+    )
+
+
 # model fixtures
 
 
@@ -554,6 +563,7 @@ def mock_client_fixture(
         client.connect = AsyncMock(side_effect=connect)
         client.listen = AsyncMock(side_effect=listen)
         client.disconnect = AsyncMock(side_effect=disconnect)
+        client.disable_server_logging = MagicMock()
         client.driver = Driver(
             client, copy.deepcopy(controller_state), copy.deepcopy(log_config_state)
         )
@@ -1250,5 +1260,15 @@ def aeotec_smart_switch_7_fixture(
 ) -> Node:
     """Load node for Aeotec Smart Switch 7."""
     node = Node(client, aeotec_smart_switch_7_state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="zcombo_smoke_co_alarm")
+def zcombo_smoke_co_alarm_fixture(
+    client: MagicMock, zcombo_smoke_co_alarm_state: NodeDataType
+) -> Node:
+    """Load node for ZCombo-G Smoke/CO Alarm."""
+    node = Node(client, zcombo_smoke_co_alarm_state)
     client.driver.controller.nodes[node.node_id] = node
     return node

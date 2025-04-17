@@ -4,15 +4,15 @@ import json
 from typing import Any
 from unittest.mock import Mock, patch
 
-from homematicip.aio.class_maps import (
+from homematicip.async_home import AsyncHome
+from homematicip.base.homematicip_object import HomeMaticIPObject
+from homematicip.class_maps import (
     TYPE_CLASS_MAP,
     TYPE_GROUP_MAP,
     TYPE_SECURITY_EVENT_MAP,
 )
-from homematicip.aio.device import AsyncDevice
-from homematicip.aio.group import AsyncGroup
-from homematicip.aio.home import AsyncHome
-from homematicip.base.homematicip_object import HomeMaticIPObject
+from homematicip.device import Device
+from homematicip.group import Group
 from homematicip.home import Home
 
 from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
@@ -49,9 +49,9 @@ def get_and_check_entity_basics(
     hmip_device = mock_hap.hmip_device_by_entity_id.get(entity_id)
 
     if hmip_device:
-        if isinstance(hmip_device, AsyncDevice):
+        if isinstance(hmip_device, Device):
             assert ha_state.attributes[ATTR_IS_GROUP] is False
-        elif isinstance(hmip_device, AsyncGroup):
+        elif isinstance(hmip_device, Group):
             assert ha_state.attributes[ATTR_IS_GROUP]
     return ha_state, hmip_device
 
@@ -174,12 +174,12 @@ class HomeTemplate(Home):
     def init_home(self):
         """Init template with json."""
         self.init_json_state = self._cleanup_json(json.loads(FIXTURE_DATA))
-        self.update_home(json_state=self.init_json_state, clearConfig=True)
+        self.update_home(json_state=self.init_json_state, clear_config=True)
         return self
 
-    def update_home(self, json_state, clearConfig: bool = False):
+    def update_home(self, json_state, clear_config: bool = False):
         """Update home and ensure that mocks are created."""
-        result = super().update_home(json_state, clearConfig)
+        result = super().update_home(json_state, clear_config)
         self._generate_mocks()
         return result
 
@@ -193,7 +193,7 @@ class HomeTemplate(Home):
 
         self.groups = [_get_mock(group) for group in self.groups]
 
-    def download_configuration(self):
+    async def download_configuration_async(self):
         """Return the initial json config."""
         return self.init_json_state
 

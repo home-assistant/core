@@ -96,20 +96,20 @@
       "pmsx003_caqi_level": {
         "name": "PMSx003 common air quality index level",
         "state": {
-          "very_low": "Very low",
-          "low": "Low",
-          "medium": "Medium",
-          "high": "High",
-          "very_high": "Very high"
+          "very_low": "[%key:common::state::very_low%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]",
+          "very_high": "[%key:common::state::very_high%]"
         },
         "state_attributes": {
           "options": {
             "state": {
-              "very_low": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::very_low%]",
-              "low": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::low%]",
-              "medium": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::medium%]",
-              "high": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::high%]",
-              "very_high": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::very_high%]"
+              "very_low": "[%key:common::state::very_low%]",
+              "low": "[%key:common::state::low%]",
+              "medium": "[%key:common::state::medium%]",
+              "high": "[%key:common::state::high%]",
+              "very_high": "[%key:common::state::very_high%]"
             }
           }
         }
@@ -129,20 +129,20 @@
       "sds011_caqi_level": {
         "name": "SDS011 common air quality index level",
         "state": {
-          "very_low": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::very_low%]",
-          "low": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::low%]",
-          "medium": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::medium%]",
-          "high": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::high%]",
-          "very_high": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::very_high%]"
+          "very_low": "[%key:common::state::very_low%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]",
+          "very_high": "[%key:common::state::very_high%]"
         },
         "state_attributes": {
           "options": {
             "state": {
-              "very_low": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::very_low%]",
-              "low": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::low%]",
-              "medium": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::medium%]",
-              "high": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::high%]",
-              "very_high": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::very_high%]"
+              "very_low": "[%key:common::state::very_low%]",
+              "low": "[%key:common::state::low%]",
+              "medium": "[%key:common::state::medium%]",
+              "high": "[%key:common::state::high%]",
+              "very_high": "[%key:common::state::very_high%]"
             }
           }
         }
@@ -165,20 +165,20 @@
       "sps30_caqi_level": {
         "name": "SPS30 common air quality index level",
         "state": {
-          "very_low": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::very_low%]",
-          "low": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::low%]",
-          "medium": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::medium%]",
-          "high": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::high%]",
-          "very_high": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::very_high%]"
+          "very_low": "[%key:common::state::very_low%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]",
+          "very_high": "[%key:common::state::very_high%]"
         },
         "state_attributes": {
           "options": {
             "state": {
-              "very_low": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::very_low%]",
-              "low": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::low%]",
-              "medium": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::medium%]",
-              "high": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::high%]",
-              "very_high": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::very_high%]"
+              "very_low": "[%key:common::state::very_low%]",
+              "low": "[%key:common::state::low%]",
+              "medium": "[%key:common::state::medium%]",
+              "high": "[%key:common::state::high%]",
+              "very_high": "[%key:common::state::very_high%]"
             }
           }
         }

@@ -25,6 +25,7 @@ from aioshelly.const import (
     MODEL_VALVE,
     MODEL_VINTAGE_V2,
     MODEL_WALL_DISPLAY,
+    MODEL_WALL_DISPLAY_X2,
 )
 
 from homeassistant.components.number import NumberMode
@@ -208,7 +209,7 @@ KELVIN_MIN_VALUE_COLOR: Final = 3000
 BLOCK_WRONG_SLEEP_PERIOD = 21600
 BLOCK_EXPECTED_SLEEP_PERIOD = 43200
 
-UPTIME_DEVIATION: Final = 5
+UPTIME_DEVIATION: Final = 60
 
 # Time to wait before reloading entry upon device config change
 ENTRY_RELOAD_COOLDOWN = 60
@@ -245,6 +246,7 @@ GEN2_RELEASE_URL = "https://shelly-api-docs.shelly.cloud/gen2/changelog/"
 GEN2_BETA_RELEASE_URL = f"{GEN2_RELEASE_URL}#unreleased"
 DEVICES_WITHOUT_FIRMWARE_CHANGELOG = (
     MODEL_WALL_DISPLAY,
+    MODEL_WALL_DISPLAY_X2,
     MODEL_MOTION,
     MODEL_MOTION_2,
     MODEL_VALVE,
@@ -275,3 +277,7 @@ ROLE_TO_DEVICE_CLASS_MAP = {
     "current_humidity": SensorDeviceClass.HUMIDITY,
     "current_temperature": SensorDeviceClass.TEMPERATURE,
 }
+
+# We want to check only the first 5 KB of the script if it contains emitEvent()
+# so that the integration startup remains fast.
+MAX_SCRIPT_SIZE = 5120
