@@ -48,6 +48,7 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    _verify_ssl: bool = True
     _api_type: APIType = APIType.CLOUD
     _user: str | None = None
     _server: str = DEFAULT_SERVER
@@ -56,28 +57,53 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_validate_input(self, user_input: dict[str, Any]) -> dict[str, Any]:
         """Validate user credentials."""
         user_input[CONF_API_TYPE] = self._api_type
+        user_input[CONF_VERIFY_SSL] = self._verify_ssl
+        gateway_id = None
 
-        client = self._create_cloud_client(
-            username=user_input[CONF_USERNAME],
-            password=user_input[CONF_PASSWORD],
-            server=SUPPORTED_SERVERS[user_input[CONF_HUB]],
-        )
-        await client.login(register_event_listener=False)
-
-        #  For Local API, we create and activate a local token
         if self._api_type == APIType.LOCAL:
-            user_input[CONF_TOKEN] = await self._create_local_api_token(
-                cloud_client=client,
-                host=user_input[CONF_HOST],
+            # Local API validation using provided token
+            session = async_create_clientsession(
+                self.hass, verify_ssl=user_input[CONF_VERIFY_SSL]
+            )
+            local_client = OverkizClient(
+                username="",  # Not used for local token auth
+                password="",  # Not used for local token auth
+                token=user_input[CONF_TOKEN],
+                session=session,
+                server=generate_local_server(host=user_input[CONF_HOST]),
                 verify_ssl=user_input[CONF_VERIFY_SSL],
             )
+            await local_client.login(register_event_listener=False)
 
-        # Set main gateway id as unique id
-        if gateways := await client.get_gateways():
-            for gateway in gateways:
-                if is_overkiz_gateway(gateway.id):
-                    gateway_id = gateway.id
-                    await self.async_set_unique_id(gateway_id, raise_on_progress=False)
+            # Set main gateway id as unique id using local client
+            if gateways := await local_client.get_gateways():
+                for gateway in gateways:
+                    if is_overkiz_gateway(gateway.id):
+                        gateway_id = gateway.id
+                        break  # Found the main gateway
+
+        else:  # APIType.CLOUD
+            client = self._create_cloud_client(
+                username=user_input[CONF_USERNAME],
+                password=user_input[CONF_PASSWORD],
+                server=SUPPORTED_SERVERS[user_input[CONF_HUB]],
+            )
+            await client.login(register_event_listener=False)
+
+            # Set main gateway id as unique id using cloud client
+            if gateways := await client.get_gateways():
+                for gateway in gateways:
+                    if is_overkiz_gateway(gateway.id):
+                        gateway_id = gateway.id
+                        break  # Found the main gateway
+
+        # Set unique_id if found
+        if gateway_id:
+            await self.async_set_unique_id(gateway_id, raise_on_progress=False)
+        else:
+            # Handle case where no suitable gateway is found, maybe raise an error?
+            # For now, logging a warning, but this might need specific error handling.
+            LOGGER.warning("Could not determine the main gateway ID")
 
         return user_input
 
@@ -211,17 +237,24 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input:
             self._host = user_input[CONF_HOST]
-            self._user = user_input[CONF_USERNAME]
-
-            # inherit the server from previous step
-            user_input[CONF_HUB] = self._server
+            # Combine user_input with existing data like CONF_HUB
+            data = {
+                CONF_HUB: self._server,
+                CONF_HOST: user_input[CONF_HOST],
+                CONF_TOKEN: user_input[CONF_TOKEN],
+                CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
+            }
 
             try:
-                user_input = await self.async_validate_input(user_input)
+                # Pass the combined data to validation
+                validated_data = await self.async_validate_input(data)
             except TooManyRequestsException:
                 errors["base"] = "too_many_requests"
+            # BadCredentialsException might map to invalid_token now
             except BadCredentialsException:
-                errors["base"] = "invalid_auth"
+                errors["base"] = (
+                    "invalid_auth"  # Keep same error key, string might need update
+                )
             except ClientConnectorCertificateError as exception:
                 errors["base"] = "certificate_verify_failed"
                 LOGGER.debug(exception)
@@ -233,12 +266,13 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
             except TooManyAttemptsBannedException:
                 errors["base"] = "too_many_attempts"
             except NotSuchTokenException:
-                errors["base"] = "no_such_token"
-            except DeveloperModeDisabled:
-                errors["base"] = "developer_mode_disabled"
+                # This error is relevant if the token is invalid/revoked
+                errors["base"] = "invalid_auth"  # Map to invalid_auth for consistency
+            # DeveloperModeDisabled is no longer relevant
+            # except DeveloperModeDisabled:
+            #     errors["base"] = "developer_mode_disabled"
             except UnknownUserException:
-                # Somfy Protect accounts are not supported since they don't use
-                # the Overkiz API server. Login will return unknown user.
+                # This shouldn't happen with token auth, but keep for safety
                 description_placeholders["unsupported_device"] = "Somfy Protect"
                 errors["base"] = "unsupported_hardware"
             except Exception:  # noqa: BLE001
@@ -246,29 +280,35 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
                 LOGGER.exception("Unknown error")
             else:
                 if self.source == SOURCE_REAUTH:
-                    self._abort_if_unique_id_mismatch(reason="reauth_wrong_account")
+                    # Check unique ID before updating
+                    current_entry = self._get_reauth_entry()
+                    if self.unique_id != current_entry.unique_id:
+                        return self.async_abort(reason="reauth_wrong_account")
 
                     return self.async_update_reload_and_abort(
-                        self._get_reauth_entry(), data_updates=user_input
+                        current_entry, data=validated_data
                     )
 
                 # Create new entry
-                self._abort_if_unique_id_configured()
+                # Unique ID should be set in async_validate_input now
+                self._abort_if_unique_id_configured(updates=validated_data)
 
                 return self.async_create_entry(
-                    title=user_input[CONF_HOST], data=user_input
+                    title=validated_data[CONF_HOST], data=validated_data
                 )
+
+        # Pre-fill data if available (e.g., from discovery or reauth)
+        data_schema = vol.Schema(
+            {
+                vol.Required(CONF_HOST, default=self._host): str,
+                vol.Required(CONF_TOKEN): str,
+                vol.Required(CONF_VERIFY_SSL, default=True): bool,
+            }
+        )
 
         return self.async_show_form(
             step_id="local",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_HOST, default=self._host): str,
-                    vol.Required(CONF_USERNAME, default=self._user): str,
-                    vol.Required(CONF_PASSWORD): str,
-                    vol.Required(CONF_VERIFY_SSL, default=True): bool,
-                }
-            ),
+            data_schema=data_schema,
             description_placeholders=description_placeholders,
             errors=errors,
         )
@@ -320,17 +360,18 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reauth."""
-        # overkiz entries always have unique IDs
         self.context["title_placeholders"] = {"gateway_id": cast(str, self.unique_id)}
 
-        self._user = entry_data[CONF_USERNAME]
         self._server = entry_data[CONF_HUB]
         self._api_type = entry_data.get(CONF_API_TYPE, APIType.CLOUD)
 
         if self._api_type == APIType.LOCAL:
             self._host = entry_data[CONF_HOST]
+            return await self.async_step_local()
 
-        return await self.async_step_user(dict(entry_data))
+        # Cloud API reauth
+        self._user = entry_data[CONF_USERNAME]
+        return await self.async_step_cloud()
 
     def _create_cloud_client(
         self, username: str, password: str, server: OverkizServer
@@ -339,45 +380,3 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
         return OverkizClient(
             username=username, password=password, server=server, session=session
         )
-
-    async def _create_local_api_token(
-        self, cloud_client: OverkizClient, host: str, verify_ssl: bool
-    ) -> str:
-        """Create local API token."""
-        # Create session on Somfy cloud server to generate an access token for local API
-        gateways = await cloud_client.get_gateways()
-
-        gateway_id = ""
-        for gateway in gateways:
-            # Overkiz can return multiple gateways, but we only can generate a token
-            # for the main gateway.
-            if is_overkiz_gateway(gateway.id):
-                gateway_id = gateway.id
-
-        developer_mode = await cloud_client.get_setup_option(
-            f"developerMode-{gateway_id}"
-        )
-
-        if developer_mode is None:
-            raise DeveloperModeDisabled
-
-        token = await cloud_client.generate_local_token(gateway_id)
-        await cloud_client.activate_local_token(
-            gateway_id=gateway_id, token=token, label="Home Assistant/local"
-        )
-
-        session = async_create_clientsession(self.hass, verify_ssl=verify_ssl)
-
-        # Local API
-        local_client = OverkizClient(
-            username="",
-            password="",
-            token=token,
-            session=session,
-            server=generate_local_server(host=host),
-            verify_ssl=verify_ssl,
-        )
-
-        await local_client.login()
-
-        return token
