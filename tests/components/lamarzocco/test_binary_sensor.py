@@ -18,7 +18,6 @@ from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_plat
 
 async def test_binary_sensors(
     hass: HomeAssistant,
-    mock_lamarzocco: MagicMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
