@@ -142,7 +142,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle reauthorization flow when encryption was removed."""
         if user_input is not None:
             self._noise_psk = None
-            return await self._async_get_entry_or_resolve_conflict()
+            return await self.async_step_validated_connection()
 
         return self.async_show_form(
             step_id="reauth_encryption_removed_confirm",
@@ -244,7 +244,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             return await self.async_step_authenticate()
 
         self._password = ""
-        return await self._async_get_entry_or_resolve_conflict()
+        return await self.async_step_validated_connection()
 
     async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None
@@ -438,15 +438,6 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             options=self._async_make_default_options(),
         )
 
-    async def _async_get_entry_or_resolve_conflict(self) -> ConfigFlowResult:
-        """Return the entry or resolve a conflict."""
-        if self.source not in (SOURCE_REAUTH, SOURCE_RECONFIGURE):
-            for entry in self._async_current_entries(include_ignore=False):
-                if entry.data.get(CONF_DEVICE_NAME) == self._device_name:
-                    self._entry_with_name_conflict = entry
-                    return await self.async_step_name_conflict()
-        return await self._async_get_entry()
-
     @callback
     def _async_make_config_data(self) -> dict[str, Any]:
         """Return config data for the entry."""
@@ -466,7 +457,8 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             CONF_ALLOW_SERVICE_CALLS: DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
         }
 
-    async def _async_get_entry(self) -> ConfigFlowResult:
+    async def async_step_validated_connection(self) -> ConfigFlowResult:
+        """Handle validated connection."""
         config_data = self._async_make_config_data()
         if self.source == SOURCE_RECONFIGURE:
             assert self.unique_id is not None
@@ -481,10 +473,10 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
                 "expected_mac": format_mac(self._reconfig_entry.unique_id),
             }
             for entry in self._async_current_entries(include_ignore=False):
-                if entry.data.get(CONF_DEVICE_NAME) == self._device_name:
-                    if entry.entry_id == self._reconfig_entry.entry_id:
-                        self._entry_with_name_conflict = self._reconfig_entry
-                        return await self.async_step_name_conflict()
+                if (
+                    entry.entry_id != self._reconfig_entry.entry_id
+                    and entry.data.get(CONF_DEVICE_NAME) == self._device_name
+                ):
                     return self.async_abort(
                         reason="reconfigure_name_conflict",
                         description_placeholders={
@@ -493,6 +485,9 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
                         },
                     )
             if self._reconfig_entry.unique_id != format_mac(self.unique_id):
+                if self._reconfig_entry.data[CONF_DEVICE_NAME] == self._device_name:
+                    self._entry_with_name_conflict = self._reconfig_entry
+                    return await self.async_step_name_conflict()
                 return self.async_abort(
                     reason="reconfigure_unique_id_changed",
                     description_placeholders={
@@ -508,7 +503,10 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_update_reload_and_abort(
                 self._reauth_entry, data=self._reauth_entry.data | config_data
             )
-
+        for entry in self._async_current_entries(include_ignore=False):
+            if entry.data.get(CONF_DEVICE_NAME) == self._device_name:
+                self._entry_with_name_conflict = entry
+                return await self.async_step_name_conflict()
         assert self._name is not None
         return self.async_create_entry(
             title=self._name,
@@ -544,7 +542,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             error = await self.try_login()
             if error:
                 return await self.async_step_authenticate(error=error)
-            return await self._async_get_entry_or_resolve_conflict()
+            return await self.async_step_validated_connection()
 
         errors = {}
         if error is not None:
