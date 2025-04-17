@@ -1,0 +1,50 @@
+# serializer version: 1
+# name: test_images[image.gs012345_none-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.gs012345_none',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'lamarzocco',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'machine_image',
+    'unique_id': 'GS012345_machine_image',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_images[image.gs012345_none-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': '3bf333ad1cc559d51d5093bf74c518ac6921623d80b624af8fdac6f58cc6c3d5',
+      'entity_picture': '/api/image_proxy/image.gs012345_none?token=3bf333ad1cc559d51d5093bf74c518ac6921623d80b624af8fdac6f58cc6c3d5',
+      'friendly_name': 'GS012345 None',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.gs012345_none',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-04-17T12:13:50.895080+00:00',
+  })
+# ---
