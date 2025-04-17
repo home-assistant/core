@@ -169,7 +169,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'prebrew_time_off',
-    'unique_id': 'MR012345_prebrew_time_off',
+    'unique_id': 'MR012345_prebrew_off',
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
@@ -227,7 +227,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'prebrew_time_on',
-    'unique_id': 'MR012345_prebrew_time_on',
+    'unique_id': 'MR012345_prebrew_on',
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
@@ -285,7 +285,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'preinfusion_time',
-    'unique_id': 'MR012345_preinfusion_time',
+    'unique_id': 'MR012345_preinfusion_off',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---

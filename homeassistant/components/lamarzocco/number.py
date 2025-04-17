@@ -78,7 +78,7 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
         native_value_fn=lambda machine: machine.schedule.smart_wake_up_sleep.smart_stand_by_minutes,
     ),
     LaMarzoccoNumberEntityDescription(
-        key="preinfusion_time",
+        key="preinfusion_off",
         translation_key="preinfusion_time",
         device_class=NumberDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -115,7 +115,7 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
         ),
     ),
     LaMarzoccoNumberEntityDescription(
-        key="prebrew_time_on",
+        key="prebrew_on",
         translation_key="prebrew_time_on",
         device_class=NumberDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
@@ -154,7 +154,7 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
         ),
     ),
     LaMarzoccoNumberEntityDescription(
-        key="prebrew_time_off",
+        key="prebrew_off",
         translation_key="prebrew_time_off",
         device_class=NumberDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
