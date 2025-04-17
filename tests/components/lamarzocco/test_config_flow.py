@@ -59,6 +59,7 @@ async def __do_sucessful_machine_selection_step(
         **USER_INPUT,
         CONF_TOKEN: None,
     }
+    assert result3["result"].unique_id == "GS012345"
 
 
 async def test_form(
