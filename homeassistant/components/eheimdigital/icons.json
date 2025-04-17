@@ -30,6 +30,14 @@
           "no_error": "mdi:check-circle"
         }
       }
+    },
+    "time": {
+      "day_start_time": {
+        "default": "mdi:weather-sunny"
+      },
+      "night_start_time": {
+        "default": "mdi:moon-waning-crescent"
+      }
     }
   }
 }

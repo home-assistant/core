@@ -79,6 +79,14 @@
           "air_in_filter": "Air in filter"
         }
       }
+    },
+    "time": {
+      "day_start_time": {
+        "name": "Day start time"
+      },
+      "night_start_time": {
+        "name": "Night start time"
+      }
     }
   }
 }
