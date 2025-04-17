@@ -14,11 +14,7 @@ from pyportainer import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryError,
-    ConfigEntryNotReady,
-)
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .coordinator import PortainerCoordinator
@@ -33,8 +29,6 @@ type PortainerConfigEntry = ConfigEntry[PortainerData]
 
 async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) -> bool:
     """Set up Portainer from a config entry."""
-    if CONF_API_KEY not in entry.data:
-        raise ConfigEntryAuthFailed
 
     _LOGGER.debug("Setting up Portainer API: %s", entry.data[CONF_HOST])
 

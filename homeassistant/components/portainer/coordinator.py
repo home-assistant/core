@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING
 
@@ -19,9 +20,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=60)
 
 if TYPE_CHECKING:
     from . import PortainerConfigEntry
@@ -32,12 +35,12 @@ class PortainerCoordinatorData:
     """Data class for Portainer Coordinator."""
 
     id: int
-    name: str
+    name: str | None
     endpoint: Endpoint
-    containers: dict[str, DockerContainer]
+    containers: dict[str, DockerContainer] | None
 
 
-class PortainerCoordinator(DataUpdateCoordinator[dict[str, dict]]):
+class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorData]]):
     """Data Update Coordinator for Portainer."""
 
     portainer: Portainer
@@ -60,7 +63,7 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[str, dict]]):
         self.config_entry = config_entry
         self.endpoints: dict[int, PortainerCoordinatorData] = {}
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> dict[int, PortainerCoordinatorData]:
         """Fetch data from Portainer API."""
         _LOGGER.debug(
             "Fetching data from Portainer API: %s", self.config_entry.data[CONF_HOST]
@@ -98,8 +101,12 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[str, dict]]):
                 id=endpoint.id,
                 name=endpoint.name,
                 endpoint=endpoint,
-                containers={container.id: container for container in containers},
+                containers={
+                    str(container.id): container
+                    for container in containers
+                    if container.id is not None
+                },  # This will be addressed in a later release of pyportainer to be explicit in a str and not str | None
             )
 
         self.endpoints = mapped_endpoints
-        return self.endpoints
+        return mapped_endpoints

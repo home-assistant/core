@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import logging
 from typing import Any
+from urllib.parse import urlparse
 
+from aiohttp import CookieJar
 from pyportainer import (
     Portainer,
     PortainerAuthenticationError,
@@ -14,10 +16,10 @@ from pyportainer import (
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import CONF_DEFAULT_PORT, DOMAIN
 
@@ -27,6 +29,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_HOST): str,
         vol.Optional(CONF_PORT, default=CONF_DEFAULT_PORT): int,
         vol.Required(CONF_API_KEY): str,
+        vol.Required(CONF_VERIFY_SSL, default=True): bool,
     }
 )
 
@@ -36,10 +39,16 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str
 
     api_url = f"{data[CONF_HOST]}:{data[CONF_PORT]}"
 
+    session = async_create_clientsession(
+        hass,
+        data[CONF_VERIFY_SSL],
+        cookie_jar=CookieJar(unsafe=True),
+    )
+
     client = Portainer(
         api_url=api_url,
         api_key=data[CONF_API_KEY],
-        session=async_get_clientsession(hass),
+        session=session,
     )
 
     try:
@@ -70,7 +79,7 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str
         )
 
     return {
-        "title": api_url,
+        "unique_id": urlparse(api_url).hostname,
         "portainer": portainer_data,
     }
 
@@ -78,11 +87,11 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str
 class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Portainer."""
 
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
+
         errors: dict[str, str] = {}
         if user_input is not None:
             try:
@@ -97,9 +106,9 @@ class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(api["title"])
+                await self.async_set_unique_id(api["unique_id"])
                 self._abort_if_unique_id_configured()
-                return self.async_create_entry(title=api["title"], data=user_input)
+                return self.async_create_entry(title=api["unique_id"], data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
