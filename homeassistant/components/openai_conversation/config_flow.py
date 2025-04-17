@@ -154,6 +154,8 @@ class OpenAIOptionsFlow(OptionsFlow):
 
         if user_input is not None:
             if user_input[CONF_RECOMMENDED] == self.last_rendered_recommended:
+                if not user_input.get(CONF_LLM_HASS_API):
+                    user_input.pop(CONF_LLM_HASS_API, None)
                 if user_input.get(CONF_CHAT_MODEL) in UNSUPPORTED_MODELS:
                     errors[CONF_CHAT_MODEL] = "model_not_supported"
 
