@@ -128,6 +128,14 @@
         }
       }
     },
+    "sensor": {
+      "coffee_boiler_ready_time": {
+        "name": "Coffee boiler ready time"
+      },
+      "steam_boiler_ready_time": {
+        "name": "Steam boiler ready time"
+      }
+    },
     "switch": {
       "auto_on_off": {
         "name": "Auto on/off ({id})"
