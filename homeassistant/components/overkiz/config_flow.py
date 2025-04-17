@@ -86,8 +86,7 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
         if gateways := await client.get_gateways():
             for gateway in gateways:
                 if is_overkiz_gateway(gateway.id):
-                    gateway_id = gateway.id
-                    await self.async_set_unique_id(gateway_id, raise_on_progress=False)
+                    await self.async_set_unique_id(gateway.id, raise_on_progress=False)
                     break
 
         return user_input
