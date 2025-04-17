@@ -17,6 +17,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import ATTR_NAME, CONF_API_KEY, CONF_ID, CONF_NAME, UnitOfTime
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -63,10 +64,14 @@ def setup_platform(
     sensors = []
     for travel_time in config[CONF_TRAVEL_TIMES]:
         name = travel_time.get(CONF_NAME) or travel_time.get(CONF_ID)
-        sensors.append(
-            WashingtonStateTravelTimeSensor(
-                name, config.get(CONF_API_KEY), travel_time.get(CONF_ID)
+        api_key = config.get(CONF_API_KEY)
+        if not api_key or not isinstance(api_key, str):
+            raise ConfigEntryError(
+                f"wsdot requires an {CONF_API_KEY}. "
+                "See https://www.home-assistant.io/integrations/wsdot#setup"
             )
+        sensors.append(
+            WashingtonStateTravelTimeSensor(name, api_key, travel_time.get(CONF_ID))
         )
 
     add_entities(sensors, True)
@@ -84,7 +89,7 @@ class WashingtonStateTransportSensor(SensorEntity):
 
     def __init__(self, name: str, access_code: str) -> None:
         """Initialize the sensor."""
-        self._data = {}
+        self._data: dict[str, str | int | float | datetime] = {}
         self._access_code = access_code
         self._name = name
         self._state = None
@@ -137,9 +142,11 @@ class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
                 ATTR_TRAVEL_TIME_ID,
             ):
                 attrs[key] = self._data.get(key)
-            attrs[ATTR_TIME_UPDATED] = _parse_wsdot_timestamp(
-                self._data.get(ATTR_TIME_UPDATED)
-            )
+            time_updated = self._data.get(ATTR_TIME_UPDATED)
+            if isinstance(time_updated, str):
+                attrs[ATTR_TIME_UPDATED] = _parse_wsdot_timestamp(time_updated)
+            else:
+                attrs[ATTR_TIME_UPDATED] = time_updated
             return attrs
         return None
 
@@ -149,7 +156,10 @@ def _parse_wsdot_timestamp(timestamp: str) -> datetime | None:
     if not timestamp:
         return None
     # ex: Date(1485040200000-0800)
-    milliseconds, tzone = re.search(r"Date\((\d+)([+-]\d\d)\d\d\)", timestamp).groups()
+    timestamp_parts = re.search(r"Date\((\d+)([+-]\d\d)\d\d\)", timestamp)
+    if timestamp_parts is None:
+        return None
+    milliseconds, tzone = timestamp_parts.groups()
     return datetime.fromtimestamp(
         int(milliseconds) / 1000, tz=timezone(timedelta(hours=int(tzone)))
     )
