@@ -458,13 +458,16 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         if self.source == SOURCE_RECONFIGURE:
             assert self.unique_id is not None
             assert self._reconfig_entry.unique_id is not None
+            assert self._host is not None
+            assert self._device_name is not None
             if self._reconfig_entry.unique_id != format_mac(self.unique_id):
                 return self.async_abort(
                     reason="reconfigure_unique_id_changed",
                     description_placeholders={
                         "name": self._reconfig_entry.title,
+                        "host": self._host,
                         "expected_mac": format_mac(self._reconfig_entry.unique_id),
-                        "unexpected_device_name": self._device_name or "",
+                        "unexpected_device_name": self._device_name,
                         "unexpected_mac": format_mac(self.unique_id),
                     },
                 )
