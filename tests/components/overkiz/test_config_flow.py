@@ -40,6 +40,7 @@ TEST_GATEWAY_ID3 = "SOMFY_PROTECT-v0NT53occUBPyuJRzx59kalW1hFfzimN"
 
 TEST_HOST = "gateway-1234-5678-9123.local:8443"
 TEST_HOST2 = "192.168.11.104:8443"
+TEST_TOKEN = "1234123412341234"
 
 MOCK_GATEWAY_RESPONSE = [Mock(id=TEST_GATEWAY_ID)]
 MOCK_GATEWAY2_RESPONSE = [Mock(id=TEST_GATEWAY_ID3), Mock(id=TEST_GATEWAY_ID2)]
@@ -184,7 +185,7 @@ async def test_form_local_happy_flow(
             result["flow_id"],
             {
                 "host": "gateway-1234-5678-1234.local:8443",
-                "token": "1234123412341234",
+                "token": TEST_TOKEN,
                 "verify_ssl": True,
             },
         )
@@ -195,7 +196,7 @@ async def test_form_local_happy_flow(
     assert result4["title"] == "gateway-1234-5678-1234.local:8443"
     assert result4["data"] == {
         "host": "gateway-1234-5678-1234.local:8443",
-        "token": "1234123412341234",
+        "token": TEST_TOKEN,
         "verify_ssl": True,
         "hub": TEST_SERVER,
         "api_type": "local",
@@ -303,7 +304,7 @@ async def test_form_invalid_auth_local(
             result["flow_id"],
             {
                 "host": TEST_HOST,
-                "token": "1234123412341234",
+                "token": TEST_TOKEN,
                 "verify_ssl": True,
             },
         )
@@ -438,14 +439,14 @@ async def test_local_abort_on_duplicate_entry(
         login=AsyncMock(return_value=True),
         get_gateways=AsyncMock(return_value=MOCK_GATEWAY_RESPONSE),
         get_setup_option=AsyncMock(return_value=True),
-        generate_local_token=AsyncMock(return_value="1234123412341234"),
+        generate_local_token=AsyncMock(return_value=TEST_TOKEN),
         activate_local_token=AsyncMock(return_value=True),
     ):
         result4 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 "host": TEST_HOST,
-                "token": "1234123412341234",
+                "token": TEST_TOKEN,
                 "verify_ssl": True,
             },
         )
@@ -852,7 +853,7 @@ async def test_local_zeroconf_flow(
             result["flow_id"],
             {
                 "host": "gateway-1234-5678-9123.local:8443",
-                "token": "1234123412341234",
+                "token": TEST_TOKEN,
                 "verify_ssl": False,
             },
         )
@@ -861,7 +862,7 @@ async def test_local_zeroconf_flow(
     assert result4["title"] == "gateway-1234-5678-9123.local:8443"
     assert result4["data"] == {
         "host": "gateway-1234-5678-9123.local:8443",
-        "token": "1234123412341234",
+        "token": TEST_TOKEN,
         "verify_ssl": False,
         "hub": TEST_SERVER,
         "api_type": "local",
