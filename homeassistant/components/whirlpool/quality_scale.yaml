@@ -7,12 +7,7 @@ rules:
   appropriate-polling: done
   brands: done
   common-modules: done
-  config-flow-test-coverage:
-    status: todo
-    comment: |
-      - Assert the unique_id in test_form
-      - Update test_form* test names and docstrings
-      - Make test_form_invalid_auth and test_reauth_flow_invalid_auth, and test_reauth_flow_auth_error finish in an happy flow
+  config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
   docs-actions:
