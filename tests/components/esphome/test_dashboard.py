@@ -6,10 +6,16 @@ from unittest.mock import patch
 from aioesphomeapi import DeviceInfo, InvalidAuthAPIError
 import pytest
 
-from homeassistant.components.esphome import CONF_NOISE_PSK, coordinator, dashboard
+from homeassistant.components.esphome import (
+    CONF_NOISE_PSK,
+    DOMAIN,
+    coordinator,
+    dashboard,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.setup import async_setup_component
 
 from . import VALID_NOISE_PSK
 
@@ -34,7 +40,6 @@ async def test_dashboard_storage(
 
 async def test_restore_dashboard_storage(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
     hass_storage: dict[str, Any],
 ) -> None:
     """Restore dashboard url and slug from storage."""
@@ -47,14 +52,13 @@ async def test_restore_dashboard_storage(
     with patch.object(
         dashboard, "async_get_or_create_dashboard_manager"
     ) as mock_get_or_create:
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
         assert mock_get_or_create.call_count == 1
 
 
 async def test_restore_dashboard_storage_end_to_end(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
     hass_storage: dict[str, Any],
 ) -> None:
     """Restore dashboard url and slug from storage."""
@@ -72,15 +76,13 @@ async def test_restore_dashboard_storage_end_to_end(
             "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI"
         ) as mock_dashboard_api,
     ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
-        assert mock_config_entry.state is ConfigEntryState.LOADED
         assert mock_dashboard_api.mock_calls[0][1][0] == "http://new-host:6052"
 
 
 async def test_restore_dashboard_storage_skipped_if_addon_uninstalled(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
     hass_storage: dict[str, Any],
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -103,27 +105,25 @@ async def test_restore_dashboard_storage_skipped_if_addon_uninstalled(
             return_value={},
         ),
     ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await async_setup_component(hass, "hassio", {})
         await hass.async_block_till_done()
-        assert mock_config_entry.state is ConfigEntryState.LOADED
-        await hass.async_block_till_done()  # wait for dashboard setup
+        await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
         assert "test-slug is no longer installed" in caplog.text
         assert not mock_dashboard_api.called
 
 
 async def test_setup_dashboard_fails(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
     hass_storage: dict[str, Any],
 ) -> None:
     """Test that nothing is stored on failed dashboard setup when there was no dashboard before."""
     with patch.object(
         coordinator.ESPHomeDashboardAPI, "get_devices", side_effect=TimeoutError
     ) as mock_get_devices:
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
         await dashboard.async_set_dashboard_info(hass, "test-slug", "test-host", 6052)
-        assert mock_config_entry.state is ConfigEntryState.LOADED
         assert mock_get_devices.call_count == 1
 
     # The dashboard addon might recover later so we still
