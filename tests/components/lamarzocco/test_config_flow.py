@@ -51,7 +51,6 @@ async def __do_sucessful_machine_selection_step(
         result2["flow_id"],
         {CONF_MACHINE: "GS012345"},
     )
-    await hass.async_block_till_done()
 
     assert result3["type"] is FlowResultType.CREATE_ENTRY
 
