@@ -330,8 +330,8 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
 
         if self._status.input_id is not None:
             for input_ in self._inputs:
-                # the input might not have an id => try to match on the stream_url/url instead
-                # we have to use both because stream_url/url do not match in all cases
+                # the input might not have an id => also try to match on the stream_url/url
+                # we have to use both because neither matches all the time
                 if (
                     input_.id == self._status.input_id
                     or input_.url == self._status.stream_url
