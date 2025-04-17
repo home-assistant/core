@@ -1903,10 +1903,10 @@ async def test_reconfig_attempt_to_change_mac_aborts(
 
 
 @pytest.mark.usefixtures("mock_zeroconf", "mock_setup_entry")
-async def test_reconfig_name_conflict_other_entry_for_mac(
+async def test_reconfig_mac_used_by_other_entry(
     hass: HomeAssistant, mock_client: APIClient
 ) -> None:
-    """Test reconfig name conflict when there is already another entry for the mac."""
+    """Test reconfig when there is another entry for the mac."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={

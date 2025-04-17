@@ -142,7 +142,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle reauthorization flow when encryption was removed."""
         if user_input is not None:
             self._noise_psk = None
-            return await self.async_step_validated_connection()
+            return await self._async_validated_connection()
 
         return self.async_show_form(
             step_id="reauth_encryption_removed_confirm",
@@ -244,7 +244,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             return await self.async_step_authenticate()
 
         self._password = ""
-        return await self.async_step_validated_connection()
+        return await self._async_validated_connection()
 
     async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None
@@ -457,80 +457,101 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             CONF_DEVICE_NAME: self._device_name,
         }
 
-    async def async_step_validated_connection(self) -> ConfigFlowResult:
+    async def _async_validated_connection(self) -> ConfigFlowResult:
         """Handle validated connection."""
-        assert self.unique_id is not None
-        assert self._host is not None
-        assert self._device_name is not None
-
         if self.source == SOURCE_RECONFIGURE:
-            assert self._reconfig_entry.unique_id is not None
-            placeholders = {
-                "name": self._reconfig_entry.data.get(
-                    CONF_DEVICE_NAME, self._reconfig_entry.title
-                ),
-                "host": self._host,
-                "expected_mac": format_mac(self._reconfig_entry.unique_id),
-            }
-            await self._async_validate_mac_abort_configured(
-                format_mac(self.unique_id), self._host, self._port
-            )
-            for entry in self._async_current_entries(include_ignore=False):
-                if (
-                    entry.entry_id != self._reconfig_entry.entry_id
-                    and entry.data.get(CONF_DEVICE_NAME) == self._device_name
-                ):
-                    return self.async_abort(
-                        reason="reconfigure_name_conflict",
-                        description_placeholders={
-                            **placeholders,
-                            "existing_title": entry.title,
-                        },
-                    )
-            if self._reconfig_entry.unique_id != format_mac(self.unique_id):
-                if self._reconfig_entry.data[CONF_DEVICE_NAME] == self._device_name:
-                    self._entry_with_name_conflict = self._reconfig_entry
-                    return await self.async_step_name_conflict()
-                return self.async_abort(
-                    reason="reconfigure_unique_id_changed",
-                    description_placeholders={
-                        **placeholders,
-                        "unexpected_mac": format_mac(self.unique_id),
-                        "unexpected_device_name": self._device_name,
-                    },
-                )
-            return self.async_update_reload_and_abort(
-                self._reconfig_entry,
-                data=self._reconfig_entry.data | self._async_make_config_data(),
-            )
+            return await self._async_reconfig_validated_connection()
         if self.source == SOURCE_REAUTH:
-            if self.unique_id != self._reauth_entry.unique_id:
-                # Reauth was triggered a while ago, and since than
-                # a new device resides at the same IP address.
-                await self._async_validate_mac_abort_configured(
-                    format_mac(self.unique_id), self._host, self._port
-                )
-                return self.async_abort(
-                    reason="reauth_unique_id_changed",
-                    description_placeholders={
-                        "name": self._reauth_entry.data.get(
-                            CONF_DEVICE_NAME, self._reauth_entry.title
-                        ),
-                        "host": self._host,
-                        "expected_mac": format_mac(self._reauth_entry.unique_id),
-                        "unexpected_mac": format_mac(self.unique_id),
-                        "unexpected_device_name": self._device_name,
-                    },
-                )
-            return self.async_update_reload_and_abort(
-                self._reauth_entry,
-                data=self._reauth_entry.data | self._async_make_config_data(),
-            )
+            return await self._async_reauth_validated_connection()
         for entry in self._async_current_entries(include_ignore=False):
             if entry.data.get(CONF_DEVICE_NAME) == self._device_name:
                 self._entry_with_name_conflict = entry
                 return await self.async_step_name_conflict()
         return self._async_create_entry()
+
+    async def _async_reauth_validated_connection(self) -> ConfigFlowResult:
+        """Handle reauth validated connection."""
+        assert self._reauth_entry.unique_id is not None
+        if self.unique_id == self._reauth_entry.unique_id:
+            return self.async_update_reload_and_abort(
+                self._reauth_entry,
+                data=self._reauth_entry.data | self._async_make_config_data(),
+            )
+        assert self._host is not None
+        self._abort_if_unique_id_configured(
+            updates={
+                CONF_HOST: self._host,
+                CONF_PORT: self._port,
+                CONF_NOISE_PSK: self._noise_psk,
+            }
+        )
+        # Reauth was triggered a while ago, and since than
+        # a new device resides at the same IP address.
+        assert self._device_name is not None
+        return self.async_abort(
+            reason="reauth_unique_id_changed",
+            description_placeholders={
+                "name": self._reauth_entry.data.get(
+                    CONF_DEVICE_NAME, self._reauth_entry.title
+                ),
+                "host": self._host,
+                "expected_mac": format_mac(self._reauth_entry.unique_id),
+                "unexpected_mac": format_mac(self.unique_id),
+                "unexpected_device_name": self._device_name,
+            },
+        )
+
+    async def _async_reconfig_validated_connection(self) -> ConfigFlowResult:
+        """Handle reconfigure validated connection."""
+        assert self._reconfig_entry.unique_id is not None
+        assert self._host is not None
+        assert self._device_name is not None
+        if not (
+            unique_id_matches := (self.unique_id == self._reconfig_entry.unique_id)
+        ):
+            self._abort_if_unique_id_configured(
+                updates={
+                    CONF_HOST: self._host,
+                    CONF_PORT: self._port,
+                    CONF_NOISE_PSK: self._noise_psk,
+                }
+            )
+        for entry in self._async_current_entries(include_ignore=False):
+            if (
+                entry.entry_id != self._reconfig_entry.entry_id
+                and entry.data.get(CONF_DEVICE_NAME) == self._device_name
+            ):
+                return self.async_abort(
+                    reason="reconfigure_name_conflict",
+                    description_placeholders={
+                        "name": self._reconfig_entry.data.get(
+                            CONF_DEVICE_NAME, self._reconfig_entry.title
+                        ),
+                        "host": self._host,
+                        "expected_mac": format_mac(self._reconfig_entry.unique_id),
+                        "existing_title": entry.title,
+                    },
+                )
+        if unique_id_matches:
+            return self.async_update_reload_and_abort(
+                self._reconfig_entry,
+                data=self._reconfig_entry.data | self._async_make_config_data(),
+            )
+        if self._reconfig_entry.data[CONF_DEVICE_NAME] == self._device_name:
+            self._entry_with_name_conflict = self._reconfig_entry
+            return await self.async_step_name_conflict()
+        return self.async_abort(
+            reason="reconfigure_unique_id_changed",
+            description_placeholders={
+                "name": self._reconfig_entry.data.get(
+                    CONF_DEVICE_NAME, self._reconfig_entry.title
+                ),
+                "host": self._host,
+                "expected_mac": format_mac(self._reconfig_entry.unique_id),
+                "unexpected_mac": format_mac(self.unique_id),
+                "unexpected_device_name": self._device_name,
+            },
+        )
 
     async def async_step_encryption_key(
         self, user_input: dict[str, Any] | None = None
@@ -560,7 +581,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             error = await self.try_login()
             if error:
                 return await self.async_step_authenticate(error=error)
-            return await self.async_step_validated_connection()
+            return await self._async_validated_connection()
 
         errors = {}
         if error is not None:
