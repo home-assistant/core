@@ -105,9 +105,8 @@ class PortainerEndpointSensor(PortainerEndpointEntity, BinarySensorEntity):
     def __init__(
         self,
         coordinator: PortainerCoordinator,
-        entry: PortainerConfigEntry,
         entity_description: PortainerBinarySensorEntityDescription,
-        device_info: PortainerCoordinatorData,
+        device_id: int,
     ) -> None:
         """Initialize Portainer endpoint binary sensor entity."""
         self.entity_description = entity_description
