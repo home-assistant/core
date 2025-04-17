@@ -49,7 +49,7 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
             device.name for device in device_entries if device.name is not None
         }
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> LibreHardwareMonitorData:
         try:
             lhm_data = await self._api.get_data()
         except LibreHardwareMonitorConnectionError as err:
@@ -75,13 +75,15 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
             False, raise_on_auth_failed, scheduled, raise_on_entry_error
         )
 
-    async def _async_handle_changes_in_devices(self, detected_devices: list[str]):
+    async def _async_handle_changes_in_devices(
+        self, detected_devices: list[str]
+    ) -> None:
         """Handle device changes by deleting devices from / adding devices to Home Assistant."""
         if self._previous_devices == set(detected_devices) or self.config_entry is None:
             return
 
         if self.data is None:
-            self._previous_devices = set(detected_devices)
+            self._previous_devices = set(detected_devices)  # type: ignore[unreachable]
             return
 
         if orphaned_devices := list(self._previous_devices - set(detected_devices)):
