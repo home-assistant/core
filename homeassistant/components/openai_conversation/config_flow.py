@@ -271,7 +271,7 @@ class OpenAIOptionsFlow(OptionsFlow):
         elif CONF_REASONING_EFFORT in options:
             options.pop(CONF_REASONING_EFFORT)
 
-        if model in WEB_SEARCH_MODELS:
+        if model.startswith(tuple(WEB_SEARCH_MODELS)):
             step_schema.update(
                 {
                     vol.Optional(
