@@ -38,9 +38,13 @@ TYPE_AQI_PM25 = "aqi_pm25"
 TYPE_AQI_PM25_24H = "aqi_pm25_24h"
 TYPE_AQI_PM25_IN = "aqi_pm25_in"
 TYPE_AQI_PM25_IN_24H = "aqi_pm25_in_24h"
+TYPE_AQI_PM25_AQIN = "aqi_pm25_in_aqin"
+TYPE_AQI_PM25_24H_AQIN = "aqi_pm25_in_24h_aqin"
 TYPE_BAROMABSIN = "baromabsin"
 TYPE_BAROMRELIN = "baromrelin"
 TYPE_CO2 = "co2"
+TYPE_CO2_IN_AQIN = "co2_in_aqin"
+TYPE_CO2_IN_24H_AQIN = "co2_in_24h_aqin"
 TYPE_DAILYRAININ = "dailyrainin"
 TYPE_DEWPOINT = "dewPoint"
 TYPE_EVENTRAININ = "eventrainin"
@@ -65,10 +69,16 @@ TYPE_LASTLIGHTNING_DISTANCE = "lightning_distance"
 TYPE_LASTLIGHTNING = "lightning_time"
 TYPE_MAXDAILYGUST = "maxdailygust"
 TYPE_MONTHLYRAININ = "monthlyrainin"
+TYPE_PM_IN_HUMIDITY_AQIN = "pm_in_humidity_aqin"
+TYPE_PM_IN_TEMP_AQIN = "pm_in_temp_aqin"
+TYPE_PM10_IN_AQIN = "pm10_in_aqin"
+TYPE_PM10_IN_24H_AQIN = "pm10_in_24h_aqin"
 TYPE_PM25 = "pm25"
 TYPE_PM25_24H = "pm25_24h"
 TYPE_PM25_IN = "pm25_in"
+TYPE_PM25_IN_AQIN = "pm25_in_aqin"
 TYPE_PM25_IN_24H = "pm25_in_24h"
+TYPE_PM25_IN_24H_AQIN = "pm25_in_24h_aqin"
 TYPE_SOILHUM1 = "soilhum1"
 TYPE_SOILHUM10 = "soilhum10"
 TYPE_SOILHUM2 = "soilhum2"
@@ -145,6 +155,17 @@ SENSOR_DESCRIPTIONS = (
         device_class=SensorDeviceClass.AQI,
     ),
     SensorEntityDescription(
+        key=TYPE_AQI_PM25_AQIN,
+        translation_key="pm25_indoor_aqi_aqin",
+        device_class=SensorDeviceClass.AQI,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=TYPE_AQI_PM25_24H_AQIN,
+        translation_key="pm25_indoor_aqi_24h_average_aqin",
+        device_class=SensorDeviceClass.AQI,
+    ),
+    SensorEntityDescription(
         key=TYPE_BAROMABSIN,
         translation_key="absolute_pressure",
         native_unit_of_measurement=UnitOfPressure.INHG,
@@ -163,6 +184,19 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         device_class=SensorDeviceClass.CO2,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=TYPE_CO2_IN_AQIN,
+        translation_key="co2_indoor_aqin",
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        device_class=SensorDeviceClass.CO2,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=TYPE_CO2_IN_24H_AQIN,
+        translation_key="co2_indoor_24h_average_aqin",
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        device_class=SensorDeviceClass.CO2,
     ),
     SensorEntityDescription(
         key=TYPE_DAILYRAININ,
@@ -325,6 +359,33 @@ SENSOR_DESCRIPTIONS = (
         state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
+        key=TYPE_PM_IN_HUMIDITY_AQIN,
+        translation_key="pm_in_humidity_aqin",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=TYPE_PM_IN_TEMP_AQIN,
+        translation_key="pm_in_temperature_aqin",
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=TYPE_PM10_IN_AQIN,
+        translation_key="pm10_indoor_aqin",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        device_class=SensorDeviceClass.PM10,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=TYPE_PM10_IN_24H_AQIN,
+        translation_key="pm10_indoor_24h_aqinaverage_aqin",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        device_class=SensorDeviceClass.PM10,
+    ),
+    SensorEntityDescription(
         key=TYPE_PM25_24H,
         translation_key="pm25_24h_average",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
@@ -348,6 +409,19 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM25,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=TYPE_PM25_IN_AQIN,
+        translation_key="pm25_indoor_aqin",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        device_class=SensorDeviceClass.PM25,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=TYPE_PM25_IN_24H_AQIN,
+        translation_key="pm25_indoor_24h_average_aqin",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        device_class=SensorDeviceClass.PM25,
     ),
     SensorEntityDescription(
         key=TYPE_SOILHUM10,

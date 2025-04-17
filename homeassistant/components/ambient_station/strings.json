@@ -97,6 +97,12 @@
       "co2_battery": {
         "name": "Carbon dioxide battery"
       },
+      "co2_indoor_aqin": {
+        "name": "Carbon dioxide PPM indoor (AQIN)"
+      },
+      "co2_indoor_24h_average_aqin": {
+        "name": "Carbon dioxide PPM indoor 24 hour average (AQIN)"
+      },
       "lightning_detector_battery": {
         "name": "Lightning detector battery"
       },
@@ -111,6 +117,24 @@
       },
       "leak_detector_4": {
         "name": "Leak detector 4"
+      },
+      "pm_in_humidity_aqin": {
+        "name": "PM indoor humidity (AQIN)"
+      },
+      "pm_in_temperature_aqin": {
+        "name": "PM indoor temperature (AQIN)"
+      },
+      "pm10_indoor_aqin": {
+        "name": "PM10 indoor (AQIN)"
+      },
+      "pm10_indoor_24h_average_aqin": {
+        "name": "PM10 indoor 24 hour average (AQIN)"
+      },
+      "pm25_indoor_aqin": {
+        "name": "PM2.5 indoor (AQIN)"
+      },
+      "pm25_indoor_24h_average_aqin": {
+        "name": "PM2.5 indoor 24 hour average (AQIN)"
       },
       "pm25_indoor_battery": {
         "name": "PM25 indoor battery"
@@ -164,6 +188,12 @@
       },
       "pm25_indoor_aqi_24h_average": {
         "name": "PM2.5 indoor AQI"
+      },
+      "pm25_indoor_aqi_aqin": {
+        "name": "PM2.5 indoor AQI (AQIN)"
+      },
+      "pm25_indoor_aqi_24h_average_aqin": {
+        "name": "PM2.5 indoor AQI 24 hour average (AQIN)"
       },
       "absolute_pressure": {
         "name": "Absolute pressure"
