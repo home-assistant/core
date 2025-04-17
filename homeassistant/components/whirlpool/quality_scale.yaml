@@ -70,7 +70,9 @@ rules:
   docs-use-cases: todo
   dynamic-devices: todo
   entity-category: done
-  entity-device-class: done
+  entity-device-class:
+    status: todo
+    comment: The "unknown" state should not be part of the enum for the dispense level sensor.
   entity-disabled-by-default: done
   entity-translations: done
   exception-translations: todo
