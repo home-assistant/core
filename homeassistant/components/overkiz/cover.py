@@ -115,7 +115,7 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         stop_tilt_command=OverkizCommand.STOP,
     ),
     # Needs override to support very specific tilt commands (rts:ExteriorVenetianBlindRTSComponent)
-    # uiClass is VenetianBlind
+    # uiClass is ExteriorVenetianBlind
     OverkizCoverDescription(
         key=UIWidget.UP_DOWN_EXTERIOR_VENETIAN_BLIND,
         device_class=CoverDeviceClass.BLIND,
