@@ -179,21 +179,27 @@ async def test_form_local_happy_flow(
         "pyoverkiz.client.OverkizClient",
         login=AsyncMock(return_value=True),
         get_gateways=AsyncMock(return_value=MOCK_GATEWAY_RESPONSE),
-        get_setup_option=AsyncMock(return_value=True),
-        generate_local_token=AsyncMock(return_value="1234123412341234"),
-        activate_local_token=AsyncMock(return_value=True),
     ):
-        await hass.config_entries.flow.async_configure(
+        result4 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "username": TEST_EMAIL,
-                "password": TEST_PASSWORD,
                 "host": "gateway-1234-5678-1234.local:8443",
+                "token": "1234123412341234",
+                "verify_ssl": True,
             },
         )
 
     await hass.async_block_till_done()
 
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
+    assert result4["title"] == "gateway-1234-5678-1234.local:8443"
+    assert result4["data"] == {
+        "host": "gateway-1234-5678-1234.local:8443",
+        "token": "1234123412341234",
+        "verify_ssl": True,
+        "hub": TEST_SERVER,
+        "api_type": "local",
+    }
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -262,7 +268,7 @@ async def test_form_invalid_auth_cloud(
         (MaintenanceException, "server_in_maintenance"),
         (TooManyAttemptsBannedException, "too_many_attempts"),
         (UnknownUserException, "unsupported_hardware"),
-        (NotSuchTokenException, "no_such_token"),
+        (NotSuchTokenException, "invalid_auth"),
         (Exception, "unknown"),
     ],
 )
@@ -297,8 +303,7 @@ async def test_form_invalid_auth_local(
             result["flow_id"],
             {
                 "host": TEST_HOST,
-                "username": TEST_EMAIL,
-                "password": TEST_PASSWORD,
+                "token": "1234123412341234",
                 "verify_ssl": True,
             },
         )
@@ -307,52 +312,6 @@ async def test_form_invalid_auth_local(
 
     assert result4["type"] is FlowResultType.FORM
     assert result4["errors"] == {"base": error}
-
-
-async def test_form_local_developer_mode_disabled(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
-    """Test we get the form."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {"hub": TEST_SERVER},
-    )
-
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["step_id"] == "local_or_cloud"
-
-    result3 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {"api_type": "local"},
-    )
-
-    assert result3["type"] is FlowResultType.FORM
-    assert result3["step_id"] == "local"
-
-    with patch.multiple(
-        "pyoverkiz.client.OverkizClient",
-        login=AsyncMock(return_value=True),
-        get_gateways=AsyncMock(return_value=MOCK_GATEWAY_RESPONSE),
-        get_setup_option=AsyncMock(return_value=None),
-    ):
-        result4 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "username": TEST_EMAIL,
-                "password": TEST_PASSWORD,
-                "host": "gateway-1234-5678-1234.local:8443",
-                "verify_ssl": True,
-            },
-        )
-
-    assert result4["type"] is FlowResultType.FORM
-    assert result4["errors"] == {"base": "developer_mode_disabled"}
 
 
 @pytest.mark.parametrize(
@@ -449,12 +408,7 @@ async def test_local_abort_on_duplicate_entry(
     MockConfigEntry(
         domain=DOMAIN,
         unique_id=TEST_GATEWAY_ID,
-        data={
-            "host": TEST_HOST,
-            "username": TEST_EMAIL,
-            "password": TEST_PASSWORD,
-            "hub": TEST_SERVER,
-        },
+        data={"host": TEST_HOST, "hub": TEST_SERVER, "token": "", "verify_ssl": True},
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -491,8 +445,7 @@ async def test_local_abort_on_duplicate_entry(
             result["flow_id"],
             {
                 "host": TEST_HOST,
-                "username": TEST_EMAIL,
-                "password": TEST_PASSWORD,
+                "token": "1234123412341234",
                 "verify_ssl": True,
             },
         )
@@ -647,10 +600,10 @@ async def test_local_reauth_success(hass: HomeAssistant) -> None:
         unique_id=TEST_GATEWAY_ID,
         version=2,
         data={
-            "username": TEST_EMAIL,
-            "password": TEST_PASSWORD,
-            "hub": TEST_SERVER,
             "host": TEST_HOST,
+            "token": "old_token",
+            "verify_ssl": True,
+            "hub": TEST_SERVER,
             "api_type": "local",
         },
     )
@@ -672,22 +625,21 @@ async def test_local_reauth_success(hass: HomeAssistant) -> None:
         "pyoverkiz.client.OverkizClient",
         login=AsyncMock(return_value=True),
         get_gateways=AsyncMock(return_value=MOCK_GATEWAY_RESPONSE),
-        get_setup_option=AsyncMock(return_value=True),
-        generate_local_token=AsyncMock(return_value="1234123412341234"),
-        activate_local_token=AsyncMock(return_value=True),
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={
-                "username": TEST_EMAIL,
-                "password": TEST_PASSWORD2,
+            {
+                "host": TEST_HOST,
+                "token": "new_token",
+                "verify_ssl": True,
             },
         )
 
         assert result3["type"] is FlowResultType.ABORT
         assert result3["reason"] == "reauth_successful"
-        assert mock_entry.data["username"] == TEST_EMAIL
-        assert mock_entry.data["password"] == TEST_PASSWORD2
+        assert mock_entry.data["host"] == TEST_HOST
+        assert mock_entry.data["token"] == "new_token"
+        assert mock_entry.data["verify_ssl"] is True
 
 
 async def test_local_reauth_wrong_account(hass: HomeAssistant) -> None:
@@ -698,10 +650,10 @@ async def test_local_reauth_wrong_account(hass: HomeAssistant) -> None:
         unique_id=TEST_GATEWAY_ID2,
         version=2,
         data={
-            "username": TEST_EMAIL,
-            "password": TEST_PASSWORD,
-            "hub": TEST_SERVER,
             "host": TEST_HOST,
+            "token": "old_token",
+            "verify_ssl": True,
+            "hub": TEST_SERVER,
             "api_type": "local",
         },
     )
@@ -722,15 +674,13 @@ async def test_local_reauth_wrong_account(hass: HomeAssistant) -> None:
         "pyoverkiz.client.OverkizClient",
         login=AsyncMock(return_value=True),
         get_gateways=AsyncMock(return_value=MOCK_GATEWAY_RESPONSE),
-        get_setup_option=AsyncMock(return_value=True),
-        generate_local_token=AsyncMock(return_value="1234123412341234"),
-        activate_local_token=AsyncMock(return_value=True),
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={
-                "username": TEST_EMAIL,
-                "password": TEST_PASSWORD2,
+            {
+                "host": TEST_HOST,
+                "token": "new_token",
+                "verify_ssl": True,
             },
         )
 
@@ -897,25 +847,24 @@ async def test_local_zeroconf_flow(
         "pyoverkiz.client.OverkizClient",
         login=AsyncMock(return_value=True),
         get_gateways=AsyncMock(return_value=MOCK_GATEWAY_RESPONSE),
-        get_setup_option=AsyncMock(return_value=True),
-        generate_local_token=AsyncMock(return_value="1234123412341234"),
-        activate_local_token=AsyncMock(return_value=True),
     ):
         result4 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"username": TEST_EMAIL, "password": TEST_PASSWORD, "verify_ssl": False},
+            {
+                "host": "gateway-1234-5678-9123.local:8443",
+                "token": "1234123412341234",
+                "verify_ssl": False,
+            },
         )
 
     assert result4["type"] is FlowResultType.CREATE_ENTRY
     assert result4["title"] == "gateway-1234-5678-9123.local:8443"
     assert result4["data"] == {
-        "username": TEST_EMAIL,
-        "password": TEST_PASSWORD,
-        "hub": TEST_SERVER,
         "host": "gateway-1234-5678-9123.local:8443",
-        "api_type": "local",
         "token": "1234123412341234",
         "verify_ssl": False,
+        "hub": TEST_SERVER,
+        "api_type": "local",
     }
 
     assert len(mock_setup_entry.mock_calls) == 1

@@ -31,16 +31,11 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import CONF_API_TYPE, CONF_HUB, DEFAULT_SERVER, DOMAIN, LOGGER
-
-
-class DeveloperModeDisabled(HomeAssistantError):
-    """Error to indicate Somfy Developer Mode is disabled."""
 
 
 class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -57,9 +52,9 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_validate_input(self, user_input: dict[str, Any]) -> dict[str, Any]:
         """Validate user credentials."""
         user_input[CONF_API_TYPE] = self._api_type
-        user_input[CONF_VERIFY_SSL] = self._verify_ssl
 
         if self._api_type == APIType.LOCAL:
+            user_input[CONF_VERIFY_SSL] = self._verify_ssl
             session = async_create_clientsession(
                 self.hass, verify_ssl=user_input[CONF_VERIFY_SSL]
             )
@@ -220,6 +215,7 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input:
             self._host = user_input[CONF_HOST]
             self._verify_ssl = user_input[CONF_VERIFY_SSL]
+            user_input[CONF_HUB] = self._server
 
             try:
                 user_input = await self.async_validate_input(user_input)
@@ -241,8 +237,6 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "server_in_maintenance"
             except TooManyAttemptsBannedException:
                 errors["base"] = "too_many_attempts"
-            except DeveloperModeDisabled:
-                errors["base"] = "developer_mode_disabled"
             except UnknownUserException:
                 # Somfy Protect accounts are not supported since they don't use
                 # the Overkiz API server. Login will return unknown user.
@@ -329,12 +323,12 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
         # Overkiz entries always have unique IDs
         self.context["title_placeholders"] = {"gateway_id": cast(str, self.unique_id)}
         self._api_type = entry_data.get(CONF_API_TYPE, APIType.CLOUD)
+        self._server = entry_data[CONF_HUB]
 
         if self._api_type == APIType.LOCAL:
             self._host = entry_data[CONF_HOST]
             self._verify_ssl = entry_data[CONF_VERIFY_SSL]
         else:
             self._user = entry_data[CONF_USERNAME]
-            self._server = entry_data[CONF_HUB]
 
         return await self.async_step_user(dict(entry_data))
