@@ -431,7 +431,12 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         await self.hass.config_entries.async_remove(
             self._entry_with_name_conflict.entry_id
         )
-        return self._async_get_entry()
+        assert self._name is not None
+        return self.async_create_entry(
+            title=self._name,
+            data=self._async_make_config_data(),
+            options=self._async_make_default_options(),
+        )
 
     async def _async_get_entry_or_resolve_conflict(self) -> ConfigFlowResult:
         """Return the entry or resolve a conflict."""
@@ -440,11 +445,12 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
                 if entry.data.get(CONF_DEVICE_NAME) == self._device_name:
                     self._entry_with_name_conflict = entry
                     return await self.async_step_name_conflict()
-        return self._async_get_entry()
+        return await self._async_get_entry()
 
     @callback
-    def _async_get_entry(self) -> ConfigFlowResult:
-        config_data = {
+    def _async_make_config_data(self) -> dict[str, Any]:
+        """Return config data for the entry."""
+        return {
             CONF_HOST: self._host,
             CONF_PORT: self._port,
             # The API uses protobuf, so empty string denotes absence
@@ -453,6 +459,15 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             CONF_DEVICE_NAME: self._device_name,
         }
 
+    @callback
+    def _async_make_default_options(self) -> dict[str, Any]:
+        """Return default options for the entry."""
+        return {
+            CONF_ALLOW_SERVICE_CALLS: DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
+        }
+
+    async def _async_get_entry(self) -> ConfigFlowResult:
+        config_data = self._async_make_config_data()
         if self.source == SOURCE_RECONFIGURE:
             assert self.unique_id is not None
             assert self._reconfig_entry.unique_id is not None
@@ -466,10 +481,10 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
                 "expected_mac": format_mac(self._reconfig_entry.unique_id),
             }
             for entry in self._async_current_entries(include_ignore=False):
-                if (
-                    entry.entry_id != self._reconfig_entry.entry_id
-                    and entry.data.get(CONF_DEVICE_NAME) == self._device_name
-                ):
+                if entry.data.get(CONF_DEVICE_NAME) == self._device_name:
+                    if entry.entry_id == self._reconfig_entry.entry_id:
+                        self._entry_with_name_conflict = self._reconfig_entry
+                        return await self.async_step_name_conflict()
                     return self.async_abort(
                         reason="reconfigure_name_conflict",
                         description_placeholders={
@@ -498,9 +513,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title=self._name,
             data=config_data,
-            options={
-                CONF_ALLOW_SERVICE_CALLS: DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
-            },
+            options=self._async_make_default_options(),
         )
 
     async def async_step_encryption_key(
