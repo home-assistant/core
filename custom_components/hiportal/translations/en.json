@@ -1,0 +1,14 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to HiPortal",
+        "description": "Enter your HiPortal credentials",
+        "data": {
+          "username": "Username",
+          "password": "Password"
+        }
+      }
+    }
+  }
+}
