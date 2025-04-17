@@ -6,7 +6,7 @@ from datetime import datetime, timedelta, timezone
 from http import HTTPStatus
 import logging
 import re
-from typing import Any, Final
+from typing import Any
 
 import requests
 import voluptuous as vol
@@ -23,25 +23,25 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_ACCESS_CODE: Final[str] = "AccessCode"
-ATTR_AVG_TIME: Final[str] = "AverageTime"
-ATTR_CURRENT_TIME: Final[str] = "CurrentTime"
-ATTR_DESCRIPTION: Final[str] = "Description"
-ATTR_TIME_UPDATED: Final[str] = "TimeUpdated"
-ATTR_TRAVEL_TIME_ID: Final[str] = "TravelTimeID"
+ATTR_ACCESS_CODE = "AccessCode"
+ATTR_AVG_TIME = "AverageTime"
+ATTR_CURRENT_TIME = "CurrentTime"
+ATTR_DESCRIPTION = "Description"
+ATTR_TIME_UPDATED = "TimeUpdated"
+ATTR_TRAVEL_TIME_ID = "TravelTimeID"
 
-ATTRIBUTION: Final[str] = "Data provided by WSDOT"
+ATTRIBUTION = "Data provided by WSDOT"
 
-CONF_TRAVEL_TIMES: Final[str] = "travel_time"
+CONF_TRAVEL_TIMES = "travel_time"
 
-ICON: Final[str] = "mdi:car"
+ICON = "mdi:car"
 
-RESOURCE: Final[str] = (
+RESOURCE = (
     "http://www.wsdot.wa.gov/Traffic/api/TravelTimes/"
     "TravelTimesREST.svc/GetTravelTimeAsJson"
 )
 
-SCAN_INTERVAL: Final[timedelta] = timedelta(minutes=3)
+SCAN_INTERVAL = timedelta(minutes=3)
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
@@ -106,7 +106,7 @@ class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
     _attr_attribution = ATTRIBUTION
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
 
-    def __init__(self, name, access_code: str, travel_time_id: str) -> None:
+    def __init__(self, name: str, access_code: str, travel_time_id: str) -> None:
         """Construct a travel time sensor."""
         self._travel_time_id = travel_time_id
         WashingtonStateTransportSensor.__init__(self, name, access_code)
