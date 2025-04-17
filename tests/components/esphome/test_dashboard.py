@@ -194,7 +194,7 @@ async def test_new_dashboard_fix_reauth(
     """Test config entries waiting for reauth are triggered."""
     mock_client.device_info.side_effect = (
         InvalidAuthAPIError,
-        DeviceInfo(uses_password=False, name="test"),
+        DeviceInfo(uses_password=False, name="test", mac_address="11:22:33:44:55:AA"),
     )
 
     with patch(
