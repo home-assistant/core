@@ -694,19 +694,6 @@ async def test_media_player_supported_features(
     assert state
     assert state.attributes["supported_features"] == expected_features
 
-    # remove pause capability from player, trigger subscription callback
-    # and check if the supported features got updated
-    music_assistant_client.players._players[mass_player_id].supported_features.remove(
-        PlayerFeature.PAUSE
-    )
-    await trigger_subscription_callback(
-        hass, music_assistant_client, EventType.PLAYER_CONFIG_UPDATED, mass_player_id
-    )
-    expected_features &= ~MediaPlayerEntityFeature.PAUSE
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.attributes["supported_features"] == expected_features
-
     # remove grouping capability from player, trigger subscription callback
     # and check if the supported features got updated
     music_assistant_client.players._players[mass_player_id].supported_features.remove(

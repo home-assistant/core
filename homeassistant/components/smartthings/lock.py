@@ -33,7 +33,7 @@ async def async_setup_entry(
     """Add locks for a config entry."""
     entry_data = entry.runtime_data
     async_add_entities(
-        SmartThingsLock(entry_data.client, device, entry_data.rooms, {Capability.LOCK})
+        SmartThingsLock(entry_data.client, device, {Capability.LOCK})
         for device in entry_data.devices.values()
         if Capability.LOCK in device.status[MAIN]
     )

@@ -75,6 +75,9 @@ class BluesoundConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by zeroconf discovery."""
+        # the player can have an ipv6 address, but the api is only available on ipv4
+        if discovery_info.ip_address.version != 4:
+            return self.async_abort(reason="no_ipv4_address")
         if discovery_info.port is not None:
             self._port = discovery_info.port
 

@@ -2,18 +2,19 @@
 
 from abc import abstractmethod
 from datetime import timedelta
-from typing import TypedDict, TypeVar, cast
+from typing import TypeVar
 
-from aiocomelit import (
+from aiocomelit.api import (
+    AlarmDataObject,
+    ComelitCommonApi,
     ComeliteSerialBridgeApi,
     ComelitSerialBridgeObject,
     ComelitVedoApi,
     ComelitVedoAreaObject,
     ComelitVedoZoneObject,
-    exceptions,
 )
-from aiocomelit.api import ComelitCommonApi
-from aiocomelit.const import ALARM_AREAS, ALARM_ZONES, BRIDGE, VEDO
+from aiocomelit.const import BRIDGE, VEDO
+from aiocomelit.exceptions import CannotAuthenticate, CannotConnect, CannotRetrieveData
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -21,16 +22,9 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import _LOGGER, DOMAIN
+from .const import _LOGGER, DOMAIN, SCAN_INTERVAL
 
 type ComelitConfigEntry = ConfigEntry[ComelitBaseCoordinator]
-
-
-class AlarmDataObject(TypedDict):
-    """TypedDict for Alarm data objects."""
-
-    alarm_areas: dict[int, ComelitVedoAreaObject]
-    alarm_zones: dict[int, ComelitVedoZoneObject]
 
 
 T = TypeVar(
@@ -59,7 +53,7 @@ class ComelitBaseCoordinator(DataUpdateCoordinator[T]):
             logger=_LOGGER,
             config_entry=entry,
             name=f"{DOMAIN}-{host}-coordinator",
-            update_interval=timedelta(seconds=5),
+            update_interval=timedelta(seconds=SCAN_INTERVAL),
         )
         device_registry = dr.async_get(self.hass)
         device_registry.async_get_or_create(
@@ -100,9 +94,9 @@ class ComelitBaseCoordinator(DataUpdateCoordinator[T]):
         try:
             await self.api.login()
             return await self._async_update_system_data()
-        except (exceptions.CannotConnect, exceptions.CannotRetrieveData) as err:
+        except (CannotConnect, CannotRetrieveData) as err:
             raise UpdateFailed(repr(err)) from err
-        except exceptions.CannotAuthenticate as err:
+        except CannotAuthenticate as err:
             raise ConfigEntryAuthFailed from err
 
     @abstractmethod
@@ -159,9 +153,4 @@ class ComelitVedoSystem(ComelitBaseCoordinator[AlarmDataObject]):
         self,
     ) -> AlarmDataObject:
         """Specific method for updating data."""
-        data = await self.api.get_all_areas_and_zones()
-
-        return AlarmDataObject(
-            alarm_areas=cast(dict[int, ComelitVedoAreaObject], data[ALARM_AREAS]),
-            alarm_zones=cast(dict[int, ComelitVedoZoneObject], data[ALARM_ZONES]),
-        )
+        return await self.api.get_all_areas_and_zones()

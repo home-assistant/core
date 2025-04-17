@@ -29,6 +29,8 @@ from homeassistant.util.enum import try_parse_enum
 from .entity import EsphomeEntity, platform_async_setup_entry
 from .enum_mapper import EsphomeEnumMapper
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,

@@ -24,6 +24,7 @@ from homeassistant.components.sensor import (
     async_rounded_state,
     async_update_suggested_units,
 )
+from homeassistant.components.sensor.const import STATE_CLASS_UNITS
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -2005,6 +2006,7 @@ async def test_non_numeric_device_class_with_unit_of_measurement(
         SensorDeviceClass.VOLUME,
         SensorDeviceClass.WATER,
         SensorDeviceClass.WEIGHT,
+        SensorDeviceClass.WIND_DIRECTION,
         SensorDeviceClass.WIND_SPEED,
     ],
 )
@@ -2032,6 +2034,37 @@ async def test_device_classes_with_invalid_unit_of_measurement(
         "is using native unit of measurement 'INVALID!' which is not a valid "
         f"unit for the device class ('{device_class}') it is using; "
         f"expected one of {units}"
+    ) in caplog.text
+
+
+@pytest.mark.parametrize(
+    "state_class",
+    [SensorStateClass.MEASUREMENT_ANGLE],
+)
+async def test_state_classes_with_invalid_unit_of_measurement(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    state_class: SensorStateClass,
+) -> None:
+    """Test error when unit of measurement is not valid for used state class."""
+    entity0 = MockSensor(
+        name="Test",
+        native_value="1.0",
+        state_class=state_class,
+        native_unit_of_measurement="INVALID!",
+    )
+    setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
+    units = {
+        str(unit) if unit else "no unit of measurement"
+        for unit in STATE_CLASS_UNITS.get(state_class, set())
+    }
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    assert (
+        f"Sensor sensor.test ({entity0.__class__}) is using native unit of "
+        "measurement 'INVALID!' which is not a valid unit "
+        f"for the state class ('{state_class}') it is using; expected one of {units};"
     ) in caplog.text
 
 
