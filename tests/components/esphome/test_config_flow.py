@@ -1780,10 +1780,10 @@ async def test_user_flow_name_conflict_overwrite(
 
 
 @pytest.mark.usefixtures("mock_zeroconf", "mock_setup_entry")
-async def test_reconfig_success_with_same_ip(
+async def test_reconfig_success_with_same_ip_new_name(
     hass: HomeAssistant, mock_client: APIClient
 ) -> None:
-    """Test reconfig initiation with same ip."""
+    """Test reconfig initiation with same ip and new name."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -1808,13 +1808,14 @@ async def test_reconfig_success_with_same_ip(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert entry.data[CONF_HOST] == "127.0.0.1"
+    assert entry.data[CONF_DEVICE_NAME] == "other"
 
 
 @pytest.mark.usefixtures("mock_zeroconf", "mock_setup_entry")
-async def test_reconfig_success_with_new_ip(
+async def test_reconfig_success_with_new_ip_new_name(
     hass: HomeAssistant, mock_client: APIClient
 ) -> None:
-    """Test reconfig initiation with new ip."""
+    """Test reconfig initiation with new ip and new name."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -1839,6 +1840,41 @@ async def test_reconfig_success_with_new_ip(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert entry.data[CONF_HOST] == "127.0.0.2"
+    assert entry.data[CONF_DEVICE_NAME] == "other"
+
+
+@pytest.mark.usefixtures("mock_zeroconf", "mock_setup_entry")
+async def test_reconfig_success_with_new_ip_same_name(
+    hass: HomeAssistant, mock_client: APIClient
+) -> None:
+    """Test reconfig initiation with new ip and same name."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 6053,
+            CONF_PASSWORD: "",
+            CONF_DEVICE_NAME: "test",
+            CONF_NOISE_PSK: VALID_NOISE_PSK,
+        },
+        unique_id="11:22:33:44:55:aa",
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    mock_client.device_info.return_value = DeviceInfo(
+        uses_password=False, name="test", mac_address="11:22:33:44:55:aa"
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6053}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_HOST] == "127.0.0.1"
+    assert entry.data[CONF_DEVICE_NAME] == "test"
+    assert entry.data[CONF_NOISE_PSK] == VALID_NOISE_PSK
 
 
 @pytest.mark.usefixtures("mock_zeroconf", "mock_setup_entry")
