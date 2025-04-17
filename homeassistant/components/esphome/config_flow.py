@@ -452,23 +452,38 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             CONF_NOISE_PSK: self._noise_psk or "",
             CONF_DEVICE_NAME: self._device_name,
         }
-        config_options = {
-            CONF_ALLOW_SERVICE_CALLS: DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
-        }
+
         if self.source == SOURCE_RECONFIGURE:
             assert self.unique_id is not None
             assert self._reconfig_entry.unique_id is not None
             assert self._host is not None
             assert self._device_name is not None
+            placeholders = {
+                "name": self._reconfig_entry.data.get(
+                    CONF_DEVICE_NAME, self._reconfig_entry.title
+                ),
+                "host": self._host,
+                "expected_mac": format_mac(self._reconfig_entry.unique_id),
+            }
+            for entry in self._async_current_entries(include_ignore=False):
+                if (
+                    entry.entry_id != self._reconfig_entry.entry_id
+                    and entry.data.get(CONF_DEVICE_NAME) == self._device_name
+                ):
+                    return self.async_abort(
+                        reason="reconfigure_name_conflict",
+                        description_placeholders={
+                            **placeholders,
+                            "existing_title": entry.title,
+                        },
+                    )
             if self._reconfig_entry.unique_id != format_mac(self.unique_id):
                 return self.async_abort(
                     reason="reconfigure_unique_id_changed",
                     description_placeholders={
-                        "name": self._reconfig_entry.title,
-                        "host": self._host,
-                        "expected_mac": format_mac(self._reconfig_entry.unique_id),
-                        "unexpected_device_name": self._device_name,
+                        **placeholders,
                         "unexpected_mac": format_mac(self.unique_id),
+                        "unexpected_device_name": self._device_name,
                     },
                 )
             return self.async_update_reload_and_abort(
@@ -483,7 +498,9 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title=self._name,
             data=config_data,
-            options=config_options,
+            options={
+                CONF_ALLOW_SERVICE_CALLS: DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
+            },
         )
 
     async def async_step_encryption_key(
