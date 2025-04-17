@@ -125,10 +125,6 @@ class PortainerEndpointSensor(PortainerEndpointEntity, BinarySensorEntity):
             return
 
         self._attr_is_on = self.entity_description.state_fn(self._device_info)
-        if self.entity_description.attributes_fn is not None:
-            self._attr_extra_state_attributes = self.entity_description.attributes_fn(
-                self._device_info
-            )
         super()._handle_coordinator_update()
 
 
