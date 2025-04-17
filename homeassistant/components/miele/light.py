@@ -13,7 +13,6 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
     LightEntityDescription,
-    LightEntityFeature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -32,8 +31,6 @@ class MieleLightDescription(LightEntityDescription):
     """Class describing Miele light entities."""
 
     value_fn: Callable[[MieleDevice], StateType]
-    preset_modes: list | None = None
-    supported_features = LightEntityFeature(0)
 
 
 @dataclass
@@ -86,14 +83,12 @@ async def async_setup_entry(
     """Set up the light platform."""
     coordinator = config_entry.runtime_data
 
-    entities = [
+    async_add_entities(
         MieleLight(coordinator, device_id, definition.description)
         for device_id, device in coordinator.data.devices.items()
         for definition in LIGHT_TYPES
         if device.device_type in definition.types
-    ]
-
-    async_add_entities(entities)
+    )
 
 
 class MieleLight(MieleEntity, LightEntity):
@@ -112,8 +107,6 @@ class MieleLight(MieleEntity, LightEntity):
         """Initialize the light."""
         super().__init__(coordinator, device_id, description)
         self.api = coordinator.api
-
-        self._attr_supported_features = self.entity_description.supported_features
 
     @property
     def is_on(self) -> bool | None:
