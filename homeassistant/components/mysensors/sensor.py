@@ -50,7 +50,6 @@ from .const import (
     NodeDiscoveryInfo,
 )
 from .entity import MySensorNodeEntity, MySensorsChildEntity
-from .helpers import on_unload
 
 SENSORS: dict[str, SensorEntityDescription] = {
     "V_TEMP": SensorEntityDescription(
@@ -102,6 +101,8 @@ SENSORS: dict[str, SensorEntityDescription] = {
         key="V_DIRECTION",
         native_unit_of_measurement=DEGREE,
         icon="mdi:compass",
+        device_class=SensorDeviceClass.WIND_DIRECTION,
+        state_class=SensorStateClass.MEASUREMENT_ANGLE,
     ),
     "V_WEIGHT": SensorEntityDescription(
         key="V_WEIGHT",
@@ -232,9 +233,7 @@ async def async_setup_entry(
         gateway: BaseAsyncGateway = hass.data[DOMAIN][MYSENSORS_GATEWAYS][gateway_id]
         async_add_entities([MyBatterySensor(gateway_id, gateway, node_id)])
 
-    on_unload(
-        hass,
-        config_entry.entry_id,
+    config_entry.async_on_unload(
         async_dispatcher_connect(
             hass,
             MYSENSORS_DISCOVERY.format(config_entry.entry_id, Platform.SENSOR),
@@ -242,9 +241,7 @@ async def async_setup_entry(
         ),
     )
 
-    on_unload(
-        hass,
-        config_entry.entry_id,
+    config_entry.async_on_unload(
         async_dispatcher_connect(
             hass,
             MYSENSORS_NODE_DISCOVERY,

@@ -6,7 +6,7 @@
         "data": {
           "email": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "country": "Country"
+          "country": "[%key:common::config_flow::data::country%]"
         },
         "data_description": {
           "email": "Email used to access your {cookidoo} account.",

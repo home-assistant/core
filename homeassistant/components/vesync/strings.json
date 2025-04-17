@@ -2,7 +2,15 @@
   "config": {
     "step": {
       "user": {
-        "title": "Enter Username and Password",
+        "title": "Enter username and password",
+        "data": {
+          "username": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The VeSync integration needs to re-authenticate your account",
         "data": {
           "username": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
@@ -13,7 +21,8 @@
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
     "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
   "entity": {
@@ -56,13 +65,19 @@
         "name": "Mist level"
       }
     },
+    "switch": {
+      "display": {
+        "name": "Display"
+      }
+    },
     "select": {
       "night_light_level": {
         "name": "Night light level",
         "state": {
           "bright": "Bright",
           "dim": "Dim",
-          "off": "[%key:common::state::off%]"
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
         }
       }
     },
@@ -71,7 +86,7 @@
         "state_attributes": {
           "preset_mode": {
             "state": {
-              "auto": "Auto",
+              "auto": "[%key:common::state::auto%]",
               "sleep": "Sleep",
               "advanced_sleep": "Advanced sleep",
               "pet": "Pet",

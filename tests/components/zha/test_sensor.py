@@ -30,6 +30,7 @@ from homeassistant.core import HomeAssistant
 from .common import send_attributes_report
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 
+ENTITY_ID_NO_PREFIX = "sensor.fakemanufacturer_fakemodel"
 ENTITY_ID_PREFIX = "sensor.fakemanufacturer_fakemodel_{}"
 
 
@@ -335,7 +336,7 @@ async def async_test_pi_heating_demand(
             "humidity",
             async_test_humidity,
             1,
-            None,
+            {},
             None,
             STATE_UNKNOWN,
         ),
@@ -344,7 +345,7 @@ async def async_test_pi_heating_demand(
             "temperature",
             async_test_temperature,
             1,
-            None,
+            {},
             None,
             STATE_UNKNOWN,
         ),
@@ -353,7 +354,7 @@ async def async_test_pi_heating_demand(
             "pressure",
             async_test_pressure,
             1,
-            None,
+            {},
             None,
             STATE_UNKNOWN,
         ),
@@ -362,7 +363,7 @@ async def async_test_pi_heating_demand(
             "illuminance",
             async_test_illuminance,
             1,
-            None,
+            {},
             None,
             STATE_UNKNOWN,
         ),
@@ -492,7 +493,7 @@ async def async_test_pi_heating_demand(
             "device_temperature",
             async_test_device_temperature,
             1,
-            None,
+            {},
             None,
             STATE_UNKNOWN,
         ),
@@ -501,7 +502,7 @@ async def async_test_pi_heating_demand(
             "setpoint_change_source",
             async_test_setpoint_change_source,
             10,
-            None,
+            {},
             None,
             STATE_UNKNOWN,
         ),
@@ -510,7 +511,7 @@ async def async_test_pi_heating_demand(
             "pi_heating_demand",
             async_test_pi_heating_demand,
             10,
-            None,
+            {},
             None,
             STATE_UNKNOWN,
         ),
@@ -558,7 +559,6 @@ async def test_sensor(
     gateway.get_or_create_device(zigpy_device)
     await gateway.async_device_initialized(zigpy_device)
     await hass.async_block_till_done(wait_background_tasks=True)
-    entity_id = ENTITY_ID_PREFIX.format(entity_suffix)
 
     zigpy_device = zigpy_device_mock(
         {
@@ -569,6 +569,11 @@ async def test_sensor(
             }
         }
     )
+
+    if hass.states.get(ENTITY_ID_NO_PREFIX):
+        entity_id = ENTITY_ID_NO_PREFIX
+    else:
+        entity_id = ENTITY_ID_PREFIX.format(entity_suffix)
 
     assert hass.states.get(entity_id).state == initial_sensor_state
 

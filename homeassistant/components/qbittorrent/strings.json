@@ -33,10 +33,10 @@
         "name": "Upload speed limit"
       },
       "alltime_download": {
-        "name": "Alltime download"
+        "name": "All-time download"
       },
       "alltime_upload": {
-        "name": "Alltime upload"
+        "name": "All-time upload"
       },
       "global_ratio": {
         "name": "Global ratio"
@@ -53,9 +53,9 @@
       "connection_status": {
         "name": "Connection status",
         "state": {
-          "connected": "Conencted",
+          "connected": "[%key:common::state::connected%]",
           "firewalled": "Firewalled",
-          "disconnected": "Disconnected"
+          "disconnected": "[%key:common::state::disconnected%]"
         }
       },
       "active_torrents": {
@@ -109,16 +109,16 @@
   },
   "exceptions": {
     "invalid_device": {
-      "message": "No device with id {device_id} was found"
+      "message": "No device with ID {device_id} was found"
     },
     "invalid_entry_id": {
-      "message": "No entry with id {device_id} was found"
+      "message": "No entry with ID {device_id} was found"
     },
     "login_error": {
-      "message": "A login error occured. Please check you username and password."
+      "message": "A login error occurred. Please check your username and password."
     },
     "cannot_connect": {
-      "message": "Can't connect to QBittorrent, please check your configuration."
+      "message": "Can't connect to qBittorrent, please check your configuration."
     }
   }
 }

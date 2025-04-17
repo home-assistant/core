@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "{name} ({host})",
+    "flow_title": "{name}",
     "step": {
       "user": {
         "description": "Set up ViCare integration. To generate client ID go to https://app.developer.viessmann.com",
@@ -11,8 +11,8 @@
           "heating_type": "Heating type"
         },
         "data_description": {
-          "username": "The email address to login to your ViCare account.",
-          "password": "The password to login to your ViCare account.",
+          "username": "The email address to log in to your ViCare account.",
+          "password": "The password to log in to your ViCare account.",
           "client_id": "The ID of the API client created in the Viessmann developer portal.",
           "heating_type": "Allows to overrule the device auto detection."
         }
@@ -338,6 +338,18 @@
       "buffer_top_temperature": {
         "name": "Buffer top temperature"
       },
+      "buffer_mid_top_temperature": {
+        "name": "Buffer mid top temperature"
+      },
+      "buffer_middle_temperature": {
+        "name": "Buffer middle temperature"
+      },
+      "buffer_mid_bottom_temperature": {
+        "name": "Buffer mid bottom temperature"
+      },
+      "buffer_bottom_temperature": {
+        "name": "Buffer bottom temperature"
+      },
       "buffer_main_temperature": {
         "name": "Buffer main temperature"
       },
@@ -350,9 +362,9 @@
       "ess_state": {
         "name": "Battery state",
         "state": {
-          "charge": "Charging",
-          "discharge": "Discharging",
-          "standby": "Standby"
+          "charge": "[%key:common::state::charging%]",
+          "discharge": "[%key:common::state::discharging%]",
+          "standby": "[%key:common::state::standby%]"
         }
       },
       "ess_discharge_today": {
@@ -400,7 +412,7 @@
       "photovoltaic_status": {
         "name": "PV state",
         "state": {
-          "ready": "Standby",
+          "ready": "[%key:common::state::standby%]",
           "production": "Producing"
         }
       },
@@ -478,6 +490,9 @@
       },
       "spf_heating": {
         "name": "Seasonal performance factor - heating"
+      },
+      "fuel_need": {
+        "name": "Fuel need"
       }
     },
     "water_heater": {
@@ -500,11 +515,11 @@
   "services": {
     "set_vicare_mode": {
       "name": "Set ViCare mode",
-      "description": "Set a ViCare mode.",
+      "description": "Sets the mode of the climate device as defined by Viessmann.",
       "fields": {
         "vicare_mode": {
           "name": "ViCare mode",
-          "description": "ViCare mode."
+          "description": "For supported values, see the `vicare_modes` attribute of the climate entity."
         }
       }
     }

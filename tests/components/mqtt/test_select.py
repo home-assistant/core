@@ -21,7 +21,7 @@ from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID, STATE_UNKNOW
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.typing import ConfigType
 
-from .test_common import (
+from .common import (
     help_custom_config,
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
