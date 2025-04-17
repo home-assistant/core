@@ -431,6 +431,11 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         await self.hass.config_entries.async_remove(
             self._entry_with_name_conflict.entry_id
         )
+        return self._async_create_entry()
+
+    @callback
+    def _async_create_entry(self) -> ConfigFlowResult:
+        """Create the config entry."""
         assert self._name is not None
         return self.async_create_entry(
             title=self._name,
@@ -459,7 +464,6 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_validated_connection(self) -> ConfigFlowResult:
         """Handle validated connection."""
-        config_data = self._async_make_config_data()
         if self.source == SOURCE_RECONFIGURE:
             assert self.unique_id is not None
             assert self._reconfig_entry.unique_id is not None
@@ -497,22 +501,19 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
                     },
                 )
             return self.async_update_reload_and_abort(
-                self._reconfig_entry, data=self._reconfig_entry.data | config_data
+                self._reconfig_entry,
+                data=self._reconfig_entry.data | self._async_make_config_data(),
             )
         if self.source == SOURCE_REAUTH:
             return self.async_update_reload_and_abort(
-                self._reauth_entry, data=self._reauth_entry.data | config_data
+                self._reauth_entry,
+                data=self._reauth_entry.data | self._async_make_config_data(),
             )
         for entry in self._async_current_entries(include_ignore=False):
             if entry.data.get(CONF_DEVICE_NAME) == self._device_name:
                 self._entry_with_name_conflict = entry
                 return await self.async_step_name_conflict()
-        assert self._name is not None
-        return self.async_create_entry(
-            title=self._name,
-            data=config_data,
-            options=self._async_make_default_options(),
-        )
+        return self._async_create_entry()
 
     async def async_step_encryption_key(
         self, user_input: dict[str, Any] | None = None
