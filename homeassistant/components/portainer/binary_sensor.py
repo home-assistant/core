@@ -143,7 +143,7 @@ class PortainerContainerSensor(PortainerContainerEntity, BinarySensorEntity):
         self.entity_description = entity_description
         super().__init__(device_info, entry, coordinator, via_device)
 
-        self._attr_unique_id = f"{entity_description.key} {device_info.id}"
+        self._attr_unique_id = f"{self.coordinator.config_entry.entry_id}_{entity_description.key}_{device_info.id}"
 
     @callback
     def _handle_coordinator_update(self):
