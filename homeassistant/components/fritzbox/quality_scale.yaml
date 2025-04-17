@@ -7,7 +7,9 @@ rules:
   brands: done
   common-modules: done
   config-flow-test-coverage: done
-  config-flow: done
+  config-flow:
+    status: todo
+    comment: some data descriptions are missing
   dependency-transparency: done
   docs-actions:
     status: exempt
@@ -75,4 +77,7 @@ rules:
   inject-websession:
     status: todo
     comment: the pyfritzhome lib is not async
-  strict-typing: done
+  strict-typing:
+    status: todo
+    comment: |
+      Dependency is missing py.typed (and appears fully untyped)
