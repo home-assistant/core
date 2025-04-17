@@ -9,7 +9,8 @@ from whirlpool.backendselector import Brand, Region
 
 from homeassistant import config_entries
 from homeassistant.components.whirlpool.const import CONF_BRAND, DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -23,7 +24,7 @@ CONFIG_INPUT = {
 
 def assert_successful_user_flow(
     mock_whirlpool_setup_entry: MagicMock,
-    result: config_entries.ConfigFlowResult,
+    result: ConfigFlowResult,
     region: str,
     brand: str,
 ) -> None:
@@ -31,17 +32,18 @@ def assert_successful_user_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test-username"
     assert result["data"] == {
-        "username": "test-username",
-        "password": "test-password",
-        "region": region,
-        "brand": brand,
+        CONF_USERNAME: CONFIG_INPUT[CONF_USERNAME],
+        CONF_PASSWORD: CONFIG_INPUT[CONF_PASSWORD],
+        CONF_REGION: region,
+        CONF_BRAND: brand,
     }
+    assert result["result"].unique_id == CONFIG_INPUT[CONF_USERNAME]
     assert len(mock_whirlpool_setup_entry.mock_calls) == 1
 
 
 def assert_successful_reauth_flow(
     mock_entry: MockConfigEntry,
-    result: config_entries.ConfigFlowResult,
+    result: ConfigFlowResult,
     region: str,
     brand: str,
 ) -> None:
@@ -49,10 +51,10 @@ def assert_successful_reauth_flow(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert mock_entry.data == {
-        CONF_USERNAME: "test-username",
+        CONF_USERNAME: CONFIG_INPUT[CONF_USERNAME],
         CONF_PASSWORD: "new-password",
-        "region": region[0],
-        "brand": brand[0],
+        CONF_REGION: region[0],
+        CONF_BRAND: brand[0],
     }
 
 
@@ -83,13 +85,12 @@ async def test_user_flow(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        CONFIG_INPUT | {"region": region[0], "brand": brand[0]},
+        CONFIG_INPUT | {CONF_REGION: region[0], CONF_BRAND: brand[0]},
     )
 
     assert_successful_user_flow(
         mock_whirlpool_setup_entry, result2, region[0], brand[0]
     )
-    assert result2["result"].unique_id == CONFIG_INPUT[CONF_USERNAME].lower()
     mock_backend_selector_api.assert_called_once_with(brand[1], region[1])
 
 
@@ -108,7 +109,7 @@ async def test_user_flow_invalid_auth(
     mock_auth_api.return_value.is_access_token_valid.return_value = False
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        CONFIG_INPUT | {"region": region[0], "brand": brand[0]},
+        CONFIG_INPUT | {CONF_REGION: region[0], CONF_BRAND: brand[0]},
     )
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
@@ -117,7 +118,7 @@ async def test_user_flow_invalid_auth(
     mock_auth_api.return_value.is_access_token_valid.return_value = True
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        CONFIG_INPUT | {"region": region[0], "brand": brand[0]},
+        CONFIG_INPUT | {CONF_REGION: region[0], CONF_BRAND: brand[0]},
     )
     assert_successful_user_flow(
         mock_whirlpool_setup_entry, result2, region[0], brand[0]
@@ -153,8 +154,8 @@ async def test_user_flow_auth_error(
         result["flow_id"],
         CONFIG_INPUT
         | {
-            "region": region[0],
-            "brand": brand[0],
+            CONF_REGION: region[0],
+            CONF_BRAND: brand[0],
         },
     )
     assert result["type"] is FlowResultType.FORM
@@ -164,7 +165,7 @@ async def test_user_flow_auth_error(
     mock_auth_api.return_value.do_auth.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        CONFIG_INPUT | {"region": region[0], "brand": brand[0]},
+        CONFIG_INPUT | {CONF_REGION: region[0], CONF_BRAND: brand[0]},
     )
 
     assert_successful_user_flow(mock_whirlpool_setup_entry, result, region[0], brand[0])
@@ -177,7 +178,7 @@ async def test_already_configured(
     """Test that configuring the integration twice with the same data fails."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
-        data=CONFIG_INPUT | {"region": region[0], "brand": brand[0]},
+        data=CONFIG_INPUT | {CONF_REGION: region[0], CONF_BRAND: brand[0]},
         unique_id="test-username",
     )
     mock_entry.add_to_hass(hass)
@@ -193,8 +194,8 @@ async def test_already_configured(
         result["flow_id"],
         CONFIG_INPUT
         | {
-            "region": region[0],
-            "brand": brand[0],
+            CONF_REGION: region[0],
+            CONF_BRAND: brand[0],
         },
     )
 
@@ -221,7 +222,7 @@ async def test_no_appliances_flow(
     mock_appliances_manager_api.return_value.washer_dryers = []
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        CONFIG_INPUT | {"region": region[0], "brand": brand[0]},
+        CONFIG_INPUT | {CONF_REGION: region[0], CONF_BRAND: brand[0]},
     )
 
     assert result2["type"] is FlowResultType.FORM
@@ -237,7 +238,7 @@ async def test_reauth_flow(
     """Test a successful reauth flow."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
-        data=CONFIG_INPUT | {"region": region[0], "brand": brand[0]},
+        data=CONFIG_INPUT | {CONF_REGION: region[0], CONF_BRAND: brand[0]},
         unique_id="test-username",
     )
     mock_entry.add_to_hass(hass)
@@ -267,7 +268,7 @@ async def test_reauth_flow_invalid_auth(
 
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
-        data=CONFIG_INPUT | {"region": region[0], "brand": brand[0]},
+        data=CONFIG_INPUT | {CONF_REGION: region[0], CONF_BRAND: brand[0]},
         unique_id="test-username",
     )
     mock_entry.add_to_hass(hass)
@@ -318,7 +319,7 @@ async def test_reauth_flow_auth_error(
 
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
-        data=CONFIG_INPUT | {"region": region[0], "brand": brand[0]},
+        data=CONFIG_INPUT | {CONF_REGION: region[0], CONF_BRAND: brand[0]},
         unique_id="test-username",
     )
     mock_entry.add_to_hass(hass)
