@@ -642,7 +642,11 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(mac_address, raise_on_progress=False)
         if self.source not in (SOURCE_REAUTH, SOURCE_RECONFIGURE):
             self._abort_if_unique_id_configured(
-                updates={CONF_HOST: self._host, CONF_PORT: self._port}
+                updates={
+                    CONF_HOST: self._host,
+                    CONF_PORT: self._port,
+                    CONF_NOISE_PSK: self._noise_psk,
+                }
             )
 
         return None
