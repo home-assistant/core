@@ -502,6 +502,8 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             )
         if self.source == SOURCE_REAUTH:
             if self.unique_id != self._reauth_entry.unique_id:
+                # Reauth was triggered a while ago, and since than
+                # a new device resides at the same IP address.
                 await self._async_validate_mac_abort_configured(
                     format_mac(self.unique_id), self._host, self._port
                 )
