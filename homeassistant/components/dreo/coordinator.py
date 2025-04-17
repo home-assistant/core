@@ -28,7 +28,6 @@ class DreoDeviceData(TypedDict):
     speed: NotRequired[int | None]
     temperature: NotRequired[float | None]
     humidity: NotRequired[float | None]
-    # 可以根据需要添加更多设备支持的属性
 
 
 class DreoDataUpdateCoordinator(DataUpdateCoordinator[DreoDeviceData]):
@@ -59,22 +58,18 @@ class DreoDataUpdateCoordinator(DataUpdateCoordinator[DreoDeviceData]):
             if status is None:
                 return data
 
-            # 处理设备状态数据
-            updated_data: DreoDeviceData = {
-                "available": status.get("connected", False),
-                "is_on": status.get("power_switch", False),
-            }
+            data["available"] = status.get("connected", False)
+            data["is_on"] = status.get("power_switch", False)
 
             if "mode" in status:
-                updated_data["mode"] = status.get("mode")
+                data["mode"] = status.get("mode")
 
             if "oscillate" in status:
-                updated_data["oscillate"] = status.get("oscillate")
+                data["oscillate"] = status.get("oscillate")
 
             if "speed" in status:
-                updated_data["speed"] = status.get("speed")
+                data["speed"] = status.get("speed")
 
-            data = updated_data
         except HsCloudException as error:
             raise UpdateFailed(f"Error communicating with Dreo API: {error}") from error
         except Exception as error:
