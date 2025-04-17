@@ -241,9 +241,7 @@ class HomeConnectCoordinator(
                             appliance_data = await self._get_appliance_data(
                                 appliance_info, self.data.get(appliance_info.ha_id)
                             )
-                            if event_message_ha_id in self.data:
-                                self.data[event_message_ha_id].update(appliance_data)
-                            else:
+                            if event_message_ha_id not in self.data:
                                 self.data[event_message_ha_id] = appliance_data
                             for listener, context in self._special_listeners.values():
                                 if (
