@@ -57,7 +57,7 @@ class KemEntity(CoordinatorEntity[KemUpdateCoordinator], Entity):
         }
 
     @property
-    def _oncue_value(self) -> str:
+    def _kem_value(self) -> str:
         """Return the sensor value."""
         generator_data = self.coordinator.data
         if self.use_device_key:

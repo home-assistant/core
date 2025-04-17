@@ -187,4 +187,4 @@ class KemSensorEntity(KemEntity, SensorEntity):
     @property
     def native_value(self) -> str:
         """Return the sensors state."""
-        return self._oncue_value
+        return self._kem_value
