@@ -11,8 +11,17 @@
   },
   "entity": {
     "sensor": {
-      "download": {
-        "name": "Download"
+      "download_speed": {
+        "name": "Download speed"
+      },
+      "upload_speed": {
+        "name": "Upload speed"
+      },
+      "loaded_ping": {
+        "name": "Loaded ping"
+      },
+      "unloaded_ping": {
+        "name": "Unloaded ping"
       }
     }
   }
