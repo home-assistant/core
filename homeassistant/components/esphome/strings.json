@@ -11,6 +11,7 @@
       "mqtt_missing_ip": "Missing IP address in MQTT properties.",
       "mqtt_missing_payload": "Missing MQTT Payload.",
       "name_conflict_migrated": "The configuration for `{name}` has been migrated to a new device with MAC address `{mac}` from `{existing_mac}`.",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "reconfigure_unique_id_changed": "**Reconfiguration of `{name}` was aborted** because the provided connection settings refer to a different device: `{unexpected_device_name}` (MAC: `{unexpected_mac}`) instead of the expected device (MAC: `{expected_mac}`)."
     },
     "error": {
