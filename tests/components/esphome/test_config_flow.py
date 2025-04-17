@@ -1939,7 +1939,7 @@ async def test_reconfig_name_conflict_other_entry_for_mac(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_unique_id_changed"
+    assert result["reason"] == "already_configured"
 
 
 @pytest.mark.usefixtures("mock_zeroconf", "mock_setup_entry")
