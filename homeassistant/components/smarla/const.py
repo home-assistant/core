@@ -4,4 +4,4 @@ DOMAIN = "smarla"
 
 HOST = "https://devices.swing2sleep.de"
 
-PLATFORMS = ["number", "sensor", "switch"]
+PLATFORMS = ["switch"]
