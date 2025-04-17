@@ -151,6 +151,11 @@ async def async_setup_entry(
             assert event.object_id is not None
         if event.object_id in added_ids:
             return
+        player = mass.players.get(event.object_id)
+        if TYPE_CHECKING:
+            assert player is not None
+        if not player.expose_to_ha:
+            return
         added_ids.add(event.object_id)
         async_add_entities([MusicAssistantPlayer(mass, event.object_id)])
 
@@ -159,6 +164,8 @@ async def async_setup_entry(
     mass_players = []
     # add all current players
     for player in mass.players:
+        if not player.expose_to_ha:
+            continue
         added_ids.add(player.player_id)
         mass_players.append(MusicAssistantPlayer(mass, player.player_id))
 
