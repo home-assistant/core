@@ -110,8 +110,20 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         key=UIWidget.TILT_ONLY_VENETIAN_BLIND,
         device_class=CoverDeviceClass.BLIND,
         is_closed_fn=is_closed,
-        # open_tilt_command=OverkizCommand.TILT_POSITIVE,
-        # close_tilt_command=OverkizCommand.TILT_NEGATIVE,
+        open_tilt_command=OverkizCommand.TILT_POSITIVE,
+        close_tilt_command=OverkizCommand.TILT_NEGATIVE,
+        stop_tilt_command=OverkizCommand.STOP,
+    ),
+    # Needs override to support very specific tilt commands (rts:ExteriorVenetianBlindRTSComponent)
+    # uiClass is VenetianBlind
+    OverkizCoverDescription(
+        key=UIWidget.UP_DOWN_EXTERIOR_VENETIAN_BLIND,
+        device_class=CoverDeviceClass.BLIND,
+        open_command=OverkizCommand.OPEN,
+        close_command=OverkizCommand.CLOSE,
+        stop_command=OverkizCommand.STOP,
+        open_tilt_command=OverkizCommand.TILT_POSITIVE,  # needs 2 params
+        close_tilt_command=OverkizCommand.TILT_NEGATIVE,  # needs 2 params
         stop_tilt_command=OverkizCommand.STOP,
     ),
     ## Default cover behavior (via UIClass)
