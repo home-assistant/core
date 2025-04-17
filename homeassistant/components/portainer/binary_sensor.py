@@ -115,16 +115,15 @@ class PortainerEndpointSensor(PortainerEndpointEntity, BinarySensorEntity):
 
         self._attr_unique_id = f"{entity_description.key} {device_info.id}"
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        try:
-            assert self.device_id in self.coordinator.endpoints
-            self._device_info = self.coordinator.endpoints[self.device_id]
-        except KeyError:
-            return
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if the binary sensor is on."""
 
-        self._attr_is_on = self.entity_description.state_fn(self._device_info)
+        return (
+            self.entity_description.state_fn(device_info)
+            if (device_info := self.coordinator.endpoints.get(self.device_id))
+            else None
+        )
         super()._handle_coordinator_update()
 
 
