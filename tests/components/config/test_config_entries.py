@@ -532,7 +532,7 @@ async def test_initialize_flow_with_virtual_domain(
                 errors={"username": "Should be unique."},
             )
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+    with mock_config_flow("test", TestFlow):
         resp = await client.post(
             "/api/config/config_entries/flow",
             json={
