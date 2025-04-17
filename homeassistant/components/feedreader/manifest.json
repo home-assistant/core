@@ -6,5 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/feedreader",
   "iot_class": "cloud_polling",
   "loggers": ["feedparser", "sgmllib3k"],
+  "quality_scale": "silver",
   "requirements": ["feedparser==6.0.11"]
 }
