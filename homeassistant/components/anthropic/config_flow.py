@@ -134,9 +134,6 @@ class AnthropicOptionsFlow(OptionsFlow):
 
         if user_input is not None:
             if user_input[CONF_RECOMMENDED] == self.last_rendered_recommended:
-                if user_input[CONF_LLM_HASS_API] == "none":
-                    user_input.pop(CONF_LLM_HASS_API)
-
                 if user_input.get(
                     CONF_THINKING_BUDGET, RECOMMENDED_THINKING_BUDGET
                 ) >= user_input.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS):
@@ -151,7 +148,7 @@ class AnthropicOptionsFlow(OptionsFlow):
                 options = {
                     CONF_RECOMMENDED: user_input[CONF_RECOMMENDED],
                     CONF_PROMPT: user_input[CONF_PROMPT],
-                    CONF_LLM_HASS_API: user_input[CONF_LLM_HASS_API],
+                    CONF_LLM_HASS_API: user_input.get(CONF_LLM_HASS_API),
                 }
 
         suggested_values = options.copy()
@@ -177,22 +174,16 @@ def anthropic_config_option_schema(
     """Return a schema for Anthropic completion options."""
     hass_apis: list[SelectOptionDict] = [
         SelectOptionDict(
-            label="No control",
-            value="none",
-        )
-    ]
-    hass_apis.extend(
-        SelectOptionDict(
             label=api.name,
             value=api.id,
         )
         for api in llm.async_get_apis(hass)
-    )
+    ]
 
     schema = {
         vol.Optional(CONF_PROMPT): TemplateSelector(),
-        vol.Optional(CONF_LLM_HASS_API, default="none"): SelectSelector(
-            SelectSelectorConfig(options=hass_apis)
+        vol.Optional(CONF_LLM_HASS_API): SelectSelector(
+            SelectSelectorConfig(options=hass_apis, multiple=True)
         ),
         vol.Required(
             CONF_RECOMMENDED, default=options.get(CONF_RECOMMENDED, False)
