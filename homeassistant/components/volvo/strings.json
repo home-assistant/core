@@ -15,7 +15,7 @@
       },
       "api_key": {
         "data": {
-          "api_key": "API key"
+          "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
           "api_key": "The Volvo developers API key"
@@ -70,7 +70,7 @@
   "selector": {
     "fuel_consumption_unit": {
       "options": {
-        "l_100km": "L/100 km",
+        "l_100km": "l/100 km",
         "mpg_uk": "mpg (UK)",
         "mpg_us": "mpg (US)"
       }
@@ -95,7 +95,7 @@
         }
       },
       "average_energy_consumption": {
-        "name": "TM Avg. energy consumption",
+        "name": "TM avg. energy consumption",
         "state_attributes": {
           "api_timestamp": {
             "name": "[%key:component::volvo::common::api_timestamp%]"
@@ -103,7 +103,7 @@
         }
       },
       "average_energy_consumption_automatic": {
-        "name": "TA Avg. energy consumption",
+        "name": "TA avg. energy consumption",
         "state_attributes": {
           "api_timestamp": {
             "name": "[%key:component::volvo::common::api_timestamp%]"
@@ -119,7 +119,7 @@
         }
       },
       "average_fuel_consumption": {
-        "name": "TM Avg. fuel consumption",
+        "name": "TM avg. fuel consumption",
         "state_attributes": {
           "api_timestamp": {
             "name": "[%key:component::volvo::common::api_timestamp%]"
@@ -127,7 +127,7 @@
         }
       },
       "average_fuel_consumption_automatic": {
-        "name": "TA Avg. fuel consumption",
+        "name": "TA avg. fuel consumption",
         "state_attributes": {
           "api_timestamp": {
             "name": "[%key:component::volvo::common::api_timestamp%]"
@@ -135,7 +135,7 @@
         }
       },
       "average_speed": {
-        "name": "TM Avg. speed",
+        "name": "TM avg. speed",
         "state_attributes": {
           "api_timestamp": {
             "name": "[%key:component::volvo::common::api_timestamp%]"
@@ -143,7 +143,7 @@
         }
       },
       "average_speed_automatic": {
-        "name": "TA Avg. speed",
+        "name": "TA avg. speed",
         "state_attributes": {
           "api_timestamp": {
             "name": "[%key:component::volvo::common::api_timestamp%]"
@@ -179,7 +179,7 @@
         "state": {
           "connection_status_connected_ac": "Connected AC",
           "connection_status_connected_dc": "Connected DC",
-          "connection_status_disconnected": "Disconnected",
+          "connection_status_disconnected": "[%key:common::state::disconnected%]",
           "connection_status_fault": "[%key:component::volvo::common::error%]",
           "connection_status_unspecified": "[%key:component::volvo::common::unknown%]"
         },
@@ -192,10 +192,10 @@
       "charging_system_status": {
         "name": "Charging status",
         "state": {
-          "charging_system_charging": "Charging",
+          "charging_system_charging": "[%key:common::state::charging%]",
           "charging_system_done": "Done",
           "charging_system_fault": "[%key:component::volvo::common::error%]",
-          "charging_system_idle": "Idle",
+          "charging_system_idle": "[%key:common::state::idle%]",
           "charging_system_scheduled": "Scheduled",
           "charging_system_unspecified": "[%key:component::volvo::common::unknown%]"
         },
@@ -278,7 +278,7 @@
         }
       },
       "trip_meter_automatic": {
-        "name": "TA Distance",
+        "name": "TA distance",
         "state_attributes": {
           "api_timestamp": {
             "name": "[%key:component::volvo::common::api_timestamp%]"
@@ -286,7 +286,7 @@
         }
       },
       "trip_meter_manual": {
-        "name": "TM Distance",
+        "name": "TM distance",
         "state_attributes": {
           "api_timestamp": {
             "name": "[%key:component::volvo::common::api_timestamp%]"
