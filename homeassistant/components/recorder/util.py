@@ -88,7 +88,7 @@ RECOMMENDED_MIN_VERSION_MARIA_DB_108 = _simple_version("10.8.4")
 MARIADB_WITH_FIXED_IN_QUERIES_108 = _simple_version("10.8.4")
 MIN_VERSION_MYSQL = _simple_version("8.0.0")
 MIN_VERSION_PGSQL = _simple_version("12.0")
-MIN_VERSION_SQLITE = _simple_version("3.40.1")
+MIN_VERSION_SQLITE = _simple_version("3.10.1")
 
 
 # This is the maximum time after the recorder ends the session

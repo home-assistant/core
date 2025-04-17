@@ -1,0 +1,17 @@
+{
+  "domain": "kem",
+  "name": "Kohler Energy Management",
+  "codeowners": ["@bdraco", "@peterager"],
+  "config_flow": true,
+  "dhcp": [
+    {
+      "hostname": "kohlergen*",
+      "macaddress": "00146F*"
+    }
+  ],
+  "documentation": "https://www.home-assistant.io/integrations/kem",
+  "iot_class": "cloud_polling",
+  "loggers": ["aiokem"],
+  "quality_scale": "bronze",
+  "requirements": ["aiokem==0.2.0"]
+}

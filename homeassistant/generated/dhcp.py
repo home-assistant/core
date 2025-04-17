@@ -302,6 +302,11 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "000DB9*",
     },
     {
+        "domain": "kem",
+        "hostname": "kohlergen*",
+        "macaddress": "00146F*",
+    },
+    {
         "domain": "lamarzocco",
         "registered_devices": True,
     },
