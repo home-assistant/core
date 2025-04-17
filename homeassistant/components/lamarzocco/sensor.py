@@ -92,7 +92,7 @@ async def async_setup_entry(
     entry: LaMarzoccoConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up binary sensor entities."""
+    """Set up sensor entities."""
     coordinator = entry.runtime_data.config_coordinator
 
     async_add_entities(
