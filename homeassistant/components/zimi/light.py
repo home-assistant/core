@@ -35,7 +35,7 @@ async def async_setup_entry(
     lights.extend(
         [
             ZimiDimmer(device, api)
-            for device in filter(lambda light: light.type == "dimmer", api.lights)
+            for device in api.lights if device.type == "dimmer"
         ]
     )
 
