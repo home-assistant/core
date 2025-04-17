@@ -328,7 +328,6 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle reauth."""
         # Overkiz entries always have unique IDs
         self.context["title_placeholders"] = {"gateway_id": cast(str, self.unique_id)}
-
         self._api_type = entry_data.get(CONF_API_TYPE, APIType.CLOUD)
 
         if self._api_type == APIType.LOCAL:
