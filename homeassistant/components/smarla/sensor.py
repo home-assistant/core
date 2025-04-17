@@ -1,6 +1,7 @@
 """Support for the Swing2Sleep Smarla sensor entities."""
 
 from dataclasses import dataclass
+from typing import Any
 
 from pysmarlaapi import Federwiege
 
@@ -13,7 +14,8 @@ from homeassistant.const import UnitOfLength, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import FederwiegeConfigEntry, SmarlaBaseEntity
+from . import FederwiegeConfigEntry
+from .entity import SmarlaBaseEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -72,7 +74,7 @@ async def async_setup_entry(
     """Set up the Smarla sensors from config entry."""
     federwiege = config_entry.runtime_data
 
-    entities: list[SmarlaSensor] = []
+    entities: list[SensorEntity] = []
 
     for desc in NUMBER_TYPES:
         entity = SmarlaSensor(federwiege, desc)
@@ -84,7 +86,7 @@ async def async_setup_entry(
 class SmarlaSensor(SmarlaBaseEntity, SensorEntity):
     """Representation of Smarla sensor."""
 
-    async def on_change(self, value):
+    async def on_change(self, value: Any):
         """Notify ha when state changes."""
         self.async_write_ha_state()
 

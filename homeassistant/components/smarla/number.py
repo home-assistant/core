@@ -1,6 +1,7 @@
 """Support for the Swing2Sleep Smarla number entities."""
 
 from dataclasses import dataclass
+from typing import Any
 
 from pysmarlaapi import Federwiege
 
@@ -12,7 +13,8 @@ from homeassistant.components.number import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import FederwiegeConfigEntry, SmarlaBaseEntity
+from . import FederwiegeConfigEntry
+from .entity import SmarlaBaseEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -45,7 +47,7 @@ async def async_setup_entry(
     """Set up the Smarla numbers from config entry."""
     federwiege = config_entry.runtime_data
 
-    entities: list[SmarlaNumber] = []
+    entities: list[NumberEntity] = []
 
     for desc in NUMBER_TYPES:
         entity = SmarlaNumber(federwiege, desc)
@@ -57,7 +59,7 @@ async def async_setup_entry(
 class SmarlaNumber(SmarlaBaseEntity, NumberEntity):
     """Representation of Smarla number."""
 
-    async def on_change(self, value):
+    async def on_change(self, value: Any):
         """Notify ha when state changes."""
         self.async_write_ha_state()
 

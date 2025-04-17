@@ -9,7 +9,8 @@ from homeassistant.components.switch import SwitchEntity, SwitchEntityDescriptio
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import FederwiegeConfigEntry, SmarlaBaseEntity
+from . import FederwiegeConfigEntry
+from .entity import SmarlaBaseEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -44,7 +45,7 @@ async def async_setup_entry(
     """Set up the Smarla switches from config entry."""
     federwiege = config_entry.runtime_data
 
-    entities: list[SmarlaSwitch] = []
+    entities: list[SwitchEntity] = []
 
     for desc in NUMBER_TYPES:
         entity = SmarlaSwitch(federwiege, desc)
@@ -56,7 +57,7 @@ async def async_setup_entry(
 class SmarlaSwitch(SmarlaBaseEntity, SwitchEntity):
     """Representation of Smarla switch."""
 
-    async def on_change(self, value):
+    async def on_change(self, value: Any):
         """Notify ha when state changes."""
         self.async_write_ha_state()
 
