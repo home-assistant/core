@@ -524,9 +524,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(
                     reason="reconfigure_name_conflict",
                     description_placeholders={
-                        "name": self._reconfig_entry.data.get(
-                            CONF_DEVICE_NAME, self._reconfig_entry.title
-                        ),
+                        "name": self._reconfig_entry.data[CONF_DEVICE_NAME],
                         "host": self._host,
                         "expected_mac": format_mac(self._reconfig_entry.unique_id),
                         "existing_title": entry.title,
