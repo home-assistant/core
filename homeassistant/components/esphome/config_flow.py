@@ -23,6 +23,7 @@ import voluptuous as vol
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
@@ -62,6 +63,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     _reauth_entry: ConfigEntry
+    _reconfig_entry: ConfigEntry
 
     def __init__(self) -> None:
         """Initialize flow."""
@@ -170,6 +172,15 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
             description_placeholders={"name": self._name},
         )
+
+    async def async_step_reconfig(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle a flow initialized by a reconfig request."""
+        self._reconfig_entry = self._get_reconfigure_entry()
+        self._host = entry_data[CONF_HOST]
+        self._port = entry_data[CONF_PORT]
+        return await self._async_step_user_base()
 
     @property
     def _name(self) -> str:
@@ -420,7 +431,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def _async_get_entry_or_resolve_conflict(self) -> ConfigFlowResult:
         """Return the entry or resolve a conflict."""
-        if self.source != SOURCE_REAUTH:
+        if self.source not in (SOURCE_REAUTH, SOURCE_RECONFIGURE):
             for entry in self._async_current_entries(include_ignore=False):
                 if entry.data.get(CONF_DEVICE_NAME) == self._device_name:
                     self._entry_with_name_conflict = entry
@@ -440,6 +451,23 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         config_options = {
             CONF_ALLOW_SERVICE_CALLS: DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
         }
+        if self.source == SOURCE_RECONFIGURE:
+            assert self.unique_id is not None
+            assert self._reconfig_entry is not None
+            assert self._reconfig_entry.unique_id is not None
+            if self._reauth_entry.unique_id != format_mac(self.unique_id):
+                return self.async_abort(
+                    reason="reconfigure_unique_id_changed",
+                    description_placeholders={
+                        "name": self._reconfig_entry.title,
+                        "expected_mac": format_mac(self._reconfig_entry.unique_id),
+                        "unexpected_device_name": self._device_name or "",
+                        "unexpected_mac": format_mac(self.unique_id),
+                    },
+                )
+            return self.async_update_reload_and_abort(
+                self._reconfig_entry, data=self._reauth_entry.data | config_data
+            )
         if self.source == SOURCE_REAUTH:
             return self.async_update_reload_and_abort(
                 self._reauth_entry, data=self._reauth_entry.data | config_data
@@ -540,7 +568,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         assert self._device_info is not None
         mac_address = format_mac(self._device_info.mac_address)
         await self.async_set_unique_id(mac_address, raise_on_progress=False)
-        if self.source != SOURCE_REAUTH:
+        if self.source not in (SOURCE_REAUTH, SOURCE_RECONFIGURE):
             self._abort_if_unique_id_configured(
                 updates={CONF_HOST: self._host, CONF_PORT: self._port}
             )
