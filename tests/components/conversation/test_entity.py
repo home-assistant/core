@@ -20,6 +20,7 @@ async def test_state_set_and_restore(hass: HomeAssistant) -> None:
     await async_setup_component(hass, "homeassistant", {})
     await async_setup_component(hass, "conversation", {})
     await async_setup_component(hass, "assist_conversation", {})
+    await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
     assert state

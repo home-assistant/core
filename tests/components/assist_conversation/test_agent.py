@@ -233,7 +233,6 @@ async def test_expose_flag_automatically_set(
 
     assert async_get_assistant_settings(hass, conversation.DOMAIN) == {}
 
-    assert await async_setup_component(hass, "conversation", {})
     assert await async_setup_component(hass, "assist_conversation", {})
     await hass.async_block_till_done()
     with patch("homeassistant.components.http.start_http_server_and_save_config"):
@@ -2450,6 +2449,7 @@ async def test_custom_sentences_config(
             }
         },
     )
+    await hass.async_block_till_done()
 
     # Invoke intent via HTTP API
     result = await conversation.async_converse(
@@ -2462,7 +2462,8 @@ async def test_custom_sentences_config(
     assert data["response"]["speech"]["plain"]["speech"] == "Stealth mode engaged"
 
 
-async def test_language_region(hass: HomeAssistant, init_components) -> None:
+@pytest.mark.usefixtures("init_components")
+async def test_language_region(hass: HomeAssistant) -> None:
     """Test regional languages."""
     hass.states.async_set("light.kitchen", "off")
     calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
@@ -2486,7 +2487,8 @@ async def test_language_region(hass: HomeAssistant, init_components) -> None:
     assert call.data == {"entity_id": ["light.kitchen"]}
 
 
-async def test_non_default_response(hass: HomeAssistant, init_components) -> None:
+@pytest.mark.usefixtures("init_components")
+async def test_non_default_response(hass: HomeAssistant) -> None:
     """Test intent response that is not the default."""
     hass.states.async_set("cover.front_door", "closed")
     calls = async_mock_service(hass, "cover", SERVICE_OPEN_COVER)
@@ -2672,7 +2674,7 @@ async def test_custom_sentences_priority(
         custom_sentences_file.seek(0)
 
         assert await async_setup_component(hass, "homeassistant", {})
-        assert await async_setup_component(hass, "conversation", {})
+        assert await async_setup_component(hass, "assist_conversation", {})
         assert await async_setup_component(hass, "light", {})
         assert await async_setup_component(hass, "intent", {})
         assert await async_setup_component(
@@ -2684,7 +2686,7 @@ async def test_custom_sentences_priority(
                 }
             },
         )
-        assert await async_setup_component(hass, "assist_conversation", {})
+        await hass.async_block_till_done()
 
         # Ensure that a "lamp" exists so that we can verify the custom intent
         # overrides the builtin sentence.
@@ -2715,7 +2717,6 @@ async def test_config_sentences_priority(
     # Add a custom sentence that would match a builtin sentence.
     # Custom sentences have priority.
     assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "intent", {})
     assert await async_setup_component(
         hass,
         "assist_conversation",
@@ -2729,8 +2730,8 @@ async def test_config_sentences_priority(
             }
         },
     )
-    assert await async_setup_component(hass, "conversation", {})
-    assert await async_setup_component(hass, "assist_conversation", {})
+    assert await async_setup_component(hass, "intent", {})
+    await hass.async_block_till_done()
 
     # Fake intent not being custom
     intents = (
