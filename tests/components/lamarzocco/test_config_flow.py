@@ -281,7 +281,6 @@ async def test_reconfigure_flow_no_machines(
     hass: HomeAssistant,
     mock_cloud_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    mock_setup_entry: Generator[AsyncMock],
     discovered: list[BluetoothServiceInfo],
 ) -> None:
     """Testing reconfgure flow."""
