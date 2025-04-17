@@ -813,12 +813,15 @@ async def test_reauth_confirm_valid(
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053, CONF_PASSWORD: ""},
+        unique_id="11:22:33:44:55:aa",
     )
     entry.add_to_hass(hass)
 
     result = await entry.start_reauth_flow(hass)
 
-    mock_client.device_info.return_value = DeviceInfo(uses_password=False, name="test")
+    mock_client.device_info.return_value = DeviceInfo(
+        uses_password=False, name="test", mac_address="11:22:33:44:55:aa"
+    )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_NOISE_PSK: VALID_NOISE_PSK}
     )
@@ -826,6 +829,41 @@ async def test_reauth_confirm_valid(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert entry.data[CONF_NOISE_PSK] == VALID_NOISE_PSK
+
+
+@pytest.mark.usefixtures("mock_zeroconf", "mock_setup_entry")
+async def test_reauth_attempt_to_change_mac_aborts(
+    hass: HomeAssistant, mock_client: APIClient
+) -> None:
+    """Test reauth initiation with valid PSK attempting to change mac.
+
+    This can happen if reauth starts, but they don't finish it before
+    a new device takes the place of the old one at the same IP.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 6053,
+            CONF_PASSWORD: "",
+            CONF_DEVICE_NAME: "test",
+        },
+        unique_id="11:22:33:44:55:aa",
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+
+    mock_client.device_info.return_value = DeviceInfo(
+        uses_password=False, name="test", mac_address="11:22:33:44:55:bb"
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_NOISE_PSK: VALID_NOISE_PSK}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_unique_id_changed"
+    assert CONF_NOISE_PSK not in entry.data
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
@@ -845,10 +883,13 @@ async def test_reauth_fixed_via_dashboard(
             CONF_PASSWORD: "",
             CONF_DEVICE_NAME: "test",
         },
+        unique_id="11:22:33:44:55:aa",
     )
     entry.add_to_hass(hass)
 
-    mock_client.device_info.return_value = DeviceInfo(uses_password=False, name="test")
+    mock_client.device_info.return_value = DeviceInfo(
+        uses_password=False, name="test", mac_address="11:22:33:44:55:aa"
+    )
 
     mock_dashboard["configured"].append(
         {
@@ -883,7 +924,7 @@ async def test_reauth_fixed_via_dashboard_add_encryption_remove_password(
     """Test reauth fixed automatically via dashboard with password removed."""
     mock_client.device_info.side_effect = (
         InvalidAuthAPIError,
-        DeviceInfo(uses_password=False, name="test"),
+        DeviceInfo(uses_password=False, name="test", mac_address="11:22:33:44:55:aa"),
     )
 
     mock_dashboard["configured"].append(
@@ -917,7 +958,9 @@ async def test_reauth_fixed_via_remove_password(
     mock_setup_entry: None,
 ) -> None:
     """Test reauth fixed automatically by seeing password removed."""
-    mock_client.device_info.return_value = DeviceInfo(uses_password=False, name="test")
+    mock_client.device_info.return_value = DeviceInfo(
+        uses_password=False, name="test", mac_address="11:22:33:44:55:aa"
+    )
 
     result = await mock_config_entry.start_reauth_flow(hass)
 
@@ -943,10 +986,13 @@ async def test_reauth_fixed_via_dashboard_at_confirm(
             CONF_PASSWORD: "",
             CONF_DEVICE_NAME: "test",
         },
+        unique_id="11:22:33:44:55:aa",
     )
     entry.add_to_hass(hass)
 
-    mock_client.device_info.return_value = DeviceInfo(uses_password=False, name="test")
+    mock_client.device_info.return_value = DeviceInfo(
+        uses_password=False, name="test", mac_address="11:22:33:44:55:aa"
+    )
 
     result = await entry.start_reauth_flow(hass)
 
@@ -984,6 +1030,7 @@ async def test_reauth_confirm_invalid(
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053, CONF_PASSWORD: ""},
+        unique_id="11:22:33:44:55:aa",
     )
     entry.add_to_hass(hass)
 
@@ -1000,7 +1047,9 @@ async def test_reauth_confirm_invalid(
     assert result["errors"]["base"] == "invalid_psk"
 
     mock_client.device_info = AsyncMock(
-        return_value=DeviceInfo(uses_password=False, name="test")
+        return_value=DeviceInfo(
+            uses_password=False, name="test", mac_address="11:22:33:44:55:aa"
+        )
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_NOISE_PSK: VALID_NOISE_PSK}
@@ -1019,7 +1068,7 @@ async def test_reauth_confirm_invalid_with_unique_id(
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053, CONF_PASSWORD: ""},
-        unique_id="test",
+        unique_id="11:22:33:44:55:aa",
     )
     entry.add_to_hass(hass)
 
@@ -1036,7 +1085,9 @@ async def test_reauth_confirm_invalid_with_unique_id(
     assert result["errors"]["base"] == "invalid_psk"
 
     mock_client.device_info = AsyncMock(
-        return_value=DeviceInfo(uses_password=False, name="test")
+        return_value=DeviceInfo(
+            uses_password=False, name="test", mac_address="11:22:33:44:55:aa"
+        )
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_NOISE_PSK: VALID_NOISE_PSK}
@@ -1049,7 +1100,7 @@ async def test_reauth_confirm_invalid_with_unique_id(
 
 @pytest.mark.usefixtures("mock_zeroconf")
 async def test_reauth_encryption_key_removed(
-    hass: HomeAssistant, mock_client, mock_setup_entry: None
+    hass: HomeAssistant, mock_client: APIClient, mock_setup_entry: None
 ) -> None:
     """Test reauth when the encryption key was removed."""
     entry = MockConfigEntry(
@@ -1060,7 +1111,7 @@ async def test_reauth_encryption_key_removed(
             CONF_PASSWORD: "",
             CONF_NOISE_PSK: VALID_NOISE_PSK,
         },
-        unique_id="test",
+        unique_id="11:22:33:44:55:aa",
     )
     entry.add_to_hass(hass)
 
@@ -1715,3 +1766,129 @@ async def test_user_flow_name_conflict_overwrite(
         CONF_DEVICE_NAME: "test",
     }
     assert result["context"]["unique_id"] == "11:22:33:44:55:aa"
+
+
+@pytest.mark.usefixtures("mock_zeroconf", "mock_setup_entry")
+async def test_reconfig_attempt_to_change_mac_aborts(
+    hass: HomeAssistant, mock_client: APIClient
+) -> None:
+    """Test reconfig initiation with valid PSK attempting to change mac."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 6053,
+            CONF_PASSWORD: "",
+            CONF_DEVICE_NAME: "test",
+        },
+        unique_id="11:22:33:44:55:aa",
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    mock_client.device_info.return_value = DeviceInfo(
+        uses_password=False, name="other", mac_address="11:22:33:44:55:bb"
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "127.0.0.2", CONF_PORT: 6053}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_unique_id_changed"
+    assert CONF_NOISE_PSK not in entry.data
+
+
+@pytest.mark.usefixtures("mock_zeroconf", "mock_setup_entry")
+async def test_reconfig_name_conflict_migrate(
+    hass: HomeAssistant, mock_client: APIClient
+) -> None:
+    """Test reconfig initiation when device has been replaced."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 6053,
+            CONF_PASSWORD: "",
+            CONF_DEVICE_NAME: "test",
+        },
+        unique_id="11:22:33:44:55:aa",
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    mock_client.device_info.return_value = DeviceInfo(
+        uses_password=False, name="test", mac_address="11:22:33:44:55:bb"
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "127.0.0.2", CONF_PORT: 6053}
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "name_conflict"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"next_step_id": "name_conflict_migrate"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "name_conflict_migrated"
+
+    assert entry.data == {
+        CONF_HOST: "127.0.0.2",
+        CONF_PORT: 6053,
+        CONF_PASSWORD: "",
+        CONF_NOISE_PSK: "",
+        CONF_DEVICE_NAME: "test",
+    }
+    assert entry.unique_id == "11:22:33:44:55:bb"
+
+
+@pytest.mark.usefixtures("mock_zeroconf", "mock_setup_entry")
+async def test_reconfig_name_conflict_overwrite(
+    hass: HomeAssistant, mock_client: APIClient
+) -> None:
+    """Test reconfig initiation when device has been replaced."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 6053,
+            CONF_PASSWORD: "",
+            CONF_DEVICE_NAME: "test",
+        },
+        unique_id="11:22:33:44:55:aa",
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    mock_client.device_info.return_value = DeviceInfo(
+        uses_password=False, name="test", mac_address="11:22:33:44:55:bb"
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "127.0.0.2", CONF_PORT: 6053}
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "name_conflict"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"next_step_id": "name_conflict_overwrite"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    assert result["data"] == {
+        CONF_HOST: "127.0.0.2",
+        CONF_PORT: 6053,
+        CONF_PASSWORD: "",
+        CONF_NOISE_PSK: "",
+        CONF_DEVICE_NAME: "test",
+    }
+    assert result["context"]["unique_id"] == "11:22:33:44:55:bb"
+    assert (
+        hass.config_entries.async_entry_for_domain_unique_id(
+            DOMAIN, "11:22:33:44:55:aa"
+        )
+        is None
+    )
