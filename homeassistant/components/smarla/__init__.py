@@ -7,20 +7,12 @@ from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, HOST, PLATFORMS
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 type FederwiegeConfigEntry = ConfigEntry[Federwiege]
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up this integration using YAML is not supported."""
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: FederwiegeConfigEntry) -> bool:
@@ -68,24 +60,3 @@ async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Reload config entry."""
     await async_unload_entry(hass, entry)
     await async_setup_entry(hass, entry)
-
-
-class SmarlaBaseEntity(Entity):
-    """Common Base Entity class for defining Smarla device."""
-
-    def __init__(
-        self,
-        federwiege: Federwiege,
-    ) -> None:
-        """Initialise the entity."""
-        super().__init__()
-
-        self._attr_has_entity_name = True
-
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, federwiege.serial_number)},
-            name="Federwiege",
-            model="Smarla",
-            manufacturer="Swing2Sleep",
-            serial_number=federwiege.serial_number,
-        )
