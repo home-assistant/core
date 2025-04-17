@@ -147,7 +147,7 @@ async def test_prebrew_on(
 
     await async_init_integration(hass, mock_config_entry)
     serial_number = mock_lamarzocco.serial_number
-    entity_id = f"number.{serial_number}_prebrew_time_on"
+    entity_id = f"number.{serial_number}_prebrew_on_time"
 
     state = hass.states.get(entity_id)
 
@@ -193,7 +193,7 @@ async def test_prebrew_off(
 
     await async_init_integration(hass, mock_config_entry)
     serial_number = mock_lamarzocco.serial_number
-    entity_id = f"number.{serial_number}_prebrew_time_off"
+    entity_id = f"number.{serial_number}_prebrew_off_time"
 
     state = hass.states.get(entity_id)
 

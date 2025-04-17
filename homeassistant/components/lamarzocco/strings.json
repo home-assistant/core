@@ -106,10 +106,10 @@
         "name": "Preinfusion time"
       },
       "prebrew_time_on": {
-        "name": "Prebrew time on"
+        "name": "Prebrew on time"
       },
       "prebrew_time_off": {
-        "name": "Prebrew time off"
+        "name": "Prebrew off time"
       }
     },
     "select": {
