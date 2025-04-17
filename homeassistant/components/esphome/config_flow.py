@@ -173,7 +173,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             description_placeholders={"name": self._name},
         )
 
-    async def async_step_reconfig(
+    async def async_step_reconfigure(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle a flow initialized by a reconfig request."""
