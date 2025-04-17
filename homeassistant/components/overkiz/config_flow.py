@@ -13,12 +13,12 @@ from pyoverkiz.exceptions import (
     BadCredentialsException,
     CozyTouchBadCredentialsException,
     MaintenanceException,
+    NotAuthenticatedException,
     NotSuchTokenException,
     TooManyAttemptsBannedException,
     TooManyRequestsException,
     UnknownUserException,
 )
-from pyoverkiz.models import OverkizServer
 from pyoverkiz.obfuscate import obfuscate_id
 from pyoverkiz.utils import generate_local_server, is_overkiz_gateway
 import voluptuous as vol
@@ -58,52 +58,39 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
         """Validate user credentials."""
         user_input[CONF_API_TYPE] = self._api_type
         user_input[CONF_VERIFY_SSL] = self._verify_ssl
-        gateway_id = None
 
         if self._api_type == APIType.LOCAL:
-            # Local API validation using provided token
             session = async_create_clientsession(
                 self.hass, verify_ssl=user_input[CONF_VERIFY_SSL]
             )
-            local_client = OverkizClient(
-                username="",  # Not used for local token auth
-                password="",  # Not used for local token auth
+            client = OverkizClient(
+                username="",
+                password="",
                 token=user_input[CONF_TOKEN],
                 session=session,
                 server=generate_local_server(host=user_input[CONF_HOST]),
                 verify_ssl=user_input[CONF_VERIFY_SSL],
             )
-            await local_client.login(register_event_listener=False)
-
-            # Set main gateway id as unique id using local client
-            if gateways := await local_client.get_gateways():
-                for gateway in gateways:
-                    if is_overkiz_gateway(gateway.id):
-                        gateway_id = gateway.id
-                        break  # Found the main gateway
-
         else:  # APIType.CLOUD
-            client = self._create_cloud_client(
+            session = async_create_clientsession(self.hass)
+            client = OverkizClient(
                 username=user_input[CONF_USERNAME],
                 password=user_input[CONF_PASSWORD],
                 server=SUPPORTED_SERVERS[user_input[CONF_HUB]],
+                session=session,
             )
-            await client.login(register_event_listener=False)
 
-            # Set main gateway id as unique id using cloud client
-            if gateways := await client.get_gateways():
-                for gateway in gateways:
-                    if is_overkiz_gateway(gateway.id):
-                        gateway_id = gateway.id
-                        break  # Found the main gateway
+        await client.login(register_event_listener=False)
 
-        # Set unique_id if found
-        if gateway_id:
-            await self.async_set_unique_id(gateway_id, raise_on_progress=False)
-        else:
-            # Handle case where no suitable gateway is found, maybe raise an error?
-            # For now, logging a warning, but this might need specific error handling.
-            LOGGER.warning("Could not determine the main gateway ID")
+        # Set main gateway id as unique id
+        gateway_id = None
+        if gateways := await client.get_gateways():
+            for gateway in gateways:
+                if is_overkiz_gateway(gateway.id):
+                    gateway_id = gateway.id
+                    break
+
+        await self.async_set_unique_id(gateway_id, raise_on_progress=False)
 
         return user_input
 
@@ -167,15 +154,13 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input:
             self._user = user_input[CONF_USERNAME]
-
-            # inherit the server from previous step
             user_input[CONF_HUB] = self._server
 
             try:
                 await self.async_validate_input(user_input)
             except TooManyRequestsException:
                 errors["base"] = "too_many_requests"
-            except BadCredentialsException as exception:
+            except (BadCredentialsException, NotAuthenticatedException) as exception:
                 # If authentication with CozyTouch auth server is valid, but token is invalid
                 # for Overkiz API server, the hardware is not supported.
                 if user_input[CONF_HUB] in {
@@ -250,11 +235,12 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
                 validated_data = await self.async_validate_input(data)
             except TooManyRequestsException:
                 errors["base"] = "too_many_requests"
-            # BadCredentialsException might map to invalid_token now
-            except BadCredentialsException:
-                errors["base"] = (
-                    "invalid_auth"  # Keep same error key, string might need update
-                )
+            except (
+                BadCredentialsException,
+                NotSuchTokenException,
+                NotAuthenticatedException,
+            ):
+                errors["base"] = "invalid_auth"
             except ClientConnectorCertificateError as exception:
                 errors["base"] = "certificate_verify_failed"
                 LOGGER.debug(exception)
@@ -265,14 +251,9 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "server_in_maintenance"
             except TooManyAttemptsBannedException:
                 errors["base"] = "too_many_attempts"
-            except NotSuchTokenException:
-                # This error is relevant if the token is invalid/revoked
-                errors["base"] = "invalid_auth"  # Map to invalid_auth for consistency
-            # DeveloperModeDisabled is no longer relevant
-            # except DeveloperModeDisabled:
-            #     errors["base"] = "developer_mode_disabled"
+            except DeveloperModeDisabled:
+                errors["base"] = "developer_mode_disabled"
             except UnknownUserException:
-                # This shouldn't happen with token auth, but keep for safety
                 description_placeholders["unsupported_device"] = "Somfy Protect"
                 errors["base"] = "unsupported_hardware"
             except Exception:  # noqa: BLE001
@@ -372,11 +353,3 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
         # Cloud API reauth
         self._user = entry_data[CONF_USERNAME]
         return await self.async_step_cloud()
-
-    def _create_cloud_client(
-        self, username: str, password: str, server: OverkizServer
-    ) -> OverkizClient:
-        session = async_create_clientsession(self.hass)
-        return OverkizClient(
-            username=username, password=password, server=server, session=session
-        )
