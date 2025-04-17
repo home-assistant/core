@@ -13,7 +13,7 @@ from librehardwaremonitor_api import (
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT
 
 from .const import DEFAULT_HOST, DEFAULT_PORT, DOMAIN
 
@@ -48,7 +48,7 @@ class LibreHardwareMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
             try:
-                main_hardware_devices = (await api.get_data()).main_device_names
+                _ = (await api.get_data()).main_device_names
             except LibreHardwareMonitorConnectionError:
                 _LOGGER.debug(
                     "ConnectionError: Is LibreHardwareMonitor running and the web server option enabled?"
@@ -63,7 +63,6 @@ class LibreHardwareMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}",
                     data=user_input,
-                    options={CONF_DEVICES: main_hardware_devices},
                 )
 
         return self.async_show_form(

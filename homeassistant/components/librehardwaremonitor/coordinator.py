@@ -13,7 +13,7 @@ from librehardwaremonitor_api import (
 from librehardwaremonitor_api.model import LibreHardwareMonitorData
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -42,7 +42,12 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
         host = config_entry.data[CONF_HOST]
         port = config_entry.data[CONF_PORT]
         self._api = LibreHardwareMonitorClient(host, port)
-        self._previous_devices = set(config_entry.options[CONF_DEVICES])
+        device_entries = dr.async_entries_for_config_entry(
+            registry=dr.async_get(self.hass), config_entry_id=config_entry.entry_id
+        )
+        self._previous_devices = {
+            device.name for device in device_entries if device.name is not None
+        }
 
     async def _async_update_data(self):
         try:
@@ -75,15 +80,13 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
         if self._previous_devices == set(detected_devices) or self.config_entry is None:
             return
 
-        self.hass.config_entries.async_update_entry(
-            entry=self.config_entry,
-            options={CONF_DEVICES: detected_devices},
-        )
+        if self.data is None:
+            self._previous_devices = set(detected_devices)
+            return
 
         if orphaned_devices := list(self._previous_devices - set(detected_devices)):
             _LOGGER.info(
-                "Devices no longer present in data, will be removed: %s",
-                orphaned_devices,
+                "Devices no longer available, will be removed: %s", orphaned_devices
             )
             device_registry = dr.async_get(self.hass)
             for device_name in orphaned_devices:

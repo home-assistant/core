@@ -13,7 +13,6 @@ from homeassistant.components.librehardwaremonitor import (
     LibreHardwareMonitorCoordinator,
 )
 from homeassistant.components.librehardwaremonitor.const import DOMAIN
-from homeassistant.const import CONF_DEVICES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import UpdateFailed
@@ -103,11 +102,6 @@ async def test_orphaned_devices_are_removed(
         await coordinator._async_refresh()
         mock_remove.assert_called_once_with(orphaned_device.id)
 
-    assert mock_entry.options[CONF_DEVICES] == [
-        "AMD Ryzen 7 7800X3D",
-        "NVIDIA GeForce RTX 4080 SUPER",
-    ]
-
 
 async def test_new_devices_are_added_and_integration_reloaded(
     hass: HomeAssistant, mock_lhm_client: AsyncMock
@@ -130,11 +124,26 @@ async def test_new_devices_are_added_and_integration_reloaded(
         "homeassistant.config_entries.ConfigEntries.async_schedule_reload"
     ) as async_schedule_reload:
         await coordinator._async_refresh()
-        async_schedule_reload.assert_called_with(mock_entry.entry_id)
+        async_schedule_reload.assert_called_once_with(mock_entry.entry_id)
 
-    assert mock_entry.options[CONF_DEVICES] == [
-        "MSI MAG B650M MORTAR WIFI (MS-7D76)",
-        "AMD Ryzen 7 7800X3D",
-        "NVIDIA GeForce RTX 4080 SUPER",
-        "Generic Memory",
-    ]
+
+async def test_integration_is_not_reloaded_on_first_refresh(
+    hass: HomeAssistant, mock_lhm_client: AsyncMock
+) -> None:
+    """Test that initial coordinator update does not cause integration to reload."""
+    mock_entry = await init_integration(hass)
+    coordinator = LibreHardwareMonitorCoordinator(hass, mock_entry)
+
+    mock_lhm_client.get_data.return_value = LibreHardwareMonitorData(
+        main_device_names=[
+            *mock_lhm_client.get_data.return_value.main_device_names,
+            "Generic Memory",
+        ],
+        sensor_data=mock_lhm_client.get_data.return_value.sensor_data,
+    )
+
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_schedule_reload"
+    ) as async_schedule_reload:
+        await coordinator._async_refresh()
+        async_schedule_reload.assert_not_called()
