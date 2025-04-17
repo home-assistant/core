@@ -29,7 +29,7 @@ async def async_setup_entry(
 
     lights: list[ZimiLight | ZimiDimmer] = [
         ZimiLight(device, api)
-        for device in filter(lambda light: light.type != "dimmer", api.lights)
+        for device in api.lights if device.type != "dimmer"
     ]
 
     lights.extend(
