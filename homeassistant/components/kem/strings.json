@@ -23,5 +23,75 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "firmware_version": {
+        "name": "Firmware version"
+      },
+      "engine_speed": {
+        "name": "Engine speed"
+      },
+      "engine_oil_pressure": {
+        "name": "Engine oil pressure"
+      },
+      "engine_coolant_temperature": {
+        "name": "Engine coolant temperature"
+      },
+      "battery_voltage": {
+        "name": "Battery voltage"
+      },
+      "lube_oil_temperature": {
+        "name": "Lube oil temperature"
+      },
+      "controller_temperature": {
+        "name": "Controller temperature"
+      },
+      "engine_compartment_temperature": {
+        "name": "Engine compartment temperature"
+      },
+      "engine_frequency": {
+        "name": "Engine frequency"
+      },
+      "engine_state": {
+        "name": "Engine state"
+      },
+      "power_source": {
+        "name": "Power source"
+      },
+      "switch_state": {
+        "name": "Switch state"
+      },
+      "total_operation": {
+        "name": "Total operation"
+      },
+      "total_runtime": {
+        "name": "Total runtime"
+      },
+      "total_runtime_hours": {
+        "name": "Total runtime hours"
+      },
+      "runtime_since_last_maintenance": {
+        "name": "Runtime since last maintenance"
+      },
+      "device_ip_address": {
+        "name": "Device IP address"
+      },
+      "server_ip_address": {
+        "name": "Server IP address"
+      },
+      "utility_voltage": {
+        "name": "Utility voltage"
+      },
+      "generator_voltage_average": {
+        "name": "Generator voltage average"
+      },
+      "generator_load": {
+        "name": "Generator load"
+      },
+      "generator_load_percentage": {
+        "name": "Generator load percentage"
+      }
+    }
   }
 }
