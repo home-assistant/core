@@ -5,8 +5,6 @@ from __future__ import annotations
 import hashlib
 from typing import Any, cast
 
-from aiohttp import ClientResponseError
-
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry
@@ -73,16 +71,8 @@ async def async_get_device_diagnostics(
         "actions": {
             hash_identifier(device_id): coordinator.data.actions[device_id].raw
         },
+        "programs": "Not implemented",
     }
-    try:
-        miele_data["programs"] = await coordinator.api.get_programs(device_id)
-    except ClientResponseError as err:
-        miele_data["programs"] = {
-            hash_identifier(device_id): {
-                "message": f"{'No programs found' if err.status == 400 else err.message}"
-            }
-        }
-
     return {
         "info": async_redact_data(info, TO_REDACT),
         "data": async_redact_data(config_entry.data, TO_REDACT),
