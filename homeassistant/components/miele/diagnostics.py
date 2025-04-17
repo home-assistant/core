@@ -9,7 +9,6 @@ from aiohttp import ClientResponseError
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceEntry
 
 from .coordinator import MieleConfigEntry
@@ -78,14 +77,11 @@ async def async_get_device_diagnostics(
     try:
         miele_data["programs"] = await coordinator.api.get_programs(device_id)
     except ClientResponseError as err:
-        if err.status == 400:
-            miele_data["programs"] = {
-                hash_identifier(device_id): {"message": "No programs found"}
+        miele_data["programs"] = {
+            hash_identifier(device_id): {
+                "message": f"{'No programs found' if err.status == 400 else err.message}"
             }
-        else:
-            raise HomeAssistantError(
-                f"Unable to fetch programs list from Miele API - {err.message}"
-            ) from err
+        }
 
     return {
         "info": async_redact_data(info, TO_REDACT),
