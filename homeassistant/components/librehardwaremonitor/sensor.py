@@ -53,16 +53,16 @@ class LibreHardwareMonitorSensor(
         """Initialize an LibreHardwareMonitor sensor."""
         super().__init__(coordinator)
 
-        self._attr_name = sensor_data.name
-        self.value = sensor_data.value
-        self.attributes = {
+        self._attr_name: str = sensor_data.name
+        self.value: str | None = sensor_data.value
+        self.attributes: dict[str, str] = {
             STATE_MIN_VALUE: self._format_number_value(sensor_data.min),
             STATE_MAX_VALUE: self._format_number_value(sensor_data.max),
         }
-        self._unit_of_measurement = sensor_data.unit
-        self._attr_unique_id = f"lhm-{sensor_data.sensor_id}"
+        self._unit_of_measurement: str | None = sensor_data.unit
+        self._attr_unique_id: str = f"lhm-{sensor_data.sensor_id}"
 
-        self._sensor_id = sensor_data.sensor_id
+        self._sensor_id: str = sensor_data.sensor_id
 
         # Hardware device
         self._attr_device_info = DeviceInfo(
@@ -87,22 +87,22 @@ class LibreHardwareMonitorSensor(
         self.async_write_ha_state()
 
     @property
-    def native_unit_of_measurement(self):
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
         return self._unit_of_measurement
 
     @property
-    def native_value(self):
+    def native_value(self) -> str | None:
         """Return the state of the device."""
         if self.value is not None and self.value != "-":
             return self._format_number_value(self.value)
         return None
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, str]:
         """Return the state attributes of the entity."""
         return self.attributes
 
     @staticmethod
-    def _format_number_value(number_str) -> str:
+    def _format_number_value(number_str: str) -> str:
         return number_str.replace(",", ".")
