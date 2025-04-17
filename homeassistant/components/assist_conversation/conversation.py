@@ -48,6 +48,7 @@ from homeassistant.components.homeassistant.exposed_entities import (
     async_listen_entity_updates,
     async_should_expose,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_STATE_CHANGED, MATCH_ALL
 from homeassistant.core import (
     Event,
@@ -67,9 +68,8 @@ from homeassistant.helpers import (
     template,
     translation,
 )
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_state_added_domain
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import language as language_util
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
@@ -185,16 +185,12 @@ class IntentCache:
         self.cache.clear()
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up assist conversation entity."""
-    if discovery_info is None:
-        return
-
     agent = DefaultAgent()
     await get_agent_manager(hass).async_setup_default_agent(agent)
     async_add_entities([agent])
