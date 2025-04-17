@@ -125,7 +125,6 @@ def will_options_be_rendered_again(current_options, new_options) -> bool:
         (
             {
                 CONF_RECOMMENDED: True,
-                CONF_LLM_HASS_API: "none",
                 CONF_PROMPT: "bla",
             },
             {
@@ -162,12 +161,12 @@ def will_options_be_rendered_again(current_options, new_options) -> bool:
             },
             {
                 CONF_RECOMMENDED: True,
-                CONF_LLM_HASS_API: "assist",
+                CONF_LLM_HASS_API: ["assist"],
                 CONF_PROMPT: "",
             },
             {
                 CONF_RECOMMENDED: True,
-                CONF_LLM_HASS_API: "assist",
+                CONF_LLM_HASS_API: ["assist"],
                 CONF_PROMPT: "",
             },
             None,
@@ -235,7 +234,7 @@ def will_options_be_rendered_again(current_options, new_options) -> bool:
             {
                 CONF_RECOMMENDED: False,
                 CONF_PROMPT: "Speak like a pirate",
-                CONF_LLM_HASS_API: "assist",
+                CONF_LLM_HASS_API: ["assist"],
                 CONF_TEMPERATURE: 0.3,
                 CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
                 CONF_TOP_P: RECOMMENDED_TOP_P,
