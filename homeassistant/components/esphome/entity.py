@@ -28,6 +28,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .const import DOMAIN
+
 # Import config flow so that it's added to the registry
 from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
 from .enum_mapper import EsphomeEnumMapper
@@ -167,7 +169,12 @@ def convert_api_error_ha_error[**_P, _R, _EntityT: EsphomeEntity[Any, Any]](
             return await func(self, *args, **kwargs)
         except APIConnectionError as error:
             raise HomeAssistantError(
-                f"Error communicating with device: {error}"
+                translation_domain=DOMAIN,
+                translation_key="error_communicating_with_device",
+                translation_placeholders={
+                    "device_name": self._device_info.name,
+                    "error": str(error),
+                },
             ) from error
 
     return handler
