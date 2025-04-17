@@ -153,7 +153,7 @@ async def test_form_only_cloud_supported(
 async def test_form_local_happy_flow(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
-    """Test we get the form."""
+    """Test local API configuration flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -404,12 +404,19 @@ async def test_cloud_abort_on_duplicate_entry(
 async def test_local_abort_on_duplicate_entry(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
-    """Test we get the form."""
+    """Test local API configuration is aborted if gateway already exists."""
 
     MockConfigEntry(
         domain=DOMAIN,
         unique_id=TEST_GATEWAY_ID,
-        data={"host": TEST_HOST, "hub": TEST_SERVER, "token": "", "verify_ssl": True},
+        version=2,
+        data={
+            "host": TEST_HOST,
+            "token": "",
+            "verify_ssl": True,
+            "hub": TEST_SERVER,
+            "api_type": "local",
+        },
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -593,16 +600,16 @@ async def test_cloud_reauth_wrong_account(hass: HomeAssistant) -> None:
         assert result2["reason"] == "reauth_wrong_account"
 
 
-async def test_local_reauth_success(hass: HomeAssistant) -> None:
-    """Test reauthentication flow."""
-
+async def test_local_reauth_legacy(hass: HomeAssistant) -> None:
+    """Test legacy reauthentication flow with username/password."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=TEST_GATEWAY_ID,
-        version=2,
+        version=1,  # Old version with username/password
         data={
             "host": TEST_HOST,
-            "token": "old_token",
+            "username": TEST_EMAIL,
+            "password": TEST_PASSWORD,
             "verify_ssl": True,
             "hub": TEST_SERVER,
             "api_type": "local",
@@ -643,8 +650,58 @@ async def test_local_reauth_success(hass: HomeAssistant) -> None:
         assert mock_entry.data["verify_ssl"] is True
 
 
+async def test_local_reauth_success(hass: HomeAssistant) -> None:
+    """Test modern local reauth flow."""
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_GATEWAY_ID,
+        version=2,
+        data={
+            "host": TEST_HOST,
+            "token": "old_token",
+            "verify_ssl": True,
+            "hub": TEST_SERVER,
+            "api_type": "local",
+        },
+    )
+    mock_entry.add_to_hass(hass)
+
+    result = await mock_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "local_or_cloud"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"api_type": "local"},
+    )
+
+    assert result2["step_id"] == "local"
+
+    with patch.multiple(
+        "pyoverkiz.client.OverkizClient",
+        login=AsyncMock(return_value=True),
+        get_gateways=AsyncMock(return_value=MOCK_GATEWAY_RESPONSE),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": TEST_HOST,
+                "token": "new_token",
+                "verify_ssl": True,
+            },
+        )
+
+        assert result3["type"] is FlowResultType.ABORT
+        assert result3["reason"] == "reauth_successful"
+        assert mock_entry.data["host"] == TEST_HOST
+        assert mock_entry.data["token"] == "new_token"
+        assert mock_entry.data["verify_ssl"] is True
+        assert "username" not in mock_entry.data
+        assert "password" not in mock_entry.data
+
+
 async def test_local_reauth_wrong_account(hass: HomeAssistant) -> None:
-    """Test reauthentication flow."""
+    """Test local reauth flow with wrong gateway account."""
 
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -860,6 +917,7 @@ async def test_local_zeroconf_flow(
 
     assert result4["type"] is FlowResultType.CREATE_ENTRY
     assert result4["title"] == "gateway-1234-5678-9123.local:8443"
+    # Verify no username/password in data
     assert result4["data"] == {
         "host": "gateway-1234-5678-9123.local:8443",
         "token": TEST_TOKEN,
@@ -867,7 +925,6 @@ async def test_local_zeroconf_flow(
         "hub": TEST_SERVER,
         "api_type": "local",
     }
-
     assert len(mock_setup_entry.mock_calls) == 1
 
 
