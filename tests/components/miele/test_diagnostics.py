@@ -10,7 +10,7 @@ from syrupy.filters import paths
 
 from homeassistant.components.miele.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceRegistry
 
 from . import setup_integration
 
@@ -47,6 +47,7 @@ async def test_diagnostics_config_entry(
 async def test_diagnostics_device(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
+    device_registry: DeviceRegistry,
     mock_miele_client: Generator[MagicMock],
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
@@ -56,7 +57,6 @@ async def test_diagnostics_device(
     TEST_DEVICE = "Dummy_Appliance_1"
 
     await setup_integration(hass, mock_config_entry)
-    device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_device(identifiers={(DOMAIN, TEST_DEVICE)})
     assert device_entry is not None
 
@@ -74,6 +74,7 @@ async def test_diagnostics_device(
 async def test_api_error(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
+    device_registry: DeviceRegistry,
     mock_miele_client: Generator[MagicMock],
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -82,7 +83,6 @@ async def test_api_error(
     TEST_DEVICE = "Dummy_Appliance_1"
 
     await setup_integration(hass, mock_config_entry)
-    device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_device(identifiers={(DOMAIN, TEST_DEVICE)})
 
     mock_miele_client.get_programs.side_effect = ClientResponseError
