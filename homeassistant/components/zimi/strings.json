@@ -10,7 +10,8 @@
         "description": "Select Zimi Cloud Connect device to configure.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "port": "[%key:common::config_flow::data::port%]"
+          "port": "[%key:common::config_flow::data::port%]",
+          "selected_host_and_port": "Selected device: {host}:{port}"
         }
       },
       "manual": {
