@@ -19,7 +19,6 @@ from tests.common import MockConfigEntry, snapshot_platform
 
 async def test_update(
     hass: HomeAssistant,
-    mock_lamarzocco: MagicMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
