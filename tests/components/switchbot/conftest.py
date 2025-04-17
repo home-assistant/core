@@ -33,7 +33,7 @@ def mock_entry_factory():
 
 @pytest.fixture
 def mock_entry_encrypted_factory():
-    """Fixture to create a MockConfigEntry with a encrypted sensor type."""
+    """Fixture to create a MockConfigEntry with an encryption key and a customizable sensor type."""
     return lambda sensor_type="lock": MockConfigEntry(
         domain=DOMAIN,
         data={

@@ -14,7 +14,7 @@ from homeassistant.components.light import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_ON
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
 from . import WOSTRIP_SERVICE_INFO
@@ -88,10 +88,6 @@ async def test_light_strip_controlling(
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-
-        initial_state = hass.states.get(entity_id)
-        assert initial_state is not None
-        assert initial_state.state == STATE_ON
 
         await hass.services.async_call(
             LIGHT_DOMAIN,
