@@ -208,7 +208,6 @@ class AgentManager:
             config.get(DOMAIN, {}).get("intents", {}), self.triggers_details
         )
         self.default_agent = agent
-        await self.hass.data[DATA_COMPONENT].async_add_entities([agent])
 
     def register_trigger(self, trigger_details: TriggerDetails) -> CALLBACK_TYPE:
         """Register a trigger."""

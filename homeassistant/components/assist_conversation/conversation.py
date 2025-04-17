@@ -67,8 +67,9 @@ from homeassistant.helpers import (
     template,
     translation,
 )
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_added_domain
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import language as language_util
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
@@ -184,13 +185,16 @@ class IntentCache:
         self.cache.clear()
 
 
-async def async_setup_default_agent(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up assist conversation entity."""
-    agent = DefaultAgent(hass)
-    await get_agent_manager(hass).async_setup_default_agent(config, agent)
+    agent = DefaultAgent()
+    await get_agent_manager(hass).async_setup_default_agent(discovery_info, agent)
+    async_add_entities([agent])
 
     @callback
     def async_entity_state_listener(event: Event[EventStateChangedData]) -> None:
@@ -213,10 +217,8 @@ class DefaultAgent(ConversationEntity):
     _attr_name = "Home Assistant"
     _attr_supported_features = ConversationEntityFeature.CONTROL
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self) -> None:
         """Initialize the default agent."""
-        self.hass = hass
-
         self._lang_intents: dict[str, LanguageIntents | object] = {}
         self._load_intents_lock = asyncio.Lock()
 
