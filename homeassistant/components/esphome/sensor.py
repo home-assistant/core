@@ -77,6 +77,7 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
         super()._on_static_info_update(static_info)
         static_info = self._static_info
         self._attr_force_update = static_info.force_update
+        self._attr_suggested_display_precision = static_info.accuracy_decimals
         # protobuf doesn't support nullable strings so we need to check
         # if the string is empty
         if unit_of_measurement := static_info.unit_of_measurement:
@@ -97,7 +98,7 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
             self._attr_state_class = _STATE_CLASSES.from_esphome(state_class)
 
     @property
-    def native_value(self) -> datetime | str | None:
+    def native_value(self) -> datetime | float | None:
         """Return the state of the entity."""
         if not self._has_state or (state := self._state).missing_state:
             return None
@@ -106,7 +107,7 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
             return None
         if self.device_class is SensorDeviceClass.TIMESTAMP:
             return dt_util.utc_from_timestamp(state_float)
-        return f"{state_float:.{self._static_info.accuracy_decimals}f}"
+        return state_float
 
 
 class EsphomeTextSensor(EsphomeEntity[TextSensorInfo, TextSensorState], SensorEntity):
