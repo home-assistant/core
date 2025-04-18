@@ -1051,6 +1051,8 @@ build.json @home-assistant/supervisor
 /tests/components/nsw_fuel_station/ @nickw444
 /homeassistant/components/nsw_rural_fire_service_feed/ @exxamalte
 /tests/components/nsw_rural_fire_service_feed/ @exxamalte
+/homeassistant/components/ntfy/ @tr4nt0r
+/tests/components/ntfy/ @tr4nt0r
 /homeassistant/components/nuheat/ @tstabrawa
 /tests/components/nuheat/ @tstabrawa
 /homeassistant/components/nuki/ @pschmitt @pvizeli @pree
