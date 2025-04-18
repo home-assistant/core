@@ -119,16 +119,18 @@ async def _async_close_cover(
     features: CoverEntityFeature,
     set_position: bool,
     set_tilt: bool,
+    current_position: int | None,
+    current_tilt_position: int | None,
 ) -> None:
     """Close the cover if it was not closed by setting the position."""
-    if not set_position:
+    if not set_position and current_position != FULL_CLOSE:
         if CoverEntityFeature.CLOSE in features:
             await service_call(SERVICE_CLOSE_COVER, service_data)
         elif CoverEntityFeature.SET_POSITION in features:
             await service_call(
                 SERVICE_SET_COVER_POSITION, service_data | {ATTR_POSITION: FULL_CLOSE}
             )
-    if not set_tilt:
+    if not set_tilt and current_tilt_position != FULL_CLOSE:
         if CoverEntityFeature.CLOSE_TILT in features:
             await service_call(SERVICE_CLOSE_COVER_TILT, service_data)
         elif CoverEntityFeature.SET_TILT_POSITION in features:
@@ -144,16 +146,18 @@ async def _async_open_cover(
     features: CoverEntityFeature,
     set_position: bool,
     set_tilt: bool,
+    current_position: int | None,
+    current_tilt_position: int | None,
 ) -> None:
     """Open the cover if it was not opened by setting the position."""
-    if not set_position:
+    if not set_position and current_position != FULL_OPEN:
         if CoverEntityFeature.OPEN in features:
             await service_call(SERVICE_OPEN_COVER, service_data)
         elif CoverEntityFeature.SET_POSITION in features:
             await service_call(
                 SERVICE_SET_COVER_POSITION, service_data | {ATTR_POSITION: FULL_OPEN}
             )
-    if not set_tilt:
+    if not set_tilt and current_tilt_position != FULL_OPEN:
         if CoverEntityFeature.OPEN_TILT in features:
             await service_call(SERVICE_OPEN_COVER_TILT, service_data)
         elif CoverEntityFeature.SET_TILT_POSITION in features:
@@ -183,12 +187,12 @@ async def _async_reproduce_state(
     current_attrs = cur_state.attributes
     target_attrs = state.attributes
 
-    current_position = current_attrs.get(ATTR_CURRENT_POSITION)
-    target_position = target_attrs.get(ATTR_CURRENT_POSITION)
+    current_position: int | None = current_attrs.get(ATTR_CURRENT_POSITION)
+    target_position: int | None = target_attrs.get(ATTR_CURRENT_POSITION)
     position_matches = current_position == target_position
 
-    current_tilt_position = current_attrs.get(ATTR_CURRENT_TILT_POSITION)
-    target_tilt_position = target_attrs.get(ATTR_CURRENT_TILT_POSITION)
+    current_tilt_position: int | None = current_attrs.get(ATTR_CURRENT_TILT_POSITION)
+    target_tilt_position: int | None = target_attrs.get(ATTR_CURRENT_TILT_POSITION)
     tilt_position_matches = current_tilt_position == target_tilt_position
 
     state_matches = cur_state.state == target_state
@@ -231,12 +235,24 @@ async def _async_reproduce_state(
 
     if target_state in CLOSING_STATES:
         await _async_close_cover(
-            service_call, service_data, features, set_position, set_tilt
+            service_call,
+            service_data,
+            features,
+            set_position,
+            set_tilt,
+            current_position,
+            current_tilt_position,
         )
 
     elif target_state in OPENING_STATES:
         await _async_open_cover(
-            service_call, service_data, features, set_position, set_tilt
+            service_call,
+            service_data,
+            features,
+            set_position,
+            set_tilt,
+            current_position,
+            current_tilt_position,
         )
 
 
