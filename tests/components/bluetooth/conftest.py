@@ -1,6 +1,7 @@
 """Tests for the bluetooth component."""
 
 from collections.abc import Generator
+import sys
 from unittest.mock import patch
 
 from bleak_retry_connector import bleak_manager
@@ -24,7 +25,13 @@ from . import (
 def disable_bluez_manager_socket():
     """Mock the bluez manager socket."""
     with patch.object(bleak_manager, "get_global_bluez_manager_with_timeout"):
-        yield
+        if (
+            "bleak.backends.bluezdbus" in sys.modules
+        ):  # only on Linux will this be imported
+            with patch("bleak.backends.bluezdbus.manager.get_global_bluez_manager"):
+                yield
+        else:
+            yield
 
 
 @pytest.fixture(name="disable_dbus_socket", autouse=True, scope="package")
