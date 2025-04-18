@@ -11,7 +11,7 @@ aiohttp_cors==0.7.0
 aiousbwatcher==1.1.1
 aiozoneinfo==0.2.3
 annotatedyaml==0.4.5
-astral==2.2
+astral==3.2
 async-interrupt==1.2.2
 async-upnp-client==0.44.0
 atomicwrites-homeassistant==1.4.1
