@@ -200,8 +200,18 @@ def get_device_uptime(uptime: float, last_uptime: datetime | None) -> datetime:
 
     if (
         not last_uptime
-        or abs((delta_uptime - last_uptime).total_seconds()) > UPTIME_DEVIATION
+        or (diff := abs((delta_uptime - last_uptime).total_seconds()))
+        > UPTIME_DEVIATION
     ):
+        if last_uptime:
+            LOGGER.debug(
+                "Time deviation %s > %s: uptime=%s, last_uptime=%s, delta_uptime=%s",
+                diff,
+                UPTIME_DEVIATION,
+                uptime,
+                last_uptime,
+                delta_uptime,
+            )
         return delta_uptime
 
     return last_uptime

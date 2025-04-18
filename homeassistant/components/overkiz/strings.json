@@ -71,14 +71,14 @@
         "state_attributes": {
           "preset_mode": {
             "state": {
-              "auto": "Auto",
+              "auto": "[%key:common::state::auto%]",
+              "manual": "[%key:common::state::manual%]",
               "comfort-1": "Comfort -1°C",
               "comfort-2": "Comfort -2°C",
               "drying": "Drying",
               "external": "External",
               "freeze": "Freeze",
               "frost_protection": "Frost protection",
-              "manual": "Manual",
               "night": "Night",
               "prog": "Prog"
             }

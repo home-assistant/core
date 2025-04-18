@@ -34,7 +34,7 @@ dbus-fast==2.43.0
 fnv-hash-fast==1.4.0
 go2rtc-client==0.1.2
 ha-ffmpeg==3.2.2
-habluetooth==3.37.0
+habluetooth==3.39.0
 hass-nabucasa==0.94.0
 hassil==2.2.3
 home-assistant-bluetooth==1.13.1
@@ -74,8 +74,8 @@ voluptuous-openapi==0.0.6
 voluptuous-serialize==2.6.0
 voluptuous==0.15.2
 webrtc-models==0.3.0
-yarl==1.19.0
-zeroconf==0.146.0
+yarl==1.20.0
+zeroconf==0.146.5
 
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238
