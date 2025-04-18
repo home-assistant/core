@@ -52,7 +52,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 RECOMMENDED_OPTIONS = {
     CONF_RECOMMENDED: True,
-    CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
+    CONF_LLM_HASS_API: [llm.LLM_API_ASSIST],
     CONF_PROMPT: llm.DEFAULT_INSTRUCTIONS_PROMPT,
 }
 
@@ -156,6 +156,10 @@ class AnthropicOptionsFlow(OptionsFlow):
         suggested_values = options.copy()
         if not suggested_values.get(CONF_PROMPT):
             suggested_values[CONF_PROMPT] = llm.DEFAULT_INSTRUCTIONS_PROMPT
+        if (
+            suggested_llm_apis := suggested_values.get(CONF_LLM_HASS_API)
+        ) and isinstance(suggested_llm_apis, str):
+            suggested_values[CONF_LLM_HASS_API] = [suggested_llm_apis]
 
         schema = self.add_suggested_values_to_schema(
             vol.Schema(anthropic_config_option_schema(self.hass, options)),
@@ -184,9 +188,9 @@ def anthropic_config_option_schema(
 
     schema = {
         vol.Optional(CONF_PROMPT): TemplateSelector(),
-        vol.Optional(CONF_LLM_HASS_API): SelectSelector(
-            SelectSelectorConfig(options=hass_apis, multiple=True)
-        ),
+        vol.Optional(
+            CONF_LLM_HASS_API,
+        ): SelectSelector(SelectSelectorConfig(options=hass_apis, multiple=True)),
         vol.Required(
             CONF_RECOMMENDED, default=options.get(CONF_RECOMMENDED, False)
         ): bool,
