@@ -33,7 +33,7 @@ from .const import (
     URI_SCHEME,
     URI_SCHEME_REGEX,
 )
-from .error import MediaSourceError, Unresolvable
+from .error import MediaSourceError, UnknownMediaSource, Unresolvable
 from .models import BrowseMediaSource, MediaSource, MediaSourceItem, PlayMedia
 
 __all__ = [
@@ -113,7 +113,11 @@ def _get_media_item(
         return MediaSourceItem(hass, domain, "", target_media_player)
 
     if item.domain is not None and item.domain not in hass.data[DOMAIN]:
-        raise ValueError("Unknown media source")
+        raise UnknownMediaSource(
+            translation_domain=DOMAIN,
+            translation_key="unknown_media_source",
+            translation_placeholders={"domain": item.domain},
+        )
 
     return item
 

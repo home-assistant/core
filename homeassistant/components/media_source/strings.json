@@ -1,0 +1,7 @@
+{
+  "exceptions": {
+    "unknown_media_source": {
+      "message": "Unknown media source: {domain}"
+    }
+  }
+}
