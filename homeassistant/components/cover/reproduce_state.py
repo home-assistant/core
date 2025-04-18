@@ -73,14 +73,14 @@ async def _async_set_position(
     Returns True if the position was set, False if there is no
     supported method for setting the position.
     """
-    if target_position == FULL_CLOSE and CoverEntityFeature.CLOSE in features:
-        await service_call(SERVICE_CLOSE_COVER, service_data)
-    elif target_position == FULL_OPEN and CoverEntityFeature.OPEN in features:
-        await service_call(SERVICE_OPEN_COVER, service_data)
-    elif CoverEntityFeature.SET_POSITION in features:
+    if CoverEntityFeature.SET_POSITION in features:
         await service_call(
             SERVICE_SET_COVER_POSITION, service_data | {ATTR_POSITION: target_position}
         )
+    elif target_position == FULL_CLOSE and CoverEntityFeature.CLOSE in features:
+        await service_call(SERVICE_CLOSE_COVER, service_data)
+    elif target_position == FULL_OPEN and CoverEntityFeature.OPEN in features:
+        await service_call(SERVICE_OPEN_COVER, service_data)
     else:
         # Requested a position but the cover doesn't support it
         return False
@@ -98,15 +98,17 @@ async def _async_set_tilt_position(
     Returns True if the tilt position was set, False if there is no
     supported method for setting the tilt position.
     """
-    if target_tilt_position == FULL_CLOSE and CoverEntityFeature.CLOSE_TILT in features:
-        await service_call(SERVICE_CLOSE_COVER_TILT, service_data)
-    elif target_tilt_position == FULL_OPEN and CoverEntityFeature.OPEN_TILT in features:
-        await service_call(SERVICE_OPEN_COVER_TILT, service_data)
-    elif CoverEntityFeature.SET_TILT_POSITION in features:
+    if CoverEntityFeature.SET_TILT_POSITION in features:
         await service_call(
             SERVICE_SET_COVER_TILT_POSITION,
             service_data | {ATTR_TILT_POSITION: target_tilt_position},
         )
+    elif (
+        target_tilt_position == FULL_CLOSE and CoverEntityFeature.CLOSE_TILT in features
+    ):
+        await service_call(SERVICE_CLOSE_COVER_TILT, service_data)
+    elif target_tilt_position == FULL_OPEN and CoverEntityFeature.OPEN_TILT in features:
+        await service_call(SERVICE_OPEN_COVER_TILT, service_data)
     else:
         # Requested a tilt position but the cover doesn't support it
         return False
@@ -214,19 +216,11 @@ async def _async_reproduce_state(
     )
     service_data = {ATTR_ENTITY_ID: entity_id}
 
-    set_position = (
-        not position_matches
-        and target_position is not None
-        and await _async_set_position(
-            service_call, service_data, features, target_position
-        )
+    set_position = target_position is not None and await _async_set_position(
+        service_call, service_data, features, target_position
     )
-    set_tilt = (
-        not tilt_position_matches
-        and target_tilt_position is not None
-        and await _async_set_tilt_position(
-            service_call, service_data, features, target_tilt_position
-        )
+    set_tilt = target_tilt_position is not None and await _async_set_tilt_position(
+        service_call, service_data, features, target_tilt_position
     )
 
     if target_state in CLOSING_STATES:

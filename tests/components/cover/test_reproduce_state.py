@@ -487,7 +487,6 @@ async def test_reproducing_states(
     valid_close_calls = [
         {"entity_id": "cover.entity_open"},
         {"entity_id": "cover.entity_open_attr"},
-        {"entity_id": "cover.entity_entirely_open"},
         {"entity_id": "cover.open_only_supports_close_open"},
         {"entity_id": "cover.open_missing_all_features"},
     ]
@@ -510,11 +509,8 @@ async def test_reproducing_states(
         valid_open_calls.remove(call.data)
 
     valid_close_tilt_calls = [
-        {"entity_id": "cover.entity_open_tilt"},
-        {"entity_id": "cover.entity_entirely_open"},
         {"entity_id": "cover.tilt_only_open"},
         {"entity_id": "cover.entity_open_attr"},
-        {"entity_id": "cover.tilt_only_tilt_position_100"},
         {"entity_id": "cover.open_only_supports_tilt_close_open"},
     ]
     assert len(close_tilt_calls) == len(valid_close_tilt_calls)
@@ -524,9 +520,7 @@ async def test_reproducing_states(
         valid_close_tilt_calls.remove(call.data)
 
     valid_open_tilt_calls = [
-        {"entity_id": "cover.entity_close_tilt"},
         {"entity_id": "cover.tilt_only_closed"},
-        {"entity_id": "cover.tilt_only_tilt_position_0"},
         {"entity_id": "cover.closed_only_supports_tilt_close_open"},
     ]
     assert len(open_tilt_calls) == len(valid_open_tilt_calls)
@@ -550,6 +544,14 @@ async def test_reproducing_states(
         },
         {
             "entity_id": "cover.open_only_supports_position",
+            ATTR_POSITION: 0,
+        },
+        {
+            "entity_id": "cover.closed_supports_all_features",
+            ATTR_POSITION: 0,
+        },
+        {
+            "entity_id": "cover.entity_entirely_open",
             ATTR_POSITION: 0,
         },
     ]
@@ -584,7 +586,30 @@ async def test_reproducing_states(
             "entity_id": "cover.closed_supports_all_features",
             ATTR_TILT_POSITION: 50,
         },
+        {
+            "entity_id": "cover.entity_close_tilt",
+            ATTR_TILT_POSITION: 100,
+        },
+        {
+            "entity_id": "cover.entity_open_tilt",
+            ATTR_TILT_POSITION: 0,
+        },
+        {
+            "entity_id": "cover.entity_entirely_open",
+            ATTR_TILT_POSITION: 0,
+        },
+        {
+            "entity_id": "cover.tilt_only_tilt_position_100",
+            ATTR_TILT_POSITION: 0,
+        },
+        {
+            "entity_id": "cover.tilt_only_tilt_position_0",
+            ATTR_TILT_POSITION: 100,
+        },
     ]
+    for call in position_tilt_calls:
+        if ATTR_TILT_POSITION not in call.data:
+            continue
     assert len(position_tilt_calls) == len(valid_position_tilt_calls)
     for call in position_tilt_calls:
         assert call.domain == "cover"
