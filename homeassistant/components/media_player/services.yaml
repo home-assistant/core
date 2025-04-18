@@ -188,6 +188,11 @@ search_media:
       supported_features:
         - media_player.MediaPlayerEntityFeature.SEARCH_MEDIA
   fields:
+    search_query:
+      required: true
+      example: "Beatles"
+      selector:
+        text:
     media_content_type:
       required: false
       example: "music"
@@ -196,11 +201,6 @@ search_media:
     media_content_id:
       required: false
       example: "A:ALBUMARTIST/Beatles"
-      selector:
-        text:
-    search_query:
-      required: true
-      example: "Beatles"
       selector:
         text:
     media_filter_classes:
