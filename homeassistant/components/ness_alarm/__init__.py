@@ -35,6 +35,7 @@ CONF_DEVICE_PORT = "port"
 CONF_INFER_ARMING_STATE = "infer_arming_state"
 CONF_ZONES = "zones"
 CONF_ZONE_NAME = "name"
+CONF_PANEL_NAME = "name"
 CONF_ZONE_TYPE = "type"
 CONF_ZONE_ID = "id"
 ATTR_OUTPUT_ID = "output_id"
@@ -63,6 +64,7 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_HOST): cv.string,
                 vol.Required(CONF_DEVICE_PORT): cv.port,
+                vol.Optional(CONF_PANEL_NAME): cv.string,
                 vol.Optional(
                     CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
                 ): cv.positive_time_period,
@@ -97,11 +99,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     zones = conf[CONF_ZONES]
     host = conf[CONF_HOST]
+    panel_name = conf[CONF_PANEL_NAME]
     port = conf[CONF_DEVICE_PORT]
     scan_interval = conf[CONF_SCAN_INTERVAL]
     infer_arming_state = conf[CONF_INFER_ARMING_STATE]
 
     client = Client(
+        name=panel_name,
         host=host,
         port=port,
         update_interval=scan_interval.total_seconds(),
