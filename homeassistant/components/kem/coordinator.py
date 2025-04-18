@@ -46,6 +46,8 @@ class KemUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         name: str,
     ) -> None:
         """Initialize."""
+        assert config_entry is not None, "ConfigEntry cannot be None"
+
         self.kem = kem
         self.device_data = device_data
         self.device_id = device_id
