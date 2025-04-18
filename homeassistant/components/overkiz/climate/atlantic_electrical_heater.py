@@ -24,6 +24,7 @@ PRESET_COMFORT2 = "comfort-2"
 PRESET_FROST_PROTECTION = "frost_protection"
 
 OVERKIZ_TO_HVAC_MODES: dict[str, HVACMode] = {
+    OverkizCommandParam.AUTO: HVACMode.AUTO,
     OverkizCommandParam.ON: HVACMode.HEAT,
     OverkizCommandParam.COMFORT: HVACMode.HEAT,
     OverkizCommandParam.OFF: HVACMode.OFF,
