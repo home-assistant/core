@@ -24,13 +24,11 @@ from homeassistant.components.cover import (
     CoverEntityDescription,
     CoverEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import HomeAssistantOverkizData
-from .const import DOMAIN
+from . import OverkizDataConfigEntry
 from .coordinator import OverkizDataUpdateCoordinator
 from .entity import OverkizDescriptiveEntity
 
@@ -261,11 +259,11 @@ SUPPORTED_DEVICES = {description.key: description for description in COVER_DESCR
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: OverkizDataConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Overkiz covers from a config entry."""
-    data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
 
     entities = [
         OverkizCover(
