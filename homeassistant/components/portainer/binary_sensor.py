@@ -72,7 +72,6 @@ async def async_setup_entry(
             [
                 PortainerEndpointSensor(
                     coordinator=portainer,
-                    entry=entry,
                     entity_description=entity_description,
                     device_info=endpoint,
                 )
@@ -80,12 +79,12 @@ async def async_setup_entry(
             ]
         )
 
+        assert endpoint.containers
         for container in endpoint.containers.values():
             entities.extend(
                 [
                     PortainerContainerSensor(
                         coordinator=portainer,
-                        entry=entry,
                         entity_description=entity_description,
                         device_info=container,
                         via_device=endpoint,
@@ -106,24 +105,23 @@ class PortainerEndpointSensor(PortainerEndpointEntity, BinarySensorEntity):
         self,
         coordinator: PortainerCoordinator,
         entity_description: PortainerBinarySensorEntityDescription,
-        device_id: int,
+        device_info: PortainerCoordinatorData,
     ) -> None:
         """Initialize Portainer endpoint binary sensor entity."""
         self.entity_description = entity_description
-        super().__init__(device_info, entry, coordinator)
+        super().__init__(device_info, coordinator.config_entry, coordinator)
 
-        self._attr_unique_id = f"{self.coordinator.config_entry.entry_id}_{entity_description.key}_{device_info.id}"
+        self._attr_unique_id = f"{device_info.id}_{entity_description.key}"
 
     @property
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
-
+        assert self.device_id
         return (
             self.entity_description.state_fn(device_info)
             if (device_info := self.coordinator.endpoints.get(self.device_id))
             else None
         )
-        super()._handle_coordinator_update()
 
 
 class PortainerContainerSensor(PortainerContainerEntity, BinarySensorEntity):
@@ -134,16 +132,15 @@ class PortainerContainerSensor(PortainerContainerEntity, BinarySensorEntity):
     def __init__(
         self,
         coordinator: PortainerCoordinator,
-        entry: PortainerConfigEntry,
         entity_description: PortainerBinarySensorEntityDescription,
         device_info: DockerContainer,
         via_device: PortainerCoordinatorData,
     ) -> None:
         """Initialize the Portainer container sensor."""
         self.entity_description = entity_description
-        super().__init__(device_info, entry, coordinator, via_device)
+        super().__init__(device_info, coordinator, via_device)
 
-        self._attr_unique_id = f"{self.coordinator.config_entry.entry_id}_{entity_description.key}_{device_info.id}"
+        self._attr_unique_id = f"{entity_description.key}_{device_info.id}"
 
     @callback
     def _handle_coordinator_update(self):

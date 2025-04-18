@@ -43,7 +43,6 @@ class PortainerContainerEntity(PortainerCoordinatorEntity):
     def __init__(
         self,
         device_info: DockerContainer,
-        entry: PortainerConfigEntry,
         coordinator: PortainerCoordinator,
         via_device: PortainerCoordinatorData,
     ) -> None:
@@ -60,12 +59,14 @@ class PortainerContainerEntity(PortainerCoordinatorEntity):
         )
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{entry.entry_id}_{self.device_id}")},
+            identifiers={
+                (DOMAIN, f"{self.coordinator.config_entry.entry_id}_{self.device_id}")
+            },
             manufacturer=DEFAULT_NAME,
             model="Container",
             name=self.device_name,
             via_device=(
                 DOMAIN,
-                f"{entry.entry_id}_{self.endpoint_id}",
+                f"{self.coordinator.config_entry.entry_id}_{self.endpoint_id}",
             ),
         )
