@@ -54,5 +54,10 @@
         }
       }
     }
+  },
+  "services": {
+    "get_raw_tariff": {
+      "service": "mdi:clipboard-text-clock-outline"
+    }
   }
 }
