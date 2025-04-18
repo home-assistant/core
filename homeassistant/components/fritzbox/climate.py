@@ -53,11 +53,10 @@ MAX_TEMPERATURE = 28
 # special temperatures for on/off in Fritz!Box API (modified by pyfritzhome)
 ON_API_TEMPERATURE = 127.0
 OFF_API_TEMPERATURE = 126.5
-API_HKR_STATE_MAPPING = {
+PRESET_API_HKR_STATE_MAPPING = {
     PRESET_COMFORT: "comfort",
     PRESET_BOOST: "on",
     PRESET_ECO: "eco",
-    HVACMode.OFF: "off",
 }
 
 
@@ -138,15 +137,15 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
             return None
         return self.data.target_temperature  # type: ignore [no-any-return]
 
-    async def async_set_hkr_state(self, value: str) -> None:
+    async def async_set_hkr_state(self, hkr_state: str) -> None:
         """Set the state of the climate."""
-        await self.hass.async_add_executor_job(self.data.set_hkr_state, value, True)
+        await self.hass.async_add_executor_job(self.data.set_hkr_state, hkr_state, True)
         await self.coordinator.async_refresh()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if (hvac_mode := kwargs.get(ATTR_HVAC_MODE)) is HVACMode.OFF:
-            await self.async_set_hkr_state(API_HKR_STATE_MAPPING[hvac_mode])
+        if kwargs.get(ATTR_HVAC_MODE) is HVACMode.OFF:
+            await self.async_set_hkr_state("off")
         elif (target_temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
             await self.hass.async_add_executor_job(
                 self.data.set_target_temperature, target_temp, True
@@ -180,7 +179,7 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
             )
             return
         if hvac_mode is HVACMode.OFF:
-            await self.async_set_hkr_state(API_HKR_STATE_MAPPING[HVACMode.OFF])
+            await self.async_set_hkr_state("off")
         else:
             if value_scheduled_preset(self.data) == PRESET_ECO:
                 target_temp = self.data.eco_temperature
@@ -210,7 +209,7 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
                 translation_domain=DOMAIN,
                 translation_key="change_preset_while_active_mode",
             )
-        await self.async_set_hkr_state(API_HKR_STATE_MAPPING[preset_mode])
+        await self.async_set_hkr_state(PRESET_API_HKR_STATE_MAPPING[preset_mode])
 
     @property
     def extra_state_attributes(self) -> ClimateExtraAttributes:
