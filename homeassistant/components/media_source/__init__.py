@@ -176,7 +176,14 @@ async def async_resolve_media(
     try:
         item = _get_media_item(hass, media_content_id, target_media_player)
     except ValueError as err:
-        raise Unresolvable(str(err)) from err
+        raise Unresolvable(
+            translation_domain=DOMAIN,
+            translation_key="resolve_media_failed",
+            translation_placeholders={
+                "media_content_id": str(media_content_id),
+                "error": str(err),
+            },
+        ) from err
 
     return await item.async_resolve()
 
