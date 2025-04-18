@@ -148,10 +148,6 @@ class EsphomeMediaPlayer(
         announcement: bool,
     ) -> str | None:
         """Get URL for ffmpeg proxy."""
-        if self.device_entry is None:
-            # Device id is required
-            return None
-
         # Choose the first default or announcement supported format
         format_to_use: MediaPlayerSupportedFormat | None = None
         for supported_format in supported_formats:
