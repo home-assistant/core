@@ -1,0 +1,17 @@
+{
+  "domain": "awtrix3",
+  "name": "Awtrix 3",
+  "codeowners": [
+    "@10der"
+  ],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/awtrix3",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "quality_scale": "bronze",
+  "requirements": [],
+  "zeroconf": [
+    "_awtrix._tcp.local."
+  ]
+}
