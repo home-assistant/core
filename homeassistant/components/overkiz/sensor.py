@@ -23,6 +23,7 @@ from homeassistant.const import (
     EntityCategory,
     UnitOfEnergy,
     UnitOfPower,
+    UnitOfSpeed,
     UnitOfTemperature,
     UnitOfTime,
     UnitOfVolume,
@@ -153,14 +154,23 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
     OverkizSensorDescription(
         key=OverkizState.CORE_FOSSIL_ENERGY_CONSUMPTION,
         name="Fossil energy consumption",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     OverkizSensorDescription(
         key=OverkizState.CORE_GAS_CONSUMPTION,
         name="Gas consumption",
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
+        device_class=SensorDeviceClass.GAS,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     OverkizSensorDescription(
         key=OverkizState.CORE_THERMAL_ENERGY_CONSUMPTION,
         name="Thermal energy consumption",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     # LightSensor/LuminanceSensor
     OverkizSensorDescription(
@@ -343,6 +353,8 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         name="Sun energy",
         native_value=lambda value: round(cast(float, value), 2),
         icon="mdi:solar-power",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     # WindSensor/WindSpeedSensor
@@ -351,6 +363,8 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         name="Wind speed",
         native_value=lambda value: round(cast(float, value), 2),
         icon="mdi:weather-windy",
+        device_class=SensorDeviceClass.WIND_SPEED,
+        native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     # SmokeSensor/SmokeSensor
