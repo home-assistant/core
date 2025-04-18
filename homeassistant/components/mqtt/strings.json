@@ -172,6 +172,7 @@
             "delete_entity": "Delete an entity",
             "availability": "Configure availability",
             "device": "Update device properties",
+            "export": "Export MQTT device configuration",
             "save_changes": "Save changes"
           }
         },
@@ -269,6 +270,36 @@
                 "expire_after": "If set, it defines the number of seconds after the sensor’s state expires, if it’s not updated. After expiry, the sensor’s state becomes unavailable. If not set, the sensor's state never expires. [Learn more.]({url}#expire_after)"
               }
             }
+          }
+        },
+        "export": {
+          "title": "Export MQTT device config",
+          "description": "An export allows you set up the MQTT Device configuration via YAMl or MQTT discovery. The configuration can also be helpfull for troubleshooting. The export includes the unique ID's used in the configuration. You cannot activate this configuration unless you remove the MQTT-device or change the unique id's. Removing the MQTT device subentry will also remove the device from the device registry. After removing the MQTT device subentry, it can be set up via YAML or discovery with the same unique ID's.",
+          "menu_options": {
+            "export_discovery": "Export MQTT discovery information",
+            "export_yaml": "Export to YAML configuration"
+          }
+        },
+        "export_yaml": {
+          "title": "[%key:component::mqtt::config_subentries::device::step::export::title%]",
+          "description": "Copy the YAML configuration below:",
+          "data": {
+            "yaml": "YAML"
+          },
+          "data_description": {
+            "yaml": "Place your YAML configuration [configuration.yaml]({url}#yaml-configuration-listed-per-item)."
+          }
+        },
+        "export_discovery": {
+          "title": "[%key:component::mqtt::config_subentries::device::step::export::title%]",
+          "description": "To allow [discovery]({url}#device-discovery-payload), the discovery payload needs to be published to the discovery topic",
+          "data": {
+            "discovery_topic": "Discovery topic",
+            "discovery_payload": "Discovery payload"
+          },
+          "data_description": {
+            "discovery_topic": "The [discovery topic]({url}#discovery-topic) to publish the discovery payload to, to trigger MQTT discovery. An empty payload published to this topic, will remove the device and discovered entities.",
+            "discovery_payload": "The JSON [discovery payload]({url}#discovery-discovery-payload) that contains information about the MQTT device."
           }
         }
       },
