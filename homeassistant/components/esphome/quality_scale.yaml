@@ -3,10 +3,11 @@ rules:
   action-setup:
     status: exempt
     comment: |
-      Actions are per device and not per integration.
-      ESPHome supports user defined actions which come
-      from the device YAML configuration.
-      https://esphome.io/components/api.html#user-defined-actions
+      Since actions are defined per device, rather than per integration,
+      they are specific to the device's YAML configuration. Additionally,
+      ESPHome allows for user-defined actions, making it difficult to provide
+      standard documentation since these actions vary by device. For more
+      information, see: https://esphome.io/components/api.html#user-defined-actions
   appropriate-polling: done
   brands: done
   common-modules: done
@@ -16,10 +17,11 @@ rules:
   docs-actions:
     status: exempt
     comment: |
-      Actions are per device and not per integration.
-      ESPHome supports user defined actions which come
-      from the device YAML configuration.
-      https://esphome.io/components/api.html#user-defined-actions
+      Since actions are defined per device, rather than per integration,
+      they are specific to the device's YAML configuration. Additionally,
+      ESPHome allows for user-defined actions, making it difficult to provide
+      standard documentation since these actions vary by device. For more
+      information, see: https://esphome.io/components/api.html#user-defined-actions
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
@@ -31,10 +33,10 @@ rules:
   test-before-setup:
     status: exempt
     comment: |
-      ESPHome uses sleepy devices and fast reconnect logic
-      so we cannot raise ConfigEntryNotReady as we need to use
-      the reconnect logic in aioesphomeapi to know when to trigger
-      connections.
+      ESPHome relies on sleepy devices and fast reconnect logic, so we
+      can't raise `ConfigEntryNotReady`. Instead, we need to utilize the
+      reconnect logic in `aioesphomeapi` to determine the right moment
+      to trigger the connection.
   unique-config-entry: done
   # Silver
   action-exceptions: done
@@ -54,7 +56,13 @@ rules:
   discovery-update-info: done
   discovery: done
   docs-data-update: todo
-  docs-examples: todo
+  docs-examples:
+    status: exempt
+    comment: |
+      Since ESPHome is a framework for creating custom devices, the
+      possibilities are virtually limitless. As a result, example
+      automations would likely only be relevant to the specific user
+      of the device and not generally useful to others.
   docs-known-limitations: todo
   docs-supported-devices: todo
   docs-supported-functions: todo
