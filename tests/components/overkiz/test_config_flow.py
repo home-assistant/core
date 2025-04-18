@@ -412,7 +412,7 @@ async def test_local_abort_on_duplicate_entry(
         version=2,
         data={
             "host": TEST_HOST,
-            "token": "",
+            "token": TEST_TOKEN,
             "verify_ssl": True,
             "hub": TEST_SERVER,
             "api_type": "local",
@@ -446,8 +446,6 @@ async def test_local_abort_on_duplicate_entry(
         login=AsyncMock(return_value=True),
         get_gateways=AsyncMock(return_value=MOCK_GATEWAY_RESPONSE),
         get_setup_option=AsyncMock(return_value=True),
-        generate_local_token=AsyncMock(return_value=TEST_TOKEN),
-        activate_local_token=AsyncMock(return_value=True),
     ):
         result4 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -917,6 +915,7 @@ async def test_local_zeroconf_flow(
 
     assert result4["type"] is FlowResultType.CREATE_ENTRY
     assert result4["title"] == "gateway-1234-5678-9123.local:8443"
+
     # Verify no username/password in data
     assert result4["data"] == {
         "host": "gateway-1234-5678-9123.local:8443",
