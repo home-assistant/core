@@ -265,7 +265,14 @@ async def test_reproducing_states(
     await async_reproduce_state(
         hass,
         [
-            State("cover.closed_supports_all_features", CoverState.CLOSED),
+            State(
+                "cover.closed_supports_all_features",
+                CoverState.CLOSED,
+                {
+                    ATTR_CURRENT_POSITION: 0,
+                    ATTR_CURRENT_TILT_POSITION: 0,
+                },
+            ),
             State("cover.entity_close", CoverState.CLOSED),
             State("cover.closed_only_supports_close_open", CoverState.CLOSED),
             State("cover.closed_only_supports_tilt_close_open", CoverState.CLOSED),
@@ -506,6 +513,7 @@ async def test_reproducing_states(
         {"entity_id": "cover.entity_open_tilt"},
         {"entity_id": "cover.entity_entirely_open"},
         {"entity_id": "cover.tilt_only_open"},
+        {"entity_id": "cover.entity_open_attr"},
         {"entity_id": "cover.tilt_only_tilt_position_100"},
         {"entity_id": "cover.open_only_supports_tilt_close_open"},
     ]
