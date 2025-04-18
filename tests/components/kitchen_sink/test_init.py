@@ -11,7 +11,6 @@ import voluptuous as vol
 from homeassistant.components.kitchen_sink import DOMAIN
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.statistics import (
-    StatisticMeanType,
     async_add_external_statistics,
     get_last_statistics,
     list_statistic_ids,
@@ -46,7 +45,6 @@ async def test_demo_statistics(hass: HomeAssistant) -> None:
     assert {
         "display_unit_of_measurement": "°C",
         "has_mean": True,
-        "mean_type": StatisticMeanType.ARITHMETIC,
         "has_sum": False,
         "name": "Outdoor temperature",
         "source": DOMAIN,
@@ -57,7 +55,6 @@ async def test_demo_statistics(hass: HomeAssistant) -> None:
     assert {
         "display_unit_of_measurement": "kWh",
         "has_mean": False,
-        "mean_type": StatisticMeanType.NONE,
         "has_sum": True,
         "name": "Energy consumption 1",
         "source": DOMAIN,

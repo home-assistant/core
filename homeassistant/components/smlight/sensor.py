@@ -25,8 +25,6 @@ from .const import UPTIME_DEVIATION
 from .coordinator import SmConfigEntry, SmDataUpdateCoordinator
 from .entity import SmEntity
 
-PARALLEL_UPDATES = 0
-
 
 @dataclass(frozen=True, kw_only=True)
 class SmSensorEntityDescription(SensorEntityDescription):
@@ -39,7 +37,7 @@ class SmSensorEntityDescription(SensorEntityDescription):
 class SmInfoEntityDescription(SensorEntityDescription):
     """Class describing SMLIGHT information entities."""
 
-    value_fn: Callable[[Info, int], StateType]
+    value_fn: Callable[[Info], StateType]
 
 
 INFO: list[SmInfoEntityDescription] = [
@@ -48,24 +46,23 @@ INFO: list[SmInfoEntityDescription] = [
         translation_key="device_mode",
         device_class=SensorDeviceClass.ENUM,
         options=["eth", "wifi", "usb"],
-        value_fn=lambda x, idx: x.coord_mode,
+        value_fn=lambda x: x.coord_mode,
     ),
     SmInfoEntityDescription(
         key="firmware_channel",
         translation_key="firmware_channel",
         device_class=SensorDeviceClass.ENUM,
         options=["dev", "release"],
-        value_fn=lambda x, idx: x.fw_channel,
+        value_fn=lambda x: x.fw_channel,
+    ),
+    SmInfoEntityDescription(
+        key="zigbee_type",
+        translation_key="zigbee_type",
+        device_class=SensorDeviceClass.ENUM,
+        options=["coordinator", "router", "thread"],
+        value_fn=lambda x: x.zb_type,
     ),
 ]
-
-RADIO_INFO = SmInfoEntityDescription(
-    key="zigbee_type",
-    translation_key="zigbee_type",
-    device_class=SensorDeviceClass.ENUM,
-    options=["coordinator", "router", "thread"],
-    value_fn=lambda x, idx: x.radios[idx].zb_type,
-)
 
 
 SENSORS: list[SmSensorEntityDescription] = [
@@ -105,16 +102,6 @@ SENSORS: list[SmSensorEntityDescription] = [
     ),
 ]
 
-EXTRA_SENSOR = SmSensorEntityDescription(
-    key="zigbee_temperature_2",
-    translation_key="zigbee_temperature",
-    device_class=SensorDeviceClass.TEMPERATURE,
-    native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-    state_class=SensorStateClass.MEASUREMENT,
-    suggested_display_precision=1,
-    value_fn=lambda x: x.zb_temp2,
-)
-
 UPTIME: list[SmSensorEntityDescription] = [
     SmSensorEntityDescription(
         key="core_uptime",
@@ -140,23 +127,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up SMLIGHT sensor based on a config entry."""
     coordinator = entry.runtime_data.data
-    entities: list[SmEntity] = list(
+
+    async_add_entities(
         chain(
             (SmInfoSensorEntity(coordinator, description) for description in INFO),
             (SmSensorEntity(coordinator, description) for description in SENSORS),
             (SmUptimeSensorEntity(coordinator, description) for description in UPTIME),
         )
     )
-
-    entities.extend(
-        SmInfoSensorEntity(coordinator, RADIO_INFO, idx)
-        for idx, _ in enumerate(coordinator.data.info.radios)
-    )
-
-    if coordinator.data.sensors.zb_temp2 is not None:
-        entities.append(SmSensorEntity(coordinator, EXTRA_SENSOR))
-
-    async_add_entities(entities)
 
 
 class SmSensorEntity(SmEntity, SensorEntity):
@@ -194,20 +172,17 @@ class SmInfoSensorEntity(SmEntity, SensorEntity):
         self,
         coordinator: SmDataUpdateCoordinator,
         description: SmInfoEntityDescription,
-        idx: int = 0,
     ) -> None:
         """Initiate slzb sensor."""
         super().__init__(coordinator)
 
         self.entity_description = description
-        self.idx = idx
-        sensor = f"_{idx}" if idx else ""
-        self._attr_unique_id = f"{coordinator.unique_id}_{description.key}{sensor}"
+        self._attr_unique_id = f"{coordinator.unique_id}_{description.key}"
 
     @property
     def native_value(self) -> StateType:
         """Return the sensor value."""
-        value = self.entity_description.value_fn(self.coordinator.data.info, self.idx)
+        value = self.entity_description.value_fn(self.coordinator.data.info)
         options = self.entity_description.options
 
         if isinstance(value, int) and options is not None:

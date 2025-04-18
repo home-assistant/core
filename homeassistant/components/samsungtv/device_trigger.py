@@ -15,7 +15,6 @@ from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 from . import trigger
-from .const import DOMAIN
 from .helpers import (
     async_get_client_by_device_entry,
     async_get_device_entry_by_device_id,
@@ -76,8 +75,4 @@ async def async_attach_trigger(
             hass, trigger_config, action, trigger_info
         )
 
-    raise HomeAssistantError(
-        translation_domain=DOMAIN,
-        translation_key="unhandled_trigger_type",
-        translation_placeholders={"trigger_type": trigger_type},
-    )
+    raise HomeAssistantError(f"Unhandled trigger type {trigger_type}")

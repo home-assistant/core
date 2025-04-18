@@ -4,15 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from json.decoder import JSONDecodeError
 from typing import Any, Final
-
-from aiovodafone.exceptions import (
-    AlreadyLogged,
-    CannotAuthenticate,
-    CannotConnect,
-    GenericLoginError,
-)
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -21,11 +13,10 @@ from homeassistant.components.button import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import _LOGGER, DOMAIN
+from .const import _LOGGER
 from .coordinator import VodafoneConfigEntry, VodafoneStationRouter
 
 # Coordinator is used to centralize the data updates
@@ -117,25 +108,4 @@ class VodafoneStationSensorEntity(
 
     async def async_press(self) -> None:
         """Triggers the Shelly button press service."""
-
-        try:
-            await self.entity_description.press_action(self.coordinator)
-        except CannotAuthenticate as err:
-            self.coordinator.config_entry.async_start_reauth(self.hass)
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="cannot_authenticate",
-                translation_placeholders={"error": repr(err)},
-            ) from err
-        except (
-            CannotConnect,
-            AlreadyLogged,
-            GenericLoginError,
-            JSONDecodeError,
-        ) as err:
-            self.coordinator.last_update_success = False
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="cannot_execute_action",
-                translation_placeholders={"error": repr(err)},
-            ) from err
+        await self.entity_description.press_action(self.coordinator)

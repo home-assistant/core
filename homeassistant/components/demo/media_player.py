@@ -41,7 +41,6 @@ async def async_setup_entry(
             DemoTVShowPlayer(),
             DemoBrowsePlayer("Browse"),
             DemoGroupPlayer("Group"),
-            DemoSearchPlayer("Search"),
         ]
     )
 
@@ -95,8 +94,6 @@ NETFLIX_PLAYER_SUPPORT = (
 )
 
 BROWSE_PLAYER_SUPPORT = MediaPlayerEntityFeature.BROWSE_MEDIA
-
-SEARCH_PLAYER_SUPPORT = MediaPlayerEntityFeature.SEARCH_MEDIA
 
 
 class AbstractDemoPlayer(MediaPlayerEntity):
@@ -401,9 +398,3 @@ class DemoGroupPlayer(AbstractDemoPlayer):
         | MediaPlayerEntityFeature.GROUPING
         | MediaPlayerEntityFeature.TURN_OFF
     )
-
-
-class DemoSearchPlayer(AbstractDemoPlayer):
-    """A Demo media player that supports searching."""
-
-    _attr_supported_features = SEARCH_PLAYER_SUPPORT

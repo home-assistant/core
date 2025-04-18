@@ -91,15 +91,15 @@ class EcoNetWaterHeater(EcoNetEntity[WaterHeater], WaterHeaterEntity):
     def operation_list(self) -> list[str]:
         """List of available operation modes."""
         econet_modes = self.water_heater.modes
-        operation_modes = set()
+        op_list = []
         for mode in econet_modes:
             if (
                 mode is not WaterHeaterOperationMode.UNKNOWN
                 and mode is not WaterHeaterOperationMode.VACATION
             ):
                 ha_mode = ECONET_STATE_TO_HA[mode]
-                operation_modes.add(ha_mode)
-        return list(operation_modes)
+                op_list.append(ha_mode)
+        return op_list
 
     @property
     def supported_features(self) -> WaterHeaterEntityFeature:

@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
+from pylamarzocco.const import FirmwareType
 from pylamarzocco.exceptions import RequestNotSuccessful
 import pytest
 from syrupy import SnapshotAssertion
@@ -19,6 +20,7 @@ from tests.common import MockConfigEntry, snapshot_platform
 
 async def test_update(
     hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
@@ -29,10 +31,19 @@ async def test_update(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.parametrize(
+    ("entity_name", "component"),
+    [
+        ("machine_firmware", FirmwareType.MACHINE),
+        ("gateway_firmware", FirmwareType.GATEWAY),
+    ],
+)
 async def test_update_entites(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
     mock_config_entry: MockConfigEntry,
+    entity_name: str,
+    component: FirmwareType,
 ) -> None:
     """Test the La Marzocco update entities."""
 
@@ -44,34 +55,43 @@ async def test_update_entites(
         UPDATE_DOMAIN,
         SERVICE_INSTALL,
         {
-            ATTR_ENTITY_ID: f"update.{serial_number}_gateway_firmware",
+            ATTR_ENTITY_ID: f"update.{serial_number}_{entity_name}",
         },
         blocking=True,
     )
 
-    mock_lamarzocco.update_firmware.assert_called_once_with()
+    mock_lamarzocco.update_firmware.assert_called_once_with(component)
 
 
+@pytest.mark.parametrize(
+    ("attr", "value"),
+    [
+        ("side_effect", RequestNotSuccessful("Boom")),
+        ("return_value", False),
+    ],
+)
 async def test_update_error(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
     mock_config_entry: MockConfigEntry,
+    attr: str,
+    value: bool | Exception,
 ) -> None:
     """Test error during update."""
 
     await async_init_integration(hass, mock_config_entry)
 
-    state = hass.states.get(f"update.{mock_lamarzocco.serial_number}_gateway_firmware")
+    state = hass.states.get(f"update.{mock_lamarzocco.serial_number}_machine_firmware")
     assert state
 
-    mock_lamarzocco.update_firmware.side_effect = RequestNotSuccessful("Boom")
+    setattr(mock_lamarzocco.update_firmware, attr, value)
 
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             UPDATE_DOMAIN,
             SERVICE_INSTALL,
             {
-                ATTR_ENTITY_ID: f"update.{mock_lamarzocco.serial_number}_gateway_firmware",
+                ATTR_ENTITY_ID: f"update.{mock_lamarzocco.serial_number}_machine_firmware",
             },
             blocking=True,
         )

@@ -214,8 +214,7 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity, Restore
             ),
             (CONF_TRIGGER_ACTION, AlarmControlPanelEntityFeature.TRIGGER),
         ):
-            # Scripts can be an empty list, therefore we need to check for None
-            if (action_config := config.get(action_id)) is not None:
+            if action_config := config.get(action_id):
                 self.add_script(action_id, action_config, name, DOMAIN)
                 self._attr_supported_features |= supported_feature
 

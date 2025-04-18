@@ -2,8 +2,12 @@
 
 from __future__ import annotations
 
+from homematicip.aio.device import (
+    AsyncWeatherSensor,
+    AsyncWeatherSensorPlus,
+    AsyncWeatherSensorPro,
+)
 from homematicip.base.enums import WeatherCondition
-from homematicip.device import WeatherSensor, WeatherSensorPlus, WeatherSensorPro
 
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLOUDY,
@@ -55,9 +59,9 @@ async def async_setup_entry(
     hap = hass.data[DOMAIN][config_entry.unique_id]
     entities: list[HomematicipGenericEntity] = []
     for device in hap.home.devices:
-        if isinstance(device, WeatherSensorPro):
+        if isinstance(device, AsyncWeatherSensorPro):
             entities.append(HomematicipWeatherSensorPro(hap, device))
-        elif isinstance(device, (WeatherSensor, WeatherSensorPlus)):
+        elif isinstance(device, (AsyncWeatherSensor, AsyncWeatherSensorPlus)):
             entities.append(HomematicipWeatherSensor(hap, device))
 
     entities.append(HomematicipHomeWeather(hap))

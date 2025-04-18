@@ -4,10 +4,12 @@ from __future__ import annotations
 
 from inkbird_ble import DeviceClass, DeviceKey, SensorUpdate, Units
 
+from homeassistant import config_entries
 from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothDataProcessor,
     PassiveBluetoothDataUpdate,
     PassiveBluetoothEntityKey,
+    PassiveBluetoothProcessorCoordinator,
     PassiveBluetoothProcessorEntity,
 )
 from homeassistant.components.sensor import (
@@ -17,17 +19,15 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    UnitOfPressure,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 
-from . import INKBIRDConfigEntry
+from .const import DOMAIN
 
 SENSOR_DESCRIPTIONS = {
     (DeviceClass.TEMPERATURE, Units.TEMP_CELSIUS): SensorEntityDescription(
@@ -57,18 +57,6 @@ SENSOR_DESCRIPTIONS = {
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
-    ),
-    (DeviceClass.CO2, Units.CONCENTRATION_PARTS_PER_MILLION): SensorEntityDescription(
-        key=f"{DeviceClass.CO2}_{Units.CONCENTRATION_PARTS_PER_MILLION}",
-        device_class=SensorDeviceClass.CO2,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    (DeviceClass.PRESSURE, Units.PRESSURE_HPA): SensorEntityDescription(
-        key=f"{DeviceClass.PRESSURE}_{Units.PRESSURE_HPA}",
-        device_class=SensorDeviceClass.PRESSURE,
-        native_unit_of_measurement=UnitOfPressure.HPA,
-        state_class=SensorStateClass.MEASUREMENT,
     ),
 }
 
@@ -109,17 +97,20 @@ def sensor_update_to_bluetooth_data_update(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: INKBIRDConfigEntry,
+    entry: config_entries.ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the INKBIRD BLE sensors."""
+    coordinator: PassiveBluetoothProcessorCoordinator = hass.data[DOMAIN][
+        entry.entry_id
+    ]
     processor = PassiveBluetoothDataProcessor(sensor_update_to_bluetooth_data_update)
     entry.async_on_unload(
         processor.async_add_entities_listener(
             INKBIRDBluetoothSensorEntity, async_add_entities
         )
     )
-    entry.async_on_unload(entry.runtime_data.async_register_processor(processor))
+    entry.async_on_unload(coordinator.async_register_processor(processor))
 
 
 class INKBIRDBluetoothSensorEntity(

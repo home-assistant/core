@@ -45,17 +45,6 @@
         }
       }
     },
-    "light": {
-      "bed_light": {
-        "state_attributes": {
-          "effect": {
-            "state": {
-              "rainbow": "mdi:looks"
-            }
-          }
-        }
-      }
-    },
     "number": {
       "volume": {
         "default": "mdi:volume-high"

@@ -8,12 +8,12 @@ from aiocomelit import ComelitSerialBridgeObject
 from aiocomelit.const import COVER, STATE_COVER, STATE_OFF, STATE_ON
 
 from homeassistant.components.cover import CoverDeviceClass, CoverEntity, CoverState
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import ComelitConfigEntry, ComelitSerialBridge
-from .entity import ComelitBridgeBaseEntity
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -34,10 +34,13 @@ async def async_setup_entry(
     )
 
 
-class ComelitCoverEntity(ComelitBridgeBaseEntity, RestoreEntity, CoverEntity):
+class ComelitCoverEntity(
+    CoordinatorEntity[ComelitSerialBridge], RestoreEntity, CoverEntity
+):
     """Cover device."""
 
     _attr_device_class = CoverDeviceClass.SHUTTER
+    _attr_has_entity_name = True
     _attr_name = None
 
     def __init__(
@@ -47,7 +50,13 @@ class ComelitCoverEntity(ComelitBridgeBaseEntity, RestoreEntity, CoverEntity):
         config_entry_entry_id: str,
     ) -> None:
         """Init cover entity."""
-        super().__init__(coordinator, device, config_entry_entry_id)
+        self._api = coordinator.api
+        self._device = device
+        super().__init__(coordinator)
+        # Use config_entry.entry_id as base for unique_id
+        # because no serial number or mac is available
+        self._attr_unique_id = f"{config_entry_entry_id}-{device.index}"
+        self._attr_device_info = coordinator.platform_device_info(device, device.type)
         # Device doesn't provide a status so we assume UNKNOWN at first startup
         self._last_action: int | None = None
         self._last_state: str | None = None
@@ -89,20 +98,13 @@ class ComelitCoverEntity(ComelitBridgeBaseEntity, RestoreEntity, CoverEntity):
         """Return if the cover is opening."""
         return self._current_action("opening")
 
-    async def _cover_set_state(self, action: int, state: int) -> None:
-        """Set desired cover state."""
-        self._last_state = self.state
-        await self.coordinator.api.set_device_status(COVER, self._device.index, action)
-        self.coordinator.data[COVER][self._device.index].status = state
-        self.async_write_ha_state()
-
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
-        await self._cover_set_state(STATE_OFF, 2)
+        await self._api.set_device_status(COVER, self._device.index, STATE_OFF)
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open cover."""
-        await self._cover_set_state(STATE_ON, 1)
+        await self._api.set_device_status(COVER, self._device.index, STATE_ON)
 
     async def async_stop_cover(self, **_kwargs: Any) -> None:
         """Stop the cover."""
@@ -110,7 +112,13 @@ class ComelitCoverEntity(ComelitBridgeBaseEntity, RestoreEntity, CoverEntity):
             return
 
         action = STATE_ON if self.is_closing else STATE_OFF
-        await self._cover_set_state(action, 0)
+        await self._api.set_device_status(COVER, self._device.index, action)
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle device update."""
+        self._last_state = self.state
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""

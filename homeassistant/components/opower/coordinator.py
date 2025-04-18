@@ -16,11 +16,7 @@ from opower import (
 from opower.exceptions import ApiException, CannotConnect, InvalidAuth
 
 from homeassistant.components.recorder import get_instance
-from homeassistant.components.recorder.models import (
-    StatisticData,
-    StatisticMeanType,
-    StatisticMetaData,
-)
+from homeassistant.components.recorder.models import StatisticData, StatisticMetaData
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
     get_last_statistics,
@@ -205,7 +201,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                 f"{account.meter_type.name.lower()} {account.utility_account_id}"
             )
             cost_metadata = StatisticMetaData(
-                mean_type=StatisticMeanType.NONE,
+                has_mean=False,
                 has_sum=True,
                 name=f"{name_prefix} cost",
                 source=DOMAIN,
@@ -213,7 +209,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                 unit_of_measurement=None,
             )
             consumption_metadata = StatisticMetaData(
-                mean_type=StatisticMeanType.NONE,
+                has_mean=False,
                 has_sum=True,
                 name=f"{name_prefix} consumption",
                 source=DOMAIN,

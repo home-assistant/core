@@ -86,8 +86,6 @@
     "trigger_type": {
       "button": "Button \"{subtype}\"",
       "button_left": "Button Left \"{subtype}\"",
-      "button_mid_left": "Button Mid Left \"{subtype}\"",
-      "button_mid_right": "Button Mid Right \"{subtype}\"",
       "button_middle": "Button Middle \"{subtype}\"",
       "button_right": "Button Right \"{subtype}\"",
       "button_on": "Button On \"{subtype}\"",
@@ -228,14 +226,6 @@
             }
           }
         }
-      }
-    },
-    "sensor": {
-      "impedance": {
-        "name": "Impedance"
-      },
-      "weight_non_stabilized": {
-        "name": "Weight non stabilized"
       }
     }
   }

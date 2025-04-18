@@ -62,10 +62,6 @@
       0,
     ]),
     'cmd list': dict({
-      '296': dict({
-        '0': 1,
-        'null': 1,
-      }),
       'DingDongOpt': dict({
         '0': 2,
         'null': 2,
@@ -169,9 +165,6 @@
       'GetRec': dict({
         '0': 1,
         'null': 2,
-      }),
-      'GetScene': dict({
-        'null': 1,
       }),
       'GetStateLight': dict({
         'null': 1,

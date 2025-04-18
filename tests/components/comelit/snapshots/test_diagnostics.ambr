@@ -5,50 +5,13 @@
       'devices': list([
         dict({
           'clima': list([
-            dict({
-              '0': dict({
-                'human_status': 'off',
-                'name': 'Climate0',
-                'power': 0.0,
-                'power_unit': 'W',
-                'protected': 0,
-                'status': 0,
-                'val': list([
-                  list([
-                    221,
-                    0,
-                    'U',
-                    'M',
-                    50,
-                    0,
-                    0,
-                    'U',
-                  ]),
-                  list([
-                    650,
-                    0,
-                    'U',
-                    'M',
-                    500,
-                    0,
-                    0,
-                    'U',
-                  ]),
-                  list([
-                    0,
-                    0,
-                  ]),
-                ]),
-                'zone': 'Living room',
-              }),
-            }),
           ]),
         }),
         dict({
           'shutter': list([
             dict({
               '0': dict({
-                'human_status': 'stopped',
+                'human_status': 'closed',
                 'name': 'Cover0',
                 'power': 0.0,
                 'power_unit': 'W',
@@ -78,18 +41,6 @@
         }),
         dict({
           'other': list([
-            dict({
-              '0': dict({
-                'human_status': 'off',
-                'name': 'Switch0',
-                'power': 0.0,
-                'power_unit': 'W',
-                'protected': 0,
-                'status': 0,
-                'val': 0,
-                'zone': 'Bathroom',
-              }),
-            }),
           ]),
         }),
         dict({
@@ -141,13 +92,13 @@
                 'alarm': False,
                 'alarm_memory': False,
                 'anomaly': False,
-                'armed': 0,
-                'human_status': 'disarmed',
+                'armed': False,
+                'human_status': 'unknown',
                 'in_time': False,
                 'name': 'Area0',
                 'out_time': False,
                 'p1': True,
-                'p2': True,
+                'p2': False,
                 'ready': False,
                 'sabotage': False,
               }),

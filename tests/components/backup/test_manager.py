@@ -68,17 +68,10 @@ from tests.typing import ClientSessionGenerator, WebSocketGenerator
 _EXPECTED_FILES = [
     "test.txt",
     ".storage",
-    "another_subdir",
-    "another_subdir/backups",
-    "another_subdir/backups/backup.tar",
-    "another_subdir/backups/not_backup",
-    "another_subdir/tts",
-    "another_subdir/tts/voice.mp3",
     "backups",
     "backups/not_backup",
     "tmp_backups",
     "tmp_backups/not_backup",
-    "tts",
 ]
 _EXPECTED_FILES_WITH_DATABASE = {
     True: [*_EXPECTED_FILES, "home-assistant_v2.db"],
@@ -545,7 +538,7 @@ async def test_initiate_backup(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
-        "last_action_event": None,
+        "last_non_idle_event": None,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
         "state": "idle",
@@ -778,7 +771,7 @@ async def test_initiate_backup_with_agent_error(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
-        "last_action_event": None,
+        "last_non_idle_event": None,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
         "state": "idle",
@@ -870,7 +863,7 @@ async def test_initiate_backup_with_agent_error(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
-        "last_action_event": {
+        "last_non_idle_event": {
             "manager_state": "create_backup",
             "reason": "upload_failed",
             "stage": None,
@@ -1160,7 +1153,7 @@ async def test_initiate_backup_non_agent_upload_error(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
-        "last_action_event": None,
+        "last_non_idle_event": None,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
         "state": "idle",
@@ -1257,7 +1250,7 @@ async def test_initiate_backup_with_task_error(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
-        "last_action_event": None,
+        "last_non_idle_event": None,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
         "state": "idle",
@@ -1353,7 +1346,7 @@ async def test_initiate_backup_file_error_upload_to_agents(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
-        "last_action_event": None,
+        "last_non_idle_event": None,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
         "state": "idle",
@@ -1477,7 +1470,7 @@ async def test_initiate_backup_file_error_create_backup(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
-        "last_action_event": None,
+        "last_non_idle_event": None,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
         "state": "idle",
@@ -1974,7 +1967,7 @@ async def test_receive_backup_agent_error(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
-        "last_action_event": None,
+        "last_non_idle_event": None,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
         "state": "idle",
@@ -2057,7 +2050,7 @@ async def test_receive_backup_agent_error(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
-        "last_action_event": {
+        "last_non_idle_event": {
             "manager_state": "receive_backup",
             "reason": None,
             "stage": None,
@@ -2110,7 +2103,7 @@ async def test_receive_backup_non_agent_upload_error(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
-        "last_action_event": None,
+        "last_non_idle_event": None,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
         "state": "idle",
@@ -2222,7 +2215,7 @@ async def test_receive_backup_file_write_error(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
-        "last_action_event": None,
+        "last_non_idle_event": None,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
         "state": "idle",
@@ -2318,7 +2311,7 @@ async def test_receive_backup_read_tar_error(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
-        "last_action_event": None,
+        "last_non_idle_event": None,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
         "state": "idle",
@@ -2483,7 +2476,7 @@ async def test_receive_backup_file_read_error(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
-        "last_action_event": None,
+        "last_non_idle_event": None,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
         "state": "idle",
@@ -3294,7 +3287,7 @@ async def test_initiate_backup_per_agent_encryption(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
-        "last_action_event": None,
+        "last_non_idle_event": None,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
         "state": "idle",
@@ -3397,7 +3390,7 @@ async def test_initiate_backup_per_agent_encryption(
 
 
 @pytest.mark.parametrize(
-    ("restore_result", "last_action_event"),
+    ("restore_result", "last_non_idle_event"),
     [
         (
             {"error": None, "error_type": None, "success": True},
@@ -3423,7 +3416,7 @@ async def test_restore_progress_after_restart(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     restore_result: dict[str, Any],
-    last_action_event: dict[str, Any],
+    last_non_idle_event: dict[str, Any],
 ) -> None:
     """Test restore backup progress after restart."""
 
@@ -3441,7 +3434,7 @@ async def test_restore_progress_after_restart(
         "backups": [],
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
-        "last_action_event": last_action_event,
+        "last_non_idle_event": last_non_idle_event,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
         "state": "idle",
@@ -3467,7 +3460,7 @@ async def test_restore_progress_after_restart_fail_to_remove(
         "backups": [],
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
-        "last_action_event": None,
+        "last_non_idle_event": None,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
         "state": "idle",
@@ -3492,20 +3485,20 @@ async def test_manager_blocked_until_home_assistant_started(
     manager = hass.data[DATA_MANAGER]
 
     assert manager.state == BackupManagerState.BLOCKED
-    assert manager.last_action_event is None
+    assert manager.last_non_idle_event is None
 
     # Fired when Home Assistant changes to starting state
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     assert manager.state == BackupManagerState.BLOCKED
-    assert manager.last_action_event is None
+    assert manager.last_non_idle_event is None
 
     # Fired when Home Assistant changes to running state
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
     assert manager.state == BackupManagerState.IDLE
-    assert manager.last_action_event is None
+    assert manager.last_non_idle_event is None
 
 
 async def test_manager_not_blocked_after_restore(
@@ -3530,7 +3523,7 @@ async def test_manager_not_blocked_after_restore(
         "backups": [],
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
-        "last_action_event": {
+        "last_non_idle_event": {
             "manager_state": "restore_backup",
             "reason": None,
             "stage": None,

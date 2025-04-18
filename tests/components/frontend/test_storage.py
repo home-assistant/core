@@ -13,9 +13,9 @@ from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
-async def setup_frontend(hass: HomeAssistant) -> None:
+def setup_frontend(hass: HomeAssistant) -> None:
     """Fixture to setup the frontend."""
-    await async_setup_component(hass, "frontend", {})
+    hass.loop.run_until_complete(async_setup_component(hass, "frontend", {}))
 
 
 async def test_get_user_data_empty(

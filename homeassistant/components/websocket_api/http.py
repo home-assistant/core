@@ -14,7 +14,7 @@ from aiohttp import WSMsgType, web
 from aiohttp.http_websocket import WebSocketWriter
 
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, EVENT_LOGGING_CHANGED
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
@@ -73,7 +73,6 @@ class WebSocketHandler:
         "_authenticated",
         "_closing",
         "_connection",
-        "_debug",
         "_handle_task",
         "_hass",
         "_logger",
@@ -108,12 +107,6 @@ class WebSocketHandler:
         self._message_queue: deque[bytes] = deque()
         self._ready_future: asyncio.Future[int] | None = None
         self._release_ready_queue_size: int = 0
-        self._async_logging_changed()
-
-    @callback
-    def _async_logging_changed(self, event: Event | None = None) -> None:
-        """Handle logging change."""
-        self._debug = self._logger.isEnabledFor(logging.DEBUG)
 
     def __repr__(self) -> str:
         """Return the representation."""
@@ -144,6 +137,7 @@ class WebSocketHandler:
         logger = self._logger
         wsock = self._wsock
         loop = self._loop
+        is_debug_log_enabled = partial(logger.isEnabledFor, logging.DEBUG)
         debug = logger.debug
         can_coalesce = connection.can_coalesce
         ready_message_count = len(message_queue)
@@ -163,14 +157,14 @@ class WebSocketHandler:
 
                 if not can_coalesce or ready_message_count == 1:
                     message = message_queue.popleft()
-                    if self._debug:
+                    if is_debug_log_enabled():
                         debug("%s: Sending %s", self.description, message)
                     await send_bytes_text(message)
                     continue
 
                 coalesced_messages = b"".join((b"[", b",".join(message_queue), b"]"))
                 message_queue.clear()
-                if self._debug:
+                if is_debug_log_enabled():
                     debug("%s: Sending %s", self.description, coalesced_messages)
                 await send_bytes_text(coalesced_messages)
         except asyncio.CancelledError:
@@ -331,9 +325,6 @@ class WebSocketHandler:
         unsub_stop = hass.bus.async_listen(
             EVENT_HOMEASSISTANT_STOP, self._async_handle_hass_stop
         )
-        cancel_logging_listener = hass.bus.async_listen(
-            EVENT_LOGGING_CHANGED, self._async_logging_changed
-        )
 
         writer = wsock._writer  # noqa: SLF001
         if TYPE_CHECKING:
@@ -363,7 +354,6 @@ class WebSocketHandler:
                 "%s: Unexpected error inside websocket API", self.description
             )
         finally:
-            cancel_logging_listener()
             unsub_stop()
 
             self._cancel_peak_checker()
@@ -411,7 +401,7 @@ class WebSocketHandler:
         except ValueError as err:
             raise Disconnect("Received invalid JSON during auth phase") from err
 
-        if self._debug:
+        if self._logger.isEnabledFor(logging.DEBUG):
             self._logger.debug("%s: Received %s", self.description, auth_msg_data)
         connection = await auth.async_handle(auth_msg_data)
         # As the webserver is now started before the start
@@ -473,6 +463,7 @@ class WebSocketHandler:
         wsock = self._wsock
         async_handle_str = connection.async_handle
         async_handle_binary = connection.async_handle_binary
+        _debug_enabled = partial(self._logger.isEnabledFor, logging.DEBUG)
 
         # Command phase
         while not wsock.closed:
@@ -505,7 +496,7 @@ class WebSocketHandler:
             except ValueError as ex:
                 raise Disconnect("Received invalid JSON.") from ex
 
-            if self._debug:
+            if _debug_enabled():
                 self._logger.debug(
                     "%s: Received %s", self.description, command_msg_data
                 )

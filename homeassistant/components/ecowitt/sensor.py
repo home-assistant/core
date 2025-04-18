@@ -68,7 +68,6 @@ ECOWITT_SENSORS_MAPPING: Final = {
         key="DEGREE",
         native_unit_of_measurement=DEGREE,
         device_class=SensorDeviceClass.WIND_DIRECTION,
-        state_class=SensorStateClass.MEASUREMENT_ANGLE,
     ),
     EcoWittSensorTypes.WATT_METERS_SQUARED: SensorEntityDescription(
         key="WATT_METERS_SQUARED",

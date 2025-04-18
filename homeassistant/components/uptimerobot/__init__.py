@@ -4,17 +4,19 @@ from __future__ import annotations
 
 from pyuptimerobot import UptimeRobot
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import PLATFORMS
-from .coordinator import UptimeRobotConfigEntry, UptimeRobotDataUpdateCoordinator
+from .const import DOMAIN, PLATFORMS
+from .coordinator import UptimeRobotDataUpdateCoordinator
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: UptimeRobotConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up UptimeRobot from a config entry."""
+    hass.data.setdefault(DOMAIN, {})
     key: str = entry.data[CONF_API_KEY]
     if key.startswith(("ur", "m")):
         raise ConfigEntryAuthFailed(
@@ -22,7 +24,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: UptimeRobotConfigEntry) 
         )
     uptime_robot_api = UptimeRobot(key, async_get_clientsession(hass))
 
-    coordinator = UptimeRobotDataUpdateCoordinator(
+    hass.data[DOMAIN][entry.entry_id] = coordinator = UptimeRobotDataUpdateCoordinator(
         hass,
         entry,
         api=uptime_robot_api,
@@ -30,15 +32,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: UptimeRobotConfigEntry) 
 
     await coordinator.async_config_entry_first_refresh()
 
-    entry.runtime_data = coordinator
-
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(
-    hass: HomeAssistant, entry: UptimeRobotConfigEntry
-) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id)
+
+    return unload_ok

@@ -18,8 +18,6 @@ from .entity import (
     platform_async_setup_entry,
 )
 
-PARALLEL_UPDATES = 0
-
 
 class EsphomeLock(EsphomeEntity[LockInfo, LockEntityState], LockEntity):
     """A lock implementation for ESPHome."""

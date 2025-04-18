@@ -95,7 +95,8 @@ class BaseFirmwareUpdateEntity(
     _attr_supported_features = (
         UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
     )
-    _attr_has_entity_name = True
+    # Until this entity can be associated with a device, we must manually name it
+    _attr_has_entity_name = False
 
     def __init__(
         self,
@@ -194,7 +195,11 @@ class BaseFirmwareUpdateEntity(
 
     def _update_attributes(self) -> None:
         """Recompute the attributes of the entity."""
-        self._attr_title = self.entity_description.firmware_name or "Unknown"
+
+        # This entity is not currently associated with a device so we must manually
+        # give it a name
+        self._attr_name = f"{self._config_entry.title} Update"
+        self._attr_title = self.entity_description.firmware_name or "unknown"
 
         if (
             self._current_firmware_info is None

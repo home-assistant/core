@@ -1,1 +1,0 @@
-"""Siemens virtual integration."""

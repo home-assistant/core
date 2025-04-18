@@ -11,8 +11,6 @@ from homeassistant.components.date import DateEntity
 
 from .entity import EsphomeEntity, esphome_state_property, platform_async_setup_entry
 
-PARALLEL_UPDATES = 0
-
 
 class EsphomeDate(EsphomeEntity[DateInfo, DateState], DateEntity):
     """A date implementation for esphome."""

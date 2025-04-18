@@ -1,17 +1,14 @@
 """The sensor tests for the Airzone platform."""
 
-from collections.abc import Generator
 import copy
 from unittest.mock import patch
 
 from aioairzone.const import API_DATA, API_SYSTEMS
 import pytest
-from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.airzone.coordinator import SCAN_INTERVAL
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
 
 from .util import (
@@ -23,27 +20,62 @@ from .util import (
     async_init_integration,
 )
 
-from tests.common import async_fire_time_changed, snapshot_platform
-
-
-@pytest.fixture(autouse=True)
-def override_platforms() -> Generator[None]:
-    """Override PLATFORMS."""
-    with patch("homeassistant.components.airzone.PLATFORMS", [Platform.SENSOR]):
-        yield
+from tests.common import async_fire_time_changed
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_airzone_create_sensors(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    snapshot: SnapshotAssertion,
-) -> None:
+async def test_airzone_create_sensors(hass: HomeAssistant) -> None:
     """Test creation of sensors."""
 
-    config_entry = await async_init_integration(hass)
+    await async_init_integration(hass)
 
-    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
+    # Hot Water
+    state = hass.states.get("sensor.airzone_dhw_temperature")
+    assert state.state == "43"
+
+    # WebServer
+    state = hass.states.get("sensor.airzone_webserver_rssi")
+    assert state.state == "-42"
+
+    # Zones
+    state = hass.states.get("sensor.despacho_temperature")
+    assert state.state == "21.20"
+
+    state = hass.states.get("sensor.despacho_humidity")
+    assert state.state == "36"
+
+    state = hass.states.get("sensor.dorm_1_temperature")
+    assert state.state == "20.8"
+
+    state = hass.states.get("sensor.dorm_1_humidity")
+    assert state.state == "35"
+
+    state = hass.states.get("sensor.dorm_2_temperature")
+    assert state.state == "20.5"
+
+    state = hass.states.get("sensor.dorm_2_humidity")
+    assert state.state == "40"
+
+    state = hass.states.get("sensor.dorm_ppal_temperature")
+    assert state.state == "21.1"
+
+    state = hass.states.get("sensor.dorm_ppal_humidity")
+    assert state.state == "39"
+
+    state = hass.states.get("sensor.salon_temperature")
+    assert state.state == "19.6"
+
+    state = hass.states.get("sensor.salon_humidity")
+    assert state.state == "34"
+
+    state = hass.states.get("sensor.airzone_2_1_temperature")
+    assert state.state == "22.3"
+
+    state = hass.states.get("sensor.airzone_2_1_humidity")
+    assert state.state == "62"
+
+    state = hass.states.get("sensor.dkn_plus_temperature")
+    assert state.state == "21.7"
 
     state = hass.states.get("sensor.dkn_plus_humidity")
     assert state is None

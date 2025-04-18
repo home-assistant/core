@@ -6,13 +6,13 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from pyephember2.pyephember2 import (
+from pyephember.pyephember import (
     EphEmber,
     ZoneMode,
     zone_current_temperature,
     zone_is_active,
     zone_is_boost_active,
-    zone_is_hotwater,
+    zone_is_hot_water,
     zone_mode,
     zone_name,
     zone_target_temperature,
@@ -69,18 +69,14 @@ def setup_platform(
 
     try:
         ember = EphEmber(username, password)
+        zones = ember.get_zones()
+        for zone in zones:
+            add_entities([EphEmberThermostat(ember, zone)])
     except RuntimeError:
-        _LOGGER.error("Cannot login to EphEmber")
-
-    try:
-        homes = ember.get_zones()
-    except RuntimeError:
-        _LOGGER.error("Fail to get zones")
+        _LOGGER.error("Cannot connect to EphEmber")
         return
 
-    add_entities(
-        EphEmberThermostat(ember, zone) for home in homes for zone in home["zones"]
-    )
+    return
 
 
 class EphEmberThermostat(ClimateEntity):
@@ -89,35 +85,33 @@ class EphEmberThermostat(ClimateEntity):
     _attr_hvac_modes = OPERATION_LIST
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
-    def __init__(self, ember, zone) -> None:
+    def __init__(self, ember, zone):
         """Initialize the thermostat."""
         self._ember = ember
         self._zone_name = zone_name(zone)
         self._zone = zone
-
-        # hot water = true, is immersive device without target temperature control.
-        self._hot_water = zone_is_hotwater(zone)
+        self._hot_water = zone_is_hot_water(zone)
 
         self._attr_name = self._zone_name
 
+        self._attr_supported_features = (
+            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.AUX_HEAT
+        )
+        self._attr_target_temperature_step = 0.5
         if self._hot_water:
             self._attr_supported_features = ClimateEntityFeature.AUX_HEAT
             self._attr_target_temperature_step = None
-        else:
-            self._attr_target_temperature_step = 0.5
-            self._attr_supported_features = (
-                ClimateEntityFeature.TURN_OFF
-                | ClimateEntityFeature.TURN_ON
-                | ClimateEntityFeature.TARGET_TEMPERATURE
-            )
+        self._attr_supported_features |= (
+            ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+        )
 
     @property
-    def current_temperature(self) -> float | None:
+    def current_temperature(self):
         """Return the current temperature."""
         return zone_current_temperature(self._zone)
 
     @property
-    def target_temperature(self) -> float | None:
+    def target_temperature(self):
         """Return the temperature we try to reach."""
         return zone_target_temperature(self._zone)
 
@@ -139,12 +133,12 @@ class EphEmberThermostat(ClimateEntity):
         """Set the operation mode."""
         mode = self.map_mode_hass_eph(hvac_mode)
         if mode is not None:
-            self._ember.set_zone_mode(self._zone["zoneid"], mode)
+            self._ember.set_mode_by_name(self._zone_name, mode)
         else:
             _LOGGER.error("Invalid operation mode provided %s", hvac_mode)
 
     @property
-    def is_aux_heat(self) -> bool:
+    def is_aux_heat(self):
         """Return true if aux heater."""
 
         return zone_is_boost_active(self._zone)
@@ -173,7 +167,7 @@ class EphEmberThermostat(ClimateEntity):
         if temperature > self.max_temp or temperature < self.min_temp:
             return
 
-        self._ember.set_zone_target_temperature(self._zone["zoneid"], temperature)
+        self._ember.set_target_temperture_by_name(self._zone_name, temperature)
 
     @property
     def min_temp(self):
@@ -194,8 +188,7 @@ class EphEmberThermostat(ClimateEntity):
 
     def update(self) -> None:
         """Get the latest data."""
-        self._ember.get_zones()
-        self._zone = self._ember.get_zone(self._zone["zoneid"])
+        self._zone = self._ember.get_zone(self._zone_name)
 
     @staticmethod
     def map_mode_hass_eph(operation_mode):

@@ -6,7 +6,7 @@
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "region": "ConnectedDrive region"
+          "region": "ConnectedDrive Region"
         },
         "data_description": {
           "username": "The email address of your MyBMW/MINI Connected account.",
@@ -113,10 +113,10 @@
     },
     "select": {
       "ac_limit": {
-        "name": "AC charging limit"
+        "name": "AC Charging Limit"
       },
       "charging_mode": {
-        "name": "Charging mode",
+        "name": "Charging Mode",
         "state": {
           "immediate_charging": "Immediate charging",
           "delayed_charging": "Delayed charging",
@@ -181,7 +181,7 @@
           "cooling": "Cooling",
           "heating": "Heating",
           "inactive": "Inactive",
-          "standby": "[%key:common::state::standby%]",
+          "standby": "Standby",
           "ventilation": "Ventilation"
         }
       },

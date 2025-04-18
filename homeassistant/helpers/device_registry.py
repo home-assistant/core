@@ -581,8 +581,8 @@ class DeviceRegistryItems[_EntryTypeT: (DeviceEntry, DeletedDeviceEntry)](
 
     def get_entry(
         self,
-        identifiers: set[tuple[str, str]] | None = None,
-        connections: set[tuple[str, str]] | None = None,
+        identifiers: set[tuple[str, str]] | None,
+        connections: set[tuple[str, str]] | None,
     ) -> _EntryTypeT | None:
         """Get entry from identifiers or connections."""
         if identifiers:
@@ -709,6 +709,22 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         """Check if device is registered."""
         return self.devices.get_entry(identifiers, connections)
 
+    def _async_get_deleted_device(
+        self,
+        identifiers: set[tuple[str, str]],
+        connections: set[tuple[str, str]],
+    ) -> DeletedDeviceEntry | None:
+        """Check if device is deleted."""
+        return self.deleted_devices.get_entry(identifiers, connections)
+
+    def _async_get_deleted_devices(
+        self,
+        identifiers: set[tuple[str, str]] | None = None,
+        connections: set[tuple[str, str]] | None = None,
+    ) -> Iterable[DeletedDeviceEntry]:
+        """List devices that are deleted."""
+        return self.deleted_devices.get_entries(identifiers, connections)
+
     def _substitute_name_placeholders(
         self,
         domain: str,
@@ -823,12 +839,10 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         else:
             connections = _normalize_connections(connections)
 
-        device = self.devices.get_entry(
-            identifiers=identifiers, connections=connections
-        )
+        device = self.async_get_device(identifiers=identifiers, connections=connections)
 
         if device is None:
-            deleted_device = self.deleted_devices.get_entry(identifiers, connections)
+            deleted_device = self._async_get_deleted_device(identifiers, connections)
             if deleted_device is None:
                 device = DeviceEntry(is_new=True)
             else:
@@ -855,7 +869,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             name = default_name
 
         if via_device is not None and via_device is not UNDEFINED:
-            if (via := self.devices.get_entry(identifiers={via_device})) is None:
+            if (via := self.async_get_device(identifiers={via_device})) is None:
                 report_usage(
                     "calls `device_registry.async_get_or_create` referencing a "
                     f"non existing `via_device` {via_device}, "
@@ -1158,7 +1172,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         # NOTE: Once we solve the broader issue of duplicated devices, we might
         # want to revisit it. Instead of simply removing the duplicated deleted device,
         # we might want to merge the information from it into the non-deleted device.
-        for deleted_device in self.deleted_devices.get_entries(
+        for deleted_device in self._async_get_deleted_devices(
             added_identifiers, added_connections
         ):
             del self.deleted_devices[deleted_device.id]
@@ -1200,7 +1214,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             # conflict, the index will only see the last one and we will not
             # be able to tell which one caused the conflict
             if (
-                existing_device := self.devices.get_entry(connections={connection})
+                existing_device := self.async_get_device(connections={connection})
             ) and existing_device.id != device_id:
                 raise DeviceConnectionCollisionError(
                     normalized_connections, existing_device
@@ -1224,7 +1238,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             # conflict, the index will only see the last one and we will not
             # be able to tell which one caused the conflict
             if (
-                existing_device := self.devices.get_entry(identifiers={identifier})
+                existing_device := self.async_get_device(identifiers={identifier})
             ) and existing_device.id != device_id:
                 raise DeviceIdentifierCollisionError(identifiers, existing_device)
 

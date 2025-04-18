@@ -11,8 +11,6 @@ from whois.exceptions import (
     UnknownDateFormat,
     UnknownTld,
     WhoisCommandFailed,
-    WhoisPrivateRegistry,
-    WhoisQuotaExceeded,
 )
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -50,10 +48,6 @@ class WhoisFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unexpected_response"
             except UnknownDateFormat:
                 errors["base"] = "unknown_date_format"
-            except WhoisPrivateRegistry:
-                errors["base"] = "private_registry"
-            except WhoisQuotaExceeded:
-                errors["base"] = "quota_exceeded"
             else:
                 return self.async_create_entry(
                     title=self.imported_name or user_input[CONF_DOMAIN],

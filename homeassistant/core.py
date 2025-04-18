@@ -38,7 +38,6 @@ from typing import (
     TypedDict,
     TypeVar,
     cast,
-    final,
     overload,
 )
 
@@ -325,7 +324,6 @@ class HassJobType(enum.Enum):
     Executor = 3
 
 
-@final  # Final to allow direct checking of the type instead of using isinstance
 class HassJob[**_P, _R_co]:
     """Represent a job to be run later.
 
@@ -1319,7 +1317,6 @@ class EventOrigin(enum.Enum):
         return next((idx for idx, origin in enumerate(EventOrigin) if origin is self))
 
 
-@final  # Final to allow direct checking of the type instead of using isinstance
 class Event(Generic[_DataT]):
     """Representation of an event within the bus."""
 
@@ -1938,14 +1935,13 @@ class State:
             # to avoid callers outside of this module
             # from misusing it by mistake.
             context = state_context._as_dict  # noqa: SLF001
-        last_changed_timestamp = self.last_changed_timestamp
         compressed_state: CompressedState = {
             COMPRESSED_STATE_STATE: self.state,
             COMPRESSED_STATE_ATTRIBUTES: self.attributes,
             COMPRESSED_STATE_CONTEXT: context,
-            COMPRESSED_STATE_LAST_CHANGED: last_changed_timestamp,
+            COMPRESSED_STATE_LAST_CHANGED: self.last_changed_timestamp,
         }
-        if last_changed_timestamp != self.last_updated_timestamp:
+        if self.last_changed != self.last_updated:
             compressed_state[COMPRESSED_STATE_LAST_UPDATED] = (
                 self.last_updated_timestamp
             )

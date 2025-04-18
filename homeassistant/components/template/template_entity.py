@@ -248,7 +248,7 @@ class _TemplateAttribute:
         return
 
 
-class TemplateEntity(AbstractTemplateEntity):
+class TemplateEntity(AbstractTemplateEntity):  # pylint: disable=hass-enforce-class-module
     """Entity that uses templates to calculate attributes."""
 
     _attr_available = True

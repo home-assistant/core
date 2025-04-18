@@ -59,3 +59,8 @@ class UptimeRobotEntity(CoordinatorEntity[UptimeRobotDataUpdateCoordinator]):
             ),
             self._monitor,
         )
+
+    @property
+    def monitor_available(self) -> bool:
+        """Returtn if the monitor is available."""
+        return bool(self.monitor.status == 2)

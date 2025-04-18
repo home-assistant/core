@@ -140,8 +140,8 @@
       "electricity_tariff": {
         "name": "Electricity tariff",
         "state": {
-          "low": "[%key:common::state::low%]",
-          "high": "[%key:common::state::high%]"
+          "low": "Low",
+          "high": "High"
         }
       },
       "power_failure_count": {

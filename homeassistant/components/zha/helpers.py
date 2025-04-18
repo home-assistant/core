@@ -514,7 +514,6 @@ class ZHAGatewayProxy(EventBase):
         self._log_queue_handler.listener = logging.handlers.QueueListener(
             log_simple_queue, log_relay_handler
         )
-        self._log_queue_handler_count: int = 0
 
         self._unsubs: list[Callable[[], None]] = []
         self._unsubs.append(self.gateway.on_all_events(self._handle_event_protocol))
@@ -748,10 +747,7 @@ class ZHAGatewayProxy(EventBase):
         if filterer:
             self._log_queue_handler.addFilter(filterer)
 
-        # Only start a new log queue handler if the old one is no longer running
-        self._log_queue_handler_count += 1
-
-        if self._log_queue_handler.listener and self._log_queue_handler_count == 1:
+        if self._log_queue_handler.listener:
             self._log_queue_handler.listener.start()
 
         for logger_name in DEBUG_RELAY_LOGGERS:
@@ -767,10 +763,7 @@ class ZHAGatewayProxy(EventBase):
         for logger_name in DEBUG_RELAY_LOGGERS:
             logging.getLogger(logger_name).removeHandler(self._log_queue_handler)
 
-        # Only stop the log queue handler if nothing else is using it
-        self._log_queue_handler_count -= 1
-
-        if self._log_queue_handler.listener and self._log_queue_handler_count == 0:
+        if self._log_queue_handler.listener:
             self._log_queue_handler.listener.stop()
 
         if filterer:

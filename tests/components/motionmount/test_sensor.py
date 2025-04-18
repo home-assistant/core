@@ -7,9 +7,11 @@ import pytest
 
 from homeassistant.core import HomeAssistant
 
-from . import MAC, ZEROCONF_NAME
+from . import ZEROCONF_NAME
 
 from tests.common import MockConfigEntry
+
+MAC = bytes.fromhex("c4dd57f8a55f")
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

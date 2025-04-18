@@ -3,7 +3,7 @@
 import logging
 from numbers import Number
 import re
-from typing import Any, cast
+from typing import Any
 
 import voluptuous as vol
 
@@ -19,7 +19,6 @@ from homeassistant.helpers.dispatcher import (
 )
 
 from . import HassioAPIError
-from .config import HassioUpdateParametersDict
 from .const import (
     ATTR_DATA,
     ATTR_ENDPOINT,
@@ -30,7 +29,6 @@ from .const import (
     ATTR_VERSION,
     ATTR_WS_EVENT,
     DATA_COMPONENT,
-    DATA_CONFIG_STORE,
     EVENT_SUPERVISOR_EVENT,
     WS_ID,
     WS_TYPE,
@@ -67,8 +65,6 @@ def async_load_websocket_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_subscribe)
     websocket_api.async_register_command(hass, websocket_update_addon)
     websocket_api.async_register_command(hass, websocket_update_core)
-    websocket_api.async_register_command(hass, websocket_update_config_info)
-    websocket_api.async_register_command(hass, websocket_update_config_update)
 
 
 @callback
@@ -186,45 +182,6 @@ async def websocket_update_addon(
 async def websocket_update_core(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
-    """Websocket handler to update Home Assistant Core."""
+    """Websocket handler to update an addon."""
     await update_core(hass, None, msg["backup"])
     connection.send_result(msg[WS_ID])
-
-
-@callback
-@websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required("type"): "hassio/update/config/info"})
-def websocket_update_config_info(
-    hass: HomeAssistant,
-    connection: websocket_api.ActiveConnection,
-    msg: dict[str, Any],
-) -> None:
-    """Send the stored backup config."""
-    connection.send_result(
-        msg["id"], hass.data[DATA_CONFIG_STORE].data.update_config.to_dict()
-    )
-
-
-@callback
-@websocket_api.require_admin
-@websocket_api.websocket_command(
-    {
-        vol.Required("type"): "hassio/update/config/update",
-        vol.Optional("add_on_backup_before_update"): bool,
-        vol.Optional("add_on_backup_retain_copies"): vol.All(int, vol.Range(min=1)),
-        vol.Optional("core_backup_before_update"): bool,
-    }
-)
-def websocket_update_config_update(
-    hass: HomeAssistant,
-    connection: websocket_api.ActiveConnection,
-    msg: dict[str, Any],
-) -> None:
-    """Update the stored backup config."""
-    changes = dict(msg)
-    changes.pop("id")
-    changes.pop("type")
-    hass.data[DATA_CONFIG_STORE].update(
-        update_config=cast(HassioUpdateParametersDict, changes)
-    )
-    connection.send_result(msg["id"])

@@ -61,49 +61,24 @@ def path_glob_fixture(hass: HomeAssistant) -> Generator[MagicMock]:
 
 
 CONFIG_DIR = {
-    "tests/testing_config": [
+    "testing_config": [
         Path("test.txt"),
         Path(".DS_Store"),
         Path(".storage"),
-        Path("another_subdir"),
         Path("backups"),
         Path("tmp_backups"),
-        Path("tts"),
         Path("home-assistant_v2.db"),
     ],
-    "/backups": [
+    "backups": [
         Path("backups/backup.tar"),
         Path("backups/not_backup"),
     ],
-    "/another_subdir": [
-        Path("another_subdir/.DS_Store"),
-        Path("another_subdir/backups"),
-        Path("another_subdir/tts"),
-    ],
-    "another_subdir/backups": [
-        Path("another_subdir/backups/backup.tar"),
-        Path("another_subdir/backups/not_backup"),
-    ],
-    "another_subdir/tts": [
-        Path("another_subdir/tts/voice.mp3"),
-    ],
-    "/tmp_backups": [  # noqa: S108
+    "tmp_backups": [
         Path("tmp_backups/forgotten_backup.tar"),
         Path("tmp_backups/not_backup"),
     ],
-    "/tts": [
-        Path("tts/voice.mp3"),
-    ],
 }
-CONFIG_DIR_DIRS = {
-    Path(".storage"),
-    Path("another_subdir"),
-    Path("another_subdir/backups"),
-    Path("another_subdir/tts"),
-    Path("backups"),
-    Path("tmp_backups"),
-    Path("tts"),
-}
+CONFIG_DIR_DIRS = {Path(".storage"), Path("backups"), Path("tmp_backups")}
 
 
 @pytest.fixture(name="create_backup")
@@ -130,10 +105,7 @@ def mock_backup_generation_fixture(
     """Mock backup generator."""
 
     with (
-        patch(
-            "pathlib.Path.iterdir",
-            lambda x: CONFIG_DIR.get(f"{x.parent.name}/{x.name}", []),
-        ),
+        patch("pathlib.Path.iterdir", lambda x: CONFIG_DIR.get(x.name, [])),
         patch("pathlib.Path.stat", return_value=MagicMock(st_size=123)),
         patch("pathlib.Path.is_file", lambda x: x not in CONFIG_DIR_DIRS),
         patch("pathlib.Path.is_dir", lambda x: x in CONFIG_DIR_DIRS),

@@ -60,7 +60,7 @@ class AquaCellConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except AuthenticationFailed:
                 errors["base"] = "invalid_auth"
-            except Exception:
+            except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:

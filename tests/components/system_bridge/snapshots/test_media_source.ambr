@@ -3,7 +3,6 @@
   dict({
     'can_expand': True,
     'can_play': False,
-    'can_search': False,
     'children_media_class': <MediaClass.DIRECTORY: 'directory'>,
     'media_class': <MediaClass.DIRECTORY: 'directory'>,
     'media_content_type': '',
@@ -16,7 +15,6 @@
   dict({
     'can_expand': True,
     'can_play': False,
-    'can_search': False,
     'children_media_class': <MediaClass.DIRECTORY: 'directory'>,
     'media_class': <MediaClass.DIRECTORY: 'directory'>,
     'media_content_type': '',
@@ -41,7 +39,6 @@
   dict({
     'can_expand': True,
     'can_play': False,
-    'can_search': False,
     'children_media_class': <MediaClass.DIRECTORY: 'directory'>,
     'media_class': <MediaClass.DIRECTORY: 'directory'>,
     'media_content_type': '',
@@ -54,7 +51,6 @@
   dict({
     'can_expand': True,
     'can_play': False,
-    'can_search': False,
     'children_media_class': <MediaClass.DIRECTORY: 'directory'>,
     'media_class': <MediaClass.DIRECTORY: 'directory'>,
     'media_content_type': '',

@@ -54,8 +54,7 @@ class HusqvarnaConfigFlowHandler(
         automower_api = AutomowerSession(AsyncConfigFlowAuth(websession, token), tz)
         try:
             status_data = await automower_api.get_status()
-        except Exception:
-            _LOGGER.exception("Unexpected exception")
+        except Exception:  # noqa: BLE001
             return self.async_abort(reason="unknown")
         if status_data == {}:
             return self.async_abort(reason="no_mower_connected")

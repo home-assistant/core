@@ -163,11 +163,11 @@ async def test_migrate_config_entry(
     assert migrated_humidifer is not None
     assert migrated_humidifer.unique_id == "humidifer"
 
-    # Assert that entity exists in the switch domain
+    # Assert that only one entity exists in the switch domain
     switch_entities = [
         e for e in entity_registry.entities.values() if e.domain == "switch"
     ]
-    assert len(switch_entities) == 2
+    assert len(switch_entities) == 1
 
     humidifer_entities = [
         e for e in entity_registry.entities.values() if e.domain == "humidifer"

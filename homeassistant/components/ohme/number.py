@@ -1,8 +1,7 @@
 """Platform for number."""
 
-from collections.abc import Callable, Coroutine
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
 
 from ohme import ApiException, OhmeApiClient
 
@@ -23,7 +22,7 @@ PARALLEL_UPDATES = 1
 class OhmeNumberDescription(OhmeEntityDescription, NumberEntityDescription):
     """Class describing Ohme number entities."""
 
-    set_fn: Callable[[OhmeApiClient, float], Coroutine[Any, Any, bool]]
+    set_fn: Callable[[OhmeApiClient, float], Awaitable[None]]
     value_fn: Callable[[OhmeApiClient], float]
 
 
@@ -32,7 +31,7 @@ NUMBER_DESCRIPTION = [
         key="target_percentage",
         translation_key="target_percentage",
         value_fn=lambda client: client.target_soc,
-        set_fn=lambda client, value: client.async_set_target(target_percent=int(value)),
+        set_fn=lambda client, value: client.async_set_target(target_percent=value),
         native_min_value=0,
         native_max_value=100,
         native_step=1,
@@ -43,7 +42,7 @@ NUMBER_DESCRIPTION = [
         translation_key="preconditioning_duration",
         value_fn=lambda client: client.preconditioning,
         set_fn=lambda client, value: client.async_set_target(
-            pre_condition_length=int(value)
+            pre_condition_length=value
         ),
         native_min_value=0,
         native_max_value=60,

@@ -4,14 +4,13 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import AsyncIterator, Callable, Coroutine, Mapping
-from http import HTTPStatus
 import logging
 import random
 from typing import Any
 
-from aiohttp import ClientError, ClientResponseError
+from aiohttp import ClientError
 from hass_nabucasa import Cloud, CloudError
-from hass_nabucasa.api import CloudApiError, CloudApiNonRetryableError
+from hass_nabucasa.api import CloudApiNonRetryableError
 from hass_nabucasa.cloud_api import (
     FilesHandlerListEntry,
     async_files_delete_file,
@@ -121,8 +120,6 @@ class CloudBackupAgent(BackupAgent):
         """
         if not backup.protected:
             raise BackupAgentError("Cloud backups must be protected")
-        if self._cloud.subscription_expired:
-            raise BackupAgentError("Cloud subscription has expired")
 
         size = backup.size
         try:
@@ -155,13 +152,6 @@ class CloudBackupAgent(BackupAgent):
                     ) from err
                 raise BackupAgentError(f"Failed to upload backup {err}") from err
             except CloudError as err:
-                if (
-                    isinstance(err, CloudApiError)
-                    and isinstance(err.orig_exc, ClientResponseError)
-                    and err.orig_exc.status == HTTPStatus.FORBIDDEN
-                    and self._cloud.subscription_expired
-                ):
-                    raise BackupAgentError("Cloud subscription has expired") from err
                 if tries == _RETRY_LIMIT:
                     raise BackupAgentError(f"Failed to upload backup {err}") from err
                 tries += 1

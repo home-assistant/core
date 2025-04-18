@@ -17,18 +17,16 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import API_ATTR_OK, COORDINATOR_UPDATE_INTERVAL, DOMAIN, LOGGER
 
-type UptimeRobotConfigEntry = ConfigEntry[UptimeRobotDataUpdateCoordinator]
-
 
 class UptimeRobotDataUpdateCoordinator(DataUpdateCoordinator[list[UptimeRobotMonitor]]):
     """Data update coordinator for UptimeRobot."""
 
-    config_entry: UptimeRobotConfigEntry
+    config_entry: ConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: UptimeRobotConfigEntry,
+        config_entry: ConfigEntry,
         api: UptimeRobot,
     ) -> None:
         """Initialize coordinator."""

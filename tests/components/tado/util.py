@@ -2,7 +2,8 @@
 
 import requests_mock
 
-from homeassistant.components.tado import CONF_REFRESH_TOKEN, DOMAIN
+from homeassistant.components.tado import DOMAIN
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
@@ -177,16 +178,9 @@ async def async_init_integration(
             "https://my.tado.com/api/v2/homes/1/zones/1/state",
             text=load_fixture(zone_1_state_fixture),
         )
-        m.post(
-            "https://login.tado.com/oauth2/token",
-            text=load_fixture(token_fixture),
-        )
         entry = MockConfigEntry(
             domain=DOMAIN,
-            version=2,
-            data={
-                CONF_REFRESH_TOKEN: "mock-token",
-            },
+            data={CONF_USERNAME: "mock", CONF_PASSWORD: "mock"},
             options={"fallback": "NEXT_TIME_BLOCK"},
         )
         entry.add_to_hass(hass)

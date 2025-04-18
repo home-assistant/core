@@ -33,7 +33,7 @@ from .const import (
     URI_SCHEME,
     URI_SCHEME_REGEX,
 )
-from .error import MediaSourceError, UnknownMediaSource, Unresolvable
+from .error import MediaSourceError, Unresolvable
 from .models import BrowseMediaSource, MediaSource, MediaSourceItem, PlayMedia
 
 __all__ = [
@@ -113,11 +113,7 @@ def _get_media_item(
         return MediaSourceItem(hass, domain, "", target_media_player)
 
     if item.domain is not None and item.domain not in hass.data[DOMAIN]:
-        raise UnknownMediaSource(
-            translation_domain=DOMAIN,
-            translation_key="unknown_media_source",
-            translation_placeholders={"domain": item.domain},
-        )
+        raise ValueError("Unknown media source")
 
     return item
 
@@ -136,14 +132,7 @@ async def async_browse_media(
     try:
         item = await _get_media_item(hass, media_content_id, None).async_browse()
     except ValueError as err:
-        raise BrowseError(
-            translation_domain=DOMAIN,
-            translation_key="browse_media_failed",
-            translation_placeholders={
-                "media_content_id": str(media_content_id),
-                "error": str(err),
-            },
-        ) from err
+        raise BrowseError(str(err)) from err
 
     if content_filter is None or item.children is None:
         return item
@@ -176,14 +165,7 @@ async def async_resolve_media(
     try:
         item = _get_media_item(hass, media_content_id, target_media_player)
     except ValueError as err:
-        raise Unresolvable(
-            translation_domain=DOMAIN,
-            translation_key="resolve_media_failed",
-            translation_placeholders={
-                "media_content_id": str(media_content_id),
-                "error": str(err),
-            },
-        ) from err
+        raise Unresolvable(str(err)) from err
 
     return await item.async_resolve()
 

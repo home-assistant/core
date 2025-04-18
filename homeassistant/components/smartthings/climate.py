@@ -118,12 +118,12 @@ async def async_setup_entry(
     """Add climate entities for a config entry."""
     entry_data = entry.runtime_data
     entities: list[ClimateEntity] = [
-        SmartThingsAirConditioner(entry_data.client, device)
+        SmartThingsAirConditioner(entry_data.client, entry_data.rooms, device)
         for device in entry_data.devices.values()
         if all(capability in device.status[MAIN] for capability in AC_CAPABILITIES)
     ]
     entities.extend(
-        SmartThingsThermostat(entry_data.client, device)
+        SmartThingsThermostat(entry_data.client, entry_data.rooms, device)
         for device in entry_data.devices.values()
         if all(
             capability in device.status[MAIN] for capability in THERMOSTAT_CAPABILITIES
@@ -137,11 +137,14 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
 
     _attr_name = None
 
-    def __init__(self, client: SmartThings, device: FullDevice) -> None:
+    def __init__(
+        self, client: SmartThings, rooms: dict[str, str], device: FullDevice
+    ) -> None:
         """Init the class."""
         super().__init__(
             client,
             device,
+            rooms,
             {
                 Capability.THERMOSTAT_FAN_MODE,
                 Capability.THERMOSTAT_MODE,
@@ -281,7 +284,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
         return [
             state
             for mode in supported_thermostat_modes
-            if (state := MODE_TO_STATE.get(mode)) is not None
+            if (state := AC_MODE_TO_STATE.get(mode)) is not None
         ]
 
     @property
@@ -333,12 +336,16 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
     """Define a SmartThings Air Conditioner."""
 
     _attr_name = None
+    _attr_preset_mode = None
 
-    def __init__(self, client: SmartThings, device: FullDevice) -> None:
+    def __init__(
+        self, client: SmartThings, rooms: dict[str, str], device: FullDevice
+    ) -> None:
         """Init the class."""
         super().__init__(
             client,
             device,
+            rooms,
             {
                 Capability.AIR_CONDITIONER_MODE,
                 Capability.SWITCH,
@@ -465,14 +472,12 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
             Capability.DEMAND_RESPONSE_LOAD_CONTROL,
             Attribute.DEMAND_RESPONSE_LOAD_CONTROL_STATUS,
         )
-        res = {}
-        for key in ("duration", "start", "override", "drlcLevel"):
-            if key in drlc_status:
-                dict_key = {"drlcLevel": "drlc_status_level"}.get(
-                    key, f"drlc_status_{key}"
-                )
-                res[dict_key] = drlc_status[key]
-        return res
+        return {
+            "drlc_status_duration": drlc_status["duration"],
+            "drlc_status_level": drlc_status["drlcLevel"],
+            "drlc_status_start": drlc_status["start"],
+            "drlc_status_override": drlc_status["override"],
+        }
 
     @property
     def fan_mode(self) -> str:
@@ -544,18 +549,6 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
             SWING_OFF,
         )
 
-    @property
-    def preset_mode(self) -> str | None:
-        """Return the preset mode."""
-        if self.supports_capability(Capability.CUSTOM_AIR_CONDITIONER_OPTIONAL_MODE):
-            mode = self.get_attribute_value(
-                Capability.CUSTOM_AIR_CONDITIONER_OPTIONAL_MODE,
-                Attribute.AC_OPTIONAL_MODE,
-            )
-            if mode == WINDFREE:
-                return WINDFREE
-        return None
-
     def _determine_preset_modes(self) -> list[str] | None:
         """Return a list of available preset modes."""
         if self.supports_capability(Capability.CUSTOM_AIR_CONDITIONER_OPTIONAL_MODE):
@@ -578,15 +571,12 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
     def _determine_hvac_modes(self) -> list[HVACMode]:
         """Determine the supported HVAC modes."""
         modes = [HVACMode.OFF]
-        if (
-            ac_modes := self.get_attribute_value(
+        modes.extend(
+            state
+            for mode in self.get_attribute_value(
                 Capability.AIR_CONDITIONER_MODE, Attribute.SUPPORTED_AC_MODES
             )
-        ) is not None:
-            modes.extend(
-                state
-                for mode in ac_modes
-                if (state := AC_MODE_TO_STATE.get(mode)) is not None
-                if state not in modes
-            )
+            if (state := AC_MODE_TO_STATE.get(mode)) is not None
+            if state not in modes
+        )
         return modes

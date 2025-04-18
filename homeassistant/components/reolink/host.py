@@ -12,7 +12,6 @@ from typing import Any, Literal
 import aiohttp
 from aiohttp.web import Request
 from reolink_aio.api import ALLOWED_SPECIAL_CHARS, Host
-from reolink_aio.baichuan import DEFAULT_BC_PORT
 from reolink_aio.enums import SubType
 from reolink_aio.exceptions import NotSupportedError, ReolinkError, SubscriptionError
 
@@ -34,14 +33,14 @@ from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.storage import Store
 from homeassistant.util.ssl import SSLCipherList
 
-from .const import CONF_BC_PORT, CONF_SUPPORTS_PRIVACY_MODE, CONF_USE_HTTPS, DOMAIN
+from .const import CONF_SUPPORTS_PRIVACY_MODE, CONF_USE_HTTPS, DOMAIN
 from .exceptions import (
     PasswordIncompatible,
     ReolinkSetupException,
     ReolinkWebhookException,
     UserNotAdmin,
 )
-from .util import ReolinkConfigEntry, get_store
+from .util import get_store
 
 DEFAULT_TIMEOUT = 30
 FIRST_TCP_PUSH_TIMEOUT = 10
@@ -67,11 +66,11 @@ class ReolinkHost:
         hass: HomeAssistant,
         config: Mapping[str, Any],
         options: Mapping[str, Any],
-        config_entry: ReolinkConfigEntry | None = None,
+        config_entry_id: str | None = None,
     ) -> None:
         """Initialize Reolink Host. Could be either NVR, or Camera."""
         self._hass: HomeAssistant = hass
-        self._config_entry = config_entry
+        self._config_entry_id = config_entry_id
         self._config = config
         self._unique_id: str = ""
 
@@ -92,7 +91,6 @@ class ReolinkHost:
             protocol=options[CONF_PROTOCOL],
             timeout=DEFAULT_TIMEOUT,
             aiohttp_get_session_callback=get_aiohttp_session,
-            bc_port=config.get(CONF_BC_PORT, DEFAULT_BC_PORT),
         )
 
         self.last_wake: float = 0
@@ -151,33 +149,15 @@ class ReolinkHost:
     async def async_init(self) -> None:
         """Connect to Reolink host."""
         if not self._api.valid_password():
-            if (
-                len(self._config[CONF_PASSWORD]) >= 32
-                and self._config_entry is not None
-            ):
-                ir.async_create_issue(
-                    self._hass,
-                    DOMAIN,
-                    f"password_too_long_{self._config_entry.entry_id}",
-                    is_fixable=True,
-                    severity=ir.IssueSeverity.ERROR,
-                    translation_key="password_too_long",
-                    translation_placeholders={"name": self._config_entry.title},
-                )
-
             raise PasswordIncompatible(
-                "Reolink password contains incompatible special character or "
-                "is too long, please change the password to only contain characters: "
-                f"a-z, A-Z, 0-9 or {ALLOWED_SPECIAL_CHARS} "
-                "and not be longer than 31 characters"
+                "Reolink password contains incompatible special character, "
+                "please change the password to only contain characters: "
+                f"a-z, A-Z, 0-9 or {ALLOWED_SPECIAL_CHARS}"
             )
 
         store: Store[str] | None = None
-        if self._config_entry is not None:
-            ir.async_delete_issue(
-                self._hass, DOMAIN, f"password_too_long_{self._config_entry.entry_id}"
-            )
-            store = get_store(self._hass, self._config_entry.entry_id)
+        if self._config_entry_id is not None:
+            store = get_store(self._hass, self._config_entry_id)
             if self._config.get(CONF_SUPPORTS_PRIVACY_MODE) and (
                 data := await store.async_load()
             ):

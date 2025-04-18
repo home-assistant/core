@@ -52,8 +52,8 @@
           "fan_mode": {
             "state": {
               "silent": "Silent",
-              "auto": "[%key:common::state::auto%]",
-              "high": "[%key:common::state::high%]"
+              "auto": "Auto",
+              "high": "High"
             }
           }
         }
@@ -74,7 +74,7 @@
       "status": {
         "name": "Status",
         "state": {
-          "off": "[%key:common::state::off%]",
+          "off": "Off",
           "off_timer": "Timer-regulated switch off",
           "test_fire": "Ignition test",
           "heatup": "Pellet feed",
@@ -83,7 +83,7 @@
           "burning": "Operating",
           "burning_mod": "Operating - Modulating",
           "unknown": "Unknown",
-          "cool_fluid": "[%key:common::state::standby%]",
+          "cool_fluid": "Stand-by",
           "fire_stop": "Switch off",
           "clean_fire": "Burn pot cleaning",
           "cooling": "Cooling in progress",

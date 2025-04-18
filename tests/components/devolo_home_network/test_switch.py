@@ -1,7 +1,7 @@
 """Tests for the devolo Home Network switch."""
 
 from datetime import timedelta
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from devolo_plc_api.device_api import WifiGuestAccessGet
 from devolo_plc_api.exceptions.device import DevicePasswordProtected, DeviceUnavailable
@@ -16,7 +16,6 @@ from homeassistant.components.devolo_home_network.const import (
 from homeassistant.components.switch import DOMAIN as PLATFORM
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
@@ -107,15 +106,18 @@ async def test_update_enable_guest_wifi(
     mock_device.device.async_get_wifi_guest_access.return_value = WifiGuestAccessGet(
         enabled=False
     )
-    await hass.services.async_call(
-        PLATFORM, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: state_key}, blocking=True
-    )
+    with patch(
+        "devolo_plc_api.device_api.deviceapi.DeviceApi.async_set_wifi_guest_access",
+        new=AsyncMock(),
+    ) as turn_off:
+        await hass.services.async_call(
+            PLATFORM, SERVICE_TURN_OFF, {"entity_id": state_key}, blocking=True
+        )
 
-    state = hass.states.get(state_key)
-    assert state is not None
-    assert state.state == STATE_OFF
-    mock_device.device.async_set_wifi_guest_access.assert_called_once_with(False)
-    mock_device.device.async_set_wifi_guest_access.reset_mock()
+        state = hass.states.get(state_key)
+        assert state is not None
+        assert state.state == STATE_OFF
+        turn_off.assert_called_once_with(False)
 
     freezer.tick(REQUEST_REFRESH_DEFAULT_COOLDOWN)
     async_fire_time_changed(hass)
@@ -125,15 +127,18 @@ async def test_update_enable_guest_wifi(
     mock_device.device.async_get_wifi_guest_access.return_value = WifiGuestAccessGet(
         enabled=True
     )
-    await hass.services.async_call(
-        PLATFORM, SERVICE_TURN_ON, {ATTR_ENTITY_ID: state_key}, blocking=True
-    )
+    with patch(
+        "devolo_plc_api.device_api.deviceapi.DeviceApi.async_set_wifi_guest_access",
+        new=AsyncMock(),
+    ) as turn_on:
+        await hass.services.async_call(
+            PLATFORM, SERVICE_TURN_ON, {"entity_id": state_key}, blocking=True
+        )
 
-    state = hass.states.get(state_key)
-    assert state is not None
-    assert state.state == STATE_ON
-    mock_device.device.async_set_wifi_guest_access.assert_called_once_with(True)
-    mock_device.device.async_set_wifi_guest_access.reset_mock()
+        state = hass.states.get(state_key)
+        assert state is not None
+        assert state.state == STATE_ON
+        turn_on.assert_called_once_with(True)
 
     freezer.tick(REQUEST_REFRESH_DEFAULT_COOLDOWN)
     async_fire_time_changed(hass)
@@ -141,17 +146,17 @@ async def test_update_enable_guest_wifi(
 
     # Device unavailable
     mock_device.device.async_get_wifi_guest_access.side_effect = DeviceUnavailable()
-    mock_device.device.async_set_wifi_guest_access.side_effect = DeviceUnavailable()
-
-    with pytest.raises(
-        HomeAssistantError, match=f"Device {entry.title} did not respond"
+    with patch(
+        "devolo_plc_api.device_api.deviceapi.DeviceApi.async_set_wifi_guest_access",
+        side_effect=DeviceUnavailable,
     ):
         await hass.services.async_call(
-            PLATFORM, SERVICE_TURN_ON, {ATTR_ENTITY_ID: state_key}, blocking=True
+            PLATFORM, SERVICE_TURN_ON, {"entity_id": state_key}, blocking=True
         )
-    state = hass.states.get(state_key)
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
+
+        state = hass.states.get(state_key)
+        assert state is not None
+        assert state.state == STATE_UNAVAILABLE
 
     await hass.config_entries.async_unload(entry.entry_id)
 
@@ -186,15 +191,18 @@ async def test_update_enable_leds(
 
     # Switch off
     mock_device.device.async_get_led_setting.return_value = False
-    await hass.services.async_call(
-        PLATFORM, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: state_key}, blocking=True
-    )
+    with patch(
+        "devolo_plc_api.device_api.deviceapi.DeviceApi.async_set_led_setting",
+        new=AsyncMock(),
+    ) as turn_off:
+        await hass.services.async_call(
+            PLATFORM, SERVICE_TURN_OFF, {"entity_id": state_key}, blocking=True
+        )
 
-    state = hass.states.get(state_key)
-    assert state is not None
-    assert state.state == STATE_OFF
-    mock_device.device.async_set_led_setting.assert_called_once_with(False)
-    mock_device.device.async_set_led_setting.reset_mock()
+        state = hass.states.get(state_key)
+        assert state is not None
+        assert state.state == STATE_OFF
+        turn_off.assert_called_once_with(False)
 
     freezer.tick(REQUEST_REFRESH_DEFAULT_COOLDOWN)
     async_fire_time_changed(hass)
@@ -202,15 +210,18 @@ async def test_update_enable_leds(
 
     # Switch on
     mock_device.device.async_get_led_setting.return_value = True
-    await hass.services.async_call(
-        PLATFORM, SERVICE_TURN_ON, {ATTR_ENTITY_ID: state_key}, blocking=True
-    )
+    with patch(
+        "devolo_plc_api.device_api.deviceapi.DeviceApi.async_set_led_setting",
+        new=AsyncMock(),
+    ) as turn_on:
+        await hass.services.async_call(
+            PLATFORM, SERVICE_TURN_ON, {"entity_id": state_key}, blocking=True
+        )
 
-    state = hass.states.get(state_key)
-    assert state is not None
-    assert state.state == STATE_ON
-    mock_device.device.async_set_led_setting.assert_called_once_with(True)
-    mock_device.device.async_set_led_setting.reset_mock()
+        state = hass.states.get(state_key)
+        assert state is not None
+        assert state.state == STATE_ON
+        turn_on.assert_called_once_with(True)
 
     freezer.tick(REQUEST_REFRESH_DEFAULT_COOLDOWN)
     async_fire_time_changed(hass)
@@ -218,17 +229,17 @@ async def test_update_enable_leds(
 
     # Device unavailable
     mock_device.device.async_get_led_setting.side_effect = DeviceUnavailable()
-    mock_device.device.async_set_led_setting.side_effect = DeviceUnavailable()
-
-    with pytest.raises(
-        HomeAssistantError, match=f"Device {entry.title} did not respond"
+    with patch(
+        "devolo_plc_api.device_api.deviceapi.DeviceApi.async_set_led_setting",
+        side_effect=DeviceUnavailable,
     ):
         await hass.services.async_call(
-            PLATFORM, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: state_key}, blocking=True
+            PLATFORM, SERVICE_TURN_OFF, {"entity_id": state_key}, blocking=True
         )
-    state = hass.states.get(state_key)
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
+
+        state = hass.states.get(state_key)
+        assert state is not None
+        assert state.state == STATE_UNAVAILABLE
 
     await hass.config_entries.async_unload(entry.entry_id)
 
@@ -297,7 +308,7 @@ async def test_auth_failed(
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
-            PLATFORM, SERVICE_TURN_ON, {ATTR_ENTITY_ID: state_key}, blocking=True
+            PLATFORM, SERVICE_TURN_ON, {"entity_id": state_key}, blocking=True
         )
 
     await hass.async_block_till_done()

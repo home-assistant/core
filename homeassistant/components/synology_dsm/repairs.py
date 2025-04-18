@@ -11,6 +11,7 @@ import voluptuous as vol
 
 from homeassistant import data_entry_flow
 from homeassistant.components.repairs import ConfirmRepairFlow, RepairsFlow
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.selector import (
@@ -27,7 +28,7 @@ from .const import (
     ISSUE_MISSING_BACKUP_SETUP,
     SYNOLOGY_CONNECTION_EXCEPTIONS,
 )
-from .coordinator import SynologyDSMConfigEntry
+from .models import SynologyDSMData
 
 LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +36,7 @@ LOGGER = logging.getLogger(__name__)
 class MissingBackupSetupRepairFlow(RepairsFlow):
     """Handler for an issue fixing flow."""
 
-    def __init__(self, entry: SynologyDSMConfigEntry, issue_id: str) -> None:
+    def __init__(self, entry: ConfigEntry, issue_id: str) -> None:
         """Create flow."""
         self.entry = entry
         self.issue_id = issue_id
@@ -58,7 +59,7 @@ class MissingBackupSetupRepairFlow(RepairsFlow):
     ) -> data_entry_flow.FlowResult:
         """Handle the confirm step of a fix flow."""
 
-        syno_data = self.entry.runtime_data
+        syno_data: SynologyDSMData = self.hass.data[DOMAIN][self.entry.unique_id]
 
         if user_input is not None:
             self.hass.config_entries.async_update_entry(

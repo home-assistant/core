@@ -21,7 +21,11 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import color as color_util
 
 from .common import setup_home_connect_entry
-from .const import BSH_AMBIENT_LIGHT_COLOR_CUSTOM_COLOR, DOMAIN
+from .const import (
+    BSH_AMBIENT_LIGHT_COLOR_CUSTOM_COLOR,
+    DOMAIN,
+    SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID,
+)
 from .coordinator import (
     HomeConnectApplianceData,
     HomeConnectConfigEntry,
@@ -160,7 +164,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                 translation_key="turn_on_light",
                 translation_placeholders={
                     **get_dict_from_home_connect_error(err),
-                    "entity_id": self.entity_id,
+                    SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID: self.entity_id,
                 },
             ) from err
         if self._color_key and self._custom_color_key:
@@ -179,7 +183,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                         translation_key="select_light_custom_color",
                         translation_placeholders={
                             **get_dict_from_home_connect_error(err),
-                            "entity_id": self.entity_id,
+                            SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID: self.entity_id,
                         },
                     ) from err
 
@@ -197,7 +201,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                         translation_key="set_light_color",
                         translation_placeholders={
                             **get_dict_from_home_connect_error(err),
-                            "entity_id": self.entity_id,
+                            SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID: self.entity_id,
                         },
                     ) from err
                 return
@@ -207,13 +211,11 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                 brightness = round(
                     color_util.brightness_to_value(
                         self._brightness_scale,
-                        cast(int, kwargs.get(ATTR_BRIGHTNESS, self._attr_brightness)),
+                        kwargs.get(ATTR_BRIGHTNESS, self._attr_brightness),
                     )
                 )
 
-                hs_color = cast(
-                    tuple[float, float], kwargs.get(ATTR_HS_COLOR, self._attr_hs_color)
-                )
+                hs_color = kwargs.get(ATTR_HS_COLOR, self._attr_hs_color)
 
                 rgb = color_util.color_hsv_to_RGB(hs_color[0], hs_color[1], brightness)
                 hex_val = color_util.color_rgb_to_hex(*rgb)
@@ -229,7 +231,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                         translation_key="set_light_color",
                         translation_placeholders={
                             **get_dict_from_home_connect_error(err),
-                            "entity_id": self.entity_id,
+                            SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID: self.entity_id,
                         },
                     ) from err
                 return
@@ -252,7 +254,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                     translation_key="set_light_brightness",
                     translation_placeholders={
                         **get_dict_from_home_connect_error(err),
-                        "entity_id": self.entity_id,
+                        SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID: self.entity_id,
                     },
                 ) from err
 
@@ -270,7 +272,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                 translation_key="turn_off_light",
                 translation_placeholders={
                     **get_dict_from_home_connect_error(err),
-                    "entity_id": self.entity_id,
+                    SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID: self.entity_id,
                 },
             ) from err
 

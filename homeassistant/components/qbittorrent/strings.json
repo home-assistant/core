@@ -53,9 +53,9 @@
       "connection_status": {
         "name": "Connection status",
         "state": {
-          "connected": "[%key:common::state::connected%]",
+          "connected": "Connected",
           "firewalled": "Firewalled",
-          "disconnected": "[%key:common::state::disconnected%]"
+          "disconnected": "Disconnected"
         }
       },
       "active_torrents": {

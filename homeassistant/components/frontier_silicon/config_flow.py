@@ -108,8 +108,8 @@ class FrontierSiliconConfigFlow(ConfigFlow, domain=DOMAIN):
             self._webfsapi_url = await AFSAPI.get_webfsapi_endpoint(device_url)
         except FSConnectionError:
             return self.async_abort(reason="cannot_connect")
-        except Exception:
-            _LOGGER.exception("Unexpected exception")
+        except Exception as exception:  # noqa: BLE001
+            _LOGGER.debug(exception)
             return self.async_abort(reason="unknown")
 
         # try to login with default pin

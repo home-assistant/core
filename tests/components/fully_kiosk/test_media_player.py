@@ -184,7 +184,6 @@ async def test_browse_media(
         "media_content_id": "media-source://media_source/local/test.mp3",
         "can_play": True,
         "can_expand": False,
-        "can_search": False,
         "thumbnail": None,
         "children_media_class": None,
     }

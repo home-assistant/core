@@ -8,7 +8,7 @@ from aiohttp import ClientSession
 from aiohttp.client_exceptions import ClientConnectorError
 from pyairnow import WebServiceAPI
 from pyairnow.conv import aqi_to_concentration
-from pyairnow.errors import AirNowError, InvalidJsonError
+from pyairnow.errors import AirNowError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -79,7 +79,7 @@ class AirNowDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 distance=self.distance,
             )
 
-        except (AirNowError, ClientConnectorError, InvalidJsonError) as error:
+        except (AirNowError, ClientConnectorError) as error:
             raise UpdateFailed(error) from error
 
         if not obs:

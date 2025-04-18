@@ -17,12 +17,10 @@ from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture
-async def mock_client(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
-) -> TestClient:
+def mock_client(hass: HomeAssistant, hass_client: ClientSessionGenerator) -> TestClient:
     """Create http client for webhooks."""
-    await async_setup_component(hass, "webhook", {})
-    return await hass_client()
+    hass.loop.run_until_complete(async_setup_component(hass, "webhook", {}))
+    return hass.loop.run_until_complete(hass_client())
 
 
 async def test_unregistering_webhook(hass: HomeAssistant, mock_client) -> None:

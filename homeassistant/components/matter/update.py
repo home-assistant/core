@@ -251,7 +251,7 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.UPDATE,
         entity_description=UpdateEntityDescription(
-            key="MatterUpdate", device_class=UpdateDeviceClass.FIRMWARE
+            key="MatterUpdate", device_class=UpdateDeviceClass.FIRMWARE, name=None
         ),
         entity_class=MatterUpdate,
         required_attributes=(

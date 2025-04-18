@@ -11,7 +11,6 @@ from systembridgeconnector.exceptions import (
     AuthenticationException,
     ConnectionClosedException,
     ConnectionErrorException,
-    DataMissingException,
 )
 from systembridgeconnector.version import Version
 from systembridgemodels.keyboard_key import KeyboardKey
@@ -185,7 +184,7 @@ async def async_setup_entry(
                 "host": entry.data[CONF_HOST],
             },
         ) from exception
-    except (DataMissingException, TimeoutError) as exception:
+    except TimeoutError as exception:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="timeout",

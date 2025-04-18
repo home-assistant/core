@@ -98,13 +98,7 @@ DEVICE_TYPE_SELECT_MAP: dict[DeviceType, tuple[SelectEntityDescription, ...]] = 
         AIR_FLOW_SELECT_DESC[ThinQProperty.WIND_STRENGTH],
         SELECT_DESC[ThinQProperty.CURRENT_JOB_MODE],
     ),
-    DeviceType.DEHUMIDIFIER: (
-        AIR_FLOW_SELECT_DESC[ThinQProperty.WIND_STRENGTH],
-        SelectEntityDescription(
-            key=ThinQProperty.CURRENT_JOB_MODE,
-            translation_key="current_job_mode_dehumidifier",
-        ),
-    ),
+    DeviceType.DEHUMIDIFIER: (AIR_FLOW_SELECT_DESC[ThinQProperty.WIND_STRENGTH],),
     DeviceType.DISH_WASHER: (
         OPERATION_SELECT_DESC[ThinQProperty.DISH_WASHER_OPERATION_MODE],
     ),

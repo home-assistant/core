@@ -53,7 +53,9 @@ rules:
   devices:
     status: exempt
     comment: No devices. One URL is always assigned to one calendar.
-  diagnostics: done
+  diagnostics:
+    status: todo
+    comment: Diagnostics not implemented, yet.
   discovery-update-info:
     status: todo
     comment: No discovery protocol available.
@@ -95,4 +97,4 @@ rules:
   # Platinum
   async-dependency: todo
   inject-websession: done
-  strict-typing: done
+  strict-typing: todo

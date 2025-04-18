@@ -41,8 +41,6 @@ from .entity import (
 from .enum_mapper import EsphomeEnumMapper
 from .ffmpeg_proxy import async_create_proxy_url
 
-PARALLEL_UPDATES = 0
-
 _LOGGER = logging.getLogger(__name__)
 
 _STATES: EsphomeEnumMapper[EspMediaPlayerState, MediaPlayerState] = EsphomeEnumMapper(
@@ -148,6 +146,10 @@ class EsphomeMediaPlayer(
         announcement: bool,
     ) -> str | None:
         """Get URL for ffmpeg proxy."""
+        if self.device_entry is None:
+            # Device id is required
+            return None
+
         # Choose the first default or announcement supported format
         format_to_use: MediaPlayerSupportedFormat | None = None
         for supported_format in supported_formats:

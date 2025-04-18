@@ -85,8 +85,7 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
                 raise err from None
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
+            except Exception:  # noqa: BLE001
                 errors["base"] = "unknown"
 
             if errors:

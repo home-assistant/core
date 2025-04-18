@@ -20,8 +20,6 @@ from .const import DOMAIN
 from .entity import EsphomeAssistEntity, EsphomeEntity, platform_async_setup_entry
 from .entry_data import ESPHomeConfigEntry
 
-PARALLEL_UPDATES = 0
-
 
 async def async_setup_entry(
     hass: HomeAssistant,

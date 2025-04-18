@@ -44,9 +44,11 @@ class UptimeRobotConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             response = await uptime_robot_api.async_get_account_details()
-        except UptimeRobotAuthenticationException:
+        except UptimeRobotAuthenticationException as exception:
+            LOGGER.error(exception)
             errors["base"] = "invalid_api_key"
-        except UptimeRobotException:
+        except UptimeRobotException as exception:
+            LOGGER.error(exception)
             errors["base"] = "cannot_connect"
         except Exception as exception:  # noqa: BLE001
             LOGGER.exception(exception)

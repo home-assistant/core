@@ -89,7 +89,6 @@ OPAQUE = "opaque"
 RRULE_PREFIX = "RRULE:"
 
 SERVICE_CREATE_EVENT = "create_event"
-FILTERED_EVENT_TYPES = [EventTypeEnum.BIRTHDAY, EventTypeEnum.WORKING_LOCATION]
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -104,7 +103,7 @@ class GoogleCalendarEntityDescription(CalendarEntityDescription):
     search: str | None
     local_sync: bool
     device_id: str
-    event_type: EventTypeEnum | None = None
+    working_location: bool = False
 
 
 def _get_entity_descriptions(
@@ -174,24 +173,14 @@ def _get_entity_descriptions(
             local_sync,
         )
         if calendar_item.primary and local_sync:
-            # Create a separate calendar for birthdays
-            entity_descriptions.append(
-                dataclasses.replace(
-                    entity_description,
-                    key=f"{key}-birthdays",
-                    translation_key="birthdays",
-                    event_type=EventTypeEnum.BIRTHDAY,
-                    name=None,
-                    entity_id=None,
-                )
-            )
+            _LOGGER.debug("work location entity")
             # Create an optional disabled by default entity for Work Location
             entity_descriptions.append(
                 dataclasses.replace(
                     entity_description,
                     key=f"{key}-work-location",
                     translation_key="working_location",
-                    event_type=EventTypeEnum.WORKING_LOCATION,
+                    working_location=True,
                     name=None,
                     entity_id=None,
                     entity_registry_enabled_default=False,
@@ -394,18 +383,9 @@ class GoogleCalendarEntity(
             for attendee in event.attendees
         ):
             return False
-        # Calendar enttiy may be limited to a specific event type
-        if (
-            self.entity_description.event_type is not None
-            and self.entity_description.event_type != event.event_type
-        ):
-            return False
-        # Default calendar entity omits the special types but includes all the others
-        if (
-            self.entity_description.event_type is None
-            and event.event_type in FILTERED_EVENT_TYPES
-        ):
-            return False
+
+        if event.event_type == EventTypeEnum.WORKING_LOCATION:
+            return self.entity_description.working_location
         if self._ignore_availability:
             return True
         return event.transparency == OPAQUE

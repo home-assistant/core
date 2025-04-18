@@ -1,1 +1,0 @@
-"""Balay virtual integration."""

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any, cast
+from typing import Any
 
 import pyeverlights
 import voluptuous as vol
@@ -84,7 +84,7 @@ class EverLightsLight(LightEntity):
         api: pyeverlights.EverLights,
         channel: int,
         status: dict[str, Any],
-        effects: list[str],
+        effects,
     ) -> None:
         """Initialize the light."""
         self._api = api
@@ -106,10 +106,8 @@ class EverLightsLight(LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
-        hs_color = cast(
-            tuple[float, float], kwargs.get(ATTR_HS_COLOR, self._attr_hs_color)
-        )
-        brightness = cast(int, kwargs.get(ATTR_BRIGHTNESS, self._attr_brightness))
+        hs_color = kwargs.get(ATTR_HS_COLOR, self._attr_hs_color)
+        brightness = kwargs.get(ATTR_BRIGHTNESS, self._attr_brightness)
         effect = kwargs.get(ATTR_EFFECT)
 
         if effect is not None:
@@ -118,7 +116,7 @@ class EverLightsLight(LightEntity):
             rgb = color_int_to_rgb(colors[0])
             hsv = color_util.color_RGB_to_hsv(*rgb)
             hs_color = hsv[:2]
-            brightness = round(hsv[2] / 100 * 255)
+            brightness = hsv[2] / 100 * 255
 
         else:
             rgb = color_util.color_hsv_to_RGB(

@@ -8,7 +8,6 @@ import datetime
 from enum import StrEnum
 import logging
 
-from homeassistant.components.recorder.models import StatisticMeanType
 from homeassistant.components.recorder.models.statistics import (
     StatisticData,
     StatisticMetaData,
@@ -271,7 +270,7 @@ class IstaSensor(CoordinatorEntity[IstaCoordinator], SensorEntity):
             ]
 
             metadata: StatisticMetaData = {
-                "mean_type": StatisticMeanType.NONE,
+                "has_mean": False,
                 "has_sum": True,
                 "name": f"{self.device_entry.name} {self.name}",
                 "source": DOMAIN,

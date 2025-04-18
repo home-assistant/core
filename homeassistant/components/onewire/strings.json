@@ -140,14 +140,14 @@
           "device_selection": "[%key:component::onewire::options::error::device_not_selected%]"
         },
         "description": "Select what configuration steps to process",
-        "title": "1-Wire device options"
+        "title": "OneWire Device Options"
       },
       "configure_device": {
         "data": {
-          "precision": "Sensor precision"
+          "precision": "Sensor Precision"
         },
         "description": "Select sensor precision for {sensor_id}",
-        "title": "1-Wire sensor precision"
+        "title": "OneWire Sensor Precision"
       }
     }
   }

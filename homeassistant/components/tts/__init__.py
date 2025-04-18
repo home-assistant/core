@@ -163,7 +163,7 @@ class TTSCache:
                 self._partial_data.append(chunk)
                 for queue in self._consumers:
                     queue.put_nowait(chunk)
-        except Exception as err:
+        except Exception as err:  # pylint: disable=broad-except
             self._loading_error = err
             raise
         finally:

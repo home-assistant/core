@@ -100,11 +100,7 @@ class ElkEntity(Entity):
         return {"index": self._element.index + 1}
 
     def _element_changed(self, element: Element, changeset: dict[str, Any]) -> None:
-        """Handle changes to the element.
-
-        This method is called when the element changes. It should be
-        overridden by subclasses to handle the changes.
-        """
+        pass
 
     @callback
     def _element_callback(self, element: Element, changeset: dict[str, Any]) -> None:
@@ -115,7 +111,7 @@ class ElkEntity(Entity):
     async def async_added_to_hass(self) -> None:
         """Register callback for ElkM1 changes and update entity state."""
         self._element.add_callback(self._element_callback)
-        self._element_changed(self._element, {})
+        self._element_callback(self._element, {})
 
     @property
     def device_info(self) -> DeviceInfo:

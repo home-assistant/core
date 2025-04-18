@@ -4,9 +4,8 @@ import logging
 from typing import TYPE_CHECKING
 
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.event import async_has_entity_registry_updated_listeners
+from homeassistant.helpers.start import async_at_start
 
 from .core import Recorder
 from .util import filter_unique_constraint_integrity_error, get_instance, session_scope
@@ -41,17 +40,16 @@ def async_setup(hass: HomeAssistant) -> None:
         """Handle entity_id changed filter."""
         return event_data["action"] == "update" and "old_entity_id" in event_data
 
-    if async_has_entity_registry_updated_listeners(hass):
-        raise HomeAssistantError(
-            "The recorder entity registry listener must be installed"
-            " before async_track_entity_registry_updated_event is called"
+    @callback
+    def _setup_entity_registry_event_handler(hass: HomeAssistant) -> None:
+        """Subscribe to event registry events."""
+        hass.bus.async_listen(
+            er.EVENT_ENTITY_REGISTRY_UPDATED,
+            _async_entity_id_changed,
+            event_filter=entity_registry_changed_filter,
         )
 
-    hass.bus.async_listen(
-        er.EVENT_ENTITY_REGISTRY_UPDATED,
-        _async_entity_id_changed,
-        event_filter=entity_registry_changed_filter,
-    )
+    async_at_start(hass, _setup_entity_registry_event_handler)
 
 
 def update_states_metadata(

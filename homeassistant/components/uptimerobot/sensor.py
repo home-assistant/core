@@ -7,11 +7,13 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import UptimeRobotConfigEntry
+from .const import DOMAIN
+from .coordinator import UptimeRobotDataUpdateCoordinator
 from .entity import UptimeRobotEntity
 
 SENSORS_INFO = {
@@ -22,17 +24,14 @@ SENSORS_INFO = {
     9: "down",
 }
 
-# Coordinator is used to centralize the data updates
-PARALLEL_UPDATES = 0
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: UptimeRobotConfigEntry,
+    entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the UptimeRobot sensors."""
-    coordinator = entry.runtime_data
+    coordinator: UptimeRobotDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         UptimeRobotSensor(
             coordinator,

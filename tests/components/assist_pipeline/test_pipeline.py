@@ -684,7 +684,7 @@ def test_fallback_intent_filter() -> None:
                 entities_list=[],
             )
         )
-        is False
+        is True
     )
     assert (
         _async_local_fallback_intent_filter(

@@ -91,7 +91,7 @@
         "name": "Hydrogen fluoride"
       },
       "health_index": {
-        "name": "Health index"
+        "name": "Health Index"
       },
       "absolute_humidity": {
         "name": "Absolute humidity"
@@ -112,10 +112,10 @@
         "name": "Oxygen"
       },
       "performance_index": {
-        "name": "Performance index"
+        "name": "Performance Index"
       },
       "hydrogen_phosphide": {
-        "name": "Hydrogen phosphide"
+        "name": "Hydrogen Phosphide"
       },
       "relative_pressure": {
         "name": "Relative pressure"
@@ -127,22 +127,22 @@
         "name": "Refrigerant"
       },
       "silicon_hydride": {
-        "name": "Silicon hydride"
+        "name": "Silicon Hydride"
       },
       "noise": {
         "name": "Noise"
       },
       "maximum_noise": {
-        "name": "Noise (maximum)"
+        "name": "Noise (Maximum)"
       },
       "radon": {
         "name": "Radon"
       },
       "industrial_volatile_organic_compounds": {
-        "name": "VOCs (industrial)"
+        "name": "VOCs (Industrial)"
       },
       "virus_index": {
-        "name": "Virus index"
+        "name": "Virus Index"
       }
     }
   }

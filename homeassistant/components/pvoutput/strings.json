@@ -27,19 +27,19 @@
   "entity": {
     "sensor": {
       "energy_consumption": {
-        "name": "Energy consumption"
+        "name": "Energy consumed"
       },
       "energy_generation": {
-        "name": "Energy generation"
+        "name": "Energy generated"
       },
       "efficiency": {
         "name": "Efficiency"
       },
       "power_consumption": {
-        "name": "Power consumption"
+        "name": "Power consumed"
       },
       "power_generation": {
-        "name": "Power generation"
+        "name": "Power generated"
       }
     }
   }

@@ -14,11 +14,10 @@ from homeassistant.components.switch import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .common import is_outlet, is_wall_switch, rgetattr
+from .common import is_outlet, is_wall_switch
 from .const import DOMAIN, VS_COORDINATOR, VS_DEVICES, VS_DISCOVERY
 from .coordinator import VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
@@ -45,14 +44,6 @@ SENSOR_DESCRIPTIONS: Final[tuple[VeSyncSwitchEntityDescription, ...]] = (
         name=None,
         on_fn=lambda device: device.turn_on(),
         off_fn=lambda device: device.turn_off(),
-    ),
-    VeSyncSwitchEntityDescription(
-        key="display",
-        is_on=lambda device: device.display_state,
-        exists_fn=lambda device: rgetattr(device, "display_state") is not None,
-        translation_key="display",
-        on_fn=lambda device: device.turn_on_display(),
-        off_fn=lambda device: device.turn_off_display(),
     ),
 )
 
@@ -120,14 +111,10 @@ class VeSyncSwitchEntity(SwitchEntity, VeSyncBaseEntity):
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        if not self.entity_description.off_fn(self.device):
-            raise HomeAssistantError("An error occurred while turning off.")
-
-        self.schedule_update_ha_state()
+        if self.entity_description.off_fn(self.device):
+            self.schedule_update_ha_state()
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        if not self.entity_description.on_fn(self.device):
-            raise HomeAssistantError("An error occurred while turning on.")
-
-        self.schedule_update_ha_state()
+        if self.entity_description.on_fn(self.device):
+            self.schedule_update_ha_state()

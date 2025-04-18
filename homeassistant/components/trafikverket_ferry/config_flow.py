@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-import logging
 from typing import Any
 
 from pytrafikverket import TrafikverketFerry
@@ -17,8 +16,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_FROM, CONF_TIME, CONF_TO, DOMAIN
 from .util import create_unique_id
-
-_LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -84,8 +81,7 @@ class TVFerryConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except NoFerryFound:
                 errors["base"] = "invalid_route"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
+            except Exception:  # noqa: BLE001
                 errors["base"] = "cannot_connect"
             else:
                 return self.async_update_reload_and_abort(
@@ -124,8 +120,7 @@ class TVFerryConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except NoFerryFound:
                 errors["base"] = "invalid_route"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
+            except Exception:  # noqa: BLE001
                 errors["base"] = "cannot_connect"
             else:
                 if not errors:

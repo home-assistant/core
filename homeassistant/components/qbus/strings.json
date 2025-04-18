@@ -15,10 +15,5 @@
     "error": {
       "no_controller": "No controllers were found"
     }
-  },
-  "exceptions": {
-    "invalid_preset": {
-      "message": "Preset mode \"{preset}\" is not valid. Valid preset modes are: {options}."
-    }
   }
 }

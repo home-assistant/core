@@ -2,17 +2,12 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any
 
-from pylamarzocco import LaMarzoccoMachine
-from pylamarzocco.const import MachineMode, ModelName, WidgetType
+from pylamarzocco.const import BoilerType
+from pylamarzocco.devices.machine import LaMarzoccoMachine
 from pylamarzocco.exceptions import RequestNotSuccessful
-from pylamarzocco.models import (
-    MachineStatus,
-    SteamBoilerLevel,
-    SteamBoilerTemperature,
-    WakeUpScheduleSettings,
-)
+from pylamarzocco.models import LaMarzoccoMachineConfig
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
@@ -35,7 +30,7 @@ class LaMarzoccoSwitchEntityDescription(
     """Description of a La Marzocco Switch."""
 
     control_fn: Callable[[LaMarzoccoMachine, bool], Coroutine[Any, Any, bool]]
-    is_on_fn: Callable[[LaMarzoccoMachine], bool]
+    is_on_fn: Callable[[LaMarzoccoMachineConfig], bool]
 
 
 ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
@@ -44,42 +39,13 @@ ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
         translation_key="main",
         name=None,
         control_fn=lambda machine, state: machine.set_power(state),
-        is_on_fn=(
-            lambda machine: cast(
-                MachineStatus, machine.dashboard.config[WidgetType.CM_MACHINE_STATUS]
-            ).mode
-            is MachineMode.BREWING_MODE
-        ),
+        is_on_fn=lambda config: config.turned_on,
     ),
     LaMarzoccoSwitchEntityDescription(
         key="steam_boiler_enable",
         translation_key="steam_boiler",
         control_fn=lambda machine, state: machine.set_steam(state),
-        is_on_fn=(
-            lambda machine: cast(
-                SteamBoilerLevel,
-                machine.dashboard.config[WidgetType.CM_STEAM_BOILER_LEVEL],
-            ).enabled
-        ),
-        supported_fn=(
-            lambda coordinator: coordinator.device.dashboard.model_name
-            in (ModelName.LINEA_MINI_R, ModelName.LINEA_MICRA)
-        ),
-    ),
-    LaMarzoccoSwitchEntityDescription(
-        key="steam_boiler_enable",
-        translation_key="steam_boiler",
-        control_fn=lambda machine, state: machine.set_steam(state),
-        is_on_fn=(
-            lambda machine: cast(
-                SteamBoilerTemperature,
-                machine.dashboard.config[WidgetType.CM_STEAM_BOILER_TEMPERATURE],
-            ).enabled
-        ),
-        supported_fn=(
-            lambda coordinator: coordinator.device.dashboard.model_name
-            not in (ModelName.LINEA_MINI_R, ModelName.LINEA_MICRA)
-        ),
+        is_on_fn=lambda config: config.boilers[BoilerType.STEAM].enabled,
     ),
     LaMarzoccoSwitchEntityDescription(
         key="smart_standby_enabled",
@@ -87,10 +53,10 @@ ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         control_fn=lambda machine, state: machine.set_smart_standby(
             enabled=state,
-            mode=machine.schedule.smart_wake_up_sleep.smart_stand_by_after,
-            minutes=machine.schedule.smart_wake_up_sleep.smart_stand_by_minutes,
+            mode=machine.config.smart_standby.mode,
+            minutes=machine.config.smart_standby.minutes,
         ),
-        is_on_fn=lambda machine: machine.schedule.smart_wake_up_sleep.smart_stand_by_enabled,
+        is_on_fn=lambda config: config.smart_standby.enabled,
     ),
 )
 
@@ -112,8 +78,8 @@ async def async_setup_entry(
     )
 
     entities.extend(
-        LaMarzoccoAutoOnOffSwitchEntity(coordinator, wake_up_sleep_entry)
-        for wake_up_sleep_entry in coordinator.device.schedule.smart_wake_up_sleep.schedules
+        LaMarzoccoAutoOnOffSwitchEntity(coordinator, wake_up_sleep_entry_id)
+        for wake_up_sleep_entry_id in coordinator.device.config.wake_up_sleep_entries
     )
 
     async_add_entities(entities)
@@ -151,7 +117,7 @@ class LaMarzoccoSwitchEntity(LaMarzoccoEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return true if device is on."""
-        return self.entity_description.is_on_fn(self.coordinator.device)
+        return self.entity_description.is_on_fn(self.coordinator.device.config)
 
 
 class LaMarzoccoAutoOnOffSwitchEntity(LaMarzoccoBaseEntity, SwitchEntity):
@@ -163,21 +129,22 @@ class LaMarzoccoAutoOnOffSwitchEntity(LaMarzoccoBaseEntity, SwitchEntity):
     def __init__(
         self,
         coordinator: LaMarzoccoUpdateCoordinator,
-        schedule_entry: WakeUpScheduleSettings,
+        identifier: str,
     ) -> None:
         """Initialize the switch."""
-        super().__init__(coordinator, f"auto_on_off_{schedule_entry.identifier}")
-        assert schedule_entry.identifier
-        self._schedule_entry = schedule_entry
-        self._identifier = schedule_entry.identifier
-        self._attr_translation_placeholders = {"id": schedule_entry.identifier}
-        self._attr_entity_category = EntityCategory.CONFIG
+        super().__init__(coordinator, f"auto_on_off_{identifier}")
+        self._identifier = identifier
+        self._attr_translation_placeholders = {"id": identifier}
+        self.entity_category = EntityCategory.CONFIG
 
     async def _async_enable(self, state: bool) -> None:
         """Enable or disable the auto on/off schedule."""
-        self._schedule_entry.enabled = state
+        wake_up_sleep_entry = self.coordinator.device.config.wake_up_sleep_entries[
+            self._identifier
+        ]
+        wake_up_sleep_entry.enabled = state
         try:
-            await self.coordinator.device.set_wakeup_schedule(self._schedule_entry)
+            await self.coordinator.device.set_wake_up_sleep(wake_up_sleep_entry)
         except RequestNotSuccessful as exc:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -197,4 +164,6 @@ class LaMarzoccoAutoOnOffSwitchEntity(LaMarzoccoBaseEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return true if switch is on."""
-        return self._schedule_entry.enabled
+        return self.coordinator.device.config.wake_up_sleep_entries[
+            self._identifier
+        ].enabled

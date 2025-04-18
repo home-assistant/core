@@ -114,34 +114,34 @@
 # name: test_sensor[System Monitor Last boot - state]
   '2024-02-24T15:00:00+00:00'
 # ---
-# name: test_sensor[System Monitor Load (15 min) - attributes]
+# name: test_sensor[System Monitor Load (15m) - attributes]
   ReadOnlyDict({
-    'friendly_name': 'System Monitor Load (15 min)',
+    'friendly_name': 'System Monitor Load (15m)',
     'icon': 'mdi:cpu-64-bit',
     'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
   })
 # ---
-# name: test_sensor[System Monitor Load (15 min) - state]
+# name: test_sensor[System Monitor Load (15m) - state]
   '3'
 # ---
-# name: test_sensor[System Monitor Load (1 min) - attributes]
+# name: test_sensor[System Monitor Load (1m) - attributes]
   ReadOnlyDict({
-    'friendly_name': 'System Monitor Load (1 min)',
+    'friendly_name': 'System Monitor Load (1m)',
     'icon': 'mdi:cpu-64-bit',
     'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
   })
 # ---
-# name: test_sensor[System Monitor Load (1 min) - state]
+# name: test_sensor[System Monitor Load (1m) - state]
   '1'
 # ---
-# name: test_sensor[System Monitor Load (5 min) - attributes]
+# name: test_sensor[System Monitor Load (5m) - attributes]
   ReadOnlyDict({
-    'friendly_name': 'System Monitor Load (5 min)',
+    'friendly_name': 'System Monitor Load (5m)',
     'icon': 'mdi:cpu-64-bit',
     'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
   })
 # ---
-# name: test_sensor[System Monitor Load (5 min) - state]
+# name: test_sensor[System Monitor Load (5m) - state]
   '2'
 # ---
 # name: test_sensor[System Monitor Memory free - attributes]

@@ -87,7 +87,7 @@ async def test_user_setup_options(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"known_hosts": ["192.168.0.1", "", " ", "192.168.0.2 "]}
+        result["flow_id"], {"known_hosts": "192.168.0.1,  ,  192.168.0.2 "}
     )
 
     users = await hass.auth.async_get_users()
@@ -152,13 +152,13 @@ def get_suggested(schema, key):
 
 
 @pytest.mark.parametrize(
-    ("parameter", "initial", "suggested", "user_input", "updated"),
+    "parameter_data",
     [
         (
             "known_hosts",
             ["192.168.0.10", "192.168.0.11"],
-            ["192.168.0.10", "192.168.0.11"],
-            ["192.168.0.1", " ", "  192.168.0.2 "],
+            "192.168.0.10,192.168.0.11",
+            "192.168.0.1,  ,  192.168.0.2 ",
             ["192.168.0.1", "192.168.0.2"],
         ),
         (
@@ -177,17 +177,11 @@ def get_suggested(schema, key):
         ),
     ],
 )
-async def test_option_flow(
-    hass: HomeAssistant,
-    parameter: str,
-    initial: list[str],
-    suggested: str | list[str],
-    user_input: str | list[str],
-    updated: list[str],
-) -> None:
+async def test_option_flow(hass: HomeAssistant, parameter_data) -> None:
     """Test config flow options."""
     basic_parameters = ["known_hosts"]
     advanced_parameters = ["ignore_cec", "uuid"]
+    parameter, initial, suggested, user_input, updated = parameter_data
 
     data = {
         "ignore_cec": [],
@@ -219,7 +213,7 @@ async def test_option_flow(
     for other_param in basic_parameters:
         if other_param == parameter:
             continue
-        assert get_suggested(data_schema, other_param) == []
+        assert get_suggested(data_schema, other_param) == ""
     if parameter in basic_parameters:
         assert get_suggested(data_schema, parameter) == suggested
 
@@ -267,7 +261,7 @@ async def test_option_flow(
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={},
+        user_input={"known_hosts": ""},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {}
@@ -283,7 +277,7 @@ async def test_known_hosts(hass: HomeAssistant, castbrowser_mock) -> None:
         "cast", context={"source": config_entries.SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"known_hosts": ["192.168.0.1", "192.168.0.2"]}
+        result["flow_id"], {"known_hosts": "192.168.0.1, 192.168.0.2"}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -296,7 +290,7 @@ async def test_known_hosts(hass: HomeAssistant, castbrowser_mock) -> None:
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={"known_hosts": ["192.168.0.11", "192.168.0.12"]},
+        user_input={"known_hosts": "192.168.0.11, 192.168.0.12"},
     )
 
     await hass.async_block_till_done(wait_background_tasks=True)

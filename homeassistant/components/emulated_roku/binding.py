@@ -5,13 +5,7 @@ import logging
 from emulated_roku import EmulatedRokuCommandHandler, EmulatedRokuServer
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import (
-    CALLBACK_TYPE,
-    CoreState,
-    Event,
-    EventOrigin,
-    HomeAssistant,
-)
+from homeassistant.core import CoreState, EventOrigin
 
 LOGGER = logging.getLogger(__package__)
 
@@ -33,18 +27,16 @@ class EmulatedRoku:
 
     def __init__(
         self,
-        hass: HomeAssistant,
-        entry_id: str,
-        name: str,
-        host_ip: str,
-        listen_port: int,
-        advertise_ip: str | None,
-        advertise_port: int | None,
-        upnp_bind_multicast: bool | None,
-    ) -> None:
+        hass,
+        name,
+        host_ip,
+        listen_port,
+        advertise_ip,
+        advertise_port,
+        upnp_bind_multicast,
+    ):
         """Initialize the properties."""
         self.hass = hass
-        self.entry_id = entry_id
 
         self.roku_usn = name
         self.host_ip = host_ip
@@ -55,21 +47,21 @@ class EmulatedRoku:
 
         self.bind_multicast = upnp_bind_multicast
 
-        self._api_server: EmulatedRokuServer | None = None
+        self._api_server = None
 
-        self._unsub_start_listener: CALLBACK_TYPE | None = None
-        self._unsub_stop_listener: CALLBACK_TYPE | None = None
+        self._unsub_start_listener = None
+        self._unsub_stop_listener = None
 
-    async def setup(self) -> bool:
+    async def setup(self):
         """Start the emulated_roku server."""
 
         class EventCommandHandler(EmulatedRokuCommandHandler):
             """emulated_roku command handler to turn commands into events."""
 
-            def __init__(self, hass: HomeAssistant) -> None:
+            def __init__(self, hass):
                 self.hass = hass
 
-            def on_keydown(self, roku_usn: str, key: str) -> None:
+            def on_keydown(self, roku_usn, key):
                 """Handle keydown event."""
                 self.hass.bus.async_fire(
                     EVENT_ROKU_COMMAND,
@@ -81,7 +73,7 @@ class EmulatedRoku:
                     EventOrigin.local,
                 )
 
-            def on_keyup(self, roku_usn: str, key: str) -> None:
+            def on_keyup(self, roku_usn, key):
                 """Handle keyup event."""
                 self.hass.bus.async_fire(
                     EVENT_ROKU_COMMAND,
@@ -93,7 +85,7 @@ class EmulatedRoku:
                     EventOrigin.local,
                 )
 
-            def on_keypress(self, roku_usn: str, key: str) -> None:
+            def on_keypress(self, roku_usn, key):
                 """Handle keypress event."""
                 self.hass.bus.async_fire(
                     EVENT_ROKU_COMMAND,
@@ -105,7 +97,7 @@ class EmulatedRoku:
                     EventOrigin.local,
                 )
 
-            def launch(self, roku_usn: str, app_id: str) -> None:
+            def launch(self, roku_usn, app_id):
                 """Handle launch event."""
                 self.hass.bus.async_fire(
                     EVENT_ROKU_COMMAND,
@@ -137,19 +129,17 @@ class EmulatedRoku:
             bind_multicast=self.bind_multicast,
         )
 
-        async def emulated_roku_stop(event: Event | None) -> None:
+        async def emulated_roku_stop(event):
             """Wrap the call to emulated_roku.close."""
             LOGGER.debug("Stopping emulated_roku %s", self.roku_usn)
             self._unsub_stop_listener = None
-            assert self._api_server is not None
             await self._api_server.close()
 
-        async def emulated_roku_start(event: Event | None) -> None:
+        async def emulated_roku_start(event):
             """Wrap the call to emulated_roku.start."""
             try:
                 LOGGER.debug("Starting emulated_roku %s", self.roku_usn)
                 self._unsub_start_listener = None
-                assert self._api_server is not None
                 await self._api_server.start()
             except OSError:
                 LOGGER.exception(
@@ -175,7 +165,7 @@ class EmulatedRoku:
 
         return True
 
-    async def unload(self) -> bool:
+    async def unload(self):
         """Unload the emulated_roku server."""
         LOGGER.debug("Unloading emulated_roku %s", self.roku_usn)
 
@@ -187,7 +177,6 @@ class EmulatedRoku:
             self._unsub_stop_listener()
             self._unsub_stop_listener = None
 
-        assert self._api_server is not None
         await self._api_server.close()
 
         return True

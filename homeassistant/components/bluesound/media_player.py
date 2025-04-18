@@ -501,16 +501,18 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
             return
 
         # presets and inputs might have the same name; presets have priority
+        url: str | None = None
         for input_ in self._inputs:
             if input_.text == source:
-                await self._player.play_url(input_.url)
-                return
+                url = input_.url
         for preset in self._presets:
             if preset.name == source:
-                await self._player.load_preset(preset.id)
-                return
+                url = preset.url
 
-        raise ServiceValidationError(f"Source {source} not found")
+        if url is None:
+            raise ServiceValidationError(f"Source {source} not found")
+
+        await self._player.play_url(url)
 
     async def async_clear_playlist(self) -> None:
         """Clear players playlist."""

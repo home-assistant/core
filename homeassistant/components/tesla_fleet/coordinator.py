@@ -7,6 +7,7 @@ from random import randint
 from time import time
 from typing import TYPE_CHECKING, Any
 
+from tesla_fleet_api import EnergySpecific, VehicleSpecific
 from tesla_fleet_api.const import TeslaEnergyPeriod, VehicleDataEndpoint
 from tesla_fleet_api.exceptions import (
     InvalidToken,
@@ -16,7 +17,6 @@ from tesla_fleet_api.exceptions import (
     TeslaFleetError,
     VehicleOffline,
 )
-from tesla_fleet_api.tesla import EnergySite, VehicleFleet
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -27,7 +27,7 @@ if TYPE_CHECKING:
 
 from .const import ENERGY_HISTORY_FIELDS, LOGGER, TeslaFleetState
 
-VEHICLE_INTERVAL_SECONDS = 600
+VEHICLE_INTERVAL_SECONDS = 300
 VEHICLE_INTERVAL = timedelta(seconds=VEHICLE_INTERVAL_SECONDS)
 VEHICLE_WAIT = timedelta(minutes=15)
 
@@ -70,7 +70,7 @@ class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self,
         hass: HomeAssistant,
         config_entry: TeslaFleetConfigEntry,
-        api: VehicleFleet,
+        api: VehicleSpecific,
         product: dict,
     ) -> None:
         """Initialize TeslaFleet Vehicle Update Coordinator."""
@@ -149,7 +149,7 @@ class TeslaFleetEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
         self,
         hass: HomeAssistant,
         config_entry: TeslaFleetConfigEntry,
-        api: EnergySite,
+        api: EnergySpecific,
     ) -> None:
         """Initialize TeslaFleet Energy Site Live coordinator."""
         super().__init__(
@@ -202,7 +202,7 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
         self,
         hass: HomeAssistant,
         config_entry: TeslaFleetConfigEntry,
-        api: EnergySite,
+        api: EnergySpecific,
     ) -> None:
         """Initialize Tesla Fleet Energy Site History coordinator."""
         super().__init__(
@@ -266,7 +266,7 @@ class TeslaFleetEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
         self,
         hass: HomeAssistant,
         config_entry: TeslaFleetConfigEntry,
-        api: EnergySite,
+        api: EnergySpecific,
         product: dict,
     ) -> None:
         """Initialize TeslaFleet Energy Info coordinator."""

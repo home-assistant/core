@@ -1,1 +1,0 @@
-"""Pitsos virtual integration."""

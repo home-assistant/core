@@ -28,11 +28,11 @@
     "sensor": {
       "state": {
         "state": {
-          "ein": "[%key:common::state::on%]",
-          "deaktiviert": "[%key:common::state::disabled%]",
-          "aus": "[%key:common::state::off%]",
+          "ein": "[%key:common::state::enabled%]",
+          "deaktiviert": "Inactive",
+          "aus": "[%key:common::state::disabled%]",
           "standby": "[%key:common::state::standby%]",
-          "auto": "[%key:common::state::auto%]",
+          "auto": "Auto",
           "permanent": "Permanent",
           "initialisierung": "Initialization",
           "antilegionellenfunktion": "Anti-legionella Function",

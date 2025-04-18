@@ -54,10 +54,10 @@
         "name": "Current UV level",
         "state": {
           "extreme": "Extreme",
-          "high": "[%key:common::state::high%]",
-          "low": "[%key:common::state::low%]",
+          "high": "High",
+          "low": "Low",
           "moderate": "Moderate",
-          "very_high": "[%key:common::state::very_high%]"
+          "very_high": "Very high"
         }
       },
       "max_uv_index": {

@@ -261,7 +261,7 @@ async def test_get_current_position(
             return_value=b"",
         ),
         patch(
-            "homeassistant.components.roborock.coordinator.RoborockMapDataParser.parse",
+            "homeassistant.components.roborock.image.RoborockMapDataParser.parse",
             return_value=map_data,
         ),
     ):
@@ -291,9 +291,7 @@ async def test_get_current_position_no_map_data(
             "homeassistant.components.roborock.coordinator.RoborockMqttClientV1.get_map_v1",
             return_value=None,
         ),
-        pytest.raises(
-            HomeAssistantError, match="Something went wrong creating the map"
-        ),
+        pytest.raises(HomeAssistantError, match="Failed to retrieve map data."),
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -318,7 +316,7 @@ async def test_get_current_position_no_robot_position(
             return_value=b"",
         ),
         patch(
-            "homeassistant.components.roborock.coordinator.RoborockMapDataParser.parse",
+            "homeassistant.components.roborock.image.RoborockMapDataParser.parse",
             return_value=map_data,
         ),
         pytest.raises(HomeAssistantError, match="Robot position not found"),

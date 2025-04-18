@@ -41,8 +41,7 @@ class SpotifyFlowHandler(
 
         try:
             current_user = await spotify.get_current_user()
-        except Exception:
-            self.logger.exception("Error while connecting to Spotify")
+        except Exception:  # noqa: BLE001
             return self.async_abort(reason="connection_error")
 
         name = current_user.display_name

@@ -4,31 +4,31 @@ from __future__ import annotations
 
 from typing import Any
 
-from homematicip.base.enums import SmokeDetectorAlarmType, WindowState
-from homematicip.device import (
-    AccelerationSensor,
-    ContactInterface,
-    Device,
-    FullFlushContactInterface,
-    FullFlushContactInterface6,
-    MotionDetectorIndoor,
-    MotionDetectorOutdoor,
-    MotionDetectorPushButton,
-    PluggableMainsFailureSurveillance,
-    PresenceDetectorIndoor,
-    RainSensor,
-    RotaryHandleSensor,
-    ShutterContact,
-    ShutterContactMagnetic,
-    SmokeDetector,
-    TiltVibrationSensor,
-    WaterSensor,
-    WeatherSensor,
-    WeatherSensorPlus,
-    WeatherSensorPro,
-    WiredInput32,
+from homematicip.aio.device import (
+    AsyncAccelerationSensor,
+    AsyncContactInterface,
+    AsyncDevice,
+    AsyncFullFlushContactInterface,
+    AsyncFullFlushContactInterface6,
+    AsyncMotionDetectorIndoor,
+    AsyncMotionDetectorOutdoor,
+    AsyncMotionDetectorPushButton,
+    AsyncPluggableMainsFailureSurveillance,
+    AsyncPresenceDetectorIndoor,
+    AsyncRainSensor,
+    AsyncRotaryHandleSensor,
+    AsyncShutterContact,
+    AsyncShutterContactMagnetic,
+    AsyncSmokeDetector,
+    AsyncTiltVibrationSensor,
+    AsyncWaterSensor,
+    AsyncWeatherSensor,
+    AsyncWeatherSensorPlus,
+    AsyncWeatherSensorPro,
+    AsyncWiredInput32,
 )
-from homematicip.group import SecurityGroup, SecurityZoneGroup
+from homematicip.aio.group import AsyncSecurityGroup, AsyncSecurityZoneGroup
+from homematicip.base.enums import SmokeDetectorAlarmType, WindowState
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -82,60 +82,66 @@ async def async_setup_entry(
     hap = hass.data[DOMAIN][config_entry.unique_id]
     entities: list[HomematicipGenericEntity] = [HomematicipCloudConnectionSensor(hap)]
     for device in hap.home.devices:
-        if isinstance(device, AccelerationSensor):
+        if isinstance(device, AsyncAccelerationSensor):
             entities.append(HomematicipAccelerationSensor(hap, device))
-        if isinstance(device, TiltVibrationSensor):
+        if isinstance(device, AsyncTiltVibrationSensor):
             entities.append(HomematicipTiltVibrationSensor(hap, device))
-        if isinstance(device, WiredInput32):
+        if isinstance(device, AsyncWiredInput32):
             entities.extend(
                 HomematicipMultiContactInterface(hap, device, channel=channel)
                 for channel in range(1, 33)
             )
-        elif isinstance(device, FullFlushContactInterface6):
+        elif isinstance(device, AsyncFullFlushContactInterface6):
             entities.extend(
                 HomematicipMultiContactInterface(hap, device, channel=channel)
                 for channel in range(1, 7)
             )
-        elif isinstance(device, (ContactInterface, FullFlushContactInterface)):
+        elif isinstance(
+            device, (AsyncContactInterface, AsyncFullFlushContactInterface)
+        ):
             entities.append(HomematicipContactInterface(hap, device))
         if isinstance(
             device,
-            (ShutterContact, ShutterContactMagnetic),
+            (AsyncShutterContact, AsyncShutterContactMagnetic),
         ):
             entities.append(HomematicipShutterContact(hap, device))
-        if isinstance(device, RotaryHandleSensor):
+        if isinstance(device, AsyncRotaryHandleSensor):
             entities.append(HomematicipShutterContact(hap, device, True))
         if isinstance(
             device,
             (
-                MotionDetectorIndoor,
-                MotionDetectorOutdoor,
-                MotionDetectorPushButton,
+                AsyncMotionDetectorIndoor,
+                AsyncMotionDetectorOutdoor,
+                AsyncMotionDetectorPushButton,
             ),
         ):
             entities.append(HomematicipMotionDetector(hap, device))
-        if isinstance(device, PluggableMainsFailureSurveillance):
+        if isinstance(device, AsyncPluggableMainsFailureSurveillance):
             entities.append(
                 HomematicipPluggableMainsFailureSurveillanceSensor(hap, device)
             )
-        if isinstance(device, PresenceDetectorIndoor):
+        if isinstance(device, AsyncPresenceDetectorIndoor):
             entities.append(HomematicipPresenceDetector(hap, device))
-        if isinstance(device, SmokeDetector):
+        if isinstance(device, AsyncSmokeDetector):
             entities.append(HomematicipSmokeDetector(hap, device))
-        if isinstance(device, WaterSensor):
+        if isinstance(device, AsyncWaterSensor):
             entities.append(HomematicipWaterDetector(hap, device))
-        if isinstance(device, (RainSensor, WeatherSensorPlus, WeatherSensorPro)):
+        if isinstance(
+            device, (AsyncRainSensor, AsyncWeatherSensorPlus, AsyncWeatherSensorPro)
+        ):
             entities.append(HomematicipRainSensor(hap, device))
-        if isinstance(device, (WeatherSensor, WeatherSensorPlus, WeatherSensorPro)):
+        if isinstance(
+            device, (AsyncWeatherSensor, AsyncWeatherSensorPlus, AsyncWeatherSensorPro)
+        ):
             entities.append(HomematicipStormSensor(hap, device))
             entities.append(HomematicipSunshineSensor(hap, device))
-        if isinstance(device, Device) and device.lowBat is not None:
+        if isinstance(device, AsyncDevice) and device.lowBat is not None:
             entities.append(HomematicipBatterySensor(hap, device))
 
     for group in hap.home.groups:
-        if isinstance(group, SecurityGroup):
+        if isinstance(group, AsyncSecurityGroup):
             entities.append(HomematicipSecuritySensorGroup(hap, device=group))
-        elif isinstance(group, SecurityZoneGroup):
+        elif isinstance(group, AsyncSecurityZoneGroup):
             entities.append(HomematicipSecurityZoneSensorGroup(hap, device=group))
 
     async_add_entities(entities)

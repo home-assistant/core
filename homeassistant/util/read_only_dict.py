@@ -1,7 +1,7 @@
 """Read only dictionary."""
 
 from copy import deepcopy
-from typing import Any, final
+from typing import Any
 
 
 def _readonly(*args: Any, **kwargs: Any) -> Any:
@@ -9,7 +9,6 @@ def _readonly(*args: Any, **kwargs: Any) -> Any:
     raise RuntimeError("Cannot modify ReadOnlyDict")
 
 
-@final  # Final to allow direct checking of the type instead of using isinstance
 class ReadOnlyDict[_KT, _VT](dict[_KT, _VT]):
     """Read only version of dict that is compatible with dict types."""
 

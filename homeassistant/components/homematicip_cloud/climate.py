@@ -4,15 +4,16 @@ from __future__ import annotations
 
 from typing import Any
 
-from homematicip.base.enums import AbsenceType
-from homematicip.device import (
-    HeatingThermostat,
-    HeatingThermostatCompact,
-    HeatingThermostatEvo,
-    Switch,
+from homematicip.aio.device import (
+    AsyncHeatingThermostat,
+    AsyncHeatingThermostatCompact,
+    AsyncHeatingThermostatEvo,
 )
+from homematicip.aio.group import AsyncHeatingGroup
+from homematicip.base.enums import AbsenceType
+from homematicip.device import Switch
 from homematicip.functionalHomes import IndoorClimateHome
-from homematicip.group import HeatingCoolingProfile, HeatingGroup
+from homematicip.group import HeatingCoolingProfile
 
 from homeassistant.components.climate import (
     PRESET_AWAY,
@@ -64,7 +65,7 @@ async def async_setup_entry(
     async_add_entities(
         HomematicipHeatingGroup(hap, device)
         for device in hap.home.groups
-        if isinstance(device, HeatingGroup)
+        if isinstance(device, AsyncHeatingGroup)
     )
 
 
@@ -81,7 +82,7 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
-    def __init__(self, hap: HomematicipHAP, device: HeatingGroup) -> None:
+    def __init__(self, hap: HomematicipHAP, device: AsyncHeatingGroup) -> None:
         """Initialize heating group."""
         device.modelType = "HmIP-Heating-Group"
         super().__init__(hap, device)
@@ -213,7 +214,7 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
             return
 
         if self.min_temp <= temperature <= self.max_temp:
-            await self._device.set_point_temperature_async(temperature)
+            await self._device.set_point_temperature(temperature)
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
@@ -221,23 +222,23 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
             return
 
         if hvac_mode == HVACMode.AUTO:
-            await self._device.set_control_mode_async(HMIP_AUTOMATIC_CM)
+            await self._device.set_control_mode(HMIP_AUTOMATIC_CM)
         else:
-            await self._device.set_control_mode_async(HMIP_MANUAL_CM)
+            await self._device.set_control_mode(HMIP_MANUAL_CM)
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         if self._device.boostMode and preset_mode != PRESET_BOOST:
-            await self._device.set_boost_async(False)
+            await self._device.set_boost(False)
         if preset_mode == PRESET_BOOST:
-            await self._device.set_boost_async()
+            await self._device.set_boost()
         if preset_mode == PRESET_ECO:
-            await self._device.set_control_mode_async(HMIP_ECO_CM)
+            await self._device.set_control_mode(HMIP_ECO_CM)
         if preset_mode in self._device_profile_names:
             profile_idx = self._get_profile_idx_by_name(preset_mode)
             if self._device.controlMode != HMIP_AUTOMATIC_CM:
                 await self.async_set_hvac_mode(HVACMode.AUTO)
-            await self._device.set_active_profile_async(profile_idx)
+            await self._device.set_active_profile(profile_idx)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -331,15 +332,20 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
     @property
     def _first_radiator_thermostat(
         self,
-    ) -> HeatingThermostat | HeatingThermostatCompact | HeatingThermostatEvo | None:
+    ) -> (
+        AsyncHeatingThermostat
+        | AsyncHeatingThermostatCompact
+        | AsyncHeatingThermostatEvo
+        | None
+    ):
         """Return the first radiator thermostat from the hmip heating group."""
         for device in self._device.devices:
             if isinstance(
                 device,
                 (
-                    HeatingThermostat,
-                    HeatingThermostatCompact,
-                    HeatingThermostatEvo,
+                    AsyncHeatingThermostat,
+                    AsyncHeatingThermostatCompact,
+                    AsyncHeatingThermostatEvo,
                 ),
             ):
                 return device
