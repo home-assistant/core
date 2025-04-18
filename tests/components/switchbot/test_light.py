@@ -1,7 +1,6 @@
 """Test the switchbot lights."""
 
 from collections.abc import Callable
-from contextlib import ExitStack
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -39,33 +38,33 @@ from tests.components.bluetooth import inject_bluetooth_service_info
             SERVICE_TURN_OFF,
             {},
             "turn_off",
-            None,
-            None,
-            None,
+            (),
+            {switchbotColorMode.RGB},
+            switchbotColorMode.RGB,
         ),
         (
             SERVICE_TURN_ON,
             {},
             "turn_on",
-            None,
-            None,
-            None,
+            (),
+            {switchbotColorMode.RGB},
+            switchbotColorMode.RGB,
         ),
         (
             SERVICE_TURN_ON,
             {ATTR_BRIGHTNESS: 128},
             "set_brightness",
-            round(128 / 255 * 100),
-            None,
-            None,
+            (round(128 / 255 * 100),),
+            {switchbotColorMode.RGB},
+            switchbotColorMode.RGB,
         ),
         (
             SERVICE_TURN_ON,
             {ATTR_RGB_COLOR: (255, 0, 0)},
             "set_rgb",
             (round(255 / 255 * 100), 255, 0, 0),
-            None,
-            None,
+            {switchbotColorMode.RGB},
+            switchbotColorMode.RGB,
         ),
         (
             SERVICE_TURN_ON,
@@ -94,55 +93,31 @@ async def test_light_strip_services(
     entry.add_to_hass(hass)
     entity_id = "light.test_name"
 
-    device_patches = []
-    if color_modes is not None:
-        device_patches.extend(
-            [
-                patch("switchbot.SwitchbotLightStrip.color_modes", new=color_modes),
-                patch("switchbot.SwitchbotLightStrip.color_mode", new=color_mode),
-            ]
-        )
-
-    with ExitStack() as stack:
-        for p in device_patches:
-            stack.enter_context(p)
-
-        mock_turn_on = stack.enter_context(
-            patch(
-                "switchbot.SwitchbotLightStrip.turn_on",
-                new=AsyncMock(return_value=True),
-            )
-        )
-        mock_turn_off = stack.enter_context(
-            patch(
-                "switchbot.SwitchbotLightStrip.turn_off",
-                new=AsyncMock(return_value=True),
-            )
-        )
-        mock_set_brightness = stack.enter_context(
-            patch(
-                "switchbot.SwitchbotLightStrip.set_brightness",
-                new=AsyncMock(return_value=True),
-            )
-        )
-        mock_set_rgb = stack.enter_context(
-            patch(
-                "switchbot.SwitchbotLightStrip.set_rgb",
-                new=AsyncMock(return_value=True),
-            )
-        )
-        mock_set_color_temp = stack.enter_context(
-            patch(
-                "switchbot.SwitchbotLightStrip.set_color_temp",
-                new=AsyncMock(return_value=True),
-            )
-        )
-        stack.enter_context(
-            patch(
-                "switchbot.SwitchbotLightStrip.update", new=AsyncMock(return_value=None)
-            )
-        )
-
+    with (
+        patch("switchbot.SwitchbotLightStrip.color_modes", new=color_modes),
+        patch("switchbot.SwitchbotLightStrip.color_mode", new=color_mode),
+        patch(
+            "switchbot.SwitchbotLightStrip.turn_on",
+            new=AsyncMock(return_value=True),
+        ) as mock_turn_on,
+        patch(
+            "switchbot.SwitchbotLightStrip.turn_off",
+            new=AsyncMock(return_value=True),
+        ) as mock_turn_off,
+        patch(
+            "switchbot.SwitchbotLightStrip.set_brightness",
+            new=AsyncMock(return_value=True),
+        ) as mock_set_brightness,
+        patch(
+            "switchbot.SwitchbotLightStrip.set_rgb",
+            new=AsyncMock(return_value=True),
+        ) as mock_set_rgb,
+        patch(
+            "switchbot.SwitchbotLightStrip.set_color_temp",
+            new=AsyncMock(return_value=True),
+        ) as mock_set_color_temp,
+        patch("switchbot.SwitchbotLightStrip.update", new=AsyncMock(return_value=None)),
+    ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -161,9 +136,4 @@ async def test_light_strip_services(
             "set_color_temp": mock_set_color_temp,
         }
         mock_instance = mock_map[mock_method]
-        if expected_args is None:
-            mock_instance.assert_awaited_once()
-        elif isinstance(expected_args, tuple):
-            mock_instance.assert_awaited_once_with(*expected_args)
-        else:
-            mock_instance.assert_awaited_once_with(expected_args)
+        mock_instance.assert_awaited_once_with(*expected_args)

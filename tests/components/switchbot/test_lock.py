@@ -79,7 +79,7 @@ async def test_lock_services(
 )
 @pytest.mark.parametrize(
     ("service", "mock_method"),
-    [(SERVICE_UNLOCK, "unlock"), (SERVICE_OPEN, "open")],
+    [(SERVICE_UNLOCK, "unlock_without_unlatch"), (SERVICE_OPEN, "unlock")],
 )
 async def test_lock_services_with_night_latch_enabled(
     hass: HomeAssistant,
@@ -122,8 +122,8 @@ async def test_lock_services_with_night_latch_enabled(
         )
 
         mock_map = {
-            "open": mock_unlock,
-            "unlock": mock_unlock_without_unlatch,
+            "unlock_without_unlatch": mock_unlock_without_unlatch,
+            "unlock": mock_unlock,
         }
         mock_instance = mock_map[mock_method]
         mock_instance.assert_awaited_once()
