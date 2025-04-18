@@ -789,6 +789,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/kegtron/ @Ernst79
 /tests/components/kegtron/ @Ernst79
 /homeassistant/components/kem/ @bdraco @peterager
+/tests/components/kem/ @bdraco @peterager
 /homeassistant/components/keyboard_remote/ @bendavid @lanrat
 /homeassistant/components/keymitt_ble/ @spycle
 /tests/components/keymitt_ble/ @spycle

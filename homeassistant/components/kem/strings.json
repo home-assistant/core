@@ -93,5 +93,10 @@
         "name": "Generator load percentage"
       }
     }
+  },
+  "exceptions": {
+    "update_retry_failed": {
+      "message": "Updating data failed after retries."
+    }
   }
 }
