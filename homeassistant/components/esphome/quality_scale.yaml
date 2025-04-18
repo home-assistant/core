@@ -5,8 +5,8 @@ rules:
     comment: |
       Since actions are defined per device, rather than per integration,
       they are specific to the device's YAML configuration. Additionally,
-      ESPHome allows for user-defined actions, making it difficult to provide
-      standard documentation since these actions vary by device. For more
+      ESPHome allows for user-defined actions, making it impossible to
+      set them up until the device is connected as they vary by device. For more
       information, see: https://esphome.io/components/api.html#user-defined-actions
   appropriate-polling: done
   brands: done
