@@ -95,6 +95,24 @@ async def test_form_exceptions(
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"base": reason}
 
+    mock_portainer_client.get_endpoints.side_effect = None
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=MOCK_USER_SETUP,
+    )
+
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "https://127.0.0.1:9000"
+    assert result["data"] == MOCK_TEST_CONFIG
+
 
 async def test_duplicate_entry(
     hass: HomeAssistant,
