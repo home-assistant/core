@@ -152,14 +152,23 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
     OverkizSensorDescription(
         key=OverkizState.CORE_FOSSIL_ENERGY_CONSUMPTION,
         name="Fossil energy consumption",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     OverkizSensorDescription(
         key=OverkizState.CORE_GAS_CONSUMPTION,
         name="Gas consumption",
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
+        device_class=SensorDeviceClass.GAS,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     OverkizSensorDescription(
         key=OverkizState.CORE_THERMAL_ENERGY_CONSUMPTION,
         name="Thermal energy consumption",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     # LightSensor/LuminanceSensor
     OverkizSensorDescription(
