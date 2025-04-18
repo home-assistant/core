@@ -2,7 +2,7 @@
 
 from collections.abc import AsyncIterator, Generator
 import json
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -14,27 +14,16 @@ from .const import TEST_BACKUP, USER_INPUT
 from tests.common import MockConfigEntry
 
 
-@pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock]:
-    """Override async_setup_entry."""
-    with patch(
-        "homeassistant.components.s3.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
-        yield mock_setup_entry
-
-
 @pytest.fixture(autouse=True)
-def mock_client() -> Generator[MagicMock]:
+def mock_client() -> Generator[AsyncMock]:
     """Mock the S3 client."""
-    with (
-        patch(
-            "homeassistant.components.s3.config_flow.get_client",
-            autospec=True,
-            return_value=AsyncMock(),
-        ) as get_client,
-        patch("homeassistant.components.s3.get_client", new=get_client),
-    ):
-        client = get_client.return_value
+    with patch(
+        "homeassistant.components.s3.api.AioSession.create_client",
+        autospec=True,
+        return_value=AsyncMock(),
+    ) as create_client:
+        client = create_client.return_value
+
         tar_file, metadata_file = suggested_filenames(TEST_BACKUP)
         client.list_objects_v2.return_value = {
             "Contents": [{"Key": tar_file}, {"Key": metadata_file}]
@@ -52,19 +41,6 @@ def mock_client() -> Generator[MagicMock]:
 
         client.get_object.return_value = {"Body": MockStream()}
 
-        get_client.return_value.__aenter__.return_value = client
-        yield client
-
-
-@pytest.fixture(autouse=True)
-async def mock_create_client():
-    """Mock the AioSession.create_client."""
-    with patch(
-        "homeassistant.components.s3.api.AioSession.create_client",
-        autospec=True,
-    ) as create_client:
-        client = create_client.return_value
-        client.head_bucket = AsyncMock()
         create_client.return_value.__aenter__.return_value = client
         yield client
 

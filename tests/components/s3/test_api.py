@@ -35,10 +35,10 @@ async def test_get_client_success(user_input) -> None:
         client.head_bucket.assert_called_once_with(Bucket=user_input[CONF_BUCKET])
 
 
-async def test_get_client_invalid_endpoint_url(user_input, mock_create_client) -> None:
+async def test_get_client_invalid_endpoint_url(user_input, mock_client) -> None:
     """Test invalid endpoint URL."""
     user_input[CONF_ENDPOINT_URL] = "invalid_url"
-    mock_create_client.__aenter__.side_effect = ValueError
+    mock_client.__aenter__.side_effect = ValueError
 
     with pytest.raises(InvalidEndpointURLError):
         async with get_client(user_input):
@@ -64,20 +64,20 @@ async def test_get_client_invalid_endpoint_url(user_input, mock_create_client) -
     ],
 )
 async def test_get_client_errors(
-    user_input, mock_create_client, side_effect, expected_exception
+    user_input, mock_client, side_effect, expected_exception
 ) -> None:
     """Test various client connection errors."""
-    mock_create_client.head_bucket.side_effect = side_effect
+    mock_client.head_bucket.side_effect = side_effect
 
     with pytest.raises(expected_exception):
         async with get_client(user_input):
             pass
 
 
-async def test_get_client_invalid_bucket_name(user_input, mock_create_client) -> None:
+async def test_get_client_invalid_bucket_name(user_input, mock_client) -> None:
     """Test invalid bucket name."""
-    mock_create_client.__aenter__.side_effect = (
-        botocore.exceptions.ParamValidationError(report="Invalid bucket name")
+    mock_client.__aenter__.side_effect = botocore.exceptions.ParamValidationError(
+        report="Invalid bucket name"
     )
 
     with pytest.raises(InvalidBucketNameError):

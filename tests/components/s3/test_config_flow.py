@@ -35,7 +35,7 @@ async def _async_start_flow(
     )
 
 
-async def test_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+async def test_flow(hass: HomeAssistant) -> None:
     """Test config flow."""
     result = await _async_start_flow(hass)
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -54,7 +54,6 @@ async def test_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
 )
 async def test_flow_errors(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     exception: Exception,
     errors: dict[str, str],
 ) -> None:
