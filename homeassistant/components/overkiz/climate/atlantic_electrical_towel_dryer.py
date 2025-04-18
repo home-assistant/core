@@ -23,9 +23,9 @@ PRESET_DRYING = "drying"
 
 OVERKIZ_TO_HVAC_MODE: dict[str, HVACMode] = {
     OverkizCommandParam.EXTERNAL: HVACMode.HEAT,  # manu
-    OverkizCommandParam.AUTO: HVACMode.AUTO,  # prog
-    OverkizCommandParam.INTERNAL: HVACMode.AUTO,  # prog
-    OverkizCommandParam.STANDBY: HVACMode.OFF,
+    OverkizCommandParam.INTERNAL: HVACMode.AUTO,  # prog (schedule, user program)
+    OverkizCommandParam.AUTO: HVACMode.AUTO,  # auto (intelligent, user behavior)
+    OverkizCommandParam.STANDBY: HVACMode.OFF,  # off
 }
 HVAC_MODE_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_HVAC_MODE.items()}
 
