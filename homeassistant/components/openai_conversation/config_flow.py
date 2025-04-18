@@ -253,6 +253,10 @@ def openai_config_option_schema(
         )
         for api in llm.async_get_apis(hass)
     ]
+    if (suggested_llm_apis := options.get(CONF_LLM_HASS_API)) and isinstance(
+        suggested_llm_apis, str
+    ):
+        suggested_llm_apis = [suggested_llm_apis]
     schema: VolDictType = {
         vol.Optional(
             CONF_PROMPT,
@@ -264,7 +268,7 @@ def openai_config_option_schema(
         ): TemplateSelector(),
         vol.Optional(
             CONF_LLM_HASS_API,
-            description={"suggested_value": options.get(CONF_LLM_HASS_API)},
+            description={"suggested_value": suggested_llm_apis},
         ): SelectSelector(SelectSelectorConfig(options=hass_apis, multiple=True)),
         vol.Required(
             CONF_RECOMMENDED, default=options.get(CONF_RECOMMENDED, False)
