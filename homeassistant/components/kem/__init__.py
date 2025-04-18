@@ -4,8 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from aiokem.exceptions import AuthenticationCredentialsError
-from aiokem.main import AioKem
+from aiokem import AioKem, AuthenticationCredentialsError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform

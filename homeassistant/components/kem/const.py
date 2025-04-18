@@ -2,7 +2,7 @@
 
 from typing import Final
 
-from aiokem.exceptions import CommunicationError
+from aiokem import CommunicationError
 
 DOMAIN = "kem"
 
@@ -12,3 +12,5 @@ CONNECTION_EXCEPTIONS = (
 )
 
 RPM: Final = "rpm"
+
+SCAN_INTERVAL_MINUTES = 10

@@ -6,9 +6,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-import aiokem
-from aiokem.exceptions import AuthenticationCredentialsError, AuthenticationError
-import aiokem.main
+from aiokem import AioKem, AuthenticationCredentialsError, AuthenticationError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -60,7 +58,7 @@ class KemConfigFlow(ConfigFlow, domain=DOMAIN):
         """Validate the user input."""
         errors: dict[str, str] = {}
         try:
-            kem = aiokem.main.AioKem(async_get_clientsession(self.hass))
+            kem = AioKem(async_get_clientsession(self.hass))
             await kem.authenticate(config[CONF_USERNAME], config[CONF_PASSWORD])
         except CONNECTION_EXCEPTIONS:
             errors["base"] = "cannot_connect"

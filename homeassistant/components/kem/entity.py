@@ -69,7 +69,7 @@ class KemEntity(CoordinatorEntity[KemUpdateCoordinator], Entity):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        if not self.coordinator.available:
+        if not self.coordinator.last_update_success:
             return False
         if not self.coordinator.data["device"]["isConnected"]:
             return False
