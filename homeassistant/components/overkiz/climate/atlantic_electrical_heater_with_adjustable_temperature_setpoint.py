@@ -58,7 +58,7 @@ OVERKIZ_TO_HVAC_MODE: dict[str, HVACMode] = {
 }
 
 OVERKIZ_TO_HVAC_ACTION: dict[str, HVACAction] = {
-    OverkizCommandParam.STANDBY : HVACAction.IDLE,
+    OverkizCommandParam.STANDBY: HVACAction.IDLE,
     OverkizCommandParam.INCREASE: HVACAction.HEATING,
     OverkizCommandParam.NONE: HVACAction.OFF,
 }
