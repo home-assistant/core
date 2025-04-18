@@ -1,8 +1,8 @@
-import asyncio
 import pytest
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+
 
 # Fake Device and coordinator to simulate the Daikin integration
 class FakeDevice:
@@ -37,7 +37,10 @@ def setup_integration(hass_instance):
 @pytest.mark.asyncio
 async def test_service_set_zone_temperature_success(setup_integration):
     hass, coordinator = setup_integration
-    from homeassistant.components.daikin.services import async_setup_services, SERVICE_SET_ZONE_TEMPERATURE
+    from homeassistant.components.daikin.services import (
+        SERVICE_SET_ZONE_TEMPERATURE,
+        async_setup_services,
+    )
 
     await async_setup_services(hass)
     service_data = {"zone_id": 0, "temperature": 23}
@@ -50,7 +53,10 @@ async def test_service_set_zone_temperature_success(setup_integration):
 @pytest.mark.asyncio
 async def test_service_set_zone_temperature_out_of_range(setup_integration):
     hass, _ = setup_integration
-    from homeassistant.components.daikin.services import async_setup_services, SERVICE_SET_ZONE_TEMPERATURE
+    from homeassistant.components.daikin.services import (
+        SERVICE_SET_ZONE_TEMPERATURE,
+        async_setup_services,
+    )
     await async_setup_services(hass)
     service_data = {"zone_id": 0, "temperature": 26}
     with pytest.raises(HomeAssistantError):
@@ -59,7 +65,10 @@ async def test_service_set_zone_temperature_out_of_range(setup_integration):
 @pytest.mark.asyncio
 async def test_service_entry_filter(setup_integration):
     hass, coordinator = setup_integration
-    from homeassistant.components.daikin.services import async_setup_services, SERVICE_SET_ZONE_TEMPERATURE
+    from homeassistant.components.daikin.services import (
+        SERVICE_SET_ZONE_TEMPERATURE,
+        async_setup_services,
+    )
     # Add a second coordinator to test filtering
     device2 = FakeDevice("AA:BB:CC:DD:EE:FF", target_temperature=22, zones=[["Office", None, 22]])
     coordinator2 = FakeCoordinator(device2)
@@ -81,7 +90,10 @@ async def test_service_missing_device(hass_instance):
     class NoDeviceCoordinator:
         pass
     hass.data["daikin"]["nodata"] = NoDeviceCoordinator()
-    from homeassistant.components.daikin.services import async_setup_services, SERVICE_SET_ZONE_TEMPERATURE
+    from homeassistant.components.daikin.services import (
+        SERVICE_SET_ZONE_TEMPERATURE,
+        async_setup_services,
+    )
     await async_setup_services(hass)
     service_data = {"zone_id": 0, "temperature": 22, "entry_id": "nodata"}
     # The service should simply log a warning and not raise an exception.

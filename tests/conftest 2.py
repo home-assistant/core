@@ -67,12 +67,7 @@ from homeassistant.components.websocket_api.auth import (
 # pylint: disable-next=hass-component-root-import
 from homeassistant.components.websocket_api.http import URL
 from homeassistant.config import YAML_CONFIG_FILE
-from homeassistant.config_entries import (
-    ConfigEntries,
-    ConfigEntry,
-    ConfigEntryState,
-    ConfigSubentryData,
-)
+from homeassistant.config_entries import ConfigEntries, ConfigEntry, ConfigEntryState
 from homeassistant.const import BASE_PLATFORMS, HASSIO_USER_NAME
 from homeassistant.core import (
     Context,
@@ -243,8 +238,8 @@ class HAFakeDatetime(freezegun.api.FakeDatetime):  # type: ignore[name-defined]
         return ha_datetime_to_fakedatetime(result)
 
 
-def check_real(func: Callable[..., Coroutine[Any, Any, Any]]) -> Callable:
-    """Decorator for real functions."""
+def check_real[**_P, _R](func: Callable[_P, Coroutine[Any, Any, _R]]):
+    """Force a function to require a keyword _test_real to be passed in."""
 
     @functools.wraps(func)
     async def guard_func(*args: _P.args, **kwargs: _P.kwargs) -> _R:
@@ -952,12 +947,6 @@ def mqtt_config_entry_data() -> dict[str, Any] | None:
 
 
 @pytest.fixture
-def mqtt_config_subentries_data() -> tuple[ConfigSubentryData] | None:
-    """Fixture to allow overriding MQTT subentries data."""
-    return None
-
-
-@pytest.fixture
 def mqtt_config_entry_options() -> dict[str, Any] | None:
     """Fixture to allow overriding MQTT entry options."""
     return None
@@ -1043,7 +1032,6 @@ async def mqtt_mock(
     mqtt_client_mock: MqttMockPahoClient,
     mqtt_config_entry_data: dict[str, Any] | None,
     mqtt_config_entry_options: dict[str, Any] | None,
-    mqtt_config_subentries_data: tuple[ConfigSubentryData] | None,
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> AsyncGenerator[MqttMockHAClient]:
     """Fixture to mock MQTT component."""
@@ -1056,7 +1044,6 @@ async def _mqtt_mock_entry(
     mqtt_client_mock: MqttMockPahoClient,
     mqtt_config_entry_data: dict[str, Any] | None,
     mqtt_config_entry_options: dict[str, Any] | None,
-    mqtt_config_subentries_data: tuple[ConfigSubentryData] | None,
 ) -> AsyncGenerator[MqttMockHAClientGenerator]:
     """Fixture to mock a delayed setup of the MQTT config entry."""
     # Local import to avoid processing MQTT modules when running a testcase
@@ -1073,7 +1060,6 @@ async def _mqtt_mock_entry(
     entry = MockConfigEntry(
         data=mqtt_config_entry_data,
         options=mqtt_config_entry_options,
-        subentries_data=mqtt_config_subentries_data,
         domain=mqtt.DOMAIN,
         title="MQTT",
         version=1,
@@ -1188,7 +1174,6 @@ async def mqtt_mock_entry(
     mqtt_client_mock: MqttMockPahoClient,
     mqtt_config_entry_data: dict[str, Any] | None,
     mqtt_config_entry_options: dict[str, Any] | None,
-    mqtt_config_subentries_data: tuple[ConfigSubentryData] | None,
 ) -> AsyncGenerator[MqttMockHAClientGenerator]:
     """Set up an MQTT config entry."""
 
@@ -1205,11 +1190,7 @@ async def mqtt_mock_entry(
         return await mqtt_mock_entry(_async_setup_config_entry)
 
     async with _mqtt_mock_entry(
-        hass,
-        mqtt_client_mock,
-        mqtt_config_entry_data,
-        mqtt_config_entry_options,
-        mqtt_config_subentries_data,
+        hass, mqtt_client_mock, mqtt_config_entry_data, mqtt_config_entry_options
     ) as mqtt_mock_entry:
         yield _setup_mqtt_entry
 
