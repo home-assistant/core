@@ -119,18 +119,16 @@ async def _async_close_cover(
     features: CoverEntityFeature,
     set_position: bool,
     set_tilt: bool,
-    current_position: int | None,
-    current_tilt_position: int | None,
 ) -> None:
     """Close the cover if it was not closed by setting the position."""
-    if not set_position and current_position != FULL_CLOSE:
+    if not set_position:
         if CoverEntityFeature.CLOSE in features:
             await service_call(SERVICE_CLOSE_COVER, service_data)
         elif CoverEntityFeature.SET_POSITION in features:
             await service_call(
                 SERVICE_SET_COVER_POSITION, service_data | {ATTR_POSITION: FULL_CLOSE}
             )
-    if not set_tilt and current_tilt_position != FULL_CLOSE:
+    if not set_tilt:
         if CoverEntityFeature.CLOSE_TILT in features:
             await service_call(SERVICE_CLOSE_COVER_TILT, service_data)
         elif CoverEntityFeature.SET_TILT_POSITION in features:
@@ -146,18 +144,16 @@ async def _async_open_cover(
     features: CoverEntityFeature,
     set_position: bool,
     set_tilt: bool,
-    current_position: int | None,
-    current_tilt_position: int | None,
 ) -> None:
     """Open the cover if it was not opened by setting the position."""
-    if not set_position and current_position != FULL_OPEN:
+    if not set_position:
         if CoverEntityFeature.OPEN in features:
             await service_call(SERVICE_OPEN_COVER, service_data)
         elif CoverEntityFeature.SET_POSITION in features:
             await service_call(
                 SERVICE_SET_COVER_POSITION, service_data | {ATTR_POSITION: FULL_OPEN}
             )
-    if not set_tilt and current_tilt_position != FULL_OPEN:
+    if not set_tilt:
         if CoverEntityFeature.OPEN_TILT in features:
             await service_call(SERVICE_OPEN_COVER_TILT, service_data)
         elif CoverEntityFeature.SET_TILT_POSITION in features:
@@ -235,24 +231,12 @@ async def _async_reproduce_state(
 
     if target_state in CLOSING_STATES:
         await _async_close_cover(
-            service_call,
-            service_data,
-            features,
-            set_position,
-            set_tilt,
-            current_position,
-            current_tilt_position,
+            service_call, service_data, features, set_position, set_tilt
         )
 
     elif target_state in OPENING_STATES:
         await _async_open_cover(
-            service_call,
-            service_data,
-            features,
-            set_position,
-            set_tilt,
-            current_position,
-            current_tilt_position,
+            service_call, service_data, features, set_position, set_tilt
         )
 
 
