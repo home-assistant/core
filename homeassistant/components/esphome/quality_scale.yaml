@@ -64,18 +64,9 @@ rules:
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
-  entity-translations:
-    status: exempt
-    comment: |
-      entities cannot be translated because they are
-      provided by the device YAML configuration.
+  entity-translations: done
   exception-translations: todo
-  icon-translations:
-    status: exempt
-    comment: |
-      icons cannot be translated because they are
-      provided by the device YAML configuration.
-  reconfiguration-flow: todo
+  icon-translations: todo
   repair-issues: done
   stale-devices: done
 
