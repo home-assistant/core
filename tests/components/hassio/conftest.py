@@ -3,17 +3,16 @@
 from collections.abc import Generator
 import os
 import re
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, patch
 
 from aiohasupervisor.models import AddonsStats, AddonState
 from aiohttp.test_utils import TestClient
 import pytest
 
 from homeassistant.auth.models import RefreshToken
-from homeassistant.components.hassio.handler import HassIO, HassioAPIError
+from homeassistant.components.hassio.handler import HassIO
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.setup import async_setup_component
 
 from . import SUPERVISOR_TOKEN
 
@@ -29,55 +28,6 @@ def disable_security_filter() -> Generator[None]:
         re.compile("not-matching-anything"),
     ):
         yield
-
-
-@pytest.fixture
-def hassio_env(supervisor_is_connected: AsyncMock) -> Generator[None]:
-    """Fixture to inject hassio env."""
-    with (
-        patch.dict(os.environ, {"SUPERVISOR": "127.0.0.1"}),
-        patch.dict(os.environ, {"SUPERVISOR_TOKEN": SUPERVISOR_TOKEN}),
-        patch(
-            "homeassistant.components.hassio.HassIO.get_info",
-            Mock(side_effect=HassioAPIError()),
-        ),
-    ):
-        yield
-
-
-@pytest.fixture
-async def hassio_stubs(
-    hassio_env: None,
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
-    supervisor_client: AsyncMock,
-) -> RefreshToken:
-    """Create mock hassio http client."""
-    with (
-        patch(
-            "homeassistant.components.hassio.HassIO.update_hass_api",
-            return_value={"result": "ok"},
-        ) as hass_api,
-        patch(
-            "homeassistant.components.hassio.HassIO.update_hass_timezone",
-            return_value={"result": "ok"},
-        ),
-        patch(
-            "homeassistant.components.hassio.HassIO.get_info",
-            side_effect=HassioAPIError(),
-        ),
-        patch(
-            "homeassistant.components.hassio.HassIO.get_ingress_panels",
-            return_value={"panels": []},
-        ),
-        patch(
-            "homeassistant.components.hassio.issues.SupervisorIssues.setup",
-        ),
-    ):
-        await async_setup_component(hass, "hassio", {})
-
-    return hass_api.call_args[0][1]
 
 
 @pytest.fixture
