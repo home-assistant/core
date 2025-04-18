@@ -149,16 +149,21 @@ class TemplateFan(TemplateEntity, FanEntity):
         self._oscillating_template = config.get(CONF_OSCILLATING_TEMPLATE)
         self._direction_template = config.get(CONF_DIRECTION_TEMPLATE)
 
-        for action_id in (
-            CONF_ON_ACTION,
-            CONF_OFF_ACTION,
-            CONF_SET_PERCENTAGE_ACTION,
-            CONF_SET_PRESET_MODE_ACTION,
-            CONF_SET_OSCILLATING_ACTION,
-            CONF_SET_DIRECTION_ACTION,
+        self._attr_supported_features |= (
+            FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
+        )
+        for action_id, supported_feature in (
+            (CONF_ON_ACTION, 0),
+            (CONF_OFF_ACTION, 0),
+            (CONF_SET_PERCENTAGE_ACTION, FanEntityFeature.SET_SPEED),
+            (CONF_SET_PRESET_MODE_ACTION, FanEntityFeature.PRESET_MODE),
+            (CONF_SET_OSCILLATING_ACTION, FanEntityFeature.OSCILLATE),
+            (CONF_SET_DIRECTION_ACTION, FanEntityFeature.DIRECTION),
         ):
-            if action_config := config.get(action_id):
+            # Scripts can be an empty list, therefore we need to check for None
+            if (action_config := config.get(action_id)) is not None:
                 self.add_script(action_id, action_config, name, DOMAIN)
+                self._attr_supported_features |= supported_feature
 
         self._state: bool | None = False
         self._percentage: int | None = None
@@ -171,19 +176,6 @@ class TemplateFan(TemplateEntity, FanEntity):
 
         # List of valid preset modes
         self._preset_modes: list[str] | None = config.get(CONF_PRESET_MODES)
-
-        if self._percentage_template:
-            self._attr_supported_features |= FanEntityFeature.SET_SPEED
-        if self._preset_mode_template and self._preset_modes:
-            self._attr_supported_features |= FanEntityFeature.PRESET_MODE
-        if self._oscillating_template:
-            self._attr_supported_features |= FanEntityFeature.OSCILLATE
-        if self._direction_template:
-            self._attr_supported_features |= FanEntityFeature.DIRECTION
-        self._attr_supported_features |= (
-            FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
-        )
-
         self._attr_assumed_state = self._template is None
 
     @property
@@ -269,6 +261,8 @@ class TemplateFan(TemplateEntity, FanEntity):
 
         if self._template is None:
             self._state = percentage != 0
+
+        if self._template is None or self._percentage_template is None:
             self.async_write_ha_state()
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
@@ -284,32 +278,39 @@ class TemplateFan(TemplateEntity, FanEntity):
 
         if self._template is None:
             self._state = True
+
+        if self._template is None or self._preset_mode_template is None:
             self.async_write_ha_state()
 
     async def async_oscillate(self, oscillating: bool) -> None:
         """Set oscillation of the fan."""
-        if (script := self._action_scripts.get(CONF_SET_OSCILLATING_ACTION)) is None:
-            return
-
         self._oscillating = oscillating
-        await self.async_run_script(
-            script,
-            run_variables={ATTR_OSCILLATING: self.oscillating},
-            context=self._context,
-        )
+        if (
+            script := self._action_scripts.get(CONF_SET_OSCILLATING_ACTION)
+        ) is not None:
+            await self.async_run_script(
+                script,
+                run_variables={ATTR_OSCILLATING: self.oscillating},
+                context=self._context,
+            )
+
+        if self._oscillating_template is None:
+            self.async_write_ha_state()
 
     async def async_set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
-        if (script := self._action_scripts.get(CONF_SET_DIRECTION_ACTION)) is None:
-            return
-
         if direction in _VALID_DIRECTIONS:
             self._direction = direction
-            await self.async_run_script(
-                script,
-                run_variables={ATTR_DIRECTION: direction},
-                context=self._context,
-            )
+            if (
+                script := self._action_scripts.get(CONF_SET_DIRECTION_ACTION)
+            ) is not None:
+                await self.async_run_script(
+                    script,
+                    run_variables={ATTR_DIRECTION: direction},
+                    context=self._context,
+                )
+            if self._direction_template is None:
+                self.async_write_ha_state()
         else:
             _LOGGER.error(
                 "Received invalid direction: %s for entity %s. Expected: %s",
