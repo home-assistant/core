@@ -2,15 +2,14 @@
 
 from unittest.mock import AsyncMock, patch
 
+from botocore.exceptions import (
+    ClientError,
+    EndpointConnectionError,
+    ParamValidationError,
+)
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.s3.api import (
-    CannotConnectError,
-    InvalidBucketNameError,
-    InvalidCredentialsError,
-    InvalidEndpointURLError,
-)
 from homeassistant.components.s3.const import CONF_BUCKET, CONF_ENDPOINT_URL, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -46,20 +45,25 @@ async def test_flow(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("exception", "errors"),
     [
-        (InvalidCredentialsError, {"base": "invalid_credentials"}),
-        (InvalidBucketNameError, {CONF_BUCKET: "invalid_bucket_name"}),
-        (InvalidEndpointURLError, {CONF_ENDPOINT_URL: "invalid_endpoint_url"}),
-        (CannotConnectError, {CONF_ENDPOINT_URL: "cannot_connect"}),
+        (
+            ParamValidationError(report="Invalid bucket name"),
+            {CONF_BUCKET: "invalid_bucket_name"},
+        ),
+        (ValueError(), {CONF_ENDPOINT_URL: "invalid_endpoint_url"}),
+        (
+            EndpointConnectionError(endpoint_url="http://example.com"),
+            {CONF_ENDPOINT_URL: "cannot_connect"},
+        ),
     ],
 )
-async def test_flow_errors(
+async def test_flow_create_client_errors(
     hass: HomeAssistant,
     exception: Exception,
     errors: dict[str, str],
 ) -> None:
     """Test config flow errors."""
     with patch(
-        "homeassistant.components.s3.config_flow.get_client",
+        "aiobotocore.session.AioSession.create_client",
         side_effect=exception,
     ):
         result = await _async_start_flow(hass)
@@ -68,6 +72,31 @@ async def test_flow_errors(
     assert result["errors"] == errors
 
     # Fix and finish the test
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        USER_INPUT,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "test"
+    assert result["data"] == USER_INPUT
+
+
+async def test_flow_head_bucket_error(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+) -> None:
+    """Test setup_entry error when calling head_bucket."""
+    mock_client.head_bucket.side_effect = ClientError(
+        error_response={"Error": {"Code": "InvalidAccessKeyId"}},
+        operation_name="head_bucket",
+    )
+    result = await _async_start_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_credentials"}
+
+    # Fix and finish the test
+    mock_client.head_bucket.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         USER_INPUT,

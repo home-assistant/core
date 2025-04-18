@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from aiobotocore.session import AioSession
+from botocore.exceptions import ClientError, ConnectionError, ParamValidationError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -14,13 +16,6 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from .api import (
-    CannotConnectError,
-    InvalidBucketNameError,
-    InvalidCredentialsError,
-    InvalidEndpointURLError,
-    get_client,
-)
 from .const import (
     CONF_ACCESS_KEY_ID,
     CONF_BUCKET,
@@ -63,15 +58,22 @@ class S3ConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             )
             try:
-                async with get_client(user_input):
-                    pass
-            except InvalidCredentialsError:
+                session = AioSession()
+                async with session.create_client(
+                    "s3",
+                    endpoint_url=user_input.get(CONF_ENDPOINT_URL),
+                    aws_secret_access_key=user_input[CONF_SECRET_ACCESS_KEY],
+                    aws_access_key_id=user_input[CONF_ACCESS_KEY_ID],
+                ) as client:
+                    await client.head_bucket(Bucket=user_input[CONF_BUCKET])
+            except ClientError:
                 errors["base"] = "invalid_credentials"
-            except InvalidBucketNameError:
-                errors[CONF_BUCKET] = "invalid_bucket_name"
-            except InvalidEndpointURLError:
+            except ParamValidationError as err:
+                if "Invalid bucket name" in str(err):
+                    errors[CONF_BUCKET] = "invalid_bucket_name"
+            except ValueError:
                 errors[CONF_ENDPOINT_URL] = "invalid_endpoint_url"
-            except CannotConnectError:
+            except ConnectionError:
                 errors[CONF_ENDPOINT_URL] = "cannot_connect"
             else:
                 return self.async_create_entry(

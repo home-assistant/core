@@ -18,7 +18,7 @@ from tests.common import MockConfigEntry
 def mock_client() -> Generator[AsyncMock]:
     """Mock the S3 client."""
     with patch(
-        "homeassistant.components.s3.api.AioSession.create_client",
+        "aiobotocore.session.AioSession.create_client",
         autospec=True,
         return_value=AsyncMock(),
     ) as create_client:
@@ -40,6 +40,7 @@ def mock_client() -> Generator[AsyncMock]:
                 return json.dumps(TEST_BACKUP.as_dict()).encode()
 
         client.get_object.return_value = {"Body": MockStream()}
+        client.head_bucket.return_value = {}
 
         create_client.return_value.__aenter__.return_value = client
         yield client

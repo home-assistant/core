@@ -1,15 +1,14 @@
 """Test the s3 storage integration."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
+from botocore.exceptions import (
+    ClientError,
+    EndpointConnectionError,
+    ParamValidationError,
+)
 import pytest
 
-from homeassistant.components.s3.api import (
-    CannotConnectError,
-    InvalidBucketNameError,
-    InvalidCredentialsError,
-    InvalidEndpointURLError,
-)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -36,13 +35,18 @@ async def test_load_unload_config_entry(
 @pytest.mark.parametrize(
     ("exception", "state"),
     [
-        (InvalidCredentialsError, ConfigEntryState.SETUP_ERROR),
-        (InvalidBucketNameError, ConfigEntryState.SETUP_ERROR),
-        (InvalidEndpointURLError, ConfigEntryState.SETUP_ERROR),
-        (CannotConnectError, ConfigEntryState.SETUP_RETRY),
+        (
+            ParamValidationError(report="Invalid bucket name"),
+            ConfigEntryState.SETUP_ERROR,
+        ),
+        (ValueError(), ConfigEntryState.SETUP_ERROR),
+        (
+            EndpointConnectionError(endpoint_url="https://example.com"),
+            ConfigEntryState.SETUP_RETRY,
+        ),
     ],
 )
-async def test_setup_errors(
+async def test_setup_entry_create_client_errors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     exception: Exception,
@@ -50,8 +54,22 @@ async def test_setup_errors(
 ) -> None:
     """Test various setup errors."""
     with patch(
-        "homeassistant.components.s3.get_client",
+        "aiobotocore.session.AioSession.create_client",
         side_effect=exception,
     ):
         await setup_integration(hass, mock_config_entry)
         assert mock_config_entry.state is state
+
+
+async def test_setup_entry_head_bucket_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: AsyncMock,
+) -> None:
+    """Test setup_entry error when calling head_bucket."""
+    mock_client.head_bucket.side_effect = ClientError(
+        error_response={"Error": {"Code": "InvalidAccessKeyId"}},
+        operation_name="head_bucket",
+    )
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
