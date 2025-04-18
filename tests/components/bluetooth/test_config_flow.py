@@ -30,7 +30,10 @@ from tests.typing import WebSocketGenerator
 
 
 @pytest.mark.usefixtures(
-    "macos_adapter", "mock_bleak_scanner_start", "mock_bluetooth_adapters"
+    "disable_bluez_manager_socket",
+    "macos_adapter",
+    "mock_bleak_scanner_start",
+    "mock_bluetooth_adapters",
 )
 async def test_options_flow_disabled_not_setup(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
