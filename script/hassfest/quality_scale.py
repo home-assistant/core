@@ -1100,7 +1100,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "weatherkit",
     "webmin",
     "wemo",
-    "whirlpool",
     "whois",
     "wiffi",
     "wilight",
