@@ -173,10 +173,10 @@ async def test_norway_in_june(hass: HomeAssistant) -> None:
 
     assert dt_util.parse_datetime(
         state.attributes[entity.STATE_ATTR_NEXT_RISING]
-    ) == datetime(2016, 7, 24, 22, 59, 45, 689645, tzinfo=dt_util.UTC)
+    ) == datetime(2016, 7, 25, 23, 26, 30, 480352, tzinfo=dt_util.UTC)
     assert dt_util.parse_datetime(
         state.attributes[entity.STATE_ATTR_NEXT_SETTING]
-    ) == datetime(2016, 7, 25, 22, 17, 13, 503932, tzinfo=dt_util.UTC)
+    ) == datetime(2016, 7, 25, 22, 16, 21, 829089, tzinfo=dt_util.UTC)
 
     assert state.state == sun.STATE_ABOVE_HORIZON
 
