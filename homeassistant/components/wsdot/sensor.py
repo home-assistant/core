@@ -64,14 +64,8 @@ def setup_platform(
     sensors = []
     for travel_time in config[CONF_TRAVEL_TIMES]:
         name = travel_time.get(CONF_NAME) or travel_time.get(CONF_ID)
-        api_key = config.get(CONF_API_KEY)
-        if not api_key or not isinstance(api_key, str):
-            raise ConfigEntryError(
-                f"wsdot requires an {CONF_API_KEY}. "
-                "See https://www.home-assistant.io/integrations/wsdot#setup"
-            )
         sensors.append(
-            WashingtonStateTravelTimeSensor(name, api_key, travel_time.get(CONF_ID))
+            WashingtonStateTravelTimeSensor(name, config[CONF_API_KEY], travel_time.get(CONF_ID))
         )
 
     add_entities(sensors, True)
@@ -89,7 +83,7 @@ class WashingtonStateTransportSensor(SensorEntity):
 
     def __init__(self, name: str, access_code: str) -> None:
         """Initialize the sensor."""
-        self._data: dict[str, str | int | float | datetime] = {}
+        self._data: dict[str, str | int | float | None] = {}
         self._access_code = access_code
         self._name = name
         self._state = None
