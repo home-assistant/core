@@ -204,7 +204,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         # core:MeasuredValueType = core:ElectricalEnergyInWh
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         entity_registry_enabled_default=False,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     OverkizSensorDescription(
         key=OverkizState.CORE_CONSUMPTION_TARIFF2,
@@ -213,7 +213,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         # core:MeasuredValueType = core:ElectricalEnergyInWh
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         entity_registry_enabled_default=False,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     OverkizSensorDescription(
         key=OverkizState.CORE_CONSUMPTION_TARIFF3,
@@ -222,7 +222,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         # core:MeasuredValueType = core:ElectricalEnergyInWh
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         entity_registry_enabled_default=False,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     OverkizSensorDescription(
         key=OverkizState.CORE_CONSUMPTION_TARIFF4,
@@ -231,7 +231,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         # core:MeasuredValueType = core:ElectricalEnergyInWh
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         entity_registry_enabled_default=False,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     OverkizSensorDescription(
         key=OverkizState.CORE_CONSUMPTION_TARIFF5,
@@ -240,7 +240,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         # core:MeasuredValueType = core:ElectricalEnergyInWh
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         entity_registry_enabled_default=False,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     OverkizSensorDescription(
         key=OverkizState.CORE_CONSUMPTION_TARIFF6,
@@ -249,7 +249,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         # core:MeasuredValueType = core:ElectricalEnergyInWh
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         entity_registry_enabled_default=False,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     OverkizSensorDescription(
         key=OverkizState.CORE_CONSUMPTION_TARIFF7,
@@ -258,7 +258,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         # core:MeasuredValueType = core:ElectricalEnergyInWh
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         entity_registry_enabled_default=False,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     OverkizSensorDescription(
         key=OverkizState.CORE_CONSUMPTION_TARIFF8,
@@ -267,7 +267,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         # core:MeasuredValueType = core:ElectricalEnergyInWh
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         entity_registry_enabled_default=False,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     OverkizSensorDescription(
         key=OverkizState.CORE_CONSUMPTION_TARIFF9,
@@ -276,7 +276,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         # core:MeasuredValueType = core:ElectricalEnergyInWh
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         entity_registry_enabled_default=False,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     # HumiditySensor/RelativeHumiditySensor
     OverkizSensorDescription(
