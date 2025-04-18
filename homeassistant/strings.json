@@ -118,6 +118,7 @@
     },
     "state": {
       "active": "Active",
+      "auto": "Auto",
       "charging": "Charging",
       "closed": "Closed",
       "closing": "Closing",
@@ -131,8 +132,10 @@
       "idle": "Idle",
       "locked": "Locked",
       "low": "Low",
+      "manual": "Manual",
       "medium": "Medium",
       "no": "No",
+      "normal": "Normal",
       "not_home": "Away",
       "off": "Off",
       "on": "On",
@@ -142,6 +145,8 @@
       "standby": "Standby",
       "stopped": "Stopped",
       "unlocked": "Unlocked",
+      "very_high": "Very high",
+      "very_low": "Very low",
       "yes": "Yes"
     },
     "time": {
