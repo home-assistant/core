@@ -184,6 +184,15 @@
   "exceptions": {
     "action_call_failed": {
       "message": "Failed to execute the action call {call_name} on {device_name}: {error}"
+    },
+    "error_communicating_with_device": {
+      "message": "Error communicating with the device {device_name}: {error}"
+    },
+    "error_compiling": {
+      "message": "Error compiling {configuration}; Try again in ESPHome dashboard for more information."
+    },
+    "error_uploading": {
+      "message": "Error during OTA of {configuration}; Try again in ESPHome dashboard for more information."
     }
   }
 }
