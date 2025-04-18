@@ -22,7 +22,7 @@ class SmarlaBaseEntity(Entity):
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, federwiege.serial_number)},
-            name="Federwiege",
+            name="Smarla",
             model="Smarla",
             manufacturer="Swing2Sleep",
             serial_number=federwiege.serial_number,
