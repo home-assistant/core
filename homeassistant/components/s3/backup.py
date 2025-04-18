@@ -24,6 +24,12 @@ from .const import CONF_BUCKET, DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 CACHE_TTL = 300
 
+# S3 part size requirements: 5 MiB to 5 GiB per part
+# https://docs.aws.amazon.com/AmazonS3/latest/userguide/qfacts.html
+# We set the threshold to 20 MiB to avoid too many parts.
+# Note that each part is allocated in the memory.
+MULTIPART_MIN_PART_SIZE_BYTES = 20 * 2**20
+
 
 def handle_boto_errors[T](
     func: Callable[..., Coroutine[Any, Any, T]],
@@ -125,36 +131,11 @@ class S3BackupAgent(BackupAgent):
         """
         tar_filename, metadata_filename = suggested_filenames(backup)
 
-        # Upload the backup file
-        upload_id = None
         try:
-            multipart_upload = await self._client.create_multipart_upload(
-                Bucket=self._bucket,
-                Key=tar_filename,
-            )
-
-            upload_id = multipart_upload["UploadId"]
-            parts = []
-            part_number = 1
-
-            stream = await open_stream()
-            async for chunk in stream:
-                part = await self._client.upload_part(
-                    Bucket=self._bucket,
-                    Key=tar_filename,
-                    PartNumber=part_number,
-                    UploadId=upload_id,
-                    Body=chunk,
-                )
-                parts.append({"PartNumber": part_number, "ETag": part["ETag"]})
-                part_number += 1
-
-            await self._client.complete_multipart_upload(
-                Bucket=self._bucket,
-                Key=tar_filename,
-                UploadId=upload_id,
-                MultipartUpload={"Parts": parts},
-            )
+            if backup.size < MULTIPART_MIN_PART_SIZE_BYTES:
+                await self._upload_simple(tar_filename, open_stream)
+            else:
+                await self._upload_multipart(tar_filename, open_stream)
 
             # Upload the metadata file
             metadata_content = json.dumps(backup.as_dict())
@@ -168,16 +149,102 @@ class S3BackupAgent(BackupAgent):
             self._cache_expiration = time()
 
         except BotoCoreError as err:
-            if upload_id:
-                try:
-                    await self._client.abort_multipart_upload(
+            raise BackupAgentError("Failed to upload backup") from err
+
+    async def _upload_simple(
+        self,
+        tar_filename: str,
+        open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
+    ) -> None:
+        """Upload a small file using simple upload.
+
+        :param tar_filename: The target filename for the backup.
+        :param open_stream: A function returning an async iterator that yields bytes.
+        """
+        _LOGGER.debug("Starting simple upload for %s", tar_filename)
+        stream = await open_stream()
+        file_data = bytearray()
+        async for chunk in stream:
+            file_data.extend(chunk)
+
+        await self._client.put_object(
+            Bucket=self._bucket,
+            Key=tar_filename,
+            Body=bytes(file_data),
+        )
+
+    async def _upload_multipart(
+        self,
+        tar_filename: str,
+        open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
+    ):
+        """Upload a large file using multipart upload.
+
+        :param tar_filename: The target filename for the backup.
+        :param open_stream: A function returning an async iterator that yields bytes.
+        """
+        _LOGGER.debug("Starting multipart upload for %s", tar_filename)
+        multipart_upload = await self._client.create_multipart_upload(
+            Bucket=self._bucket,
+            Key=tar_filename,
+        )
+        upload_id = multipart_upload["UploadId"]
+        try:
+            parts = []
+            part_number = 1
+            buffer = bytearray()
+
+            stream = await open_stream()
+            async for chunk in stream:
+                buffer.extend(chunk)
+
+                # If buffer size meets minimum part size, upload it as a part
+                if len(buffer) >= MULTIPART_MIN_PART_SIZE_BYTES:
+                    _LOGGER.debug(
+                        "Uploading part number %d, size %d", part_number, len(buffer)
+                    )
+                    part = await self._client.upload_part(
                         Bucket=self._bucket,
                         Key=tar_filename,
+                        PartNumber=part_number,
                         UploadId=upload_id,
+                        Body=bytes(buffer),
                     )
-                except BotoCoreError:
-                    _LOGGER.exception("Failed to abort multipart upload")
-            raise BackupAgentError("Failed to upload backup") from err
+                    parts.append({"PartNumber": part_number, "ETag": part["ETag"]})
+                    part_number += 1
+                    buffer = bytearray()
+
+            # Upload the final buffer as the last part (no minimum size requirement)
+            if buffer:
+                _LOGGER.debug(
+                    "Uploading final part number %d, size %d", part_number, len(buffer)
+                )
+                part = await self._client.upload_part(
+                    Bucket=self._bucket,
+                    Key=tar_filename,
+                    PartNumber=part_number,
+                    UploadId=upload_id,
+                    Body=bytes(buffer),
+                )
+                parts.append({"PartNumber": part_number, "ETag": part["ETag"]})
+
+            await self._client.complete_multipart_upload(
+                Bucket=self._bucket,
+                Key=tar_filename,
+                UploadId=upload_id,
+                MultipartUpload={"Parts": parts},
+            )
+
+        except BotoCoreError:
+            try:
+                await self._client.abort_multipart_upload(
+                    Bucket=self._bucket,
+                    Key=tar_filename,
+                    UploadId=upload_id,
+                )
+            except BotoCoreError:
+                _LOGGER.exception("Failed to abort multipart upload")
+            raise
 
     @handle_boto_errors
     async def async_delete_backup(

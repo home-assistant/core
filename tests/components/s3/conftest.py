@@ -6,16 +6,41 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant.components.s3.backup import suggested_filenames
+from homeassistant.components.backup import AgentBackup
+from homeassistant.components.s3.backup import (
+    MULTIPART_MIN_PART_SIZE_BYTES,
+    suggested_filenames,
+)
 from homeassistant.components.s3.const import DOMAIN
 
-from .const import TEST_BACKUP, USER_INPUT
+from .const import USER_INPUT
 
 from tests.common import MockConfigEntry
 
 
+@pytest.fixture(
+    params=[2**20, MULTIPART_MIN_PART_SIZE_BYTES],
+    ids=["small", "large"],
+)
+def test_backup(request: pytest.FixtureRequest) -> None:
+    """Test backup fixture."""
+    return AgentBackup(
+        addons=[],
+        backup_id="23e64aec",
+        date="2024-11-22T11:48:48.727189+01:00",
+        database_included=True,
+        extra_metadata={},
+        folders=[],
+        homeassistant_included=True,
+        homeassistant_version="2024.12.0.dev0",
+        name="Core 2024.12.0.dev0",
+        protected=False,
+        size=request.param,
+    )
+
+
 @pytest.fixture(autouse=True)
-def mock_client() -> Generator[AsyncMock]:
+def mock_client(test_backup: AgentBackup) -> Generator[AsyncMock]:
     """Mock the S3 client."""
     with patch(
         "aiobotocore.session.AioSession.create_client",
@@ -24,7 +49,7 @@ def mock_client() -> Generator[AsyncMock]:
     ) as create_client:
         client = create_client.return_value
 
-        tar_file, metadata_file = suggested_filenames(TEST_BACKUP)
+        tar_file, metadata_file = suggested_filenames(test_backup)
         client.list_objects_v2.return_value = {
             "Contents": [{"Key": tar_file}, {"Key": metadata_file}]
         }
@@ -37,7 +62,7 @@ def mock_client() -> Generator[AsyncMock]:
                 yield b"backup data"
 
             async def read(self) -> bytes:
-                return json.dumps(TEST_BACKUP.as_dict()).encode()
+                return json.dumps(test_backup.as_dict()).encode()
 
         client.get_object.return_value = {"Body": MockStream()}
         client.head_bucket.return_value = {}

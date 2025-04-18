@@ -11,6 +11,7 @@ import pytest
 
 from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, AgentBackup
 from homeassistant.components.s3.backup import (
+    MULTIPART_MIN_PART_SIZE_BYTES,
     BotoCoreError,
     S3BackupAgent,
     async_register_backup_agents_listener,
@@ -26,7 +27,7 @@ from homeassistant.helpers.backup import async_initialize_backup
 from homeassistant.setup import async_setup_component
 
 from . import setup_integration
-from .const import TEST_BACKUP, USER_INPUT
+from .const import USER_INPUT
 
 from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator, MagicMock, WebSocketGenerator
@@ -100,6 +101,7 @@ async def test_agents_list_backups(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     mock_config_entry: MockConfigEntry,
+    test_backup: AgentBackup,
 ) -> None:
     """Test agent list backups."""
 
@@ -111,22 +113,22 @@ async def test_agents_list_backups(
     assert response["result"]["agent_errors"] == {}
     assert response["result"]["backups"] == [
         {
-            "addons": [],
+            "addons": test_backup.addons,
+            "backup_id": test_backup.backup_id,
+            "date": test_backup.date,
+            "database_included": test_backup.database_included,
+            "folders": test_backup.folders,
+            "homeassistant_included": test_backup.homeassistant_included,
+            "homeassistant_version": test_backup.homeassistant_version,
+            "name": test_backup.name,
+            "extra_metadata": test_backup.extra_metadata,
             "agents": {
                 f"{DOMAIN}.{mock_config_entry.entry_id}": {
-                    "protected": False,
-                    "size": 34519040,
+                    "protected": test_backup.protected,
+                    "size": test_backup.size,
                 }
             },
-            "backup_id": "23e64aec",
-            "date": "2024-11-22T11:48:48.727189+01:00",
-            "database_included": True,
-            "folders": [],
-            "homeassistant_included": True,
-            "homeassistant_version": "2024.12.0.dev0",
-            "name": "Core 2024.12.0.dev0",
             "failed_agent_ids": [],
-            "extra_metadata": {},
             "with_automatic_settings": None,
         }
     ]
@@ -136,32 +138,34 @@ async def test_agents_get_backup(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     mock_config_entry: MockConfigEntry,
+    test_backup: AgentBackup,
 ) -> None:
     """Test agent get backup."""
 
-    backup_id = TEST_BACKUP.backup_id
     client = await hass_ws_client(hass)
-    await client.send_json_auto_id({"type": "backup/details", "backup_id": backup_id})
+    await client.send_json_auto_id(
+        {"type": "backup/details", "backup_id": test_backup.backup_id}
+    )
     response = await client.receive_json()
 
     assert response["success"]
     assert response["result"]["agent_errors"] == {}
     assert response["result"]["backup"] == {
-        "addons": [],
+        "addons": test_backup.addons,
+        "backup_id": test_backup.backup_id,
+        "date": test_backup.date,
+        "database_included": test_backup.database_included,
+        "folders": test_backup.folders,
+        "homeassistant_included": test_backup.homeassistant_included,
+        "homeassistant_version": test_backup.homeassistant_version,
+        "name": test_backup.name,
+        "extra_metadata": test_backup.extra_metadata,
         "agents": {
             f"{DOMAIN}.{mock_config_entry.entry_id}": {
-                "protected": False,
-                "size": 34519040,
+                "protected": test_backup.protected,
+                "size": test_backup.size,
             }
         },
-        "backup_id": "23e64aec",
-        "date": "2024-11-22T11:48:48.727189+01:00",
-        "database_included": True,
-        "folders": [],
-        "homeassistant_included": True,
-        "homeassistant_version": "2024.12.0.dev0",
-        "extra_metadata": {},
-        "name": "Core 2024.12.0.dev0",
         "failed_agent_ids": [],
         "with_automatic_settings": None,
     }
@@ -189,6 +193,7 @@ async def test_agents_list_backups_with_corrupted_metadata(
     mock_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
+    test_backup: AgentBackup,
 ) -> None:
     """Test listing backups when one metadata file is corrupted."""
     # Create agent
@@ -209,7 +214,7 @@ async def test_agents_list_backups_with_corrupted_metadata(
     }
 
     # Mock responses for get_object calls
-    valid_metadata = json.dumps(TEST_BACKUP.as_dict())
+    valid_metadata = json.dumps(test_backup.as_dict())
     corrupted_metadata = "{invalid json content"
 
     async def mock_get_object(**kwargs):
@@ -228,7 +233,7 @@ async def test_agents_list_backups_with_corrupted_metadata(
 
     backups = await agent.async_list_backups()
     assert len(backups) == 1
-    assert backups[0].backup_id == TEST_BACKUP.backup_id
+    assert backups[0].backup_id == test_backup.backup_id
     assert "Failed to process metadata file" in caplog.text
 
 
@@ -282,56 +287,48 @@ async def test_agents_upload(
     caplog: pytest.LogCaptureFixture,
     mock_client: MagicMock,
     mock_config_entry: MockConfigEntry,
+    test_backup: AgentBackup,
 ) -> None:
     """Test agent upload backup."""
     client = await hass_client()
     with (
         patch(
             "homeassistant.components.backup.manager.BackupManager.async_get_backup",
-        ) as fetch_backup,
+            return_value=test_backup,
+        ),
         patch(
             "homeassistant.components.backup.manager.read_backup",
-            return_value=AgentBackup(
-                addons=[],
-                backup_id="23e64aec",
-                date="2024-11-22T11:48:48.727189+01:00",
-                database_included=True,
-                extra_metadata={},
-                folders=[],
-                homeassistant_included=True,
-                homeassistant_version="2024.12.0.dev0",
-                name="Core 2024.12.0.dev0",
-                protected=False,
-                size=34519040,
-            ),
+            return_value=test_backup,
         ),
         patch("pathlib.Path.open") as mocked_open,
     ):
-        mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
-        fetch_backup.return_value = AgentBackup(
-            addons=[],
-            backup_id="23e64aec",
-            date="2024-11-22T11:48:48.727189+01:00",
-            database_included=True,
-            extra_metadata={},
-            folders=[],
-            homeassistant_included=True,
-            homeassistant_version="2024.12.0.dev0",
-            name="Core 2024.12.0.dev0",
-            protected=False,
-            size=34519040,
+        # we must emit at least two chunks
+        # the "appendix" chunk triggers the upload of the final buffer part
+        mocked_open.return_value.read = Mock(
+            side_effect=[
+                b"a" * test_backup.size,
+                b"appendix",
+                b"",
+            ]
         )
         resp = await client.post(
             f"/api/backup/upload?agent_id={DOMAIN}.{mock_config_entry.entry_id}",
             data={"file": StringIO("test")},
         )
 
-    assert resp.status == 201
-    assert "Uploading backup 23e64aec" in caplog.text
-    mock_client.create_multipart_upload.assert_awaited_once()
-    mock_client.upload_part.assert_awaited()
-    mock_client.complete_multipart_upload.assert_awaited_once()
-    mock_client.put_object.assert_awaited_once()  # For metadata file
+        assert resp.status == 201
+        assert f"Uploading backup {test_backup.backup_id}" in caplog.text
+        if test_backup.size < MULTIPART_MIN_PART_SIZE_BYTES:
+            # single part + metadata both as regular upload (no multiparts)
+            assert mock_client.create_multipart_upload.await_count == 0
+            assert mock_client.put_object.await_count == 2
+        else:
+            assert "Uploading final part" in caplog.text
+            # 2 parts as multipart + metadata as regular upload
+            assert mock_client.create_multipart_upload.await_count == 1
+            assert mock_client.upload_part.await_count == 2
+            assert mock_client.complete_multipart_upload.await_count == 1
+            assert mock_client.put_object.await_count == 1
 
 
 async def test_agents_upload_network_failure(
@@ -339,47 +336,24 @@ async def test_agents_upload_network_failure(
     caplog: pytest.LogCaptureFixture,
     mock_client: MagicMock,
     mock_config_entry: MockConfigEntry,
+    test_backup: AgentBackup,
 ) -> None:
     """Test agent upload backup with network failure."""
     client = await hass_client()
     with (
         patch(
             "homeassistant.components.backup.manager.BackupManager.async_get_backup",
-        ) as fetch_backup,
+            return_value=test_backup,
+        ),
         patch(
             "homeassistant.components.backup.manager.read_backup",
-            return_value=AgentBackup(
-                addons=[],
-                backup_id="23e64aec",
-                date="2024-11-22T11:48:48.727189+01:00",
-                database_included=True,
-                extra_metadata={},
-                folders=[],
-                homeassistant_included=True,
-                homeassistant_version="2024.12.0.dev0",
-                name="Core 2024.12.0.dev0",
-                protected=False,
-                size=34519040,
-            ),
+            return_value=test_backup,
         ),
         patch("pathlib.Path.open") as mocked_open,
     ):
         mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
-        fetch_backup.return_value = AgentBackup(
-            addons=[],
-            backup_id="23e64aec",
-            date="2024-11-22T11:48:48.727189+01:00",
-            database_included=True,
-            extra_metadata={},
-            folders=[],
-            homeassistant_included=True,
-            homeassistant_version="2024.12.0.dev0",
-            name="Core 2024.12.0.dev0",
-            protected=False,
-            size=34519040,
-        )
         # simulate network failure
-        mock_client.upload_part.side_effect = (
+        mock_client.put_object.side_effect = mock_client.upload_part.side_effect = (
             mock_client.abort_multipart_upload.side_effect
         ) = ConnectTimeoutError(endpoint_url=USER_INPUT[CONF_ENDPOINT_URL])
         resp = await client.post(
@@ -389,10 +363,6 @@ async def test_agents_upload_network_failure(
 
     assert resp.status == 201
     assert "Upload failed for s3" in caplog.text
-    assert "Failed to abort multipart upload" in caplog.text
-    mock_client.create_multipart_upload.assert_awaited_once()
-    mock_client.upload_part.assert_awaited()
-    mock_client.abort_multipart_upload.assert_awaited_once()
 
 
 async def test_agents_download(
@@ -417,6 +387,7 @@ async def test_error_during_delete(
     hass_ws_client: WebSocketGenerator,
     mock_client: MagicMock,
     mock_config_entry: MockConfigEntry,
+    test_backup: AgentBackup,
 ) -> None:
     """Test the error wrapper."""
     mock_client.delete_object.side_effect = BotoCoreError
@@ -426,7 +397,7 @@ async def test_error_during_delete(
     await client.send_json_auto_id(
         {
             "type": "backup/delete",
-            "backup_id": TEST_BACKUP.backup_id,
+            "backup_id": test_backup.backup_id,
         }
     )
     response = await client.receive_json()
@@ -442,6 +413,7 @@ async def test_error_during_delete(
 async def test_cache_expiration(
     hass: HomeAssistant,
     mock_client: MagicMock,
+    test_backup: AgentBackup,
 ) -> None:
     """Test that the cache expires correctly."""
     # Mock the entry
@@ -457,7 +429,7 @@ async def test_cache_expiration(
     agent = S3BackupAgent(hass, mock_entry)
 
     # Mock metadata response
-    metadata_content = json.dumps(TEST_BACKUP.as_dict())
+    metadata_content = json.dumps(test_backup.as_dict())
     mock_body = AsyncMock()
     mock_body.read.return_value = metadata_content.encode()
     mock_client.list_objects_v2.return_value = {
