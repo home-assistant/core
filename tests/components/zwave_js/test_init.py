@@ -11,12 +11,14 @@ from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import AddonsOptions
 import pytest
 from zwave_js_server.client import Client
+from zwave_js_server.const import SecurityClass
 from zwave_js_server.event import Event
 from zwave_js_server.exceptions import (
     BaseZwaveJSServerError,
     InvalidServerVersion,
     NotConnected,
 )
+from zwave_js_server.model.controller import ProvisioningEntry
 from zwave_js_server.model.node import Node, NodeDataType
 from zwave_js_server.model.version import VersionInfo
 
@@ -24,7 +26,7 @@ from homeassistant.components.hassio import HassioAPIError
 from homeassistant.components.logger import DOMAIN as LOGGER_DOMAIN, SERVICE_SET_LEVEL
 from homeassistant.components.persistent_notification import async_dismiss
 from homeassistant.components.zwave_js import DOMAIN
-from homeassistant.components.zwave_js.helpers import get_device_id
+from homeassistant.components.zwave_js.helpers import get_device_id, get_device_id_ext
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import CoreState, HomeAssistant
@@ -44,6 +46,8 @@ from tests.common import (
     async_get_persistent_notifications,
 )
 from tests.typing import WebSocketGenerator
+
+CONTROLLER_PATCH_PREFIX = "zwave_js_server.model.controller.Controller"
 
 
 @pytest.fixture(name="connect_timeout")
@@ -277,10 +281,13 @@ async def test_listen_done_during_setup_after_forward_entry(
     """Test listen task finishing during setup after forward entry."""
     assert hass.state is CoreState.running
 
+    original_send_command_side_effect = client.async_send_command.side_effect
+
     async def send_command_side_effect(*args: Any, **kwargs: Any) -> None:
         """Mock send command."""
         listen_block.set()
         getattr(listen_result, listen_future_result_method)(listen_future_result)
+        client.async_send_command.side_effect = original_send_command_side_effect
         # Yield to allow the listen task to run
         await asyncio.sleep(0)
 
@@ -425,6 +432,46 @@ async def test_on_node_added_ready(
     assert device_registry.async_get_device(
         identifiers={(DOMAIN, air_temperature_device_id)}
     )
+
+
+async def test_on_node_added_preprovisioned(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    multisensor_6_state,
+    client,
+    integration,
+) -> None:
+    """Test node added event with a preprovisioned device."""
+    dsk = "test"
+    node = Node(client, deepcopy(multisensor_6_state))
+    device = device_registry.async_get_or_create(
+        config_entry_id=integration.entry_id,
+        identifiers={(DOMAIN, f"provision_{dsk}")},
+    )
+    provisioning_entry = ProvisioningEntry.from_dict(
+        {
+            "dsk": dsk,
+            "securityClasses": [SecurityClass.S2_UNAUTHENTICATED],
+            "device_id": device.id,
+        }
+    )
+    with patch(
+        f"{CONTROLLER_PATCH_PREFIX}.async_get_provisioning_entry",
+        side_effect=lambda id: provisioning_entry if id == node.node_id else None,
+    ):
+        event = {"node": node}
+        client.driver.controller.emit("node added", event)
+        await hass.async_block_till_done()
+
+        device = device_registry.async_get(device.id)
+        assert device
+        assert device.identifiers == {
+            get_device_id(client.driver, node),
+            get_device_id_ext(client.driver, node),
+        }
+        assert device.sw_version == node.firmware_version
+        # There should only be the controller and the preprovisioned device
+        assert len(device_registry.devices) == 2
 
 
 @pytest.mark.usefixtures("integration")
@@ -2045,7 +2092,14 @@ async def test_server_logging(hass: HomeAssistant, client: MagicMock) -> None:
     # is enabled
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    assert len(client.async_send_command.call_args_list) == 0
+    assert len(client.async_send_command.call_args_list) == 2
+    assert client.async_send_command.call_args_list[0][0][0] == {
+        "command": "controller.get_provisioning_entries",
+    }
+    assert client.async_send_command.call_args_list[1][0][0] == {
+        "command": "controller.get_provisioning_entry",
+        "dskOrNodeId": 1,
+    }
     assert not client.enable_server_logging.called
     assert not client.disable_server_logging.called
 
