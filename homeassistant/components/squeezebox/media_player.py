@@ -23,6 +23,8 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
     RepeatMode,
+    SearchMedia,
+    SearchMediaQuery,
     async_process_play_media_url,
 )
 from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY
@@ -204,6 +206,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         | MediaPlayerEntityFeature.GROUPING
         | MediaPlayerEntityFeature.MEDIA_ENQUEUE
         | MediaPlayerEntityFeature.MEDIA_ANNOUNCE
+        | MediaPlayerEntityFeature.SEARCH_MEDIA
     )
     _attr_has_entity_name = True
     _attr_name = None
@@ -544,6 +547,88 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         if index is not None:
             await self._player.async_index(index)
         await self.coordinator.async_refresh()
+
+    async def async_search_media(
+        self,
+        query: SearchMediaQuery,
+    ) -> SearchMedia:
+        """Search the media player."""
+
+        if not query.media_content_type or query.media_content_type not in [
+            "favorites",
+            "albums",
+            "artists",
+            "genres",
+            "tracks",
+            "playlists",
+            "new music",
+            "album artists",
+        ]:
+            _LOGGER.debug("Invalid Media Content Type: %s", query.media_content_type)
+            raise ServiceValidationError(
+                "Media Content Type must be specified and must be one of favorites, albums, artists, genres, tracks, playlists, new music, album artists"
+            )
+
+        if query.media_content_type == "favorites":
+            parameter = [
+                query.media_content_type,
+                "items",
+                "0",
+                str(self.browse_limit),
+                "search:" + query.search_query,
+                "want_url:1",
+            ]
+            result_loop = "loop_loop"
+        else:
+            parameter = [
+                query.media_content_type,
+                "0",
+                str(self.browse_limit),
+                "search:" + query.search_query,
+                "want_url:1",
+            ]
+            result_loop = f"{query.media_content_type}_loop"
+
+        match query.media_content_type:
+            case "albums":
+                parameter.append("tags:laay")
+            case "tracks":
+                parameter.append("tags:aglQrTy")
+            case "new music":
+                parameter.append("tags:laay")
+                result_loop = "albums_loop"
+            case "album artists":
+                result_loop = "artists_loop"
+
+        result = await self._player.async_query(*parameter)
+        search_data = []
+
+        if result:
+            for item in result[result_loop]:
+                child_data = BrowseMedia(
+                    media_content_id=item["id"],
+                    title=item["title"],
+                    media_content_type=item["type"],
+                    media_class="None",
+                    can_expand=False,
+                    can_play=True,
+                )
+                search_data.append(child_data)
+            search_response = []
+            search_response.append(
+                BrowseMedia(
+                    title=str(result.get("title")),
+                    media_class="class",
+                    children_media_class="children",
+                    media_content_id="id",
+                    media_content_type="type",
+                    can_play=True,
+                    children=search_data,
+                    can_expand=True,
+                )
+            )
+            return SearchMedia(result=search_response)
+        raise ServiceValidationError("Action returned no result")
 
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set the repeat mode."""
