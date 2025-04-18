@@ -56,11 +56,23 @@ def mock_client() -> Generator[MagicMock]:
         yield client
 
 
+@pytest.fixture(autouse=True)
+async def mock_create_client():
+    """Mock the AioSession.create_client."""
+    with patch(
+        "homeassistant.components.s3.api.AioSession.create_client",
+        autospec=True,
+    ) as create_client:
+        client = create_client.return_value
+        client.head_bucket = AsyncMock()
+        create_client.return_value.__aenter__.return_value = client
+        yield client
+
+
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
-        unique_id="test",
         entry_id="test",
         title="test",
         domain=DOMAIN,

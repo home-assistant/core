@@ -27,7 +27,6 @@ async def _async_start_flow(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
 
     return await hass.config_entries.flow.async_configure(
@@ -74,7 +73,6 @@ async def test_flow_errors(
         result["flow_id"],
         USER_INPUT,
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test"
@@ -86,8 +84,7 @@ async def test_abort_if_already_configured(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test we abort if the account is already configured."""
-    result = await _async_start_flow(hass)
-    assert result["type"] is FlowResultType.CREATE_ENTRY
+    mock_config_entry.add_to_hass(hass)
     result = await _async_start_flow(hass)
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

@@ -5,7 +5,7 @@ import functools
 import json
 import logging
 from time import time
-from typing import Any, cast
+from typing import Any
 
 from botocore.exceptions import BotoCoreError
 
@@ -88,10 +88,10 @@ class S3BackupAgent(BackupAgent):
         """Initialize the S3 agent."""
         super().__init__()
         self._client = entry.runtime_data
-        self._bucket = cast(str, entry.data[CONF_BUCKET])
+        self._bucket: str = entry.data[CONF_BUCKET]
         self.name = entry.title
-        self.unique_id = cast(str, entry.unique_id)
-        self._backup_cache = cast(dict[str, AgentBackup], {})
+        self.unique_id = entry.entry_id
+        self._backup_cache: dict[str, AgentBackup] = {}
         self._cache_expiration = time()
 
     @handle_boto_errors
@@ -134,7 +134,7 @@ class S3BackupAgent(BackupAgent):
             )
 
             upload_id = multipart_upload["UploadId"]
-            parts: list = []
+            parts = []
             part_number = 1
 
             stream = await open_stream()
@@ -244,8 +244,7 @@ class S3BackupAgent(BackupAgent):
                     Bucket=self._bucket, Key=metadata_file["Key"]
                 )
                 metadata_content = await metadata_response["Body"].read()
-                backup = AgentBackup.from_dict(json.loads(metadata_content))
-                backups[backup.backup_id] = backup
+                metadata_json = json.loads(metadata_content)
             except (BotoCoreError, json.JSONDecodeError) as err:
                 _LOGGER.warning(
                     "Failed to process metadata file %s: %s",
@@ -253,6 +252,8 @@ class S3BackupAgent(BackupAgent):
                     err,
                 )
                 continue
+            backup = AgentBackup.from_dict(metadata_json)
+            backups[backup.backup_id] = backup
 
         self._backup_cache = backups
         self._cache_expiration = time() + CACHE_TTL

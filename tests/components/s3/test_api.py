@@ -1,7 +1,5 @@
 """Test the S3 API."""
 
-from unittest.mock import AsyncMock, patch
-
 import botocore
 import pytest
 
@@ -29,19 +27,6 @@ def user_input():
         CONF_ACCESS_KEY_ID: "test_key",
         CONF_BUCKET: "test_bucket",
     }
-
-
-@pytest.fixture(autouse=True)
-async def mock_create_client():
-    """Mock the AioSession.create_client."""
-    with patch(
-        "homeassistant.components.s3.api.AioSession.create_client",
-        autospec=True,
-    ) as create_client:
-        client = create_client.return_value
-        client.head_bucket = AsyncMock()
-        create_client.return_value.__aenter__.return_value = client
-        yield client
 
 
 async def test_get_client_success(user_input) -> None:
