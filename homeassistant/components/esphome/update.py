@@ -26,6 +26,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.enum import try_parse_enum
 
+from .const import DOMAIN
 from .coordinator import ESPHomeDashboardCoordinator
 from .dashboard import async_get_dashboard
 from .domain_data import DomainData
@@ -201,16 +202,23 @@ class ESPHomeDashboardUpdateEntity(
             api = coordinator.api
             device = coordinator.data.get(self._device_info.name)
             assert device is not None
+            configuration = device["configuration"]
             try:
-                if not await api.compile(device["configuration"]):
+                if not await api.compile(configuration):
                     raise HomeAssistantError(
-                        f"Error compiling {device['configuration']}; "
-                        "Try again in ESPHome dashboard for more information."
+                        translation_domain=DOMAIN,
+                        translation_key="error_compiling",
+                        translation_placeholders={
+                            "configuration": configuration,
+                        },
                     )
-                if not await api.upload(device["configuration"], "OTA"):
+                if not await api.upload(configuration, "OTA"):
                     raise HomeAssistantError(
-                        f"Error updating {device['configuration']} via OTA; "
-                        "Try again in ESPHome dashboard for more information."
+                        translation_domain=DOMAIN,
+                        translation_key="error_uploading",
+                        translation_placeholders={
+                            "configuration": configuration,
+                        },
                     )
             finally:
                 await self.coordinator.async_request_refresh()
