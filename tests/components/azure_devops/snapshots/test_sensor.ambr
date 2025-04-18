@@ -131,7 +131,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'CI latest build id',
+    'original_name': 'CI latest build ID',
     'platform': 'azure_devops',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -143,7 +143,7 @@
 # name: test_sensors[sensor.testproject_ci_latest_build_id-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'testproject CI latest build id',
+      'friendly_name': 'testproject CI latest build ID',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.testproject_ci_latest_build_id',
@@ -462,7 +462,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'CI latest build url',
+    'original_name': 'CI latest build URL',
     'platform': 'azure_devops',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -474,7 +474,7 @@
 # name: test_sensors[sensor.testproject_ci_latest_build_url-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'testproject CI latest build url',
+      'friendly_name': 'testproject CI latest build URL',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.testproject_ci_latest_build_url',
@@ -526,7 +526,7 @@
 # name: test_sensors_missing_data[sensor.testproject_ci_latest_build_id-state-missing-data]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'testproject CI latest build id',
+      'friendly_name': 'testproject CI latest build ID',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.testproject_ci_latest_build_id',
@@ -619,7 +619,7 @@
 # name: test_sensors_missing_data[sensor.testproject_ci_latest_build_url-state-missing-data]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'testproject CI latest build url',
+      'friendly_name': 'testproject CI latest build URL',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.testproject_ci_latest_build_url',

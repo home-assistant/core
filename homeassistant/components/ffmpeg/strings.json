@@ -2,7 +2,7 @@
   "services": {
     "restart": {
       "name": "[%key:common::action::restart%]",
-      "description": "Sends a restart command to a ffmpeg based sensor.",
+      "description": "Sends a restart command to an FFmpeg-based sensor.",
       "fields": {
         "entity_id": {
           "name": "Entity",
@@ -12,7 +12,7 @@
     },
     "start": {
       "name": "[%key:common::action::start%]",
-      "description": "Sends a start command to a ffmpeg based sensor.",
+      "description": "Sends a start command to an FFmpeg-based sensor.",
       "fields": {
         "entity_id": {
           "name": "Entity",
@@ -22,7 +22,7 @@
     },
     "stop": {
       "name": "[%key:common::action::stop%]",
-      "description": "Sends a stop command to a ffmpeg based sensor.",
+      "description": "Sends a stop command to an FFmpeg-based sensor.",
       "fields": {
         "entity_id": {
           "name": "Entity",

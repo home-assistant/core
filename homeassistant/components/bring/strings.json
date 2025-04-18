@@ -13,7 +13,7 @@
         },
         "data_description": {
           "email": "The email address associated with your Bring! account.",
-          "password": "The password to login to your Bring! account."
+          "password": "The password to log in to your Bring! account."
         }
       },
       "reauth_confirm": {

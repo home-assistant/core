@@ -142,6 +142,12 @@ class CambridgeAudioDevice(CambridgeAudioEntity, MediaPlayerEntity):
     @property
     def media_artist(self) -> str | None:
         """Artist of current playing media, music track only."""
+        if (
+            not self.client.play_state.metadata.artist
+            and self.client.state.source == "IR"
+        ):
+            # Return channel instead of artist when playing internet radio
+            return self.client.play_state.metadata.station
         return self.client.play_state.metadata.artist
 
     @property
@@ -168,6 +174,11 @@ class CambridgeAudioDevice(CambridgeAudioEntity, MediaPlayerEntity):
     def media_position_updated_at(self) -> datetime:
         """Last time the media position was updated."""
         return self.client.position_last_updated
+
+    @property
+    def media_channel(self) -> str | None:
+        """Channel currently playing."""
+        return self.client.play_state.metadata.station
 
     @property
     def is_volume_muted(self) -> bool | None:

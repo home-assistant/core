@@ -126,7 +126,7 @@ async def test_calls_not_allowed(
             await done.wait()
 
     assert sum(played_audio_bytes) > 0
-    assert played_audio_bytes == snapshot()
+    assert played_audio_bytes == snapshot
 
 
 async def test_pipeline_not_found(
@@ -846,7 +846,7 @@ async def test_pipeline_error(
             await done.wait()
 
         assert sum(played_audio_bytes) > 0
-        assert played_audio_bytes == snapshot()
+        assert played_audio_bytes == snapshot
 
 
 @pytest.mark.usefixtures("socket_enabled")

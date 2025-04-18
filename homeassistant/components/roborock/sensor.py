@@ -36,7 +36,13 @@ from .coordinator import (
     RoborockDataUpdateCoordinator,
     RoborockDataUpdateCoordinatorA01,
 )
-from .entity import RoborockCoordinatedEntityA01, RoborockCoordinatedEntityV1
+from .entity import (
+    RoborockCoordinatedEntityA01,
+    RoborockCoordinatedEntityV1,
+    RoborockEntity,
+)
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -304,7 +310,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Roborock vacuum sensors."""
     coordinators = config_entry.runtime_data
-    async_add_entities(
+    entities: list[RoborockEntity] = [
         RoborockSensorEntity(
             coordinator,
             description,
@@ -312,8 +318,9 @@ async def async_setup_entry(
         for coordinator in coordinators.v1
         for description in SENSOR_DESCRIPTIONS
         if description.value_fn(coordinator.roborock_device_info.props) is not None
-    )
-    async_add_entities(
+    ]
+    entities.extend(RoborockCurrentRoom(coordinator) for coordinator in coordinators.v1)
+    entities.extend(
         RoborockSensorEntityA01(
             coordinator,
             description,
@@ -322,6 +329,7 @@ async def async_setup_entry(
         for description in A01_SENSOR_DESCRIPTIONS
         if description.data_protocol in coordinator.data
     )
+    async_add_entities(entities)
 
 
 class RoborockSensorEntity(RoborockCoordinatedEntityV1, SensorEntity):
@@ -349,6 +357,48 @@ class RoborockSensorEntity(RoborockCoordinatedEntityV1, SensorEntity):
         return self.entity_description.value_fn(
             self.coordinator.roborock_device_info.props
         )
+
+
+class RoborockCurrentRoom(RoborockCoordinatedEntityV1, SensorEntity):
+    """Representation of a Current Room Sensor."""
+
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_translation_key = "current_room"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(
+        self,
+        coordinator: RoborockDataUpdateCoordinator,
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__(
+            f"current_room_{coordinator.duid_slug}",
+            coordinator,
+            None,
+            is_dock_entity=False,
+        )
+
+    @property
+    def options(self) -> list[str]:
+        """Return the currently valid rooms."""
+        if (
+            self.coordinator.current_map is not None
+            and self.coordinator.current_map in self.coordinator.maps
+        ):
+            return list(
+                self.coordinator.maps[self.coordinator.current_map].rooms.values()
+            )
+        return []
+
+    @property
+    def native_value(self) -> str | None:
+        """Return the value reported by the sensor."""
+        if (
+            self.coordinator.current_map is not None
+            and self.coordinator.current_map in self.coordinator.maps
+        ):
+            return self.coordinator.maps[self.coordinator.current_map].current_room
+        return None
 
 
 class RoborockSensorEntityA01(RoborockCoordinatedEntityA01, SensorEntity):

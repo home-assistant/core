@@ -252,8 +252,8 @@ async def test_setup_after_deps_all_present(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_setup_after_deps_in_stage_1_ignored(hass: HomeAssistant) -> None:
-    """Test after_dependencies are ignored in stage 1."""
+async def test_setup_after_deps_in_stage_1(hass: HomeAssistant) -> None:
+    """Test after_dependencies are promoted in stage 1."""
     # This test relies on this
     assert "cloud" in bootstrap.STAGE_1_INTEGRATIONS
     order = []
@@ -295,7 +295,7 @@ async def test_setup_after_deps_in_stage_1_ignored(hass: HomeAssistant) -> None:
 
     assert "normal_integration" in hass.config.components
     assert "cloud" in hass.config.components
-    assert order == ["cloud", "an_after_dep", "normal_integration"]
+    assert order == ["an_after_dep", "normal_integration", "cloud"]
 
 
 @pytest.mark.parametrize("load_registries", [False])
@@ -304,7 +304,7 @@ async def test_setup_after_deps_manifests_are_loaded_even_if_not_setup(
 ) -> None:
     """Ensure we preload manifests for after deps even if they are not setup.
 
-    Its important that we preload the after dep manifests even if they are not setup
+    It's important that we preload the after dep manifests even if they are not setup
     since we will always have to check their requirements since any integration
     that lists an after dep may import it and we have to ensure requirements are
     up to date before the after dep can be imported.
@@ -371,7 +371,7 @@ async def test_setup_after_deps_manifests_are_loaded_even_if_not_setup(
     assert "an_after_dep" not in hass.config.components
     assert "an_after_dep_of_after_dep" not in hass.config.components
     assert "an_after_dep_of_after_dep_of_after_dep" not in hass.config.components
-    assert order == ["cloud", "normal_integration"]
+    assert order == ["normal_integration", "cloud"]
     assert loader.async_get_loaded_integration(hass, "an_after_dep") is not None
     assert (
         loader.async_get_loaded_integration(hass, "an_after_dep_of_after_dep")
@@ -456,9 +456,9 @@ async def test_setup_frontend_before_recorder(hass: HomeAssistant) -> None:
 
     assert order == [
         "http",
+        "an_after_dep",
         "frontend",
         "recorder",
-        "an_after_dep",
         "normal_integration",
     ]
 
@@ -703,8 +703,8 @@ async def test_setup_hass_takes_longer_than_log_slow_startup(
         return True
 
     with (
-        patch.object(bootstrap, "LOG_SLOW_STARTUP_INTERVAL", 0.1),
-        patch.object(bootstrap, "SLOW_STARTUP_CHECK_INTERVAL", 0.05),
+        patch.object(bootstrap, "LOG_SLOW_STARTUP_INTERVAL", 0.005),
+        patch.object(bootstrap, "SLOW_STARTUP_CHECK_INTERVAL", 0.005),
         patch(
             "homeassistant.components.frontend.async_setup",
             side_effect=_async_setup_that_blocks_startup,
@@ -924,7 +924,7 @@ async def test_setup_hass_invalid_core_config(
                 "external_url": "https://abcdef.ui.nabu.casa",
             },
             "map": {},
-            "person": {"invalid": True},
+            "frontend": {"invalid": True},
         }
     ],
 )
@@ -1546,41 +1546,75 @@ def test_should_rollover_is_always_false() -> None:
 async def test_no_base_platforms_loaded_before_recorder(hass: HomeAssistant) -> None:
     """Verify stage 0 not load base platforms before recorder.
 
-    If a stage 0 integration has a base platform in its dependencies and
-    it loads before the recorder, it may load integrations that expect
-    the recorder to be loaded. We need to ensure that no stage 0 integration
-    has a base platform in its dependencies that loads before the recorder.
+    If a stage 0 integration implements base platforms or has a base
+    platform in its dependencies and it loads before the recorder,
+    because of platform-based YAML schema, it may inadvertently
+    load integrations that expect the recorder to already be loaded.
+    We need to ensure that doesn't happen.
     """
+    IGNORE_BASE_PLATFORM_FILES = {
+        # config/scene.py is not a platform
+        "config": {"scene.py"},
+        # websocket_api/sensor.py is using the platform YAML schema
+        # we must not migrate it to an integration key until
+        # we remove the platform YAML schema support for sensors
+        "websocket_api": {"sensor.py"},
+    }
+    # person is a special case because it is a base platform
+    # in the sense that it creates entities in its namespace
+    # but its not used by other integrations to create entities
+    # so we want to make sure it is not loaded before the recorder
+    base_platforms = BASE_PLATFORMS | {"person"}
+
     integrations_before_recorder: set[str] = set()
     for _, integrations, _ in bootstrap.STAGE_0_INTEGRATIONS:
         integrations_before_recorder |= integrations
         if "recorder" in integrations:
             break
+    else:
+        pytest.fail("recorder not in stage 0")
 
-    integrations_or_execs = await loader.async_get_integrations(
+    integrations_or_excs = await loader.async_get_integrations(
         hass, integrations_before_recorder
     )
-    integrations: list[Integration] = []
-    resolve_deps_tasks: list[asyncio.Task[bool]] = []
-    for integration in integrations_or_execs.values():
-        assert not isinstance(integrations_or_execs, Exception)
-        integrations.append(integration)
-        resolve_deps_tasks.append(integration.resolve_dependencies())
+    integrations: dict[str, Integration] = {}
+    for domain, integration in integrations_or_excs.items():
+        assert not isinstance(integrations_or_excs, Exception)
+        integrations[domain] = integration
 
-    await asyncio.gather(*resolve_deps_tasks)
-    base_platform_py_files = {f"{base_platform}.py" for base_platform in BASE_PLATFORMS}
-    for integration in integrations:
-        domain_with_base_platforms_deps = BASE_PLATFORMS.intersection(
-            integration.all_dependencies
+    integrations_all_dependencies = (
+        await loader.resolve_integrations_after_dependencies(
+            hass, integrations.values(), ignore_exceptions=True
         )
-        assert not domain_with_base_platforms_deps, (
-            f"{integration.domain} has base platforms in dependencies: "
-            f"{domain_with_base_platforms_deps}"
+    )
+    all_integrations = integrations.copy()
+    all_integrations.update(
+        (domain, loader.async_get_loaded_integration(hass, domain))
+        for domains in integrations_all_dependencies.values()
+        for domain in domains
+    )
+
+    problems: dict[str, set[str]] = {}
+    for domain in integrations:
+        domain_with_base_platforms_deps = (
+            integrations_all_dependencies[domain] & base_platforms
         )
-        integration_top_level_files = base_platform_py_files.intersection(
-            integration._top_level_files
+        if domain_with_base_platforms_deps:
+            problems[domain] = domain_with_base_platforms_deps
+    assert not problems, (
+        f"Integrations that are setup before recorder have base platforms in their dependencies: {problems}"
+    )
+
+    base_platform_py_files = {f"{base_platform}.py" for base_platform in base_platforms}
+
+    for domain, integration in all_integrations.items():
+        integration_base_platforms_files = (
+            integration._top_level_files & base_platform_py_files
         )
-        assert not integration_top_level_files, (
-            f"{integration.domain} has base platform files in top level files: "
-            f"{integration_top_level_files}"
-        )
+        if ignore := IGNORE_BASE_PLATFORM_FILES.get(domain):
+            integration_base_platforms_files -= ignore
+        if integration_base_platforms_files:
+            problems[domain] = integration_base_platforms_files
+    assert not problems, (
+        f"Integrations that are setup before recorder implement base platforms: {problems}"
+    )

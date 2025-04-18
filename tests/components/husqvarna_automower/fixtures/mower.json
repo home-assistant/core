@@ -176,7 +176,7 @@
         ],
         "statistics": {
           "cuttingBladeUsageTime": 123,
-          "downTime": 123,
+          "downTime": 3600,
           "numberOfChargingCycles": 1380,
           "numberOfCollisions": 11396,
           "totalChargingTime": 4334400,
@@ -184,7 +184,7 @@
           "totalDriveDistance": 1780272,
           "totalRunningTime": 4564800,
           "totalSearchingTime": 370800,
-          "upTime": 456
+          "upTime": 7200
         },
         "stayOutZones": {
           "dirty": false,
