@@ -136,7 +136,14 @@ async def async_browse_media(
     try:
         item = await _get_media_item(hass, media_content_id, None).async_browse()
     except ValueError as err:
-        raise BrowseError(str(err)) from err
+        raise BrowseError(
+            translation_domain=DOMAIN,
+            translation_key="browse_media_failed",
+            translation_placeholders={
+                "media_content_id": str(media_content_id),
+                "error": str(err),
+            },
+        ) from err
 
     if content_filter is None or item.children is None:
         return item
