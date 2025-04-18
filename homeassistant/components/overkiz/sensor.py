@@ -126,6 +126,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         name="Outlet engine",
         icon="mdi:fan-chevron-down",
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     OverkizSensorDescription(
