@@ -1,5 +1,7 @@
-"""Dreo for device."""
+"""Dreo device base entity."""
 
+from collections.abc import Callable
+from functools import partial
 from typing import Any
 
 from hscloud.hscloudexception import (
@@ -62,10 +64,25 @@ class DreoEntity(CoordinatorEntity[DreoDataUpdateCoordinator]):
         """Return device availability."""
         return self.coordinator.data.get("available", False)
 
-    async def _send_command_and_update(self, translation_key: str, **kwargs) -> None:
-        """Call a hscloud device command, handle errors, and update entity state."""
+    async def _try_command(
+        self, translation_key: str, func: Callable, *args: Any, **kwargs: Any
+    ) -> bool:
+        """Call a device command handling error messages.
+
+        Args:
+            translation_key: Translation key for error message
+            func: Function to call
+            args: Arguments for the function
+            kwargs: Keyword arguments for the function
+
+        Returns:
+            True if command succeeded, False otherwise
+
+        """
         try:
-            self.coordinator.client.update_status(self._device_id, **kwargs)
+            await self.coordinator.hass.async_add_executor_job(
+                partial(func, *args, **kwargs)
+            )
             await self.coordinator.async_request_refresh()
         except (
             HsCloudException,
@@ -73,6 +90,21 @@ class DreoEntity(CoordinatorEntity[DreoDataUpdateCoordinator]):
             HsCloudAccessDeniedException,
             HsCloudFlowControlException,
         ) as ex:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN, translation_key=translation_key
-            ) from ex
+            if self.available:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN, translation_key=translation_key
+                ) from ex
+            return False
+        else:
+            return True
+
+    async def _send_command_and_update(
+        self, translation_key: str, **kwargs: Any
+    ) -> None:
+        """Call a hscloud device command, handle errors, and update entity state."""
+        await self._try_command(
+            translation_key,
+            self.coordinator.client.update_status,
+            self._device_id,
+            **kwargs,
+        )
