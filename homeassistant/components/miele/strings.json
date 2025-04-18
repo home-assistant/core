@@ -104,7 +104,7 @@
       "name": "Wine cabinet freezer"
     },
     "hob_extraction": {
-      "name": "How with extraction"
+      "name": "Hob with extraction"
     },
     "washer_dryer": {
       "name": "Washer dryer"
@@ -135,9 +135,6 @@
       }
     },
     "sensor": {
-      "elapsed_time": {
-        "name": "Elapsed time"
-      },
       "energy_consumption": {
         "name": "Energy consumption"
       },
@@ -766,12 +763,6 @@
           "yellow_split_peas": "Yellow split peas",
           "zander_fillet": "Zander (fillet)"
         }
-      },
-      "remaining_time": {
-        "name": "Remaining time"
-      },
-      "start_time": {
-        "name": "Start in"
       },
       "spin_speed": {
         "name": "Spin speed"

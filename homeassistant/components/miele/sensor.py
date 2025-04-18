@@ -20,7 +20,6 @@ from homeassistant.const import (
     EntityCategory,
     UnitOfEnergy,
     UnitOfTemperature,
-    UnitOfTime,
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
@@ -190,58 +189,6 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             MieleAppliance.TUMBLE_DRYER,
             MieleAppliance.TUMBLE_DRYER_SEMI_PROFESSIONAL,
             MieleAppliance.DISHWASHER,
-            MieleAppliance.OVEN,
-            MieleAppliance.OVEN_MICROWAVE,
-            MieleAppliance.STEAM_OVEN,
-            MieleAppliance.MICROWAVE,
-            MieleAppliance.ROBOT_VACUUM_CLEANER,
-            MieleAppliance.WASHER_DRYER,
-            MieleAppliance.STEAM_OVEN_COMBI,
-            MieleAppliance.STEAM_OVEN_MICRO,
-            MieleAppliance.DIALOG_OVEN,
-            MieleAppliance.STEAM_OVEN_MK2,
-        ),
-        description=MieleSensorDescription(
-            key="state_remaining_time",
-            translation_key="remaining_time",
-            value_fn=lambda value: value.state_remaining_time,
-            device_class=SensorDeviceClass.DURATION,
-            native_unit_of_measurement=UnitOfTime.MINUTES,
-            entity_category=EntityCategory.DIAGNOSTIC,
-        ),
-    ),
-    MieleSensorDefinition(
-        types=(
-            MieleAppliance.WASHING_MACHINE,
-            MieleAppliance.TUMBLE_DRYER,
-            MieleAppliance.DISHWASHER,
-            MieleAppliance.OVEN,
-            MieleAppliance.OVEN_MICROWAVE,
-            MieleAppliance.STEAM_OVEN,
-            MieleAppliance.MICROWAVE,
-            MieleAppliance.WASHER_DRYER,
-            MieleAppliance.STEAM_OVEN_COMBI,
-            MieleAppliance.STEAM_OVEN_MICRO,
-            MieleAppliance.DIALOG_OVEN,
-            MieleAppliance.ROBOT_VACUUM_CLEANER,
-            MieleAppliance.STEAM_OVEN_MK2,
-        ),
-        description=MieleSensorDescription(
-            key="state_elapsed_time",
-            translation_key="elapsed_time",
-            value_fn=lambda value: value.state_elapsed_time,
-            device_class=SensorDeviceClass.DURATION,
-            native_unit_of_measurement=UnitOfTime.MINUTES,
-            entity_category=EntityCategory.DIAGNOSTIC,
-        ),
-    ),
-    MieleSensorDefinition(
-        types=(
-            MieleAppliance.WASHING_MACHINE,
-            MieleAppliance.WASHING_MACHINE_SEMI_PROFESSIONAL,
-            MieleAppliance.TUMBLE_DRYER,
-            MieleAppliance.TUMBLE_DRYER_SEMI_PROFESSIONAL,
-            MieleAppliance.DISHWASHER,
             MieleAppliance.WASHER_DRYER,
         ),
         description=MieleSensorDescription(
@@ -268,35 +215,6 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             state_class=SensorStateClass.TOTAL_INCREASING,
             native_unit_of_measurement=UnitOfVolume.LITERS,
             entity_category=EntityCategory.DIAGNOSTIC,
-        ),
-    ),
-    MieleSensorDefinition(
-        types=(
-            MieleAppliance.WASHING_MACHINE,
-            MieleAppliance.WASHING_MACHINE_SEMI_PROFESSIONAL,
-            MieleAppliance.TUMBLE_DRYER,
-            MieleAppliance.TUMBLE_DRYER_SEMI_PROFESSIONAL,
-            MieleAppliance.DISHWASHER,
-            MieleAppliance.DISH_WARMER,
-            MieleAppliance.OVEN,
-            MieleAppliance.OVEN_MICROWAVE,
-            MieleAppliance.STEAM_OVEN,
-            MieleAppliance.MICROWAVE,
-            MieleAppliance.WASHER_DRYER,
-            MieleAppliance.STEAM_OVEN_COMBI,
-            MieleAppliance.STEAM_OVEN_MICRO,
-            MieleAppliance.DIALOG_OVEN,
-            MieleAppliance.STEAM_OVEN_MK2,
-        ),
-        description=MieleSensorDescription(
-            key="state_start_time",
-            translation_key="start_time",
-            value_fn=lambda value: value.state_start_time,
-            native_unit_of_measurement=UnitOfTime.MINUTES,
-            device_class=SensorDeviceClass.DURATION,
-            entity_category=EntityCategory.DIAGNOSTIC,
-            suggested_display_precision=2,
-            suggested_unit_of_measurement=UnitOfTime.HOURS,
         ),
     ),
     MieleSensorDefinition(
@@ -398,12 +316,6 @@ async def async_setup_entry(
                         entity_class = MielePhaseSensor
                     case "state_program_type":
                         entity_class = MieleTypeSensor
-                    case (
-                        "state_remaining_time"
-                        | "state_elapsed_time"
-                        | "state_start_time"
-                    ):
-                        entity_class = MieleDurationSensor
                     case _:
                         entity_class = MieleSensor
                 if (
@@ -543,15 +455,3 @@ class MieleProgramIdSensor(MieleSensor):
     def options(self) -> list[str]:
         """Return the options list for the actual device type."""
         return list(STATE_PROGRAM_ID.get(self.device.device_type, {}).values())
-
-
-class MieleDurationSensor(MieleSensor):
-    """Representation of the duration sensor."""
-
-    @property
-    def native_value(self) -> StateType:
-        """Return as minutes."""
-        value_list = cast(list[int], self.entity_description.value_fn(self.device))
-        if len(value_list) == 0:
-            return None
-        return value_list[0] * 60 + value_list[1]
