@@ -22,7 +22,7 @@ rules:
       https://esphome.io/components/api.html#user-defined-actions
   docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions: todo
+  docs-removal-instructions: done
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: todo
