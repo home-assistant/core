@@ -14,22 +14,29 @@ from tests.common import MockConfigEntry
 
 API_BASE_URL = "https://api.prowlapp.com/publicapi/"
 
+TEST_NAME = "TestProwl"
 TEST_API_KEY = "f00f" * 10
+OTHER_API_KEY = "beef" * 10
 CONF_INPUT = {CONF_API_KEY: TEST_API_KEY, CONF_NAME: "TestProwl"}
+CONF_INPUT_NEW_KEY = {CONF_API_KEY: OTHER_API_KEY}
 INVALID_API_KEY_ERROR = {"base": "invalid_api_key"}
 TIMEOUT_ERROR = {"base": "api_timeout"}
 BAD_API_RESPONSE = {"base": "bad_api_response"}
 
 
 @pytest.fixture
-async def configure_prowl_through_yaml(hass: HomeAssistant):
+async def configure_prowl_through_yaml(hass: HomeAssistant, mock_pyprowl_success):
     """Configure the notify domain with YAML for the Prowl platform."""
     await async_setup_component(
         hass,
         NOTIFY_DOMAIN,
         {
             NOTIFY_DOMAIN: [
-                {"platform": PROWL_DOMAIN, "api_key": TEST_API_KEY},
+                {
+                    "name": PROWL_DOMAIN,
+                    "platform": PROWL_DOMAIN,
+                    "api_key": TEST_API_KEY,
+                },
             ]
         },
     )
@@ -66,7 +73,7 @@ def mock_pyprowl_forbidden():
 
 @pytest.fixture
 def mock_pyprowl_timeout():
-    """Mock an timeout to the PyProwl service."""
+    """Mock a timeout to the PyProwl service."""
     with patch("pyprowl.Prowl") as MockProwl:
         mock_instance = MockProwl.return_value
         mock_instance.verify_key.side_effect = TimeoutError
@@ -85,6 +92,10 @@ def mock_pyprowl_syntax_error():
 
 
 @pytest.fixture
-def mock_pyprowl_config_entry() -> MockConfigEntry:
+async def mock_pyprowl_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Fixture to create a mocked ConfigEntry."""
+    # Load the notify component as our initialization depends on it.
+    await async_setup_component(hass, NOTIFY_DOMAIN, {NOTIFY_DOMAIN: []})
+    await hass.async_block_till_done()
+
     return MockConfigEntry(title="Mocked Prowl", domain=PROWL_DOMAIN, data=CONF_INPUT)

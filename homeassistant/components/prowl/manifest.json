@@ -1,10 +1,11 @@
 {
   "domain": "prowl",
   "name": "Prowl",
+  "after_dependencies": ["notify"],
   "codeowners": [],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/prowl",
-  "integration_type": "hub",
+  "integration_type": "service",
   "iot_class": "cloud_push",
   "loggers": ["prowl"],
   "quality_scale": "legacy",

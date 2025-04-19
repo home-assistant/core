@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -15,8 +16,8 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.exceptions import HomeAssistantError
 
-from . import ProwlNotificationService
 from .const import DOMAIN
+from .notify import ProwlNotificationService
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,6 +38,7 @@ class ProwlConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle user configuration."""
         errors = {}
+
         if user_input and user_input[CONF_API_KEY]:
             self.api_key = user_input[CONF_API_KEY]
             if user_input[CONF_NAME] and len(user_input[CONF_NAME]) > 0:
@@ -54,21 +56,54 @@ class ProwlConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
-            step_id="user", data_schema=self._get_schema(), errors=errors
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_API_KEY): str,
+                    vol.Required(CONF_NAME): str,
+                }
+            ),
+            errors=errors,
+            description_placeholders={
+                "info": "Enter name of Prowl key and the API key"
+            },
         )
 
-    def _get_schema(self) -> vol.Schema:
-        """Return the schema for the user input."""
-        return vol.Schema(
-            {
-                vol.Required(CONF_API_KEY): str,
-                vol.Required(CONF_NAME): str,
-            }
+    async def async_step_reauth(
+        self, user_input: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle re-authentication when the API key is invalid."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Dialog that informs the user that reauth is required."""
+        errors = {}
+        entry = self._get_reauth_entry()
+
+        if user_input:
+            api_key = user_input[CONF_API_KEY]
+            errors = await self._validate_api_key(api_key)
+
+            if not errors:
+                # Update existing entry with new API key
+                data = {CONF_NAME: entry.data[CONF_NAME], CONF_API_KEY: api_key}
+                self.hass.config_entries.async_update_entry(entry, data=data)
+                return self.async_abort(reason="reauth_successful")
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
+            errors=errors,
+            description_placeholders={
+                "info": "Your Prowl API key is invalid. Please re-enter it."
+            },
         )
 
     async def _validate_api_key(self, api_key: str):
         """Validate the provided API key."""
-        prowl = ProwlNotificationService(self.hass, api_key)
+        prowl = ProwlNotificationService(self.hass, DOMAIN, api_key)
         try:
             if not await prowl.async_verify_key():
                 return {"base": "invalid_api_key"}
