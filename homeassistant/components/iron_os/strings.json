@@ -284,6 +284,12 @@
     },
     "submit_setting_failed": {
       "message": "Failed to submit setting to device, try again later"
+    },
+    "cannot_connect": {
+      "message": "Cannot connect to device {name}"
+    },
+    "update_check_failed": {
+      "message": "Failed to check for latest IronOS update"
     }
   }
 }
