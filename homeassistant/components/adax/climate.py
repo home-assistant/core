@@ -42,10 +42,8 @@ async def async_setup_entry(
     else:
         cloud_coordinator = cast(AdaxCloudCoordinator, entry.runtime_data)
         async_add_entities(
-            (
-                AdaxDevice(cloud_coordinator, device_id)
-                for device_id in cloud_coordinator.data
-            ),
+            AdaxDevice(cloud_coordinator, device_id)
+            for device_id in cloud_coordinator.data
         )
 
 
@@ -76,7 +74,7 @@ class AdaxDevice(CoordinatorEntity[AdaxCloudCoordinator], ClimateEntity):
         self._attr_name = self.room["name"]
         self._attr_unique_id = f"{self.room['homeId']}_{self._device_id}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._device_id)},
+            identifiers={(DOMAIN, device_id)},
             # Instead of setting the device name to the entity name, adax
             # should be updated to set has_entity_name = True, and set the entity
             # name to None

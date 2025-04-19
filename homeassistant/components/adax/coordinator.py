@@ -64,7 +64,7 @@ class AdaxLocalCoordinator(DataUpdateCoordinator[dict[str, Any] | None]):
             websession=async_get_clientsession(hass, verify_ssl=False),
         )
 
-    async def _async_update_data(self) -> dict[str, Any] | None:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from the Adax."""
         if result := await self.adax_data_handler.get_status():
             return cast(dict[str, Any], result)
