@@ -1,4 +1,4 @@
-"""Support for Oncue sensors."""
+"""Support for KEM sensors."""
 
 from __future__ import annotations
 
@@ -8,12 +8,22 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import (
+    DD_DISPLAY_NAME,
+    DD_FIRMWARE_VERSION,
+    DD_IS_CONNECTED,
+    DD_MAC_ADDRESS,
+    DD_MODEL_NAME,
+    DD_PRODUCT,
+    DOMAIN,
+    GD_DEVICE,
+    KOHLER,
+)
 from .coordinator import KemUpdateCoordinator
 
 
 class KemEntity(CoordinatorEntity[KemUpdateCoordinator], Entity):
-    """Representation of an Oncue entity."""
+    """Representation of an KEM entity."""
 
     _attr_has_entity_name = True
 
@@ -32,24 +42,20 @@ class KemEntity(CoordinatorEntity[KemUpdateCoordinator], Entity):
         self._attr_unique_id = f"{self._device_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, str(self._device_id))},
-            name=device_data["displayName"],
-            hw_version=device_data["product"],
-            sw_version=device_data["firmwareVersion"],
-            model=device_data["modelDisplayName"],
-            manufacturer="Kohler",
+            name=device_data[DD_DISPLAY_NAME],
+            hw_version=device_data[DD_PRODUCT],
+            sw_version=device_data[DD_FIRMWARE_VERSION],
+            model=device_data[DD_MODEL_NAME],
+            manufacturer=KOHLER,
         )
+        # The format of the key is device:key or key. Parse it.
         splits = self.entity_description.key.split(":")
-        if len(splits) > 1:
-            self.use_device_key = True
-            self.key = splits[1]
-        else:
-            self.use_device_key = False
-            self.key = self.entity_description.key
-
+        self.use_device_key = len(splits) > 1
+        self.key = splits[1] if self.use_device_key else self.entity_description.key
         self._attr_translation_key = self.entity_description.translation_key
 
         try:
-            mac_address_hex = device_data["macAddress"].replace(":", "")
+            mac_address_hex = device_data[DD_MAC_ADDRESS].replace(":", "")
         except ValueError:  # MacAddress may be invalid if the gateway is offline
             return
         self._attr_device_info[ATTR_CONNECTIONS] = {
@@ -61,7 +67,7 @@ class KemEntity(CoordinatorEntity[KemUpdateCoordinator], Entity):
         """Return the sensor value."""
         generator_data = self.coordinator.data
         if self.use_device_key:
-            value = generator_data["device"][self.key]
+            value = generator_data[GD_DEVICE][self.key]
         else:
             value = generator_data[self.key]
         return value
@@ -71,6 +77,6 @@ class KemEntity(CoordinatorEntity[KemUpdateCoordinator], Entity):
         """Return if entity is available."""
         if not self.coordinator.last_update_success:
             return False
-        if not self.coordinator.data["device"]["isConnected"]:
+        if not self.coordinator.data[GD_DEVICE][DD_IS_CONNECTED]:
             return False
         return super().available

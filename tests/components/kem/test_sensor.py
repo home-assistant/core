@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
-
 from aiokem import AioKem
 from freezegun.api import FrozenDateTimeFactory
 from syrupy import SnapshotAssertion
@@ -46,7 +44,7 @@ async def test_sensor_availability(
     generator["device"]["isConnected"] = False
 
     # Move time to next update
-    freezer.tick(timedelta(minutes=SCAN_INTERVAL_MINUTES))
+    freezer.tick(SCAN_INTERVAL_MINUTES)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -59,7 +57,7 @@ async def test_sensor_availability(
     mock_kem.get_generator_data.side_effect = Exception("Test exception")
 
     # Move time to next update
-    freezer.tick(timedelta(minutes=SCAN_INTERVAL_MINUTES))
+    freezer.tick(SCAN_INTERVAL_MINUTES)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 

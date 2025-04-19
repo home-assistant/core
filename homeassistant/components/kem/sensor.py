@@ -1,4 +1,4 @@
-"""Support for Oncue sensors."""
+"""Support for KEM sensors."""
 
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import RPM
+from .const import CE_RT_COORDINATORS, CE_RT_HOMES, DD_DEVICES, DD_ID, RPM
 from .coordinator import KemUpdateCoordinator
 from .entity import KemEntity
 
@@ -171,11 +171,6 @@ SENSORS = [
     ),
 ]
 
-UNIT_MAPPINGS = {
-    "C": UnitOfTemperature.CELSIUS,
-    "F": UnitOfTemperature.FAHRENHEIT,
-}
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -184,25 +179,22 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensors."""
 
-    entities = []
-
-    homes = config_entry.runtime_data["homes"]
-    for home_data in homes:
-        for device_data in home_data["devices"]:
-            device_id = device_data["id"]
-            coordinator = config_entry.runtime_data["coordinators"][device_id]
-            for sensor_description in SENSORS:
-                entity = KemSensorEntity(
-                    coordinator, device_id, device_data, sensor_description
-                )
-                entities.append(entity)
-    async_add_entities(
-        entities,
-    )
+    entities = [
+        KemSensorEntity(
+            coordinator, device_data[DD_ID], device_data, sensor_description
+        )
+        for home_data in config_entry.runtime_data[CE_RT_HOMES]
+        for device_data in home_data[DD_DEVICES]
+        for coordinator in (
+            config_entry.runtime_data[CE_RT_COORDINATORS][device_data[DD_ID]],
+        )
+        for sensor_description in SENSORS
+    ]
+    async_add_entities(entities)
 
 
 class KemSensorEntity(KemEntity, SensorEntity):
-    """Representation of an Oncue sensor."""
+    """Representation of an KEM sensor."""
 
     def __init__(
         self,
@@ -213,10 +205,6 @@ class KemSensorEntity(KemEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, device_id, device_data, description)
-        # if not description.native_unit_of_measurement and sensor.unit is not None:
-        #     self._attr_native_unit_of_measurement = UNIT_MAPPINGS.get(
-        #         sensor.unit, sensor.unit
-        #     )
 
     @property
     def native_value(self) -> str:

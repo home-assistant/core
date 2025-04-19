@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
 from unittest.mock import patch
 
 from aiokem import AioKem, AuthenticationError, CommunicationError
@@ -37,7 +36,7 @@ async def test_coordinator_retries(
     with patch(
         "homeassistant.components.kem.coordinator.RETRY_DELAY", mock_retry_delay
     ):
-        freezer.tick(timedelta(minutes=SCAN_INTERVAL_MINUTES))
+        freezer.tick(SCAN_INTERVAL_MINUTES)
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -54,7 +53,7 @@ async def test_coordinator_retries(
     with patch(
         "homeassistant.components.kem.coordinator.RETRY_DELAY", mock_retry_delay
     ):
-        freezer.tick(timedelta(minutes=SCAN_INTERVAL_MINUTES))
+        freezer.tick(SCAN_INTERVAL_MINUTES)
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -76,7 +75,7 @@ async def test_coordinator_retries(
     with patch(
         "homeassistant.components.kem.coordinator.RETRY_DELAY", mock_retry_delay
     ):
-        freezer.tick(timedelta(minutes=SCAN_INTERVAL_MINUTES))
+        freezer.tick(SCAN_INTERVAL_MINUTES)
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -100,7 +99,7 @@ async def test_coordinator_retries(
     with patch(
         "homeassistant.components.kem.coordinator.RETRY_DELAY", mock_retry_delay
     ):
-        freezer.tick(timedelta(minutes=SCAN_INTERVAL_MINUTES))
+        freezer.tick(SCAN_INTERVAL_MINUTES)
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
 

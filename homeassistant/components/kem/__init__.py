@@ -1,4 +1,4 @@
-"""The Oncue integration."""
+"""The Kohler Energy Management (KEM) integration."""
 
 from __future__ import annotations
 
@@ -12,16 +12,24 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONNECTION_EXCEPTIONS
+from .const import (
+    CE_RT_COORDINATORS,
+    CE_RT_HOMES,
+    CE_RT_KEM,
+    CONNECTION_EXCEPTIONS,
+    DD_DEVICES,
+    DD_DISPLAY_NAME,
+    DD_ID,
+    DOMAIN,
+)
 from .coordinator import KemUpdateCoordinator
 
 PLATFORMS: list[str] = [Platform.SENSOR]
-
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Oncue from a config entry."""
+    """Set up KEM from a config entry."""
     data = entry.data
     websession = async_get_clientsession(hass)
     kem = AioKem(session=websession)
@@ -33,14 +41,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from ex
 
     entry.runtime_data = {}
-    entry.runtime_data["coordinators"] = {}
-    entry.runtime_data["kem"] = kem
+    entry.runtime_data[CE_RT_COORDINATORS] = {}
+    entry.runtime_data[CE_RT_KEM] = kem
 
     homes = await kem.get_homes()
-    entry.runtime_data["homes"] = homes
+    entry.runtime_data[CE_RT_HOMES] = homes
     for home_data in homes:
-        for device_data in home_data["devices"]:
-            device_id = device_data["id"]
+        for device_data in home_data[DD_DEVICES]:
+            device_id = device_data[DD_ID]
             coordinator = KemUpdateCoordinator(
                 hass=hass,
                 logger=_LOGGER,
@@ -49,14 +57,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 device_id=device_id,
                 device_data=device_data,
                 kem=kem,
-                name=f"kem {device_data['displayName']}",
+                name=f"{DOMAIN} {device_data[DD_DISPLAY_NAME]}",
             )
             await coordinator.async_config_entry_first_refresh()
-            entry.runtime_data["coordinators"][device_id] = coordinator
+            entry.runtime_data[CE_RT_COORDINATORS][device_id] = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
+    kem: AioKem = entry.runtime_data.get(CE_RT_KEM)
+    if kem:
+        await kem.close()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

@@ -8,7 +8,7 @@
         }
       },
       "reauth_confirm": {
-        "description": "Re-authenticate Oncue account {username}",
+        "description": "Re-authenticate KEM account {username}",
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
         }

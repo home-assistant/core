@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import timedelta
 import logging
 from typing import Any
 
@@ -57,7 +56,7 @@ class KemUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             logger=logger,
             config_entry=config_entry,
             name=name,
-            update_interval=timedelta(minutes=SCAN_INTERVAL_MINUTES),
+            update_interval=SCAN_INTERVAL_MINUTES,
         )
 
     async def _async_retry_auth(self) -> bool:

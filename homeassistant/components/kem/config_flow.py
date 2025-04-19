@@ -1,4 +1,4 @@
-"""Config flow for Oncue integration."""
+"""Config flow for KEM integration."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from aiokem import AioKem, AuthenticationCredentialsError, AuthenticationError
+from aiokem import AioKem, AuthenticationError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -62,8 +62,6 @@ class KemConfigFlow(ConfigFlow, domain=DOMAIN):
             await kem.authenticate(config[CONF_USERNAME], config[CONF_PASSWORD])
         except CONNECTION_EXCEPTIONS:
             errors["base"] = "cannot_connect"
-        except AuthenticationCredentialsError:
-            errors[CONF_PASSWORD] = "invalid_auth"
         except AuthenticationError:
             errors[CONF_PASSWORD] = "invalid_auth"
         except Exception:
