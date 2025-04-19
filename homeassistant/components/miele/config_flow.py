@@ -22,7 +22,6 @@ class OAuth2FlowHandler(
     """Config flow to handle Miele OAuth2 authentication."""
 
     DOMAIN = DOMAIN
-    name: str = ""
 
     @property
     def logger(self) -> logging.Logger:
