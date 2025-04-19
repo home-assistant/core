@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from functools import partial
 
 from freebox_api.exceptions import HttpRequestError
 
@@ -23,7 +24,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Freebox entry."""
     api = await get_api(hass, entry.data[CONF_HOST])
     try:
-        await api.open(entry.data[CONF_HOST], entry.data[CONF_PORT])
+        await hass.async_add_executor_job(
+            partial(api.open, entry.data[CONF_HOST], entry.data[CONF_PORT])
+        )
     except HttpRequestError as err:
         raise ConfigEntryNotReady from err
 
