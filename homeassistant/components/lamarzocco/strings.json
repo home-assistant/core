@@ -83,6 +83,9 @@
       },
       "water_tank": {
         "name": "Water tank empty"
+      },
+      "websocket_connected": {
+        "name": "WebSocket connected"
       }
     },
     "button": {
