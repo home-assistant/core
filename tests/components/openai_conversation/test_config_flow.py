@@ -454,6 +454,7 @@ async def test_options_retained(
     assert {
         str(key): key.description["suggested_value"]
         for key in options["data_schema"].schema
+        if "suggested_value" in key.description
     } == {
         CONF_PROMPT: "Speak like super Mario",
         CONF_RECOMMENDED: False,
@@ -471,6 +472,7 @@ async def test_options_retained(
     assert {
         str(key): key.description["suggested_value"]
         for key in options["data_schema"].schema
+        if "suggested_value" in key.description
     } == {
         CONF_CHAT_MODEL: "gpt-4o",
         CONF_MAX_TOKENS: 1000,
@@ -492,6 +494,7 @@ async def test_options_retained(
     assert {
         str(key): key.description["suggested_value"]
         for key in options["data_schema"].schema
+        if "suggested_value" in key.description
     } == {
         CONF_WEB_SEARCH: True,
         CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
@@ -518,6 +521,7 @@ async def test_options_retained(
     assert {
         str(key): key.description["suggested_value"]
         for key in options["data_schema"].schema
+        if "suggested_value" in key.description
     } == {
         CONF_PROMPT: "Speak like a pro",
         CONF_RECOMMENDED: False,
@@ -535,6 +539,7 @@ async def test_options_retained(
     assert {
         str(key): key.description["suggested_value"]
         for key in options["data_schema"].schema
+        if "suggested_value" in key.description
     } == {
         CONF_CHAT_MODEL: "o1-pro",
         CONF_MAX_TOKENS: 1000,
@@ -556,6 +561,7 @@ async def test_options_retained(
     assert {
         str(key): key.description["suggested_value"]
         for key in options["data_schema"].schema
+        if "suggested_value" in key.description
     } == {CONF_REASONING_EFFORT: "high"}
 
 

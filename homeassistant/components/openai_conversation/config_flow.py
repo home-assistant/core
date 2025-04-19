@@ -171,7 +171,9 @@ class OpenAIOptionsFlow(OptionsFlow):
             ): TemplateSelector(),
             vol.Optional(
                 CONF_LLM_HASS_API,
-                description={"suggested_value": suggested_llm_apis},
+                description={"suggested_value": suggested_llm_apis}
+                if suggested_llm_apis
+                else {},
             ): SelectSelector(SelectSelectorConfig(options=hass_apis, multiple=True)),
             vol.Required(
                 CONF_RECOMMENDED, default=options.get(CONF_RECOMMENDED, False)
