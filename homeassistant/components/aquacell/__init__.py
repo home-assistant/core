@@ -6,10 +6,10 @@ from aioaquacell import AquacellApi
 from aioaquacell.const import Brand
 
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_BRAND
+from .const import CONF_BRAND, DOMAIN, SERVICE_FORCE_POLL
 from .coordinator import AquacellConfigEntry, AquacellCoordinator
 
 PLATFORMS = [Platform.SENSOR]
@@ -29,6 +29,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: AquacellConfigEntry) -> 
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    async def handle_force_poll(call: ServiceCall) -> None:
+        """Handle the force_poll service call."""
+        await coordinator.async_refresh()
+
+    hass.services.async_register(DOMAIN, SERVICE_FORCE_POLL, handle_force_poll)
 
     return True
 

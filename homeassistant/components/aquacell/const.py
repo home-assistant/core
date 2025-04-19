@@ -11,3 +11,5 @@ CONF_REFRESH_TOKEN_CREATION_TIME = "refresh_token_creation_time"
 
 REFRESH_TOKEN_EXPIRY_TIME = timedelta(days=30)
 UPDATE_INTERVAL = timedelta(days=1)
+
+SERVICE_FORCE_POLL = "force_poll"
