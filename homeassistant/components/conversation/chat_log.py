@@ -197,7 +197,7 @@ class ChatLog:
                 (
                     "?",
                     ";",  # Greek question mark
-                    "？", # Chinese question mark
+                    "？",  # Chinese question mark
                 )
             )
         )
