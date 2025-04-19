@@ -58,7 +58,7 @@ async def test_switch_states(
         (MowerModes.MAIN_AREA, "on"),
     ):
         values[TEST_MOWER_ID].mower.mode = mode
-        mock_automower_client.get_status.return_value = values
+        mock_automower_client.get_joost.return_value = values
         freezer.tick(SCAN_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
@@ -132,7 +132,7 @@ async def test_stay_out_zone_switch_commands(
         mower_time_zone,
     )
     values[TEST_MOWER_ID].stay_out_zones.zones[TEST_ZONE_ID].enabled = boolean
-    mock_automower_client.get_status.return_value = values
+    mock_automower_client.get_joost.return_value = values
     mocked_method = mock_automower_client.commands.switch_stay_out_zone
     await hass.services.async_call(
         domain=SWITCH_DOMAIN,
@@ -189,7 +189,7 @@ async def test_work_area_switch_commands(
         mower_time_zone,
     )
     values[TEST_MOWER_ID].work_areas[TEST_AREA_ID].enabled = boolean
-    mock_automower_client.get_status.return_value = values
+    mock_automower_client.get_joost.return_value = values
     mocked_method = mock_automower_client.commands.workarea_settings
     await hass.services.async_call(
         domain=SWITCH_DOMAIN,
@@ -241,7 +241,7 @@ async def test_add_stay_out_zone(
             )
         }
     )
-    mock_automower_client.get_status.return_value = values
+    mock_automower_client.get_joost.return_value = values
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -251,7 +251,7 @@ async def test_add_stay_out_zone(
     assert current_entites_after_addition == current_entites + 1
     values[TEST_MOWER_ID].stay_out_zones.zones.pop(TEST_VARIABLE_ZONE_ID)
     values[TEST_MOWER_ID].stay_out_zones.zones.pop(TEST_ZONE_ID)
-    mock_automower_client.get_status.return_value = values
+    mock_automower_client.get_joost.return_value = values
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()

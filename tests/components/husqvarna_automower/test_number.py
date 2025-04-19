@@ -66,7 +66,7 @@ async def test_number_workarea_commands(
     entity_id = "number.test_mower_1_front_lawn_cutting_height"
     await setup_integration(hass, mock_config_entry)
     values[TEST_MOWER_ID].work_areas[123456].cutting_height = 75
-    mock_automower_client.get_status.return_value = values
+    mock_automower_client.get_joost.return_value = values
     mocked_method = mock_automower_client.commands.workarea_settings
     await hass.services.async_call(
         domain="number",
