@@ -1,18 +1,16 @@
 """Test the Miele config flow."""
 
 from collections.abc import Generator
-from ipaddress import ip_address
 from unittest.mock import AsyncMock
 
 from pymiele import OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 import pytest
 
 from homeassistant.components.miele.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
-from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import CLIENT_ID
 
@@ -214,129 +212,3 @@ async def test_flow_reconfigure_abort(
     assert result.get("reason") == "reconfigure_successful"
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-
-
-# @pytest.mark.usefixtures("current_request_with_host")
-# async def test_full_zeroconf_flow_implementation(
-#     hass: HomeAssistant,
-#     hass_client_no_auth: ClientSessionGenerator,
-#     aioclient_mock: AiohttpClientMocker,
-#     mock_setup_entry: Generator[AsyncMock],
-# ) -> None:
-#     """Test the zeroconf flow from start to finish."""
-#     result = await hass.config_entries.flow.async_init(
-#         DOMAIN,
-#         context={"source": SOURCE_ZEROCONF},
-#         data=ZeroconfServiceInfo(
-#             ip_address=ip_address("127.0.0.1"),
-#             ip_addresses=[ip_address("127.0.0.1")],
-#             hostname="example.local.",
-#             name="mock_name",
-#             port=9123,
-#             properties={"id": "AA:BB:CC:DD:EE:FF"},
-#             type="mock_type",
-#         ),
-#     )
-
-#     assert result["step_id"] == "zeroconf_confirm"
-#     assert result["type"] is FlowResultType.FORM
-
-#     state = config_entry_oauth2_flow._encode_jwt(
-#         hass,
-#         {
-#             "flow_id": result["flow_id"],
-#             "redirect_uri": REDIRECT_URL,
-#         },
-#     )
-
-#     assert result["url"] == (
-#         f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
-#         f"&redirect_uri={REDIRECT_URL}"
-#         f"&state={state}"
-#         "&vg=sv-SE"
-#     )
-
-#     client = await hass_client_no_auth()
-#     resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
-#     assert resp.status == 200
-#     assert resp.headers["content-type"] == "text/html; charset=utf-8"
-
-#     aioclient_mock.post(
-#         OAUTH2_TOKEN,
-#         json={
-#             "refresh_token": "mock-refresh-token",
-#             "access_token": "mock-access-token",
-#             "type": "Bearer",
-#             "expires_in": 60,
-#         },
-#     )
-
-#     await hass.config_entries.flow.async_configure(result["flow_id"])
-
-#     assert result.get("type") is FlowResultType.EXTERNAL_STEP
-#     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-#     assert len(mock_setup_entry.mock_calls) == 1
-
-
-@pytest.mark.usefixtures("current_request_with_host")
-async def test_full_zeroconf_flow(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
-    mock_setup_entry: Generator[AsyncMock],
-) -> None:
-    """Test the zeroconf flow from start to finish."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
-        data=ZeroconfServiceInfo(
-            ip_address=ip_address("127.0.0.1"),
-            ip_addresses=[ip_address("127.0.0.1")],
-            hostname="example.local.",
-            name="mock_name",
-            port=9123,
-            properties={"id": "AA:BB:CC:DD:EE:FF"},
-            type="mock_type",
-        ),
-    )
-    assert result["description_placeholders"] == {"name": "mock_name"}
-    assert result["step_id"] == "zeroconf_confirm"
-    assert result["type"] is FlowResultType.FORM
-
-    result_2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    await hass.async_block_till_done()
-    assert result_2["type"] is FlowResultType.EXTERNAL_STEP
-
-    state = config_entry_oauth2_flow._encode_jwt(
-        hass,
-        {
-            "flow_id": result_2["flow_id"],
-            "redirect_uri": REDIRECT_URL,
-        },
-    )
-
-    assert result_2["url"] == (
-        f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
-        f"&redirect_uri={REDIRECT_URL}"
-        f"&state={state}"
-        "&vg=sv-SE"
-    )
-
-    client = await hass_client_no_auth()
-    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
-    assert resp.status == 200
-    assert resp.headers["content-type"] == "text/html; charset=utf-8"
-
-    aioclient_mock.post(
-        OAUTH2_TOKEN,
-        json={
-            "refresh_token": "mock-refresh-token",
-            "access_token": "mock-access-token",
-            "type": "Bearer",
-            "expires_in": 60,
-        },
-    )
-    await hass.config_entries.flow.async_configure(result_2["flow_id"])
-
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
