@@ -44,7 +44,7 @@ from homeassistant.core import (
     State,
     callback,
 )
-from homeassistant.exceptions import TemplateError
+from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -827,7 +827,18 @@ def execute_service(
     entry_data: RuntimeEntryData, service: UserService, call: ServiceCall
 ) -> None:
     """Execute a service on a node."""
-    entry_data.client.execute_service(service, call.data)
+    try:
+        entry_data.client.execute_service(service, call.data)
+    except APIConnectionError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="action_call_failed",
+            translation_placeholders={
+                "call_name": service.name,
+                "device_name": entry_data.name,
+                "error": str(err),
+            },
+        ) from err
 
 
 def build_service_name(device_info: EsphomeDeviceInfo, service: UserService) -> str:

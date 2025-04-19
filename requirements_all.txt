@@ -243,7 +243,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==29.10.0
+aioesphomeapi==30.0.1
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -829,7 +829,7 @@ ebusdpy==0.0.17
 ecoaliface==0.4.0
 
 # homeassistant.components.eheimdigital
-eheimdigital==1.0.6
+eheimdigital==1.1.0
 
 # homeassistant.components.electric_kiwi
 electrickiwi-api==0.9.14
@@ -889,7 +889,7 @@ epson-projector==0.5.1
 eq3btsmart==1.4.1
 
 # homeassistant.components.esphome
-esphome-dashboard-api==1.2.3
+esphome-dashboard-api==1.3.0
 
 # homeassistant.components.netgear_lte
 eternalegypt==0.0.16
@@ -1114,7 +1114,7 @@ ha-silabs-firmware-client==0.2.0
 habiticalib==0.3.7
 
 # homeassistant.components.bluetooth
-habluetooth==3.38.1
+habluetooth==3.39.0
 
 # homeassistant.components.cloud
 hass-nabucasa==0.94.0
@@ -1957,7 +1957,7 @@ pyenphase==1.25.5
 pyenvisalink==4.7
 
 # homeassistant.components.ephember
-pyephember==0.3.1
+pyephember2==0.4.12
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
@@ -2089,7 +2089,7 @@ pykwb==0.0.8
 pylacrosse==0.4
 
 # homeassistant.components.lamarzocco
-pylamarzocco==1.4.9
+pylamarzocco==2.0.0b1
 
 # homeassistant.components.lastfm
 pylast==5.1.0

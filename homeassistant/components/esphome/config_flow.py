@@ -47,6 +47,7 @@ from .const import (
     DOMAIN,
 )
 from .dashboard import async_get_or_create_dashboard_manager, async_set_dashboard_info
+from .entry_data import ESPHomeConfigEntry
 from .manager import async_replace_device
 
 ERROR_REQUIRES_ENCRYPTION_KEY = "requires_encryption_key"
@@ -608,7 +609,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: ESPHomeConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler()
