@@ -51,9 +51,8 @@ class AsyncFileIterator:
 
     async def _initialize(self) -> None:
         """Load file object."""
-        self._client = await BackupAgentClient(self.cfg, self.hass).open()  # pylint: disable=unnecessary-dunder-call
+        self._client = await BackupAgentClient(self.cfg, self.hass).open()
         self._fileobj = await self._client.sftp.open(self.file_path, "rb")
-        await self._fileobj.__aenter__()  # pylint: disable=unnecessary-dunder-call
 
         self._initialized = True
 
@@ -143,7 +142,7 @@ class BackupAgentClient:
 
         Raises
         ------
-        `AssertionError` -- if metadata file is not found.
+        `FileNotFoundError` -- if metadata file is not found.
 
         """
 
@@ -165,7 +164,7 @@ class BackupAgentClient:
 
         Raises
         ------
-        `AssertionError` -- if either metadata file or archive is not found.
+        `FileNotFoundError` -- if either metadata file or archive is not found.
 
         """
 
@@ -249,8 +248,7 @@ class BackupAgentClient:
 
         Raises
         ------
-        - `AssertionError` -- if metadata file is not found.
-        - `FileNotFoundError` -- if backup archive is not found.
+        - `FileNotFoundError` -- if metadata or backup archive is not found.
 
         """
 
@@ -302,12 +300,8 @@ class BackupAgentClient:
                 ),
             )
         except (OSError, PermissionDenied) as e:
-            LOGGER.error(
-                "Failure while attempting to establish SSH connection. Re-auth might be required."
-                " Please check SSH credentials and if changed, re-add the integration"
-            )
             raise BackupAgentAuthError(
-                "Failure while attempting to establish SSH connection. Re-auth might be required."
+                "Failure while attempting to establish SSH connection. Please check SSH credentials and if changed, re-add the integration"
             ) from e
 
         # Configure SFTP Client Connection

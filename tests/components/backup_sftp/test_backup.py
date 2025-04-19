@@ -4,6 +4,7 @@ from io import StringIO
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
+from asyncssh.sftp import SFTPError
 import pytest
 
 from homeassistant.components.backup import AddonInfo, AgentBackup
@@ -189,15 +190,14 @@ async def test_agents_download_fail(
     )
     assert resp.status == 500
     content = await resp.content.read()
-    assert "Unexpected error while initiating download of backup" in content.decode()
+    assert "SFTP error while initiating download of backup" in content.decode()
 
     async_cm_mock.iter_file = MagicMock(side_effect=FileNotFoundError("Error message."))
     resp = await client.get(
         f"/api/backup/download/{TEST_AGENT_BACKUP.backup_id}?agent_id={DOMAIN}.{TEST_AGENT_ID}"
     )
-    assert resp.status == 500
+    assert resp.status == 404
     content = await resp.content.read()
-    assert "Unable to initiate download of backup" in content.decode()
 
 
 @patch("homeassistant.components.backup_sftp.backup.BackupAgentClient")
@@ -311,6 +311,7 @@ async def test_agents_delete(
     """Test agent delete backup."""
     backup_agent_client.return_value = async_cm_mock
     async_cm_mock.async_delete_backup.return_value = None
+    async_cm_mock.async_list_backups.return_value = [TEST_AGENT_BACKUP]
 
     client = await hass_ws_client(hass)
     await client.send_json_auto_id(
@@ -327,16 +328,42 @@ async def test_agents_delete(
     async_cm_mock.async_delete_backup.assert_called_once()
 
 
+@pytest.mark.parametrize(
+    ("exc", "expected_result"),
+    [
+        (FileNotFoundError("Does not exist."), {"agent_errors": {}}),
+        (
+            SFTPError(0, "manual"),
+            {
+                "agent_errors": {
+                    f"{DOMAIN}.{TEST_AGENT_ID}": f"Failed to delete backup id: {TEST_AGENT_BACKUP.backup_id}: manual"
+                }
+            },
+        ),
+        (
+            RuntimeError("runtime error."),
+            {
+                "agent_errors": {
+                    f"{DOMAIN}.{TEST_AGENT_ID}": f"Unexpected error while removing backup: {TEST_AGENT_BACKUP.backup_id}: runtime error."
+                }
+            },
+        ),
+    ],
+    ids=["file_not_found_exc", "sftp_error_exc", "runtimer_error_exc"],
+)
 @patch("homeassistant.components.backup_sftp.backup.BackupAgentClient")
 async def test_agents_delete_fail(
     backup_agent_client: MagicMock,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     async_cm_mock: AsyncMock,
+    exc: Exception,
+    expected_result: dict[str, dict[str, str]],
 ) -> None:
     """Test agent delete backup fails."""
     backup_agent_client.return_value = async_cm_mock
-    async_cm_mock.async_delete_backup.side_effect = AssertionError("Does not exist.")
+    async_cm_mock.async_delete_backup.side_effect = exc
+    async_cm_mock.async_list_backups.return_value = [TEST_AGENT_BACKUP]
 
     client = await hass_ws_client(hass)
     await client.send_json_auto_id(
@@ -348,26 +375,7 @@ async def test_agents_delete_fail(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {
-        "agent_errors": {
-            f"{DOMAIN}.{TEST_AGENT_ID}": "Failed to delete backup id: test-backup: Does not exist."
-        }
-    }
-
-    # Test for unexpected exception
-    async_cm_mock.async_delete_backup.side_effect = RuntimeError("Error Message.")
-    await client.send_json_auto_id(
-        {
-            "type": "backup/delete",
-            "backup_id": TEST_AGENT_BACKUP.backup_id,
-        }
-    )
-    response = await client.receive_json()
-    assert response["result"] == {
-        "agent_errors": {
-            f"{DOMAIN}.{TEST_AGENT_ID}": "Unexpected error while removing backup: test-backup: Error Message."
-        }
-    }
+    assert response["result"] == expected_result
 
 
 @patch("homeassistant.components.backup_sftp.backup.BackupAgentClient")
@@ -396,4 +404,4 @@ async def test_agents_delete_not_found(
     assert response["success"]
     assert response["result"] == {"agent_errors": {}}
 
-    async_cm_mock.async_delete_backup.assert_called_with(None)
+    async_cm_mock.async_delete_backup.assert_not_called()

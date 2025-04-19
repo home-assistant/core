@@ -16,7 +16,7 @@ from homeassistant.components.backup import (
 from homeassistant.core import HomeAssistant, callback
 
 from . import SFTPConfigEntry
-from .client import BackupAgentClient
+from .client import BackupAgentAuthError, BackupAgentClient
 from .const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN, LOGGER
 
 
@@ -67,8 +67,6 @@ class SFTPBackupAgent(BackupAgent):
         """Download a backup file from SFTP."""
         LOGGER.debug("Received request to download backup id: %s", backup_id)
         backup = await self.async_get_backup(backup_id)
-        if backup is None:
-            raise BackupNotFound(f"Backup {backup_id} not found")
 
         try:
             LOGGER.debug(
@@ -76,13 +74,13 @@ class SFTPBackupAgent(BackupAgent):
             )
             async with BackupAgentClient(self._entry, self._hass) as client:
                 return await client.iter_file(backup)
-        except (AssertionError, FileNotFoundError) as e:
-            raise BackupAgentError(
+        except FileNotFoundError as e:
+            raise BackupNotFound(
                 f"Unable to initiate download of backup id: {backup_id}. {e}"
             ) from e
-        except Exception as e:
+        except (BackupAgentAuthError, RuntimeError) as e:
             raise BackupAgentError(
-                f"Unexpected error while initiating download of backup id: {backup_id}. {e}"
+                f"SFTP error while initiating download of backup id: {backup_id}. {e}"
             ) from e
 
     async def async_upload_backup(
@@ -103,7 +101,7 @@ class SFTPBackupAgent(BackupAgent):
             async with BackupAgentClient(self._entry, self._hass) as client:
                 LOGGER.debug("Uploading backup: %s", backup.backup_id)
                 await client.async_upload_backup(iterator, backup)
-        except Exception as e:
+        except (BackupAgentAuthError, RuntimeError) as e:
             raise BackupAgentError(
                 f"Failed to upload backup to remote SFTP location. Error: {e}"
             ) from e
@@ -124,11 +122,13 @@ class SFTPBackupAgent(BackupAgent):
             )
             async with BackupAgentClient(self._entry, self._hass) as client:
                 await client.async_delete_backup(backup)
-        except (AssertionError, SFTPError) as err:
+        except FileNotFoundError as err:
+            raise BackupNotFound(str(err)) from err
+        except SFTPError as err:
             raise BackupAgentError(
                 f"Failed to delete backup id: {backup_id}: {err}"
             ) from err
-        except Exception as err:
+        except (BackupAgentAuthError, RuntimeError) as err:
             raise BackupAgentError(
                 f"Unexpected error while removing backup: {backup_id}: {err}"
             ) from err
@@ -140,7 +140,7 @@ class SFTPBackupAgent(BackupAgent):
         try:
             async with BackupAgentClient(self._entry, self._hass) as client:
                 return await client.async_list_backups()
-        except Exception as e:
+        except (BackupAgentAuthError, RuntimeError) as e:
             LOGGER.exception("Listing backups failed.")
             raise BackupAgentError(f"Failed to list backups: {e}") from e
 
@@ -148,7 +148,7 @@ class SFTPBackupAgent(BackupAgent):
         self,
         backup_id: str,
         **kwargs: Any,
-    ) -> AgentBackup | None:
+    ) -> AgentBackup:
         """Return a backup."""
         backups = await self.async_list_backups()
 
@@ -157,4 +157,4 @@ class SFTPBackupAgent(BackupAgent):
                 LOGGER.debug(f"Returning backup id: {backup_id}. {backup}")
                 return backup
 
-        return None
+        raise BackupNotFound(f"Backup {backup_id} not found")

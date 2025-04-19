@@ -50,7 +50,7 @@ async def test_setup_error(
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
-    assert entries[0].state is ConfigEntryState.SETUP_RETRY
+    assert entries[0].state is ConfigEntryState.SETUP_ERROR
 
 
 @patch("homeassistant.components.backup_sftp.client.connect")
