@@ -7030,6 +7030,11 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "vegehub": {
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "velbus": {
       "name": "Velbus",
       "integration_type": "hub",
@@ -7823,6 +7828,7 @@
     "trend",
     "uptime",
     "utility_meter",
+    "vegehub",
     "version",
     "waze_travel_time",
     "workday",
