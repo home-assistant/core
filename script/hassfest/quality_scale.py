@@ -325,7 +325,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "ecobee",
     "ecoforest",
     "econet",
-    "ecovacs",
     "ecowitt",
     "eddystone_temperature",
     "edimax",
