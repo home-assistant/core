@@ -1,9 +1,11 @@
 """Client for SFTP Backup Location integration."""
 
+from __future__ import annotations
+
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
 import json
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Self
 
 from asyncssh import (
     SFTPClient,
@@ -35,7 +37,7 @@ class AsyncFileIterator:
 
     def __init__(
         self,
-        cfg: "SFTPConfigEntry",
+        cfg: SFTPConfigEntry,
         hass: HomeAssistant,
         file_path: str,
         buffer_size: int = BUF_SIZE,
@@ -96,7 +98,7 @@ class BackupAgentAuthError(BackupAgentError):
 class BackupAgentClient:
     """Helper class that manages SSH and SFTP Server connections."""
 
-    def __init__(self, config: "SFTPConfigEntry", hass: HomeAssistant) -> None:
+    def __init__(self, config: SFTPConfigEntry, hass: HomeAssistant) -> None:
         """Initialize `BackupAgentClient`."""
         self.cfg: SFTPConfigEntry = config
         self.hass: HomeAssistant = hass
@@ -104,7 +106,7 @@ class BackupAgentClient:
         self.sftp: SFTPClient | None = None
         LOGGER.debug("Initialized with config: %s", self.cfg.runtime_data)
 
-    async def __aenter__(self) -> "BackupAgentClient":
+    async def __aenter__(self) -> Self:
         """Async context manager entrypoint."""
 
         return await self.open()
@@ -285,7 +287,7 @@ class BackupAgentClient:
                 files.append(f"{self.cfg.runtime_data.backup_location}/{file}")
         return files
 
-    async def open(self) -> "BackupAgentClient":
+    async def open(self) -> BackupAgentClient:
         """Return initialized `BackupAgentClient`.
 
         This is to avoid calling `__aenter__` dunder method.
