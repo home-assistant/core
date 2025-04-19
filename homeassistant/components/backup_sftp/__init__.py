@@ -4,11 +4,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from homeassistant.components.backup import BackupAgentError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 
-from .client import BackupAgentAuthError, BackupAgentClient
+from .client import BackupAgentClient
 from .const import (
     CONF_BACKUP_LOCATION,
     CONF_HOST,
@@ -17,7 +18,6 @@ from .const import (
     CONF_PRIVATE_KEY_FILE,
     CONF_USERNAME,
     DATA_BACKUP_AGENT_LISTENERS,
-    LOGGER,
 )
 
 type SFTPConfigEntry = ConfigEntry[SFTPConfigEntryData]
@@ -55,7 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SFTPConfigEntry) -> bool
         async with BackupAgentClient(entry, hass) as client:
             if not isinstance(await client.list_backup_location(), list):
                 raise ConfigEntryError("Unexpected error while setting up integration.")
-    except (BackupAgentAuthError, RuntimeError) as e:
+    except BackupAgentError as e:
         raise ConfigEntryError from e
 
     # Notify backup listeners

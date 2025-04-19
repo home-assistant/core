@@ -7,12 +7,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import asyncssh
 import pytest
 
-from homeassistant.components.backup import AgentBackup
+from homeassistant.components.backup import AgentBackup, BackupAgentError
 
 # Import the classes and functions under test.
 from homeassistant.components.backup_sftp.client import (
     AsyncFileIterator,
-    BackupAgentAuthError,
     BackupAgentClient,
     BackupMetadata,
 )
@@ -140,17 +139,12 @@ async def mock_connect(async_cm_mock_generator: Callable[..., MagicMock]) -> Moc
 async def test_client_aenter_fail_exceptions(
     config_entry: MockConfigEntry, hass: HomeAssistant, mock_connect: Mocks
 ) -> None:
-    """Test exceptions in `__aenter__` method of `BackupAgentClient` class.
-
-    Should raise:
-    - `BackupAgentAuthError` on any connection error attempts - that's when connection fails.
-    - `RuntimeError` on SFTP Connection error.
-    """
+    """Test exceptions in `__aenter__` method of `BackupAgentClient` class."""
 
     mock_connect.connect.side_effect = OSError("Error message")
     with (
         patch("homeassistant.components.backup_sftp.client.connect", mock_connect()),
-        pytest.raises(BackupAgentAuthError),
+        pytest.raises(BackupAgentError),
     ):
         async with BackupAgentClient(config_entry, hass):
             pass
@@ -161,7 +155,7 @@ async def test_client_aenter_fail_exceptions(
     )
     with (
         patch("homeassistant.components.backup_sftp.client.connect", mock_connect()),
-        pytest.raises(RuntimeError) as exc,
+        pytest.raises(BackupAgentError) as exc,
     ):
         async with BackupAgentClient(config_entry, hass):
             pass

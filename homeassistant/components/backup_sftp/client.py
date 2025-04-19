@@ -91,14 +91,6 @@ class BackupMetadata:
     metadata_file: str
 
 
-class BackupClientError(Exception):
-    """Base exception for `BackupAgentClient` class."""
-
-
-class BackupAgentAuthError(BackupClientError):
-    """Exception raised when authentication fails after being initially setup."""
-
-
 class BackupAgentClient:
     """Helper class that manages SSH and SFTP Server connections."""
 
