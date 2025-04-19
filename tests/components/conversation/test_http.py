@@ -7,8 +7,7 @@ from unittest.mock import patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.conversation import default_agent
-from homeassistant.components.conversation.const import DATA_DEFAULT_ENTITY
+from homeassistant.components.conversation import get_agent_manager
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant
@@ -42,10 +41,10 @@ class OrderBeerIntentHandler(intent.IntentHandler):
         return response
 
 
+@pytest.mark.usefixtures("init_components", "init_default_agent")
 @pytest.mark.parametrize("agent_id", AGENT_ID_OPTIONS)
 async def test_http_processing_intent(
     hass: HomeAssistant,
-    init_components,
     hass_client: ClientSessionGenerator,
     agent_id,
     entity_registry: er.EntityRegistry,
@@ -73,9 +72,9 @@ async def test_http_processing_intent(
     assert data == snapshot
 
 
+@pytest.mark.usefixtures("init_components", "init_default_agent")
 async def test_http_api_no_match(
     hass: HomeAssistant,
-    init_components,
     hass_client: ClientSessionGenerator,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -93,9 +92,9 @@ async def test_http_api_no_match(
     assert data["response"]["data"]["code"] == "no_intent_match"
 
 
+@pytest.mark.usefixtures("init_components", "init_default_agent")
 async def test_http_api_handle_failure(
     hass: HomeAssistant,
-    init_components,
     hass_client: ClientSessionGenerator,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -121,9 +120,9 @@ async def test_http_api_handle_failure(
     assert data["response"]["data"]["code"] == "failed_to_handle"
 
 
+@pytest.mark.usefixtures("init_components", "init_default_agent")
 async def test_http_api_unexpected_failure(
     hass: HomeAssistant,
-    init_components,
     hass_client: ClientSessionGenerator,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -149,8 +148,9 @@ async def test_http_api_unexpected_failure(
     assert data["response"]["data"]["code"] == "unknown"
 
 
+@pytest.mark.usefixtures("init_components", "init_default_agent")
 async def test_http_api_wrong_data(
-    hass: HomeAssistant, init_components, hass_client: ClientSessionGenerator
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
     """Test the HTTP conversation API."""
     client = await hass_client()
@@ -162,6 +162,7 @@ async def test_http_api_wrong_data(
     assert resp.status == HTTPStatus.BAD_REQUEST
 
 
+@pytest.mark.usefixtures("init_components", "init_default_agent")
 @pytest.mark.parametrize(
     "payload",
     [
@@ -193,7 +194,6 @@ async def test_http_api_wrong_data(
 )
 async def test_ws_api(
     hass: HomeAssistant,
-    init_components,
     hass_ws_client: WebSocketGenerator,
     payload,
     snapshot: SnapshotAssertion,
@@ -210,13 +210,14 @@ async def test_ws_api(
     assert msg["result"]["response"]["data"]["code"] == "no_intent_match"
 
 
+@pytest.mark.usefixtures("init_components", "init_default_agent")
 @pytest.mark.parametrize("agent_id", AGENT_ID_OPTIONS)
 async def test_ws_prepare(
-    hass: HomeAssistant, init_components, hass_ws_client: WebSocketGenerator, agent_id
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, agent_id
 ) -> None:
     """Test the Websocket prepare conversation API."""
-    agent = hass.data[DATA_DEFAULT_ENTITY]
-    assert isinstance(agent, default_agent.DefaultAgent)
+    agent = get_agent_manager(hass).default_agent
+    assert agent is not None
 
     # No intents should be loaded yet
     assert not agent._lang_intents.get(hass.config.language)
@@ -236,9 +237,9 @@ async def test_ws_prepare(
     assert agent._lang_intents.get(hass.config.language)
 
 
+@pytest.mark.usefixtures("init_components", "init_default_agent")
 async def test_get_agent_list(
     hass: HomeAssistant,
-    init_components,
     mock_conversation_agent: MockAgent,
     mock_agent_support_all: MockAgent,
     hass_ws_client: WebSocketGenerator,
@@ -294,9 +295,9 @@ async def test_get_agent_list(
     assert msg["result"] == snapshot
 
 
+@pytest.mark.usefixtures("init_components", "init_default_agent")
 async def test_ws_hass_agent_debug(
     hass: HomeAssistant,
-    init_components,
     hass_ws_client: WebSocketGenerator,
     area_registry: ar.AreaRegistry,
     entity_registry: er.EntityRegistry,
@@ -346,9 +347,9 @@ async def test_ws_hass_agent_debug(
     assert len(off_calls) == 0
 
 
+@pytest.mark.usefixtures("init_components", "init_default_agent")
 async def test_ws_hass_agent_debug_null_result(
     hass: HomeAssistant,
-    init_components,
     hass_ws_client: WebSocketGenerator,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -362,7 +363,7 @@ async def test_ws_hass_agent_debug_null_result(
         return await self.async_recognize(user_input, *args, **kwargs)
 
     with patch(
-        "homeassistant.components.conversation.default_agent.DefaultAgent.async_recognize_intent",
+        "homeassistant.components.assist_conversation.conversation.DefaultAgent.async_recognize_intent",
         async_recognize_intent,
     ):
         await client.send_json_auto_id(
@@ -381,9 +382,9 @@ async def test_ws_hass_agent_debug_null_result(
     assert msg["result"]["results"] == [None]
 
 
+@pytest.mark.usefixtures("init_components", "init_default_agent")
 async def test_ws_hass_agent_debug_out_of_range(
     hass: HomeAssistant,
-    init_components,
     hass_ws_client: WebSocketGenerator,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
@@ -439,9 +440,9 @@ async def test_ws_hass_agent_debug_out_of_range(
     assert results[0]["unmatched_slots"] == {"brightness": 1001}
 
 
+@pytest.mark.usefixtures("init_components", "init_default_agent")
 async def test_ws_hass_agent_debug_custom_sentence(
     hass: HomeAssistant,
-    init_components,
     hass_ws_client: WebSocketGenerator,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
@@ -474,9 +475,9 @@ async def test_ws_hass_agent_debug_custom_sentence(
     assert debug_results[0].get("file") == "en/beer.yaml"
 
 
+@pytest.mark.usefixtures("init_components", "init_default_agent")
 async def test_ws_hass_agent_debug_sentence_trigger(
     hass: HomeAssistant,
-    init_components,
     hass_ws_client: WebSocketGenerator,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -538,8 +539,9 @@ async def test_ws_hass_agent_debug_sentence_trigger(
     assert len(calls) == 0
 
 
+@pytest.mark.usefixtures("init_components", "init_default_agent")
 async def test_ws_hass_language_scores(
-    hass: HomeAssistant, init_components, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test getting language support scores."""
     client = await hass_ws_client(hass)
@@ -560,8 +562,9 @@ async def test_ws_hass_language_scores(
     }
 
 
+@pytest.mark.usefixtures("init_components", "init_default_agent")
 async def test_ws_hass_language_scores_with_filter(
-    hass: HomeAssistant, init_components, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test getting language support scores with language/country filter."""
     client = await hass_ws_client(hass)
