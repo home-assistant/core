@@ -710,6 +710,11 @@ ZEROCONF = {
             "domain": "thread",
         },
     ],
+    "_mieleathome._tcp.local.": [
+        {
+            "domain": "miele",
+        },
+    ],
     "_miio._udp.local.": [
         {
             "domain": "xiaomi_aqara",
