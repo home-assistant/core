@@ -2,32 +2,26 @@
   "config": {
     "step": {
       "user": {
+        "description": "Enter name of Prowl key and the API key.",
         "data": {
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]",
-          "country": "Country"
-        }
-      },
-      "choose_contract": {
-        "data": {
-          "contract": "Contract"
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "name": "[%key:common::config_flow::data::name%]"
         }
       },
       "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
         "data": {
-          "description": "Re-authenticate with Prosegur account.",
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "api_key": "[%key:common::config_flow::data::api_key%]"
         }
       }
     },
     "error": {
-      "invalid_api_key": "Invalid API key provided.",
-      "api_timeout": "Timeout calling the Prowl API.",
-      "bad_api_response": "Bad API response, try again later."
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
+      "api_timeout": "[%key:common::config_flow::error::timeout_connect%]",
+      "bad_api_response": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "reauth_successful": "Successfully updated the Prowl API key."
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   }
 }

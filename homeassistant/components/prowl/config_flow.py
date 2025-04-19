@@ -64,9 +64,6 @@ class ProwlConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
-            description_placeholders={
-                "info": "Enter name of Prowl key and the API key"
-            },
         )
 
     async def async_step_reauth(
@@ -96,9 +93,6 @@ class ProwlConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
             errors=errors,
-            description_placeholders={
-                "info": "Your Prowl API key is invalid. Please re-enter it."
-            },
         )
 
     async def _validate_api_key(self, api_key: str):
