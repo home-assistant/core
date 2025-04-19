@@ -132,8 +132,11 @@ class DeviceConnectivity(SurePetcareBinarySensor):
 
     @callback
     def _update_attr(self, surepy_entity: SurepyEntity) -> None:
-        state = surepy_entity.raw_data()["status"]
-        online = state["online"]
+        try:
+            state = surepy_entity.raw_data()["status"]
+            online = state["online"]
+        except KeyError:
+            online = False
         self._attr_is_on = bool(online)
         if online:
             self._attr_extra_state_attributes = {
