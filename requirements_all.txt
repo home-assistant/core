@@ -1852,7 +1852,7 @@ pybbox==0.0.5-alpha
 pyblackbird==0.6
 
 # homeassistant.components.bluesound
-pyblu==2.0.0
+pyblu==2.0.1
 
 # homeassistant.components.neato
 pybotvac==0.0.26
@@ -2331,7 +2331,7 @@ pysmartthings==3.0.4
 pysmarty2==0.10.2
 
 # homeassistant.components.smhi
-pysmhi==1.0.1
+pysmhi==1.0.2
 
 # homeassistant.components.edl21
 pysml==0.0.12
@@ -3158,7 +3158,7 @@ zeroconf==0.146.5
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.55
+zha==0.0.56
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.13
