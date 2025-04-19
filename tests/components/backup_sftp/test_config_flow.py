@@ -74,7 +74,7 @@ async def test_backup_sftp_full_flow(
     assert len(mock_client.mock_calls) == 1
 
     # Verify that a new config entry is created.
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     expected_title = f"{user_input[CONF_USERNAME]}@{user_input[CONF_HOST]}"
     assert result["title"] == expected_title
     assert result["data"] == user_input
@@ -100,7 +100,7 @@ async def test_already_configured(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -139,7 +139,7 @@ async def test_config_flow_exceptions(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] and result["errors"]["base"] == error_base
 
     # Recover from the error
@@ -157,7 +157,7 @@ async def test_config_flow_exceptions(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
