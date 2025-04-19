@@ -121,8 +121,8 @@ rules:
     status: exempt
     comment: |
       This integration does not have entities.
-  reconfiguration-flow: todo
-  repair-issues: todo
+  reconfiguration-flow: done
+  repair-issues: done
   stale-devices:
     status: exempt
     comment: |
