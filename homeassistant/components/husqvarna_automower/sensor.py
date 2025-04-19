@@ -49,12 +49,10 @@ ERROR_KEYS = [
     "alarm_outside_geofence",
     "angular_sensor_problem",
     "battery_problem",
-    "battery_problem",
     "battery_restriction_due_to_ambient_temperature",
     "can_error",
     "charging_current_too_high",
     "charging_station_blocked",
-    "charging_system_problem",
     "charging_system_problem",
     "collision_sensor_defect",
     "collision_sensor_error",
@@ -65,11 +63,6 @@ ERROR_KEYS = [
     "complex_working_area",
     "connection_changed",
     "connection_not_changed",
-    "connectivity_problem",
-    "connectivity_problem",
-    "connectivity_problem",
-    "connectivity_problem",
-    "connectivity_problem",
     "connectivity_problem",
     "connectivity_settings_restored",
     "cutting_drive_motor_1_defect",
@@ -83,7 +76,6 @@ ERROR_KEYS = [
     "cutting_motor_problem",
     "cutting_stopped_slope_too_steep",
     "cutting_system_blocked",
-    "cutting_system_blocked",
     "cutting_system_imbalance_warning",
     "cutting_system_major_imbalance",
     "destination_not_reachable",
@@ -93,7 +85,6 @@ ERROR_KEYS = [
     "empty_battery",
     "folding_cutting_deck_sensor_defect",
     "folding_sensor_activated",
-    "geofence_problem",
     "geofence_problem",
     "gps_navigation_problem",
     "guide_1_not_found",
@@ -111,7 +102,6 @@ ERROR_KEYS = [
     "left_brush_motor_overloaded",
     "lift_sensor_defect",
     "lifted",
-    "limited_cutting_height_range",
     "limited_cutting_height_range",
     "loop_sensor_defect",
     "loop_sensor_problem_front",
@@ -136,9 +126,6 @@ ERROR_KEYS = [
     "safety_function_faulty",
     "settings_restored",
     "sim_card_locked",
-    "sim_card_locked",
-    "sim_card_locked",
-    "sim_card_locked",
     "sim_card_not_found",
     "sim_card_requires_pin",
     "slipped_mower_has_slipped_situation_not_solved_with_moving_pattern",
@@ -147,13 +134,6 @@ ERROR_KEYS = [
     "stop_button_problem",
     "stuck_in_charging_station",
     "switch_cord_problem",
-    "temporary_battery_problem",
-    "temporary_battery_problem",
-    "temporary_battery_problem",
-    "temporary_battery_problem",
-    "temporary_battery_problem",
-    "temporary_battery_problem",
-    "temporary_battery_problem",
     "temporary_battery_problem",
     "tilt_sensor_problem",
     "too_high_discharge_current",
@@ -196,7 +176,9 @@ ERROR_STATES = [
     MowerStates.WAIT_UPDATING,
 ]
 
-ERROR_KEY_LIST = list(set(ERROR_KEYS + [state.lower() for state in ERROR_STATES]))
+ERROR_KEY_LIST = list(
+    dict.fromkeys(ERROR_KEYS + [state.lower() for state in ERROR_STATES])
+)
 
 RESTRICTED_REASONS: list = [
     RestrictedReasons.ALL_WORK_AREAS_COMPLETED,
