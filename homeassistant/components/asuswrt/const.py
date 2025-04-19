@@ -7,10 +7,12 @@ CONF_INTERFACE = "interface"
 CONF_REQUIRE_IP = "require_ip"
 CONF_SSH_KEY = "ssh_key"
 CONF_TRACK_UNKNOWN = "track_unknown"
+CONF_REFRESH_INTERVAL = "refresh_interval"
 
 DEFAULT_DNSMASQ = "/var/lib/misc"
 DEFAULT_INTERFACE = "eth0"
 DEFAULT_TRACK_UNKNOWN = False
+DEFAULT_REFRESH_INTERVAL = 30
 
 KEY_COORDINATOR = "coordinator"
 KEY_METHOD = "method"

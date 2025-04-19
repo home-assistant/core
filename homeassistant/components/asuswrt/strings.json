@@ -40,6 +40,7 @@
       "init": {
         "data": {
           "consider_home": "Seconds to wait before considering a device away",
+          "refresh_interval": "Seconds between each refresh interval",
           "track_unknown": "Track unknown / unnamed devices",
           "interface": "The interface that you want statistics from (e.g. eth0, eth1 etc)",
           "dnsmasq": "The location of the dnsmasq.leases file in the router",

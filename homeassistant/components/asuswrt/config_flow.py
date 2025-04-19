@@ -41,8 +41,10 @@ from .const import (
     CONF_REQUIRE_IP,
     CONF_SSH_KEY,
     CONF_TRACK_UNKNOWN,
+    CONF_REFRESH_INTERVAL,
     DEFAULT_DNSMASQ,
     DEFAULT_INTERFACE,
+    DEFAULT_REFRESH_INTERVAL,
     DEFAULT_TRACK_UNKNOWN,
     DOMAIN,
     MODE_AP,
@@ -82,6 +84,9 @@ OPTIONS_SCHEMA = vol.Schema(
         vol.Optional(
             CONF_CONSIDER_HOME, default=DEFAULT_CONSIDER_HOME.total_seconds()
         ): vol.All(vol.Coerce(int), vol.Clamp(min=0, max=900)),
+        vol.Optional(
+            CONF_REFRESH_INTERVAL, default=DEFAULT_REFRESH_INTERVAL.total_seconds()
+        ): vol.All(vol.Coerce(int), vol.Clamp(min=10, max=3600)),
         vol.Optional(CONF_TRACK_UNKNOWN, default=DEFAULT_TRACK_UNKNOWN): bool,
     }
 )
