@@ -1,0 +1,32 @@
+{
+  "config": {
+    "flow_title": "{device_id}",
+    "step": {
+      "user": {
+        "description": "Config Rexense device",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "The hostname of the rexense device.",
+          "port": "The TCP port of the rexense device."
+        }
+      },
+      "reconfigure": {
+        "description": "Update configuration for {device_id}.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "[%key:component::rexense::config::step::user::data_description::host%]",
+          "port": "[%key:component::rexense::config::step::user::data_description::port%]"
+        }
+      },
+      "discovery_confirm": {
+        "description": "Do you want to set up the {model} at {host}?"
+      }
+    }
+  }
+}
