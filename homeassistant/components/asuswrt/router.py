@@ -51,6 +51,10 @@ SENSORS_TYPE_COUNT = "sensors_count"
 
 _LOGGER = logging.getLogger(__name__)
 
+def get_scan_interval(self, options: dict[str, Any]) -> timedelta:
+    """Get scan interval based on configured refresh interval."""
+    refresh_interval = options.get(CONF_REFRESH_INTERVAL, DEFAULT_REFRESH_INTERVAL)
+    return timedelta(seconds=refresh_interval)
 
 class AsusWrtSensorDataHandler:
     """Data handler for AsusWrt sensor."""
@@ -93,7 +97,7 @@ class AsusWrtSensorDataHandler:
             name=sensor_type,
             update_method=method,
             # Polling interval. Will only be polled if there are subscribers.
-            update_interval=SCAN_INTERVAL if should_poll else None,
+            update_interval=get_scan_interval(self._api.options) if should_poll else None,
         )
         await coordinator.async_refresh()
 
@@ -266,8 +270,9 @@ class AsusWrtRouter:
         # Init Sensors
         await self.init_sensors_coordinator()
 
+        scan_interval = get_scan_interval(self._options)
         self.async_on_close(
-            async_track_time_interval(self.hass, self.update_all, SCAN_INTERVAL)
+            async_track_time_interval(self.hass, self.update_all, scan_interval)
         )
 
     async def update_all(self, now: datetime | None = None) -> None:
