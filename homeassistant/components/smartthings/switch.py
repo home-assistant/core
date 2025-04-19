@@ -38,7 +38,6 @@ AC_CAPABILITIES = (
 MEDIA_PLAYER_CAPABILITIES = (
     Capability.AUDIO_MUTE,
     Capability.AUDIO_VOLUME,
-    Capability.MEDIA_PLAYBACK,
 )
 
 
