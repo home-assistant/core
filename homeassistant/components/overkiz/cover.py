@@ -65,9 +65,9 @@ class OverkizCoverDescription(CoverEntityDescription):
     current_tilt_position_state: OverkizState | None = None
     set_tilt_position_command: OverkizCommand | None = None
     open_tilt_command: OverkizCommand | None = None
-    open_tilt_command_args: OverkizStateType | list[OverkizStateType] = None
+    open_tilt_command_args: list[OverkizStateType] | None = None
     close_tilt_command: OverkizCommand | None = None
-    close_tilt_command_args: OverkizStateType | list[OverkizStateType] = None
+    close_tilt_command_args: list[OverkizStateType] | None = None
     stop_tilt_command: OverkizCommand | None = None
 
 
@@ -437,19 +437,17 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
         if command := self.entity_description.set_tilt_position_command:
             await self.executor.async_execute_command(command, position)
 
-    async def async_open_tilt_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
         if command := self.entity_description.open_tilt_command:
-            await self.executor.async_execute_command(
-                command, self.entity_description.open_tilt_command_args
-            )
+            args = self.entity_description.open_tilt_command_args or []
+            await self.executor.async_execute_command(command, *args)
 
-    async def async_close_tilt_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
         if command := self.entity_description.close_tilt_command:
-            await self.executor.async_execute_command(
-                command, self.entity_description.close_tilt_command_args
-            )
+            args = self.entity_description.close_tilt_command_args or []
+            await self.executor.async_execute_command(command, *args)
 
     async def async_stop_tilt_cover(self, **kwargs: Any) -> None:
         """Stop the cover tilt."""
