@@ -4,20 +4,31 @@ from pymodbus.exceptions import ModbusException
 import pytest
 
 from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP_KELVIN,
+    DOMAIN as LIGHT_DOMAIN,
+)
 from homeassistant.components.modbus.const import (
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
+    CONF_BRIGHTNESS_REGISTER,
+    CONF_COLOR_TEMP_REGISTER,
     CONF_DEVICE_ADDRESS,
     CONF_INPUT_TYPE,
     CONF_STATE_OFF,
     CONF_STATE_ON,
     CONF_VERIFY,
     CONF_WRITE_TYPE,
+    LIGHT_DEFAULT_MAX_KELVIN,
+    LIGHT_DEFAULT_MIN_KELVIN,
     MODBUS_DOMAIN,
+    LIGHT_MODBUS_SCALE_MAX,
+    LIGHT_MODBUS_SCALE_MIN,
 )
+from homeassistant.components.modbus.light import ModbusLight
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_ADDRESS,
@@ -271,7 +282,6 @@ async def test_light_service_turn(
     """Run test for service turn_on/turn_off."""
 
     assert MODBUS_DOMAIN in hass.config.components
-
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
     await hass.services.async_call(
         LIGHT_DOMAIN, SERVICE_TURN_ON, service_data={ATTR_ENTITY_ID: ENTITY_ID}
@@ -314,6 +324,8 @@ async def test_light_service_turn(
                 {
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 1234,
+                    CONF_BRIGHTNESS_REGISTER: 1,
+                    CONF_COLOR_TEMP_REGISTER: 2,
                     CONF_WRITE_TYPE: CALL_TYPE_COIL,
                     CONF_VERIFY: {},
                 }
@@ -338,6 +350,26 @@ async def test_service_light_update(hass: HomeAssistant, mock_modbus_ha) -> None
         blocking=True,
     )
     assert hass.states.get(ENTITY_ID).state == STATE_ON
+    mock_modbus_ha.read_holding_registers.return_value = ReadResult([100, 0])
+    expected_brightness = 255
+    expected_color_temp = 7000
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+        },
+        blocking=True,
+    )
+    assert (
+        hass.states.get(ENTITY_ID).attributes.get(ATTR_BRIGHTNESS)
+        == expected_brightness
+    )
+    assert (
+        hass.states.get(ENTITY_ID).attributes.get(ATTR_COLOR_TEMP_KELVIN)
+        == expected_color_temp
+    )
+    assert hass
 
 
 async def test_no_discovery_info_light(
@@ -352,3 +384,164 @@ async def test_no_discovery_info_light(
     )
     await hass.async_block_till_done()
     assert LIGHT_DOMAIN in hass.config.components
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_LIGHTS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 1234,
+                    CONF_WRITE_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                    CONF_SCAN_INTERVAL: 0,
+                    CONF_BRIGHTNESS_REGISTER: 1,
+                }
+            ]
+        }
+    ],
+)
+async def test_brightness_light(hass: HomeAssistant, mock_modbus_ha) -> None:
+    """Test Modbus Light brightness."""
+    from homeassistant.components.modbus.light import ModbusLight
+
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        service_data={
+            ATTR_ENTITY_ID: ENTITY_ID,
+            ATTR_BRIGHTNESS: 128,
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
+
+    calls = mock_modbus_ha.write_register.call_args_list
+    modbus_brightness = await ModbusLight._convert_brightness_to_modbus(brightness=128)
+
+    assert any(
+        call.args[0] == 1 and call.kwargs["value"] == modbus_brightness
+        for call in calls
+    )
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_OFF,
+        service_data={ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_LIGHTS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 1234,
+                    CONF_WRITE_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                    CONF_SCAN_INTERVAL: 0,
+                    CONF_BRIGHTNESS_REGISTER: 1,
+                    CONF_COLOR_TEMP_REGISTER: 2,
+                }
+            ]
+        }
+    ],
+)
+async def test_color_temp_light(hass: HomeAssistant, mock_modbus_ha) -> None:
+    """Test Modbus Light color temperature."""
+    from homeassistant.components.modbus.light import ModbusLight
+
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        service_data={
+            ATTR_ENTITY_ID: ENTITY_ID,
+            ATTR_BRIGHTNESS: 128,
+            ATTR_COLOR_TEMP_KELVIN: 2000,
+        },
+        blocking=True,
+    )
+
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
+
+    calls = mock_modbus_ha.write_register.call_args_list
+    modbus_brightness = await ModbusLight._convert_brightness_to_modbus(brightness=128)
+    modbus_temp = round(
+        LIGHT_MODBUS_SCALE_MIN
+        + (2000 - LIGHT_DEFAULT_MIN_KELVIN)
+        * (LIGHT_MODBUS_SCALE_MAX - LIGHT_MODBUS_SCALE_MIN)
+        / (LIGHT_DEFAULT_MAX_KELVIN - LIGHT_DEFAULT_MIN_KELVIN)
+    )
+
+    assert any(
+        call.args[0] == 1 and call.kwargs["value"] == modbus_brightness
+        for call in calls
+    )
+    assert any(
+        call.args[0] == 2 and call.kwargs["value"] == modbus_temp for call in calls
+    )
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_OFF,
+        service_data={ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
+
+
+@pytest.mark.asyncio
+class TestModbusConvectors:
+    """Tests for ModbusLight brightness and color temperature conversions."""
+
+    async def test_convert_brightness_to_modbus(self):
+        """Test conversion of brightness (0–255) to Modbus scale (0–100)."""
+        brightness = 128
+        expected = 50
+        result = await ModbusLight._convert_brightness_to_modbus(brightness)
+        assert result == expected
+
+    async def test_convert_color_temp_to_modbus(self):
+        """Test conversion of color temperature in Kelvin to Modbus scale (0–100)."""
+        kelvin = 2000
+        expected = 0
+        result = round(
+            LIGHT_MODBUS_SCALE_MIN
+            + (kelvin - LIGHT_DEFAULT_MIN_KELVIN)
+            * (LIGHT_MODBUS_SCALE_MAX - LIGHT_MODBUS_SCALE_MIN)
+            / (LIGHT_DEFAULT_MAX_KELVIN - LIGHT_DEFAULT_MIN_KELVIN)
+        )
+        assert result == expected
+
+    async def test_percent_to_temperature(self):
+        """Test conversion of Modbus percentage (0–100) to color temperature in Kelvin."""
+        percent = 20
+        expected_kelvin = 3000
+        result = round(
+            LIGHT_DEFAULT_MIN_KELVIN
+            + (
+                percent
+                / (LIGHT_MODBUS_SCALE_MAX - LIGHT_MODBUS_SCALE_MIN)
+                * (LIGHT_DEFAULT_MAX_KELVIN - LIGHT_DEFAULT_MIN_KELVIN)
+            )
+        )
+        assert result == expected_kelvin
+
+    async def test_percent_to_brightness(self):
+        """Test conversion of Modbus percentage (0–100) to brightness (0–255)."""
+        percent = 20
+        expected_brightness = 51
+        result = await ModbusLight._convert_modbus_percent_to_brightness(percent)
+        assert result == expected_brightness
