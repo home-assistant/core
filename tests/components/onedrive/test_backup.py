@@ -75,7 +75,6 @@ async def test_agents_info(
 async def test_agents_list_backups(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test agent list backups."""
 
@@ -103,6 +102,22 @@ async def test_agents_list_backups(
             "with_automatic_settings": None,
         }
     ]
+
+
+async def test_agents_list_backups_with_download_failure(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_onedrive_client: MagicMock,
+) -> None:
+    """Test agent list backups still works if one of the items fails to download."""
+    mock_onedrive_client.download_drive_item.side_effect = OneDriveException("test")
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "backup/info"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"]["agent_errors"] == {}
+    assert response["result"]["backups"] == []
 
 
 async def test_agents_get_backup(
