@@ -5,7 +5,9 @@ from unittest.mock import patch
 
 import pytest
 
-from tests.common import AsyncMock
+from tests.common import AsyncMock, MockConfigEntry
+
+from . import LOCAL_CONFIG, CLOUD_CONFIG
 
 CLOUD_DEVICE_DATA: dict[str, Any] = [
     {
@@ -22,6 +24,13 @@ LOCAL_DEVICE_DATA: dict[str, Any] = {
     "current_temperature": 15,
     "target_temperature": 20,
 }
+
+
+@pytest.fixture(params=["cloud", "local"])
+def mock_config_entry(request: pytest.FixtureRequest) -> MockConfigEntry:
+    """Mock a config entry."""
+    entry_data = LOCAL_CONFIG if request.param == "local" else CLOUD_CONFIG
+    return MockConfigEntry(domain="adax", data=entry_data)
 
 
 @pytest.fixture
