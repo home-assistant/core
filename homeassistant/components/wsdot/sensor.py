@@ -17,7 +17,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import ATTR_NAME, CONF_API_KEY, CONF_ID, CONF_NAME, UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -65,7 +64,9 @@ def setup_platform(
     for travel_time in config[CONF_TRAVEL_TIMES]:
         name = travel_time.get(CONF_NAME) or travel_time.get(CONF_ID)
         sensors.append(
-            WashingtonStateTravelTimeSensor(name, config[CONF_API_KEY], travel_time.get(CONF_ID))
+            WashingtonStateTravelTimeSensor(
+                name, config[CONF_API_KEY], travel_time.get(CONF_ID)
+            )
         )
 
     add_entities(sensors, True)
@@ -136,18 +137,16 @@ class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
                 ATTR_TRAVEL_TIME_ID,
             ):
                 attrs[key] = self._data.get(key)
-            time_updated = self._data.get(ATTR_TIME_UPDATED)
-            if isinstance(time_updated, str):
-                attrs[ATTR_TIME_UPDATED] = _parse_wsdot_timestamp(time_updated)
-            else:
-                attrs[ATTR_TIME_UPDATED] = time_updated
+            attrs[ATTR_TIME_UPDATED] = _parse_wsdot_timestamp(
+                self._data.get(ATTR_TIME_UPDATED)
+            )
             return attrs
         return None
 
 
-def _parse_wsdot_timestamp(timestamp: str) -> datetime | None:
+def _parse_wsdot_timestamp(timestamp: Any) -> datetime | None:
     """Convert WSDOT timestamp to datetime."""
-    if not timestamp:
+    if not isinstance(timestamp, str):
         return None
     # ex: Date(1485040200000-0800)
     timestamp_parts = re.search(r"Date\((\d+)([+-]\d\d)\d\d\)", timestamp)
