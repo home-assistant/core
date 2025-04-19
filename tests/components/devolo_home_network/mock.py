@@ -64,6 +64,7 @@ class MockDevice(Device):
             return_value=FIRMWARE_UPDATE_AVAILABLE
         )
         self.device.async_get_led_setting = AsyncMock(return_value=False)
+        self.device.async_set_led_setting = AsyncMock(return_value=True)
         self.device.async_restart = AsyncMock(return_value=True)
         self.device.async_uptime = AsyncMock(return_value=UPTIME)
         self.device.async_start_wps = AsyncMock(return_value=True)
@@ -71,6 +72,7 @@ class MockDevice(Device):
             return_value=CONNECTED_STATIONS
         )
         self.device.async_get_wifi_guest_access = AsyncMock(return_value=GUEST_WIFI)
+        self.device.async_set_wifi_guest_access = AsyncMock(return_value=True)
         self.device.async_get_wifi_neighbor_access_points = AsyncMock(
             return_value=NEIGHBOR_ACCESS_POINTS
         )

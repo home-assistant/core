@@ -32,9 +32,9 @@ from time import time
 from .const import (
     CONF_KAMEREON_ACCOUNT_ID,
     COOLING_UPDATES_SECONDS,
-    DEFAULT_SCAN_INTERVAL,
+    MAX_CALLS_PER_HOURS,
 )
-from .renault_vehicle import RenaultVehicleProxy
+from .renault_vehicle import COORDINATORS, RenaultVehicleProxy
 
 LOGGER = logging.getLogger(__name__)
 
@@ -82,7 +82,6 @@ class RenaultHub:
     async def async_initialise(self, config_entry: RenaultConfigEntry) -> None:
         """Set up proxy."""
         account_id: str = config_entry.data[CONF_KAMEREON_ACCOUNT_ID]
-        scan_interval = timedelta(seconds=DEFAULT_SCAN_INTERVAL)
 
         self._account = await self._client.get_api_account(account_id)
         vehicles = await self._account.get_vehicles()
@@ -94,6 +93,12 @@ class RenaultHub:
                 raise ConfigEntryNotReady(
                     "Failed to retrieve vehicle details from Renault servers"
                 )
+
+            num_call_per_scan = len(COORDINATORS) * len(vehicles.vehicleLinks)
+            scan_interval = timedelta(
+                seconds=(3600 * num_call_per_scan) / MAX_CALLS_PER_HOURS
+            )
+
             device_registry = dr.async_get(self._hass)
             await asyncio.gather(
                 *(
@@ -107,6 +112,21 @@ class RenaultHub:
                     for vehicle_link in vehicles.vehicleLinks
                 )
             )
+
+            # all vehicles have been initiated with the right number of active coordinators
+            num_call_per_scan = 0
+            for vehicle_link in vehicles.vehicleLinks:
+                vehicle = self._vehicles[str(vehicle_link.vin)]
+                num_call_per_scan += len(vehicle.coordinators)
+
+            new_scan_interval = timedelta(
+                seconds=(3600 * num_call_per_scan) / MAX_CALLS_PER_HOURS
+            )
+            if new_scan_interval != scan_interval:
+                # we need to change the vehicles with the right scan interval
+                for vehicle_link in vehicles.vehicleLinks:
+                    vehicle = self._vehicles[str(vehicle_link.vin)]
+                    vehicle.update_scan_interval(new_scan_interval)
 
     async def async_initialise_vehicle(
         self,
