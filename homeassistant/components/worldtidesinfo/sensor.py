@@ -13,7 +13,13 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
 )
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_DATUM,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_NAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -33,6 +39,7 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_LATITUDE): cv.latitude,
         vol.Optional(CONF_LONGITUDE): cv.longitude,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_DATUM): cv.string,
     }
 )
 
@@ -67,12 +74,13 @@ class WorldTidesInfoSensor(SensorEntity):
 
     _attr_attribution = ATTRIBUTION
 
-    def __init__(self, name, lat, lon, key):
+    def __init__(self, name, lat, lon, key, datum):
         """Initialize the sensor."""
         self._name = name
         self._lat = lat
         self._lon = lon
         self._key = key
+        self._datum = datum
         self.data = None
 
     @property
@@ -121,6 +129,8 @@ class WorldTidesInfoSensor(SensorEntity):
             "https://www.worldtides.info/api?extremes&length=86400"
             f"&key={self._key}&lat={self._lat}&lon={self._lon}&start={start}"
         )
+        if self._datum:
+            resource += f"&datum={self._datum}"
 
         try:
             self.data = requests.get(resource, timeout=10).json()
