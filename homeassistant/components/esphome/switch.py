@@ -18,6 +18,8 @@ from .entity import (
     platform_async_setup_entry,
 )
 
+PARALLEL_UPDATES = 0
+
 
 class EsphomeSwitch(EsphomeEntity[SwitchInfo, SwitchState], SwitchEntity):
     """A switch implementation for ESPHome."""
