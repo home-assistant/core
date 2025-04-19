@@ -40,8 +40,7 @@ PARALLEL_UPDATES = 0
 
 ATTR_WORK_AREA_ID_ASSIGNMENT = "work_area_id_assignment"
 
-ERROR_KEY_LIST = [
-    "no_error",
+ERROR_KEYS = [
     "alarm_mower_in_motion",
     "alarm_mower_lifted",
     "alarm_mower_stopped",
@@ -77,10 +76,10 @@ ERROR_KEY_LIST = [
     "cutting_drive_motor_2_defect",
     "cutting_drive_motor_3_defect",
     "cutting_height_blocked",
-    "cutting_height_problem",
     "cutting_height_problem_curr",
     "cutting_height_problem_dir",
     "cutting_height_problem_drive",
+    "cutting_height_problem",
     "cutting_motor_problem",
     "cutting_stopped_slope_too_steep",
     "cutting_system_blocked",
@@ -92,9 +91,6 @@ ERROR_KEY_LIST = [
     "docking_sensor_defect",
     "electronic_problem",
     "empty_battery",
-    MowerStates.ERROR.lower(),
-    MowerStates.ERROR_AT_POWER_UP.lower(),
-    MowerStates.FATAL_ERROR.lower(),
     "folding_cutting_deck_sensor_defect",
     "folding_sensor_activated",
     "geofence_problem",
@@ -129,6 +125,7 @@ ERROR_KEY_LIST = [
     "no_accurate_position_from_satellites",
     "no_confirmed_position",
     "no_drive",
+    "no_error",
     "no_loop_signal",
     "no_power_in_charging_station",
     "no_response_from_charger",
@@ -189,11 +186,17 @@ ERROR_KEY_LIST = [
     "zone_generator_problem",
 ]
 
-ERROR_STATES = {
-    MowerStates.ERROR,
+ERROR_STATES = [
     MowerStates.ERROR_AT_POWER_UP,
+    MowerStates.ERROR,
     MowerStates.FATAL_ERROR,
-}
+    MowerStates.OFF,
+    MowerStates.STOPPED,
+    MowerStates.WAIT_POWER_UP,
+    MowerStates.WAIT_UPDATING,
+]
+
+ERROR_KEY_LIST = list(set(ERROR_KEYS + [state.lower() for state in ERROR_STATES]))
 
 RESTRICTED_REASONS: list = [
     RestrictedReasons.ALL_WORK_AREAS_COMPLETED,
