@@ -1577,3 +1577,51 @@ async def test_entry_missing_bluetooth_mac_address(
     )
     await hass.async_block_till_done()
     assert entry.data[CONF_BLUETOOTH_MAC_ADDRESS] == "AA:BB:CC:DD:EE:FC"
+
+
+async def test_device_adds_friendly_name(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a device with user services that change arguments."""
+    entity_info = []
+    states = []
+    device: MockESPHomeDevice = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=[],
+        device_info={"name": "nofriendlyname", "friendly_name": ""},
+        states=states,
+    )
+    await hass.async_block_till_done()
+    dev_reg = dr.async_get(hass)
+    dev = dev_reg.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, device.entry.unique_id)}
+    )
+    assert dev.name == "Nofriendlyname"
+    assert (
+        "No `friendly_name` set in the `esphome:` section of "
+        "the YAML config for device 'nofriendlyname'"
+    ) in caplog.text
+    caplog.clear()
+
+    await device.mock_disconnect(True)
+    await hass.async_block_till_done()
+    device.device_info = DeviceInfo(
+        **{**device.device_info.to_dict(), "friendly_name": "I have a friendly name"}
+    )
+    mock_client.device_info = AsyncMock(return_value=device.device_info)
+    await device.mock_connect()
+    await hass.async_block_till_done()
+    dev = dev_reg.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, device.entry.unique_id)}
+    )
+    assert dev.name == "I have a friendly name"
+    assert (
+        "No `friendly_name` set in the `esphome:` section of the YAML config for device"
+    ) not in caplog.text

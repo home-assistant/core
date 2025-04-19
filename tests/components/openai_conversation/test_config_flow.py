@@ -111,7 +111,7 @@ async def test_options_unsupported_model(
         {
             CONF_RECOMMENDED: False,
             CONF_PROMPT: "Speak like a pirate",
-            CONF_LLM_HASS_API: "assist",
+            CONF_LLM_HASS_API: ["assist"],
         },
     )
     await hass.async_block_till_done()
@@ -187,7 +187,6 @@ async def test_options_no_model_settings(
         {
             CONF_RECOMMENDED: False,
             CONF_PROMPT: "Speak like a pirate",
-            CONF_LLM_HASS_API: "none",
         },
     )
     assert options["type"] == FlowResultType.FORM
@@ -230,7 +229,6 @@ async def test_options_reasoning_model(
         {
             CONF_RECOMMENDED: False,
             CONF_PROMPT: "Speak like a pirate",
-            CONF_LLM_HASS_API: "none",
         },
     )
     assert options["type"] == FlowResultType.FORM
@@ -284,7 +282,6 @@ async def test_options_web_search_no_user_location(
         {
             CONF_RECOMMENDED: False,
             CONF_PROMPT: "Speak like a pirate",
-            CONF_LLM_HASS_API: "none",
         },
     )
     assert options["type"] == FlowResultType.FORM
@@ -342,7 +339,6 @@ async def test_options_web_search_user_location(
         {
             CONF_RECOMMENDED: False,
             CONF_PROMPT: "Speak like a pirate",
-            CONF_LLM_HASS_API: "none",
         },
     )
     assert options["type"] == FlowResultType.FORM
@@ -460,7 +456,6 @@ async def test_options_retained(
         for key in options["data_schema"].schema
     } == {
         CONF_PROMPT: "Speak like super Mario",
-        CONF_LLM_HASS_API: "none",
         CONF_RECOMMENDED: False,
     }
 
@@ -469,7 +464,6 @@ async def test_options_retained(
         {
             CONF_RECOMMENDED: False,
             CONF_PROMPT: "Speak like super Mario",
-            CONF_LLM_HASS_API: "none",
         },
     )
     assert options["type"] == FlowResultType.FORM
@@ -526,7 +520,6 @@ async def test_options_retained(
         for key in options["data_schema"].schema
     } == {
         CONF_PROMPT: "Speak like a pro",
-        CONF_LLM_HASS_API: "none",
         CONF_RECOMMENDED: False,
     }
 
@@ -535,7 +528,6 @@ async def test_options_retained(
         {
             CONF_RECOMMENDED: False,
             CONF_PROMPT: "Speak like a pro",
-            CONF_LLM_HASS_API: "none",
         },
     )
     assert options["type"] == FlowResultType.FORM
@@ -577,7 +569,7 @@ async def test_options_removed(
         options={
             CONF_RECOMMENDED: False,
             CONF_PROMPT: "Speak like a pirate",
-            CONF_LLM_HASS_API: "assist",
+            CONF_LLM_HASS_API: ["assist"],
             CONF_TEMPERATURE: 0.8,
             CONF_CHAT_MODEL: "gpt-4o",
             CONF_TOP_P: 0.9,
@@ -601,7 +593,6 @@ async def test_options_removed(
         {
             CONF_RECOMMENDED: True,
             CONF_PROMPT: "Speak like a pirate",
-            CONF_LLM_HASS_API: "none",
         },
     )
     await hass.async_block_till_done()
@@ -618,7 +609,7 @@ async def test_options_removed(
         options={
             CONF_RECOMMENDED: False,
             CONF_PROMPT: "Speak like a pirate",
-            CONF_LLM_HASS_API: "assist",
+            CONF_LLM_HASS_API: ["assist"],
             CONF_TEMPERATURE: 0.8,
             CONF_CHAT_MODEL: "gpt-4o",
             CONF_TOP_P: 0.9,
@@ -636,7 +627,6 @@ async def test_options_removed(
         {
             CONF_RECOMMENDED: True,
             CONF_PROMPT: "Speak like a pirate",
-            CONF_LLM_HASS_API: "none",
         },
     )
     await hass.async_block_till_done()
@@ -653,7 +643,7 @@ async def test_options_removed(
         options={
             CONF_RECOMMENDED: False,
             CONF_PROMPT: "Speak like a pirate",
-            CONF_LLM_HASS_API: "assist",
+            CONF_LLM_HASS_API: ["assist"],
             CONF_TEMPERATURE: 0.8,
             CONF_CHAT_MODEL: "gpt-4o",
             CONF_TOP_P: 0.9,
@@ -677,7 +667,6 @@ async def test_options_removed(
         {
             CONF_RECOMMENDED: False,
             CONF_PROMPT: "Speak like a pirate",
-            CONF_LLM_HASS_API: "none",
         },
     )
     assert options["type"] == FlowResultType.FORM
@@ -720,7 +709,7 @@ async def test_options_removed(
         options={
             CONF_RECOMMENDED: False,
             CONF_PROMPT: "Speak like a pirate",
-            CONF_LLM_HASS_API: "assist",
+            CONF_LLM_HASS_API: ["assist"],
             CONF_TEMPERATURE: 0.8,
             CONF_CHAT_MODEL: "o3-mini",
             CONF_TOP_P: 0.9,
@@ -738,7 +727,6 @@ async def test_options_removed(
         {
             CONF_RECOMMENDED: False,
             CONF_PROMPT: "Speak like a pirate",
-            CONF_LLM_HASS_API: "none",
         },
     )
     assert options["type"] == FlowResultType.FORM

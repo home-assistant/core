@@ -75,7 +75,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 RECOMMENDED_OPTIONS = {
     CONF_RECOMMENDED: True,
-    CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
+    CONF_LLM_HASS_API: [llm.LLM_API_ASSIST],
     CONF_PROMPT: llm.DEFAULT_INSTRUCTIONS_PROMPT,
 }
 
@@ -150,17 +150,15 @@ class OpenAIOptionsFlow(OptionsFlow):
 
         hass_apis: list[SelectOptionDict] = [
             SelectOptionDict(
-                label="No control",
-                value="none",
-            )
-        ]
-        hass_apis.extend(
-            SelectOptionDict(
                 label=api.name,
                 value=api.id,
             )
             for api in llm.async_get_apis(self.hass)
-        )
+        ]
+        if (suggested_llm_apis := options.get(CONF_LLM_HASS_API)) and isinstance(
+            suggested_llm_apis, str
+        ):
+            suggested_llm_apis = [suggested_llm_apis]
 
         step_schema: VolDictType = {
             vol.Optional(
@@ -173,17 +171,16 @@ class OpenAIOptionsFlow(OptionsFlow):
             ): TemplateSelector(),
             vol.Optional(
                 CONF_LLM_HASS_API,
-                description={"suggested_value": options.get(CONF_LLM_HASS_API, "none")},
-                default="none",
-            ): SelectSelector(SelectSelectorConfig(options=hass_apis)),
+                description={"suggested_value": suggested_llm_apis},
+            ): SelectSelector(SelectSelectorConfig(options=hass_apis, multiple=True)),
             vol.Required(
                 CONF_RECOMMENDED, default=options.get(CONF_RECOMMENDED, False)
             ): bool,
         }
 
         if user_input is not None:
-            if user_input[CONF_LLM_HASS_API] == "none":
-                user_input.pop(CONF_LLM_HASS_API)
+            if not user_input.get(CONF_LLM_HASS_API):
+                user_input.pop(CONF_LLM_HASS_API, None)
 
             if user_input[CONF_RECOMMENDED]:
                 return self.async_create_entry(title="", data=user_input)

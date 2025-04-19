@@ -81,6 +81,7 @@ async def test_restore_dashboard_storage_end_to_end(
         assert mock_dashboard_api.mock_calls[0][1][0] == "http://new-host:6052"
 
 
+@pytest.mark.usefixtures("hassio_stubs")
 async def test_restore_dashboard_storage_skipped_if_addon_uninstalled(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
@@ -105,9 +106,7 @@ async def test_restore_dashboard_storage_skipped_if_addon_uninstalled(
             return_value={},
         ),
     ):
-        await async_setup_component(hass, "hassio", {})
-        await hass.async_block_till_done()
-        await async_setup_component(hass, DOMAIN, {})
+        assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
         assert "test-slug is no longer installed" in caplog.text
         assert not mock_dashboard_api.called
@@ -194,7 +193,7 @@ async def test_new_dashboard_fix_reauth(
     """Test config entries waiting for reauth are triggered."""
     mock_client.device_info.side_effect = (
         InvalidAuthAPIError,
-        DeviceInfo(uses_password=False, name="test"),
+        DeviceInfo(uses_password=False, name="test", mac_address="11:22:33:44:55:AA"),
     )
 
     with patch(
