@@ -91,6 +91,11 @@ class AdaxDevice(ClimateEntity):
             manufacturer="Adax",
         )
 
+    @property
+    def available(self) -> bool:
+        """Whether the entity is available or not."""
+        return super().available and self._attr_current_temperature is not None
+
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
         if hvac_mode == HVACMode.HEAT:
@@ -110,9 +115,13 @@ class AdaxDevice(ClimateEntity):
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
-        await self._adax_data_handler.set_room_target_temperature(
-            self._device_id, temperature, True
-        )
+        if temperature == 0:
+            # Temp value of 0 should be treated as a 'turn-off' command
+            await self.async_turn_off()
+        else:
+            await self._adax_data_handler.set_room_target_temperature(
+                self._device_id, temperature, True
+            )
 
     async def async_update(self) -> None:
         """Get the latest data."""
