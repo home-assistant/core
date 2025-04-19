@@ -119,7 +119,12 @@ async def test_user_connection_updates_host(
         data={CONF_HOST: "127.0.0.1", CONF_PORT: 80},
     )
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "already_configured_updates"
+    assert result["description_placeholders"] == {
+        "title": "Mock Title",
+        "name": "unknown",
+        "mac": "11:22:33:44:55:aa",
+    }
     assert entry.data[CONF_HOST] == "127.0.0.1"
 
 
@@ -173,7 +178,12 @@ async def test_user_sets_unique_id(
         {CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
     )
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "already_configured_updates"
+    assert result["description_placeholders"] == {
+        "title": "test",
+        "name": "test",
+        "mac": "11:22:33:44:55:aa",
+    }
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
@@ -645,7 +655,12 @@ async def test_discovery_already_configured(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "already_configured_updates"
+    assert result["description_placeholders"] == {
+        "title": "Mock Title",
+        "name": "unknown",
+        "mac": "11:22:33:44:55:aa",
+    }
 
 
 async def test_discovery_duplicate_data(
@@ -701,7 +716,12 @@ async def test_discovery_updates_unique_id(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "already_configured_updates"
+    assert result["description_placeholders"] == {
+        "title": "Mock Title",
+        "name": "unknown",
+        "mac": "11:22:33:44:55:aa",
+    }
 
     assert entry.unique_id == "11:22:33:44:55:aa"
 
@@ -1159,7 +1179,12 @@ async def test_discovery_dhcp_updates_host(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "already_configured_updates"
+    assert result["description_placeholders"] == {
+        "title": "Mock Title",
+        "name": "unknown",
+        "mac": "11:22:33:44:55:aa",
+    }
 
     assert entry.data[CONF_HOST] == "192.168.43.184"
 
@@ -1188,7 +1213,12 @@ async def test_discovery_dhcp_does_not_update_host_wrong_mac(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "already_configured_detailed"
+    assert result["description_placeholders"] == {
+        "title": "Mock Title",
+        "name": "unknown",
+        "mac": "11:22:33:44:55:aa",
+    }
 
     # Mac was wrong, should not update
     assert entry.data[CONF_HOST] == "192.168.43.183"
@@ -1217,7 +1247,12 @@ async def test_discovery_dhcp_does_not_update_host_wrong_mac_bad_key(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "already_configured_detailed"
+    assert result["description_placeholders"] == {
+        "title": "Mock Title",
+        "name": "unknown",
+        "mac": "11:22:33:44:55:aa",
+    }
 
     # Mac was wrong, should not update
     assert entry.data[CONF_HOST] == "192.168.43.183"
@@ -1246,7 +1281,12 @@ async def test_discovery_dhcp_does_not_update_host_missing_mac_bad_key(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "already_configured_detailed"
+    assert result["description_placeholders"] == {
+        "title": "Mock Title",
+        "name": "unknown",
+        "mac": "11:22:33:44:55:aa",
+    }
 
     # Mac was missing, should not update
     assert entry.data[CONF_HOST] == "192.168.43.183"
@@ -1999,7 +2039,12 @@ async def test_reconfig_mac_used_by_other_entry(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "already_configured_updates"
+    assert result["description_placeholders"] == {
+        "title": "Mock Title",
+        "name": "test4",
+        "mac": "11:22:33:44:55:bb",
+    }
 
 
 @pytest.mark.usefixtures("mock_zeroconf", "mock_setup_entry")

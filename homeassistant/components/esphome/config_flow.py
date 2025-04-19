@@ -306,7 +306,32 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             updates[CONF_HOST] = host
             if port is not None:
                 updates[CONF_PORT] = port
-        self._abort_if_unique_id_configured(updates=updates)
+        self._abort_unique_id_configured_with_details(updates=updates)
+
+    @callback
+    def _abort_unique_id_configured_with_details(self, updates: dict[str, Any]) -> None:
+        """Abort if unique_id is already configured with details."""
+        assert self.unique_id is not None
+        if not (
+            conflict_entry := self.hass.config_entries.async_entry_for_domain_unique_id(
+                self.handler, self.unique_id
+            )
+        ):
+            return
+        assert conflict_entry.unique_id is not None
+        if updates:
+            error = "already_configured_updates"
+        else:
+            error = "already_configured_detailed"
+        self._abort_if_unique_id_configured(
+            updates=updates,
+            error=error,
+            description_placeholders={
+                "title": conflict_entry.title,
+                "name": conflict_entry.data.get(CONF_DEVICE_NAME, "unknown"),
+                "mac": format_mac(conflict_entry.unique_id),
+            },
+        )
 
     async def async_step_mqtt(
         self, discovery_info: MqttServiceInfo
@@ -341,7 +366,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
         # Check if already configured
         await self.async_set_unique_id(mac_address)
-        self._abort_if_unique_id_configured(
+        self._abort_unique_id_configured_with_details(
             updates={CONF_HOST: self._host, CONF_PORT: self._port}
         )
 
@@ -479,7 +504,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
                 data=self._reauth_entry.data | self._async_make_config_data(),
             )
         assert self._host is not None
-        self._abort_if_unique_id_configured(
+        self._abort_unique_id_configured_with_details(
             updates={
                 CONF_HOST: self._host,
                 CONF_PORT: self._port,
@@ -510,7 +535,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         if not (
             unique_id_matches := (self.unique_id == self._reconfig_entry.unique_id)
         ):
-            self._abort_if_unique_id_configured(
+            self._abort_unique_id_configured_with_details(
                 updates={
                     CONF_HOST: self._host,
                     CONF_PORT: self._port,
@@ -640,7 +665,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         mac_address = format_mac(self._device_info.mac_address)
         await self.async_set_unique_id(mac_address, raise_on_progress=False)
         if self.source not in (SOURCE_REAUTH, SOURCE_RECONFIGURE):
-            self._abort_if_unique_id_configured(
+            self._abort_unique_id_configured_with_details(
                 updates={
                     CONF_HOST: self._host,
                     CONF_PORT: self._port,

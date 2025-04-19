@@ -750,7 +750,12 @@ async def test_connection_aborted_wrong_device(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "already_configured_updates"
+    assert result["description_placeholders"] == {
+        "title": "Mock Title",
+        "name": "test",
+        "mac": "11:22:33:44:55:aa",
+    }
     assert entry.data[CONF_HOST] == "192.168.43.184"
     await hass.async_block_till_done()
     assert len(new_info.mock_calls) == 2
@@ -819,7 +824,12 @@ async def test_connection_aborted_wrong_device_same_name(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "already_configured_updates"
+    assert result["description_placeholders"] == {
+        "title": "Mock Title",
+        "name": "test",
+        "mac": "11:22:33:44:55:aa",
+    }
     assert entry.data[CONF_HOST] == "192.168.43.184"
     await hass.async_block_till_done()
     assert len(new_info.mock_calls) == 2
