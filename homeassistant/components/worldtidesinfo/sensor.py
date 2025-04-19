@@ -56,11 +56,12 @@ def setup_platform(
     lat = config.get(CONF_LATITUDE, hass.config.latitude)
     lon = config.get(CONF_LONGITUDE, hass.config.longitude)
     key = config.get(CONF_API_KEY)
+    datum = config.get(CONF_DATUM, None)
 
     if None in (lat, lon):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
 
-    tides = WorldTidesInfoSensor(name, lat, lon, key)
+    tides = WorldTidesInfoSensor(name, lat, lon, key, datum)
     tides.update()
     if tides.data.get("error") == "No location found":
         _LOGGER.error("Location not available")
