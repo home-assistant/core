@@ -318,10 +318,6 @@ class BackupAgentClient:
         try:
             self.sftp = await self._ssh.start_sftp_client()
         except (SFTPNoSuchFile, SFTPPermissionDenied) as e:
-            LOGGER.exception(e)
-            LOGGER.error(
-                "Failed to create SFTP client. Re-configuring integration might be required"
-            )
             raise RuntimeError(
                 "Failed to create SFTP client. Re-configuring integration might be required"
             ) from e
