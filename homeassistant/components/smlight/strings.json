@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "Set up SMLIGHT Zigbee Integration",
+        "description": "Set up SMLIGHT Zigbee integration",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         },
@@ -15,6 +15,10 @@
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "Username for the device's web login.",
+          "password": "Password for the device's web login."
         }
       },
       "reauth_confirm": {
@@ -23,6 +27,10 @@
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "[%key:component::smlight::config::step::auth::data_description::username%]",
+          "password": "[%key:component::smlight::config::step::auth::data_description::password%]"
         }
       },
       "confirm_discovery": {
@@ -111,7 +119,7 @@
         "name": "Zigbee flash mode"
       },
       "reconnect_zigbee_router": {
-        "name": "Reconnect zigbee router"
+        "name": "Reconnect Zigbee router"
       }
     },
     "switch": {
@@ -135,6 +143,14 @@
       "zigbee_update": {
         "name": "Zigbee firmware"
       }
+    }
+  },
+  "exceptions": {
+    "firmware_update_failed": {
+      "message": "Firmware update failed for {device_name}."
+    },
+    "cannot_connect_device": {
+      "message": "An error occurred while connecting to the SMLIGHT device: {error}."
     }
   },
   "issues": {

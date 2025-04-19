@@ -33,6 +33,26 @@ async def test_all_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+async def test_set_time(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+    mock_device_client: MagicMock,
+) -> None:
+    """Test setting the time entity."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        "time",
+        SERVICE_SET_VALUE,
+        service_data={"time": time(hour=7, minute=0)},
+        blocking=True,
+        target={"entity_id": "time.garden_light_on"},
+    )
+
+    mock_device_client.set_light_schedule.assert_awaited_once_with(time(7, 0), None)
+
+
 @pytest.mark.parametrize(
     ("exception", "user_error"),
     [

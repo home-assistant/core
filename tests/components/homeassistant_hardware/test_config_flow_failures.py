@@ -35,8 +35,8 @@ async def fixture_mock_supervisor_client(supervisor_client: AsyncMock):
 
 
 @pytest.mark.parametrize(
-    "ignore_translations",
-    ["component.test_firmware_domain.config.abort.unsupported_firmware"],
+    "ignore_translations_for_mock_domains",
+    ["test_firmware_domain"],
 )
 @pytest.mark.parametrize(
     "next_step",
@@ -45,6 +45,7 @@ async def fixture_mock_supervisor_client(supervisor_client: AsyncMock):
         STEP_PICK_FIRMWARE_THREAD,
     ],
 )
+@pytest.mark.usefixtures("addon_store_info")
 async def test_config_flow_cannot_probe_firmware(
     next_step: str, hass: HomeAssistant
 ) -> None:
@@ -69,8 +70,8 @@ async def test_config_flow_cannot_probe_firmware(
 
 
 @pytest.mark.parametrize(
-    "ignore_translations",
-    ["component.test_firmware_domain.config.abort.not_hassio"],
+    "ignore_translations_for_mock_domains",
+    ["test_firmware_domain"],
 )
 async def test_config_flow_zigbee_not_hassio_wrong_firmware(
     hass: HomeAssistant,
@@ -98,8 +99,8 @@ async def test_config_flow_zigbee_not_hassio_wrong_firmware(
 
 
 @pytest.mark.parametrize(
-    "ignore_translations",
-    ["component.test_firmware_domain.config.abort.addon_already_running"],
+    "ignore_translations_for_mock_domains",
+    ["test_firmware_domain"],
 )
 async def test_config_flow_zigbee_flasher_addon_already_running(
     hass: HomeAssistant,
@@ -136,8 +137,8 @@ async def test_config_flow_zigbee_flasher_addon_already_running(
 
 
 @pytest.mark.parametrize(
-    "ignore_translations",
-    ["component.test_firmware_domain.config.abort.addon_info_failed"],
+    "ignore_translations_for_mock_domains",
+    ["test_firmware_domain"],
 )
 async def test_config_flow_zigbee_flasher_addon_info_fails(hass: HomeAssistant) -> None:
     """Test failure case when flasher addon cannot be installed."""
@@ -173,8 +174,8 @@ async def test_config_flow_zigbee_flasher_addon_info_fails(hass: HomeAssistant) 
 
 
 @pytest.mark.parametrize(
-    "ignore_translations",
-    ["component.test_firmware_domain.config.abort.addon_install_failed"],
+    "ignore_translations_for_mock_domains",
+    ["test_firmware_domain"],
 )
 async def test_config_flow_zigbee_flasher_addon_install_fails(
     hass: HomeAssistant,
@@ -207,8 +208,8 @@ async def test_config_flow_zigbee_flasher_addon_install_fails(
 
 
 @pytest.mark.parametrize(
-    "ignore_translations",
-    ["component.test_firmware_domain.config.abort.addon_set_config_failed"],
+    "ignore_translations_for_mock_domains",
+    ["test_firmware_domain"],
 )
 async def test_config_flow_zigbee_flasher_addon_set_config_fails(
     hass: HomeAssistant,
@@ -245,8 +246,8 @@ async def test_config_flow_zigbee_flasher_addon_set_config_fails(
 
 
 @pytest.mark.parametrize(
-    "ignore_translations",
-    ["component.test_firmware_domain.config.abort.addon_start_failed"],
+    "ignore_translations_for_mock_domains",
+    ["test_firmware_domain"],
 )
 async def test_config_flow_zigbee_flasher_run_fails(hass: HomeAssistant) -> None:
     """Test failure case when flasher addon fails to run."""
@@ -310,8 +311,44 @@ async def test_config_flow_zigbee_flasher_uninstall_fails(hass: HomeAssistant) -
 
 
 @pytest.mark.parametrize(
-    "ignore_translations",
-    ["component.test_firmware_domain.config.abort.not_hassio_thread"],
+    "ignore_translations_for_mock_domains",
+    ["test_firmware_domain"],
+)
+async def test_config_flow_zigbee_confirmation_fails(hass: HomeAssistant) -> None:
+    """Test the config flow failing due to Zigbee firmware not being detected."""
+    result = await hass.config_entries.flow.async_init(
+        TEST_DOMAIN, context={"source": "hardware"}
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "pick_firmware"
+
+    with mock_addon_info(
+        hass,
+        app_type=ApplicationType.EZSP,
+    ) as (mock_otbr_manager, mock_flasher_manager):
+        # Pick the menu option: we are now installing the addon
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"next_step_id": STEP_PICK_FIRMWARE_ZIGBEE},
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "confirm_zigbee"
+
+    with mock_addon_info(
+        hass,
+        app_type=None,  # Probing fails
+    ) as (mock_otbr_manager, mock_flasher_manager):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "unsupported_firmware"
+
+
+@pytest.mark.parametrize(
+    "ignore_translations_for_mock_domains",
+    ["test_firmware_domain"],
 )
 async def test_config_flow_thread_not_hassio(hass: HomeAssistant) -> None:
     """Test when the stick is used with a non-hassio setup and Thread is selected."""
@@ -337,8 +374,8 @@ async def test_config_flow_thread_not_hassio(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "ignore_translations",
-    ["component.test_firmware_domain.config.abort.addon_info_failed"],
+    "ignore_translations_for_mock_domains",
+    ["test_firmware_domain"],
 )
 async def test_config_flow_thread_addon_info_fails(hass: HomeAssistant) -> None:
     """Test failure case when flasher addon cannot be installed."""
@@ -365,8 +402,8 @@ async def test_config_flow_thread_addon_info_fails(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "ignore_translations",
-    ["component.test_firmware_domain.config.abort.otbr_addon_already_running"],
+    "ignore_translations_for_mock_domains",
+    ["test_firmware_domain"],
 )
 async def test_config_flow_thread_addon_already_running(hass: HomeAssistant) -> None:
     """Test failure case when the Thread addon is already running."""
@@ -404,8 +441,8 @@ async def test_config_flow_thread_addon_already_running(hass: HomeAssistant) -> 
 
 
 @pytest.mark.parametrize(
-    "ignore_translations",
-    ["component.test_firmware_domain.config.abort.addon_install_failed"],
+    "ignore_translations_for_mock_domains",
+    ["test_firmware_domain"],
 )
 async def test_config_flow_thread_addon_install_fails(hass: HomeAssistant) -> None:
     """Test failure case when flasher addon cannot be installed."""
@@ -435,8 +472,8 @@ async def test_config_flow_thread_addon_install_fails(hass: HomeAssistant) -> No
 
 
 @pytest.mark.parametrize(
-    "ignore_translations",
-    ["component.test_firmware_domain.config.abort.addon_set_config_failed"],
+    "ignore_translations_for_mock_domains",
+    ["test_firmware_domain"],
 )
 async def test_config_flow_thread_addon_set_config_fails(hass: HomeAssistant) -> None:
     """Test failure case when flasher addon cannot be configured."""
@@ -466,8 +503,8 @@ async def test_config_flow_thread_addon_set_config_fails(hass: HomeAssistant) ->
 
 
 @pytest.mark.parametrize(
-    "ignore_translations",
-    ["component.test_firmware_domain.config.abort.addon_start_failed"],
+    "ignore_translations_for_mock_domains",
+    ["test_firmware_domain"],
 )
 async def test_config_flow_thread_flasher_run_fails(hass: HomeAssistant) -> None:
     """Test failure case when flasher addon fails to run."""
@@ -531,8 +568,50 @@ async def test_config_flow_thread_flasher_uninstall_fails(hass: HomeAssistant) -
 
 
 @pytest.mark.parametrize(
-    "ignore_translations",
-    ["component.test_firmware_domain.options.abort.zha_still_using_stick"],
+    "ignore_translations_for_mock_domains",
+    ["test_firmware_domain"],
+)
+async def test_config_flow_thread_confirmation_fails(hass: HomeAssistant) -> None:
+    """Test the config flow failing due to OpenThread firmware not being detected."""
+    result = await hass.config_entries.flow.async_init(
+        TEST_DOMAIN, context={"source": "hardware"}
+    )
+
+    with mock_addon_info(
+        hass,
+        app_type=ApplicationType.EZSP,
+    ) as (mock_otbr_manager, mock_flasher_manager):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"next_step_id": STEP_PICK_FIRMWARE_THREAD},
+        )
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "confirm_otbr"
+
+    with mock_addon_info(
+        hass,
+        app_type=None,  # Probing fails
+    ) as (mock_otbr_manager, mock_flasher_manager):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "unsupported_firmware"
+
+
+@pytest.mark.parametrize(
+    "ignore_translations_for_mock_domains",
+    ["test_firmware_domain"],
 )
 async def test_options_flow_zigbee_to_thread_zha_configured(
     hass: HomeAssistant,
@@ -579,9 +658,10 @@ async def test_options_flow_zigbee_to_thread_zha_configured(
 
 
 @pytest.mark.parametrize(
-    "ignore_translations",
-    ["component.test_firmware_domain.options.abort.otbr_still_using_stick"],
+    "ignore_translations_for_mock_domains",
+    ["test_firmware_domain"],
 )
+@pytest.mark.usefixtures("addon_store_info")
 async def test_options_flow_thread_to_zigbee_otbr_configured(
     hass: HomeAssistant,
 ) -> None:

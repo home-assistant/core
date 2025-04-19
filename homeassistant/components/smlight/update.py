@@ -20,12 +20,13 @@ from homeassistant.components.update import (
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import get_radio
-from .const import LOGGER
+from .const import DOMAIN, LOGGER
 from .coordinator import SmConfigEntry, SmFirmwareUpdateCoordinator, SmFwData
 from .entity import SmEntity
+
+PARALLEL_UPDATES = 1
 
 
 def zigbee_latest_version(data: SmFwData, idx: int) -> Firmware | None:
@@ -56,13 +57,15 @@ CORE_UPDATE_ENTITY = SmUpdateEntityDescription(
 ZB_UPDATE_ENTITY = SmUpdateEntityDescription(
     key="zigbee_update",
     translation_key="zigbee_update",
-    installed_version=lambda x, idx: get_radio(x, idx).zb_version,
+    installed_version=lambda x, idx: x.radios[idx].zb_version,
     latest_version=zigbee_latest_version,
 )
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: SmConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: SmConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the SMLIGHT update entities."""
     coordinator = entry.runtime_data.firmware
@@ -73,7 +76,6 @@ async def async_setup_entry(
 
     entities = [SmUpdateEntity(coordinator, CORE_UPDATE_ENTITY)]
     radios = coordinator.data.info.radios
-    assert radios is not None
 
     entities.extend(
         SmUpdateEntity(coordinator, ZB_UPDATE_ENTITY, idx)
@@ -208,7 +210,13 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
     def _update_failed(self, event: MessageEvent) -> None:
         self._update_done()
         self.coordinator.in_progress = False
-        raise HomeAssistantError(f"Update failed for {self.name}")
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="firmware_update_failed",
+            translation_placeholders={
+                "device_name": str(self.name),
+            },
+        )
 
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any

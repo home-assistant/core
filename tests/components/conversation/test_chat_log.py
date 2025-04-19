@@ -1,6 +1,7 @@
 """Test the conversation session."""
 
 from collections.abc import Generator
+from dataclasses import asdict
 from datetime import timedelta
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -13,6 +14,7 @@ from homeassistant.components.conversation import (
     ConversationInput,
     ConverseError,
     ToolResultContent,
+    UserContent,
     async_get_chat_log,
 )
 from homeassistant.components.conversation.chat_log import DATA_CHAT_LOGS
@@ -85,7 +87,9 @@ async def test_default_content(
     with (
         chat_session.async_get_chat_session(hass) as session,
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+        async_get_chat_log(hass, session, mock_conversation_input) as chat_log2,
     ):
+        assert chat_log is chat_log2
         assert len(chat_log.content) == 2
         assert chat_log.content[0].role == "system"
         assert chat_log.content[0].content == ""
@@ -133,6 +137,48 @@ async def test_unknown_llm_api(
 
     assert str(exc_info.value) == "Error getting LLM API unknown-api"
     assert exc_info.value.as_conversation_result().as_dict() == snapshot
+
+
+async def test_multiple_llm_apis(
+    hass: HomeAssistant,
+    mock_conversation_input: ConversationInput,
+) -> None:
+    """Test when we reference an LLM API."""
+
+    class MyTool(llm.Tool):
+        """Test tool."""
+
+        name = "test_tool"
+        description = "Test function"
+        parameters = vol.Schema(
+            {vol.Optional("param1", description="Test parameters"): str}
+        )
+
+    class MyAPI(llm.API):
+        """Test API."""
+
+        async def async_get_api_instance(
+            self, llm_context: llm.LLMContext
+        ) -> llm.APIInstance:
+            """Return a list of tools."""
+            return llm.APIInstance(self, "My API Prompt", llm_context, [MyTool()])
+
+    api = MyAPI(hass=hass, id="my-api", name="Test")
+    llm.async_register_api(hass, api)
+
+    with (
+        chat_session.async_get_chat_session(hass) as session,
+        async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+    ):
+        await chat_log.async_update_llm_data(
+            conversing_domain="test",
+            user_input=mock_conversation_input,
+            user_llm_hass_api=["assist", "my-api"],
+            user_llm_prompt=None,
+        )
+
+    assert chat_log.llm_api
+    assert chat_log.llm_api.api.id == "assist|my-api"
 
 
 async def test_template_error(
@@ -524,18 +570,29 @@ async def test_add_delta_content_stream(
         return tool_input.tool_args["param1"]
 
     mock_tool.async_call.side_effect = tool_call
+    expected_delta = []
 
     async def stream():
         """Yield deltas."""
         for d in deltas:
             yield d
+            expected_delta.append(d)
+
+    captured_deltas = []
 
     with (
         patch(
             "homeassistant.helpers.llm.AssistAPI._async_get_tools", return_value=[]
         ) as mock_get_tools,
         chat_session.async_get_chat_session(hass) as session,
-        async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+        async_get_chat_log(
+            hass,
+            session,
+            mock_conversation_input,
+            chat_log_delta_listener=lambda chat_log, delta: captured_deltas.append(
+                delta
+            ),
+        ) as chat_log,
     ):
         mock_get_tools.return_value = [mock_tool]
         await chat_log.async_update_llm_data(
@@ -545,13 +602,17 @@ async def test_add_delta_content_stream(
             user_llm_prompt=None,
         )
 
-        results = [
-            tool_result_content
-            async for tool_result_content in chat_log.async_add_delta_content_stream(
-                "mock-agent-id", stream()
-            )
-        ]
+        results = []
+        async for content in chat_log.async_add_delta_content_stream(
+            "mock-agent-id", stream()
+        ):
+            results.append(content)
 
+            # Interweave the tool results with the source deltas into expected_delta
+            if content.role == "tool_result":
+                expected_delta.append(asdict(content))
+
+        assert captured_deltas == expected_delta
         assert results == snapshot
         assert chat_log.content[2:] == results
 
@@ -572,7 +633,7 @@ async def test_add_delta_content_stream_errors(
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
     ):
         # Stream content without LLM API set
-        with pytest.raises(ValueError):  # noqa: PT012
+        with pytest.raises(ValueError):
             async for _tool_result_content in chat_log.async_add_delta_content_stream(
                 "mock-agent-id",
                 stream(
@@ -594,7 +655,7 @@ async def test_add_delta_content_stream_errors(
 
         # Non assistant role
         for role in "system", "user":
-            with pytest.raises(ValueError):  # noqa: PT012
+            with pytest.raises(ValueError):
                 async for (
                     _tool_result_content
                 ) in chat_log.async_add_delta_content_stream(
@@ -602,3 +663,53 @@ async def test_add_delta_content_stream_errors(
                     stream([{"role": role}]),
                 ):
                     pass
+
+
+async def test_chat_log_reuse(
+    hass: HomeAssistant,
+    mock_conversation_input: ConversationInput,
+) -> None:
+    """Test that we can reuse a chat log."""
+    with (
+        chat_session.async_get_chat_session(hass) as session,
+        async_get_chat_log(hass, session) as chat_log,
+    ):
+        assert chat_log.conversation_id == session.conversation_id
+        assert len(chat_log.content) == 1
+
+        with async_get_chat_log(hass, session) as chat_log2:
+            assert chat_log2 is chat_log
+            assert len(chat_log.content) == 1
+
+        with async_get_chat_log(hass, session, mock_conversation_input) as chat_log2:
+            assert chat_log2 is chat_log
+            assert len(chat_log.content) == 2
+            assert chat_log.content[1].role == "user"
+            assert chat_log.content[1].content == mock_conversation_input.text
+
+
+async def test_chat_log_continue_conversation(
+    hass: HomeAssistant,
+    mock_conversation_input: ConversationInput,
+) -> None:
+    """Test continue conversation."""
+    with (
+        chat_session.async_get_chat_session(hass) as session,
+        async_get_chat_log(hass, session) as chat_log,
+    ):
+        assert chat_log.continue_conversation is False
+        chat_log.async_add_user_content(UserContent(mock_conversation_input.text))
+        assert chat_log.continue_conversation is False
+        chat_log.async_add_assistant_content_without_tools(
+            AssistantContent(
+                agent_id="mock-agent-id",
+                content="Hey? ",
+            )
+        )
+        chat_log.async_add_assistant_content_without_tools(
+            AssistantContent(
+                agent_id="mock-agent-id",
+                content="Ποιο είναι το αγαπημένο σου χρώμα στα ελληνικά;",
+            )
+        )
+        assert chat_log.continue_conversation is True

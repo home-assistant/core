@@ -69,3 +69,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool
 async def async_unload_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, entry: HeosConfigEntry, device: dr.DeviceEntry
+) -> bool:
+    """Remove config entry from device if no longer present."""
+    return not any(
+        (domain, key)
+        for domain, key in device.identifiers
+        if domain == DOMAIN and int(key) in entry.runtime_data.heos.players
+    )

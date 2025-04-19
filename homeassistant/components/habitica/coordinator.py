@@ -11,6 +11,7 @@ from typing import Any
 
 from aiohttp import ClientError
 from habiticalib import (
+    Avatar,
     ContentData,
     Habitica,
     HabiticaException,
@@ -19,7 +20,6 @@ from habiticalib import (
     TaskFilter,
     TooManyRequestsError,
     UserData,
-    UserStyles,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -165,12 +165,10 @@ class HabiticaDataUpdateCoordinator(DataUpdateCoordinator[HabiticaData]):
         else:
             await self.async_request_refresh()
 
-    async def generate_avatar(self, user_styles: UserStyles) -> bytes:
+    async def generate_avatar(self, avatar: Avatar) -> bytes:
         """Generate Avatar."""
 
-        avatar = BytesIO()
-        await self.habitica.generate_avatar(
-            fp=avatar, user_styles=user_styles, fmt="PNG"
-        )
+        png = BytesIO()
+        await self.habitica.generate_avatar(fp=png, avatar=avatar, fmt="PNG")
 
-        return avatar.getvalue()
+        return png.getvalue()

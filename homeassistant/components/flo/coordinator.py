@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -16,6 +17,16 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN as FLO_DOMAIN, LOGGER
+
+type FloConfigEntry = ConfigEntry[FloRuntimeData]
+
+
+@dataclass
+class FloRuntimeData:
+    """Flo runtime data."""
+
+    client: API
+    devices: list[FloDeviceDataUpdateCoordinator]
 
 
 class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):

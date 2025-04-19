@@ -3,17 +3,15 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterable, Sequence
 import logging
 from typing import Any
 
-from pysmartthings import Attribute, Capability
+from pysmartthings import Attribute, Capability, Command, SmartThings
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
-    DOMAIN as CLIMATE_DOMAIN,
     SWING_BOTH,
     SWING_HORIZONTAL,
     SWING_OFF,
@@ -23,12 +21,12 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DATA_BROKERS, DOMAIN
+from . import FullDevice, SmartThingsConfigEntry
+from .const import MAIN
 from .entity import SmartThingsEntity
 
 ATTR_OPERATION_STATE = "operation_state"
@@ -97,124 +95,106 @@ UNIT_MAP = {"C": UnitOfTemperature.CELSIUS, "F": UnitOfTemperature.FAHRENHEIT}
 _LOGGER = logging.getLogger(__name__)
 
 
+AC_CAPABILITIES = [
+    Capability.AIR_CONDITIONER_MODE,
+    Capability.AIR_CONDITIONER_FAN_MODE,
+    Capability.SWITCH,
+    Capability.TEMPERATURE_MEASUREMENT,
+    Capability.THERMOSTAT_COOLING_SETPOINT,
+]
+
+THERMOSTAT_CAPABILITIES = [
+    Capability.TEMPERATURE_MEASUREMENT,
+    Capability.THERMOSTAT_HEATING_SETPOINT,
+    Capability.THERMOSTAT_MODE,
+]
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: SmartThingsConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add climate entities for a config entry."""
-    ac_capabilities = [
-        Capability.air_conditioner_mode,
-        Capability.air_conditioner_fan_mode,
-        Capability.switch,
-        Capability.temperature_measurement,
-        Capability.thermostat_cooling_setpoint,
+    entry_data = entry.runtime_data
+    entities: list[ClimateEntity] = [
+        SmartThingsAirConditioner(entry_data.client, device)
+        for device in entry_data.devices.values()
+        if all(capability in device.status[MAIN] for capability in AC_CAPABILITIES)
     ]
-
-    broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
-    entities: list[ClimateEntity] = []
-    for device in broker.devices.values():
-        if not broker.any_assigned(device.device_id, CLIMATE_DOMAIN):
-            continue
-        if all(capability in device.capabilities for capability in ac_capabilities):
-            entities.append(SmartThingsAirConditioner(device))
-        else:
-            entities.append(SmartThingsThermostat(device))
-    async_add_entities(entities, True)
-
-
-def get_capabilities(capabilities: Sequence[str]) -> Sequence[str] | None:
-    """Return all capabilities supported if minimum required are present."""
-    supported = [
-        Capability.air_conditioner_mode,
-        Capability.demand_response_load_control,
-        Capability.air_conditioner_fan_mode,
-        Capability.switch,
-        Capability.thermostat,
-        Capability.thermostat_cooling_setpoint,
-        Capability.thermostat_fan_mode,
-        Capability.thermostat_heating_setpoint,
-        Capability.thermostat_mode,
-        Capability.thermostat_operating_state,
-    ]
-    # Can have this legacy/deprecated capability
-    if Capability.thermostat in capabilities:
-        return supported
-    # Or must have all of these thermostat capabilities
-    thermostat_capabilities = [
-        Capability.temperature_measurement,
-        Capability.thermostat_heating_setpoint,
-        Capability.thermostat_mode,
-    ]
-    if all(capability in capabilities for capability in thermostat_capabilities):
-        return supported
-    # Or must have all of these A/C capabilities
-    ac_capabilities = [
-        Capability.air_conditioner_mode,
-        Capability.air_conditioner_fan_mode,
-        Capability.switch,
-        Capability.temperature_measurement,
-        Capability.thermostat_cooling_setpoint,
-    ]
-    if all(capability in capabilities for capability in ac_capabilities):
-        return supported
-    return None
+    entities.extend(
+        SmartThingsThermostat(entry_data.client, device)
+        for device in entry_data.devices.values()
+        if all(
+            capability in device.status[MAIN] for capability in THERMOSTAT_CAPABILITIES
+        )
+    )
+    async_add_entities(entities)
 
 
 class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
     """Define a SmartThings climate entities."""
 
-    def __init__(self, device):
-        """Init the class."""
-        super().__init__(device)
-        self._attr_supported_features = self._determine_features()
-        self._hvac_mode = None
-        self._hvac_modes = None
+    _attr_name = None
 
-    def _determine_features(self):
+    def __init__(self, client: SmartThings, device: FullDevice) -> None:
+        """Init the class."""
+        super().__init__(
+            client,
+            device,
+            {
+                Capability.THERMOSTAT_FAN_MODE,
+                Capability.THERMOSTAT_MODE,
+                Capability.TEMPERATURE_MEASUREMENT,
+                Capability.THERMOSTAT_HEATING_SETPOINT,
+                Capability.THERMOSTAT_OPERATING_STATE,
+                Capability.THERMOSTAT_COOLING_SETPOINT,
+                Capability.RELATIVE_HUMIDITY_MEASUREMENT,
+            },
+        )
+        self._attr_supported_features = self._determine_features()
+
+    def _determine_features(self) -> ClimateEntityFeature:
         flags = (
             ClimateEntityFeature.TARGET_TEMPERATURE
             | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
             | ClimateEntityFeature.TURN_OFF
             | ClimateEntityFeature.TURN_ON
         )
-        if self._device.get_capability(
-            Capability.thermostat_fan_mode, Capability.thermostat
-        ):
+        if self.supports_capability(Capability.THERMOSTAT_FAN_MODE):
             flags |= ClimateEntityFeature.FAN_MODE
         return flags
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
-        await self._device.set_thermostat_fan_mode(fan_mode, set_status=True)
-
-        # State is set optimistically in the command above, therefore update
-        # the entity state ahead of receiving the confirming push updates
-        self.async_schedule_update_ha_state(True)
+        await self.execute_device_command(
+            Capability.THERMOSTAT_FAN_MODE,
+            Command.SET_THERMOSTAT_FAN_MODE,
+            argument=fan_mode,
+        )
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
-        mode = STATE_TO_MODE[hvac_mode]
-        await self._device.set_thermostat_mode(mode, set_status=True)
-
-        # State is set optimistically in the command above, therefore update
-        # the entity state ahead of receiving the confirming push updates
-        self.async_schedule_update_ha_state(True)
+        await self.execute_device_command(
+            Capability.THERMOSTAT_MODE,
+            Command.SET_THERMOSTAT_MODE,
+            argument=STATE_TO_MODE[hvac_mode],
+        )
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new operation mode and target temperatures."""
+        hvac_mode = self.hvac_mode
         # Operation state
         if operation_state := kwargs.get(ATTR_HVAC_MODE):
-            mode = STATE_TO_MODE[operation_state]
-            await self._device.set_thermostat_mode(mode, set_status=True)
-            await self.async_update()
+            await self.async_set_hvac_mode(operation_state)
+            hvac_mode = operation_state
 
         # Heat/cool setpoint
         heating_setpoint = None
         cooling_setpoint = None
-        if self.hvac_mode == HVACMode.HEAT:
+        if hvac_mode == HVACMode.HEAT:
             heating_setpoint = kwargs.get(ATTR_TEMPERATURE)
-        elif self.hvac_mode == HVACMode.COOL:
+        elif hvac_mode == HVACMode.COOL:
             cooling_setpoint = kwargs.get(ATTR_TEMPERATURE)
         else:
             heating_setpoint = kwargs.get(ATTR_TARGET_TEMP_LOW)
@@ -222,137 +202,158 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
         tasks = []
         if heating_setpoint is not None:
             tasks.append(
-                self._device.set_heating_setpoint(
-                    round(heating_setpoint, 3), set_status=True
+                self.execute_device_command(
+                    Capability.THERMOSTAT_HEATING_SETPOINT,
+                    Command.SET_HEATING_SETPOINT,
+                    argument=round(heating_setpoint, 3),
                 )
             )
         if cooling_setpoint is not None:
             tasks.append(
-                self._device.set_cooling_setpoint(
-                    round(cooling_setpoint, 3), set_status=True
+                self.execute_device_command(
+                    Capability.THERMOSTAT_COOLING_SETPOINT,
+                    Command.SET_COOLING_SETPOINT,
+                    argument=round(cooling_setpoint, 3),
                 )
             )
         await asyncio.gather(*tasks)
 
-        # State is set optimistically in the commands above, therefore update
-        # the entity state ahead of receiving the confirming push updates
-        self.async_schedule_update_ha_state(True)
-
-    async def async_update(self) -> None:
-        """Update the attributes of the climate device."""
-        thermostat_mode = self._device.status.thermostat_mode
-        self._hvac_mode = MODE_TO_STATE.get(thermostat_mode)
-        if self._hvac_mode is None:
-            _LOGGER.debug(
-                "Device %s (%s) returned an invalid hvac mode: %s",
-                self._device.label,
-                self._device.device_id,
-                thermostat_mode,
-            )
-
-        modes = set()
-        supported_modes = self._device.status.supported_thermostat_modes
-        if isinstance(supported_modes, Iterable):
-            for mode in supported_modes:
-                if (state := MODE_TO_STATE.get(mode)) is not None:
-                    modes.add(state)
-                else:
-                    _LOGGER.debug(
-                        (
-                            "Device %s (%s) returned an invalid supported thermostat"
-                            " mode: %s"
-                        ),
-                        self._device.label,
-                        self._device.device_id,
-                        mode,
-                    )
-        else:
-            _LOGGER.debug(
-                "Device %s (%s) returned invalid supported thermostat modes: %s",
-                self._device.label,
-                self._device.device_id,
-                supported_modes,
-            )
-        self._hvac_modes = list(modes)
-
     @property
-    def current_humidity(self):
+    def current_humidity(self) -> float | None:
         """Return the current humidity."""
-        return self._device.status.humidity
+        if self.supports_capability(Capability.RELATIVE_HUMIDITY_MEASUREMENT):
+            return self.get_attribute_value(
+                Capability.RELATIVE_HUMIDITY_MEASUREMENT, Attribute.HUMIDITY
+            )
+        return None
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        return self._device.status.temperature
+        return self.get_attribute_value(
+            Capability.TEMPERATURE_MEASUREMENT, Attribute.TEMPERATURE
+        )
 
     @property
-    def fan_mode(self):
+    def fan_mode(self) -> str | None:
         """Return the fan setting."""
-        return self._device.status.thermostat_fan_mode
+        return self.get_attribute_value(
+            Capability.THERMOSTAT_FAN_MODE, Attribute.THERMOSTAT_FAN_MODE
+        )
 
     @property
-    def fan_modes(self):
+    def fan_modes(self) -> list[str]:
         """Return the list of available fan modes."""
-        return self._device.status.supported_thermostat_fan_modes
+        return self.get_attribute_value(
+            Capability.THERMOSTAT_FAN_MODE, Attribute.SUPPORTED_THERMOSTAT_FAN_MODES
+        )
 
     @property
     def hvac_action(self) -> HVACAction | None:
         """Return the current running hvac operation if supported."""
+        if not self.supports_capability(Capability.THERMOSTAT_OPERATING_STATE):
+            return None
         return OPERATING_STATE_TO_ACTION.get(
-            self._device.status.thermostat_operating_state
+            self.get_attribute_value(
+                Capability.THERMOSTAT_OPERATING_STATE,
+                Attribute.THERMOSTAT_OPERATING_STATE,
+            )
         )
 
     @property
-    def hvac_mode(self) -> HVACMode:
+    def hvac_mode(self) -> HVACMode | None:
         """Return current operation ie. heat, cool, idle."""
-        return self._hvac_mode
+        return MODE_TO_STATE.get(
+            self.get_attribute_value(
+                Capability.THERMOSTAT_MODE, Attribute.THERMOSTAT_MODE
+            )
+        )
 
     @property
     def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available operation modes."""
-        return self._hvac_modes
+        if (
+            supported_thermostat_modes := self.get_attribute_value(
+                Capability.THERMOSTAT_MODE, Attribute.SUPPORTED_THERMOSTAT_MODES
+            )
+        ) is None:
+            return []
+        return [
+            state
+            for mode in supported_thermostat_modes
+            if (state := MODE_TO_STATE.get(mode)) is not None
+        ]
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if self.hvac_mode == HVACMode.COOL:
-            return self._device.status.cooling_setpoint
+            return self.get_attribute_value(
+                Capability.THERMOSTAT_COOLING_SETPOINT, Attribute.COOLING_SETPOINT
+            )
         if self.hvac_mode == HVACMode.HEAT:
-            return self._device.status.heating_setpoint
+            return self.get_attribute_value(
+                Capability.THERMOSTAT_HEATING_SETPOINT, Attribute.HEATING_SETPOINT
+            )
         return None
 
     @property
-    def target_temperature_high(self):
+    def target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
         if self.hvac_mode == HVACMode.HEAT_COOL:
-            return self._device.status.cooling_setpoint
+            return self.get_attribute_value(
+                Capability.THERMOSTAT_COOLING_SETPOINT, Attribute.COOLING_SETPOINT
+            )
         return None
 
     @property
     def target_temperature_low(self):
         """Return the lowbound target temperature we try to reach."""
         if self.hvac_mode == HVACMode.HEAT_COOL:
-            return self._device.status.heating_setpoint
+            return self.get_attribute_value(
+                Capability.THERMOSTAT_HEATING_SETPOINT, Attribute.HEATING_SETPOINT
+            )
         return None
 
     @property
-    def temperature_unit(self):
+    def temperature_unit(self) -> str:
         """Return the unit of measurement."""
-        return UNIT_MAP.get(self._device.status.attributes[Attribute.temperature].unit)
+        # Offline third party thermostats may not have a unit
+        # Since climate always requires a unit, default to Celsius
+        if (
+            unit := self._internal_state[Capability.TEMPERATURE_MEASUREMENT][
+                Attribute.TEMPERATURE
+            ].unit
+        ) is None:
+            return UnitOfTemperature.CELSIUS
+        return UNIT_MAP[unit]
 
 
 class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
     """Define a SmartThings Air Conditioner."""
 
-    _hvac_modes: list[HVACMode]
+    _attr_name = None
 
-    def __init__(self, device) -> None:
+    def __init__(self, client: SmartThings, device: FullDevice) -> None:
         """Init the class."""
-        super().__init__(device)
-        self._hvac_modes = []
-        self._attr_preset_mode = None
+        super().__init__(
+            client,
+            device,
+            {
+                Capability.AIR_CONDITIONER_MODE,
+                Capability.SWITCH,
+                Capability.FAN_OSCILLATION_MODE,
+                Capability.AIR_CONDITIONER_FAN_MODE,
+                Capability.THERMOSTAT_COOLING_SETPOINT,
+                Capability.TEMPERATURE_MEASUREMENT,
+                Capability.CUSTOM_AIR_CONDITIONER_OPTIONAL_MODE,
+                Capability.DEMAND_RESPONSE_LOAD_CONTROL,
+            },
+        )
+        self._attr_hvac_modes = self._determine_hvac_modes()
         self._attr_preset_modes = self._determine_preset_modes()
-        self._attr_swing_modes = self._determine_swing_modes()
+        if self.supports_capability(Capability.FAN_OSCILLATION_MODE):
+            self._attr_swing_modes = self._determine_swing_modes()
         self._attr_supported_features = self._determine_supported_features()
 
     def _determine_supported_features(self) -> ClimateEntityFeature:
@@ -362,7 +363,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
             | ClimateEntityFeature.TURN_OFF
             | ClimateEntityFeature.TURN_ON
         )
-        if self._device.get_capability(Capability.fan_oscillation_mode):
+        if self.supports_capability(Capability.FAN_OSCILLATION_MODE):
             features |= ClimateEntityFeature.SWING_MODE
         if (self._attr_preset_modes is not None) and len(self._attr_preset_modes) > 0:
             features |= ClimateEntityFeature.PRESET_MODE
@@ -370,14 +371,11 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
-        await self._device.set_fan_mode(fan_mode, set_status=True)
-
-        # setting the fan must reset the preset mode (it deactivates the windFree function)
-        self._attr_preset_mode = None
-
-        # State is set optimistically in the command above, therefore update
-        # the entity state ahead of receiving the confirming push updates
-        self.async_write_ha_state()
+        await self.execute_device_command(
+            Capability.AIR_CONDITIONER_FAN_MODE,
+            Command.SET_FAN_MODE,
+            argument=fan_mode,
+        )
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
@@ -386,23 +384,27 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
             return
         tasks = []
         # Turn on the device if it's off before setting mode.
-        if not self._device.status.switch:
-            tasks.append(self._device.switch_on(set_status=True))
+        if self.get_attribute_value(Capability.SWITCH, Attribute.SWITCH) == "off":
+            tasks.append(self.async_turn_on())
 
         mode = STATE_TO_AC_MODE[hvac_mode]
         # If new hvac_mode is HVAC_MODE_FAN_ONLY and AirConditioner support "wind" mode the AirConditioner new mode has to be "wind"
         # The conversion make the mode change working
         # The conversion is made only for device that wrongly has capability "wind" instead "fan_only"
         if hvac_mode == HVACMode.FAN_ONLY:
-            supported_modes = self._device.status.supported_ac_modes
-            if WIND in supported_modes:
+            if WIND in self.get_attribute_value(
+                Capability.AIR_CONDITIONER_MODE, Attribute.SUPPORTED_AC_MODES
+            ):
                 mode = WIND
 
-        tasks.append(self._device.set_air_conditioner_mode(mode, set_status=True))
+        tasks.append(
+            self.execute_device_command(
+                Capability.AIR_CONDITIONER_MODE,
+                Command.SET_AIR_CONDITIONER_MODE,
+                argument=mode,
+            )
+        )
         await asyncio.gather(*tasks)
-        # State is set optimistically in the command above, therefore update
-        # the entity state ahead of receiving the confirming push updates
-        self.async_write_ha_state()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -410,155 +412,181 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
         # operation mode
         if operation_mode := kwargs.get(ATTR_HVAC_MODE):
             if operation_mode == HVACMode.OFF:
-                tasks.append(self._device.switch_off(set_status=True))
+                tasks.append(self.async_turn_off())
             else:
-                if not self._device.status.switch:
-                    tasks.append(self._device.switch_on(set_status=True))
+                if (
+                    self.get_attribute_value(Capability.SWITCH, Attribute.SWITCH)
+                    == "off"
+                ):
+                    tasks.append(self.async_turn_on())
                 tasks.append(self.async_set_hvac_mode(operation_mode))
         # temperature
         tasks.append(
-            self._device.set_cooling_setpoint(kwargs[ATTR_TEMPERATURE], set_status=True)
+            self.execute_device_command(
+                Capability.THERMOSTAT_COOLING_SETPOINT,
+                Command.SET_COOLING_SETPOINT,
+                argument=kwargs[ATTR_TEMPERATURE],
+            )
         )
         await asyncio.gather(*tasks)
-        # State is set optimistically in the command above, therefore update
-        # the entity state ahead of receiving the confirming push updates
-        self.async_write_ha_state()
 
     async def async_turn_on(self) -> None:
         """Turn device on."""
-        await self._device.switch_on(set_status=True)
-        # State is set optimistically in the command above, therefore update
-        # the entity state ahead of receiving the confirming push updates
-        self.async_write_ha_state()
+        await self.execute_device_command(
+            Capability.SWITCH,
+            Command.ON,
+        )
 
     async def async_turn_off(self) -> None:
         """Turn device off."""
-        await self._device.switch_off(set_status=True)
-        # State is set optimistically in the command above, therefore update
-        # the entity state ahead of receiving the confirming push updates
-        self.async_write_ha_state()
-
-    async def async_update(self) -> None:
-        """Update the calculated fields of the AC."""
-        modes = {HVACMode.OFF}
-        for mode in self._device.status.supported_ac_modes:
-            if (state := AC_MODE_TO_STATE.get(mode)) is not None:
-                modes.add(state)
-            else:
-                _LOGGER.debug(
-                    "Device %s (%s) returned an invalid supported AC mode: %s",
-                    self._device.label,
-                    self._device.device_id,
-                    mode,
-                )
-        self._hvac_modes = list(modes)
+        await self.execute_device_command(
+            Capability.SWITCH,
+            Command.OFF,
+        )
 
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        return self._device.status.temperature
+        return self.get_attribute_value(
+            Capability.TEMPERATURE_MEASUREMENT, Attribute.TEMPERATURE
+        )
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return device specific state attributes.
 
         Include attributes from the Demand Response Load Control (drlc)
         and Power Consumption capabilities.
         """
-        attributes = [
-            "drlc_status_duration",
-            "drlc_status_level",
-            "drlc_status_start",
-            "drlc_status_override",
-        ]
-        state_attributes = {}
-        for attribute in attributes:
-            value = getattr(self._device.status, attribute)
-            if value is not None:
-                state_attributes[attribute] = value
-        return state_attributes
+        if not self.supports_capability(Capability.DEMAND_RESPONSE_LOAD_CONTROL):
+            return None
+
+        drlc_status = self.get_attribute_value(
+            Capability.DEMAND_RESPONSE_LOAD_CONTROL,
+            Attribute.DEMAND_RESPONSE_LOAD_CONTROL_STATUS,
+        )
+        res = {}
+        for key in ("duration", "start", "override", "drlcLevel"):
+            if key in drlc_status:
+                dict_key = {"drlcLevel": "drlc_status_level"}.get(
+                    key, f"drlc_status_{key}"
+                )
+                res[dict_key] = drlc_status[key]
+        return res
 
     @property
     def fan_mode(self) -> str:
         """Return the fan setting."""
-        return self._device.status.fan_mode
+        return self.get_attribute_value(
+            Capability.AIR_CONDITIONER_FAN_MODE, Attribute.FAN_MODE
+        )
 
     @property
     def fan_modes(self) -> list[str]:
         """Return the list of available fan modes."""
-        return self._device.status.supported_ac_fan_modes
+        return self.get_attribute_value(
+            Capability.AIR_CONDITIONER_FAN_MODE, Attribute.SUPPORTED_AC_FAN_MODES
+        )
 
     @property
     def hvac_mode(self) -> HVACMode | None:
         """Return current operation ie. heat, cool, idle."""
-        if not self._device.status.switch:
+        if self.get_attribute_value(Capability.SWITCH, Attribute.SWITCH) == "off":
             return HVACMode.OFF
-        return AC_MODE_TO_STATE.get(self._device.status.air_conditioner_mode)
-
-    @property
-    def hvac_modes(self) -> list[HVACMode]:
-        """Return the list of available operation modes."""
-        return self._hvac_modes
+        return AC_MODE_TO_STATE.get(
+            self.get_attribute_value(
+                Capability.AIR_CONDITIONER_MODE, Attribute.AIR_CONDITIONER_MODE
+            )
+        )
 
     @property
     def target_temperature(self) -> float:
         """Return the temperature we try to reach."""
-        return self._device.status.cooling_setpoint
+        return self.get_attribute_value(
+            Capability.THERMOSTAT_COOLING_SETPOINT, Attribute.COOLING_SETPOINT
+        )
 
     @property
     def temperature_unit(self) -> str:
         """Return the unit of measurement."""
-        return UNIT_MAP[self._device.status.attributes[Attribute.temperature].unit]
+        unit = self._internal_state[Capability.TEMPERATURE_MEASUREMENT][
+            Attribute.TEMPERATURE
+        ].unit
+        assert unit
+        return UNIT_MAP[unit]
 
     def _determine_swing_modes(self) -> list[str] | None:
         """Return the list of available swing modes."""
-        supported_swings = None
-        supported_modes = self._device.status.attributes[
-            Attribute.supported_fan_oscillation_modes
-        ][0]
-        if supported_modes is not None:
-            supported_swings = [
-                FAN_OSCILLATION_TO_SWING.get(m, SWING_OFF) for m in supported_modes
-            ]
-        return supported_swings
+        if (
+            supported_modes := self.get_attribute_value(
+                Capability.FAN_OSCILLATION_MODE,
+                Attribute.SUPPORTED_FAN_OSCILLATION_MODES,
+            )
+        ) is None:
+            return None
+        return [FAN_OSCILLATION_TO_SWING.get(m, SWING_OFF) for m in supported_modes]
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set swing mode."""
-        fan_oscillation_mode = SWING_TO_FAN_OSCILLATION[swing_mode]
-        await self._device.set_fan_oscillation_mode(fan_oscillation_mode)
-
-        # setting the fan must reset the preset mode (it deactivates the windFree function)
-        self._attr_preset_mode = None
-
-        self.async_schedule_update_ha_state(True)
+        await self.execute_device_command(
+            Capability.FAN_OSCILLATION_MODE,
+            Command.SET_FAN_OSCILLATION_MODE,
+            argument=SWING_TO_FAN_OSCILLATION[swing_mode],
+        )
 
     @property
     def swing_mode(self) -> str:
         """Return the swing setting."""
         return FAN_OSCILLATION_TO_SWING.get(
-            self._device.status.fan_oscillation_mode, SWING_OFF
+            self.get_attribute_value(
+                Capability.FAN_OSCILLATION_MODE, Attribute.FAN_OSCILLATION_MODE
+            ),
+            SWING_OFF,
         )
+
+    @property
+    def preset_mode(self) -> str | None:
+        """Return the preset mode."""
+        if self.supports_capability(Capability.CUSTOM_AIR_CONDITIONER_OPTIONAL_MODE):
+            mode = self.get_attribute_value(
+                Capability.CUSTOM_AIR_CONDITIONER_OPTIONAL_MODE,
+                Attribute.AC_OPTIONAL_MODE,
+            )
+            if mode == WINDFREE:
+                return WINDFREE
+        return None
 
     def _determine_preset_modes(self) -> list[str] | None:
         """Return a list of available preset modes."""
-        supported_modes: list | None = self._device.status.attributes[
-            "supportedAcOptionalMode"
-        ].value
-        if supported_modes and WINDFREE in supported_modes:
-            return [WINDFREE]
+        if self.supports_capability(Capability.CUSTOM_AIR_CONDITIONER_OPTIONAL_MODE):
+            supported_modes = self.get_attribute_value(
+                Capability.CUSTOM_AIR_CONDITIONER_OPTIONAL_MODE,
+                Attribute.SUPPORTED_AC_OPTIONAL_MODE,
+            )
+            if supported_modes and WINDFREE in supported_modes:
+                return [WINDFREE]
         return None
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set special modes (currently only windFree is supported)."""
-        result = await self._device.command(
-            "main",
-            "custom.airConditionerOptionalMode",
-            "setAcOptionalMode",
-            [preset_mode],
+        await self.execute_device_command(
+            Capability.CUSTOM_AIR_CONDITIONER_OPTIONAL_MODE,
+            Command.SET_AC_OPTIONAL_MODE,
+            argument=preset_mode,
         )
-        if result:
-            self._device.status.update_attribute_value("acOptionalMode", preset_mode)
 
-        self._attr_preset_mode = preset_mode
-
-        self.async_write_ha_state()
+    def _determine_hvac_modes(self) -> list[HVACMode]:
+        """Determine the supported HVAC modes."""
+        modes = [HVACMode.OFF]
+        if (
+            ac_modes := self.get_attribute_value(
+                Capability.AIR_CONDITIONER_MODE, Attribute.SUPPORTED_AC_MODES
+            )
+        ) is not None:
+            modes.extend(
+                state
+                for mode in ac_modes
+                if (state := AC_MODE_TO_STATE.get(mode)) is not None
+                if state not in modes
+            )
+        return modes

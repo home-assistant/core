@@ -235,11 +235,11 @@ async def test_sync_message(hass: HomeAssistant, registries) -> None:
                                         ],
                                     },
                                     {
-                                        "setting_name": "none",
+                                        "setting_name": "off",
                                         "setting_values": [
                                             {
                                                 "lang": "en",
-                                                "setting_synonym": ["none"],
+                                                "setting_synonym": ["off"],
                                             }
                                         ],
                                     },
@@ -356,9 +356,9 @@ async def test_sync_in_area(area_on_device, hass: HomeAssistant, registries) -> 
                                         ],
                                     },
                                     {
-                                        "setting_name": "none",
+                                        "setting_name": "off",
                                         "setting_values": [
-                                            {"lang": "en", "setting_synonym": ["none"]}
+                                            {"lang": "en", "setting_synonym": ["off"]}
                                         ],
                                     },
                                 ],
@@ -957,9 +957,9 @@ async def test_unavailable_state_does_sync(hass: HomeAssistant) -> None:
                                         ],
                                     },
                                     {
-                                        "setting_name": "none",
+                                        "setting_name": "off",
                                         "setting_values": [
-                                            {"lang": "en", "setting_synonym": ["none"]}
+                                            {"lang": "en", "setting_synonym": ["off"]}
                                         ],
                                     },
                                 ],

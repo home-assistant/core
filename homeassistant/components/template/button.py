@@ -19,8 +19,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.device import async_device_info_to_link_from_device_id
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.script import Script
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_PRESS, DOMAIN
@@ -93,7 +95,7 @@ async def async_setup_platform(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize config entry."""
     _options = dict(config_entry.options)
@@ -118,11 +120,9 @@ class TemplateButtonEntity(TemplateEntity, ButtonEntity):
         """Initialize the button."""
         super().__init__(hass, config=config, unique_id=unique_id)
         assert self._attr_name is not None
-        self._command_press = (
-            Script(hass, config.get(CONF_PRESS), self._attr_name, DOMAIN)
-            if config.get(CONF_PRESS, None) is not None
-            else None
-        )
+        # Scripts can be an empty list, therefore we need to check for None
+        if (action := config.get(CONF_PRESS)) is not None:
+            self.add_script(CONF_PRESS, action, self._attr_name, DOMAIN)
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._attr_state = None
         self._attr_device_info = async_device_info_to_link_from_device_id(
@@ -132,5 +132,5 @@ class TemplateButtonEntity(TemplateEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Press the button."""
-        if self._command_press:
-            await self.async_run_script(self._command_press, context=self._context)
+        if script := self._action_scripts.get(CONF_PRESS):
+            await self.async_run_script(script, context=self._context)

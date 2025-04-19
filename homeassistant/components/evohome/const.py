@@ -18,11 +18,10 @@ USER_DATA: Final = "user_data"
 SCAN_INTERVAL_DEFAULT: Final = timedelta(seconds=300)
 SCAN_INTERVAL_MINIMUM: Final = timedelta(seconds=60)
 
-ATTR_SYSTEM_MODE: Final = "mode"
-ATTR_DURATION_DAYS: Final = "period"
-ATTR_DURATION_HOURS: Final = "duration"
+ATTR_PERIOD: Final = "period"  # number of days
+ATTR_DURATION: Final = "duration"  # number of minutes, <24h
 
-ATTR_ZONE_TEMP: Final = "setpoint"
+ATTR_SETPOINT: Final = "setpoint"
 ATTR_DURATION_UNTIL: Final = "duration"
 
 

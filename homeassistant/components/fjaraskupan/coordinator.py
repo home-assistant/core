@@ -29,6 +29,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN
 
+type FjaraskupanConfigEntry = ConfigEntry[dict[str, FjaraskupanCoordinator]]
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -65,12 +67,12 @@ class UnableToConnect(HomeAssistantError):
 class FjaraskupanCoordinator(DataUpdateCoordinator[State]):
     """Update coordinator for each device."""
 
-    config_entry: ConfigEntry
+    config_entry: FjaraskupanConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: FjaraskupanConfigEntry,
         device: Device,
         device_info: DeviceInfo,
     ) -> None:

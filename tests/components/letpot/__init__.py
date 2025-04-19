@@ -30,7 +30,7 @@ AUTHENTICATION = AuthenticationInfo(
     email="email@example.com",
 )
 
-STATUS = LetPotDeviceStatus(
+MAX_STATUS = LetPotDeviceStatus(
     errors=LetPotDeviceErrors(low_water=True, low_nutrients=False, refill_error=False),
     light_brightness=500,
     light_mode=1,
@@ -48,4 +48,20 @@ STATUS = LetPotDeviceStatus(
     temperature_value=18,
     water_mode=1,
     water_level=100,
+)
+
+SE_STATUS = LetPotDeviceStatus(
+    errors=LetPotDeviceErrors(low_water=True, pump_malfunction=True),
+    light_brightness=500,
+    light_mode=1,
+    light_schedule_end=datetime.time(18, 0),
+    light_schedule_start=datetime.time(8, 0),
+    online=True,
+    plant_days=1,
+    pump_mode=1,
+    pump_nutrient=None,
+    pump_status=0,
+    raw=[],  # Not used by integration, and it requires a real device to get
+    system_on=True,
+    system_sound=False,
 )

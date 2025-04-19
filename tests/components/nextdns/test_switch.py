@@ -5,12 +5,14 @@ from unittest.mock import Mock, patch
 
 from aiohttp import ClientError
 from aiohttp.client_exceptions import ClientConnectorError
-from nextdns import ApiError
+from nextdns import ApiError, InvalidApiKeyError
 import pytest
 from syrupy import SnapshotAssertion
 from tenacity import RetryError
 
+from homeassistant.components.nextdns.const import DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -158,3 +160,32 @@ async def test_switch_failure(hass: HomeAssistant, exc: Exception) -> None:
             {ATTR_ENTITY_ID: "switch.fake_profile_block_page"},
             blocking=True,
         )
+
+
+async def test_switch_auth_error(hass: HomeAssistant) -> None:
+    """Tests that the turn on/off action starts re-auth flow."""
+    entry = await init_integration(hass)
+
+    with patch(
+        "homeassistant.components.nextdns.NextDns.set_setting",
+        side_effect=InvalidApiKeyError,
+    ):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.fake_profile_block_page"},
+            blocking=True,
+        )
+
+    assert entry.state is ConfigEntryState.LOADED
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+
+    flow = flows[0]
+    assert flow.get("step_id") == "reauth_confirm"
+    assert flow.get("handler") == DOMAIN
+
+    assert "context" in flow
+    assert flow["context"].get("source") == SOURCE_REAUTH
+    assert flow["context"].get("entry_id") == entry.entry_id

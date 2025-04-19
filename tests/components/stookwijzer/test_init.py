@@ -66,8 +66,8 @@ async def test_migrate_entry(
 
     assert mock_v1_config_entry.version == 2
     assert mock_v1_config_entry.data == {
-        CONF_LATITUDE: 200000.123456789,
-        CONF_LONGITUDE: 450000.123456789,
+        CONF_LATITUDE: 450000.123456789,
+        CONF_LONGITUDE: 200000.123456789,
     }
 
 
@@ -81,7 +81,7 @@ async def test_entry_migration_failure(
     assert mock_v1_config_entry.version == 1
 
     # Failed getting the transformed coordinates
-    mock_stookwijzer.async_transform_coordinates.return_value = (None, None)
+    mock_stookwijzer.async_transform_coordinates.return_value = None
 
     mock_v1_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_v1_config_entry.entry_id)

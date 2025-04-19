@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import Any
 
 from aiohasupervisor import SupervisorError
-from aiohasupervisor.models import OSUpdate
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 
 from homeassistant.components.update import (
@@ -17,7 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ICON, ATTR_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     ADDONS_COORDINATOR,
@@ -36,10 +35,10 @@ from .entity import (
     HassioOSEntity,
     HassioSupervisorEntity,
 )
-from .update_helper import update_addon, update_core
+from .update_helper import update_addon, update_core, update_os
 
 ENTITY_DESCRIPTION = UpdateEntityDescription(
-    name="Update",
+    translation_key="update",
     key=ATTR_VERSION_LATEST,
 )
 
@@ -47,7 +46,7 @@ ENTITY_DESCRIPTION = UpdateEntityDescription(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Supervisor update based on a config entry."""
     coordinator = hass.data[ADDONS_COORDINATOR]
@@ -170,7 +169,9 @@ class SupervisorOSUpdateEntity(HassioOSEntity, UpdateEntity):
     """Update entity to handle updates for the Home Assistant Operating System."""
 
     _attr_supported_features = (
-        UpdateEntityFeature.INSTALL | UpdateEntityFeature.SPECIFIC_VERSION
+        UpdateEntityFeature.INSTALL
+        | UpdateEntityFeature.SPECIFIC_VERSION
+        | UpdateEntityFeature.BACKUP
     )
     _attr_title = "Home Assistant Operating System"
 
@@ -203,14 +204,7 @@ class SupervisorOSUpdateEntity(HassioOSEntity, UpdateEntity):
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install an update."""
-        try:
-            await self.coordinator.supervisor_client.os.update(
-                OSUpdate(version=version)
-            )
-        except SupervisorError as err:
-            raise HomeAssistantError(
-                f"Error updating Home Assistant Operating System: {err}"
-            ) from err
+        await update_os(self.hass, version, backup)
 
 
 class SupervisorSupervisorUpdateEntity(HassioSupervisorEntity, UpdateEntity):

@@ -90,7 +90,7 @@
   "services": {
     "get_requests": {
       "name": "Get requests",
-      "description": "Get media requests from Overseerr.",
+      "description": "Retrieves a list of media requests from Overseerr.",
       "fields": {
         "config_entry_id": {
           "name": "Overseerr instance",
@@ -106,7 +106,7 @@
         },
         "requested_by": {
           "name": "Requested by",
-          "description": "Filter the requests by the user id that requested them."
+          "description": "Filter the requests by the user ID that requested them."
         }
       }
     }

@@ -43,6 +43,7 @@ from homeassistant.helpers.event import (
     async_track_time_interval,
     async_track_utc_time_change,
 )
+from homeassistant.helpers.recorder import DATA_RECORDER
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util import dt as dt_util
@@ -78,7 +79,13 @@ from .db_schema import (
     StatisticsShortTerm,
 )
 from .executor import DBInterruptibleThreadPoolExecutor
-from .models import DatabaseEngine, StatisticData, StatisticMetaData, UnsupportedDialect
+from .models import (
+    DatabaseEngine,
+    StatisticData,
+    StatisticMeanType,
+    StatisticMetaData,
+    UnsupportedDialect,
+)
 from .pool import POOL_SIZE, MutexPool, RecorderPool
 from .table_managers.event_data import EventDataManager
 from .table_managers.event_types import EventTypeManager
@@ -121,8 +128,6 @@ from .util import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-DEFAULT_URL = "sqlite:///{hass_config_path}"
 
 # Controls how often we clean up
 # States and Events objects
@@ -183,7 +188,7 @@ class Recorder(threading.Thread):
         self.db_retry_wait = db_retry_wait
         self.database_engine: DatabaseEngine | None = None
         # Database connection is ready, but non-live migration may be in progress
-        db_connected: asyncio.Future[bool] = hass.data[DOMAIN].db_connected
+        db_connected: asyncio.Future[bool] = hass.data[DATA_RECORDER].db_connected
         self.async_db_connected: asyncio.Future[bool] = db_connected
         # Database is ready to use but live migration may be in progress
         self.async_db_ready: asyncio.Future[bool] = hass.loop.create_future()
@@ -612,6 +617,17 @@ class Recorder(threading.Thread):
         table: type[Statistics | StatisticsShortTerm],
     ) -> None:
         """Schedule import of statistics."""
+        if "mean_type" not in metadata:
+            # Backwards compatibility for old metadata format
+            # Can be removed after 2026.4
+            metadata["mean_type"] = (  # type: ignore[unreachable]
+                StatisticMeanType.ARITHMETIC
+                if metadata.get("has_mean")
+                else StatisticMeanType.NONE
+            )
+        # Remove deprecated has_mean as it's not needed anymore in core
+        metadata.pop("has_mean", None)
+
         self.queue_task(ImportStatisticsTask(metadata, stats, table))
 
     @callback
@@ -1291,11 +1307,17 @@ class Recorder(threading.Thread):
 
     async def async_block_till_done(self) -> None:
         """Async version of block_till_done."""
+        if future := self.async_get_commit_future():
+            await future
+
+    @callback
+    def async_get_commit_future(self) -> asyncio.Future[None] | None:
+        """Return a future that will wait for the next commit or None if nothing pending."""
         if self._queue.empty() and not self._event_session_has_pending_writes:
-            return
-        event = asyncio.Event()
-        self.queue_task(SynchronizeTask(event))
-        await event.wait()
+            return None
+        future: asyncio.Future[None] = self.hass.loop.create_future()
+        self.queue_task(SynchronizeTask(future))
+        return future
 
     def block_till_done(self) -> None:
         """Block till all events processed.

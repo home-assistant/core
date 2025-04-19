@@ -21,7 +21,7 @@ from homeassistant.components.siren import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TPLinkConfigEntry, legacy_device_id
 from .const import DOMAIN
@@ -61,7 +61,7 @@ SIREN_DESCRIPTIONS: tuple[TPLinkSirenEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: TPLinkConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up siren entities."""
     data = config_entry.runtime_data

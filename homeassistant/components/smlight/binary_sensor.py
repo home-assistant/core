@@ -16,12 +16,13 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import SCAN_INTERNET_INTERVAL
 from .coordinator import SmConfigEntry, SmDataUpdateCoordinator
 from .entity import SmEntity
 
+PARALLEL_UPDATES = 0
 SCAN_INTERVAL = SCAN_INTERNET_INTERVAL
 
 
@@ -56,7 +57,7 @@ SENSORS = [
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SmConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up SMLIGHT sensor based on a config entry."""
     coordinator = entry.runtime_data.data
