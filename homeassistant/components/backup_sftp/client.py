@@ -211,10 +211,6 @@ class BackupAgentClient:
                 )
                 continue
             except SFTPError as e:
-                LOGGER.error(
-                    "SFTP Error occurred while attempting to extract list of backups. %s",
-                    e,
-                )
                 raise RuntimeError(
                     f"SFTP Error occurred while attempting to extract list of backups. {e}"
                 ) from e
