@@ -50,21 +50,33 @@ MEDIA_TYPE_TO_SQUEEZEBOX: dict[str | MediaType, str] = {
     MediaType.GENRE: "genre",
     MediaType.APPS: "apps",
     "radios": "radios",
+    "favorite": "favorite",
 }
 
 SQUEEZEBOX_ID_BY_TYPE: dict[str | MediaType, str] = {
     MediaType.ALBUM: "album_id",
+    "albums": "album_id",
     MediaType.ARTIST: "artist_id",
+    "artists": "artist_id",
     MediaType.TRACK: "track_id",
+    "tracks": "track_id",
     MediaType.PLAYLIST: "playlist_id",
+    "playlists": "playlist_id",
     MediaType.GENRE: "genre_id",
+    "genres": "genre_id",
+    "favorite": "item_id",
     "favorites": "item_id",
     MediaType.APPS: "item_id",
+    "app": "item_id",
+    "radios": "item_id",
+    "radio": "item_id",
 }
 
 CONTENT_TYPE_MEDIA_CLASS: dict[str | MediaType, dict[str, MediaClass | str]] = {
     "favorites": {"item": MediaClass.DIRECTORY, "children": MediaClass.TRACK},
+    "favorite": {"item": "favorite", "children": ""},
     "radios": {"item": MediaClass.DIRECTORY, "children": MediaClass.APP},
+    "radio": {"item": MediaClass.DIRECTORY, "children": MediaClass.APP},
     "artists": {"item": MediaClass.DIRECTORY, "children": MediaClass.ARTIST},
     "albums": {"item": MediaClass.DIRECTORY, "children": MediaClass.ALBUM},
     "tracks": {"item": MediaClass.DIRECTORY, "children": MediaClass.TRACK},
@@ -100,6 +112,7 @@ CONTENT_TYPE_TO_CHILD_TYPE: dict[
     "album artists": MediaType.ARTIST,
     MediaType.APPS: MediaType.APP,
     MediaType.APP: MediaType.TRACK,
+    "favorite": None,
 }
 
 
@@ -191,7 +204,7 @@ def _build_response_favorites(item: dict[str, Any]) -> BrowseMedia:
     return BrowseMedia(
         media_content_id=item["id"],
         title=item["title"],
-        media_content_type="favorites",
+        media_content_type="favorite",
         media_class=CONTENT_TYPE_MEDIA_CLASS[MediaType.TRACK]["item"],
         can_expand=bool(item.get("hasitems")),
         can_play=bool(item["isaudio"] and item.get("url")),
@@ -236,6 +249,7 @@ async def build_item_response(
 
     search_id = payload["search_id"]
     search_type = payload["search_type"]
+    search_query = payload.get("search_query")
     assert (
         search_type is not None
     )  # async_browse_media will not call this function if search_type is None
@@ -252,6 +266,7 @@ async def build_item_response(
         browse_data.media_type_to_squeezebox[search_type],
         limit=browse_limit,
         browse_id=browse_id,
+        search_query=search_query,
     )
 
     if result is not None and result.get("items"):
@@ -261,7 +276,7 @@ async def build_item_response(
         for item in result["items"]:
             # Force the item id to a string in case it's numeric from some lms
             item["id"] = str(item.get("id", ""))
-            if search_type == "favorites":
+            if search_type in ["favorites", "favorite"]:
                 child_media = _build_response_favorites(item)
 
             elif search_type in ["apps", "radios"]:
