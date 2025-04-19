@@ -97,3 +97,9 @@
     'state': 'unknown',
   })
 # ---
+# name: test_update_user_image
+  None
+# ---
+# name: test_update_user_image.1
+  b'd'
+# ---
