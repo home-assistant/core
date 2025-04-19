@@ -94,7 +94,7 @@ class VolvoDataCoordinator(DataUpdateCoordinator[CoordinatorData]):
             )
 
         self.vehicle = vehicle
-        self.data = self.data or {}
+        self.data = {}
 
         device_name = (
             f"{MANUFACTURER} {vehicle.description.model} {vehicle.model_year}"
