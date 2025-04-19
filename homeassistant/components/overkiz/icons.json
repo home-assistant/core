@@ -1,0 +1,28 @@
+{
+  "entity": {
+    "climate": {
+      "overkiz": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "auto": "mdi:thermostat-auto",
+              "comfort-1": "mdi:thermometer",
+              "comfort-2": "mdi:thermometer-low",
+              "frost_protection": "mdi:snowflake",
+              "prog": "mdi:clock-outline",
+              "external": "mdi:remote"
+            }
+          }
+        }
+      }
+    },
+    "sensor": {
+      "derogated_target_temperature": {
+        "default": "mdi:thermometer-alert"
+      },
+      "regulation_mode": {
+        "default": "mdi:auto-mode"
+      }
+    }
+  }
+}
