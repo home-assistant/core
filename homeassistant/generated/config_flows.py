@@ -573,6 +573,7 @@ FLOWS = {
         "slimproto",
         "sma",
         "smappee",
+        "smarla",
         "smart_meter_texas",
         "smartthings",
         "smarttub",
