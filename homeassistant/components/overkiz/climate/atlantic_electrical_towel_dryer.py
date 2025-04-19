@@ -35,7 +35,6 @@ OVERKIZ_TO_PRESET_MODE: dict[str, str] = {
     OverkizCommandParam.BOOST: PRESET_BOOST,
     OverkizCommandParam.DRYING: PRESET_DRYING,
 }
-
 PRESET_MODE_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_PRESET_MODE.items()}
 
 TEMPERATURE_SENSOR_DEVICE_INDEX = 7
