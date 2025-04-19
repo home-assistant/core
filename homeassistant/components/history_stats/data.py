@@ -88,20 +88,20 @@ class HistoryStats:
         if current_period_start_timestamp > now_timestamp:
             # History cannot tell the future
             self._history_current_period = []
-            self._previous_run_before_start = True
+            self._previous_run_before_start = False
             self._state = HistoryStatsState(None, None, self._period)
             return self._state
         #
         # We avoid querying the database if the below did NOT happen:
         #
-        # - The previous run happened before the start time
-        # - The start time changed
-        # - The period shrank in size
+        # - No previous run occurred (uninitialized)
+        # - The start time moved back in time
+        # - The end time moved back in time
         # - The previous period ended before now
         #
         if (
-            not self._previous_run_before_start
-            and current_period_start_timestamp == previous_period_start_timestamp
+            self._previous_run_before_start
+            and current_period_start_timestamp >= previous_period_start_timestamp
             and (
                 current_period_end_timestamp == previous_period_end_timestamp
                 or (
@@ -110,6 +110,21 @@ class HistoryStats:
                 )
             )
         ):
+            start_changed = (
+                current_period_start_timestamp != previous_period_start_timestamp
+            )
+            if start_changed:
+                # Trim the start of the _history_current_period to the new period start
+                trim_count = 0
+                for i, state in enumerate(self._history_current_period):
+                    if state.last_changed < current_period_start_timestamp:
+                        state.last_changed = current_period_start_timestamp
+                        if i > 0:
+                            trim_count += 1
+                    else:
+                        break
+                self._history_current_period = self._history_current_period[trim_count:]
+
             new_data = False
             if event and (new_state := event.data["new_state"]) is not None:
                 if (
@@ -121,7 +136,11 @@ class HistoryStats:
                         HistoryState(new_state.state, new_state.last_changed_timestamp)
                     )
                     new_data = True
-            if not new_data and current_period_end_timestamp < now_timestamp:
+            if (
+                not new_data
+                and current_period_end_timestamp < now_timestamp
+                and not start_changed
+            ):
                 # If period has not changed and current time after the period end...
                 # Don't compute anything as the value cannot have changed
                 return self._state
@@ -139,7 +158,7 @@ class HistoryStats:
                         HistoryState(new_state.state, new_state.last_changed_timestamp)
                     )
 
-            self._previous_run_before_start = False
+            self._previous_run_before_start = True
 
         seconds_matched, match_count = self._async_compute_seconds_and_changes(
             now_timestamp,
