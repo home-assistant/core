@@ -1530,7 +1530,7 @@ pybalboa==1.1.3
 pyblackbird==0.6
 
 # homeassistant.components.bluesound
-pyblu==2.0.0
+pyblu==2.0.1
 
 # homeassistant.components.neato
 pybotvac==0.0.26
