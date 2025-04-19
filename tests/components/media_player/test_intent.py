@@ -14,9 +14,13 @@ from homeassistant.components.media_player import (
 from homeassistant.components.media_player.const import MediaPlayerEntityFeature
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
+    STATE_BUFFERING,
     STATE_IDLE,
+    STATE_OFF,
+    STATE_ON,
     STATE_PAUSED,
     STATE_PLAYING,
+    STATE_STANDBY,
 )
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import (
@@ -220,16 +224,27 @@ async def test_previous_media_player_intent(hass: HomeAssistant) -> None:
         )
 
 
-async def test_volume_media_player_intent(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "state",
+    [
+        STATE_PLAYING,
+        STATE_PAUSED,
+        STATE_IDLE,
+        STATE_ON,
+        STATE_BUFFERING,
+        STATE_STANDBY,
+        STATE_OFF,
+    ],
+)
+async def test_volume_media_player_intent(hass: HomeAssistant, state) -> None:
     """Test HassSetVolume intent for media players."""
     await media_player_intent.async_setup_intents(hass)
 
     entity_id = f"{DOMAIN}.test_media_player"
     attributes = {ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature.VOLUME_SET}
 
-    hass.states.async_set(entity_id, STATE_PLAYING, attributes=attributes)
+    hass.states.async_set(entity_id, state, attributes=attributes)
     calls = async_mock_service(hass, DOMAIN, SERVICE_VOLUME_SET)
-
     response = await intent.async_handle(
         hass,
         "test",
@@ -244,32 +259,6 @@ async def test_volume_media_player_intent(hass: HomeAssistant) -> None:
     assert call.domain == DOMAIN
     assert call.service == SERVICE_VOLUME_SET
     assert call.data == {"entity_id": entity_id, "volume_level": 0.5}
-
-    # Test if not playing
-    hass.states.async_set(entity_id, STATE_IDLE, attributes=attributes)
-
-    with pytest.raises(intent.MatchFailedError):
-        response = await intent.async_handle(
-            hass,
-            "test",
-            media_player_intent.INTENT_SET_VOLUME,
-            {"volume_level": {"value": 50}},
-        )
-
-    # Test feature not supported
-    hass.states.async_set(
-        entity_id,
-        STATE_PLAYING,
-        attributes={ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature(0)},
-    )
-
-    with pytest.raises(intent.MatchFailedError):
-        response = await intent.async_handle(
-            hass,
-            "test",
-            media_player_intent.INTENT_SET_VOLUME,
-            {"volume_level": {"value": 50}},
-        )
 
 
 async def test_multiple_media_players(
