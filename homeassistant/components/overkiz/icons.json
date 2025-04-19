@@ -1,0 +1,15 @@
+{
+  "entity": {
+    "climate": {
+      "overkiz": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "drying": "mdi:hair-dryer"
+            }
+          }
+        }
+      }
+    }
+  }
+}
