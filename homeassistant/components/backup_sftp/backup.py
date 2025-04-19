@@ -16,7 +16,7 @@ from homeassistant.components.backup import (
 from homeassistant.core import HomeAssistant, callback
 
 from . import SFTPConfigEntry
-from .client import BackupAgentAuthError, BackupAgentClient
+from .client import BackupAgentClient
 from .const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN, LOGGER
 
 
@@ -72,15 +72,13 @@ class SFTPBackupAgent(BackupAgent):
             LOGGER.debug(
                 "Establishing SFTP connection to remote host in order to download backup"
             )
+
+            # Will raise BackupAgentError if failure to authenticate or SFTP Permissions
             async with BackupAgentClient(self._entry, self._hass) as client:
                 return await client.iter_file(backup)
         except FileNotFoundError as e:
             raise BackupNotFound(
                 f"Unable to initiate download of backup id: {backup_id}. {e}"
-            ) from e
-        except (BackupAgentAuthError, RuntimeError) as e:
-            raise BackupAgentError(
-                f"SFTP error while initiating download of backup id: {backup_id}. {e}"
             ) from e
 
     async def async_upload_backup(
@@ -97,14 +95,11 @@ class SFTPBackupAgent(BackupAgent):
         LOGGER.debug(
             "Establishing SFTP connection to remote host in order to upload backup"
         )
-        try:
-            async with BackupAgentClient(self._entry, self._hass) as client:
-                LOGGER.debug("Uploading backup: %s", backup.backup_id)
-                await client.async_upload_backup(iterator, backup)
-        except (BackupAgentAuthError, RuntimeError) as e:
-            raise BackupAgentError(
-                f"Failed to upload backup to remote SFTP location. Error: {e}"
-            ) from e
+
+        # Will raise BackupAgentError if failure to authenticate or SFTP Permissions
+        async with BackupAgentClient(self._entry, self._hass) as client:
+            LOGGER.debug("Uploading backup: %s", backup.backup_id)
+            await client.async_upload_backup(iterator, backup)
         LOGGER.debug("Successfully uploaded backup id: %s", backup.backup_id)
 
     async def async_delete_backup(
@@ -120,6 +115,7 @@ class SFTPBackupAgent(BackupAgent):
             LOGGER.debug(
                 "Establishing SFTP connection to remote host in order to delete backup"
             )
+            # Will raise BackupAgentError if failure to authenticate or SFTP Permissions
             async with BackupAgentClient(self._entry, self._hass) as client:
                 await client.async_delete_backup(backup)
         except FileNotFoundError as err:
@@ -128,21 +124,15 @@ class SFTPBackupAgent(BackupAgent):
             raise BackupAgentError(
                 f"Failed to delete backup id: {backup_id}: {err}"
             ) from err
-        except (BackupAgentAuthError, RuntimeError) as err:
-            raise BackupAgentError(
-                f"Unexpected error while removing backup: {backup_id}: {err}"
-            ) from err
 
         LOGGER.debug("Successfully removed backup id: %s", backup_id)
 
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups stored on SFTP Storage."""
-        try:
-            async with BackupAgentClient(self._entry, self._hass) as client:
-                return await client.async_list_backups()
-        except (BackupAgentAuthError, RuntimeError) as e:
-            LOGGER.exception("Listing backups failed.")
-            raise BackupAgentError(f"Failed to list backups: {e}") from e
+
+        # Will raise BackupAgentError if failure to authenticate or SFTP Permissions
+        async with BackupAgentClient(self._entry, self._hass) as client:
+            return await client.async_list_backups()
 
     async def async_get_backup(
         self,
