@@ -408,6 +408,7 @@ class ConfigEntry[_DataT = Any]:
     created_at: datetime
     modified_at: datetime
     discovery_keys: MappingProxyType[str, tuple[DiscoveryKey, ...]]
+    virtual_domain: str | None
 
     def __init__(
         self,
@@ -429,6 +430,7 @@ class ConfigEntry[_DataT = Any]:
         title: str,
         unique_id: str | None,
         version: int,
+        virtual_domain: str | None = None,
     ) -> None:
         """Initialize a config entry."""
         _setter = object.__setattr__
@@ -441,6 +443,7 @@ class ConfigEntry[_DataT = Any]:
 
         # Domain the configuration belongs to
         _setter(self, "domain", domain)
+        _setter(self, "virtual_domain", virtual_domain)
 
         # Title of the configuration
         _setter(self, "title", title)
@@ -1673,6 +1676,7 @@ class ConfigEntriesFlowManager(
             title=result["title"],
             unique_id=flow.unique_id,
             version=result["version"],
+            virtual_domain=flow.context.get("virtual_domain"),
         )
 
         if existing_entry is not None:
@@ -2318,8 +2322,9 @@ class ConfigEntries:
         entry: ConfigEntry,
         *,
         data: Mapping[str, Any] | UndefinedType = UNDEFINED,
-        discovery_keys: MappingProxyType[str, tuple[DiscoveryKey, ...]]
-        | UndefinedType = UNDEFINED,
+        discovery_keys: (
+            MappingProxyType[str, tuple[DiscoveryKey, ...]] | UndefinedType
+        ) = UNDEFINED,
         minor_version: int | UndefinedType = UNDEFINED,
         options: Mapping[str, Any] | UndefinedType = UNDEFINED,
         pref_disable_new_entities: bool | UndefinedType = UNDEFINED,
