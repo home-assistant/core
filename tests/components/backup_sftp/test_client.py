@@ -213,9 +213,8 @@ async def test_async_list_backups(
         patch("homeassistant.components.backup_sftp.client.connect", mock_connect()),
     ):
         async with BackupAgentClient(config_entry, hass) as client:
-            backups = await client.async_list_backups()
-            assert backups == []
-
+            with pytest.raises(RuntimeError):
+                backups = await client.async_list_backups()
 
 @patch(
     "homeassistant.components.backup_sftp.client.SSHClientConnectionOptions",
@@ -229,7 +228,7 @@ async def test_async_list_backups_err(
 ) -> None:
     """Test `async_list_backups` method of `BackupAgentClient` class when error during metadata load occurs."""
 
-    mock_connect.read = AsyncMock(side_effect=RuntimeError("Error message"))
+    mock_connect.read = AsyncMock(side_effect=TypeError("Error message"))
 
     with (
         patch("homeassistant.components.backup_sftp.client.connect", mock_connect()),

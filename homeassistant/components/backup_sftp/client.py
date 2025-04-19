@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 from asyncssh import (
     SFTPClient,
     SFTPClientFile,
+    SFTPError,
     SSHClientConnection,
     SSHClientConnectionOptions,
     connect,
@@ -202,12 +203,19 @@ class BackupAgentClient:
                         **json.loads(await rfile.read()), metadata_file=file
                     )
                     backups.append(AgentBackup.from_dict(metadata.metadata))
-            except Exception as e:  # noqa: BLE001
-                LOGGER.exception(e)
+            except (json.JSONDecodeError, TypeError) as e:
                 LOGGER.error(
-                    "Failed to load backup metadata from file: %s. Ignoring", file
+                    "Failed to load backup metadata from file: %s. %s", file, str(e)
                 )
                 continue
+            except SFTPError as e:
+                LOGGER.error(
+                    "SFTP Error occurred while attempting to extract list of backups. %s",
+                    e,
+                )
+                raise RuntimeError(
+                    f"SFTP Error occurred while attempting to extract list of backups. {e}"
+                ) from e
 
         return backups
 
