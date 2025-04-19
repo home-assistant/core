@@ -122,6 +122,9 @@ def mock_homewizardenergy_v2(
             load_json_object_fixture("v2/generic/token.json", DOMAIN)
         ).token
 
+        # Authorization flow is used during configuration flow
+        client.delete_token.return_value = None
+
         yield client
 
 
