@@ -87,11 +87,11 @@ class BackupMetadata:
     metadata_file: str
 
 
-class BackupAgentError(Exception):
+class BackupClientError(Exception):
     """Base exception for `BackupAgentClient` class."""
 
 
-class BackupAgentAuthError(BackupAgentError):
+class BackupAgentAuthError(BackupClientError):
     """Exception raised when authentication fails after being initially setup."""
 
 
