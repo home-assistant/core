@@ -1,0 +1,30 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "group_devices_per_depth_level": "Grouping depth level"
+        },
+        "data_description": {
+          "host": "The IP address or hostname of the system running Open Hardware Monitor.",
+          "port": "The port of your Open Hardware Monitor web server. By default 8085.",
+          "group_devices_per_depth_level": "Group devices per X-depth level."
+        }
+      },
+      "reconfigure": {
+        "data": {
+          "group_devices_per_depth_level": "Grouping depth level"
+        },
+        "data_description": {
+          "group_devices_per_depth_level": "Group devices per X-depth level."
+        }
+      }
+    }
+  }
+}
