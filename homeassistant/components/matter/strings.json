@@ -85,6 +85,9 @@
       },
       "evse_supply_charging_state": {
         "name": "Supply charging state"
+      },
+      "boost_state": {
+        "name": "Boost state"
       }
     },
     "button": {
@@ -229,6 +232,9 @@
       },
       "laundry_washer_spin_speed": {
         "name": "Spin speed"
+      },
+      "water_heater_mode": {
+        "name": "Water heater mode"
       }
     },
     "sensor": {
@@ -278,6 +284,15 @@
       },
       "switch_current_position": {
         "name": "Current switch position"
+      },
+      "estimated_heat_required": {
+        "name": "Required heating energy"
+      },
+      "tank_volume": {
+        "name": "Tank volume"
+      },
+      "tank_percentage": {
+        "name": "Hot water level"
       },
       "valve_position": {
         "name": "Valve position"
@@ -347,6 +362,11 @@
     "valve": {
       "valve": {
         "name": "[%key:component::valve::title%]"
+      }
+    },
+    "water_heater": {
+      "water_heater": {
+        "name": "[%key:component::water_heater::title%]"
       }
     }
   },
