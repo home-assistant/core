@@ -19,7 +19,6 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
 )
-from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
@@ -56,7 +55,7 @@ def _ups_schema(ups_list: dict[str, str]) -> vol.Schema:
     return vol.Schema({vol.Required(CONF_ALIAS): vol.In(ups_list)})
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
+async def validate_input(data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input allows us to connect.
 
     Data has the keys from _base_schema with values provided by the user.
@@ -303,7 +302,7 @@ class NutConfigFlow(ConfigFlow, domain=DOMAIN):
         info: dict[str, Any] = {}
         description_placeholders: dict[str, str] = {}
         try:
-            info = await validate_input(self.hass, config)
+            info = await validate_input(config)
         except NUTLoginError:
             errors[CONF_PASSWORD] = "invalid_auth"
         except NUTError as ex:
