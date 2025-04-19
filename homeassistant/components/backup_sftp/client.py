@@ -18,7 +18,11 @@ from asyncssh import (
 from asyncssh.misc import PermissionDenied
 from asyncssh.sftp import SFTPNoSuchFile, SFTPPermissionDenied
 
-from homeassistant.components.backup import AgentBackup, suggested_filename
+from homeassistant.components.backup import (
+    AgentBackup,
+    BackupAgentError,
+    suggested_filename,
+)
 from homeassistant.core import HomeAssistant
 
 from .const import BUF_SIZE, LOGGER
@@ -306,7 +310,7 @@ class BackupAgentClient:
                 ),
             )
         except (OSError, PermissionDenied) as e:
-            raise BackupAgentAuthError(
+            raise BackupAgentError(
                 "Failure while attempting to establish SSH connection. Please check SSH credentials and if changed, re-add the integration"
             ) from e
 
@@ -314,7 +318,7 @@ class BackupAgentClient:
         try:
             self.sftp = await self._ssh.start_sftp_client()
         except (SFTPNoSuchFile, SFTPPermissionDenied) as e:
-            raise RuntimeError(
+            raise BackupAgentError(
                 "Failed to create SFTP client. Re-configuring integration might be required"
             ) from e
 
