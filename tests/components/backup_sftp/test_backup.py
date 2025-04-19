@@ -52,7 +52,9 @@ TEST_AGENT_BACKUP_RESULT = {
 @pytest.fixture
 async def backup_agent_client(async_cm_mock: AsyncMock) -> AsyncGenerator[AsyncMock]:
     """Fixture for mocking the BackupAgentClient."""
-    with patch("homeassistant.components.backup_sftp.backup.BackupAgentClient") as mock_client:
+    with patch(
+        "homeassistant.components.backup_sftp.backup.BackupAgentClient"
+    ) as mock_client:
         mock_client.return_value = async_cm_mock
         yield async_cm_mock
 
@@ -175,7 +177,9 @@ async def test_agents_download_fail(
     backup_agent_client: AsyncMock,
 ) -> None:
     """Test agent download backup fails."""
-    backup_agent_client.iter_file = MagicMock(side_effect=RuntimeError("Error message."))
+    backup_agent_client.iter_file = MagicMock(
+        side_effect=RuntimeError("Error message.")
+    )
     backup_agent_client.async_list_backups.return_value = [TEST_AGENT_BACKUP]
 
     client = await hass_client()
@@ -186,7 +190,9 @@ async def test_agents_download_fail(
     content = await resp.content.read()
     assert "Error message." in content.decode()
 
-    backup_agent_client.iter_file = MagicMock(side_effect=FileNotFoundError("Error message."))
+    backup_agent_client.iter_file = MagicMock(
+        side_effect=FileNotFoundError("Error message.")
+    )
     resp = await client.get(
         f"/api/backup/download/{TEST_AGENT_BACKUP.backup_id}?agent_id={DOMAIN}.{TEST_AGENT_ID}"
     )
@@ -280,10 +286,7 @@ async def test_agents_upload_fail(
         await hass.async_block_till_done()
 
     assert resp.status == 201
-    assert (
-        "Error message"
-        in caplog.text
-    )
+    assert "Error message" in caplog.text
 
 
 async def test_agents_delete(
@@ -324,11 +327,7 @@ async def test_agents_delete(
         ),
         (
             RuntimeError("runtime error."),
-            {
-                "agent_errors": {
-                    f"{DOMAIN}.{TEST_AGENT_ID}": "runtime error."
-                }
-            },
+            {"agent_errors": {f"{DOMAIN}.{TEST_AGENT_ID}": "runtime error."}},
         ),
     ],
     ids=["file_not_found_exc", "sftp_error_exc", "runtimer_error_exc"],
