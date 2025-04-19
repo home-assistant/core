@@ -577,9 +577,9 @@ class UtilityMeterSensor(RestoreSensor):
     async def _async_reset_meter(self, event):
         """Reset the utility meter status."""
 
-        await self._program_reset()
-
         await self.async_reset_meter(self._tariff_entity)
+
+        await self._program_reset()
 
     async def async_reset_meter(self, entity_id):
         """Reset meter."""
