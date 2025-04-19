@@ -56,6 +56,7 @@ from .const import (
     CONF_SYNC_STATE,
     KNX_ADDRESS,
     ColorTempModes,
+    CoverConf,
     FanZeroMode,
 )
 from .validation import (
@@ -453,11 +454,6 @@ class CoverSchema(KNXPlatformSchema):
     CONF_POSITION_STATE_ADDRESS = "position_state_address"
     CONF_ANGLE_ADDRESS = "angle_address"
     CONF_ANGLE_STATE_ADDRESS = "angle_state_address"
-    CONF_TRAVELLING_TIME_DOWN = "travelling_time_down"
-    CONF_TRAVELLING_TIME_UP = "travelling_time_up"
-    CONF_INVERT_UPDOWN = "invert_updown"
-    CONF_INVERT_POSITION = "invert_position"
-    CONF_INVERT_ANGLE = "invert_angle"
 
     DEFAULT_TRAVEL_TIME = 25
     DEFAULT_NAME = "KNX Cover"
@@ -474,14 +470,14 @@ class CoverSchema(KNXPlatformSchema):
                 vol.Optional(CONF_ANGLE_ADDRESS): ga_list_validator,
                 vol.Optional(CONF_ANGLE_STATE_ADDRESS): ga_list_validator,
                 vol.Optional(
-                    CONF_TRAVELLING_TIME_DOWN, default=DEFAULT_TRAVEL_TIME
+                    CoverConf.TRAVELLING_TIME_DOWN, default=DEFAULT_TRAVEL_TIME
                 ): cv.positive_float,
                 vol.Optional(
-                    CONF_TRAVELLING_TIME_UP, default=DEFAULT_TRAVEL_TIME
+                    CoverConf.TRAVELLING_TIME_UP, default=DEFAULT_TRAVEL_TIME
                 ): cv.positive_float,
-                vol.Optional(CONF_INVERT_UPDOWN, default=False): cv.boolean,
-                vol.Optional(CONF_INVERT_POSITION, default=False): cv.boolean,
-                vol.Optional(CONF_INVERT_ANGLE, default=False): cv.boolean,
+                vol.Optional(CoverConf.INVERT_UPDOWN, default=False): cv.boolean,
+                vol.Optional(CoverConf.INVERT_POSITION, default=False): cv.boolean,
+                vol.Optional(CoverConf.INVERT_ANGLE, default=False): cv.boolean,
                 vol.Optional(CONF_DEVICE_CLASS): COVER_DEVICE_CLASSES_SCHEMA,
                 vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
             }

@@ -160,6 +160,7 @@ SUPPORTED_PLATFORMS_YAML: Final = {
 
 SUPPORTED_PLATFORMS_UI: Final = {
     Platform.BINARY_SENSOR,
+    Platform.COVER,
     Platform.LIGHT,
     Platform.SWITCH,
 }
@@ -182,3 +183,13 @@ CURRENT_HVAC_ACTIONS: Final = {
     HVACMode.FAN_ONLY: HVACAction.FAN,
     HVACMode.DRY: HVACAction.DRYING,
 }
+
+
+class CoverConf:
+    """Common config keys for cover."""
+
+    TRAVELLING_TIME_DOWN: Final = "travelling_time_down"
+    TRAVELLING_TIME_UP: Final = "travelling_time_up"
+    INVERT_UPDOWN: Final = "invert_updown"
+    INVERT_POSITION: Final = "invert_position"
+    INVERT_ANGLE: Final = "invert_angle"
