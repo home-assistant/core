@@ -196,13 +196,13 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
         (
             {
                 CONF_RECOMMENDED: True,
-                CONF_LLM_HASS_API: "none",
                 CONF_PROMPT: "bla",
             },
             {
                 CONF_RECOMMENDED: False,
                 CONF_PROMPT: "Speak like a pirate",
                 CONF_TEMPERATURE: 0.3,
+                CONF_LLM_HASS_API: [],
             },
             {
                 CONF_RECOMMENDED: False,
@@ -224,13 +224,30 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
             },
             {
                 CONF_RECOMMENDED: True,
-                CONF_LLM_HASS_API: "assist",
+                CONF_LLM_HASS_API: ["assist"],
                 CONF_PROMPT: "",
             },
             {
                 CONF_RECOMMENDED: True,
-                CONF_LLM_HASS_API: "assist",
+                CONF_LLM_HASS_API: ["assist"],
                 CONF_PROMPT: "",
+            },
+        ),
+        (
+            {
+                CONF_RECOMMENDED: True,
+                CONF_PROMPT: "",
+                CONF_LLM_HASS_API: "assist",
+            },
+            {
+                CONF_RECOMMENDED: True,
+                CONF_PROMPT: "",
+                CONF_LLM_HASS_API: ["assist"],
+            },
+            {
+                CONF_RECOMMENDED: True,
+                CONF_PROMPT: "",
+                CONF_LLM_HASS_API: ["assist"],
             },
         ),
     ],
