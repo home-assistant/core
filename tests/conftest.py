@@ -243,8 +243,8 @@ class HAFakeDatetime(freezegun.api.FakeDatetime):  # type: ignore[name-defined]
         return ha_datetime_to_fakedatetime(result)
 
 
-def check_real(func: Callable[..., Coroutine[Any, Any, Any]]) -> Callable:
-    """Decorator for real functions."""
+def check_real[**_P, _R](func: Callable[_P, Coroutine[Any, Any, _R]]):
+    """Force a function to require a keyword _test_real to be passed in."""
 
     @functools.wraps(func)
     async def guard_func(*args: _P.args, **kwargs: _P.kwargs) -> _R:
