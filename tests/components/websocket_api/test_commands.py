@@ -26,15 +26,17 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.loader import async_get_integration
-from homeassistant.setup import async_setup_component
+from homeassistant.setup import async_set_domains_to_be_loaded, async_setup_component
 from homeassistant.util.json import json_loads
 
 from tests.common import (
     MockConfigEntry,
     MockEntity,
     MockEntityPlatform,
+    MockModule,
     MockUser,
     async_mock_service,
+    mock_integration,
     mock_platform,
 )
 from tests.typing import (
@@ -2824,3 +2826,83 @@ async def test_subscribe_entities_chained_state_change(
 
     await websocket_client.close()
     await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(
+    ("domain", "result"),
+    [
+        ("config", {"integration_loaded": True}),
+        ("non_existing_domain", {"integration_loaded": False}),
+    ],
+)
+async def test_wait_integration(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    domain: str,
+    result: dict[str, Any],
+) -> None:
+    """Test we can get wait for an integration to load."""
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json_auto_id({"type": "integration/wait", "domain": domain})
+    response = await ws_client.receive_json()
+    assert response == {
+        "id": ANY,
+        "result": result,
+        "success": True,
+        "type": "result",
+    }
+
+
+async def test_wait_integration_startup(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test we can get wait for an integration to load during startup."""
+    ws_client = await hass_ws_client(hass)
+
+    setup_stall = asyncio.Event()
+    setup_started = asyncio.Event()
+
+    async def mock_setup(hass: HomeAssistant, _) -> bool:
+        setup_started.set()
+        await setup_stall.wait()
+        return True
+
+    mock_integration(hass, MockModule("test", async_setup=mock_setup))
+
+    # The integration is not loaded, and is also not scheduled to load
+    await ws_client.send_json_auto_id({"type": "integration/wait", "domain": "test"})
+    response = await ws_client.receive_json()
+    assert response == {
+        "id": ANY,
+        "result": {"integration_loaded": False},
+        "success": True,
+        "type": "result",
+    }
+
+    # Mark the component as scheduled to be loaded
+    async_set_domains_to_be_loaded(hass, {"test"})
+
+    # Start loading the component, including its config entries
+    hass.async_create_task(async_setup_component(hass, "test", {}))
+    await setup_started.wait()
+
+    # The component is not yet loaded
+    assert "test" not in hass.config.components
+
+    # Allow setup to proceed
+    setup_stall.set()
+
+    # The component is scheduled to load, this will block until the config entry is loaded
+    await ws_client.send_json_auto_id({"type": "integration/wait", "domain": "test"})
+    response = await ws_client.receive_json()
+    assert response == {
+        "id": ANY,
+        "result": {"integration_loaded": True},
+        "success": True,
+        "type": "result",
+    }
+
+    # The component has been loaded
+    assert "test" in hass.config.components
