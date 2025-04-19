@@ -554,81 +554,45 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
     ) -> SearchMedia:
         """Search the media player."""
 
-        if not query.media_content_type or query.media_content_type not in [
-            "favorites",
-            "albums",
-            "artists",
-            "genres",
-            "tracks",
-            "playlists",
-            "new music",
-            "album artists",
-        ]:
+        if not query.media_content_type or query.media_content_type not in (
+            str(key)
+            for key in self._browse_data.content_type_media_class
+            if key not in ["apps", "app", "radios", "radio"]
+        ):
             _LOGGER.debug("Invalid Media Content Type: %s", query.media_content_type)
+
             raise ServiceValidationError(
-                "Media Content Type must be specified and must be one of favorites, albums, artists, genres, tracks, playlists, new music, album artists"
+                f"Media Content Type must be specified and must be one of {
+                    ', '.join(
+                        str(key)
+                        for key in self._browse_data.content_type_media_class
+                        if key not in ['apps', 'app', 'radios', 'radio']
+                    )
+                }"
             )
 
-        if query.media_content_type == "favorites":
-            parameter = [
-                query.media_content_type,
-                "items",
-                "0",
-                str(self.browse_limit),
-                "search:" + query.search_query,
-                "want_url:1",
+        payload = {
+            "search_type": query.media_content_type,
+            "search_id": query.media_content_id,
+            "search_query": query.search_query,
+        }
+
+        search_response: BrowseMedia = await build_item_response(
+            self,
+            self._player,
+            payload,
+            self.browse_limit,
+            self._browse_data,
+        )
+
+        if query.media_filter_classes and search_response.children:
+            search_response.children = [
+                child
+                for child in search_response.children
+                if child.media_content_type in query.media_filter_classes
             ]
-            result_loop = "loop_loop"
-        else:
-            parameter = [
-                query.media_content_type,
-                "0",
-                str(self.browse_limit),
-                "search:" + query.search_query,
-                "want_url:1",
-            ]
-            result_loop = f"{query.media_content_type}_loop"
 
-        match query.media_content_type:
-            case "albums":
-                parameter.append("tags:laay")
-            case "tracks":
-                parameter.append("tags:aglQrTy")
-            case "new music":
-                parameter.append("tags:laay")
-                result_loop = "albums_loop"
-            case "album artists":
-                result_loop = "artists_loop"
-
-        result = await self._player.async_query(*parameter)
-        search_data = []
-
-        if result:
-            for item in result[result_loop]:
-                child_data = BrowseMedia(
-                    media_content_id=item["id"],
-                    title=item["title"],
-                    media_content_type=item["type"],
-                    media_class="None",
-                    can_expand=False,
-                    can_play=True,
-                )
-                search_data.append(child_data)
-            search_response = []
-            search_response.append(
-                BrowseMedia(
-                    title=str(result.get("title")),
-                    media_class="class",
-                    children_media_class="children",
-                    media_content_id="id",
-                    media_content_type="type",
-                    can_play=True,
-                    children=search_data,
-                    can_expand=True,
-                )
-            )
-            return SearchMedia(result=search_response)
-        raise ServiceValidationError("Action returned no result")
+        return SearchMedia(result=[search_response])
 
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set the repeat mode."""

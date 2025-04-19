@@ -131,11 +131,15 @@ async def mock_async_play_announcement(media_id: str) -> bool:
 
 
 async def mock_async_browse(
-    media_type: MediaType, limit: int, browse_id: tuple | None = None
+    media_type: MediaType,
+    limit: int,
+    browse_id: tuple | None = None,
+    search_query: str | None = None,
 ) -> dict | None:
     """Mock the async_browse method of pysqueezebox.Player."""
     child_types = {
         "favorites": "favorites",
+        "favorite": "favorite",
         "new music": "album",
         "album artists": "artists",
         "albums": "album",
