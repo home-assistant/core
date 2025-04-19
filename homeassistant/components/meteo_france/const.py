@@ -50,7 +50,7 @@ CONDITION_CLASSES: dict[str, list[str]] = {
         "Bancs de Brouillard",
     ],
     ATTR_CONDITION_HAIL: ["Risque de grêle", "Risque de grèle"],
-    ATTR_CONDITION_LIGHTNING: ["Risque d'orages", "Orages"],
+    ATTR_CONDITION_LIGHTNING: ["Risque d'orages", "Orages", "Orage avec grêle"],
     ATTR_CONDITION_LIGHTNING_RAINY: [
         "Pluie orageuses",
         "Pluies orageuses",
