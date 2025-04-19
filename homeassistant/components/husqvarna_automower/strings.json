@@ -121,7 +121,7 @@
           "electronic_problem": "Electronic problem",
           "empty_battery": "Empty battery",
           "error_at_power_up": "Error at power up",
-          "error": "Error",
+          "error": "[%key:common::state::error%]",
           "fatal_error": "Fatal error",
           "folding_cutting_deck_sensor_defect": "Folding cutting deck sensor defect",
           "folding_sensor_activated": "Folding sensor activated",
