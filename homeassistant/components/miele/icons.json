@@ -1,0 +1,15 @@
+{
+  "entity": {
+    "sensor": {
+      "elapsed_time": {
+        "default": "mdi:timelapse"
+      },
+      "start_time": {
+        "default": "mdi:clock-start"
+      },
+      "remaining_time": {
+        "default": "mdi:clock-end"
+      }
+    }
+  }
+}
