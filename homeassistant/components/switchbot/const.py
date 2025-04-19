@@ -37,6 +37,7 @@ class SupportedModels(StrEnum):
     REMOTE = "remote"
     ROLLER_SHADE = "roller_shade"
     HUBMINI_MATTER = "hubmini_matter"
+    CIRCULATOR_FAN = "circulator_fan"
 
 
 CONNECTABLE_SUPPORTED_MODEL_TYPES = {
@@ -54,6 +55,7 @@ CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.RELAY_SWITCH_1PM: SupportedModels.RELAY_SWITCH_1PM,
     SwitchbotModel.RELAY_SWITCH_1: SupportedModels.RELAY_SWITCH_1,
     SwitchbotModel.ROLLER_SHADE: SupportedModels.ROLLER_SHADE,
+    SwitchbotModel.CIRCULATOR_FAN: SupportedModels.CIRCULATOR_FAN,
 }
 
 NON_CONNECTABLE_SUPPORTED_MODEL_TYPES = {
