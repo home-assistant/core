@@ -36,6 +36,15 @@
       },
       "smart_standby_time": {
         "default": "mdi:timer"
+      },
+      "preinfusion_time": {
+        "default": "mdi:water"
+      },
+      "prebrew_time_on": {
+        "default": "mdi:water"
+      },
+      "prebrew_time_off": {
+        "default": "mdi:water-off"
       }
     },
     "select": {
