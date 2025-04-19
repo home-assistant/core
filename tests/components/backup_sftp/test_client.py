@@ -216,6 +216,7 @@ async def test_async_list_backups(
             with pytest.raises(RuntimeError):
                 backups = await client.async_list_backups()
 
+
 @patch(
     "homeassistant.components.backup_sftp.client.SSHClientConnectionOptions",
     MagicMock(),
