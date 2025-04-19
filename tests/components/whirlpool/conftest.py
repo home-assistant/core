@@ -4,11 +4,10 @@ from unittest import mock
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-import whirlpool
-import whirlpool.aircon
+from whirlpool import aircon, washerdryer
 from whirlpool.backendselector import Brand, Region
 
-from .const import MOCK_SAID1, MOCK_SAID2, MOCK_SAID3, MOCK_SAID4
+from .const import MOCK_SAID1, MOCK_SAID2
 
 
 @pytest.fixture(
@@ -49,7 +48,7 @@ def fixture_mock_auth_api():
 
 @pytest.fixture(name="mock_appliances_manager_api", autouse=True)
 def fixture_mock_appliances_manager_api(
-    mock_aircon1_api, mock_aircon2_api, mock_sensor1_api, mock_sensor2_api
+    mock_aircon1_api, mock_aircon2_api, mock_washer_api, mock_dryer_api
 ):
     """Set up AppliancesManager fixture."""
     with (
@@ -69,8 +68,8 @@ def fixture_mock_appliances_manager_api(
             mock_aircon2_api,
         ]
         mock_appliances_manager.return_value.washer_dryers = [
-            mock_sensor1_api,
-            mock_sensor2_api,
+            mock_washer_api,
+            mock_dryer_api,
         ]
         yield mock_appliances_manager
 
@@ -100,8 +99,8 @@ def get_aircon_mock(said):
     mock_aircon.appliance_info.model_number = "12345"
     mock_aircon.get_online.return_value = True
     mock_aircon.get_power_on.return_value = True
-    mock_aircon.get_mode.return_value = whirlpool.aircon.Mode.Cool
-    mock_aircon.get_fanspeed.return_value = whirlpool.aircon.FanSpeed.Auto
+    mock_aircon.get_mode.return_value = aircon.Mode.Cool
+    mock_aircon.get_fanspeed.return_value = aircon.FanSpeed.Auto
     mock_aircon.get_current_temp.return_value = 15
     mock_aircon.get_temp.return_value = 20
     mock_aircon.get_current_humidity.return_value = 80
@@ -131,63 +130,54 @@ def fixture_mock_aircon2_api():
     return get_aircon_mock(MOCK_SAID2)
 
 
-@pytest.fixture(name="mock_aircon_api_instances", autouse=False)
-def fixture_mock_aircon_api_instances(mock_aircon1_api, mock_aircon2_api):
-    """Set up air conditioner API fixture."""
-    with mock.patch(
-        "homeassistant.components.whirlpool.climate.Aircon"
-    ) as mock_aircon_api:
-        mock_aircon_api.side_effect = [mock_aircon1_api, mock_aircon2_api]
-        yield mock_aircon_api
-
-
-def get_sensor_mock(said: str, data_model: str):
-    """Get a mock of a sensor."""
-    mock_sensor = mock.Mock(said=said)
-    mock_sensor.name = f"WasherDryer {said}"
-    mock_sensor.register_attr_callback = MagicMock()
-    mock_sensor.appliance_info.data_model = data_model
-    mock_sensor.appliance_info.category = "washer_dryer"
-    mock_sensor.appliance_info.model_number = "12345"
-    mock_sensor.get_online.return_value = True
-    mock_sensor.get_machine_state.return_value = (
-        whirlpool.washerdryer.MachineState.Standby
+@pytest.fixture
+def mock_washer_api():
+    """Get a mock of a washer."""
+    mock_washer = mock.Mock(said="said_washer")
+    mock_washer.name = "Washer"
+    mock_washer.fetch_data = AsyncMock()
+    mock_washer.register_attr_callback = MagicMock()
+    mock_washer.appliance_info.data_model = "washer"
+    mock_washer.appliance_info.category = "washer_dryer"
+    mock_washer.appliance_info.model_number = "12345"
+    mock_washer.get_online.return_value = True
+    mock_washer.get_machine_state.return_value = (
+        washerdryer.MachineState.RunningMainCycle
     )
-    mock_sensor.get_door_open.return_value = False
-    mock_sensor.get_dispense_1_level.return_value = 3
-    mock_sensor.get_time_remaining.return_value = 3540
-    mock_sensor.get_cycle_status_filling.return_value = False
-    mock_sensor.get_cycle_status_rinsing.return_value = False
-    mock_sensor.get_cycle_status_sensing.return_value = False
-    mock_sensor.get_cycle_status_soaking.return_value = False
-    mock_sensor.get_cycle_status_spinning.return_value = False
-    mock_sensor.get_cycle_status_washing.return_value = False
+    mock_washer.get_door_open.return_value = False
+    mock_washer.get_dispense_1_level.return_value = 3
+    mock_washer.get_time_remaining.return_value = 3540
+    mock_washer.get_cycle_status_filling.return_value = False
+    mock_washer.get_cycle_status_rinsing.return_value = False
+    mock_washer.get_cycle_status_sensing.return_value = False
+    mock_washer.get_cycle_status_soaking.return_value = False
+    mock_washer.get_cycle_status_spinning.return_value = False
+    mock_washer.get_cycle_status_washing.return_value = False
 
-    return mock_sensor
-
-
-@pytest.fixture(name="mock_sensor1_api", autouse=False)
-def fixture_mock_sensor1_api():
-    """Set up sensor API fixture."""
-    return get_sensor_mock(MOCK_SAID3, "washer")
+    return mock_washer
 
 
-@pytest.fixture(name="mock_sensor2_api", autouse=False)
-def fixture_mock_sensor2_api():
-    """Set up sensor API fixture."""
-    return get_sensor_mock(MOCK_SAID4, "dryer")
+@pytest.fixture
+def mock_dryer_api():
+    """Get a mock of a dryer."""
+    mock_dryer = mock.Mock(said="said_dryer")
+    mock_dryer.name = "Dryer"
+    mock_dryer.fetch_data = AsyncMock()
+    mock_dryer.register_attr_callback = MagicMock()
+    mock_dryer.appliance_info.data_model = "dryer"
+    mock_dryer.appliance_info.category = "washer_dryer"
+    mock_dryer.appliance_info.model_number = "12345"
+    mock_dryer.get_online.return_value = True
+    mock_dryer.get_machine_state.return_value = (
+        washerdryer.MachineState.RunningMainCycle
+    )
+    mock_dryer.get_door_open.return_value = False
+    mock_dryer.get_time_remaining.return_value = 3540
+    mock_dryer.get_cycle_status_filling.return_value = False
+    mock_dryer.get_cycle_status_rinsing.return_value = False
+    mock_dryer.get_cycle_status_sensing.return_value = False
+    mock_dryer.get_cycle_status_soaking.return_value = False
+    mock_dryer.get_cycle_status_spinning.return_value = False
+    mock_dryer.get_cycle_status_washing.return_value = False
 
-
-@pytest.fixture(name="mock_sensor_api_instances", autouse=False)
-def fixture_mock_sensor_api_instances(mock_sensor1_api, mock_sensor2_api):
-    """Set up sensor API fixture."""
-    with mock.patch(
-        "homeassistant.components.whirlpool.sensor.WasherDryer"
-    ) as mock_sensor_api:
-        mock_sensor_api.side_effect = [
-            mock_sensor1_api,
-            mock_sensor2_api,
-            mock_sensor1_api,
-            mock_sensor2_api,
-        ]
-        yield mock_sensor_api
+    return mock_dryer
