@@ -14,6 +14,7 @@ from aioautomower.model import (
     RestrictedReasons,
     WorkArea,
 )
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,

@@ -4,6 +4,7 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from aioautomower.model import MowerModes, StayOutZones, Zone
+
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback

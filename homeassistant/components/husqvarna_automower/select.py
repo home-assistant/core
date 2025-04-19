@@ -4,6 +4,7 @@ import logging
 from typing import cast
 
 from aioautomower.model import HeadlightModes
+
 from homeassistant.components.select import SelectEntity
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant

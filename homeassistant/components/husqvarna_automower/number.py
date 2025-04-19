@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any
 
 from aioautomower.model import MowerAttributes, WorkArea
 from aioautomower.session import AutomowerSession
+
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant, callback

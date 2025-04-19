@@ -6,6 +6,7 @@ import logging
 from typing import TYPE_CHECKING
 
 from aioautomower.model import MowerActivities, MowerAttributes
+
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,

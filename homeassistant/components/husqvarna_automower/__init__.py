@@ -2,9 +2,9 @@
 
 import logging
 
+from aioautomower.session import AutomowerSession
 from aiohttp import ClientResponseError
 
-from aioautomower.session import AutomowerSession
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
