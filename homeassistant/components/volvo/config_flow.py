@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import voluptuous as vol
 from volvocarsapi.api import VolvoCarsApi
@@ -14,38 +14,16 @@ from homeassistant.config_entries import (
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
     ConfigFlowResult,
-    OptionsFlow,
 )
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_API_KEY, CONF_NAME, CONF_TOKEN
-from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
-from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .api import ConfigFlowVolvoAuth
-from .const import (
-    CONF_VIN,
-    DOMAIN,
-    MANUFACTURER,
-    OPT_FUEL_CONSUMPTION_UNIT,
-    OPT_FUEL_UNIT_LITER_PER_100KM,
-    OPT_FUEL_UNIT_MPG_UK,
-    OPT_FUEL_UNIT_MPG_US,
-)
-from .coordinator import VolvoConfigEntry, VolvoData
+from .const import CONF_VIN, DOMAIN, MANUFACTURER
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def _default_fuel_unit(hass: HomeAssistant) -> str:
-    if hass.config.country == "UK":
-        return OPT_FUEL_UNIT_MPG_UK
-
-    if hass.config.units == US_CUSTOMARY_SYSTEM or hass.config.country == "US":
-        return OPT_FUEL_UNIT_MPG_US
-
-    return OPT_FUEL_UNIT_LITER_PER_100KM
 
 
 class VolvoOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
@@ -82,13 +60,6 @@ class VolvoOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Reconfigure the entry."""
         return await self.async_step_api_key()
-
-    # Overridden method
-    @staticmethod
-    @callback
-    def async_get_options_flow(_: VolvoConfigEntry) -> VolvoOptionsFlowHandler:
-        """Create the options flow."""
-        return VolvoOptionsFlowHandler()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
@@ -202,54 +173,4 @@ class VolvoOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         return self.async_create_entry(
             title=f"{MANUFACTURER} {vin}",
             data=self._config_data,
-            options={OPT_FUEL_CONSUMPTION_UNIT: _default_fuel_unit(self.hass)},
-        )
-
-
-class VolvoOptionsFlowHandler(OptionsFlow):
-    """Class to handle the options."""
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Manage the options."""
-        if user_input is not None:
-            return self.async_create_entry(data=user_input)
-
-        if TYPE_CHECKING:
-            assert isinstance(self.config_entry.runtime_data, VolvoData)
-
-        coordinator = self.config_entry.runtime_data.coordinator
-        schema: dict[vol.Marker, Any] = {}
-
-        if coordinator.vehicle.has_combustion_engine():
-            schema.update(
-                {
-                    vol.Required(
-                        OPT_FUEL_CONSUMPTION_UNIT,
-                        default=self.config_entry.options.get(
-                            OPT_FUEL_CONSUMPTION_UNIT, OPT_FUEL_UNIT_LITER_PER_100KM
-                        ),
-                    ): SelectSelector(
-                        SelectSelectorConfig(
-                            options=[
-                                OPT_FUEL_UNIT_LITER_PER_100KM,
-                                OPT_FUEL_UNIT_MPG_UK,
-                                OPT_FUEL_UNIT_MPG_US,
-                            ],
-                            multiple=False,
-                            translation_key=OPT_FUEL_CONSUMPTION_UNIT,
-                        )
-                    )
-                }
-            )
-
-        if len(schema) == 0:
-            return self.async_abort(reason="no_options_available")
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(schema), self.config_entry.options
-            ),
         )

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from decimal import Decimal
 from typing import Any
 
 from volvocarsapi.models import (
@@ -34,13 +33,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    DATA_BATTERY_CAPACITY,
-    OPT_FUEL_CONSUMPTION_UNIT,
-    OPT_FUEL_UNIT_LITER_PER_100KM,
-    OPT_FUEL_UNIT_MPG_UK,
-    OPT_FUEL_UNIT_MPG_US,
-)
+from .const import DATA_BATTERY_CAPACITY
 from .coordinator import VolvoConfigEntry, VolvoDataCoordinator
 from .entity import VolvoEntity, VolvoEntityDescription, value_to_translation_key
 
@@ -52,7 +45,6 @@ class VolvoSensorDescription(VolvoEntityDescription, SensorEntityDescription):
     """Describes a Volvo sensor entity."""
 
     value_fn: Callable[[VolvoCarsValue, VolvoConfigEntry], Any] | None = None
-    unit_fn: Callable[[VolvoConfigEntry], str] | None = None
     available_fn: Callable[[VolvoCarsVehicle], bool] = lambda vehicle: True
 
 
@@ -69,41 +61,6 @@ def _calculate_time_to_service(field: VolvoCarsValue, _: VolvoConfigEntry) -> in
         return value * 30
 
     return value
-
-
-def _determine_fuel_consumption_unit(entry: VolvoConfigEntry) -> str:
-    unit_key = entry.options.get(
-        OPT_FUEL_CONSUMPTION_UNIT, OPT_FUEL_UNIT_LITER_PER_100KM
-    )
-
-    return (
-        "mpg"
-        if unit_key in (OPT_FUEL_UNIT_MPG_UK, OPT_FUEL_UNIT_MPG_US)
-        else "L/100 km"
-    )
-
-
-def _convert_fuel_consumption(
-    field: VolvoCarsValue, entry: VolvoConfigEntry
-) -> Decimal:
-    value = Decimal(field.value)
-
-    decimals = 1
-    converted_value = value
-
-    unit_key = entry.options.get(
-        OPT_FUEL_CONSUMPTION_UNIT, OPT_FUEL_UNIT_LITER_PER_100KM
-    )
-
-    if unit_key == OPT_FUEL_UNIT_MPG_UK:
-        decimals = 2
-        converted_value = (Decimal("282.481") / value) if value else Decimal(0)
-
-    elif unit_key == OPT_FUEL_UNIT_MPG_US:
-        decimals = 2
-        converted_value = (Decimal("235.215") / value) if value else Decimal(0)
-
-    return round(converted_value, decimals)
 
 
 _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
@@ -154,22 +111,18 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         key="average_fuel_consumption",
         translation_key="average_fuel_consumption",
         api_field="averageFuelConsumption",
-        native_unit_of_measurement="L/100 km",
+        native_unit_of_measurement="l/100 km",
         state_class=SensorStateClass.MEASUREMENT,
         available_fn=lambda vehicle: vehicle.has_combustion_engine(),
-        unit_fn=_determine_fuel_consumption_unit,
-        value_fn=_convert_fuel_consumption,
     ),
     # statistics endpoint
     VolvoSensorDescription(
         key="average_fuel_consumption_automatic",
         translation_key="average_fuel_consumption_automatic",
         api_field="averageFuelConsumptionAutomatic",
-        native_unit_of_measurement="L/100 km",
+        native_unit_of_measurement="l/100 km",
         state_class=SensorStateClass.MEASUREMENT,
         available_fn=lambda vehicle: vehicle.has_combustion_engine(),
-        unit_fn=_determine_fuel_consumption_unit,
-        value_fn=_convert_fuel_consumption,
     ),
     # statistics endpoint
     VolvoSensorDescription(
@@ -382,11 +335,6 @@ class VolvoSensor(VolvoEntity, SensorEntity):
     ) -> None:
         """Initialize."""
         super().__init__(coordinator, description)
-
-        if description.unit_fn:
-            self._attr_native_unit_of_measurement = description.unit_fn(
-                self.coordinator.config_entry
-            )
 
     def _update_state(self, api_field: VolvoCarsApiBaseModel | None) -> None:
         assert isinstance(api_field, VolvoCarsValue)

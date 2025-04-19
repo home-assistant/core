@@ -54,9 +54,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: VolvoConfigEntry) -> boo
     entry.runtime_data = VolvoData(coordinator)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    # Register events
-    entry.async_on_unload(entry.add_update_listener(_entry_update_listener))
-
     return True
 
 
@@ -64,8 +61,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: VolvoConfigEntry) -> bo
     """Unload a config entry."""
     _LOGGER.debug("%s - Unloading entry", entry.entry_id)
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
-async def _entry_update_listener(hass: HomeAssistant, entry: VolvoConfigEntry) -> None:
-    """Reload entry after config changes."""
-    await hass.config_entries.async_reload(entry.entry_id)

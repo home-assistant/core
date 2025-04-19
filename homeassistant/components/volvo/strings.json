@@ -52,30 +52,6 @@
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
     }
   },
-  "options": {
-    "abort": {
-      "no_options_available": "No options available for your vehicle."
-    },
-    "step": {
-      "init": {
-        "data": {
-          "fuel_consumption_unit": "Fuel consumption unit"
-        },
-        "data_description": {
-          "fuel_consumption_unit": "Choose the preferred unit"
-        }
-      }
-    }
-  },
-  "selector": {
-    "fuel_consumption_unit": {
-      "options": {
-        "l_100km": "l/100 km",
-        "mpg_uk": "mpg (UK)",
-        "mpg_us": "mpg (US)"
-      }
-    }
-  },
   "entity": {
     "sensor": {
       "availability": {

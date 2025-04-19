@@ -3,67 +3,37 @@
 from unittest.mock import AsyncMock
 
 import pytest
-from volvocarsapi.api import _API_CONNECTED_ENDPOINT, _API_URL, VolvoCarsApi
+from volvocarsapi.api import _API_CONNECTED_ENDPOINT, _API_URL
 from volvocarsapi.auth import TOKEN_URL
 from volvocarsapi.models import VolvoApiException
 
-from homeassistant.components.volvo.const import (
-    CONF_VIN,
-    DOMAIN,
-    OPT_FUEL_CONSUMPTION_UNIT,
-    OPT_FUEL_UNIT_LITER_PER_100KM,
-    OPT_FUEL_UNIT_MPG_UK,
-    OPT_FUEL_UNIT_MPG_US,
-)
-from homeassistant.components.volvo.coordinator import VolvoData
+from homeassistant.components.volvo.const import CONF_VIN, DOMAIN
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
-from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM, UnitSystem
 
-from .conftest import model
 from .const import REDIRECT_URI, SERVER_TOKEN_RESPONSE
 
-from tests.common import METRIC_SYSTEM, MockConfigEntry
+from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
 
-@pytest.mark.parametrize(
-    ("country", "units", "expected_fuel_unit"),
-    [
-        ("BE", METRIC_SYSTEM, OPT_FUEL_UNIT_LITER_PER_100KM),
-        ("NL", METRIC_SYSTEM, OPT_FUEL_UNIT_LITER_PER_100KM),
-        ("BE", US_CUSTOMARY_SYSTEM, OPT_FUEL_UNIT_MPG_US),
-        ("UK", METRIC_SYSTEM, OPT_FUEL_UNIT_MPG_UK),
-        ("UK", US_CUSTOMARY_SYSTEM, OPT_FUEL_UNIT_MPG_UK),
-        ("US", US_CUSTOMARY_SYSTEM, OPT_FUEL_UNIT_MPG_US),
-        ("US", METRIC_SYSTEM, OPT_FUEL_UNIT_MPG_US),
-    ],
-)
 @pytest.mark.usefixtures("current_request_with_host")
 async def test_full_flow(
     hass: HomeAssistant,
     config_flow: ConfigFlowResult,
     mock_setup_entry: AsyncMock,
     aioclient_mock: AiohttpClientMocker,
-    *,
-    country: str,
-    units: UnitSystem,
-    expected_fuel_unit: str,
 ) -> None:
     """Check full flow."""
-    hass.config.country = country
-    hass.config.units = units
-
     config_flow = await _async_run_flow_to_completion(hass, config_flow, aioclient_mock)
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup_entry.mock_calls) == 1
     assert config_flow["type"] is FlowResultType.CREATE_ENTRY
-    assert config_flow["options"][OPT_FUEL_CONSUMPTION_UNIT] == expected_fuel_unit
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -200,44 +170,6 @@ async def test_api_failure_flow(
     assert config_flow["type"] is FlowResultType.FORM
     assert config_flow["errors"]["base"] == "cannot_load_vehicles"
     assert config_flow["step_id"] == "api_key"
-
-
-@pytest.mark.parametrize(
-    ("fuel_unit"),
-    [
-        (OPT_FUEL_UNIT_LITER_PER_100KM),
-        (OPT_FUEL_UNIT_MPG_UK),
-        (OPT_FUEL_UNIT_MPG_US),
-    ],
-)
-async def test_options_flow(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, fuel_unit: str
-) -> None:
-    """Test options flow."""
-    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={OPT_FUEL_CONSUMPTION_UNIT: fuel_unit}
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert mock_config_entry.options[OPT_FUEL_CONSUMPTION_UNIT] == fuel_unit
-
-
-@model("xc40_electric_2024")
-async def test_no_options_flow(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: AsyncMock
-) -> None:
-    """Test options flow where no options are available."""
-    volvo_data: VolvoData = mock_config_entry.runtime_data
-    api: VolvoCarsApi = mock_api.return_value
-
-    volvo_data.coordinator.vehicle = await api.async_get_vehicle_details()
-
-    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_options_available"
 
 
 async def _async_run_flow_to_completion(
