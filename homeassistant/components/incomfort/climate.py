@@ -12,7 +12,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, EntityCategory, UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -43,7 +43,6 @@ async def async_setup_entry(
 class InComfortClimate(IncomfortEntity, ClimateEntity):
     """Representation of an InComfort/InTouch climate device."""
 
-    _attr_entity_category = EntityCategory.CONFIG
     _attr_min_temp = 5.0
     _attr_max_temp = 30.0
     _attr_name = None

@@ -703,8 +703,8 @@ async def test_setup_hass_takes_longer_than_log_slow_startup(
         return True
 
     with (
-        patch.object(bootstrap, "LOG_SLOW_STARTUP_INTERVAL", 0.1),
-        patch.object(bootstrap, "SLOW_STARTUP_CHECK_INTERVAL", 0.05),
+        patch.object(bootstrap, "LOG_SLOW_STARTUP_INTERVAL", 0.005),
+        patch.object(bootstrap, "SLOW_STARTUP_CHECK_INTERVAL", 0.005),
         patch(
             "homeassistant.components.frontend.async_setup",
             side_effect=_async_setup_that_blocks_startup,
@@ -924,7 +924,7 @@ async def test_setup_hass_invalid_core_config(
                 "external_url": "https://abcdef.ui.nabu.casa",
             },
             "map": {},
-            "person": {"invalid": True},
+            "frontend": {"invalid": True},
         }
     ],
 )
@@ -1560,6 +1560,11 @@ async def test_no_base_platforms_loaded_before_recorder(hass: HomeAssistant) -> 
         # we remove the platform YAML schema support for sensors
         "websocket_api": {"sensor.py"},
     }
+    # person is a special case because it is a base platform
+    # in the sense that it creates entities in its namespace
+    # but its not used by other integrations to create entities
+    # so we want to make sure it is not loaded before the recorder
+    base_platforms = BASE_PLATFORMS | {"person"}
 
     integrations_before_recorder: set[str] = set()
     for _, integrations, _ in bootstrap.STAGE_0_INTEGRATIONS:
@@ -1592,7 +1597,7 @@ async def test_no_base_platforms_loaded_before_recorder(hass: HomeAssistant) -> 
     problems: dict[str, set[str]] = {}
     for domain in integrations:
         domain_with_base_platforms_deps = (
-            integrations_all_dependencies[domain] & BASE_PLATFORMS
+            integrations_all_dependencies[domain] & base_platforms
         )
         if domain_with_base_platforms_deps:
             problems[domain] = domain_with_base_platforms_deps
@@ -1600,7 +1605,7 @@ async def test_no_base_platforms_loaded_before_recorder(hass: HomeAssistant) -> 
         f"Integrations that are setup before recorder have base platforms in their dependencies: {problems}"
     )
 
-    base_platform_py_files = {f"{base_platform}.py" for base_platform in BASE_PLATFORMS}
+    base_platform_py_files = {f"{base_platform}.py" for base_platform in base_platforms}
 
     for domain, integration in all_integrations.items():
         integration_base_platforms_files = (

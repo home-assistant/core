@@ -1065,7 +1065,7 @@
           'custom.airConditionerOptionalMode': dict({
             'acOptionalMode': dict({
               'timestamp': '2025-02-09T09:14:39.642Z',
-              'value': 'off',
+              'value': 'windFree',
             }),
             'supportedAcOptionalMode': dict({
               'timestamp': '2024-09-10T10:26:28.781Z',

@@ -77,6 +77,7 @@ def reolink_connect_class() -> Generator[MagicMock]:
         host_mock.check_new_firmware.return_value = False
         host_mock.unsubscribe.return_value = True
         host_mock.logout.return_value = True
+        host_mock.is_nvr = True
         host_mock.is_hub = False
         host_mock.mac_address = TEST_MAC
         host_mock.uid = TEST_UID
@@ -137,6 +138,8 @@ def reolink_connect_class() -> Generator[MagicMock]:
         host_mock.daynight_state.return_value = "Black&White"
         host_mock.hub_alarm_tone_id.return_value = 1
         host_mock.hub_visitor_tone_id.return_value = 1
+        host_mock.recording_packing_time_list = ["30 Minutes", "60 Minutes"]
+        host_mock.recording_packing_time = "60 Minutes"
 
         # Baichuan
         host_mock.baichuan = create_autospec(Baichuan)

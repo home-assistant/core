@@ -8,6 +8,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components import switch, template
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.template.switch import rewrite_legacy_to_modern_conf
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -17,6 +18,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import CoreState, HomeAssistant, ServiceCall, State
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.template import Template
 from homeassistant.setup import async_setup_component
@@ -29,6 +31,7 @@ from tests.common import (
     mock_component,
     mock_restore_cache,
 )
+from tests.typing import WebSocketGenerator
 
 TEST_OBJECT_ID = "test_template_switch"
 TEST_ENTITY_ID = f"switch.{TEST_OBJECT_ID}"
@@ -277,6 +280,46 @@ async def test_setup_config_entry(
     state = hass.states.get("switch.my_template")
     assert state is not None
     assert state == snapshot
+
+
+@pytest.mark.parametrize("state_key", ["value_template", "state"])
+async def test_flow_preview(
+    hass: HomeAssistant,
+    state_key: str,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the config flow preview."""
+    client = await hass_ws_client(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        template.DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": SWITCH_DOMAIN},
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == SWITCH_DOMAIN
+    assert result["errors"] is None
+    assert result["preview"] == "template"
+
+    await client.send_json_auto_id(
+        {
+            "type": "template/start_preview",
+            "flow_id": result["flow_id"],
+            "flow_type": "config_flow",
+            "user_input": {"name": "My template", state_key: "{{ 'on' }}"},
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] is None
+
+    msg = await client.receive_json()
+    assert msg["event"]["state"] == "on"
 
 
 @pytest.mark.parametrize(
@@ -938,3 +981,49 @@ async def test_device_id(
     template_entity = entity_registry.async_get("switch.my_template")
     assert template_entity is not None
     assert template_entity.device_id == device_entry.id
+
+
+@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(
+    ("style", "switch_config"),
+    [
+        (
+            ConfigurationStyle.LEGACY,
+            {
+                TEST_OBJECT_ID: {
+                    "turn_on": [],
+                    "turn_off": [],
+                },
+            },
+        ),
+        (
+            ConfigurationStyle.MODERN,
+            {
+                "name": TEST_OBJECT_ID,
+                "turn_on": [],
+                "turn_off": [],
+            },
+        ),
+    ],
+)
+async def test_empty_action_config(hass: HomeAssistant, setup_switch) -> None:
+    """Test configuration with empty script."""
+    await hass.services.async_call(
+        switch.DOMAIN,
+        switch.SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        blocking=True,
+    )
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_ON
+
+    await hass.services.async_call(
+        switch.DOMAIN,
+        switch.SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        blocking=True,
+    )
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_OFF

@@ -12,6 +12,7 @@ import voluptuous as vol
 from homeassistant.components import conversation
 from homeassistant.components.conversation import UserContent, async_get_chat_log, trace
 from homeassistant.components.google_generative_ai_conversation.conversation import (
+    ERROR_GETTING_RESPONSE,
     _escape_decode,
     _format_schema,
 )
@@ -492,7 +493,33 @@ async def test_empty_response(
     assert result.response.response_type == intent.IntentResponseType.ERROR, result
     assert result.response.error_code == "unknown", result
     assert result.response.as_dict()["speech"]["plain"]["speech"] == (
-        "Sorry, I had a problem getting a response from Google Generative AI."
+        ERROR_GETTING_RESPONSE
+    )
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_none_response(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test empty response."""
+    with patch("google.genai.chats.AsyncChats.create") as mock_create:
+        mock_chat = AsyncMock()
+        mock_create.return_value.send_message = mock_chat
+        chat_response = Mock(prompt_feedback=None)
+        mock_chat.return_value = chat_response
+        chat_response.candidates = None
+        result = await conversation.async_converse(
+            hass,
+            "hello",
+            None,
+            Context(),
+            agent_id="conversation.google_generative_ai_conversation",
+        )
+
+    assert result.response.response_type == intent.IntentResponseType.ERROR, result
+    assert result.response.error_code == "unknown", result
+    assert result.response.as_dict()["speech"]["plain"]["speech"] == (
+        ERROR_GETTING_RESPONSE
     )
 
 
@@ -715,3 +742,48 @@ async def test_empty_content_in_chat_history(
 
         assert actual_history[0].parts[0].text == first_input
         assert actual_history[1].parts[0].text == " "
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_history_always_user_first_turn(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test that the user is always first in the chat history."""
+    with (
+        chat_session.async_get_chat_session(hass) as session,
+        async_get_chat_log(hass, session) as chat_log,
+    ):
+        chat_log.async_add_assistant_content_without_tools(
+            conversation.AssistantContent(
+                agent_id="conversation.google_generative_ai_conversation",
+                content="Garage door left open, do you want to close it?",
+            )
+        )
+
+    with patch("google.genai.chats.AsyncChats.create") as mock_create:
+        mock_chat = AsyncMock()
+        mock_create.return_value.send_message = mock_chat
+        chat_response = Mock(prompt_feedback=None)
+        mock_chat.return_value = chat_response
+        chat_response.candidates = [Mock(content=Mock(parts=[]))]
+
+        await conversation.async_converse(
+            hass,
+            "hello",
+            chat_log.conversation_id,
+            Context(),
+            agent_id="conversation.google_generative_ai_conversation",
+        )
+
+    _, kwargs = mock_create.call_args
+    actual_history = kwargs.get("history")
+
+    assert actual_history[0].parts[0].text == " "
+    assert actual_history[0].role == "user"
+    assert (
+        actual_history[1].parts[0].text
+        == "Garage door left open, do you want to close it?"
+    )
+    assert actual_history[1].role == "model"

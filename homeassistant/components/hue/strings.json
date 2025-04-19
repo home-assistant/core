@@ -197,5 +197,11 @@
         }
       }
     }
+  },
+  "issues": {
+    "deprecated_effect_none": {
+      "title": "Light turned on with deprecated effect",
+      "description": "A light was turned on with the deprecated effect `None`. This has been replaced with `off`. Please update any automations, scenes, or scripts that use this effect."
+    }
   }
 }

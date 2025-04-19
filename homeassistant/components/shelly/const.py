@@ -209,7 +209,7 @@ KELVIN_MIN_VALUE_COLOR: Final = 3000
 BLOCK_WRONG_SLEEP_PERIOD = 21600
 BLOCK_EXPECTED_SLEEP_PERIOD = 43200
 
-UPTIME_DEVIATION: Final = 5
+UPTIME_DEVIATION: Final = 60
 
 # Time to wait before reloading entry upon device config change
 ENTRY_RELOAD_COOLDOWN = 60
@@ -277,3 +277,7 @@ ROLE_TO_DEVICE_CLASS_MAP = {
     "current_humidity": SensorDeviceClass.HUMIDITY,
     "current_temperature": SensorDeviceClass.TEMPERATURE,
 }
+
+# We want to check only the first 5 KB of the script if it contains emitEvent()
+# so that the integration startup remains fast.
+MAX_SCRIPT_SIZE = 5120

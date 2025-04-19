@@ -40,22 +40,22 @@
     },
     "error": {
       "model_not_supported": "This model is not supported, please select a different model",
-      "web_search_not_supported": "Web search is only supported for gpt-4o and gpt-4o-mini models"
+      "web_search_not_supported": "Web search is not supported by this model"
     }
   },
   "selector": {
     "reasoning_effort": {
       "options": {
-        "low": "Low",
-        "medium": "Medium",
-        "high": "High"
+        "low": "[%key:common::state::low%]",
+        "medium": "[%key:common::state::medium%]",
+        "high": "[%key:common::state::high%]"
       }
     },
     "search_context_size": {
       "options": {
-        "low": "Low",
-        "medium": "Medium",
-        "high": "High"
+        "low": "[%key:common::state::low%]",
+        "medium": "[%key:common::state::medium%]",
+        "high": "[%key:common::state::high%]"
       }
     }
   },
@@ -89,7 +89,7 @@
     },
     "generate_content": {
       "name": "Generate content",
-      "description": "Sends a conversational query to ChatGPT including any attached image files",
+      "description": "Sends a conversational query to ChatGPT including any attached image or PDF files",
       "fields": {
         "config_entry": {
           "name": "Config entry",

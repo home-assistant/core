@@ -59,6 +59,7 @@ from ..const import (
     CONF_COLOR_TEMP_KELVIN,
     CONF_COMMAND_TOPIC,
     CONF_EFFECT_LIST,
+    CONF_FLASH,
     CONF_FLASH_TIME_LONG,
     CONF_FLASH_TIME_SHORT,
     CONF_MAX_KELVIN,
@@ -69,6 +70,7 @@ from ..const import (
     CONF_RETAIN,
     CONF_STATE_TOPIC,
     CONF_SUPPORTED_COLOR_MODES,
+    CONF_TRANSITION,
     DEFAULT_BRIGHTNESS,
     DEFAULT_BRIGHTNESS_SCALE,
     DEFAULT_EFFECT,
@@ -93,6 +95,9 @@ DOMAIN = "mqtt_json"
 
 DEFAULT_NAME = "MQTT JSON Light"
 
+DEFAULT_FLASH = True
+DEFAULT_TRANSITION = True
+
 _PLATFORM_SCHEMA_BASE = (
     MQTT_RW_SCHEMA.extend(
         {
@@ -103,6 +108,7 @@ _PLATFORM_SCHEMA_BASE = (
             vol.Optional(CONF_COLOR_TEMP_KELVIN, default=False): cv.boolean,
             vol.Optional(CONF_EFFECT, default=DEFAULT_EFFECT): cv.boolean,
             vol.Optional(CONF_EFFECT_LIST): vol.All(cv.ensure_list, [cv.string]),
+            vol.Optional(CONF_FLASH, default=DEFAULT_FLASH): cv.boolean,
             vol.Optional(
                 CONF_FLASH_TIME_LONG, default=DEFAULT_FLASH_TIME_LONG
             ): cv.positive_int,
@@ -125,6 +131,7 @@ _PLATFORM_SCHEMA_BASE = (
                 vol.Unique(),
                 valid_supported_color_modes,
             ),
+            vol.Optional(CONF_TRANSITION, default=DEFAULT_TRANSITION): cv.boolean,
             vol.Optional(CONF_WHITE_SCALE, default=DEFAULT_WHITE_SCALE): vol.All(
                 vol.Coerce(int), vol.Range(min=1)
             ),
@@ -199,11 +206,12 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             for key in (CONF_FLASH_TIME_SHORT, CONF_FLASH_TIME_LONG)
         }
 
-        self._attr_supported_features = (
-            LightEntityFeature.TRANSITION | LightEntityFeature.FLASH
-        )
         self._attr_supported_features |= (
             config[CONF_EFFECT] and LightEntityFeature.EFFECT
+        )
+        self._attr_supported_features |= config[CONF_FLASH] and LightEntityFeature.FLASH
+        self._attr_supported_features |= (
+            config[CONF_TRANSITION] and LightEntityFeature.TRANSITION
         )
         if supported_color_modes := self._config.get(CONF_SUPPORTED_COLOR_MODES):
             self._attr_supported_color_modes = supported_color_modes

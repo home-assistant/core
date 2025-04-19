@@ -90,6 +90,9 @@
       'ha_id': 'BOSCH-HCS000000-D00000000004',
       'name': 'Hood',
       'programs': list([
+        'Cooking.Common.Program.Hood.Automatic',
+        'Cooking.Common.Program.Hood.Venting',
+        'Cooking.Common.Program.Hood.DelayedShutOff',
       ]),
       'settings': dict({
         'BSH.Common.Setting.AmbientLightBrightness': 70,

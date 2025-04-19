@@ -6,6 +6,7 @@ count_omer:
       selector:
         date:
     nusach:
+      required: true
       example: "sfarad"
       default: "sfarad"
       selector:

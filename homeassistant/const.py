@@ -28,8 +28,8 @@ MINOR_VERSION: Final = 5
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
-REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 13, 0)
-REQUIRED_NEXT_PYTHON_VER: Final[tuple[int, int, int]] = (3, 13, 0)
+REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 13, 2)
+REQUIRED_NEXT_PYTHON_VER: Final[tuple[int, int, int]] = (3, 13, 2)
 # Truthy date string triggers showing related deprecation warning messages.
 REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = ""
 
@@ -603,6 +603,7 @@ class UnitOfReactivePower(StrEnum):
     """Reactive power units."""
 
     VOLT_AMPERE_REACTIVE = "var"
+    KILO_VOLT_AMPERE_REACTIVE = "kvar"
 
 
 _DEPRECATED_POWER_VOLT_AMPERE_REACTIVE: Final = DeprecatedConstantEnum(

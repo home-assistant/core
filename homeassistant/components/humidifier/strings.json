@@ -62,15 +62,15 @@
         "mode": {
           "name": "Mode",
           "state": {
-            "normal": "Normal",
-            "eco": "Eco",
-            "away": "Away",
+            "normal": "[%key:common::state::normal%]",
+            "home": "[%key:common::state::home%]",
+            "away": "[%key:common::state::not_home%]",
+            "auto": "[%key:common::state::auto%]",
+            "baby": "Baby",
             "boost": "Boost",
             "comfort": "Comfort",
-            "home": "[%key:common::state::home%]",
-            "sleep": "Sleep",
-            "auto": "Auto",
-            "baby": "Baby"
+            "eco": "Eco",
+            "sleep": "Sleep"
           }
         }
       }

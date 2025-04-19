@@ -197,6 +197,11 @@ class JewishCalendarSensor(JewishCalendarEntity, SensorEntity):
         super().__init__(config_entry, description)
         self._attrs: dict[str, str] = {}
 
+    async def async_added_to_hass(self) -> None:
+        """Call when entity is added to hass."""
+        await super().async_added_to_hass()
+        await self.async_update()
+
     async def async_update(self) -> None:
         """Update the state of the sensor."""
         now = dt_util.now()

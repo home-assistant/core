@@ -1487,7 +1487,7 @@
       "adaptation_run_status": {
         "name": "Adaptation run status",
         "state": {
-          "nothing": "Idle",
+          "nothing": "[%key:common::state::idle%]",
           "something": "State"
         },
         "state_attributes": {

@@ -231,6 +231,56 @@
     'state': 'on',
   })
 # ---
+# name: test_all_entities[vd_network_audio_003s][media_player.soundbar-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.soundbar',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <MediaPlayerDeviceClass.SPEAKER: 'speaker'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 1420>,
+    'translation_key': None,
+    'unique_id': 'a75cb1e1-03fd-3c77-ca9f-d4e56c4096c6_main',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[vd_network_audio_003s][media_player.soundbar-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'speaker',
+      'friendly_name': 'Soundbar',
+      'supported_features': <MediaPlayerEntityFeature: 1420>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.soundbar',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_all_entities[vd_stv_2017_k][media_player.tv_samsung_8_series_49-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

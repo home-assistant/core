@@ -51,7 +51,7 @@ rules:
     status: done
     comment: Handled by coordinator.
   parallel-updates: done
-  reauthentication-flow: todo
+  reauthentication-flow: done
   test-coverage: todo
 
   # Gold

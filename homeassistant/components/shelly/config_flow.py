@@ -12,6 +12,7 @@ from aioshelly.exceptions import (
     CustomPortNotSupported,
     DeviceConnectionError,
     InvalidAuthError,
+    InvalidHostError,
     MacAddressMismatchError,
 )
 from aioshelly.rpc_device import RpcDevice
@@ -157,6 +158,8 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.info = await self._async_get_info(host, port)
             except DeviceConnectionError:
                 errors["base"] = "cannot_connect"
+            except InvalidHostError:
+                errors["base"] = "invalid_host"
             except Exception:  # noqa: BLE001
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"

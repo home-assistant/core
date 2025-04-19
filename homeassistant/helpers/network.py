@@ -10,12 +10,12 @@ from aiohttp import hdrs
 from hass_nabucasa import remote
 import yarl
 
-from homeassistant.components import http
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
 from homeassistant.util.network import is_ip_address, is_loopback, normalize_url
 
+from . import http
 from .hassio import is_hassio
 
 TYPE_URL_INTERNAL = "internal_url"

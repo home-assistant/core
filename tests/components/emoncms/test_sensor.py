@@ -7,67 +7,14 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.emoncms.const import DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
-from homeassistant.helpers.typing import ConfigType
-from homeassistant.setup import async_setup_component
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 from .conftest import EMONCMS_FAILURE, get_feed
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
-
-
-async def test_deprecated_yaml(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-    emoncms_yaml_config: ConfigType,
-    emoncms_client: AsyncMock,
-) -> None:
-    """Test an issue is created when we import from yaml config."""
-
-    await async_setup_component(hass, SENSOR_DOMAIN, emoncms_yaml_config)
-    await hass.async_block_till_done()
-
-    assert issue_registry.async_get_issue(
-        domain=HOMEASSISTANT_DOMAIN, issue_id=f"deprecated_yaml_{DOMAIN}"
-    )
-
-
-async def test_yaml_with_template(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-    emoncms_yaml_config_with_template: ConfigType,
-    emoncms_client: AsyncMock,
-) -> None:
-    """Test an issue is created when we import a yaml config with a value_template parameter."""
-
-    await async_setup_component(hass, SENSOR_DOMAIN, emoncms_yaml_config_with_template)
-    await hass.async_block_till_done()
-
-    assert issue_registry.async_get_issue(
-        domain=DOMAIN, issue_id=f"remove_value_template_{DOMAIN}"
-    )
-
-
-async def test_yaml_no_include_only_feed_id(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-    emoncms_yaml_config_no_include_only_feed_id: ConfigType,
-    emoncms_client: AsyncMock,
-) -> None:
-    """Test an issue is created when we import a yaml config without a include_only_feed_id parameter."""
-
-    await async_setup_component(
-        hass, SENSOR_DOMAIN, emoncms_yaml_config_no_include_only_feed_id
-    )
-    await hass.async_block_till_done()
-
-    assert issue_registry.async_get_issue(
-        domain=DOMAIN, issue_id=f"missing_include_only_feed_id_{DOMAIN}"
-    )
 
 
 async def test_no_feed_selected(
