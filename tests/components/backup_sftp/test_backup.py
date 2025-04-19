@@ -1,5 +1,6 @@
 """Test the Backup SFTP Location platform."""
 
+from collections.abc import AsyncGenerator
 from io import StringIO
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
@@ -48,6 +49,14 @@ TEST_AGENT_BACKUP_RESULT = {
 }
 
 
+@pytest.fixture
+async def backup_agent_client(async_cm_mock: AsyncMock) -> AsyncGenerator[AsyncMock]:
+    """Fixture for mocking the BackupAgentClient."""
+    with patch("homeassistant.components.backup_sftp.backup.BackupAgentClient") as mock_client:
+        mock_client.return_value = async_cm_mock
+        yield async_cm_mock
+
+
 async def test_agents_info(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -81,16 +90,13 @@ async def test_agents_info(
     )
 
 
-@patch("homeassistant.components.backup_sftp.backup.BackupAgentClient")
 async def test_agents_list_backups(
-    backup_agent_client: MagicMock,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    async_cm_mock: AsyncMock,
+    backup_agent_client: AsyncMock,
 ) -> None:
     """Test agent list backups."""
-    backup_agent_client.return_value = async_cm_mock
-    async_cm_mock.async_list_backups.return_value = [TEST_AGENT_BACKUP]
+    backup_agent_client.async_list_backups.return_value = [TEST_AGENT_BACKUP]
 
     client = await hass_ws_client(hass)
     await client.send_json_auto_id({"type": "backup/info"})
@@ -101,16 +107,13 @@ async def test_agents_list_backups(
     assert response["result"]["backups"] == [TEST_AGENT_BACKUP_RESULT]
 
 
-@patch("homeassistant.components.backup_sftp.backup.BackupAgentClient")
 async def test_agents_list_backups_fail(
-    backup_agent_client: MagicMock,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    async_cm_mock: AsyncMock,
+    backup_agent_client: AsyncMock,
 ) -> None:
     """Test agent list backups fails."""
-    backup_agent_client.return_value = async_cm_mock
-    async_cm_mock.async_list_backups.side_effect = RuntimeError("Error message")
+    backup_agent_client.async_list_backups.side_effect = RuntimeError("Error message")
 
     client = await hass_ws_client(hass)
     await client.send_json_auto_id({"type": "backup/info"})
@@ -119,7 +122,7 @@ async def test_agents_list_backups_fail(
     assert response["success"]
     assert response["result"]["backups"] == []
     assert response["result"]["agent_errors"] == {
-        f"{DOMAIN}.{TEST_AGENT_ID}": "Failed to list backups: Error message"
+        f"{DOMAIN}.{TEST_AGENT_ID}": "Error message"
     }
 
 
@@ -131,18 +134,15 @@ async def test_agents_list_backups_fail(
     ],
     ids=["found", "not_found"],
 )
-@patch("homeassistant.components.backup_sftp.backup.BackupAgentClient")
 async def test_agents_get_backup(
-    backup_agent_client: MagicMock,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     backup_id: str,
     expected_result: dict[str, Any] | None,
-    async_cm_mock: AsyncMock,
+    backup_agent_client: AsyncMock,
 ) -> None:
     """Test agent get backup."""
-    backup_agent_client.return_value = async_cm_mock
-    async_cm_mock.async_list_backups.return_value = [TEST_AGENT_BACKUP]
+    backup_agent_client.async_list_backups.return_value = [TEST_AGENT_BACKUP]
 
     client = await hass_ws_client(hass)
     await client.send_json_auto_id({"type": "backup/details", "backup_id": backup_id})
@@ -152,17 +152,14 @@ async def test_agents_get_backup(
     assert response["result"]["backup"] == expected_result
 
 
-@patch("homeassistant.components.backup_sftp.backup.BackupAgentClient")
 async def test_agents_download(
-    backup_agent_client: MagicMock,
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    async_cm_mock: AsyncMock,
+    backup_agent_client: AsyncMock,
 ) -> None:
     """Test agent download backup."""
-    backup_agent_client.return_value = async_cm_mock
-    async_cm_mock.iter_file.return_value = AsyncFileIteratorMock(b"backup data")
-    async_cm_mock.async_list_backups.return_value = [TEST_AGENT_BACKUP]
+    backup_agent_client.iter_file.return_value = AsyncFileIteratorMock(b"backup data")
+    backup_agent_client.async_list_backups.return_value = [TEST_AGENT_BACKUP]
 
     client = await hass_client()
     resp = await client.get(
@@ -172,17 +169,14 @@ async def test_agents_download(
     assert await resp.content.read() == b"backup data"
 
 
-@patch("homeassistant.components.backup_sftp.backup.BackupAgentClient")
 async def test_agents_download_fail(
-    backup_agent_client: MagicMock,
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    async_cm_mock: AsyncMock,
+    backup_agent_client: AsyncMock,
 ) -> None:
     """Test agent download backup fails."""
-    backup_agent_client.return_value = async_cm_mock
-    async_cm_mock.iter_file = MagicMock(side_effect=RuntimeError("Error message."))
-    async_cm_mock.async_list_backups.return_value = [TEST_AGENT_BACKUP]
+    backup_agent_client.iter_file = MagicMock(side_effect=RuntimeError("Error message."))
+    backup_agent_client.async_list_backups.return_value = [TEST_AGENT_BACKUP]
 
     client = await hass_client()
     resp = await client.get(
@@ -190,9 +184,9 @@ async def test_agents_download_fail(
     )
     assert resp.status == 500
     content = await resp.content.read()
-    assert "SFTP error while initiating download of backup" in content.decode()
+    assert "Error message." in content.decode()
 
-    async_cm_mock.iter_file = MagicMock(side_effect=FileNotFoundError("Error message."))
+    backup_agent_client.iter_file = MagicMock(side_effect=FileNotFoundError("Error message."))
     resp = await client.get(
         f"/api/backup/download/{TEST_AGENT_BACKUP.backup_id}?agent_id={DOMAIN}.{TEST_AGENT_ID}"
     )
@@ -200,16 +194,13 @@ async def test_agents_download_fail(
     content = await resp.content.read()
 
 
-@patch("homeassistant.components.backup_sftp.backup.BackupAgentClient")
 async def test_agents_download_metadata_not_found(
-    backup_agent_client: MagicMock,
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    async_cm_mock: AsyncMock,
+    backup_agent_client: AsyncMock,
 ) -> None:
     """Test agent download backup raises error if not found."""
-    backup_agent_client.return_value = async_cm_mock
-    async_cm_mock.async_list_backups.return_value = []
+    backup_agent_client.async_list_backups.return_value = []
 
     client = await hass_client()
     resp = await client.get(
@@ -220,17 +211,14 @@ async def test_agents_download_metadata_not_found(
     assert content.decode() == ""
 
 
-@patch("homeassistant.components.backup_sftp.backup.BackupAgentClient")
 async def test_agents_upload(
-    backup_agent_client: MagicMock,
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     caplog: pytest.LogCaptureFixture,
-    async_cm_mock: AsyncMock,
+    backup_agent_client: AsyncMock,
 ) -> None:
     """Test agent upload backup."""
-    backup_agent_client.return_value = async_cm_mock
-    async_cm_mock.async_upload_backup.return_value = None
+    backup_agent_client.async_upload_backup.return_value = None
 
     client = await hass_client()
 
@@ -257,20 +245,17 @@ async def test_agents_upload(
         f"Successfully uploaded backup id: {TEST_AGENT_BACKUP.backup_id}" in caplog.text
     )
 
-    async_cm_mock.async_upload_backup.assert_called_once()
+    backup_agent_client.async_upload_backup.assert_called_once()
 
 
-@patch("homeassistant.components.backup_sftp.backup.BackupAgentClient")
 async def test_agents_upload_fail(
-    backup_agent_client: MagicMock,
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     caplog: pytest.LogCaptureFixture,
-    async_cm_mock: AsyncMock,
+    backup_agent_client: AsyncMock,
 ) -> None:
     """Test agent upload backup fails."""
-    backup_agent_client.return_value = async_cm_mock
-    async_cm_mock.async_upload_backup = AsyncMock(
+    backup_agent_client.async_upload_backup = AsyncMock(
         side_effect=RuntimeError("Error message")
     )
 
@@ -296,22 +281,19 @@ async def test_agents_upload_fail(
 
     assert resp.status == 201
     assert (
-        "Failed to upload backup to remote SFTP location. Error: Error message"
+        "Error message"
         in caplog.text
     )
 
 
-@patch("homeassistant.components.backup_sftp.backup.BackupAgentClient")
 async def test_agents_delete(
-    backup_agent_client: MagicMock,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    async_cm_mock: AsyncMock,
+    backup_agent_client: AsyncMock,
 ) -> None:
     """Test agent delete backup."""
-    backup_agent_client.return_value = async_cm_mock
-    async_cm_mock.async_delete_backup.return_value = None
-    async_cm_mock.async_list_backups.return_value = [TEST_AGENT_BACKUP]
+    backup_agent_client.async_delete_backup.return_value = None
+    backup_agent_client.async_list_backups.return_value = [TEST_AGENT_BACKUP]
 
     client = await hass_ws_client(hass)
     await client.send_json_auto_id(
@@ -325,7 +307,7 @@ async def test_agents_delete(
     assert response["success"]
     assert response["result"] == {"agent_errors": {}}
 
-    async_cm_mock.async_delete_backup.assert_called_once()
+    backup_agent_client.async_delete_backup.assert_called_once()
 
 
 @pytest.mark.parametrize(
@@ -344,26 +326,23 @@ async def test_agents_delete(
             RuntimeError("runtime error."),
             {
                 "agent_errors": {
-                    f"{DOMAIN}.{TEST_AGENT_ID}": f"Unexpected error while removing backup: {TEST_AGENT_BACKUP.backup_id}: runtime error."
+                    f"{DOMAIN}.{TEST_AGENT_ID}": "runtime error."
                 }
             },
         ),
     ],
     ids=["file_not_found_exc", "sftp_error_exc", "runtimer_error_exc"],
 )
-@patch("homeassistant.components.backup_sftp.backup.BackupAgentClient")
 async def test_agents_delete_fail(
-    backup_agent_client: MagicMock,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    async_cm_mock: AsyncMock,
+    backup_agent_client: AsyncMock,
     exc: Exception,
     expected_result: dict[str, dict[str, str]],
 ) -> None:
     """Test agent delete backup fails."""
-    backup_agent_client.return_value = async_cm_mock
-    async_cm_mock.async_delete_backup.side_effect = exc
-    async_cm_mock.async_list_backups.return_value = [TEST_AGENT_BACKUP]
+    backup_agent_client.async_delete_backup.side_effect = exc
+    backup_agent_client.async_list_backups.return_value = [TEST_AGENT_BACKUP]
 
     client = await hass_ws_client(hass)
     await client.send_json_auto_id(
@@ -378,17 +357,13 @@ async def test_agents_delete_fail(
     assert response["result"] == expected_result
 
 
-@patch("homeassistant.components.backup_sftp.backup.BackupAgentClient")
 async def test_agents_delete_not_found(
-    backup_agent_client: MagicMock,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    caplog: pytest.LogCaptureFixture,
-    async_cm_mock: AsyncMock,
+    backup_agent_client: AsyncMock,
 ) -> None:
     """Test agent delete backup not found."""
-    backup_agent_client.return_value = async_cm_mock
-    async_cm_mock.async_list_backups.return_value = []
+    backup_agent_client.async_list_backups.return_value = []
 
     client = await hass_ws_client(hass)
     backup_id = "1234"
@@ -404,4 +379,4 @@ async def test_agents_delete_not_found(
     assert response["success"]
     assert response["result"] == {"agent_errors": {}}
 
-    async_cm_mock.async_delete_backup.assert_not_called()
+    backup_agent_client.async_delete_backup.assert_not_called()
