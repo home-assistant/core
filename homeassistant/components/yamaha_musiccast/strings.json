@@ -29,29 +29,29 @@
     "select": {
       "dimmer": {
         "state": {
-          "auto": "Auto"
+          "auto": "[%key:common::state::auto%]"
         }
       },
       "zone_sleep": {
         "state": {
           "off": "[%key:common::state::off%]",
-          "30_min": "30 Minutes",
-          "60_min": "60 Minutes",
-          "90_min": "90 Minutes",
-          "120_min": "120 Minutes"
+          "30_min": "30 minutes",
+          "60_min": "60 minutes",
+          "90_min": "90 minutes",
+          "120_min": "120 minutes"
         }
       },
       "zone_tone_control_mode": {
         "state": {
-          "manual": "Manual",
-          "auto": "Auto",
+          "manual": "[%key:common::state::manual%]",
+          "auto": "[%key:common::state::auto%]",
           "bypass": "Bypass"
         }
       },
       "zone_surr_decoder_type": {
         "state": {
           "toggle": "[%key:common::action::toggle%]",
-          "auto": "Auto",
+          "auto": "[%key:common::state::auto%]",
           "dolby_pl": "Dolby ProLogic",
           "dolby_pl2x_movie": "Dolby ProLogic 2x Movie",
           "dolby_pl2x_music": "Dolby ProLogic 2x Music",
@@ -64,8 +64,8 @@
       },
       "zone_equalizer_mode": {
         "state": {
-          "manual": "Manual",
-          "auto": "Auto",
+          "manual": "[%key:common::state::manual%]",
+          "auto": "[%key:common::state::auto%]",
           "bypass": "[%key:component::yamaha_musiccast::entity::select::zone_tone_control_mode::state::bypass%]"
         }
       },
@@ -84,11 +84,11 @@
       },
       "zone_link_audio_delay": {
         "state": {
-          "audio_sync_on": "Audio Synchronization On",
-          "audio_sync_off": "Audio Synchronization Off",
+          "audio_sync_on": "Audio synchronization on",
+          "audio_sync_off": "Audio synchronization off",
           "balanced": "Balanced",
-          "lip_sync": "Lip Synchronization",
-          "audio_sync": "Audio Synchronization"
+          "lip_sync": "Lip synchronization",
+          "audio_sync": "Audio synchronization"
         }
       }
     }
