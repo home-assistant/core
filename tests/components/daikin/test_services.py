@@ -195,3 +195,5 @@ async def test_service_unload_services(setup_integration) -> None:
         await hass.services.async_call(
             "daikin", services.SERVICE_SET_ZONE_TEMPERATURE, service_data, blocking=True
         )
+    # Also check that the service is not present in hass.services.async_services()
+    assert services.SERVICE_SET_ZONE_TEMPERATURE not in hass.services.async_services().get("daikin", {})

@@ -105,7 +105,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
                             f"Failed to set zone temperature after {retries} attempts: {err}"
                         ) from err
                     await asyncio.sleep(1)
-        await asyncio.gather(*(set_temp(entry_id, coordinator) for entry_id, coordinator in coordinators.items()))
+        await asyncio.gather(*(set_temp(entry_id, coordinator) for entry_id, coordinator in coordinators.items()), return_exceptions=True)
 
     hass.services.async_register(
         DOMAIN,
@@ -113,7 +113,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         async_handle_set_zone_temperature,
         schema=SERVICE_SET_ZONE_TEMPERATURE_SCHEMA,
     )
-    _LOGGER.info("Daikin custom services registered")
+    _LOGGER.debug("Daikin custom services registered")
 
 async def async_unload_services(hass: HomeAssistant) -> None:
     """Unregister Daikin custom services. Called if the integration is fully unloaded (e.g., last config entry removed)."""
