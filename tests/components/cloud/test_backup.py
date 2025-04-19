@@ -5,9 +5,9 @@ from io import StringIO
 from typing import Any
 from unittest.mock import ANY, Mock, PropertyMock, patch
 
-from aiohttp import ClientError
+from aiohttp import ClientError, ClientResponseError
 from hass_nabucasa import CloudError
-from hass_nabucasa.api import CloudApiNonRetryableError
+from hass_nabucasa.api import CloudApiError, CloudApiNonRetryableError
 from hass_nabucasa.files import FilesError, StorageType
 import pytest
 
@@ -540,6 +540,120 @@ async def test_agents_upload_not_protected(
         await hass.async_block_till_done()
 
     assert resp.status == 201
+    store_backups = hass_storage[BACKUP_DOMAIN]["data"]["backups"]
+    assert len(store_backups) == 1
+    stored_backup = store_backups[0]
+    assert stored_backup["backup_id"] == backup_id
+    assert stored_backup["failed_agent_ids"] == ["cloud.cloud"]
+
+
+@pytest.mark.usefixtures("cloud_logged_in", "mock_list_files")
+async def test_agents_upload_not_subscribed(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_storage: dict[str, Any],
+    cloud: Mock,
+) -> None:
+    """Test upload backup when cloud user is not subscribed."""
+    cloud.subscription_expired = True
+    client = await hass_client()
+    backup_data = "test"
+    backup_id = "test-backup"
+    test_backup = AgentBackup(
+        addons=[AddonInfo(name="Test", slug="test", version="1.0.0")],
+        backup_id=backup_id,
+        database_included=True,
+        date="1970-01-01T00:00:00.000Z",
+        extra_metadata={},
+        folders=[Folder.MEDIA, Folder.SHARE],
+        homeassistant_included=True,
+        homeassistant_version="2024.12.0",
+        name="Test",
+        protected=True,
+        size=len(backup_data),
+    )
+
+    with (
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
+        ) as fetch_backup,
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            return_value=test_backup,
+        ),
+        patch("pathlib.Path.open") as mocked_open,
+    ):
+        mocked_open.return_value.read = Mock(side_effect=[backup_data.encode(), b""])
+        fetch_backup.return_value = test_backup
+        resp = await client.post(
+            "/api/backup/upload?agent_id=cloud.cloud",
+            data={"file": StringIO(backup_data)},
+        )
+        await hass.async_block_till_done()
+
+    assert resp.status == 201
+    assert cloud.files.upload.call_count == 0
+    store_backups = hass_storage[BACKUP_DOMAIN]["data"]["backups"]
+    assert len(store_backups) == 1
+    stored_backup = store_backups[0]
+    assert stored_backup["backup_id"] == backup_id
+    assert stored_backup["failed_agent_ids"] == ["cloud.cloud"]
+
+
+@pytest.mark.usefixtures("cloud_logged_in", "mock_list_files")
+async def test_agents_upload_not_subscribed_midway(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_storage: dict[str, Any],
+    cloud: Mock,
+) -> None:
+    """Test upload backup when cloud subscription expires during the call."""
+    client = await hass_client()
+    backup_data = "test"
+    backup_id = "test-backup"
+    test_backup = AgentBackup(
+        addons=[AddonInfo(name="Test", slug="test", version="1.0.0")],
+        backup_id=backup_id,
+        database_included=True,
+        date="1970-01-01T00:00:00.000Z",
+        extra_metadata={},
+        folders=[Folder.MEDIA, Folder.SHARE],
+        homeassistant_included=True,
+        homeassistant_version="2024.12.0",
+        name="Test",
+        protected=True,
+        size=len(backup_data),
+    )
+
+    async def mock_upload(*args: Any, **kwargs: Any) -> None:
+        """Mock file upload."""
+        cloud.subscription_expired = True
+        raise CloudApiError(
+            "Boom!", orig_exc=ClientResponseError(Mock(), Mock(), status=403)
+        )
+
+    cloud.files.upload.side_effect = mock_upload
+
+    with (
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
+        ) as fetch_backup,
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            return_value=test_backup,
+        ),
+        patch("pathlib.Path.open") as mocked_open,
+    ):
+        mocked_open.return_value.read = Mock(side_effect=[backup_data.encode(), b""])
+        fetch_backup.return_value = test_backup
+        resp = await client.post(
+            "/api/backup/upload?agent_id=cloud.cloud",
+            data={"file": StringIO(backup_data)},
+        )
+        await hass.async_block_till_done()
+
+    assert resp.status == 201
+    assert cloud.files.upload.call_count == 1
     store_backups = hass_storage[BACKUP_DOMAIN]["data"]["backups"]
     assert len(store_backups) == 1
     stored_backup = store_backups[0]

@@ -61,11 +61,14 @@ OPTIONS_SCHEMA = vol.Schema(
 _LOGGER = logging.getLogger(__name__)
 
 
-def _get_data_schema(hass: HomeAssistant) -> vol.Schema:
+async def _get_data_schema(hass: HomeAssistant) -> vol.Schema:
     default_location = {
         CONF_LATITUDE: hass.config.latitude,
         CONF_LONGITUDE: hass.config.longitude,
     }
+    get_timezones: list[str] = list(
+        await hass.async_add_executor_job(zoneinfo.available_timezones)
+    )
     return vol.Schema(
         {
             vol.Required(CONF_DIASPORA, default=DEFAULT_DIASPORA): BooleanSelector(),
@@ -75,9 +78,7 @@ def _get_data_schema(hass: HomeAssistant) -> vol.Schema:
             vol.Optional(CONF_LOCATION, default=default_location): LocationSelector(),
             vol.Optional(CONF_ELEVATION, default=hass.config.elevation): int,
             vol.Optional(CONF_TIME_ZONE, default=hass.config.time_zone): SelectSelector(
-                SelectSelectorConfig(
-                    options=sorted(zoneinfo.available_timezones()),
-                )
+                SelectSelectorConfig(options=get_timezones, sort=True)
             ),
         }
     )
@@ -109,7 +110,7 @@ class JewishCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                _get_data_schema(self.hass), user_input
+                await _get_data_schema(self.hass), user_input
             ),
         )
 
@@ -121,7 +122,7 @@ class JewishCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
         if not user_input:
             return self.async_show_form(
                 data_schema=self.add_suggested_values_to_schema(
-                    _get_data_schema(self.hass),
+                    await _get_data_schema(self.hass),
                     reconfigure_entry.data,
                 ),
                 step_id="reconfigure",

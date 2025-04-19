@@ -266,7 +266,7 @@ async def _transform_stream(
                 raise ValueError("Unexpected stop event without a current block")
             if current_block["type"] == "tool_use":
                 tool_block = cast(ToolUseBlockParam, current_block)
-                tool_args = json.loads(current_tool_args)
+                tool_args = json.loads(current_tool_args) if current_tool_args else {}
                 tool_block["input"] = tool_args
                 yield {
                     "tool_calls": [

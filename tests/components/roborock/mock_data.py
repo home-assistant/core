@@ -28,6 +28,7 @@ USER_EMAIL = "user@domain.com"
 
 BASE_URL = "https://usiot.roborock.com"
 
+ROBOROCK_RRUID = "roboborock-userid-abc-123"
 USER_DATA = UserData.from_dict(
     {
         "tuyaname": "abc123",
@@ -35,7 +36,7 @@ USER_DATA = UserData.from_dict(
         "uid": 123456,
         "tokentype": "",
         "token": "abc123",
-        "rruid": "abc123",
+        "rruid": ROBOROCK_RRUID,
         "region": "us",
         "countrycode": "1",
         "country": "US",

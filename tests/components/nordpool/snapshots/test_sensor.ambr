@@ -1332,7 +1332,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1.80446',
+    'state': '0.0',
   })
 # ---
 # name: test_sensor[sensor.nord_pool_se4_daily_average-entry]
@@ -1580,9 +1580,9 @@
 # name: test_sensor[sensor.nord_pool_se4_lowest_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'end': '2024-11-05T03:00:00+00:00',
+      'end': '2024-11-05T19:00:00+00:00',
       'friendly_name': 'Nord Pool SE4 Lowest price',
-      'start': '2024-11-05T02:00:00+00:00',
+      'start': '2024-11-05T18:00:00+00:00',
       'unit_of_measurement': 'SEK/kWh',
     }),
     'context': <ANY>,
@@ -1590,7 +1590,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.06519',
+    'state': '0.0',
   })
 # ---
 # name: test_sensor[sensor.nord_pool_se4_next_price-entry]

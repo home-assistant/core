@@ -41,3 +41,12 @@ UNSUPPORTED_MODELS: list[str] = [
     "gpt-4o-mini-realtime-preview",
     "gpt-4o-mini-realtime-preview-2024-12-17",
 ]
+
+WEB_SEARCH_MODELS: list[str] = [
+    "gpt-4.1",
+    "gpt-4.1-mini",
+    "gpt-4o",
+    "gpt-4o-search-preview",
+    "gpt-4o-mini",
+    "gpt-4o-mini-search-preview",
+]

@@ -28,7 +28,7 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",
       "code_expired": "Authentication code expired or credential setup is invalid, please try again.",
-      "api_disabled": "You must enable the Google Calendar API in the Google Cloud Console"
+      "calendar_api_disabled": "You must [enable the Google Calendar API]({calendar_api_url}) in the Google Cloud Console"
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"

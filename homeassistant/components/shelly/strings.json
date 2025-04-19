@@ -51,6 +51,7 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "firmware_not_fully_provisioned": "Device not fully provisioned. Please contact Shelly support",
       "custom_port_not_supported": "Gen1 device does not support custom port.",
@@ -174,16 +175,16 @@
       "operation": {
         "state": {
           "warmup": "Warm-up",
-          "normal": "Normal",
+          "normal": "[%key:common::state::normal%]",
           "fault": "Fault"
         },
         "state_attributes": {
           "self_test": {
             "state": {
-              "not_completed": "Not completed",
-              "completed": "Completed",
-              "running": "Running",
-              "pending": "Pending"
+              "not_completed": "[%key:component::shelly::entity::sensor::self_test::state::not_completed%]",
+              "completed": "[%key:component::shelly::entity::sensor::self_test::state::completed%]",
+              "running": "[%key:component::shelly::entity::sensor::self_test::state::running%]",
+              "pending": "[%key:component::shelly::entity::sensor::self_test::state::pending%]"
             }
           }
         }
@@ -210,10 +211,10 @@
         "state": {
           "checking": "Checking",
           "closed": "[%key:common::state::closed%]",
-          "closing": "Closing",
+          "closing": "[%key:common::state::closing%]",
           "failure": "Failure",
           "opened": "Opened",
-          "opening": "Opening"
+          "opening": "[%key:common::state::opening%]"
         }
       }
     }

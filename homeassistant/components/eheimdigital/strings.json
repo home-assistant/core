@@ -46,6 +46,39 @@
           }
         }
       }
+    },
+    "number": {
+      "manual_speed": {
+        "name": "Manual speed"
+      },
+      "day_speed": {
+        "name": "Day speed"
+      },
+      "night_speed": {
+        "name": "Night speed"
+      },
+      "temperature_offset": {
+        "name": "Temperature offset"
+      },
+      "night_temperature_offset": {
+        "name": "Night temperature offset"
+      }
+    },
+    "sensor": {
+      "current_speed": {
+        "name": "Current speed"
+      },
+      "service_hours": {
+        "name": "Remaining hours until service"
+      },
+      "error_code": {
+        "name": "Error code",
+        "state": {
+          "no_error": "No error",
+          "rotor_stuck": "Rotor stuck",
+          "air_in_filter": "Air in filter"
+        }
+      }
     }
   }
 }

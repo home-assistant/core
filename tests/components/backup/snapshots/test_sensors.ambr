@@ -32,7 +32,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': 'Backup Manager State',
+    'original_name': 'Backup Manager state',
     'platform': 'backup',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -45,7 +45,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Backup Backup Manager State',
+      'friendly_name': 'Backup Backup Manager state',
       'options': list([
         'idle',
         'create_backup',

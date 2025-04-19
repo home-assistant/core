@@ -25,6 +25,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
+from homeassistant.util.json import JsonObjectType
 
 from tests.common import MockConfigEntry, async_mock_service
 
@@ -45,9 +46,12 @@ def llm_context() -> llm.LLMContext:
 class MyAPI(llm.API):
     """Test API."""
 
+    prompt: str = ""
+    tools: list[llm.Tool] = []
+
     async def async_get_api_instance(self, _: llm.ToolInput) -> llm.APIInstance:
         """Return a list of tools."""
-        return llm.APIInstance(self, "", [], llm_context)
+        return llm.APIInstance(self, self.prompt, llm_context, self.tools)
 
 
 async def test_get_api_no_existing(
@@ -181,13 +185,13 @@ async def test_assist_api(
 
     assert len(llm.async_get_apis(hass)) == 1
     api = await llm.async_get_api(hass, "assist", llm_context)
-    assert [tool.name for tool in api.tools] == ["get_home_state"]
+    assert [tool.name for tool in api.tools] == ["GetLiveContext"]
 
     # Match all
     intent_handler.platforms = None
 
     api = await llm.async_get_api(hass, "assist", llm_context)
-    assert [tool.name for tool in api.tools] == ["test_intent", "get_home_state"]
+    assert [tool.name for tool in api.tools] == ["test_intent", "GetLiveContext"]
 
     # Match specific domain
     intent_handler.platforms = {"light"}
@@ -575,7 +579,11 @@ async def test_assist_api_prompt(
             suggested_area="Test Area 2",
         )
     )
-    exposed_entities_prompt = """An overview of the areas and the devices in this smart home:
+    exposed_entities_prompt = """Live Context: An overview of the areas and the devices in this smart home:
+- names: '1'
+  domain: light
+  state: unavailable
+  areas: Test Area 2
 - names: Kitchen
   domain: light
   state: 'on'
@@ -590,18 +598,6 @@ async def test_assist_api_prompt(
   domain: light
   state: unavailable
   areas: Test Area, Alternative name
-- names: Test Service
-  domain: light
-  state: unavailable
-  areas: Test Area, Alternative name
-- names: Test Service
-  domain: light
-  state: unavailable
-  areas: Test Area, Alternative name
-- names: Test Service
-  domain: light
-  state: unavailable
-  areas: Test Area, Alternative name
 - names: Test Device 2
   domain: light
   state: unavailable
@@ -614,16 +610,27 @@ async def test_assist_api_prompt(
   domain: light
   state: unavailable
   areas: Test Area 2
+- names: Test Service
+  domain: light
+  state: unavailable
+  areas: Test Area, Alternative name
+- names: Test Service
+  domain: light
+  state: unavailable
+  areas: Test Area, Alternative name
+- names: Test Service
+  domain: light
+  state: unavailable
+  areas: Test Area, Alternative name
 - names: Unnamed Device
   domain: light
   state: unavailable
   areas: Test Area 2
+"""
+    stateless_exposed_entities_prompt = """Static Context: An overview of the areas and the devices in this smart home:
 - names: '1'
   domain: light
-  state: unavailable
   areas: Test Area 2
-"""
-    stateless_exposed_entities_prompt = """An overview of the areas and the devices in this smart home:
 - names: Kitchen
   domain: light
 - names: Living Room
@@ -632,15 +639,6 @@ async def test_assist_api_prompt(
 - names: Test Device, my test light
   domain: light
   areas: Test Area, Alternative name
-- names: Test Service
-  domain: light
-  areas: Test Area, Alternative name
-- names: Test Service
-  domain: light
-  areas: Test Area, Alternative name
-- names: Test Service
-  domain: light
-  areas: Test Area, Alternative name
 - names: Test Device 2
   domain: light
   areas: Test Area 2
@@ -650,10 +648,16 @@ async def test_assist_api_prompt(
 - names: Test Device 4
   domain: light
   areas: Test Area 2
-- names: Unnamed Device
+- names: Test Service
   domain: light
-  areas: Test Area 2
-- names: '1'
+  areas: Test Area, Alternative name
+- names: Test Service
+  domain: light
+  areas: Test Area, Alternative name
+- names: Test Service
+  domain: light
+  areas: Test Area, Alternative name
+- names: Unnamed Device
   domain: light
   areas: Test Area 2
 """
@@ -669,17 +673,30 @@ async def test_assist_api_prompt(
         "When a user asks to turn on all devices of a specific type, "
         "ask user to specify an area, unless there is only one device of that type."
     )
+    dynamic_context_prompt = """You ARE equipped to answer questions about the current state of
+the home using the `GetLiveContext` tool. This is a primary function. Do not state you lack the
+functionality if the question requires live data.
+If the user asks about device existence/type (e.g., "Do I have lights in the bedroom?"): Answer
+from the static context below.
+If the user asks about the CURRENT state, value, or mode (e.g., "Is the lock locked?",
+"Is the fan on?", "What mode is the thermostat in?", "What is the temperature outside?"):
+    1.  Recognize this requires live data.
+    2.  You MUST call `GetLiveContext`. This tool will provide the needed real-time information (like temperature from the local weather, lock status, etc.).
+    3.  Use the tool's response** to answer the user accurately (e.g., "The temperature outside is [value from tool].").
+For general knowledge questions not about the home: Answer truthfully from internal knowledge.
+"""
     api = await llm.async_get_api(hass, "assist", llm_context)
     assert api.api_prompt == (
         f"""{first_part_prompt}
 {area_prompt}
 {no_timer_prompt}
+{dynamic_context_prompt}
 {stateless_exposed_entities_prompt}"""
     )
 
-    # Verify that the get_home_state tool returns the same results as the exposed_entities_prompt
+    # Verify that the GetLiveContext tool returns the same results as the exposed_entities_prompt
     result = await api.async_call_tool(
-        llm.ToolInput(tool_name="get_home_state", tool_args={})
+        llm.ToolInput(tool_name="GetLiveContext", tool_args={})
     )
     assert result == {
         "success": True,
@@ -697,6 +714,7 @@ async def test_assist_api_prompt(
         f"""{first_part_prompt}
 {area_prompt}
 {no_timer_prompt}
+{dynamic_context_prompt}
 {stateless_exposed_entities_prompt}"""
     )
 
@@ -712,6 +730,7 @@ async def test_assist_api_prompt(
         f"""{first_part_prompt}
 {area_prompt}
 {no_timer_prompt}
+{dynamic_context_prompt}
 {stateless_exposed_entities_prompt}"""
     )
 
@@ -723,6 +742,7 @@ async def test_assist_api_prompt(
     assert api.api_prompt == (
         f"""{first_part_prompt}
 {area_prompt}
+{dynamic_context_prompt}
 {stateless_exposed_entities_prompt}"""
     )
 
@@ -1326,3 +1346,57 @@ async def test_no_tools_exposed(hass: HomeAssistant) -> None:
     )
     api = await llm.async_get_api(hass, "assist", llm_context)
     assert api.tools == []
+
+
+async def test_merged_api(hass: HomeAssistant, llm_context: llm.LLMContext) -> None:
+    """Test an API instance that merges multiple llm apis."""
+
+    class MyTool(llm.Tool):
+        def __init__(self, name: str, description: str) -> None:
+            self.name = name
+            self.description = description
+
+        async def async_call(
+            self, hass: HomeAssistant, tool_input: llm.ToolInput, _: llm.LLMContext
+        ) -> JsonObjectType:
+            return {"result": {tool_input.tool_name: tool_input.tool_args}}
+
+    api1 = MyAPI(hass=hass, id="api-1", name="API 1")
+    api1.prompt = "This is prompt 1"
+    api1.tools = [MyTool(name="Tool_1", description="Description 1")]
+    llm.async_register_api(hass, api1)
+
+    api2 = MyAPI(hass=hass, id="api-2", name="API 2")
+    api2.prompt = "This is prompt 2"
+    api2.tools = [MyTool(name="Tool_2", description="Description 2")]
+    llm.async_register_api(hass, api2)
+
+    instance = await llm.async_get_api(hass, ["api-1", "api-2"], llm_context)
+    assert instance.api.id == "api-1|api-2"
+
+    assert (
+        instance.api_prompt
+        == """Follow these instructions for tools from "api-1":
+This is prompt 1
+
+Follow these instructions for tools from "api-2":
+This is prompt 2
+
+"""
+    )
+    assert [(tool.name, tool.description) for tool in instance.tools] == [
+        ("api-1.Tool_1", "Description 1"),
+        ("api-2.Tool_2", "Description 2"),
+    ]
+
+    # The test tool returns back the provided arguments so we can verify
+    # the original tool is invoked with the correct tool name and args.
+    result = await instance.async_call_tool(
+        llm.ToolInput(tool_name="api-1.Tool_1", tool_args={"arg1": "value1"})
+    )
+    assert result == {"result": {"Tool_1": {"arg1": "value1"}}}
+
+    result = await instance.async_call_tool(
+        llm.ToolInput(tool_name="api-2.Tool_2", tool_args={"arg2": "value2"})
+    )
+    assert result == {"result": {"Tool_2": {"arg2": "value2"}}}
