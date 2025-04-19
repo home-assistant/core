@@ -94,6 +94,7 @@ class EphEmberThermostat(ClimateEntity):
         self._ember = ember
         self._zone_name = zone_name(zone)
         self._zone = zone
+        self._attr_unique_id = zone["zoneid"]
 
         # hot water = true, is immersive device without target temperature control.
         self._hot_water = zone_is_hotwater(zone)
