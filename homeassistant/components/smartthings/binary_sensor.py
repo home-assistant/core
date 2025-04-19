@@ -59,10 +59,11 @@ CAPABILITY_TO_SENSORS: dict[
                 Category.DOOR: BinarySensorDeviceClass.DOOR,
                 Category.WINDOW: BinarySensorDeviceClass.WINDOW,
             },
-            exists_fn=lambda key: key in {"freezer", "cooler"},
+            exists_fn=lambda key: key in {"freezer", "cooler", "cvroom"},
             component_translation_key={
                 "freezer": "freezer_door",
                 "cooler": "cooler_door",
+                "cvroom": "cool_select_plus_door",
             },
             deprecated_fn=(
                 lambda status: "fridge_door"
