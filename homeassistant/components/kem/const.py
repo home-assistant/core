@@ -11,6 +11,7 @@ CE_RT_COORDINATORS = "coordinators"
 CE_RT_KEM = "kem"
 CE_RT_HOMES = "homes"
 
+CONF_REFRESH_TOKEN = "refresh_token"
 
 DD_DEVICES = "devices"
 DD_PRODUCT = "product"

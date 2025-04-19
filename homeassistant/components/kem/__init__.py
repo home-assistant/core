@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import logging
 
-from aiokem import AioKem, AuthenticationCredentialsError
+from aiokem import AioKem, AuthenticationError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -23,6 +23,7 @@ from .const import (
     DOMAIN,
 )
 from .coordinator import KemUpdateCoordinator
+from .kem import HAAioKem
 
 PLATFORMS: list[str] = [Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
@@ -30,12 +31,11 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up KEM from a config entry."""
-    data = entry.data
     websession = async_get_clientsession(hass)
-    kem = AioKem(session=websession)
+    kem = HAAioKem(session=websession, hass=hass, config_entry=entry)
     try:
-        await kem.authenticate(data[CONF_USERNAME], data[CONF_PASSWORD])
-    except AuthenticationCredentialsError as ex:
+        await kem.login()
+    except AuthenticationError as ex:
         raise ConfigEntryAuthFailed from ex
     except CONNECTION_EXCEPTIONS as ex:
         raise ConfigEntryNotReady from ex

@@ -6,7 +6,7 @@ from unittest.mock import patch
 from aiokem import AioKem
 import pytest
 
-from homeassistant.components.kem.const import DOMAIN
+from homeassistant.components.kem.const import CONF_REFRESH_TOKEN, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -34,6 +34,19 @@ def kem_config_entry_fixture() -> MockConfigEntry:
         data={
             CONF_USERNAME: "username",
             CONF_PASSWORD: "password",
+        },
+    )
+
+
+@pytest.fixture(name="kem_config_entry_with_refresh_token")
+def kem_config_entry_with_refresh_token_fixture() -> MockConfigEntry:
+    """Create a config entry fixture with refresh token."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_USERNAME: "username",
+            CONF_PASSWORD: "password",
+            CONF_REFRESH_TOKEN: "refresh_token",
         },
     )
 

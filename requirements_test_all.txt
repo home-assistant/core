@@ -266,6 +266,9 @@ aioimaplib==2.0.1
 # homeassistant.components.apache_kafka
 aiokafka==0.10.0
 
+# homeassistant.components.kem
+aiokem==0.4.0
+
 # homeassistant.components.lifx
 aiolifx-effects==0.3.2
 
