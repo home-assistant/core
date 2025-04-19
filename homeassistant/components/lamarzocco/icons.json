@@ -72,6 +72,14 @@
         }
       }
     },
+    "sensor": {
+      "coffee_boiler_ready_time": {
+        "default": "mdi:av-timer"
+      },
+      "steam_boiler_ready_time": {
+        "default": "mdi:av-timer"
+      }
+    },
     "switch": {
       "main": {
         "default": "mdi:power",
