@@ -6,7 +6,7 @@ import time
 from unittest.mock import AsyncMock, create_autospec, patch
 
 from aioautomower.model import MowerAttributes
-from aioautomower.session import AutomowerSession, _MowerCommands
+from aioautomower.session import _MowerCommands
 from aioautomower.utils import mower_list_to_dictionary_dataclass
 from aiohttp import ClientWebSocketResponse
 import pytest
@@ -108,7 +108,9 @@ async def setup_credentials(hass: HomeAssistant) -> None:
 
 
 @pytest.fixture
-def mock_automower_client(values: dict[str, MowerAttributes]) -> Generator[AsyncMock]:
+def mock_automower_client(
+    values: dict[str, MowerAttributes],
+) -> Generator[AsyncMock]:
     """Mock a Husqvarna Automower client."""
 
     async def listen() -> None:
@@ -117,14 +119,15 @@ def mock_automower_client(values: dict[str, MowerAttributes]) -> Generator[Async
         await listen_block.wait()
         pytest.fail("Listen was not cancelled!")
 
-    mock = create_autospec(AutomowerSession, instance=True)
-    mock.auth = AsyncMock(side_effect=ClientWebSocketResponse)
-    mock.commands = create_autospec(_MowerCommands, instance=True, spec_set=True)
-    mock.get_status = AsyncMock(return_value=values)
-    mock.start_listening = AsyncMock(side_effect=listen)
-
     with patch(
         "homeassistant.components.husqvarna_automower.AutomowerSession",
-        return_value=mock,
-    ):
-        yield mock
+        autospec=True,
+    ) as mock:
+        mock_instance = mock.return_value
+        mock_instance.auth = AsyncMock(side_effect=ClientWebSocketResponse)
+        mock_instance.commands = create_autospec(
+            _MowerCommands, instance=True, spec_set=True
+        )
+        mock_instance.get_status = AsyncMock(return_value=values)
+        mock_instance.start_listening = AsyncMock(side_effect=listen)
+        yield mock_instance
