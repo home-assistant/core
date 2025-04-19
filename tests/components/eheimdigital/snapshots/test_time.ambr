@@ -1,0 +1,189 @@
+# serializer version: 1
+# name: test_setup[time.mock_classicvario_day_start_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'time',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'time.mock_classicvario_day_start_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Day start time',
+    'platform': 'eheimdigital',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'day_start_time',
+    'unique_id': '00:00:00:00:00:03_day_start_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[time.mock_classicvario_day_start_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock classicVARIO Day start time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'time.mock_classicvario_day_start_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[time.mock_classicvario_night_start_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'time',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'time.mock_classicvario_night_start_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Night start time',
+    'platform': 'eheimdigital',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'night_start_time',
+    'unique_id': '00:00:00:00:00:03_night_start_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[time.mock_classicvario_night_start_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock classicVARIO Night start time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'time.mock_classicvario_night_start_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[time.mock_heater_day_start_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'time',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'time.mock_heater_day_start_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Day start time',
+    'platform': 'eheimdigital',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'day_start_time',
+    'unique_id': '00:00:00:00:00:02_day_start_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[time.mock_heater_day_start_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Heater Day start time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'time.mock_heater_day_start_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[time.mock_heater_night_start_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'time',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'time.mock_heater_night_start_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Night start time',
+    'platform': 'eheimdigital',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'night_start_time',
+    'unique_id': '00:00:00:00:00:02_night_start_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[time.mock_heater_night_start_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Heater Night start time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'time.mock_heater_night_start_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
