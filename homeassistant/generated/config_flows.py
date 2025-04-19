@@ -645,6 +645,7 @@ FLOWS = {
         "tomorrowio",
         "toon",
         "totalconnect",
+        "touchline",
         "touchline_sl",
         "tplink",
         "tplink_omada",
