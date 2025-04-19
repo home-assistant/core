@@ -173,156 +173,361 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
     assert result2["errors"] == {"base": error}
 
 
-async def test_options_no_model_settings(
-    hass: HomeAssistant, mock_config_entry, mock_init_component
+@pytest.mark.parametrize(
+    ("current_options", "new_options", "expected_options"),
+    [
+        (  # Test converting single llm api format to list
+            {
+                CONF_RECOMMENDED: True,
+                CONF_LLM_HASS_API: "assist",
+                CONF_PROMPT: "",
+            },
+            (
+                {
+                    CONF_RECOMMENDED: True,
+                    CONF_LLM_HASS_API: ["assist"],
+                    CONF_PROMPT: "",
+                },
+            ),
+            {
+                CONF_RECOMMENDED: True,
+                CONF_LLM_HASS_API: ["assist"],
+                CONF_PROMPT: "",
+            },
+        ),
+        (  # options with no model-specific settings
+            {},
+            (
+                {
+                    CONF_RECOMMENDED: False,
+                    CONF_PROMPT: "Speak like a pirate",
+                },
+                {
+                    CONF_TEMPERATURE: 1.0,
+                    CONF_CHAT_MODEL: "gpt-4.5-preview",
+                    CONF_TOP_P: RECOMMENDED_TOP_P,
+                    CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                },
+            ),
+            {
+                CONF_RECOMMENDED: False,
+                CONF_PROMPT: "Speak like a pirate",
+                CONF_TEMPERATURE: 1.0,
+                CONF_CHAT_MODEL: "gpt-4.5-preview",
+                CONF_TOP_P: RECOMMENDED_TOP_P,
+                CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+            },
+        ),
+        (  # options for reasoning models
+            {},
+            (
+                {
+                    CONF_RECOMMENDED: False,
+                    CONF_PROMPT: "Speak like a pirate",
+                },
+                {
+                    CONF_TEMPERATURE: 1.0,
+                    CONF_CHAT_MODEL: "o1-pro",
+                    CONF_TOP_P: RECOMMENDED_TOP_P,
+                    CONF_MAX_TOKENS: 10000,
+                },
+                {
+                    CONF_REASONING_EFFORT: "high",
+                },
+            ),
+            {
+                CONF_RECOMMENDED: False,
+                CONF_PROMPT: "Speak like a pirate",
+                CONF_TEMPERATURE: 1.0,
+                CONF_CHAT_MODEL: "o1-pro",
+                CONF_TOP_P: RECOMMENDED_TOP_P,
+                CONF_MAX_TOKENS: 10000,
+                CONF_REASONING_EFFORT: "high",
+            },
+        ),
+        (  # options for web search without user location
+            {
+                CONF_RECOMMENDED: True,
+                CONF_PROMPT: "bla",
+            },
+            (
+                {
+                    CONF_RECOMMENDED: False,
+                    CONF_PROMPT: "Speak like a pirate",
+                },
+                {
+                    CONF_TEMPERATURE: 0.3,
+                    CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
+                    CONF_TOP_P: RECOMMENDED_TOP_P,
+                    CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                },
+                {
+                    CONF_WEB_SEARCH: True,
+                    CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
+                    CONF_WEB_SEARCH_USER_LOCATION: False,
+                },
+            ),
+            {
+                CONF_RECOMMENDED: False,
+                CONF_PROMPT: "Speak like a pirate",
+                CONF_TEMPERATURE: 0.3,
+                CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
+                CONF_TOP_P: RECOMMENDED_TOP_P,
+                CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_WEB_SEARCH: True,
+                CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
+                CONF_WEB_SEARCH_USER_LOCATION: False,
+            },
+        ),
+        # Test that current options are showed as suggested values
+        (  # Case 1: web search
+            {
+                CONF_RECOMMENDED: False,
+                CONF_PROMPT: "Speak like super Mario",
+                CONF_TEMPERATURE: 0.8,
+                CONF_CHAT_MODEL: "gpt-4o",
+                CONF_TOP_P: 0.9,
+                CONF_MAX_TOKENS: 1000,
+                CONF_WEB_SEARCH: True,
+                CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
+                CONF_WEB_SEARCH_USER_LOCATION: True,
+                CONF_WEB_SEARCH_CITY: "San Francisco",
+                CONF_WEB_SEARCH_REGION: "California",
+                CONF_WEB_SEARCH_COUNTRY: "US",
+                CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
+            },
+            (
+                {
+                    CONF_RECOMMENDED: False,
+                    CONF_PROMPT: "Speak like super Mario",
+                },
+                {
+                    CONF_TEMPERATURE: 0.8,
+                    CONF_CHAT_MODEL: "gpt-4o",
+                    CONF_TOP_P: 0.9,
+                    CONF_MAX_TOKENS: 1000,
+                },
+                {
+                    CONF_WEB_SEARCH: True,
+                    CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
+                    CONF_WEB_SEARCH_USER_LOCATION: False,
+                },
+            ),
+            {
+                CONF_RECOMMENDED: False,
+                CONF_PROMPT: "Speak like super Mario",
+                CONF_TEMPERATURE: 0.8,
+                CONF_CHAT_MODEL: "gpt-4o",
+                CONF_TOP_P: 0.9,
+                CONF_MAX_TOKENS: 1000,
+                CONF_WEB_SEARCH: True,
+                CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
+                CONF_WEB_SEARCH_USER_LOCATION: False,
+            },
+        ),
+        (  # Case 2: reasoning model
+            {
+                CONF_RECOMMENDED: False,
+                CONF_PROMPT: "Speak like a pro",
+                CONF_TEMPERATURE: 0.8,
+                CONF_CHAT_MODEL: "o1-pro",
+                CONF_TOP_P: 0.9,
+                CONF_MAX_TOKENS: 1000,
+                CONF_REASONING_EFFORT: "high",
+            },
+            (
+                {
+                    CONF_RECOMMENDED: False,
+                    CONF_PROMPT: "Speak like a pro",
+                },
+                {
+                    CONF_TEMPERATURE: 0.8,
+                    CONF_CHAT_MODEL: "o1-pro",
+                    CONF_TOP_P: 0.9,
+                    CONF_MAX_TOKENS: 1000,
+                },
+                {CONF_REASONING_EFFORT: "high"},
+            ),
+            {
+                CONF_RECOMMENDED: False,
+                CONF_PROMPT: "Speak like a pro",
+                CONF_TEMPERATURE: 0.8,
+                CONF_CHAT_MODEL: "o1-pro",
+                CONF_TOP_P: 0.9,
+                CONF_MAX_TOKENS: 1000,
+                CONF_REASONING_EFFORT: "high",
+            },
+        ),
+        # Test that old options are removed after reconfiguration
+        (  # Case 1: web search to recommended
+            {
+                CONF_RECOMMENDED: False,
+                CONF_PROMPT: "Speak like a pirate",
+                CONF_TEMPERATURE: 0.8,
+                CONF_CHAT_MODEL: "gpt-4o",
+                CONF_TOP_P: 0.9,
+                CONF_MAX_TOKENS: 1000,
+                CONF_WEB_SEARCH: True,
+                CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
+                CONF_WEB_SEARCH_USER_LOCATION: True,
+                CONF_WEB_SEARCH_CITY: "San Francisco",
+                CONF_WEB_SEARCH_REGION: "California",
+                CONF_WEB_SEARCH_COUNTRY: "US",
+                CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
+            },
+            (
+                {
+                    CONF_RECOMMENDED: True,
+                    CONF_LLM_HASS_API: ["assist"],
+                    CONF_PROMPT: "",
+                },
+            ),
+            {
+                CONF_RECOMMENDED: True,
+                CONF_LLM_HASS_API: ["assist"],
+                CONF_PROMPT: "",
+            },
+        ),
+        (  # Case 2: reasoning to recommended
+            {
+                CONF_RECOMMENDED: False,
+                CONF_PROMPT: "Speak like a pirate",
+                CONF_LLM_HASS_API: ["assist"],
+                CONF_TEMPERATURE: 0.8,
+                CONF_CHAT_MODEL: "gpt-4o",
+                CONF_TOP_P: 0.9,
+                CONF_MAX_TOKENS: 1000,
+                CONF_REASONING_EFFORT: "high",
+            },
+            (
+                {
+                    CONF_RECOMMENDED: True,
+                    CONF_PROMPT: "Speak like a pirate",
+                },
+            ),
+            {
+                CONF_RECOMMENDED: True,
+                CONF_PROMPT: "Speak like a pirate",
+            },
+        ),
+        (  # Case 3: web search to reasoning
+            {
+                CONF_RECOMMENDED: False,
+                CONF_PROMPT: "Speak like a pirate",
+                CONF_LLM_HASS_API: ["assist"],
+                CONF_TEMPERATURE: 0.8,
+                CONF_CHAT_MODEL: "gpt-4o",
+                CONF_TOP_P: 0.9,
+                CONF_MAX_TOKENS: 1000,
+                CONF_WEB_SEARCH: True,
+                CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
+                CONF_WEB_SEARCH_USER_LOCATION: True,
+                CONF_WEB_SEARCH_CITY: "San Francisco",
+                CONF_WEB_SEARCH_REGION: "California",
+                CONF_WEB_SEARCH_COUNTRY: "US",
+                CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
+            },
+            (
+                {
+                    CONF_RECOMMENDED: False,
+                    CONF_PROMPT: "Speak like a pirate",
+                },
+                {
+                    CONF_TEMPERATURE: 0.8,
+                    CONF_CHAT_MODEL: "o3-mini",
+                    CONF_TOP_P: 0.9,
+                    CONF_MAX_TOKENS: 1000,
+                },
+                {
+                    CONF_REASONING_EFFORT: "low",
+                },
+            ),
+            {
+                CONF_RECOMMENDED: False,
+                CONF_PROMPT: "Speak like a pirate",
+                CONF_TEMPERATURE: 0.8,
+                CONF_CHAT_MODEL: "o3-mini",
+                CONF_TOP_P: 0.9,
+                CONF_MAX_TOKENS: 1000,
+                CONF_REASONING_EFFORT: "low",
+            },
+        ),
+        (  # Case 4: reasoning to web search
+            {
+                CONF_RECOMMENDED: False,
+                CONF_PROMPT: "Speak like a pirate",
+                CONF_LLM_HASS_API: ["assist"],
+                CONF_TEMPERATURE: 0.8,
+                CONF_CHAT_MODEL: "o3-mini",
+                CONF_TOP_P: 0.9,
+                CONF_MAX_TOKENS: 1000,
+                CONF_REASONING_EFFORT: "low",
+            },
+            (
+                {
+                    CONF_RECOMMENDED: False,
+                    CONF_PROMPT: "Speak like a pirate",
+                },
+                {
+                    CONF_TEMPERATURE: 0.8,
+                    CONF_CHAT_MODEL: "gpt-4o",
+                    CONF_TOP_P: 0.9,
+                    CONF_MAX_TOKENS: 1000,
+                },
+                {
+                    CONF_WEB_SEARCH: True,
+                    CONF_WEB_SEARCH_CONTEXT_SIZE: "high",
+                    CONF_WEB_SEARCH_USER_LOCATION: False,
+                },
+            ),
+            {
+                CONF_RECOMMENDED: False,
+                CONF_PROMPT: "Speak like a pirate",
+                CONF_TEMPERATURE: 0.8,
+                CONF_CHAT_MODEL: "gpt-4o",
+                CONF_TOP_P: 0.9,
+                CONF_MAX_TOKENS: 1000,
+                CONF_WEB_SEARCH: True,
+                CONF_WEB_SEARCH_CONTEXT_SIZE: "high",
+                CONF_WEB_SEARCH_USER_LOCATION: False,
+            },
+        ),
+    ],
+)
+async def test_options_switching(
+    hass: HomeAssistant,
+    mock_config_entry,
+    mock_init_component,
+    current_options,
+    new_options,
+    expected_options,
 ) -> None:
-    """Test options with no model-specific settings."""
+    """Test the options form."""
+    hass.config_entries.async_update_entry(mock_config_entry, options=current_options)
     options = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
-    assert options["type"] == FlowResultType.FORM
     assert options["step_id"] == "init"
 
-    # Configure initial step
-    options = await hass.config_entries.options.async_configure(
-        options["flow_id"],
-        {
-            CONF_RECOMMENDED: False,
-            CONF_PROMPT: "Speak like a pirate",
-        },
-    )
-    assert options["type"] == FlowResultType.FORM
-    assert options["step_id"] == "advanced"
+    for step_options in new_options:
+        assert options["type"] == FlowResultType.FORM
 
-    # Configure advanced step
-    options = await hass.config_entries.options.async_configure(
-        options["flow_id"],
-        {
-            CONF_TEMPERATURE: 1.0,
-            CONF_CHAT_MODEL: "gpt-4.5-preview",
-            CONF_TOP_P: RECOMMENDED_TOP_P,
-            CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
-        },
-    )
-    await hass.async_block_till_done()
+        # Test that current options are showed as suggested values:
+        for key in options["data_schema"].schema:
+            if (
+                isinstance(key.description, dict)
+                and "suggested_value" in key.description
+                and str(key) in current_options
+            ):
+                assert current_options[str(key)] == key.description["suggested_value"]
+
+        # Configure current step
+        options = await hass.config_entries.options.async_configure(
+            options["flow_id"],
+            step_options,
+        )
+        await hass.async_block_till_done()
 
     assert options["type"] is FlowResultType.CREATE_ENTRY
-    assert options["data"] == {
-        CONF_RECOMMENDED: False,
-        CONF_PROMPT: "Speak like a pirate",
-        CONF_TEMPERATURE: 1.0,
-        CONF_CHAT_MODEL: "gpt-4.5-preview",
-        CONF_TOP_P: RECOMMENDED_TOP_P,
-        CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
-    }
-
-
-async def test_options_reasoning_model(
-    hass: HomeAssistant, mock_config_entry, mock_init_component
-) -> None:
-    """Test options for reasoning models."""
-    options = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
-    assert options["type"] == FlowResultType.FORM
-    assert options["step_id"] == "init"
-
-    # Configure initial step
-    options = await hass.config_entries.options.async_configure(
-        options["flow_id"],
-        {
-            CONF_RECOMMENDED: False,
-            CONF_PROMPT: "Speak like a pirate",
-        },
-    )
-    assert options["type"] == FlowResultType.FORM
-    assert options["step_id"] == "advanced"
-
-    # Configure advanced step
-    options = await hass.config_entries.options.async_configure(
-        options["flow_id"],
-        {
-            CONF_TEMPERATURE: 1.0,
-            CONF_CHAT_MODEL: "o1-pro",
-            CONF_TOP_P: RECOMMENDED_TOP_P,
-            CONF_MAX_TOKENS: 10000,
-        },
-    )
-    assert options["type"] == FlowResultType.FORM
-    assert options["step_id"] == "model"
-
-    # Configure model step
-    options = await hass.config_entries.options.async_configure(
-        options["flow_id"],
-        {
-            CONF_REASONING_EFFORT: "high",
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert options["type"] is FlowResultType.CREATE_ENTRY
-    assert options["data"] == {
-        CONF_RECOMMENDED: False,
-        CONF_PROMPT: "Speak like a pirate",
-        CONF_TEMPERATURE: 1.0,
-        CONF_CHAT_MODEL: "o1-pro",
-        CONF_TOP_P: RECOMMENDED_TOP_P,
-        CONF_MAX_TOKENS: 10000,
-        CONF_REASONING_EFFORT: "high",
-    }
-
-
-async def test_options_web_search_no_user_location(
-    hass: HomeAssistant, mock_config_entry, mock_init_component
-) -> None:
-    """Test options for web search without user location."""
-    options = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
-    assert options["type"] == FlowResultType.FORM
-    assert options["step_id"] == "init"
-
-    # Configure initial step
-    options = await hass.config_entries.options.async_configure(
-        options["flow_id"],
-        {
-            CONF_RECOMMENDED: False,
-            CONF_PROMPT: "Speak like a pirate",
-        },
-    )
-    assert options["type"] == FlowResultType.FORM
-    assert options["step_id"] == "advanced"
-
-    # Configure advanced step
-    options = await hass.config_entries.options.async_configure(
-        options["flow_id"],
-        {
-            CONF_TEMPERATURE: 1.0,
-            CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
-            CONF_TOP_P: RECOMMENDED_TOP_P,
-            CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
-        },
-    )
-    assert options["type"] == FlowResultType.FORM
-    assert options["step_id"] == "model"
-
-    # Configure model step
-    options = await hass.config_entries.options.async_configure(
-        options["flow_id"],
-        {
-            CONF_WEB_SEARCH: True,
-            CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
-            CONF_WEB_SEARCH_USER_LOCATION: False,
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert options["type"] is FlowResultType.CREATE_ENTRY
-    assert options["data"] == {
-        CONF_RECOMMENDED: False,
-        CONF_PROMPT: "Speak like a pirate",
-        CONF_TEMPERATURE: 1.0,
-        CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
-        CONF_TOP_P: RECOMMENDED_TOP_P,
-        CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
-        CONF_WEB_SEARCH: True,
-        CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
-        CONF_WEB_SEARCH_USER_LOCATION: False,
-    }
+    assert options["data"] == expected_options
 
 
 async def test_options_web_search_user_location(
@@ -421,354 +626,4 @@ async def test_options_web_search_user_location(
         CONF_WEB_SEARCH_REGION: "California",
         CONF_WEB_SEARCH_COUNTRY: "US",
         CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
-    }
-
-
-async def test_options_retained(
-    hass: HomeAssistant, mock_config_entry, mock_init_component
-) -> None:
-    """Test that current options are showed as suggested values."""
-    # Case 1: web search
-    hass.config_entries.async_update_entry(
-        mock_config_entry,
-        options={
-            CONF_RECOMMENDED: False,
-            CONF_PROMPT: "Speak like super Mario",
-            CONF_TEMPERATURE: 0.8,
-            CONF_CHAT_MODEL: "gpt-4o",
-            CONF_TOP_P: 0.9,
-            CONF_MAX_TOKENS: 1000,
-            CONF_WEB_SEARCH: True,
-            CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
-            CONF_WEB_SEARCH_USER_LOCATION: True,
-            CONF_WEB_SEARCH_CITY: "San Francisco",
-            CONF_WEB_SEARCH_REGION: "California",
-            CONF_WEB_SEARCH_COUNTRY: "US",
-            CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
-        },
-    )
-
-    options = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
-    assert options["type"] == FlowResultType.FORM
-    assert options["step_id"] == "init"
-    assert {
-        str(key): key.description["suggested_value"]
-        for key in options["data_schema"].schema
-        if "suggested_value" in key.description
-    } == {
-        CONF_PROMPT: "Speak like super Mario",
-        CONF_RECOMMENDED: False,
-    }
-
-    options = await hass.config_entries.options.async_configure(
-        options["flow_id"],
-        {
-            CONF_RECOMMENDED: False,
-            CONF_PROMPT: "Speak like super Mario",
-        },
-    )
-    assert options["type"] == FlowResultType.FORM
-    assert options["step_id"] == "advanced"
-    assert {
-        str(key): key.description["suggested_value"]
-        for key in options["data_schema"].schema
-        if "suggested_value" in key.description
-    } == {
-        CONF_CHAT_MODEL: "gpt-4o",
-        CONF_MAX_TOKENS: 1000,
-        CONF_TOP_P: 0.9,
-        CONF_TEMPERATURE: 0.8,
-    }
-
-    options = await hass.config_entries.options.async_configure(
-        options["flow_id"],
-        {
-            CONF_TEMPERATURE: 0.8,
-            CONF_CHAT_MODEL: "gpt-4o",
-            CONF_TOP_P: 0.9,
-            CONF_MAX_TOKENS: 1000,
-        },
-    )
-    assert options["type"] == FlowResultType.FORM
-    assert options["step_id"] == "model"
-    assert {
-        str(key): key.description["suggested_value"]
-        for key in options["data_schema"].schema
-        if "suggested_value" in key.description
-    } == {
-        CONF_WEB_SEARCH: True,
-        CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
-        CONF_WEB_SEARCH_USER_LOCATION: True,
-    }
-
-    # Case 2: reasoning model
-    hass.config_entries.async_update_entry(
-        mock_config_entry,
-        options={
-            CONF_RECOMMENDED: False,
-            CONF_PROMPT: "Speak like a pro",
-            CONF_TEMPERATURE: 0.8,
-            CONF_CHAT_MODEL: "o1-pro",
-            CONF_TOP_P: 0.9,
-            CONF_MAX_TOKENS: 1000,
-            CONF_REASONING_EFFORT: "high",
-        },
-    )
-
-    options = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
-    assert options["type"] == FlowResultType.FORM
-    assert options["step_id"] == "init"
-    assert {
-        str(key): key.description["suggested_value"]
-        for key in options["data_schema"].schema
-        if "suggested_value" in key.description
-    } == {
-        CONF_PROMPT: "Speak like a pro",
-        CONF_RECOMMENDED: False,
-    }
-
-    options = await hass.config_entries.options.async_configure(
-        options["flow_id"],
-        {
-            CONF_RECOMMENDED: False,
-            CONF_PROMPT: "Speak like a pro",
-        },
-    )
-    assert options["type"] == FlowResultType.FORM
-    assert options["step_id"] == "advanced"
-    assert {
-        str(key): key.description["suggested_value"]
-        for key in options["data_schema"].schema
-        if "suggested_value" in key.description
-    } == {
-        CONF_CHAT_MODEL: "o1-pro",
-        CONF_MAX_TOKENS: 1000,
-        CONF_TOP_P: 0.9,
-        CONF_TEMPERATURE: 0.8,
-    }
-
-    options = await hass.config_entries.options.async_configure(
-        options["flow_id"],
-        {
-            CONF_TEMPERATURE: 0.8,
-            CONF_CHAT_MODEL: "o1-pro",
-            CONF_TOP_P: 0.9,
-            CONF_MAX_TOKENS: 1000,
-        },
-    )
-    assert options["type"] == FlowResultType.FORM
-    assert options["step_id"] == "model"
-    assert {
-        str(key): key.description["suggested_value"]
-        for key in options["data_schema"].schema
-        if "suggested_value" in key.description
-    } == {CONF_REASONING_EFFORT: "high"}
-
-
-async def test_options_removed(
-    hass: HomeAssistant, mock_config_entry, mock_init_component
-) -> None:
-    """Test that old options are removed after reconfiguration."""
-    # Case 1: web search to recommended
-    hass.config_entries.async_update_entry(
-        mock_config_entry,
-        options={
-            CONF_RECOMMENDED: False,
-            CONF_PROMPT: "Speak like a pirate",
-            CONF_LLM_HASS_API: ["assist"],
-            CONF_TEMPERATURE: 0.8,
-            CONF_CHAT_MODEL: "gpt-4o",
-            CONF_TOP_P: 0.9,
-            CONF_MAX_TOKENS: 1000,
-            CONF_WEB_SEARCH: True,
-            CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
-            CONF_WEB_SEARCH_USER_LOCATION: True,
-            CONF_WEB_SEARCH_CITY: "San Francisco",
-            CONF_WEB_SEARCH_REGION: "California",
-            CONF_WEB_SEARCH_COUNTRY: "US",
-            CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
-        },
-    )
-
-    options = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
-    assert options["type"] == FlowResultType.FORM
-    assert options["step_id"] == "init"
-
-    options = await hass.config_entries.options.async_configure(
-        options["flow_id"],
-        {
-            CONF_RECOMMENDED: True,
-            CONF_PROMPT: "Speak like a pirate",
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert options["type"] is FlowResultType.CREATE_ENTRY
-    assert options["data"] == {
-        CONF_RECOMMENDED: True,
-        CONF_PROMPT: "Speak like a pirate",
-    }
-
-    # Case 2: reasoning to recommended
-    hass.config_entries.async_update_entry(
-        mock_config_entry,
-        options={
-            CONF_RECOMMENDED: False,
-            CONF_PROMPT: "Speak like a pirate",
-            CONF_LLM_HASS_API: ["assist"],
-            CONF_TEMPERATURE: 0.8,
-            CONF_CHAT_MODEL: "gpt-4o",
-            CONF_TOP_P: 0.9,
-            CONF_MAX_TOKENS: 1000,
-            CONF_REASONING_EFFORT: "high",
-        },
-    )
-
-    options = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
-    assert options["type"] == FlowResultType.FORM
-    assert options["step_id"] == "init"
-
-    options = await hass.config_entries.options.async_configure(
-        options["flow_id"],
-        {
-            CONF_RECOMMENDED: True,
-            CONF_PROMPT: "Speak like a pirate",
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert options["type"] is FlowResultType.CREATE_ENTRY
-    assert options["data"] == {
-        CONF_RECOMMENDED: True,
-        CONF_PROMPT: "Speak like a pirate",
-    }
-
-    # Case 3: web search to reasoning
-    hass.config_entries.async_update_entry(
-        mock_config_entry,
-        options={
-            CONF_RECOMMENDED: False,
-            CONF_PROMPT: "Speak like a pirate",
-            CONF_LLM_HASS_API: ["assist"],
-            CONF_TEMPERATURE: 0.8,
-            CONF_CHAT_MODEL: "gpt-4o",
-            CONF_TOP_P: 0.9,
-            CONF_MAX_TOKENS: 1000,
-            CONF_WEB_SEARCH: True,
-            CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
-            CONF_WEB_SEARCH_USER_LOCATION: True,
-            CONF_WEB_SEARCH_CITY: "San Francisco",
-            CONF_WEB_SEARCH_REGION: "California",
-            CONF_WEB_SEARCH_COUNTRY: "US",
-            CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
-        },
-    )
-
-    options = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
-    assert options["type"] == FlowResultType.FORM
-    assert options["step_id"] == "init"
-
-    options = await hass.config_entries.options.async_configure(
-        options["flow_id"],
-        {
-            CONF_RECOMMENDED: False,
-            CONF_PROMPT: "Speak like a pirate",
-        },
-    )
-    assert options["type"] == FlowResultType.FORM
-    assert options["step_id"] == "advanced"
-
-    options = await hass.config_entries.options.async_configure(
-        options["flow_id"],
-        {
-            CONF_TEMPERATURE: 0.8,
-            CONF_CHAT_MODEL: "o3-mini",
-            CONF_TOP_P: 0.9,
-            CONF_MAX_TOKENS: 1000,
-        },
-    )
-    assert options["type"] == FlowResultType.FORM
-    assert options["step_id"] == "model"
-
-    options = await hass.config_entries.options.async_configure(
-        options["flow_id"],
-        {
-            CONF_REASONING_EFFORT: "low",
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert options["type"] is FlowResultType.CREATE_ENTRY
-    assert options["data"] == {
-        CONF_RECOMMENDED: False,
-        CONF_PROMPT: "Speak like a pirate",
-        CONF_TEMPERATURE: 0.8,
-        CONF_CHAT_MODEL: "o3-mini",
-        CONF_TOP_P: 0.9,
-        CONF_MAX_TOKENS: 1000,
-        CONF_REASONING_EFFORT: "low",
-    }
-
-    # Case 4: reasoning to web search
-    hass.config_entries.async_update_entry(
-        mock_config_entry,
-        options={
-            CONF_RECOMMENDED: False,
-            CONF_PROMPT: "Speak like a pirate",
-            CONF_LLM_HASS_API: ["assist"],
-            CONF_TEMPERATURE: 0.8,
-            CONF_CHAT_MODEL: "o3-mini",
-            CONF_TOP_P: 0.9,
-            CONF_MAX_TOKENS: 1000,
-            CONF_REASONING_EFFORT: "low",
-        },
-    )
-
-    options = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
-    assert options["type"] == FlowResultType.FORM
-    assert options["step_id"] == "init"
-
-    options = await hass.config_entries.options.async_configure(
-        options["flow_id"],
-        {
-            CONF_RECOMMENDED: False,
-            CONF_PROMPT: "Speak like a pirate",
-        },
-    )
-    assert options["type"] == FlowResultType.FORM
-    assert options["step_id"] == "advanced"
-
-    options = await hass.config_entries.options.async_configure(
-        options["flow_id"],
-        {
-            CONF_TEMPERATURE: 0.8,
-            CONF_CHAT_MODEL: "gpt-4o",
-            CONF_TOP_P: 0.9,
-            CONF_MAX_TOKENS: 1000,
-        },
-    )
-    assert options["type"] == FlowResultType.FORM
-    assert options["step_id"] == "model"
-
-    options = await hass.config_entries.options.async_configure(
-        options["flow_id"],
-        {
-            CONF_WEB_SEARCH: True,
-            CONF_WEB_SEARCH_CONTEXT_SIZE: "high",
-            CONF_WEB_SEARCH_USER_LOCATION: False,
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert options["type"] is FlowResultType.CREATE_ENTRY
-    assert options["data"] == {
-        CONF_RECOMMENDED: False,
-        CONF_PROMPT: "Speak like a pirate",
-        CONF_TEMPERATURE: 0.8,
-        CONF_CHAT_MODEL: "gpt-4o",
-        CONF_TOP_P: 0.9,
-        CONF_MAX_TOKENS: 1000,
-        CONF_WEB_SEARCH: True,
-        CONF_WEB_SEARCH_CONTEXT_SIZE: "high",
-        CONF_WEB_SEARCH_USER_LOCATION: False,
     }

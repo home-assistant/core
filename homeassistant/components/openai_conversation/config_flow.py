@@ -313,10 +313,14 @@ class OpenAIOptionsFlow(OptionsFlow):
             return self.async_create_entry(title="", data=options)
 
         if user_input is not None:
-            if user_input.get(CONF_WEB_SEARCH) and user_input.get(
-                CONF_WEB_SEARCH_USER_LOCATION
-            ):
-                user_input.update(await self._get_location_data())
+            if user_input.get(CONF_WEB_SEARCH):
+                if user_input.get(CONF_WEB_SEARCH_USER_LOCATION):
+                    user_input.update(await self._get_location_data())
+                else:
+                    options.pop(CONF_WEB_SEARCH_CITY, None)
+                    options.pop(CONF_WEB_SEARCH_REGION, None)
+                    options.pop(CONF_WEB_SEARCH_COUNTRY, None)
+                    options.pop(CONF_WEB_SEARCH_TIMEZONE, None)
 
             options.update(user_input)
             return self.async_create_entry(title="", data=options)
