@@ -958,33 +958,35 @@ async def test_debug_logging(
         [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
         Awaitable[MockConfigEntry],
     ],
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test enabling and disabling debug logging."""
-    assert await async_setup_component(hass, "logger", {"logger": {}})
-    await mock_generic_device_entry(
-        mock_client=mock_client,
-        entity_info=[],
-        user_service=[],
-        states=[],
-    )
-    await hass.services.async_call(
-        "logger",
-        "set_level",
-        {"homeassistant.components.esphome": "DEBUG"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-    mock_client.set_debug.assert_has_calls([call(True)])
+    with caplog.at_level(logging.NOTSET, "homeassistant.components.esphome"):
+        assert await async_setup_component(hass, "logger", {"logger": {}})
+        await mock_generic_device_entry(
+            mock_client=mock_client,
+            entity_info=[],
+            user_service=[],
+            states=[],
+        )
+        await hass.services.async_call(
+            "logger",
+            "set_level",
+            {"homeassistant.components.esphome": "DEBUG"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        mock_client.set_debug.assert_has_calls([call(True)])
 
-    mock_client.reset_mock()
-    await hass.services.async_call(
-        "logger",
-        "set_level",
-        {"homeassistant.components.esphome": "WARNING"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-    mock_client.set_debug.assert_has_calls([call(False)])
+        mock_client.reset_mock()
+        await hass.services.async_call(
+            "logger",
+            "set_level",
+            {"homeassistant.components.esphome": "WARNING"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        mock_client.set_debug.assert_has_calls([call(False)])
 
 
 async def test_esphome_device_with_dash_in_name_user_services(
