@@ -109,7 +109,7 @@
       "message": "No data received from {host}"
     },
     "process_not_found": {
-      "message": "Could not find process with id {id}."
+      "message": "Could not find process with ID {id}."
     },
     "timeout": {
       "message": "A timeout occurred for {title} ({host})"
@@ -120,7 +120,7 @@
   },
   "issues": {
     "unsupported_version": {
-      "title": "System Bridge Upgrade Required",
+      "title": "System Bridge upgrade required",
       "description": "Your version of System Bridge for host {host} is not supported.\n\nPlease upgrade to the latest version."
     }
   },

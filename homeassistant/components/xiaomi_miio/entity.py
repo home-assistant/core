@@ -185,7 +185,7 @@ class XiaomiGatewayDevice(CoordinatorEntity, Entity):
         )
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return if entity is available."""
         if self.coordinator.data is None:
             return False

@@ -315,11 +315,11 @@
           "preset_mode": {
             "name": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::name%]",
             "state": {
-              "auto": "Auto",
+              "auto": "[%key:common::state::auto%]",
+              "building_protection": "Building protection",
               "comfort": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::comfort%]",
-              "standby": "Standby",
               "economy": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::eco%]",
-              "building_protection": "Building protection"
+              "standby": "[%key:common::state::standby%]"
             }
           }
         }
@@ -397,7 +397,7 @@
         },
         "response": {
           "name": "Send as Response",
-          "description": "If set to `True`, the telegram will be sent as a `GroupValueResponse` instead of a `GroupValueWrite`."
+          "description": "Whether the telegram should be sent as a `GroupValueResponse` instead of a `GroupValueWrite`."
         }
       }
     },
@@ -425,7 +425,7 @@
         },
         "remove": {
           "name": "Remove event registration",
-          "description": "If `True` the group address(es) will be removed."
+          "description": "Whether the group address(es) will be removed."
         }
       }
     },
@@ -455,7 +455,7 @@
         },
         "remove": {
           "name": "Remove exposure",
-          "description": "If `True` the exposure will be removed. Only `address` is required for removal."
+          "description": "Whether the exposure should be removed. Only the 'Address' field is required for removal."
         }
       }
     },

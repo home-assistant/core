@@ -90,6 +90,9 @@
       'ha_id': 'BOSCH-HCS000000-D00000000004',
       'name': 'Hood',
       'programs': list([
+        'Cooking.Common.Program.Hood.Automatic',
+        'Cooking.Common.Program.Hood.Venting',
+        'Cooking.Common.Program.Hood.DelayedShutOff',
       ]),
       'settings': dict({
         'BSH.Common.Setting.AmbientLightBrightness': 70,
@@ -98,8 +101,8 @@
         'BSH.Common.Setting.AmbientLightEnabled': True,
         'Cooking.Common.Setting.Lighting': True,
         'Cooking.Common.Setting.LightingBrightness': 70,
+        'Cooking.Hood.Setting.ColorTemperature': 'Cooking.Hood.EnumType.ColorTemperature.warmToNeutral',
         'Cooking.Hood.Setting.ColorTemperaturePercent': 70,
-        'unknown': 'Cooking.Hood.EnumType.ColorTemperature.warmToNeutral',
       }),
       'status': dict({
         'BSH.Common.Status.DoorState': 'BSH.Common.EnumType.DoorState.Closed',
@@ -272,6 +275,7 @@
       'settings': dict({
         'BSH.Common.Setting.ChildLock': False,
         'BSH.Common.Setting.PowerState': 'BSH.Common.EnumType.PowerState.On',
+        'LaundryCare.Washer.Setting.IDos2BaseLevel': 0,
       }),
       'status': dict({
         'BSH.Common.Status.DoorState': 'BSH.Common.EnumType.DoorState.Closed',

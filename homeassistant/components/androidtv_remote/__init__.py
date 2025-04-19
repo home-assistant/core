@@ -35,16 +35,12 @@ async def async_setup_entry(
 
     @callback
     def is_available_updated(is_available: bool) -> None:
-        if is_available:
-            _LOGGER.info(
-                "Reconnected to %s at %s", entry.data[CONF_NAME], entry.data[CONF_HOST]
-            )
-        else:
-            _LOGGER.warning(
-                "Disconnected from %s at %s",
-                entry.data[CONF_NAME],
-                entry.data[CONF_HOST],
-            )
+        _LOGGER.info(
+            "%s %s at %s",
+            "Reconnected to" if is_available else "Disconnected from",
+            entry.data[CONF_NAME],
+            entry.data[CONF_HOST],
+        )
 
     api.add_is_available_updated_callback(is_available_updated)
 

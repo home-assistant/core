@@ -153,8 +153,6 @@ ALLOWED_USED_COMPONENTS = {
 }
 
 IGNORE_VIOLATIONS = {
-    # Has same requirement, gets defaults.
-    ("sql", "recorder"),
     # Sharing a base class
     ("lutron_caseta", "lutron"),
     ("ffmpeg_noise", "ffmpeg_motion"),

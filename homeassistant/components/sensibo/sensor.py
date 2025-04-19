@@ -26,7 +26,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import SensiboConfigEntry
@@ -240,7 +240,7 @@ DESCRIPTION_BY_MODELS = {
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SensiboConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Sensibo sensor platform."""
 
@@ -253,9 +253,8 @@ async def async_setup_entry(
 
         entities: list[SensiboMotionSensor | SensiboDeviceSensor] = []
         nonlocal added_devices
-        new_devices, remove_devices, added_devices = coordinator.get_devices(
-            added_devices
-        )
+        new_devices, _, new_added_devices = coordinator.get_devices(added_devices)
+        added_devices = new_added_devices
 
         if new_devices:
             entities.extend(

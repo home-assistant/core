@@ -6,6 +6,7 @@ from contextlib import suppress
 from dataclasses import dataclass
 import html
 import re
+from typing import TYPE_CHECKING
 
 import voluptuous as vol
 import yarl
@@ -195,8 +196,8 @@ async def fetch_blueprint_from_github_gist_url(
     )
     gist = await resp.json()
 
-    blueprint = None
-    filename = None
+    blueprint: Blueprint | None = None
+    filename: str | None = None
     content: str
 
     for filename, info in gist["files"].items():
@@ -218,6 +219,8 @@ async def fetch_blueprint_from_github_gist_url(
             "No valid blueprint found in the gist. The blueprint file needs to end with"
             " '.yaml'"
         )
+    if TYPE_CHECKING:
+        assert isinstance(filename, str)
 
     return ImportedBlueprint(
         f"{gist['owner']['login']}/{filename[:-5]}", content, blueprint

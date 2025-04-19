@@ -9,7 +9,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import RainMachineConfigEntry
 from .const import DATA_PROVISION_SETTINGS, DATA_RESTRICTIONS_CURRENT
@@ -94,7 +94,7 @@ BINARY_SENSOR_DESCRIPTIONS = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: RainMachineConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up RainMachine binary sensors based on a config entry."""
     data = entry.runtime_data

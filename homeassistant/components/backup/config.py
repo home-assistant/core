@@ -12,15 +12,18 @@ from typing import TYPE_CHECKING, Self, TypedDict
 from cronsim import CronSim
 
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.event import async_call_later, async_track_point_in_time
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util import dt as dt_util
 
-from .const import LOGGER
+from .const import DOMAIN, LOGGER
 from .models import BackupManagerError, Folder
 
 if TYPE_CHECKING:
     from .manager import BackupManager, ManagerBackup
+
+AUTOMATIC_BACKUP_AGENTS_UNAVAILABLE_ISSUE_ID = "automatic_backup_agents_unavailable"
 
 CRON_PATTERN_DAILY = "{m} {h} * * *"
 CRON_PATTERN_WEEKLY = "{m} {h} * * {d}"
@@ -39,6 +42,7 @@ class StoredBackupConfig(TypedDict):
     """Represent the stored backup config."""
 
     agents: dict[str, StoredAgentConfig]
+    automatic_backups_configured: bool
     create_backup: StoredCreateBackupConfig
     last_attempted_automatic_backup: str | None
     last_completed_automatic_backup: str | None
@@ -51,6 +55,7 @@ class BackupConfigData:
     """Represent loaded backup config data."""
 
     agents: dict[str, AgentConfig]
+    automatic_backups_configured: bool  # only used by frontend
     create_backup: CreateBackupConfig
     last_attempted_automatic_backup: datetime | None = None
     last_completed_automatic_backup: datetime | None = None
@@ -88,6 +93,7 @@ class BackupConfigData:
                 agent_id: AgentConfig(protected=agent_data["protected"])
                 for agent_id, agent_data in data["agents"].items()
             },
+            automatic_backups_configured=data["automatic_backups_configured"],
             create_backup=CreateBackupConfig(
                 agent_ids=data["create_backup"]["agent_ids"],
                 include_addons=data["create_backup"]["include_addons"],
@@ -127,6 +133,7 @@ class BackupConfigData:
             agents={
                 agent_id: agent.to_dict() for agent_id, agent in self.agents.items()
             },
+            automatic_backups_configured=self.automatic_backups_configured,
             create_backup=self.create_backup.to_dict(),
             last_attempted_automatic_backup=last_attempted,
             last_completed_automatic_backup=last_completed,
@@ -142,10 +149,12 @@ class BackupConfig:
         """Initialize backup config."""
         self.data = BackupConfigData(
             agents={},
+            automatic_backups_configured=False,
             create_backup=CreateBackupConfig(),
             retention=RetentionConfig(),
             schedule=BackupSchedule(),
         )
+        self._hass = hass
         self._manager = manager
 
     def load(self, stored_config: StoredBackupConfig) -> None:
@@ -154,10 +163,12 @@ class BackupConfig:
         self.data.retention.apply(self._manager)
         self.data.schedule.apply(self._manager)
 
-    async def update(
+    @callback
+    def update(
         self,
         *,
         agents: dict[str, AgentParametersDict] | UndefinedType = UNDEFINED,
+        automatic_backups_configured: bool | UndefinedType = UNDEFINED,
         create_backup: CreateBackupParametersDict | UndefinedType = UNDEFINED,
         retention: RetentionParametersDict | UndefinedType = UNDEFINED,
         schedule: ScheduleParametersDict | UndefinedType = UNDEFINED,
@@ -171,8 +182,12 @@ class BackupConfig:
                     self.data.agents[agent_id] = replace(
                         self.data.agents[agent_id], **agent_config
                     )
+        if automatic_backups_configured is not UNDEFINED:
+            self.data.automatic_backups_configured = automatic_backups_configured
         if create_backup is not UNDEFINED:
             self.data.create_backup = replace(self.data.create_backup, **create_backup)
+            if "agent_ids" in create_backup:
+                check_unavailable_agents(self._hass, self._manager)
         if retention is not UNDEFINED:
             new_retention = RetentionConfig(**retention)
             if new_retention != self.data.retention:
@@ -553,3 +568,46 @@ async def delete_backups_exceeding_configured_count(manager: BackupManager) -> N
     await manager.async_delete_filtered_backups(
         include_filter=_automatic_backups_filter, delete_filter=_delete_filter
     )
+
+
+@callback
+def check_unavailable_agents(hass: HomeAssistant, manager: BackupManager) -> None:
+    """Check for unavailable agents."""
+    if missing_agent_ids := set(manager.config.data.create_backup.agent_ids) - set(
+        manager.backup_agents
+    ):
+        LOGGER.debug(
+            "Agents %s are configured for automatic backup but are unavailable",
+            missing_agent_ids,
+        )
+
+    # Remove issues for unavailable agents that are not unavailable anymore.
+    issue_registry = ir.async_get(hass)
+    existing_missing_agent_issue_ids = {
+        issue_id
+        for domain, issue_id in issue_registry.issues
+        if domain == DOMAIN
+        and issue_id.startswith(AUTOMATIC_BACKUP_AGENTS_UNAVAILABLE_ISSUE_ID)
+    }
+    current_missing_agent_issue_ids = {
+        f"{AUTOMATIC_BACKUP_AGENTS_UNAVAILABLE_ISSUE_ID}_{agent_id}": agent_id
+        for agent_id in missing_agent_ids
+    }
+    for issue_id in existing_missing_agent_issue_ids - set(
+        current_missing_agent_issue_ids
+    ):
+        ir.async_delete_issue(hass, DOMAIN, issue_id)
+    for issue_id, agent_id in current_missing_agent_issue_ids.items():
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            issue_id,
+            is_fixable=False,
+            learn_more_url="homeassistant://config/backup",
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="automatic_backup_agents_unavailable",
+            translation_placeholders={
+                "agent_id": agent_id,
+                "backup_settings": "/config/backup/settings",
+            },
+        )

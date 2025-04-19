@@ -8,6 +8,9 @@ from typing import Any
 
 from pyfreedompro import get_list, get_states
 
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_API_KEY
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -15,18 +18,27 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+type FreedomproConfigEntry = ConfigEntry[FreedomproDataUpdateCoordinator]
+
 
 class FreedomproDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
     """Class to manage fetching Freedompro data API."""
 
-    def __init__(self, hass, api_key):
+    def __init__(self, hass: HomeAssistant, entry: FreedomproConfigEntry) -> None:
         """Initialize."""
+
         self._hass = hass
-        self._api_key = api_key
+        self._api_key = entry.data[CONF_API_KEY]
         self._devices: list[dict[str, Any]] | None = None
 
         update_interval = timedelta(minutes=1)
-        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=update_interval)
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=entry,
+            name=DOMAIN,
+            update_interval=update_interval,
+        )
 
     async def _async_update_data(self):
         if self._devices is None:

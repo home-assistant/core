@@ -62,6 +62,7 @@ def get_data_update_coordinator(
 
         config_entry_data[DATA_UPDATE_COORDINATOR] = DeviceDataUpdateCoordinator(
             hass,
+            config_entry,
             _LOGGER,
             api,
             # Name of the data. For logging purposes.

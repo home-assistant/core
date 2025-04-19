@@ -1,8 +1,10 @@
 """Tests for the Elmax config flow."""
 
+from ipaddress import IPv4Address, IPv6Address
 from unittest.mock import patch
 
 from elmax_api.exceptions import ElmaxBadLoginError, ElmaxBadPinError, ElmaxNetworkError
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.elmax.const import (
@@ -28,6 +30,7 @@ from . import (
     MOCK_DIRECT_CERT,
     MOCK_DIRECT_HOST,
     MOCK_DIRECT_HOST_CHANGED,
+    MOCK_DIRECT_HOST_V6,
     MOCK_DIRECT_PORT,
     MOCK_DIRECT_SSL,
     MOCK_PANEL_ID,
@@ -37,12 +40,27 @@ from . import (
     MOCK_USERNAME,
     MOCK_WRONG_PANEL_PIN,
 )
+from .conftest import MOCK_DIRECT_BASE_URI_V6
 
 from tests.common import MockConfigEntry
 
 MOCK_ZEROCONF_DISCOVERY_INFO = ZeroconfServiceInfo(
-    ip_address=MOCK_DIRECT_HOST,
-    ip_addresses=[MOCK_DIRECT_HOST],
+    ip_address=IPv4Address(address=MOCK_DIRECT_HOST),
+    ip_addresses=[IPv4Address(address=MOCK_DIRECT_HOST)],
+    hostname="VideoBox.local",
+    name="VideoBox",
+    port=443,
+    properties={
+        "idl": MOCK_PANEL_ID,
+        "idr": MOCK_PANEL_ID,
+        "v1": "PHANTOM64PRO_GSM 11.9.844",
+        "v2": "4.9.13",
+    },
+    type="_elmax-ssl._tcp",
+)
+MOCK_ZEROCONF_DISCOVERY_INFO_V6 = ZeroconfServiceInfo(
+    ip_address=IPv6Address(address=MOCK_DIRECT_HOST_V6),
+    ip_addresses=[IPv6Address(address=MOCK_DIRECT_HOST_V6)],
     hostname="VideoBox.local",
     name="VideoBox",
     port=443,
@@ -55,8 +73,8 @@ MOCK_ZEROCONF_DISCOVERY_INFO = ZeroconfServiceInfo(
     type="_elmax-ssl._tcp",
 )
 MOCK_ZEROCONF_DISCOVERY_CHANGED_INFO = ZeroconfServiceInfo(
-    ip_address=MOCK_DIRECT_HOST_CHANGED,
-    ip_addresses=[MOCK_DIRECT_HOST_CHANGED],
+    ip_address=IPv4Address(address=MOCK_DIRECT_HOST_CHANGED),
+    ip_addresses=[IPv4Address(address=MOCK_DIRECT_HOST_CHANGED)],
     hostname="VideoBox.local",
     name="VideoBox",
     port=443,
@@ -69,8 +87,8 @@ MOCK_ZEROCONF_DISCOVERY_CHANGED_INFO = ZeroconfServiceInfo(
     type="_elmax-ssl._tcp",
 )
 MOCK_ZEROCONF_DISCOVERY_INFO_NOT_SUPPORTED = ZeroconfServiceInfo(
-    ip_address=MOCK_DIRECT_HOST,
-    ip_addresses=[MOCK_DIRECT_HOST],
+    ip_address=IPv4Address(MOCK_DIRECT_HOST),
+    ip_addresses=[IPv4Address(MOCK_DIRECT_HOST)],
     hostname="VideoBox.local",
     name="VideoBox",
     port=443,
@@ -194,6 +212,18 @@ async def test_zeroconf_discovery(hass: HomeAssistant) -> None:
     assert result["errors"] is None
 
 
+async def test_zeroconf_discovery_ipv6(hass: HomeAssistant) -> None:
+    """Test discovery of Elmax local api panel."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=MOCK_ZEROCONF_DISCOVERY_INFO_V6,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "zeroconf_setup"
+    assert result["errors"] is None
+
+
 async def test_zeroconf_setup_show_form(hass: HomeAssistant) -> None:
     """Test discovery shows a form when activated."""
     result = await hass.config_entries.flow.async_init(
@@ -216,6 +246,27 @@ async def test_zeroconf_setup(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=MOCK_ZEROCONF_DISCOVERY_INFO,
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
+            CONF_ELMAX_MODE_DIRECT_SSL: MOCK_DIRECT_SSL,
+        },
+    )
+
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.parametrize("base_uri", [MOCK_DIRECT_BASE_URI_V6])
+async def test_zeroconf_ipv6_setup(hass: HomeAssistant) -> None:
+    """Test the successful creation of config entry via discovery flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=MOCK_ZEROCONF_DISCOVERY_INFO_V6,
     )
 
     result = await hass.config_entries.flow.async_configure(

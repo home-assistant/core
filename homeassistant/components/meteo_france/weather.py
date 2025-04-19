@@ -28,7 +28,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -55,7 +55,9 @@ def format_condition(condition: str):
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Meteo-France weather platform."""
     coordinator: DataUpdateCoordinator[MeteoFranceForecast] = hass.data[DOMAIN][
@@ -158,6 +160,11 @@ class MeteoFranceWeather(
     def native_wind_speed(self):
         """Return the wind speed."""
         return self.coordinator.data.current_forecast["wind"]["speed"]
+
+    @property
+    def native_wind_gust_speed(self):
+        """Return the wind gust speed."""
+        return self.coordinator.data.current_forecast["wind"].get("gust")
 
     @property
     def wind_bearing(self):

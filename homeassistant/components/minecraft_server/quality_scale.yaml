@@ -6,22 +6,15 @@ rules:
   appropriate-polling: done
   brands: done
   common-modules: done
-  config-flow:
-    status: todo
-    comment: Check removal and replacement of name in config flow with the title (server address).
-  config-flow-test-coverage:
-    status: todo
-    comment: |
-      Merge test_show_config_form with full flow test.
-      Move full flow test to the top of all tests.
-      All test cases should end in either CREATE_ENTRY or ABORT.
+  config-flow: done
+  config-flow-test-coverage: done
   dependency-transparency: done
   docs-actions:
     status: exempt
     comment: Integration doesn't provide any service actions.
   docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions: todo
+  docs-removal-instructions: done
   entity-event-setup:
     status: done
     comment: Handled by coordinator.
@@ -29,7 +22,7 @@ rules:
     status: done
     comment: Using confid entry ID as the dependency mcstatus doesn't provide a unique information.
   has-entity-name: done
-  runtime-data: todo
+  runtime-data: done
   test-before-configure: done
   test-before-setup:
     status: done
@@ -58,11 +51,7 @@ rules:
   log-when-unavailable:
     status: done
     comment: Handled by coordinator.
-  parallel-updates:
-    status: todo
-    comment: |
-      Although this is handled by the coordinator and no service actions are provided,
-      PARALLEL_UPDATES should still be set to 0 in binary_sensor and sensor according to the rule.
+  parallel-updates: done
   reauthentication-flow:
     status: exempt
     comment: No authentication is required for the integration.

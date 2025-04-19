@@ -8,7 +8,7 @@ from nhc.cover import NHCCover
 
 from homeassistant.components.cover import CoverEntity, CoverEntityFeature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import NikoHomeControlConfigEntry
 from .entity import NikoHomeControlEntity
@@ -17,7 +17,7 @@ from .entity import NikoHomeControlEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: NikoHomeControlConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Niko Home Control cover entry."""
     controller = entry.runtime_data
