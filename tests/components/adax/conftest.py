@@ -4,8 +4,10 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+import json
 
-from tests.common import AsyncMock, MockConfigEntry
+from homeassistant.components.adax.const import DOMAIN
+from tests.common import AsyncMock, MockConfigEntry, load_fixture
 
 from . import LOCAL_CONFIG, CLOUD_CONFIG
 
@@ -29,8 +31,9 @@ LOCAL_DEVICE_DATA: dict[str, Any] = {
 @pytest.fixture(params=["cloud", "local"])
 def mock_config_entry(request: pytest.FixtureRequest) -> MockConfigEntry:
     """Mock a config entry."""
-    entry_data = LOCAL_CONFIG if request.param == "local" else CLOUD_CONFIG
-    return MockConfigEntry(domain="adax", data=entry_data)
+    f = load_fixture(f"get_config_{request.param}.json", DOMAIN)
+    entry_data = json.loads(f)
+    return MockConfigEntry(domain=DOMAIN, data=entry_data)
 
 
 @pytest.fixture
