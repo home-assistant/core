@@ -3,9 +3,8 @@
 from abc import abstractmethod
 from typing import Any
 
+from tesla_fleet_api import EnergySpecific, VehicleSpecific
 from tesla_fleet_api.const import Scope
-from tesla_fleet_api.tesla.energysite import EnergySite
-from tesla_fleet_api.tesla.vehicle.fleet import VehicleFleet
 
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -42,7 +41,7 @@ class TeslaFleetEntity(
         | TeslaFleetEnergySiteLiveCoordinator
         | TeslaFleetEnergySiteHistoryCoordinator
         | TeslaFleetEnergySiteInfoCoordinator,
-        api: VehicleFleet | EnergySite,
+        api: VehicleSpecific | EnergySpecific,
         key: str,
     ) -> None:
         """Initialize common aspects of a TeslaFleet entity."""

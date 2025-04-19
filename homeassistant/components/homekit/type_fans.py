@@ -4,7 +4,6 @@ import logging
 from typing import Any
 
 from pyhap.const import CATEGORY_FAN
-from pyhap.service import Service
 
 from homeassistant.components.fan import (
     ATTR_DIRECTION,
@@ -35,7 +34,6 @@ from homeassistant.core import State, callback
 from .accessories import TYPES, HomeAccessory
 from .const import (
     CHAR_ACTIVE,
-    CHAR_CONFIGURED_NAME,
     CHAR_NAME,
     CHAR_ON,
     CHAR_ROTATION_DIRECTION,
@@ -58,9 +56,9 @@ class Fan(HomeAccessory):
     Currently supports: state, speed, oscillate, direction.
     """
 
-    def __init__(self, *args: Any, category: int = CATEGORY_FAN) -> None:
+    def __init__(self, *args: Any) -> None:
         """Initialize a new Fan accessory object."""
-        super().__init__(*args, category=category)
+        super().__init__(*args, category=CATEGORY_FAN)
         self.chars: list[str] = []
         state = self.hass.states.get(self.entity_id)
         assert state
@@ -81,8 +79,12 @@ class Fan(HomeAccessory):
             self.chars.append(CHAR_SWING_MODE)
         if features & FanEntityFeature.SET_SPEED:
             self.chars.append(CHAR_ROTATION_SPEED)
+        if self.preset_modes and len(self.preset_modes) == 1:
+            self.chars.append(CHAR_TARGET_FAN_STATE)
 
-        serv_fan = self.create_services()
+        serv_fan = self.add_preload_service(SERV_FANV2, self.chars)
+        self.set_primary_service(serv_fan)
+        self.char_active = serv_fan.configure_char(CHAR_ACTIVE, value=0)
 
         self.char_direction = None
         self.char_speed = None
@@ -105,25 +107,15 @@ class Fan(HomeAccessory):
                 properties={PROP_MIN_STEP: percentage_step},
             )
 
-        if (
-            self.preset_modes
-            and len(self.preset_modes) == 1
-            # NOTE: This would be missing for air purifiers
-            and CHAR_TARGET_FAN_STATE in self.chars
-        ):
+        if self.preset_modes and len(self.preset_modes) == 1:
             self.char_target_fan_state = serv_fan.configure_char(
                 CHAR_TARGET_FAN_STATE,
                 value=0,
             )
         elif self.preset_modes:
             for preset_mode in self.preset_modes:
-                if not self.should_add_preset_mode_switch(preset_mode):
-                    continue
-
                 preset_serv = self.add_preload_service(
-                    SERV_SWITCH,
-                    [CHAR_NAME, CHAR_CONFIGURED_NAME],
-                    unique_id=preset_mode,
+                    SERV_SWITCH, CHAR_NAME, unique_id=preset_mode
                 )
                 serv_fan.add_linked_service(preset_serv)
                 preset_serv.configure_char(
@@ -132,12 +124,9 @@ class Fan(HomeAccessory):
                         f"{self.display_name} {preset_mode}"
                     ),
                 )
-                preset_serv.configure_char(
-                    CHAR_CONFIGURED_NAME, value=cleanup_name_for_homekit(preset_mode)
-                )
 
                 def setter_callback(value: int, preset_mode: str = preset_mode) -> None:
-                    self.set_preset_mode(value, preset_mode)
+                    return self.set_preset_mode(value, preset_mode)
 
                 self.preset_mode_chars[preset_mode] = preset_serv.configure_char(
                     CHAR_ON,
@@ -148,27 +137,10 @@ class Fan(HomeAccessory):
         if CHAR_SWING_MODE in self.chars:
             self.char_swing = serv_fan.configure_char(CHAR_SWING_MODE, value=0)
         self.async_update_state(state)
-        serv_fan.setter_callback = self.set_chars
+        serv_fan.setter_callback = self._set_chars
 
-    def create_services(self) -> Service:
-        """Create and configure the primary service for this accessory."""
-        if self.preset_modes and len(self.preset_modes) == 1:
-            self.chars.append(CHAR_TARGET_FAN_STATE)
-        serv_fan = self.add_preload_service(SERV_FANV2, self.chars)
-        self.set_primary_service(serv_fan)
-        self.char_active = serv_fan.configure_char(CHAR_ACTIVE, value=0)
-        return serv_fan
-
-    def should_add_preset_mode_switch(self, preset_mode: str) -> bool:
-        """Check if a preset mode switch should be added.
-
-        Always true for fans, but can be overridden by subclasses.
-        """
-        return True
-
-    def set_chars(self, char_values: dict[str, Any]) -> None:
-        """Set characteristic values."""
-        _LOGGER.debug("Fan set_chars: %s", char_values)
+    def _set_chars(self, char_values: dict[str, Any]) -> None:
+        _LOGGER.debug("Fan _set_chars: %s", char_values)
         if CHAR_ACTIVE in char_values:
             if char_values[CHAR_ACTIVE]:
                 # If the device supports set speed we

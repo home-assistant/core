@@ -2,6 +2,6 @@
 
 from __future__ import annotations
 
-from annotatedyaml import Input, NodeDictClass, NodeListClass, NodeStrClass
+from annotatedyaml.objects import Input, NodeDictClass, NodeListClass, NodeStrClass
 
 __all__ = ["Input", "NodeDictClass", "NodeListClass", "NodeStrClass"]

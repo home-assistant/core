@@ -44,14 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GiosConfigEntry) -> bool
     try:
         gios = await Gios.create(websession, station_id)
     except (GiosError, ConnectionError, ClientConnectorError) as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="cannot_connect",
-            translation_placeholders={
-                "entry": entry.title,
-                "error": repr(err),
-            },
-        ) from err
+        raise ConfigEntryNotReady from err
 
     coordinator = GiosDataUpdateCoordinator(hass, entry, gios)
     await coordinator.async_config_entry_first_refresh()

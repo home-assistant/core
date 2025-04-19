@@ -79,10 +79,9 @@ class WLEDPresetSelect(WLEDEntity, SelectEntity):
         super().__init__(coordinator=coordinator)
 
         self._attr_unique_id = f"{coordinator.data.info.mac_address}_preset"
-        sorted_values = sorted(
-            coordinator.data.presets.values(), key=lambda preset: preset.name
-        )
-        self._attr_options = [preset.name for preset in sorted_values]
+        self._attr_options = [
+            preset.name for preset in self.coordinator.data.presets.values()
+        ]
 
     @property
     def available(self) -> bool:
@@ -116,10 +115,9 @@ class WLEDPlaylistSelect(WLEDEntity, SelectEntity):
         super().__init__(coordinator=coordinator)
 
         self._attr_unique_id = f"{coordinator.data.info.mac_address}_playlist"
-        sorted_values = sorted(
-            coordinator.data.playlists.values(), key=lambda playlist: playlist.name
-        )
-        self._attr_options = [playlist.name for playlist in sorted_values]
+        self._attr_options = [
+            playlist.name for playlist in self.coordinator.data.playlists.values()
+        ]
 
     @property
     def available(self) -> bool:
@@ -161,10 +159,9 @@ class WLEDPaletteSelect(WLEDEntity, SelectEntity):
             self._attr_translation_placeholders = {"segment": str(segment)}
 
         self._attr_unique_id = f"{coordinator.data.info.mac_address}_palette_{segment}"
-        sorted_values = sorted(
-            coordinator.data.palettes.values(), key=lambda palette: palette.name
-        )
-        self._attr_options = [palette.name for palette in sorted_values]
+        self._attr_options = [
+            palette.name for palette in self.coordinator.data.palettes.values()
+        ]
         self._segment = segment
 
     @property

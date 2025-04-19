@@ -29,30 +29,13 @@ VEDO_PIN = 5678
 FAKE_PIN = 0000
 
 BRIDGE_DEVICE_QUERY = {
-    CLIMATE: {
-        0: ComelitSerialBridgeObject(
-            index=0,
-            name="Climate0",
-            status=0,
-            human_status="off",
-            type="climate",
-            val=[
-                [221, 0, "U", "M", 50, 0, 0, "U"],
-                [650, 0, "U", "M", 500, 0, 0, "U"],
-                [0, 0],
-            ],
-            protected=0,
-            zone="Living room",
-            power=0.0,
-            power_unit=WATT,
-        ),
-    },
+    CLIMATE: {},
     COVER: {
         0: ComelitSerialBridgeObject(
             index=0,
             name="Cover0",
             status=0,
-            human_status="stopped",
+            human_status="closed",
             type="cover",
             val=0,
             protected=0,
@@ -75,20 +58,7 @@ BRIDGE_DEVICE_QUERY = {
             power_unit=WATT,
         )
     },
-    OTHER: {
-        0: ComelitSerialBridgeObject(
-            index=0,
-            name="Switch0",
-            status=0,
-            human_status="off",
-            type="other",
-            val=0,
-            protected=0,
-            zone="Bathroom",
-            power=0.0,
-            power_unit=WATT,
-        ),
-    },
+    OTHER: {},
     IRRIGATION: {},
     SCENARIO: {},
 }
@@ -99,16 +69,16 @@ VEDO_DEVICE_QUERY = AlarmDataObject(
             index=0,
             name="Area0",
             p1=True,
-            p2=True,
+            p2=False,
             ready=False,
-            armed=0,
+            armed=False,
             alarm=False,
             alarm_memory=False,
             sabotage=False,
             anomaly=False,
             in_time=False,
             out_time=False,
-            human_status=AlarmAreaState.DISARMED,
+            human_status=AlarmAreaState.UNKNOWN,
         )
     },
     alarm_zones={

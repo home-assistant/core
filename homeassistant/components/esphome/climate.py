@@ -65,8 +65,6 @@ from .entity import (
 )
 from .enum_mapper import EsphomeEnumMapper
 
-PARALLEL_UPDATES = 0
-
 FAN_QUIET = "quiet"
 
 

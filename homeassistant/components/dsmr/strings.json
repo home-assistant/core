@@ -51,8 +51,8 @@
       "electricity_active_tariff": {
         "name": "Active tariff",
         "state": {
-          "low": "[%key:common::state::low%]",
-          "normal": "[%key:common::state::normal%]"
+          "low": "Low",
+          "normal": "Normal"
         }
       },
       "electricity_delivered_tariff_1": {

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Final, NamedTuple, cast, final
+from typing import TYPE_CHECKING, Any, Final, NamedTuple, cast
 
 from propcache.api import cached_property
 from sqlalchemy.engine.row import Row
@@ -114,7 +114,6 @@ DATA_POS: Final = 11
 CONTEXT_POS: Final = 12
 
 
-@final  # Final to allow direct checking of the type instead of using isinstance
 class EventAsRow(NamedTuple):
     """Convert an event to a row.
 

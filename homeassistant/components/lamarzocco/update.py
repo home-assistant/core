@@ -59,7 +59,7 @@ async def async_setup_entry(
 ) -> None:
     """Create update entities."""
 
-    coordinator = entry.runtime_data.settings_coordinator
+    coordinator = entry.runtime_data.firmware_coordinator
     async_add_entities(
         LaMarzoccoUpdateEntity(coordinator, description)
         for description in ENTITIES
@@ -74,20 +74,18 @@ class LaMarzoccoUpdateEntity(LaMarzoccoEntity, UpdateEntity):
     _attr_supported_features = UpdateEntityFeature.INSTALL
 
     @property
-    def installed_version(self) -> str:
+    def installed_version(self) -> str | None:
         """Return the current firmware version."""
-        return self.coordinator.device.settings.firmwares[
+        return self.coordinator.device.firmware[
             self.entity_description.component
-        ].build_version
+        ].current_version
 
     @property
     def latest_version(self) -> str:
         """Return the latest firmware version."""
-        if available_update := self.coordinator.device.settings.firmwares[
+        return self.coordinator.device.firmware[
             self.entity_description.component
-        ].available_update:
-            return available_update.build_version
-        return self.installed_version
+        ].latest_version
 
     @property
     def release_url(self) -> str | None:
@@ -101,7 +99,9 @@ class LaMarzoccoUpdateEntity(LaMarzoccoEntity, UpdateEntity):
         self._attr_in_progress = True
         self.async_write_ha_state()
         try:
-            await self.coordinator.device.update_firmware()
+            success = await self.coordinator.device.update_firmware(
+                self.entity_description.component
+            )
         except RequestNotSuccessful as exc:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -110,5 +110,13 @@ class LaMarzoccoUpdateEntity(LaMarzoccoEntity, UpdateEntity):
                     "key": self.entity_description.key,
                 },
             ) from exc
+        if not success:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={
+                    "key": self.entity_description.key,
+                },
+            )
         self._attr_in_progress = False
         await self.coordinator.async_request_refresh()

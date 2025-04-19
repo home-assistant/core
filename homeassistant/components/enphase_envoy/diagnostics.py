@@ -66,19 +66,16 @@ async def _get_fixture_collection(envoy: Envoy, serial: str) -> dict[str, Any]:
     ]
 
     for end_point in end_points:
-        try:
-            response = await envoy.request(end_point)
-            fixture_data[end_point] = response.text.replace("\n", "").replace(
-                serial, CLEAN_TEXT
-            )
-            fixture_data[f"{end_point}_log"] = json_dumps(
-                {
-                    "headers": dict(response.headers.items()),
-                    "code": response.status_code,
-                }
-            )
-        except EnvoyError as err:
-            fixture_data[f"{end_point}_log"] = {"Error": repr(err)}
+        response = await envoy.request(end_point)
+        fixture_data[end_point] = response.text.replace("\n", "").replace(
+            serial, CLEAN_TEXT
+        )
+        fixture_data[f"{end_point}_log"] = json_dumps(
+            {
+                "headers": dict(response.headers.items()),
+                "code": response.status_code,
+            }
+        )
     return fixture_data
 
 
@@ -163,7 +160,10 @@ async def async_get_config_entry_diagnostics(
 
     fixture_data: dict[str, Any] = {}
     if entry.options.get(OPTION_DIAGNOSTICS_INCLUDE_FIXTURES, False):
-        fixture_data = await _get_fixture_collection(envoy=envoy, serial=old_serial)
+        try:
+            fixture_data = await _get_fixture_collection(envoy=envoy, serial=old_serial)
+        except EnvoyError as err:
+            fixture_data["Error"] = repr(err)
 
     diagnostic_data: dict[str, Any] = {
         "config_entry": async_redact_data(entry.as_dict(), TO_REDACT),

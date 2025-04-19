@@ -87,11 +87,11 @@
         "state": {
           "available": "Available",
           "charging": "[%key:common::state::charging%]",
-          "connected": "[%key:common::state::connected%]",
+          "connected": "Connected",
           "error": "Error",
-          "locked": "[%key:common::state::locked%]",
+          "locked": "Locked",
           "need_auth": "Waiting for authentication",
-          "paused": "[%key:common::state::paused%]",
+          "paused": "Paused",
           "paused_by_scheduler": "Paused by scheduler",
           "updating_firmware": "Updating firmware"
         }

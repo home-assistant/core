@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-import mimetypes
 from pathlib import Path
 
-from google.genai import Client
+from google import genai  # type: ignore[attr-defined]
 from google.genai.errors import APIError, ClientError
 from requests.exceptions import Timeout
 import voluptuous as vol
@@ -43,7 +42,7 @@ CONF_FILENAMES = "filenames"
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = (Platform.CONVERSATION,)
 
-type GoogleGenerativeAIConfigEntry = ConfigEntry[Client]
+type GoogleGenerativeAIConfigEntry = ConfigEntry[genai.Client]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -84,12 +83,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     )
                 if not Path(filename).exists():
                     raise HomeAssistantError(f"`{filename}` does not exist")
-                mimetype = mimetypes.guess_type(filename)[0]
-                with open(filename, "rb") as file:
-                    uploaded_file = client.files.upload(
-                        file=file, config={"mime_type": mimetype}
-                    )
-                    prompt_parts.append(uploaded_file)
+                prompt_parts.append(client.files.upload(file=filename))
 
         await hass.async_add_executor_job(append_files_to_prompt)
 
@@ -139,11 +133,7 @@ async def async_setup_entry(
     """Set up Google Generative AI Conversation from a config entry."""
 
     try:
-
-        def _init_client() -> Client:
-            return Client(api_key=entry.data[CONF_API_KEY])
-
-        client = await hass.async_add_executor_job(_init_client)
+        client = genai.Client(api_key=entry.data[CONF_API_KEY])
         await client.aio.models.get(
             model=entry.options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
             config={"http_options": {"timeout": TIMEOUT_MILLIS}},

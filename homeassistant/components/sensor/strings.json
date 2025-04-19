@@ -278,10 +278,10 @@
       "name": "Timestamp"
     },
     "volatile_organic_compounds": {
-      "name": "Volatile organic compounds"
+      "name": "VOCs"
     },
     "volatile_organic_compounds_parts": {
-      "name": "Volatile organic compounds parts"
+      "name": "[%key:component::sensor::entity_component::volatile_organic_compounds::name%]"
     },
     "voltage": {
       "name": "Voltage"
@@ -309,10 +309,6 @@
     }
   },
   "issues": {
-    "mean_type_changed": {
-      "title": "The mean type of {statistic_id} has changed",
-      "description": ""
-    },
     "state_class_removed": {
       "title": "{statistic_id} no longer has a state class",
       "description": ""

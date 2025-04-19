@@ -71,11 +71,11 @@ sequence:
           title: !input dismiss_text
   - alias: "Awaiting response"
     wait_for_trigger:
-      - trigger: event
+      - platform: event
         event_type: mobile_app_notification_action
         event_data:
           action: "{{ action_confirm }}"
-      - trigger: event
+      - platform: event
         event_type: mobile_app_notification_action
         event_data:
           action: "{{ action_dismiss }}"

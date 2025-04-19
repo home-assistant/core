@@ -82,8 +82,7 @@ SENSOR_TYPES: tuple[ZamgSensorEntityDescription, ...] = (
         key="wind_bearing",
         name="Wind Bearing",
         native_unit_of_measurement=DEGREE,
-        state_class=SensorStateClass.MEASUREMENT_ANGLE,
-        device_class=SensorDeviceClass.WIND_DIRECTION,
+        state_class=SensorStateClass.MEASUREMENT,
         para_name="DD",
     ),
     ZamgSensorEntityDescription(

@@ -70,8 +70,9 @@ MOCK_SUBENTRY_NOTIFY_COMPONENT1 = {
     "363a7ecad6be4a19b939a016ea93e994": {
         "platform": "notify",
         "name": "Milkman alert",
+        "qos": 0,
         "command_topic": "test-topic",
-        "command_template": "{{ value }}",
+        "command_template": "{{ value_json.value }}",
         "entity_picture": "https://example.com/363a7ecad6be4a19b939a016ea93e994",
         "retain": False,
     },
@@ -80,6 +81,7 @@ MOCK_SUBENTRY_NOTIFY_COMPONENT2 = {
     "6494827dac294fa0827c54b02459d309": {
         "platform": "notify",
         "name": "The second notifier",
+        "qos": 0,
         "command_topic": "test-topic2",
         "entity_picture": "https://example.com/6494827dac294fa0827c54b02459d309",
     },
@@ -87,55 +89,11 @@ MOCK_SUBENTRY_NOTIFY_COMPONENT2 = {
 MOCK_SUBENTRY_NOTIFY_COMPONENT_NO_NAME = {
     "5269352dd9534c908d22812ea5d714cd": {
         "platform": "notify",
+        "qos": 0,
         "command_topic": "test-topic",
-        "command_template": "{{ value }}",
+        "command_template": "{{ value_json.value }}",
         "entity_picture": "https://example.com/5269352dd9534c908d22812ea5d714cd",
         "retain": False,
-    },
-}
-
-MOCK_SUBENTRY_SENSOR_COMPONENT = {
-    "e9261f6feed443e7b7d5f3fbe2a47412": {
-        "platform": "sensor",
-        "name": "Energy",
-        "device_class": "enum",
-        "state_topic": "test-topic",
-        "options": ["low", "medium", "high"],
-        "expire_after": 30,
-        "value_template": "{{ value_json.value }}",
-        "entity_picture": "https://example.com/e9261f6feed443e7b7d5f3fbe2a47412",
-    },
-}
-MOCK_SUBENTRY_SENSOR_COMPONENT_STATE_CLASS = {
-    "a0f85790a95d4889924602effff06b6e": {
-        "platform": "sensor",
-        "name": "Energy",
-        "state_class": "measurement",
-        "state_topic": "test-topic",
-        "entity_picture": "https://example.com/a0f85790a95d4889924602effff06b6e",
-    },
-}
-MOCK_SUBENTRY_SENSOR_COMPONENT_LAST_RESET = {
-    "e9261f6feed443e7b7d5f3fbe2a47412": {
-        "platform": "sensor",
-        "name": "Energy",
-        "state_class": "total",
-        "last_reset_value_template": "{{ value_json.value }}",
-        "state_topic": "test-topic",
-        "entity_picture": "https://example.com/e9261f6feed443e7b7d5f3fbe2a47412",
-    },
-}
-MOCK_SUBENTRY_SWITCH_COMPONENT = {
-    "3faf1318016c46c5aea26707eeb6f12e": {
-        "platform": "switch",
-        "name": "Outlet",
-        "device_class": "outlet",
-        "command_topic": "test-topic",
-        "state_topic": "test-topic",
-        "command_template": "{{ value }}",
-        "value_template": "{{ value_json.value }}",
-        "entity_picture": "https://example.com/3faf1318016c46c5aea26707eeb6f12e",
-        "optimistic": True,
     },
 }
 
@@ -146,6 +104,7 @@ MOCK_SUBENTRY_LIGHT_COMPONENT = {
     "8131babc5e8d4f44b82e0761d39091a2": {
         "platform": "light",
         "name": "Test light",
+        "qos": 1,
         "command_topic": "test-topic4",
         "schema": "basic",
         "entity_picture": "https://example.com/8131babc5e8d4f44b82e0761d39091a2",
@@ -155,6 +114,7 @@ MOCK_SUBENTRY_NOTIFY_BAD_SCHEMA = {
     "b10b531e15244425a74bb0abb1e9d2c6": {
         "platform": "notify",
         "name": "Test",
+        "qos": 1,
         "command_topic": "bad#topic",
     },
 }
@@ -188,11 +148,10 @@ MOCK_NOTIFY_SUBENTRY_DATA_SINGLE = {
         "model": "Model XL",
         "model_id": "mn002",
         "configuration_url": "https://example.com",
-        "mqtt_settings": {"qos": 1},
     },
     "components": MOCK_SUBENTRY_NOTIFY_COMPONENT1,
 }
-MOCK_NOTIFY_SUBENTRY_DATA_NO_NAME = {
+MOCK_SUBENTRY_DATA_NOTIFY_NO_NAME = {
     "device": {
         "name": "Milk notifier",
         "sw_version": "1.0",
@@ -203,50 +162,7 @@ MOCK_NOTIFY_SUBENTRY_DATA_NO_NAME = {
     },
     "components": MOCK_SUBENTRY_NOTIFY_COMPONENT_NO_NAME,
 }
-MOCK_SENSOR_SUBENTRY_DATA_SINGLE = {
-    "device": {
-        "name": "Test sensor",
-        "sw_version": "1.0",
-        "hw_version": "2.1 rev a",
-        "model": "Model XL",
-        "model_id": "mn002",
-        "configuration_url": "https://example.com",
-    },
-    "components": MOCK_SUBENTRY_SENSOR_COMPONENT,
-}
-MOCK_SENSOR_SUBENTRY_DATA_SINGLE_STATE_CLASS = {
-    "device": {
-        "name": "Test sensor",
-        "sw_version": "1.0",
-        "hw_version": "2.1 rev a",
-        "model": "Model XL",
-        "model_id": "mn002",
-        "configuration_url": "https://example.com",
-    },
-    "components": MOCK_SUBENTRY_SENSOR_COMPONENT_STATE_CLASS,
-}
-MOCK_SENSOR_SUBENTRY_DATA_SINGLE_LAST_RESET_TEMPLATE = {
-    "device": {
-        "name": "Test sensor",
-        "sw_version": "1.0",
-        "hw_version": "2.1 rev a",
-        "model": "Model XL",
-        "model_id": "mn002",
-        "configuration_url": "https://example.com",
-    },
-    "components": MOCK_SUBENTRY_SENSOR_COMPONENT_LAST_RESET,
-}
-MOCK_SWITCH_SUBENTRY_DATA_SINGLE_STATE_CLASS = {
-    "device": {
-        "name": "Test switch",
-        "sw_version": "1.0",
-        "hw_version": "2.1 rev a",
-        "model": "Model XL",
-        "model_id": "mn002",
-        "configuration_url": "https://example.com",
-    },
-    "components": MOCK_SUBENTRY_SWITCH_COMPONENT,
-}
+
 MOCK_SUBENTRY_DATA_BAD_COMPONENT_SCHEMA = {
     "device": {
         "name": "Milk notifier",
@@ -269,8 +185,7 @@ MOCK_SUBENTRY_DATA_SET_MIX = {
     },
     "components": MOCK_SUBENTRY_NOTIFY_COMPONENT1
     | MOCK_SUBENTRY_NOTIFY_COMPONENT2
-    | MOCK_SUBENTRY_LIGHT_COMPONENT
-    | MOCK_SUBENTRY_SWITCH_COMPONENT,
+    | MOCK_SUBENTRY_LIGHT_COMPONENT,
 } | MOCK_SUBENTRY_AVAILABILITY_DATA
 _SENTINEL = object()
 

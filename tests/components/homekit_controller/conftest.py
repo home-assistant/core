@@ -4,9 +4,7 @@ from collections.abc import Callable, Generator
 import datetime
 from unittest.mock import MagicMock, patch
 
-from aiohomekit.model import Transport
-from aiohomekit.testing import FakeController, FakeDiscovery, FakePairing
-from bleak.backends.device import BLEDevice
+from aiohomekit.testing import FakeController
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -59,31 +57,3 @@ def get_next_aid() -> Generator[Callable[[], int]]:
         return id_counter
 
     return _get_id
-
-
-@pytest.fixture
-def fake_ble_discovery() -> Generator[None]:
-    """Fake BLE discovery."""
-
-    class FakeBLEDiscovery(FakeDiscovery):
-        device = BLEDevice(
-            address="AA:BB:CC:DD:EE:FF", name="TestDevice", rssi=-50, details=()
-        )
-
-    with patch("aiohomekit.testing.FakeDiscovery", FakeBLEDiscovery):
-        yield
-
-
-@pytest.fixture
-def fake_ble_pairing() -> Generator[None]:
-    """Fake BLE pairing."""
-
-    class FakeBLEPairing(FakePairing):
-        """Fake BLE pairing."""
-
-        @property
-        def transport(self):
-            return Transport.BLE
-
-    with patch("aiohomekit.testing.FakePairing", FakeBLEPairing):
-        yield

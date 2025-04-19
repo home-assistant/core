@@ -94,12 +94,10 @@ SENSOR_OUTPUT = {
 
 
 @pytest.fixture
-async def mock_client(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
-) -> TestClient:
+def mock_client(hass: HomeAssistant, hass_client: ClientSessionGenerator) -> TestClient:
     """Start the Home Assistant HTTP component."""
     with patch("homeassistant.components.spaceapi", return_value=True):
-        await async_setup_component(hass, "spaceapi", CONFIG)
+        hass.loop.run_until_complete(async_setup_component(hass, "spaceapi", CONFIG))
 
     hass.states.async_set(
         "test.temp1",
@@ -128,7 +126,7 @@ async def mock_client(
         "test.hum1", 88, attributes={ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE}
     )
 
-    return await hass_client()
+    return hass.loop.run_until_complete(hass_client())
 
 
 async def test_spaceapi_get(hass: HomeAssistant, mock_client) -> None:

@@ -221,9 +221,6 @@
       "cutting_blade_usage_time": {
         "name": "Cutting blade usage time"
       },
-      "downtime": {
-        "name": "Downtime"
-      },
       "restricted_reason": {
         "name": "Restricted reason",
         "state": {
@@ -265,9 +262,6 @@
           "home": "Home",
           "demo": "Demo"
         }
-      },
-      "uptime": {
-        "name": "Uptime"
       },
       "work_area": {
         "name": "Work area",

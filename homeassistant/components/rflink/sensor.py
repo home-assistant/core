@@ -236,8 +236,7 @@ SENSOR_TYPES = (
         key="winddirection",
         name="Wind direction",
         icon="mdi:compass",
-        state_class=SensorStateClass.MEASUREMENT_ANGLE,
-        device_class=SensorDeviceClass.WIND_DIRECTION,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=DEGREE,
     ),
     SensorEntityDescription(

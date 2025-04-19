@@ -1,7 +1,7 @@
 {
   "domain": "sky_hub",
   "name": "Sky Hub",
-  "codeowners": [],
+  "codeowners": ["@rogerselwyn"],
   "documentation": "https://www.home-assistant.io/integrations/sky_hub",
   "iot_class": "local_polling",
   "loggers": ["pyskyqhub"],

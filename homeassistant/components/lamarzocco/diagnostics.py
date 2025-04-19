@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
-from typing import Any
+from dataclasses import asdict
+from typing import Any, TypedDict
+
+from pylamarzocco.const import FirmwareType
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
@@ -14,6 +17,15 @@ TO_REDACT = {
 }
 
 
+class DiagnosticsData(TypedDict):
+    """Diagnostic data for La Marzocco."""
+
+    model: str
+    config: dict[str, Any]
+    firmware: list[dict[FirmwareType, dict[str, Any]]]
+    statistics: dict[str, Any]
+
+
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant,
     entry: LaMarzoccoConfigEntry,
@@ -21,4 +33,12 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     coordinator = entry.runtime_data.config_coordinator
     device = coordinator.device
-    return async_redact_data(device.to_dict(), TO_REDACT)
+    # collect all data sources
+    diagnostics_data = DiagnosticsData(
+        model=device.model,
+        config=asdict(device.config),
+        firmware=[{key: asdict(firmware)} for key, firmware in device.firmware.items()],
+        statistics=asdict(device.statistics),
+    )
+
+    return async_redact_data(diagnostics_data, TO_REDACT)

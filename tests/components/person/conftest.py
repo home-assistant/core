@@ -31,7 +31,7 @@ def storage_collection(hass: HomeAssistant) -> person.PersonStorageCollection:
 
 
 @pytest.fixture
-async def storage_setup(
+def storage_setup(
     hass: HomeAssistant, hass_storage: dict[str, Any], hass_admin_user: MockUser
 ) -> None:
     """Storage setup."""
@@ -49,4 +49,4 @@ async def storage_setup(
             ]
         },
     }
-    assert await async_setup_component(hass, DOMAIN, {})
+    assert hass.loop.run_until_complete(async_setup_component(hass, DOMAIN, {}))

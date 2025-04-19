@@ -315,11 +315,11 @@
           "preset_mode": {
             "name": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::name%]",
             "state": {
-              "auto": "[%key:common::state::auto%]",
-              "building_protection": "Building protection",
+              "auto": "Auto",
               "comfort": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::comfort%]",
+              "standby": "Standby",
               "economy": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::eco%]",
-              "standby": "[%key:common::state::standby%]"
+              "building_protection": "Building protection"
             }
           }
         }

@@ -113,9 +113,7 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
         translation_key="last_boot_time",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data: (
-            now() - timedelta(seconds=data.status["uptime"])
-        ).replace(microsecond=0),
+        value_fn=lambda data: now() - timedelta(seconds=data.status["uptime"]),
     ),
     StarlinkSensorEntityDescription(
         key="ping_drop_rate",

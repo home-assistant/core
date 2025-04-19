@@ -26,9 +26,6 @@
     "set_humidify_setpoint": {
       "service": "mdi:water-percent"
     },
-    "set_dehumidify_setpoint": {
-      "service": "mdi:water-percent"
-    },
     "set_hvac_run_mode": {
       "service": "mdi:hvac"
     }

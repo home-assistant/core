@@ -44,7 +44,9 @@ rules:
   parallel-updates:
     status: exempt
     comment: Integration does not have platforms.
-  reauthentication-flow: done
+  reauthentication-flow:
+    status: exempt
+    comment: Integration does not support authentication.
   test-coverage: done
 
   # Gold

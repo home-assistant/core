@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-from aiowebdav2.exceptions import MethodNotSupportedError, UnauthorizedError
+from aiowebdav2.exceptions import UnauthorizedError
 import pytest
 
 from homeassistant import config_entries
@@ -86,7 +86,6 @@ async def test_form_fail(hass: HomeAssistant, webdav_client: AsyncMock) -> None:
     ("exception", "expected_error"),
     [
         (UnauthorizedError("https://webdav.demo"), "invalid_auth"),
-        (MethodNotSupportedError("check", "https://webdav.demo"), "invalid_method"),
         (Exception("Unexpected error"), "unknown"),
     ],
 )

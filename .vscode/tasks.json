@@ -4,7 +4,7 @@
     {
       "label": "Run Home Assistant Core",
       "type": "shell",
-      "command": "${command:python.interpreterPath} -m homeassistant -c ./config",
+      "command": "hass -c ./config",
       "group": "test",
       "presentation": {
         "reveal": "always",

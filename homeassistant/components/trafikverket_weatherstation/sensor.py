@@ -89,8 +89,7 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
         translation_key="wind_direction",
         value_fn=lambda data: data.winddirection,
         native_unit_of_measurement=DEGREE,
-        state_class=SensorStateClass.MEASUREMENT_ANGLE,
-        device_class=SensorDeviceClass.WIND_DIRECTION,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     TrafikverketSensorEntityDescription(
         key="wind_speed",

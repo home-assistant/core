@@ -55,6 +55,7 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 from homeassistant.helpers.service_info.hassio import (
     HassioServiceInfo as _HassioServiceInfo,
 )
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import create_eager_task
@@ -77,7 +78,6 @@ from . import (  # noqa: F401
 from .addon_manager import AddonError, AddonInfo, AddonManager, AddonState  # noqa: F401
 from .addon_panel import async_setup_addon_panel
 from .auth import async_setup_auth_view
-from .config import HassioConfig
 from .const import (
     ADDONS_COORDINATOR,
     ATTR_ADDON,
@@ -91,7 +91,6 @@ from .const import (
     ATTR_PASSWORD,
     ATTR_SLUG,
     DATA_COMPONENT,
-    DATA_CONFIG_STORE,
     DATA_CORE_INFO,
     DATA_HOST_INFO,
     DATA_INFO,
@@ -145,6 +144,8 @@ _DEPRECATED_HassioServiceInfo = DeprecatedConstant(
     "2025.11",
 )
 
+STORAGE_KEY = DOMAIN
+STORAGE_VERSION = 1
 # If new platforms are added, be sure to import them above
 # so we do not make other components that depend on hassio
 # wait for the import of the platforms
@@ -334,14 +335,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     except SupervisorError:
         _LOGGER.warning("Not connected with the supervisor / system too busy!")
 
-    # Load the store
-    config_store = HassioConfig(hass)
-    await config_store.load()
-    hass.data[DATA_CONFIG_STORE] = config_store
+    store = Store[dict[str, str]](hass, STORAGE_VERSION, STORAGE_KEY)
+    if (data := await store.async_load()) is None:
+        data = {}
 
     refresh_token = None
-    if (hassio_user := config_store.data.hassio_user) is not None:
-        user = await hass.auth.async_get_user(hassio_user)
+    if "hassio_user" in data:
+        user = await hass.auth.async_get_user(data["hassio_user"])
         if user and user.refresh_tokens:
             refresh_token = list(user.refresh_tokens.values())[0]
 
@@ -358,7 +358,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             HASSIO_USER_NAME, group_ids=[GROUP_ID_ADMIN]
         )
         refresh_token = await hass.auth.async_create_refresh_token(user)
-        config_store.update(hassio_user=user.id)
+        data["hassio_user"] = user.id
+        await store.async_save(data)
 
     # This overrides the normal API call that would be forwarded
     development_repo = config.get(DOMAIN, {}).get(CONF_FRONTEND_REPO)

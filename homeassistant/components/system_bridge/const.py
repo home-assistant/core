@@ -18,6 +18,4 @@ MODULES: Final[list[Module]] = [
     Module.SYSTEM,
 ]
 
-DATA_WAIT_TIMEOUT: Final[int] = 20
-
-GET_DATA_WAIT_TIMEOUT: Final[int] = 15
+DATA_WAIT_TIMEOUT: Final[int] = 10

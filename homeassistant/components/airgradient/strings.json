@@ -11,7 +11,7 @@
         }
       },
       "discovery_confirm": {
-        "description": "Do you want to set up {model}?"
+        "description": "Do you want to setup {model}?"
       }
     },
     "abort": {
@@ -68,8 +68,8 @@
       "led_bar_mode": {
         "name": "LED bar mode",
         "state": {
-          "off": "[%key:common::state::off%]",
-          "co2": "[%key:component::sensor::entity_component::carbon_dioxide::name%]",
+          "off": "Off",
+          "co2": "Carbon dioxide",
           "pm": "Particulate matter"
         }
       },
@@ -143,8 +143,8 @@
       "led_bar_mode": {
         "name": "[%key:component::airgradient::entity::select::led_bar_mode::name%]",
         "state": {
-          "off": "[%key:common::state::off%]",
-          "co2": "[%key:component::sensor::entity_component::carbon_dioxide::name%]",
+          "off": "[%key:component::airgradient::entity::select::led_bar_mode::state::off%]",
+          "co2": "[%key:component::airgradient::entity::select::led_bar_mode::state::co2%]",
           "pm": "[%key:component::airgradient::entity::select::led_bar_mode::state::pm%]"
         }
       },

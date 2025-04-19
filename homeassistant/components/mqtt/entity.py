@@ -123,7 +123,7 @@ from .subscription import (
     async_subscribe_topics_internal,
     async_unsubscribe_topics,
 )
-from .util import learn_more_url, mqtt_config_entry_enabled
+from .util import mqtt_config_entry_enabled
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -300,7 +300,6 @@ def async_setup_entity_entry_helper(
             availability_config = subentry_data.get("availability", {})
             subentry_entities: list[Entity] = []
             device_config = subentry_data["device"].copy()
-            device_mqtt_options = device_config.pop("mqtt_settings", {})
             device_config["identifiers"] = config_subentry_id
             for component_id, component_data in subentry_data["components"].items():
                 if component_data["platform"] != domain:
@@ -312,7 +311,6 @@ def async_setup_entity_entry_helper(
                 component_config[CONF_DEVICE] = device_config
                 component_config.pop("platform")
                 component_config.update(availability_config)
-                component_config.update(device_mqtt_options)
 
                 try:
                     config = platform_schema_modern(component_config)
@@ -348,6 +346,9 @@ def async_setup_entity_entry_helper(
                 line = getattr(yaml_config, "__line__", "?")
                 issue_id = hex(hash(frozenset(yaml_config)))
                 yaml_config_str = yaml_dump(yaml_config)
+                learn_more_url = (
+                    f"https://www.home-assistant.io/integrations/{domain}.mqtt/"
+                )
                 async_create_issue(
                     hass,
                     DOMAIN,
@@ -355,7 +356,7 @@ def async_setup_entity_entry_helper(
                     issue_domain=domain,
                     is_fixable=False,
                     severity=IssueSeverity.ERROR,
-                    learn_more_url=learn_more_url(domain),
+                    learn_more_url=learn_more_url,
                     translation_placeholders={
                         "domain": domain,
                         "config_file": config_file,
@@ -399,10 +400,6 @@ class MqttAttributesMixin(Entity):
 
     _attributes_extra_blocked: frozenset[str] = frozenset()
     _attr_tpl: Callable[[ReceivePayloadType], ReceivePayloadType] | None = None
-    _message_callback: Callable[
-        [MessageCallbackType, set[str] | None, ReceiveMessage], None
-    ]
-    _process_update_extra_state_attributes: Callable[[dict[str, Any]], None]
 
     def __init__(self, config: ConfigType) -> None:
         """Initialize the JSON attributes mixin."""
@@ -437,15 +434,9 @@ class MqttAttributesMixin(Entity):
                 CONF_JSON_ATTRS_TOPIC: {
                     "topic": self._attributes_config.get(CONF_JSON_ATTRS_TOPIC),
                     "msg_callback": partial(
-                        self._message_callback,
+                        self._message_callback,  # type: ignore[attr-defined]
                         self._attributes_message_received,
-                        {
-                            "_attr_extra_state_attributes",
-                            "_attr_gps_accuracy",
-                            "_attr_latitude",
-                            "_attr_location_name",
-                            "_attr_longitude",
-                        },
+                        {"_attr_extra_state_attributes"},
                     ),
                     "entity_id": self.entity_id,
                     "qos": self._attributes_config.get(CONF_QOS),
@@ -484,21 +475,13 @@ class MqttAttributesMixin(Entity):
                     if k not in MQTT_ATTRIBUTES_BLOCKED
                     and k not in self._attributes_extra_blocked
                 }
-                if hasattr(self, "_process_update_extra_state_attributes"):
-                    self._process_update_extra_state_attributes(filtered_dict)
-                else:
-                    self._attr_extra_state_attributes = filtered_dict
-
+                self._attr_extra_state_attributes = filtered_dict
             else:
                 _LOGGER.warning("JSON result was not a dictionary")
 
 
 class MqttAvailabilityMixin(Entity):
     """Mixin used for platforms that report availability."""
-
-    _message_callback: Callable[
-        [MessageCallbackType, set[str] | None, ReceiveMessage], None
-    ]
 
     def __init__(self, config: ConfigType) -> None:
         """Initialize the availability mixin."""
@@ -565,7 +548,7 @@ class MqttAvailabilityMixin(Entity):
             f"availability_{topic}": {
                 "topic": topic,
                 "msg_callback": partial(
-                    self._message_callback,
+                    self._message_callback,  # type: ignore[attr-defined]
                     self._availability_message_received,
                     {"available"},
                 ),

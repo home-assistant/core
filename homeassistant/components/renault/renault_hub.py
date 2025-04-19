@@ -27,13 +27,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 if TYPE_CHECKING:
     from . import RenaultConfigEntry
 
-from time import time
-
-from .const import (
-    CONF_KAMEREON_ACCOUNT_ID,
-    COOLING_UPDATES_SECONDS,
-    DEFAULT_SCAN_INTERVAL,
-)
+from .const import CONF_KAMEREON_ACCOUNT_ID, DEFAULT_SCAN_INTERVAL
 from .renault_vehicle import RenaultVehicleProxy
 
 LOGGER = logging.getLogger(__name__)
@@ -50,24 +44,6 @@ class RenaultHub:
         )
         self._account: RenaultAccount | None = None
         self._vehicles: dict[str, RenaultVehicleProxy] = {}
-
-        self._got_throttled_at_time: float | None = None
-
-    def set_throttled(self) -> None:
-        """We got throttled, we need to adjust the rate limit."""
-        if self._got_throttled_at_time is None:
-            self._got_throttled_at_time = time()
-
-    def is_throttled(self) -> bool:
-        """Check if we are throttled."""
-        if self._got_throttled_at_time is None:
-            return False
-
-        if time() - self._got_throttled_at_time > COOLING_UPDATES_SECONDS:
-            self._got_throttled_at_time = None
-            return False
-
-        return True
 
     async def attempt_login(self, username: str, password: str) -> bool:
         """Attempt login to Renault servers."""
@@ -123,7 +99,6 @@ class RenaultHub:
         vehicle = RenaultVehicleProxy(
             hass=self._hass,
             config_entry=config_entry,
-            hub=self,
             vehicle=await renault_account.get_api_vehicle(vehicle_link.vin),
             details=vehicle_link.vehicleDetails,
             scan_interval=scan_interval,

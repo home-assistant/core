@@ -71,41 +71,41 @@ async def test_switch_offline(
 @pytest.mark.parametrize(
     ("name", "on", "off"),
     [
-        ("test_charge", "VehicleFleet.charge_start", "VehicleFleet.charge_stop"),
+        ("test_charge", "VehicleSpecific.charge_start", "VehicleSpecific.charge_stop"),
         (
             "test_auto_seat_climate_left",
-            "VehicleFleet.remote_auto_seat_climate_request",
-            "VehicleFleet.remote_auto_seat_climate_request",
+            "VehicleSpecific.remote_auto_seat_climate_request",
+            "VehicleSpecific.remote_auto_seat_climate_request",
         ),
         (
             "test_auto_seat_climate_right",
-            "VehicleFleet.remote_auto_seat_climate_request",
-            "VehicleFleet.remote_auto_seat_climate_request",
+            "VehicleSpecific.remote_auto_seat_climate_request",
+            "VehicleSpecific.remote_auto_seat_climate_request",
         ),
         (
             "test_auto_steering_wheel_heater",
-            "VehicleFleet.remote_auto_steering_wheel_heat_climate_request",
-            "VehicleFleet.remote_auto_steering_wheel_heat_climate_request",
+            "VehicleSpecific.remote_auto_steering_wheel_heat_climate_request",
+            "VehicleSpecific.remote_auto_steering_wheel_heat_climate_request",
         ),
         (
             "test_defrost",
-            "VehicleFleet.set_preconditioning_max",
-            "VehicleFleet.set_preconditioning_max",
+            "VehicleSpecific.set_preconditioning_max",
+            "VehicleSpecific.set_preconditioning_max",
         ),
         (
             "energy_site_storm_watch",
-            "EnergySite.storm_mode",
-            "EnergySite.storm_mode",
+            "EnergySpecific.storm_mode",
+            "EnergySpecific.storm_mode",
         ),
         (
             "energy_site_allow_charging_from_grid",
-            "EnergySite.grid_import_export",
-            "EnergySite.grid_import_export",
+            "EnergySpecific.grid_import_export",
+            "EnergySpecific.grid_import_export",
         ),
         (
             "test_sentry_mode",
-            "VehicleFleet.set_sentry_mode",
-            "VehicleFleet.set_sentry_mode",
+            "VehicleSpecific.set_sentry_mode",
+            "VehicleSpecific.set_sentry_mode",
         ),
     ],
 )
@@ -122,7 +122,7 @@ async def test_switch_services(
 
     entity_id = f"switch.{name}"
     with patch(
-        f"tesla_fleet_api.tesla.{on}",
+        f"homeassistant.components.tesla_fleet.{on}",
         return_value=COMMAND_OK,
     ) as call:
         await hass.services.async_call(
@@ -136,7 +136,7 @@ async def test_switch_services(
         call.assert_called_once()
 
     with patch(
-        f"tesla_fleet_api.tesla.{off}",
+        f"homeassistant.components.tesla_fleet.{off}",
         return_value=COMMAND_OK,
     ) as call:
         await hass.services.async_call(

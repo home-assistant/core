@@ -14,7 +14,6 @@ from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
-from homeassistant.util.ssl import create_client_context
 
 from tests.common import get_fixture_path
 
@@ -85,7 +84,6 @@ def message():
         "Home Assistant",
         0,
         True,
-        create_client_context(),
     )
 
 

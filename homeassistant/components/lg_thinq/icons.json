@@ -169,9 +169,6 @@
       "current_job_mode": {
         "default": "mdi:format-list-bulleted"
       },
-      "current_job_mode_dehumidifier": {
-        "default": "mdi:format-list-bulleted"
-      },
       "operation_mode": {
         "default": "mdi:gesture-tap-button"
       },

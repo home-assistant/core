@@ -1,9 +1,7 @@
 """The Backup integration."""
 
-from homeassistant.config_entries import SOURCE_SYSTEM
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import config_validation as cv, discovery_flow
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.backup import DATA_BACKUP
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.typing import ConfigType
@@ -20,12 +18,10 @@ from .agent import (
 )
 from .config import BackupConfig, CreateBackupParametersDict
 from .const import DATA_MANAGER, DOMAIN
-from .coordinator import BackupConfigEntry, BackupDataUpdateCoordinator
 from .http import async_register_http_views
 from .manager import (
     BackupManager,
     BackupManagerError,
-    BackupPlatformEvent,
     BackupPlatformProtocol,
     BackupReaderWriter,
     BackupReaderWriterError,
@@ -56,7 +52,6 @@ __all__ = [
     "BackupConfig",
     "BackupManagerError",
     "BackupNotFound",
-    "BackupPlatformEvent",
     "BackupPlatformProtocol",
     "BackupReaderWriter",
     "BackupReaderWriterError",
@@ -78,8 +73,6 @@ __all__ = [
     "suggested_filename",
     "suggested_filename_from_name_date",
 ]
-
-PLATFORMS = [Platform.SENSOR]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
@@ -135,28 +128,4 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async_register_http_views(hass)
 
-    discovery_flow.async_create_flow(
-        hass, DOMAIN, context={"source": SOURCE_SYSTEM}, data={}
-    )
-
     return True
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: BackupConfigEntry) -> bool:
-    """Set up a config entry."""
-    backup_manager: BackupManager = hass.data[DATA_MANAGER]
-    coordinator = BackupDataUpdateCoordinator(hass, entry, backup_manager)
-    await coordinator.async_config_entry_first_refresh()
-
-    entry.async_on_unload(coordinator.async_unsubscribe)
-
-    entry.runtime_data = coordinator
-
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    return True
-
-
-async def async_unload_entry(hass: HomeAssistant, entry: BackupConfigEntry) -> bool:
-    """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

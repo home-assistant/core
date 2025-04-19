@@ -38,7 +38,7 @@
         "state": {
           "printing": "Printing",
           "idle": "[%key:common::state::idle%]",
-          "stopped": "[%key:common::state::stopped%]"
+          "stopped": "Stopped"
         }
       },
       "uptime": {

@@ -2,16 +2,16 @@
   "entity": {
     "sensor": {
       "round_trip_time_avg": {
-        "name": "Round-trip time average"
+        "name": "Round Trip Time Average"
       },
       "round_trip_time_max": {
-        "name": "Round-trip time maximum"
+        "name": "Round Trip Time Maximum"
       },
       "round_trip_time_mdev": {
-        "name": "Round-trip time mean deviation"
+        "name": "Round Trip Time Mean Deviation"
       },
       "round_trip_time_min": {
-        "name": "Round-trip time minimum"
+        "name": "Round Trip Time Minimum"
       }
     }
   },

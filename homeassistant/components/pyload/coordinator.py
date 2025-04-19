@@ -31,7 +31,6 @@ class PyLoadData:
     download: bool
     reconnect: bool
     captcha: bool | None = None
-    proxy: bool | None = None
     free_space: int
 
 

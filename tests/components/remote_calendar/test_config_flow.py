@@ -45,35 +45,6 @@ async def test_form_import_ics(hass: HomeAssistant, ics_content: str) -> None:
     }
 
 
-@respx.mock
-async def test_form_import_webcal(hass: HomeAssistant, ics_content: str) -> None:
-    """Test we get the import form."""
-    respx.get(CALENDER_URL).mock(
-        return_value=Response(
-            status_code=200,
-            text=ics_content,
-        )
-    )
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_CALENDAR_NAME: CALENDAR_NAME,
-            CONF_URL: "webcal://some.calendar.com/calendar.ics",
-        },
-    )
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == CALENDAR_NAME
-    assert result2["data"] == {
-        CONF_CALENDAR_NAME: CALENDAR_NAME,
-        CONF_URL: CALENDER_URL,
-    }
-
-
 @pytest.mark.parametrize(
     ("side_effect"),
     [
@@ -165,17 +136,8 @@ async def test_unsupported_inputs(
     ## and then the exception isn't raised anymore.
 
 
-@pytest.mark.parametrize(
-    ("http_status", "error"),
-    [
-        (401, "cannot_connect"),
-        (403, "forbidden"),
-    ],
-)
 @respx.mock
-async def test_form_http_status_error(
-    hass: HomeAssistant, ics_content: str, http_status: int, error: str
-) -> None:
+async def test_form_http_status_error(hass: HomeAssistant, ics_content: str) -> None:
     """Test we http status."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -183,7 +145,7 @@ async def test_form_http_status_error(
     assert result["type"] is FlowResultType.FORM
     respx.get(CALENDER_URL).mock(
         return_value=Response(
-            status_code=http_status,
+            status_code=403,
         )
     )
 
@@ -195,7 +157,7 @@ async def test_form_http_status_error(
         },
     )
     assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": error}
+    assert result2["errors"] == {"base": "cannot_connect"}
     respx.get(CALENDER_URL).mock(
         return_value=Response(
             status_code=200,

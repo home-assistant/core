@@ -46,8 +46,6 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-type EmulatedRokuConfigEntry = ConfigEntry[EmulatedRoku]
-
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the emulated roku component."""
@@ -67,21 +65,22 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(
-    hass: HomeAssistant, entry: EmulatedRokuConfigEntry
-) -> bool:
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up an emulated roku server from a config entry."""
-    config = entry.data
-    name: str = config[CONF_NAME]
-    listen_port: int = config[CONF_LISTEN_PORT]
-    host_ip: str = config.get(CONF_HOST_IP) or await async_get_source_ip(hass)
-    advertise_ip: str | None = config.get(CONF_ADVERTISE_IP)
-    advertise_port: int | None = config.get(CONF_ADVERTISE_PORT)
-    upnp_bind_multicast: bool | None = config.get(CONF_UPNP_BIND_MULTICAST)
+    config = config_entry.data
+
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = {}
+
+    name = config[CONF_NAME]
+    listen_port = config[CONF_LISTEN_PORT]
+    host_ip = config.get(CONF_HOST_IP) or await async_get_source_ip(hass)
+    advertise_ip = config.get(CONF_ADVERTISE_IP)
+    advertise_port = config.get(CONF_ADVERTISE_PORT)
+    upnp_bind_multicast = config.get(CONF_UPNP_BIND_MULTICAST)
 
     server = EmulatedRoku(
         hass,
-        entry.entry_id,
         name,
         host_ip,
         listen_port,
@@ -89,12 +88,14 @@ async def async_setup_entry(
         advertise_port,
         upnp_bind_multicast,
     )
-    entry.runtime_data = server
+
+    hass.data[DOMAIN][name] = server
+
     return await server.setup()
 
 
-async def async_unload_entry(
-    hass: HomeAssistant, entry: EmulatedRokuConfigEntry
-) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await entry.runtime_data.unload()
+    name = entry.data[CONF_NAME]
+    server = hass.data[DOMAIN].pop(name)
+    return await server.unload()

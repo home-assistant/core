@@ -1,7 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "already_configured": "Account is already configured",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reauth_account_mismatch": "The reauthentication account does not match the original account"
     },
@@ -132,7 +132,7 @@
         "name": "Tire pressure warning rear right"
       },
       "pin_to_drive_enabled": {
-        "name": "PIN to Drive enabled"
+        "name": "Pin to drive enabled"
       },
       "drive_rail": {
         "name": "Drive rail"
@@ -221,16 +221,10 @@
         "state_attributes": {
           "preset_mode": {
             "state": {
-              "off": "[%key:common::state::normal%]",
+              "off": "Normal",
               "keep": "Keep mode",
               "dog": "Dog mode",
               "camp": "Camp mode"
-            }
-          },
-          "fan_mode": {
-            "state": {
-              "off": "[%key:common::state::off%]",
-              "bioweapon": "Bioweapon defense"
             }
           }
         }
@@ -262,72 +256,72 @@
       "climate_state_seat_heater_left": {
         "name": "Seat heater front left",
         "state": {
-          "high": "[%key:common::state::high%]",
-          "low": "[%key:common::state::low%]",
-          "medium": "[%key:common::state::medium%]",
-          "off": "[%key:common::state::off%]"
+          "high": "High",
+          "low": "Low",
+          "medium": "Medium",
+          "off": "Off"
         }
       },
       "climate_state_seat_heater_rear_center": {
         "name": "Seat heater rear center",
         "state": {
-          "high": "[%key:common::state::high%]",
-          "low": "[%key:common::state::low%]",
-          "medium": "[%key:common::state::medium%]",
-          "off": "[%key:common::state::off%]"
+          "high": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::high%]",
+          "low": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::low%]",
+          "medium": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::medium%]",
+          "off": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::off%]"
         }
       },
       "climate_state_seat_heater_rear_left": {
         "name": "Seat heater rear left",
         "state": {
-          "high": "[%key:common::state::high%]",
-          "low": "[%key:common::state::low%]",
-          "medium": "[%key:common::state::medium%]",
-          "off": "[%key:common::state::off%]"
+          "high": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::high%]",
+          "low": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::low%]",
+          "medium": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::medium%]",
+          "off": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::off%]"
         }
       },
       "climate_state_seat_heater_rear_right": {
         "name": "Seat heater rear right",
         "state": {
-          "high": "[%key:common::state::high%]",
-          "low": "[%key:common::state::low%]",
-          "medium": "[%key:common::state::medium%]",
-          "off": "[%key:common::state::off%]"
+          "high": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::high%]",
+          "low": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::low%]",
+          "medium": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::medium%]",
+          "off": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::off%]"
         }
       },
       "climate_state_seat_heater_right": {
         "name": "Seat heater front right",
         "state": {
-          "high": "[%key:common::state::high%]",
-          "low": "[%key:common::state::low%]",
-          "medium": "[%key:common::state::medium%]",
-          "off": "[%key:common::state::off%]"
+          "high": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::high%]",
+          "low": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::low%]",
+          "medium": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::medium%]",
+          "off": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::off%]"
         }
       },
       "climate_state_seat_heater_third_row_left": {
         "name": "Seat heater third row left",
         "state": {
-          "high": "[%key:common::state::high%]",
-          "low": "[%key:common::state::low%]",
-          "medium": "[%key:common::state::medium%]",
-          "off": "[%key:common::state::off%]"
+          "high": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::high%]",
+          "low": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::low%]",
+          "medium": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::medium%]",
+          "off": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::off%]"
         }
       },
       "climate_state_seat_heater_third_row_right": {
         "name": "Seat heater third row right",
         "state": {
-          "high": "[%key:common::state::high%]",
-          "low": "[%key:common::state::low%]",
-          "medium": "[%key:common::state::medium%]",
-          "off": "[%key:common::state::off%]"
+          "high": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::high%]",
+          "low": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::low%]",
+          "medium": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::medium%]",
+          "off": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::off%]"
         }
       },
       "climate_state_steering_wheel_heat_level": {
         "name": "Steering wheel heater",
         "state": {
-          "high": "[%key:common::state::high%]",
-          "low": "[%key:common::state::low%]",
-          "off": "[%key:common::state::off%]"
+          "high": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::high%]",
+          "low": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::low%]",
+          "off": "[%key:component::teslemetry::entity::select::climate_state_seat_heater_left::state::off%]"
         }
       },
       "components_customer_preferred_export_rule": {
@@ -422,8 +416,8 @@
         "state": {
           "starting": "Starting",
           "charging": "[%key:common::state::charging%]",
-          "disconnected": "[%key:common::state::disconnected%]",
-          "stopped": "[%key:common::state::stopped%]",
+          "disconnected": "Disconnected",
+          "stopped": "Stopped",
           "complete": "Complete",
           "no_power": "No power"
         }
@@ -534,7 +528,7 @@
       "vin": {
         "name": "Vehicle",
         "state": {
-          "disconnected": "[%key:common::state::disconnected%]"
+          "disconnected": "Disconnected"
         }
       },
       "vpp_backup_reserve_percent": {
@@ -726,7 +720,7 @@
         },
         "enable": {
           "description": "Enable or disable scheduled charging.",
-          "name": "[%key:common::action::enable%]"
+          "name": "Enable"
         },
         "time": {
           "description": "Time to start charging.",
@@ -748,7 +742,7 @@
         },
         "enable": {
           "description": "Enable or disable scheduled departure.",
-          "name": "[%key:common::action::enable%]"
+          "name": "Enable"
         },
         "end_off_peak_time": {
           "description": "Time to complete charging by.",
@@ -782,7 +776,7 @@
         },
         "enable": {
           "description": "Enable or disable speed limit.",
-          "name": "[%key:common::action::enable%]"
+          "name": "Enable"
         },
         "pin": {
           "description": "4 digit PIN.",
@@ -814,7 +808,7 @@
         },
         "enable": {
           "description": "Enable or disable valet mode.",
-          "name": "[%key:common::action::enable%]"
+          "name": "Enable"
         },
         "pin": {
           "description": "4 digit PIN.",

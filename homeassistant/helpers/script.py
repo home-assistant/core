@@ -966,11 +966,12 @@ class _ScriptRun:
     ## Variable actions ##
 
     async def _async_step_variables(self) -> None:
-        """Assign values to variables."""
-        self._step_log("assigning variables")
-        self._variables.update(
-            self._action[CONF_VARIABLES].async_simple_render(self._variables)
-        )
+        """Define a local variable."""
+        self._step_log("defining local variables")
+        for key, value in (
+            self._action[CONF_VARIABLES].async_simple_render(self._variables).items()
+        ):
+            self._variables.define_local(key, value)
 
     ## External actions ##
 
@@ -1311,7 +1312,7 @@ class _QueuedScriptRun(_ScriptRun):
 
     lock_acquired = False
 
-    async def async_run(self) -> ScriptRunResult | None:
+    async def async_run(self) -> None:
         """Run script."""
         # Wait for previous run, if any, to finish by attempting to acquire the script's
         # shared lock. At the same time monitor if we've been told to stop.
@@ -1325,7 +1326,7 @@ class _QueuedScriptRun(_ScriptRun):
 
         self.lock_acquired = True
         # We've acquired the lock so we can go ahead and start the run.
-        return await super().async_run()
+        await super().async_run()
 
     def _finish(self) -> None:
         if self.lock_acquired:

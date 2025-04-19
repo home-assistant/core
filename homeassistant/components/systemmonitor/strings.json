@@ -48,13 +48,13 @@
         "name": "Last boot"
       },
       "load_15m": {
-        "name": "Load (15 min)"
+        "name": "Load (15m)"
       },
       "load_1m": {
-        "name": "Load (1 min)"
+        "name": "Load (1m)"
       },
       "load_5m": {
-        "name": "Load (5 min)"
+        "name": "Load (5m)"
       },
       "memory_free": {
         "name": "Memory free"

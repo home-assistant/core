@@ -1,5 +1,6 @@
 """The tests for the rss_feed_api component."""
 
+from asyncio import AbstractEventLoop
 from http import HTTPStatus
 
 from aiohttp.test_utils import TestClient
@@ -13,11 +14,13 @@ from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture
-async def mock_http_client(
+def mock_http_client(
+    event_loop: AbstractEventLoop,
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
 ) -> TestClient:
     """Set up test fixture."""
+    loop = event_loop
     config = {
         "rss_feed_template": {
             "testfeed": {
@@ -32,8 +35,8 @@ async def mock_http_client(
         }
     }
 
-    await async_setup_component(hass, "rss_feed_template", config)
-    return await hass_client()
+    loop.run_until_complete(async_setup_component(hass, "rss_feed_template", config))
+    return loop.run_until_complete(hass_client())
 
 
 async def test_get_nonexistant_feed(mock_http_client) -> None:

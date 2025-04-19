@@ -1136,7 +1136,7 @@ class SelectOptionDict(TypedDict):
 
 
 class SelectSelectorMode(StrEnum):
-    """Possible modes for a select selector."""
+    """Possible modes for a number selector."""
 
     LIST = "list"
     DROPDOWN = "dropdown"

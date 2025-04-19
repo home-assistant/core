@@ -296,8 +296,7 @@ class LightTemplate(TemplateEntity, LightEntity):
         self._supports_transition_template = config.get(CONF_SUPPORTS_TRANSITION)
 
         for action_id in (CONF_ON_ACTION, CONF_OFF_ACTION, CONF_EFFECT_ACTION):
-            # Scripts can be an empty list, therefore we need to check for None
-            if (action_config := config.get(action_id)) is not None:
+            if action_config := config.get(action_id):
                 self.add_script(action_id, action_config, name, DOMAIN)
 
         self._state = False
@@ -324,8 +323,7 @@ class LightTemplate(TemplateEntity, LightEntity):
             (CONF_RGBW_ACTION, ColorMode.RGBW),
             (CONF_RGBWW_ACTION, ColorMode.RGBWW),
         ):
-            # Scripts can be an empty list, therefore we need to check for None
-            if (action_config := config.get(action_id)) is not None:
+            if action_config := config.get(action_id):
                 self.add_script(action_id, action_config, name, DOMAIN)
                 color_modes.add(color_mode)
         self._supported_color_modes = filter_supported_color_modes(color_modes)
@@ -335,7 +333,7 @@ class LightTemplate(TemplateEntity, LightEntity):
             self._color_mode = next(iter(self._supported_color_modes))
 
         self._attr_supported_features = LightEntityFeature(0)
-        if (self._action_scripts.get(CONF_EFFECT_ACTION)) is not None:
+        if self._action_scripts.get(CONF_EFFECT_ACTION):
             self._attr_supported_features |= LightEntityFeature.EFFECT
         if self._supports_transition is True:
             self._attr_supported_features |= LightEntityFeature.TRANSITION

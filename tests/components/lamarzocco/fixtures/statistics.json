@@ -1,0 +1,26 @@
+[
+  {
+    "count": 1047,
+    "coffeeType": 0
+  },
+  {
+    "count": 560,
+    "coffeeType": 1
+  },
+  {
+    "count": 468,
+    "coffeeType": 2
+  },
+  {
+    "count": 312,
+    "coffeeType": 3
+  },
+  {
+    "count": 2252,
+    "coffeeType": 4
+  },
+  {
+    "coffeeType": -1,
+    "count": 1740
+  }
+]

@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from enum import IntEnum
-from typing import Literal, NotRequired, TypedDict
+from typing import Literal, TypedDict
 
 
 class StatisticResult(TypedDict):
@@ -37,7 +36,6 @@ class StatisticMixIn(TypedDict, total=False):
     min: float
     max: float
     mean: float
-    mean_weight: float
 
 
 class StatisticData(StatisticDataBase, StatisticMixIn, total=False):
@@ -52,20 +50,10 @@ class StatisticDataTimestamp(StatisticDataTimestampBase, StatisticMixIn, total=F
     last_reset_ts: float | None
 
 
-class StatisticMeanType(IntEnum):
-    """Statistic mean type."""
-
-    NONE = 0
-    ARITHMETIC = 1
-    CIRCULAR = 2
-
-
 class StatisticMetaData(TypedDict):
     """Statistic meta data class."""
 
-    # has_mean is deprecated, use mean_type instead. has_mean will be removed in 2026.4
-    has_mean: NotRequired[bool]
-    mean_type: StatisticMeanType
+    has_mean: bool
     has_sum: bool
     name: str | None
     source: str

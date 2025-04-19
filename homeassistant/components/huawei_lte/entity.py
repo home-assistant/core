@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import timedelta
 
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -24,6 +25,7 @@ class HuaweiLteBaseEntity(Entity):
     def __init__(self, router: Router) -> None:
         """Initialize."""
         self.router = router
+        self._unsub_handlers: list[Callable] = []
 
     @property
     def _device_unique_id(self) -> str:
@@ -46,7 +48,7 @@ class HuaweiLteBaseEntity(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Connect to update signals."""
-        self.async_on_remove(
+        self._unsub_handlers.append(
             async_dispatcher_connect(self.hass, UPDATE_SIGNAL, self._async_maybe_update)
         )
 
@@ -54,6 +56,12 @@ class HuaweiLteBaseEntity(Entity):
         """Update state if the update signal comes from our router."""
         if config_entry_unique_id == self.router.config_entry.unique_id:
             self.async_schedule_update_ha_state(True)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Invoke unsubscription handlers."""
+        for unsub in self._unsub_handlers:
+            unsub()
+        self._unsub_handlers.clear()
 
 
 class HuaweiLteBaseEntityWithDevice(HuaweiLteBaseEntity):

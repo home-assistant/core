@@ -1,1 +1,0 @@
-"""Thermador virtual integration."""

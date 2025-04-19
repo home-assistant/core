@@ -51,11 +51,7 @@ async def async_call_action_from_config(
     runtime_data = _get_runtime_data_from_device_id(hass, device_id)
     if not runtime_data:
         raise InvalidDeviceAutomationConfig(
-            translation_domain=DOMAIN,
-            translation_key="device_invalid",
-            translation_placeholders={
-                "device_id": device_id,
-            },
+            f"Unable to find a NUT device with id {device_id}"
         )
     await runtime_data.data.async_run_command(command_name)
 

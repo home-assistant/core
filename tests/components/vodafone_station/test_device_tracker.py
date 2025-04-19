@@ -47,7 +47,8 @@ async def test_consider_home(
 
     device_tracker = f"device_tracker.{DEVICE_1_HOST}"
 
-    assert (state := hass.states.get(device_tracker))
+    state = hass.states.get(device_tracker)
+    assert state
     assert state.state == STATE_HOME
 
     mock_vodafone_station_router.get_devices_data.return_value[
@@ -58,5 +59,6 @@ async def test_consider_home(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert (state := hass.states.get(device_tracker))
+    state = hass.states.get(device_tracker)
+    assert state
     assert state.state == STATE_NOT_HOME

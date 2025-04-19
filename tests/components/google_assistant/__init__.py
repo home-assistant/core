@@ -260,13 +260,6 @@ DEMO_DEVICES = [
         "willReportState": False,
     },
     {
-        "id": "media_player.search",
-        "name": {"name": "Search"},
-        "traits": ["action.devices.traits.MediaState", "action.devices.traits.OnOff"],
-        "type": "action.devices.types.SETTOP",
-        "willReportState": False,
-    },
-    {
         "id": "fan.living_room_fan",
         "name": {"name": "Living Room Fan"},
         "traits": [

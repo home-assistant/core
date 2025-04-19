@@ -18,5 +18,4 @@ async def async_get_config_entry_diagnostics(
         "advice": client.advice,
         "air_quality_index": client.lki,
         "windspeed_ms": client.windspeed_ms,
-        "forecast": await client.async_get_forecast(),
     }

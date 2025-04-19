@@ -5,7 +5,7 @@ from __future__ import annotations
 from pypglab.mqtt import (
     Client as PyPGLabMqttClient,
     Sub_State as PyPGLabSubState,
-    Subscribe_CallBack as PyPGLabSubscribeCallBack,
+    Subcribe_CallBack as PyPGLabSubscribeCallBack,
 )
 
 from homeassistant.components import mqtt

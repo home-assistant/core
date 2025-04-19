@@ -1,0 +1,10 @@
+{
+  "code": 0,
+  "deviceStatus": "on",
+  "activeTime": 50,
+  "filterLife": 90,
+  "screenStatus": "on",
+  "mode": "auto",
+  "level": 2,
+  "airQuality": 95
+}

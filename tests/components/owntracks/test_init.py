@@ -43,7 +43,7 @@ def mock_dev_track(mock_device_tracker_conf: list[Device]) -> None:
 
 
 @pytest.fixture
-async def mock_client(
+def mock_client(
     hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
 ) -> TestClient:
     """Start the Home Assistant HTTP component."""
@@ -54,9 +54,9 @@ async def mock_client(
     MockConfigEntry(
         domain="owntracks", data={"webhook_id": "owntracks_test", "secret": "abcd"}
     ).add_to_hass(hass)
-    await async_setup_component(hass, "owntracks", {})
+    hass.loop.run_until_complete(async_setup_component(hass, "owntracks", {}))
 
-    return await hass_client_no_auth()
+    return hass.loop.run_until_complete(hass_client_no_auth())
 
 
 async def test_handle_valid_message(mock_client) -> None:

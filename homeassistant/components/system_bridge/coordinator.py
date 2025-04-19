@@ -33,7 +33,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, GET_DATA_WAIT_TIMEOUT, MODULES
+from .const import DOMAIN, MODULES
 from .data import SystemBridgeData
 
 
@@ -119,10 +119,7 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
         """Get data from WebSocket."""
         await self.check_websocket_connected()
 
-        modules_data = await self.websocket_client.get_data(
-            GetData(modules=modules),
-            timeout=GET_DATA_WAIT_TIMEOUT,
-        )
+        modules_data = await self.websocket_client.get_data(GetData(modules=modules))
 
         # Merge new data with existing data
         for module in MODULES:

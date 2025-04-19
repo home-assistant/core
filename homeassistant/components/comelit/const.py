@@ -9,5 +9,3 @@ _LOGGER = logging.getLogger(__package__)
 DOMAIN = "comelit"
 DEFAULT_PORT = 80
 DEVICE_TYPE_LIST = [BRIDGE, VEDO]
-
-SCAN_INTERVAL = 5

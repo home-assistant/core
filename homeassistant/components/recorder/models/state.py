@@ -104,7 +104,7 @@ class LazyState(State):
         return self._last_updated_ts
 
     @cached_property
-    def last_changed_timestamp(self) -> float:
+    def last_changed_timestamp(self) -> float:  # type: ignore[override]
         """Last changed timestamp."""
         ts = self._last_changed_ts or self._last_updated_ts
         if TYPE_CHECKING:
@@ -112,7 +112,7 @@ class LazyState(State):
         return ts
 
     @cached_property
-    def last_reported_timestamp(self) -> float:
+    def last_reported_timestamp(self) -> float:  # type: ignore[override]
         """Last reported timestamp."""
         ts = self._last_reported_ts or self._last_updated_ts
         if TYPE_CHECKING:

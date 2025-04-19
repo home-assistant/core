@@ -31,7 +31,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'f0af21a2-d5a1-437c-b10a-b34a87394b71_main_energyMeter_energy_energy',
+    'unique_id': 'f0af21a2-d5a1-437c-b10a-b34a87394b71.energy',
     'unit_of_measurement': 'kWh',
   })
 # ---
@@ -83,7 +83,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'f0af21a2-d5a1-437c-b10a-b34a87394b71_main_powerMeter_power_power',
+    'unique_id': 'f0af21a2-d5a1-437c-b10a-b34a87394b71.power',
     'unit_of_measurement': 'W',
   })
 # ---
@@ -135,7 +135,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'f0af21a2-d5a1-437c-b10a-b34a87394b71_main_voltageMeasurement_voltage_voltage',
+    'unique_id': 'f0af21a2-d5a1-437c-b10a-b34a87394b71.voltage',
     'unit_of_measurement': None,
   })
 # ---
@@ -152,58 +152,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
-  })
-# ---
-# name: test_all_entities[aux_ac][sensor.aux_a_c_on_off_temperature-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.aux_a_c_on_off_temperature',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Temperature',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'bf53a150-f8a4-45d1-aac4-86252475d551_main_temperatureMeasurement_temperature_temperature',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_all_entities[aux_ac][sensor.aux_a_c_on_off_temperature-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'AUX A/C on-off Temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.aux_a_c_on_off_temperature',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '20.0',
   })
 # ---
 # name: test_all_entities[base_electric_meter][sensor.aeon_energy_monitor_energy-entry]
@@ -238,7 +186,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '68e786a6-7f61-4c3a-9e13-70b803cf782b_main_energyMeter_energy_energy',
+    'unique_id': '68e786a6-7f61-4c3a-9e13-70b803cf782b.energy',
     'unit_of_measurement': 'kWh',
   })
 # ---
@@ -290,7 +238,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '68e786a6-7f61-4c3a-9e13-70b803cf782b_main_powerMeter_power_power',
+    'unique_id': '68e786a6-7f61-4c3a-9e13-70b803cf782b.power',
     'unit_of_measurement': 'W',
   })
 # ---
@@ -340,7 +288,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '286ba274-4093-4bcb-849c-a1a3efe7b1e5_main_battery_battery_battery',
+    'unique_id': '286ba274-4093-4bcb-849c-a1a3efe7b1e5.battery',
     'unit_of_measurement': '%',
   })
 # ---
@@ -391,7 +339,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '286ba274-4093-4bcb-849c-a1a3efe7b1e5_main_temperatureMeasurement_temperature_temperature',
+    'unique_id': '286ba274-4093-4bcb-849c-a1a3efe7b1e5.temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -448,7 +396,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'alarm',
-    'unique_id': '10e06a70-ee7d-4832-85e9-a0a06a7a05bd_main_alarm_alarm_alarm',
+    'unique_id': '10e06a70-ee7d-4832-85e9-a0a06a7a05bd.alarm',
     'unit_of_measurement': None,
   })
 # ---
@@ -502,7 +450,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '10e06a70-ee7d-4832-85e9-a0a06a7a05bd_main_battery_battery_battery',
+    'unique_id': '10e06a70-ee7d-4832-85e9-a0a06a7a05bd.battery',
     'unit_of_measurement': '%',
   })
 # ---
@@ -553,7 +501,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'd0268a69-abfb-4c92-a646-61cec2e510ad_main_powerMeter_power_power',
+    'unique_id': 'd0268a69-abfb-4c92-a646-61cec2e510ad.power',
     'unit_of_measurement': 'W',
   })
 # ---
@@ -603,7 +551,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '2d9a892b-1c93-45a5-84cb-0e81889498c6_main_battery_battery_battery',
+    'unique_id': '2d9a892b-1c93-45a5-84cb-0e81889498c6.battery',
     'unit_of_measurement': '%',
   })
 # ---
@@ -654,7 +602,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '2d9a892b-1c93-45a5-84cb-0e81889498c6_main_temperatureMeasurement_temperature_temperature',
+    'unique_id': '2d9a892b-1c93-45a5-84cb-0e81889498c6.temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -672,416 +620,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '15.0',
-  })
-# ---
-# name: test_all_entities[da_ac_airsensor_01001][sensor.eeomoniteo_peulreoseu_air_quality-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.eeomoniteo_peulreoseu_air_quality',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Air quality',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'air_quality',
-    'unique_id': 'a3a970ea-e09c-9c04-161b-94c934e21666_main_airQualitySensor_airQuality_airQuality',
-    'unit_of_measurement': 'CAQI',
-  })
-# ---
-# name: test_all_entities[da_ac_airsensor_01001][sensor.eeomoniteo_peulreoseu_air_quality-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': '에어모니터 플러스 Air quality',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'CAQI',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.eeomoniteo_peulreoseu_air_quality',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2',
-  })
-# ---
-# name: test_all_entities[da_ac_airsensor_01001][sensor.eeomoniteo_peulreoseu_carbon_dioxide-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.eeomoniteo_peulreoseu_carbon_dioxide',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
-    'original_icon': None,
-    'original_name': 'Carbon dioxide',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'a3a970ea-e09c-9c04-161b-94c934e21666_main_carbonDioxideMeasurement_carbonDioxide_carbonDioxide',
-    'unit_of_measurement': 'ppm',
-  })
-# ---
-# name: test_all_entities[da_ac_airsensor_01001][sensor.eeomoniteo_peulreoseu_carbon_dioxide-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'carbon_dioxide',
-      'friendly_name': '에어모니터 플러스 Carbon dioxide',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'ppm',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.eeomoniteo_peulreoseu_carbon_dioxide',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '1045',
-  })
-# ---
-# name: test_all_entities[da_ac_airsensor_01001][sensor.eeomoniteo_peulreoseu_humidity-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.eeomoniteo_peulreoseu_humidity',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
-    'original_icon': None,
-    'original_name': 'Humidity',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'a3a970ea-e09c-9c04-161b-94c934e21666_main_relativeHumidityMeasurement_humidity_humidity',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_all_entities[da_ac_airsensor_01001][sensor.eeomoniteo_peulreoseu_humidity-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'humidity',
-      'friendly_name': '에어모니터 플러스 Humidity',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.eeomoniteo_peulreoseu_humidity',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '54',
-  })
-# ---
-# name: test_all_entities[da_ac_airsensor_01001][sensor.eeomoniteo_peulreoseu_odor_sensor-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.eeomoniteo_peulreoseu_odor_sensor',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Odor sensor',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'odor_sensor',
-    'unique_id': 'a3a970ea-e09c-9c04-161b-94c934e21666_main_odorSensor_odorLevel_odorLevel',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[da_ac_airsensor_01001][sensor.eeomoniteo_peulreoseu_odor_sensor-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': '에어모니터 플러스 Odor sensor',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.eeomoniteo_peulreoseu_odor_sensor',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '1',
-  })
-# ---
-# name: test_all_entities[da_ac_airsensor_01001][sensor.eeomoniteo_peulreoseu_pm1-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.eeomoniteo_peulreoseu_pm1',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.PM1: 'pm1'>,
-    'original_icon': None,
-    'original_name': 'PM1',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'a3a970ea-e09c-9c04-161b-94c934e21666_main_veryFineDustSensor_veryFineDustLevel_veryFineDustLevel',
-    'unit_of_measurement': 'µg/m³',
-  })
-# ---
-# name: test_all_entities[da_ac_airsensor_01001][sensor.eeomoniteo_peulreoseu_pm1-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'pm1',
-      'friendly_name': '에어모니터 플러스 PM1',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.eeomoniteo_peulreoseu_pm1',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '6',
-  })
-# ---
-# name: test_all_entities[da_ac_airsensor_01001][sensor.eeomoniteo_peulreoseu_pm10-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.eeomoniteo_peulreoseu_pm10',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.PM10: 'pm10'>,
-    'original_icon': None,
-    'original_name': 'PM10',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'a3a970ea-e09c-9c04-161b-94c934e21666_main_dustSensor_dustLevel_dustLevel',
-    'unit_of_measurement': 'µg/m³',
-  })
-# ---
-# name: test_all_entities[da_ac_airsensor_01001][sensor.eeomoniteo_peulreoseu_pm10-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'pm10',
-      'friendly_name': '에어모니터 플러스 PM10',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.eeomoniteo_peulreoseu_pm10',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '31',
-  })
-# ---
-# name: test_all_entities[da_ac_airsensor_01001][sensor.eeomoniteo_peulreoseu_pm2_5-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.eeomoniteo_peulreoseu_pm2_5',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
-    'original_icon': None,
-    'original_name': 'PM2.5',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'a3a970ea-e09c-9c04-161b-94c934e21666_main_dustSensor_fineDustLevel_fineDustLevel',
-    'unit_of_measurement': 'µg/m³',
-  })
-# ---
-# name: test_all_entities[da_ac_airsensor_01001][sensor.eeomoniteo_peulreoseu_pm2_5-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'pm25',
-      'friendly_name': '에어모니터 플러스 PM2.5',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.eeomoniteo_peulreoseu_pm2_5',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '7',
-  })
-# ---
-# name: test_all_entities[da_ac_airsensor_01001][sensor.eeomoniteo_peulreoseu_temperature-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.eeomoniteo_peulreoseu_temperature',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Temperature',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'a3a970ea-e09c-9c04-161b-94c934e21666_main_temperatureMeasurement_temperature_temperature',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_all_entities[da_ac_airsensor_01001][sensor.eeomoniteo_peulreoseu_temperature-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': '에어모니터 플러스 Temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.eeomoniteo_peulreoseu_temperature',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '23.0',
   })
 # ---
 # name: test_all_entities[da_ac_rac_000001][sensor.ac_office_granit_energy-entry]
@@ -1119,7 +657,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '96a5ef74-5832-a84b-f1f7-ca799957065d_main_powerConsumptionReport_powerConsumption_energy_meter',
+    'unique_id': '96a5ef74-5832-a84b-f1f7-ca799957065d.energy_meter',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -1174,7 +712,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'energy_difference',
-    'unique_id': '96a5ef74-5832-a84b-f1f7-ca799957065d_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
+    'unique_id': '96a5ef74-5832-a84b-f1f7-ca799957065d.deltaEnergy_meter',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -1229,7 +767,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'energy_saved',
-    'unique_id': '96a5ef74-5832-a84b-f1f7-ca799957065d_main_powerConsumptionReport_powerConsumption_energySaved_meter',
+    'unique_id': '96a5ef74-5832-a84b-f1f7-ca799957065d.energySaved_meter',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -1281,7 +819,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '96a5ef74-5832-a84b-f1f7-ca799957065d_main_relativeHumidityMeasurement_humidity_humidity',
+    'unique_id': '96a5ef74-5832-a84b-f1f7-ca799957065d.humidity',
     'unit_of_measurement': '%',
   })
 # ---
@@ -1336,7 +874,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '96a5ef74-5832-a84b-f1f7-ca799957065d_main_powerConsumptionReport_powerConsumption_power_meter',
+    'unique_id': '96a5ef74-5832-a84b-f1f7-ca799957065d.power_meter',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -1393,7 +931,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'power_energy',
-    'unique_id': '96a5ef74-5832-a84b-f1f7-ca799957065d_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
+    'unique_id': '96a5ef74-5832-a84b-f1f7-ca799957065d.powerEnergy_meter',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -1445,7 +983,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '96a5ef74-5832-a84b-f1f7-ca799957065d_main_temperatureMeasurement_temperature_temperature',
+    'unique_id': '96a5ef74-5832-a84b-f1f7-ca799957065d.temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -1495,7 +1033,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'audio_volume',
-    'unique_id': '96a5ef74-5832-a84b-f1f7-ca799957065d_main_audioVolume_volume_volume',
+    'unique_id': '96a5ef74-5832-a84b-f1f7-ca799957065d.volume',
     'unit_of_measurement': '%',
   })
 # ---
@@ -1507,435 +1045,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ac_office_granit_volume',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '100',
-  })
-# ---
-# name: test_all_entities[da_ac_rac_000003][sensor.office_airfree_energy-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.office_airfree_energy',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Energy',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'c76d6f38-1b7f-13dd-37b5-db18d5272783_main_powerConsumptionReport_powerConsumption_energy_meter',
-    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-  })
-# ---
-# name: test_all_entities[da_ac_rac_000003][sensor.office_airfree_energy-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Office AirFree Energy',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.office_airfree_energy',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '602.171',
-  })
-# ---
-# name: test_all_entities[da_ac_rac_000003][sensor.office_airfree_energy_difference-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.office_airfree_energy_difference',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Energy difference',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'energy_difference',
-    'unique_id': 'c76d6f38-1b7f-13dd-37b5-db18d5272783_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
-    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-  })
-# ---
-# name: test_all_entities[da_ac_rac_000003][sensor.office_airfree_energy_difference-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Office AirFree Energy difference',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.office_airfree_energy_difference',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_all_entities[da_ac_rac_000003][sensor.office_airfree_energy_saved-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.office_airfree_energy_saved',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Energy saved',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'energy_saved',
-    'unique_id': 'c76d6f38-1b7f-13dd-37b5-db18d5272783_main_powerConsumptionReport_powerConsumption_energySaved_meter',
-    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-  })
-# ---
-# name: test_all_entities[da_ac_rac_000003][sensor.office_airfree_energy_saved-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Office AirFree Energy saved',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.office_airfree_energy_saved',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_all_entities[da_ac_rac_000003][sensor.office_airfree_humidity-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.office_airfree_humidity',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
-    'original_icon': None,
-    'original_name': 'Humidity',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'c76d6f38-1b7f-13dd-37b5-db18d5272783_main_relativeHumidityMeasurement_humidity_humidity',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_all_entities[da_ac_rac_000003][sensor.office_airfree_humidity-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'humidity',
-      'friendly_name': 'Office AirFree Humidity',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.office_airfree_humidity',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '48',
-  })
-# ---
-# name: test_all_entities[da_ac_rac_000003][sensor.office_airfree_power-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.office_airfree_power',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': None,
-    'original_name': 'Power',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'c76d6f38-1b7f-13dd-37b5-db18d5272783_main_powerConsumptionReport_powerConsumption_power_meter',
-    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-  })
-# ---
-# name: test_all_entities[da_ac_rac_000003][sensor.office_airfree_power-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Office AirFree Power',
-      'power_consumption_end': '2025-03-27T05:40:02Z',
-      'power_consumption_start': '2025-03-27T05:29:22Z',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.office_airfree_power',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
-  })
-# ---
-# name: test_all_entities[da_ac_rac_000003][sensor.office_airfree_power_energy-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.office_airfree_power_energy',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Power energy',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'power_energy',
-    'unique_id': 'c76d6f38-1b7f-13dd-37b5-db18d5272783_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
-    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-  })
-# ---
-# name: test_all_entities[da_ac_rac_000003][sensor.office_airfree_power_energy-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Office AirFree Power energy',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.office_airfree_power_energy',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_all_entities[da_ac_rac_000003][sensor.office_airfree_temperature-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.office_airfree_temperature',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Temperature',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'c76d6f38-1b7f-13dd-37b5-db18d5272783_main_temperatureMeasurement_temperature_temperature',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_all_entities[da_ac_rac_000003][sensor.office_airfree_temperature-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Office AirFree Temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.office_airfree_temperature',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '26',
-  })
-# ---
-# name: test_all_entities[da_ac_rac_000003][sensor.office_airfree_volume-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.office_airfree_volume',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Volume',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'audio_volume',
-    'unique_id': 'c76d6f38-1b7f-13dd-37b5-db18d5272783_main_audioVolume_volume_volume',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_all_entities[da_ac_rac_000003][sensor.office_airfree_volume-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Office AirFree Volume',
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.office_airfree_volume',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1977,7 +1086,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '4ece486b-89db-f06a-d54d-748b676b4d8e_main_powerConsumptionReport_powerConsumption_energy_meter',
+    'unique_id': '4ece486b-89db-f06a-d54d-748b676b4d8e.energy_meter',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -2032,7 +1141,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'energy_difference',
-    'unique_id': '4ece486b-89db-f06a-d54d-748b676b4d8e_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
+    'unique_id': '4ece486b-89db-f06a-d54d-748b676b4d8e.deltaEnergy_meter',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -2087,7 +1196,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'energy_saved',
-    'unique_id': '4ece486b-89db-f06a-d54d-748b676b4d8e_main_powerConsumptionReport_powerConsumption_energySaved_meter',
+    'unique_id': '4ece486b-89db-f06a-d54d-748b676b4d8e.energySaved_meter',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -2139,7 +1248,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '4ece486b-89db-f06a-d54d-748b676b4d8e_main_relativeHumidityMeasurement_humidity_humidity',
+    'unique_id': '4ece486b-89db-f06a-d54d-748b676b4d8e.humidity',
     'unit_of_measurement': '%',
   })
 # ---
@@ -2194,7 +1303,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '4ece486b-89db-f06a-d54d-748b676b4d8e_main_powerConsumptionReport_powerConsumption_power_meter',
+    'unique_id': '4ece486b-89db-f06a-d54d-748b676b4d8e.power_meter',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -2251,7 +1360,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'power_energy',
-    'unique_id': '4ece486b-89db-f06a-d54d-748b676b4d8e_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
+    'unique_id': '4ece486b-89db-f06a-d54d-748b676b4d8e.powerEnergy_meter',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -2303,7 +1412,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '4ece486b-89db-f06a-d54d-748b676b4d8e_main_temperatureMeasurement_temperature_temperature',
+    'unique_id': '4ece486b-89db-f06a-d54d-748b676b4d8e.temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -2353,7 +1462,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'audio_volume',
-    'unique_id': '4ece486b-89db-f06a-d54d-748b676b4d8e_main_audioVolume_volume_volume',
+    'unique_id': '4ece486b-89db-f06a-d54d-748b676b4d8e.volume',
     'unit_of_measurement': '%',
   })
 # ---
@@ -2403,7 +1512,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'air_quality',
-    'unique_id': 'F8042E25-0E53-0000-0000-000000000000_main_airQualitySensor_airQuality_airQuality',
+    'unique_id': 'F8042E25-0E53-0000-0000-000000000000.airQuality',
     'unit_of_measurement': 'CAQI',
   })
 # ---
@@ -2454,7 +1563,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'F8042E25-0E53-0000-0000-000000000000_main_dustSensor_dustLevel_dustLevel',
+    'unique_id': 'F8042E25-0E53-0000-0000-000000000000.dustLevel',
     'unit_of_measurement': 'µg/m³',
   })
 # ---
@@ -2506,7 +1615,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'F8042E25-0E53-0000-0000-000000000000_main_dustSensor_fineDustLevel_fineDustLevel',
+    'unique_id': 'F8042E25-0E53-0000-0000-000000000000.fineDustLevel',
     'unit_of_measurement': 'µg/m³',
   })
 # ---
@@ -2558,7 +1667,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'F8042E25-0E53-0000-0000-000000000000_main_temperatureMeasurement_temperature_temperature',
+    'unique_id': 'F8042E25-0E53-0000-0000-000000000000.temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -2608,7 +1717,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'completion_time',
-    'unique_id': '2bad3237-4886-e699-1b90-4a51a3d55c8a_main_ovenOperatingState_completionTime_completionTime',
+    'unique_id': '2bad3237-4886-e699-1b90-4a51a3d55c8a.completionTime',
     'unit_of_measurement': None,
   })
 # ---
@@ -2676,7 +1785,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'oven_job_state',
-    'unique_id': '2bad3237-4886-e699-1b90-4a51a3d55c8a_main_ovenOperatingState_ovenJobState_ovenJobState',
+    'unique_id': '2bad3237-4886-e699-1b90-4a51a3d55c8a.ovenJobState',
     'unit_of_measurement': None,
   })
 # ---
@@ -2749,7 +1858,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'oven_machine_state',
-    'unique_id': '2bad3237-4886-e699-1b90-4a51a3d55c8a_main_ovenOperatingState_machineState_machineState',
+    'unique_id': '2bad3237-4886-e699-1b90-4a51a3d55c8a.machineState',
     'unit_of_measurement': None,
   })
 # ---
@@ -2830,7 +1939,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'oven_mode',
-    'unique_id': '2bad3237-4886-e699-1b90-4a51a3d55c8a_main_ovenMode_ovenMode_ovenMode',
+    'unique_id': '2bad3237-4886-e699-1b90-4a51a3d55c8a.ovenMode',
     'unit_of_measurement': None,
   })
 # ---
@@ -2905,7 +2014,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'oven_setpoint',
-    'unique_id': '2bad3237-4886-e699-1b90-4a51a3d55c8a_main_ovenSetpoint_ovenSetpoint_ovenSetpoint',
+    'unique_id': '2bad3237-4886-e699-1b90-4a51a3d55c8a.ovenSetpoint',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -2956,7 +2065,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '2bad3237-4886-e699-1b90-4a51a3d55c8a_main_temperatureMeasurement_temperature_temperature',
+    'unique_id': '2bad3237-4886-e699-1b90-4a51a3d55c8a.temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -3006,7 +2115,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'completion_time',
-    'unique_id': '9447959a-0dfa-6b27-d40d-650da525c53f_main_ovenOperatingState_completionTime_completionTime',
+    'unique_id': '9447959a-0dfa-6b27-d40d-650da525c53f.completionTime',
     'unit_of_measurement': None,
   })
 # ---
@@ -3074,7 +2183,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'oven_job_state',
-    'unique_id': '9447959a-0dfa-6b27-d40d-650da525c53f_main_ovenOperatingState_ovenJobState_ovenJobState',
+    'unique_id': '9447959a-0dfa-6b27-d40d-650da525c53f.ovenJobState',
     'unit_of_measurement': None,
   })
 # ---
@@ -3147,7 +2256,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'oven_machine_state',
-    'unique_id': '9447959a-0dfa-6b27-d40d-650da525c53f_main_ovenOperatingState_machineState_machineState',
+    'unique_id': '9447959a-0dfa-6b27-d40d-650da525c53f.machineState',
     'unit_of_measurement': None,
   })
 # ---
@@ -3228,7 +2337,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'oven_mode',
-    'unique_id': '9447959a-0dfa-6b27-d40d-650da525c53f_main_ovenMode_ovenMode_ovenMode',
+    'unique_id': '9447959a-0dfa-6b27-d40d-650da525c53f.ovenMode',
     'unit_of_measurement': None,
   })
 # ---
@@ -3303,7 +2412,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'oven_setpoint',
-    'unique_id': '9447959a-0dfa-6b27-d40d-650da525c53f_main_ovenSetpoint_ovenSetpoint_ovenSetpoint',
+    'unique_id': '9447959a-0dfa-6b27-d40d-650da525c53f.ovenSetpoint',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -3354,7 +2463,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '9447959a-0dfa-6b27-d40d-650da525c53f_main_temperatureMeasurement_temperature_temperature',
+    'unique_id': '9447959a-0dfa-6b27-d40d-650da525c53f.temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -3404,7 +2513,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'completion_time',
-    'unique_id': '2c3cbaa0-1899-5ddc-7b58-9d657bd48f18_main_ovenOperatingState_completionTime_completionTime',
+    'unique_id': '2c3cbaa0-1899-5ddc-7b58-9d657bd48f18.completionTime',
     'unit_of_measurement': None,
   })
 # ---
@@ -3472,7 +2581,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'oven_job_state',
-    'unique_id': '2c3cbaa0-1899-5ddc-7b58-9d657bd48f18_main_ovenOperatingState_ovenJobState_ovenJobState',
+    'unique_id': '2c3cbaa0-1899-5ddc-7b58-9d657bd48f18.ovenJobState',
     'unit_of_measurement': None,
   })
 # ---
@@ -3545,7 +2654,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'oven_machine_state',
-    'unique_id': '2c3cbaa0-1899-5ddc-7b58-9d657bd48f18_main_ovenOperatingState_machineState_machineState',
+    'unique_id': '2c3cbaa0-1899-5ddc-7b58-9d657bd48f18.machineState',
     'unit_of_measurement': None,
   })
 # ---
@@ -3626,7 +2735,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'oven_mode',
-    'unique_id': '2c3cbaa0-1899-5ddc-7b58-9d657bd48f18_main_ovenMode_ovenMode_ovenMode',
+    'unique_id': '2c3cbaa0-1899-5ddc-7b58-9d657bd48f18.ovenMode',
     'unit_of_measurement': None,
   })
 # ---
@@ -3701,7 +2810,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'oven_setpoint',
-    'unique_id': '2c3cbaa0-1899-5ddc-7b58-9d657bd48f18_main_ovenSetpoint_ovenSetpoint_ovenSetpoint',
+    'unique_id': '2c3cbaa0-1899-5ddc-7b58-9d657bd48f18.ovenSetpoint',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -3752,7 +2861,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '2c3cbaa0-1899-5ddc-7b58-9d657bd48f18_main_temperatureMeasurement_temperature_temperature',
+    'unique_id': '2c3cbaa0-1899-5ddc-7b58-9d657bd48f18.temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -3807,7 +2916,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '7db87911-7dce-1cf2-7119-b953432a2f09_main_powerConsumptionReport_powerConsumption_energy_meter',
+    'unique_id': '7db87911-7dce-1cf2-7119-b953432a2f09.energy_meter',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -3862,7 +2971,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'energy_difference',
-    'unique_id': '7db87911-7dce-1cf2-7119-b953432a2f09_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
+    'unique_id': '7db87911-7dce-1cf2-7119-b953432a2f09.deltaEnergy_meter',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -3917,7 +3026,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'energy_saved',
-    'unique_id': '7db87911-7dce-1cf2-7119-b953432a2f09_main_powerConsumptionReport_powerConsumption_energySaved_meter',
+    'unique_id': '7db87911-7dce-1cf2-7119-b953432a2f09.energySaved_meter',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -3972,7 +3081,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '7db87911-7dce-1cf2-7119-b953432a2f09_main_powerConsumptionReport_powerConsumption_power_meter',
+    'unique_id': '7db87911-7dce-1cf2-7119-b953432a2f09.power_meter',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -4029,7 +3138,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'power_energy',
-    'unique_id': '7db87911-7dce-1cf2-7119-b953432a2f09_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
+    'unique_id': '7db87911-7dce-1cf2-7119-b953432a2f09.powerEnergy_meter',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -4047,560 +3156,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0135559777781698',
-  })
-# ---
-# name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_energy-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.refrigerator_energy',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Energy',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '7d3feb98-8a36-4351-c362-5e21ad3a78dd_main_powerConsumptionReport_powerConsumption_energy_meter',
-    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-  })
-# ---
-# name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_energy-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Refrigerator Energy',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.refrigerator_energy',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '4381.422',
-  })
-# ---
-# name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_energy_difference-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.refrigerator_energy_difference',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Energy difference',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'energy_difference',
-    'unique_id': '7d3feb98-8a36-4351-c362-5e21ad3a78dd_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
-    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-  })
-# ---
-# name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_energy_difference-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Refrigerator Energy difference',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.refrigerator_energy_difference',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.027',
-  })
-# ---
-# name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_energy_saved-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.refrigerator_energy_saved',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Energy saved',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'energy_saved',
-    'unique_id': '7d3feb98-8a36-4351-c362-5e21ad3a78dd_main_powerConsumptionReport_powerConsumption_energySaved_meter',
-    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-  })
-# ---
-# name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_energy_saved-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Refrigerator Energy saved',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.refrigerator_energy_saved',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_power-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.refrigerator_power',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': None,
-    'original_name': 'Power',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '7d3feb98-8a36-4351-c362-5e21ad3a78dd_main_powerConsumptionReport_powerConsumption_power_meter',
-    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-  })
-# ---
-# name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_power-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Refrigerator Power',
-      'power_consumption_end': '2025-02-09T00:25:23Z',
-      'power_consumption_start': '2025-02-09T00:13:39Z',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.refrigerator_power',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '144',
-  })
-# ---
-# name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_power_energy-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.refrigerator_power_energy',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Power energy',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'power_energy',
-    'unique_id': '7d3feb98-8a36-4351-c362-5e21ad3a78dd_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
-    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-  })
-# ---
-# name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_power_energy-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Refrigerator Power energy',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.refrigerator_power_energy',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0270189050030708',
-  })
-# ---
-# name: test_all_entities[da_ref_normal_01011][sensor.frigo_energy-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.frigo_energy',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Energy',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '5758b2ec-563e-f39b-ec39-208e54aabf60_main_powerConsumptionReport_powerConsumption_energy_meter',
-    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-  })
-# ---
-# name: test_all_entities[da_ref_normal_01011][sensor.frigo_energy-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Frigo Energy',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.frigo_energy',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '66.571',
-  })
-# ---
-# name: test_all_entities[da_ref_normal_01011][sensor.frigo_energy_difference-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.frigo_energy_difference',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Energy difference',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'energy_difference',
-    'unique_id': '5758b2ec-563e-f39b-ec39-208e54aabf60_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
-    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-  })
-# ---
-# name: test_all_entities[da_ref_normal_01011][sensor.frigo_energy_difference-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Frigo Energy difference',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.frigo_energy_difference',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.019',
-  })
-# ---
-# name: test_all_entities[da_ref_normal_01011][sensor.frigo_energy_saved-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.frigo_energy_saved',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Energy saved',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'energy_saved',
-    'unique_id': '5758b2ec-563e-f39b-ec39-208e54aabf60_main_powerConsumptionReport_powerConsumption_energySaved_meter',
-    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-  })
-# ---
-# name: test_all_entities[da_ref_normal_01011][sensor.frigo_energy_saved-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Frigo Energy saved',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.frigo_energy_saved',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_all_entities[da_ref_normal_01011][sensor.frigo_power-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.frigo_power',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': None,
-    'original_name': 'Power',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '5758b2ec-563e-f39b-ec39-208e54aabf60_main_powerConsumptionReport_powerConsumption_power_meter',
-    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-  })
-# ---
-# name: test_all_entities[da_ref_normal_01011][sensor.frigo_power-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Frigo Power',
-      'power_consumption_end': '2025-03-30T18:38:18Z',
-      'power_consumption_start': '2025-03-30T18:21:37Z',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.frigo_power',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '61',
-  })
-# ---
-# name: test_all_entities[da_ref_normal_01011][sensor.frigo_power_energy-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.frigo_power_energy',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Power energy',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'power_energy',
-    'unique_id': '5758b2ec-563e-f39b-ec39-208e54aabf60_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
-    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-  })
-# ---
-# name: test_all_entities[da_ref_normal_01011][sensor.frigo_power_energy-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Frigo Power energy',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.frigo_power_energy',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0189117822202047',
   })
 # ---
 # name: test_all_entities[da_rvc_normal_000001][sensor.robot_vacuum_battery-entry]
@@ -4633,7 +3188,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '3442dfc6-17c0-a65f-dae0-4c6e01786f44_main_battery_battery_battery',
+    'unique_id': '3442dfc6-17c0-a65f-dae0-4c6e01786f44.battery',
     'unit_of_measurement': '%',
   })
 # ---
@@ -4691,7 +3246,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'robot_cleaner_cleaning_mode',
-    'unique_id': '3442dfc6-17c0-a65f-dae0-4c6e01786f44_main_robotCleanerCleaningMode_robotCleanerCleaningMode_robotCleanerCleaningMode',
+    'unique_id': '3442dfc6-17c0-a65f-dae0-4c6e01786f44.robotCleanerCleaningMode',
     'unit_of_measurement': None,
   })
 # ---
@@ -4760,7 +3315,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'robot_cleaner_movement',
-    'unique_id': '3442dfc6-17c0-a65f-dae0-4c6e01786f44_main_robotCleanerMovement_robotCleanerMovement_robotCleanerMovement',
+    'unique_id': '3442dfc6-17c0-a65f-dae0-4c6e01786f44.robotCleanerMovement',
     'unit_of_measurement': None,
   })
 # ---
@@ -4827,7 +3382,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'robot_cleaner_turbo_mode',
-    'unique_id': '3442dfc6-17c0-a65f-dae0-4c6e01786f44_main_robotCleanerTurboMode_robotCleanerTurboMode_robotCleanerTurboMode',
+    'unique_id': '3442dfc6-17c0-a65f-dae0-4c6e01786f44.robotCleanerTurboMode',
     'unit_of_measurement': None,
   })
 # ---
@@ -4881,7 +3436,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'thermostat_cooling_setpoint',
-    'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_thermostatCoolingSetpoint_coolingSetpoint_coolingSetpoint',
+    'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100.coolingSetpoint',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -4935,7 +3490,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_powerConsumptionReport_powerConsumption_energy_meter',
+    'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100.energy_meter',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -4990,7 +3545,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'energy_difference',
-    'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
+    'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100.deltaEnergy_meter',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -5045,7 +3600,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'energy_saved',
-    'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_powerConsumptionReport_powerConsumption_energySaved_meter',
+    'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100.energySaved_meter',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -5100,7 +3655,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_powerConsumptionReport_powerConsumption_power_meter',
+    'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100.power_meter',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -5157,7 +3712,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'power_energy',
-    'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
+    'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100.powerEnergy_meter',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -5209,7 +3764,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_temperatureMeasurement_temperature_temperature',
+    'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100.temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -5259,7 +3814,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'completion_time',
-    'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_dishwasherOperatingState_completionTime_completionTime',
+    'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676.completionTime',
     'unit_of_measurement': None,
   })
 # ---
@@ -5312,7 +3867,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_powerConsumptionReport_powerConsumption_energy_meter',
+    'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676.energy_meter',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -5367,7 +3922,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'energy_difference',
-    'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
+    'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676.deltaEnergy_meter',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -5422,7 +3977,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'energy_saved',
-    'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_powerConsumptionReport_powerConsumption_energySaved_meter',
+    'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676.energySaved_meter',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -5485,7 +4040,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'dishwasher_job_state',
-    'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_dishwasherOperatingState_dishwasherJobState_dishwasherJobState',
+    'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676.dishwasherJobState',
     'unit_of_measurement': None,
   })
 # ---
@@ -5551,7 +4106,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'dishwasher_machine_state',
-    'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_dishwasherOperatingState_machineState_machineState',
+    'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676.machineState',
     'unit_of_measurement': None,
   })
 # ---
@@ -5609,7 +4164,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_powerConsumptionReport_powerConsumption_power_meter',
+    'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676.power_meter',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -5666,7 +4221,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'power_energy',
-    'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
+    'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676.powerEnergy_meter',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -5680,473 +4235,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.dishwasher_power_energy',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_all_entities[da_wm_sc_000001][sensor.airdresser_completion_time-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.airdresser_completion_time',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': None,
-    'original_name': 'Completion time',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'completion_time',
-    'unique_id': 'b93211bf-9d96-bd21-3b2f-964fcc87f5cc_main_dryerOperatingState_completionTime_completionTime',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[da_wm_sc_000001][sensor.airdresser_completion_time-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'AirDresser Completion time',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.airdresser_completion_time',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2025-02-11T09:00:17+00:00',
-  })
-# ---
-# name: test_all_entities[da_wm_sc_000001][sensor.airdresser_energy-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.airdresser_energy',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Energy',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'b93211bf-9d96-bd21-3b2f-964fcc87f5cc_main_powerConsumptionReport_powerConsumption_energy_meter',
-    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-  })
-# ---
-# name: test_all_entities[da_wm_sc_000001][sensor.airdresser_energy-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'AirDresser Energy',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.airdresser_energy',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '207.5',
-  })
-# ---
-# name: test_all_entities[da_wm_sc_000001][sensor.airdresser_energy_difference-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.airdresser_energy_difference',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Energy difference',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'energy_difference',
-    'unique_id': 'b93211bf-9d96-bd21-3b2f-964fcc87f5cc_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
-    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-  })
-# ---
-# name: test_all_entities[da_wm_sc_000001][sensor.airdresser_energy_difference-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'AirDresser Energy difference',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.airdresser_energy_difference',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_all_entities[da_wm_sc_000001][sensor.airdresser_energy_saved-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.airdresser_energy_saved',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Energy saved',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'energy_saved',
-    'unique_id': 'b93211bf-9d96-bd21-3b2f-964fcc87f5cc_main_powerConsumptionReport_powerConsumption_energySaved_meter',
-    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-  })
-# ---
-# name: test_all_entities[da_wm_sc_000001][sensor.airdresser_energy_saved-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'AirDresser Energy saved',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.airdresser_energy_saved',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_all_entities[da_wm_sc_000001][sensor.airdresser_job_state-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'cooling',
-        'delay_wash',
-        'drying',
-        'finished',
-        'none',
-        'refreshing',
-        'weight_sensing',
-        'wrinkle_prevent',
-        'dehumidifying',
-        'ai_drying',
-        'sanitizing',
-        'internal_care',
-        'freeze_protection',
-        'continuous_dehumidifying',
-        'thawing_frozen_inside',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.airdresser_job_state',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': 'Job state',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'dryer_job_state',
-    'unique_id': 'b93211bf-9d96-bd21-3b2f-964fcc87f5cc_main_dryerOperatingState_dryerJobState_dryerJobState',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[da_wm_sc_000001][sensor.airdresser_job_state-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'AirDresser Job state',
-      'options': list([
-        'cooling',
-        'delay_wash',
-        'drying',
-        'finished',
-        'none',
-        'refreshing',
-        'weight_sensing',
-        'wrinkle_prevent',
-        'dehumidifying',
-        'ai_drying',
-        'sanitizing',
-        'internal_care',
-        'freeze_protection',
-        'continuous_dehumidifying',
-        'thawing_frozen_inside',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.airdresser_job_state',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'none',
-  })
-# ---
-# name: test_all_entities[da_wm_sc_000001][sensor.airdresser_machine_state-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'pause',
-        'run',
-        'stop',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.airdresser_machine_state',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': 'Machine state',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'dryer_machine_state',
-    'unique_id': 'b93211bf-9d96-bd21-3b2f-964fcc87f5cc_main_dryerOperatingState_machineState_machineState',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[da_wm_sc_000001][sensor.airdresser_machine_state-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'AirDresser Machine state',
-      'options': list([
-        'pause',
-        'run',
-        'stop',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.airdresser_machine_state',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'stop',
-  })
-# ---
-# name: test_all_entities[da_wm_sc_000001][sensor.airdresser_power-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.airdresser_power',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': None,
-    'original_name': 'Power',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'b93211bf-9d96-bd21-3b2f-964fcc87f5cc_main_powerConsumptionReport_powerConsumption_power_meter',
-    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-  })
-# ---
-# name: test_all_entities[da_wm_sc_000001][sensor.airdresser_power-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'AirDresser Power',
-      'power_consumption_end': '2025-02-11T08:21:17Z',
-      'power_consumption_start': '2025-02-10T22:51:59Z',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.airdresser_power',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
-  })
-# ---
-# name: test_all_entities[da_wm_sc_000001][sensor.airdresser_power_energy-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.airdresser_power_energy',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Power energy',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'power_energy',
-    'unique_id': 'b93211bf-9d96-bd21-3b2f-964fcc87f5cc_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
-    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-  })
-# ---
-# name: test_all_entities[da_wm_sc_000001][sensor.airdresser_power_energy-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'AirDresser Power energy',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.airdresser_power_energy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -6183,7 +4271,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'completion_time',
-    'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b_main_dryerOperatingState_completionTime_completionTime',
+    'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b.completionTime',
     'unit_of_measurement': None,
   })
 # ---
@@ -6236,7 +4324,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b_main_powerConsumptionReport_powerConsumption_energy_meter',
+    'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b.energy_meter',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -6291,7 +4379,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'energy_difference',
-    'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
+    'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b.deltaEnergy_meter',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -6346,7 +4434,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'energy_saved',
-    'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b_main_powerConsumptionReport_powerConsumption_energySaved_meter',
+    'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b.energySaved_meter',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -6414,7 +4502,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'dryer_job_state',
-    'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b_main_dryerOperatingState_dryerJobState_dryerJobState',
+    'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b.dryerJobState',
     'unit_of_measurement': None,
   })
 # ---
@@ -6485,7 +4573,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'dryer_machine_state',
-    'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b_main_dryerOperatingState_machineState_machineState',
+    'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b.machineState',
     'unit_of_measurement': None,
   })
 # ---
@@ -6543,7 +4631,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b_main_powerConsumptionReport_powerConsumption_power_meter',
+    'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b.power_meter',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -6600,7 +4688,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'power_energy',
-    'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
+    'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b.powerEnergy_meter',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -6650,7 +4738,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'completion_time',
-    'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd_main_dryerOperatingState_completionTime_completionTime',
+    'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd.completionTime',
     'unit_of_measurement': None,
   })
 # ---
@@ -6703,7 +4791,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd_main_powerConsumptionReport_powerConsumption_energy_meter',
+    'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd.energy_meter',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -6758,7 +4846,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'energy_difference',
-    'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
+    'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd.deltaEnergy_meter',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -6813,7 +4901,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'energy_saved',
-    'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd_main_powerConsumptionReport_powerConsumption_energySaved_meter',
+    'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd.energySaved_meter',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -6881,7 +4969,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'dryer_job_state',
-    'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd_main_dryerOperatingState_dryerJobState_dryerJobState',
+    'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd.dryerJobState',
     'unit_of_measurement': None,
   })
 # ---
@@ -6952,7 +5040,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'dryer_machine_state',
-    'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd_main_dryerOperatingState_machineState_machineState',
+    'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd.machineState',
     'unit_of_measurement': None,
   })
 # ---
@@ -7010,7 +5098,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd_main_powerConsumptionReport_powerConsumption_power_meter',
+    'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd.power_meter',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -7067,7 +5155,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'power_energy',
-    'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
+    'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd.powerEnergy_meter',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -7117,7 +5205,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'completion_time',
-    'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47_main_washerOperatingState_completionTime_completionTime',
+    'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47.completionTime',
     'unit_of_measurement': None,
   })
 # ---
@@ -7170,7 +5258,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47_main_powerConsumptionReport_powerConsumption_energy_meter',
+    'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47.energy_meter',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -7225,7 +5313,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'energy_difference',
-    'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
+    'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47.deltaEnergy_meter',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -7280,7 +5368,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'energy_saved',
-    'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47_main_powerConsumptionReport_powerConsumption_energySaved_meter',
+    'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47.energySaved_meter',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -7349,7 +5437,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'washer_job_state',
-    'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47_main_washerOperatingState_washerJobState_washerJobState',
+    'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47.washerJobState',
     'unit_of_measurement': None,
   })
 # ---
@@ -7421,7 +5509,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'washer_machine_state',
-    'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47_main_washerOperatingState_machineState_machineState',
+    'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47.machineState',
     'unit_of_measurement': None,
   })
 # ---
@@ -7479,7 +5567,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47_main_powerConsumptionReport_powerConsumption_power_meter',
+    'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47.power_meter',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -7536,7 +5624,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'power_energy',
-    'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
+    'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47.powerEnergy_meter',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -7586,7 +5674,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'completion_time',
-    'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7_main_washerOperatingState_completionTime_completionTime',
+    'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7.completionTime',
     'unit_of_measurement': None,
   })
 # ---
@@ -7639,7 +5727,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7_main_powerConsumptionReport_powerConsumption_energy_meter',
+    'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7.energy_meter',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -7694,7 +5782,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'energy_difference',
-    'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
+    'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7.deltaEnergy_meter',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -7749,7 +5837,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'energy_saved',
-    'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7_main_powerConsumptionReport_powerConsumption_energySaved_meter',
+    'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7.energySaved_meter',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -7818,7 +5906,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'washer_job_state',
-    'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7_main_washerOperatingState_washerJobState_washerJobState',
+    'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7.washerJobState',
     'unit_of_measurement': None,
   })
 # ---
@@ -7890,7 +5978,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'washer_machine_state',
-    'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7_main_washerOperatingState_machineState_machineState',
+    'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7.machineState',
     'unit_of_measurement': None,
   })
 # ---
@@ -7948,7 +6036,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7_main_powerConsumptionReport_powerConsumption_power_meter',
+    'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7.power_meter',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -8005,7 +6093,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'power_energy',
-    'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7_main_powerConsumptionReport_powerConsumption_powerEnergy_meter',
+    'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7.powerEnergy_meter',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -8057,7 +6145,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'd5dc3299-c266-41c7-bd08-f540aea54b89_main_temperatureMeasurement_temperature_temperature',
+    'unique_id': 'd5dc3299-c266-41c7-bd08-f540aea54b89.temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -8109,7 +6197,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '028469cb-6e89-4f14-8d9a-bfbca5e0fbfc_main_relativeHumidityMeasurement_humidity_humidity',
+    'unique_id': '028469cb-6e89-4f14-8d9a-bfbca5e0fbfc.humidity',
     'unit_of_measurement': '%',
   })
 # ---
@@ -8161,7 +6249,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '028469cb-6e89-4f14-8d9a-bfbca5e0fbfc_main_temperatureMeasurement_temperature_temperature',
+    'unique_id': '028469cb-6e89-4f14-8d9a-bfbca5e0fbfc.temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -8213,7 +6301,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '1888b38f-6246-4f1e-911b-bfcfb66999db_main_relativeHumidityMeasurement_humidity_humidity',
+    'unique_id': '1888b38f-6246-4f1e-911b-bfcfb66999db.humidity',
     'unit_of_measurement': '%',
   })
 # ---
@@ -8265,7 +6353,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '1888b38f-6246-4f1e-911b-bfcfb66999db_main_temperatureMeasurement_temperature_temperature',
+    'unique_id': '1888b38f-6246-4f1e-911b-bfcfb66999db.temperature',
     'unit_of_measurement': None,
   })
 # ---
@@ -8282,208 +6370,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
-  })
-# ---
-# name: test_all_entities[gas_meter][sensor.gas_meter_gas-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.gas_meter_gas',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.GAS: 'gas'>,
-    'original_icon': None,
-    'original_name': 'Gas',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '3b57dca3-9a90-4f27-ba80-f947b1e60d58_main_gasMeter_gasMeterVolume_gasMeterVolume',
-    'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
-  })
-# ---
-# name: test_all_entities[gas_meter][sensor.gas_meter_gas-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'gas',
-      'friendly_name': 'Gas Meter Gas',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gas_meter_gas',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '40',
-  })
-# ---
-# name: test_all_entities[gas_meter][sensor.gas_meter_gas_meter-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.gas_meter_gas_meter',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Gas meter',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'gas_meter',
-    'unique_id': '3b57dca3-9a90-4f27-ba80-f947b1e60d58_main_gasMeter_gasMeter_gasMeter',
-    'unit_of_measurement': 'kWh',
-  })
-# ---
-# name: test_all_entities[gas_meter][sensor.gas_meter_gas_meter-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Gas Meter Gas meter',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'kWh',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gas_meter_gas_meter',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '450.5',
-  })
-# ---
-# name: test_all_entities[gas_meter][sensor.gas_meter_gas_meter_calorific-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.gas_meter_gas_meter_calorific',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Gas meter calorific',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'gas_meter_calorific',
-    'unique_id': '3b57dca3-9a90-4f27-ba80-f947b1e60d58_main_gasMeter_gasMeterCalorific_gasMeterCalorific',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[gas_meter][sensor.gas_meter_gas_meter_calorific-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Gas Meter Gas meter calorific',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gas_meter_gas_meter_calorific',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '40',
-  })
-# ---
-# name: test_all_entities[gas_meter][sensor.gas_meter_gas_meter_time-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.gas_meter_gas_meter_time',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': None,
-    'original_name': 'Gas meter time',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'gas_meter_time',
-    'unique_id': '3b57dca3-9a90-4f27-ba80-f947b1e60d58_main_gasMeter_gasMeterTime_gasMeterTime',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[gas_meter][sensor.gas_meter_gas_meter_time-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Gas Meter Gas meter time',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gas_meter_gas_meter_time',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2025-04-11T13:30:00+00:00',
   })
 # ---
 # name: test_all_entities[generic_ef00_v1][sensor.thermostat_kuche_link_quality-entry]
@@ -8518,7 +6404,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'link_quality',
-    'unique_id': '656569c2-7976-4232-a789-34b4d1176c3a_main_signalStrength_lqi_lqi',
+    'unique_id': '656569c2-7976-4232-a789-34b4d1176c3a.lqi',
     'unit_of_measurement': None,
   })
 # ---
@@ -8568,7 +6454,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '656569c2-7976-4232-a789-34b4d1176c3a_main_signalStrength_rssi_rssi',
+    'unique_id': '656569c2-7976-4232-a789-34b4d1176c3a.rssi',
     'unit_of_measurement': 'dBm',
   })
 # ---
@@ -8620,7 +6506,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '656569c2-7976-4232-a789-34b4d1176c3a_main_temperatureMeasurement_temperature_temperature',
+    'unique_id': '656569c2-7976-4232-a789-34b4d1176c3a.temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -8638,55 +6524,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '21.0',
-  })
-# ---
-# name: test_all_entities[heatit_zpushwall][sensor.livingroom_smart_switch_battery-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.livingroom_smart_switch_battery',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
-    'original_icon': None,
-    'original_name': 'Battery',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '5e5b97f3-3094-44e6-abc0-f61283412d6a_main_battery_battery_battery',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_all_entities[heatit_zpushwall][sensor.livingroom_smart_switch_battery-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Livingroom smart switch Battery',
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.livingroom_smart_switch_battery',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '100',
   })
 # ---
 # name: test_all_entities[heatit_ztrm3_thermostat][sensor.hall_thermostat_energy-entry]
@@ -8721,7 +6558,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '69a271f6-6537-4982-8cd9-979866872692_main_energyMeter_energy_energy',
+    'unique_id': '69a271f6-6537-4982-8cd9-979866872692.energy',
     'unit_of_measurement': 'kWh',
   })
 # ---
@@ -8773,7 +6610,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '69a271f6-6537-4982-8cd9-979866872692_main_powerMeter_power_power',
+    'unique_id': '69a271f6-6537-4982-8cd9-979866872692.power',
     'unit_of_measurement': 'W',
   })
 # ---
@@ -8825,7 +6662,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '69a271f6-6537-4982-8cd9-979866872692_main_temperatureMeasurement_temperature_temperature',
+    'unique_id': '69a271f6-6537-4982-8cd9-979866872692.temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -8875,7 +6712,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '71afed1c-006d-4e48-b16e-e7f88f9fd638_main_battery_battery_battery',
+    'unique_id': '71afed1c-006d-4e48-b16e-e7f88f9fd638.battery',
     'unit_of_measurement': '%',
   })
 # ---
@@ -8892,6 +6729,261 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '37',
+  })
+# ---
+# name: test_all_entities[im_speaker_ai_0001][sensor.galaxy_home_mini_media_input_source-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.galaxy_home_mini_media_input_source',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Media input source',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'media_input_source',
+    'unique_id': 'c9276e43-fe3c-88c3-1dcc-2eb79e292b8c.inputSource',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[im_speaker_ai_0001][sensor.galaxy_home_mini_media_input_source-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Galaxy Home Mini Media input source',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.galaxy_home_mini_media_input_source',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[im_speaker_ai_0001][sensor.galaxy_home_mini_media_playback_repeat-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.galaxy_home_mini_media_playback_repeat',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Media playback repeat',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'media_playback_repeat',
+    'unique_id': 'c9276e43-fe3c-88c3-1dcc-2eb79e292b8c.playbackRepeatMode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[im_speaker_ai_0001][sensor.galaxy_home_mini_media_playback_repeat-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Galaxy Home Mini Media playback repeat',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.galaxy_home_mini_media_playback_repeat',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[im_speaker_ai_0001][sensor.galaxy_home_mini_media_playback_shuffle-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.galaxy_home_mini_media_playback_shuffle',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Media playback shuffle',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'media_playback_shuffle',
+    'unique_id': 'c9276e43-fe3c-88c3-1dcc-2eb79e292b8c.playbackShuffle',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[im_speaker_ai_0001][sensor.galaxy_home_mini_media_playback_shuffle-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Galaxy Home Mini Media playback shuffle',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.galaxy_home_mini_media_playback_shuffle',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'disabled',
+  })
+# ---
+# name: test_all_entities[im_speaker_ai_0001][sensor.galaxy_home_mini_media_playback_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'paused',
+        'playing',
+        'stopped',
+        'fast_forwarding',
+        'rewinding',
+        'buffering',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.galaxy_home_mini_media_playback_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Media playback status',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'media_playback_status',
+    'unique_id': 'c9276e43-fe3c-88c3-1dcc-2eb79e292b8c.playbackStatus',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[im_speaker_ai_0001][sensor.galaxy_home_mini_media_playback_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Galaxy Home Mini Media playback status',
+      'options': list([
+        'paused',
+        'playing',
+        'stopped',
+        'fast_forwarding',
+        'rewinding',
+        'buffering',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.galaxy_home_mini_media_playback_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'stopped',
+  })
+# ---
+# name: test_all_entities[im_speaker_ai_0001][sensor.galaxy_home_mini_volume-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.galaxy_home_mini_volume',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Volume',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'audio_volume',
+    'unique_id': 'c9276e43-fe3c-88c3-1dcc-2eb79e292b8c.volume',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[im_speaker_ai_0001][sensor.galaxy_home_mini_volume-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Galaxy Home Mini Volume',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.galaxy_home_mini_volume',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '52',
   })
 # ---
 # name: test_all_entities[multipurpose_sensor][sensor.deck_door_battery-entry]
@@ -8924,7 +7016,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '7d246592-93db-4d72-a10d-5a51793ece8c_main_battery_battery_battery',
+    'unique_id': '7d246592-93db-4d72-a10d-5a51793ece8c.battery',
     'unit_of_measurement': '%',
   })
 # ---
@@ -8975,7 +7067,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '7d246592-93db-4d72-a10d-5a51793ece8c_main_temperatureMeasurement_temperature_temperature',
+    'unique_id': '7d246592-93db-4d72-a10d-5a51793ece8c.temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -9025,7 +7117,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'x_coordinate',
-    'unique_id': '7d246592-93db-4d72-a10d-5a51793ece8c_main_threeAxis_threeAxis_x_coordinate',
+    'unique_id': '7d246592-93db-4d72-a10d-5a51793ece8c X Coordinate',
     'unit_of_measurement': None,
   })
 # ---
@@ -9072,7 +7164,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'y_coordinate',
-    'unique_id': '7d246592-93db-4d72-a10d-5a51793ece8c_main_threeAxis_threeAxis_y_coordinate',
+    'unique_id': '7d246592-93db-4d72-a10d-5a51793ece8c Y Coordinate',
     'unit_of_measurement': None,
   })
 # ---
@@ -9119,7 +7211,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'z_coordinate',
-    'unique_id': '7d246592-93db-4d72-a10d-5a51793ece8c_main_threeAxis_threeAxis_z_coordinate',
+    'unique_id': '7d246592-93db-4d72-a10d-5a51793ece8c Z Coordinate',
     'unit_of_measurement': None,
   })
 # ---
@@ -9166,7 +7258,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'air_conditioner_mode',
-    'unique_id': 'bf4b1167-48a3-4af7-9186-0900a678ffa5_main_airConditionerMode_airConditionerMode_airConditionerMode',
+    'unique_id': 'bf4b1167-48a3-4af7-9186-0900a678ffa5.airConditionerMode',
     'unit_of_measurement': None,
   })
 # ---
@@ -9213,7 +7305,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'thermostat_cooling_setpoint',
-    'unique_id': 'bf4b1167-48a3-4af7-9186-0900a678ffa5_main_thermostatCoolingSetpoint_coolingSetpoint_coolingSetpoint',
+    'unique_id': 'bf4b1167-48a3-4af7-9186-0900a678ffa5.coolingSetpoint',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -9230,6 +7322,119 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '20',
+  })
+# ---
+# name: test_all_entities[sonos_player][sensor.elliots_rum_media_playback_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'paused',
+        'playing',
+        'stopped',
+        'fast_forwarding',
+        'rewinding',
+        'buffering',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.elliots_rum_media_playback_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Media playback status',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'media_playback_status',
+    'unique_id': 'c85fced9-c474-4a47-93c2-037cc7829536.playbackStatus',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sonos_player][sensor.elliots_rum_media_playback_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Elliots Rum Media playback status',
+      'options': list([
+        'paused',
+        'playing',
+        'stopped',
+        'fast_forwarding',
+        'rewinding',
+        'buffering',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.elliots_rum_media_playback_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'playing',
+  })
+# ---
+# name: test_all_entities[sonos_player][sensor.elliots_rum_volume-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.elliots_rum_volume',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Volume',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'audio_volume',
+    'unique_id': 'c85fced9-c474-4a47-93c2-037cc7829536.volume',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[sonos_player][sensor.elliots_rum_volume-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Elliots Rum Volume',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.elliots_rum_volume',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '15',
   })
 # ---
 # name: test_all_entities[tplink_p110][sensor.spulmaschine_energy-entry]
@@ -9267,7 +7472,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '6602696a-1e48-49e4-919f-69406f5b5da1_main_powerConsumptionReport_powerConsumption_energy_meter',
+    'unique_id': '6602696a-1e48-49e4-919f-69406f5b5da1.energy_meter',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -9322,7 +7527,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'energy_difference',
-    'unique_id': '6602696a-1e48-49e4-919f-69406f5b5da1_main_powerConsumptionReport_powerConsumption_deltaEnergy_meter',
+    'unique_id': '6602696a-1e48-49e4-919f-69406f5b5da1.deltaEnergy_meter',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -9342,13 +7547,20 @@
     'state': '0.0',
   })
 # ---
-# name: test_all_entities[vd_sensor_light_2023][sensor.light_sensor_55_the_frame_brightness_intensity-entry]
+# name: test_all_entities[vd_network_audio_002s][sensor.soundbar_living_media_playback_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'options': list([
+        'paused',
+        'playing',
+        'stopped',
+        'fast_forwarding',
+        'rewinding',
+        'buffering',
+      ]),
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9357,7 +7569,63 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.light_sensor_55_the_frame_brightness_intensity',
+    'entity_id': 'sensor.soundbar_living_media_playback_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Media playback status',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'media_playback_status',
+    'unique_id': '0d94e5db-8501-2355-eb4f-214163702cac.playbackStatus',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[vd_network_audio_002s][sensor.soundbar_living_media_playback_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Soundbar Living Media playback status',
+      'options': list([
+        'paused',
+        'playing',
+        'stopped',
+        'fast_forwarding',
+        'rewinding',
+        'buffering',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.soundbar_living_media_playback_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'stopped',
+  })
+# ---
+# name: test_all_entities[vd_network_audio_002s][sensor.soundbar_living_volume-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.soundbar_living_volume',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -9369,28 +7637,153 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Brightness intensity',
+    'original_name': 'Volume',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'brightness_intensity',
-    'unique_id': '5cc1c096-98b9-460c-8f1c-1045509ec605_main_relativeBrightness_brightnessIntensity_brightnessIntensity',
-    'unit_of_measurement': 'level',
+    'translation_key': 'audio_volume',
+    'unique_id': '0d94e5db-8501-2355-eb4f-214163702cac.volume',
+    'unit_of_measurement': '%',
   })
 # ---
-# name: test_all_entities[vd_sensor_light_2023][sensor.light_sensor_55_the_frame_brightness_intensity-state]
+# name: test_all_entities[vd_network_audio_002s][sensor.soundbar_living_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Light Sensor - 55" The Frame Brightness intensity',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'level',
+      'friendly_name': 'Soundbar Living Volume',
+      'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.light_sensor_55_the_frame_brightness_intensity',
+    'entity_id': 'sensor.soundbar_living_volume',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2',
+    'state': '17',
+  })
+# ---
+# name: test_all_entities[vd_stv_2017_k][sensor.tv_samsung_8_series_49_media_input_source-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'digitaltv',
+        'hdmi1',
+        'hdmi4',
+        'hdmi4',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.tv_samsung_8_series_49_media_input_source',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Media input source',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'media_input_source',
+    'unique_id': '4588d2d9-a8cf-40f4-9a0b-ed5dfbaccda1.inputSource',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[vd_stv_2017_k][sensor.tv_samsung_8_series_49_media_input_source-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': '[TV] Samsung 8 Series (49) Media input source',
+      'options': list([
+        'digitaltv',
+        'hdmi1',
+        'hdmi4',
+        'hdmi4',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.tv_samsung_8_series_49_media_input_source',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'hdmi1',
+  })
+# ---
+# name: test_all_entities[vd_stv_2017_k][sensor.tv_samsung_8_series_49_media_playback_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'paused',
+        'playing',
+        'stopped',
+        'fast_forwarding',
+        'rewinding',
+        'buffering',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.tv_samsung_8_series_49_media_playback_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Media playback status',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'media_playback_status',
+    'unique_id': '4588d2d9-a8cf-40f4-9a0b-ed5dfbaccda1.playbackStatus',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[vd_stv_2017_k][sensor.tv_samsung_8_series_49_media_playback_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': '[TV] Samsung 8 Series (49) Media playback status',
+      'options': list([
+        'paused',
+        'playing',
+        'stopped',
+        'fast_forwarding',
+        'rewinding',
+        'buffering',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.tv_samsung_8_series_49_media_playback_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---
 # name: test_all_entities[vd_stv_2017_k][sensor.tv_samsung_8_series_49_tv_channel-entry]
@@ -9423,7 +7816,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'tv_channel',
-    'unique_id': '4588d2d9-a8cf-40f4-9a0b-ed5dfbaccda1_main_tvChannel_tvChannel_tvChannel',
+    'unique_id': '4588d2d9-a8cf-40f4-9a0b-ed5dfbaccda1.tvChannel',
     'unit_of_measurement': None,
   })
 # ---
@@ -9470,7 +7863,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'tv_channel_name',
-    'unique_id': '4588d2d9-a8cf-40f4-9a0b-ed5dfbaccda1_main_tvChannel_tvChannelName_tvChannelName',
+    'unique_id': '4588d2d9-a8cf-40f4-9a0b-ed5dfbaccda1.tvChannelName',
     'unit_of_measurement': None,
   })
 # ---
@@ -9485,6 +7878,54 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '',
+  })
+# ---
+# name: test_all_entities[vd_stv_2017_k][sensor.tv_samsung_8_series_49_volume-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.tv_samsung_8_series_49_volume',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Volume',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'audio_volume',
+    'unique_id': '4588d2d9-a8cf-40f4-9a0b-ed5dfbaccda1.volume',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[vd_stv_2017_k][sensor.tv_samsung_8_series_49_volume-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': '[TV] Samsung 8 Series (49) Volume',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.tv_samsung_8_series_49_volume',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '13',
   })
 # ---
 # name: test_all_entities[virtual_thermostat][sensor.asd_battery-entry]
@@ -9517,7 +7958,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '2894dc93-0f11-49cc-8a81-3a684cebebf6_main_battery_battery_battery',
+    'unique_id': '2894dc93-0f11-49cc-8a81-3a684cebebf6.battery',
     'unit_of_measurement': '%',
   })
 # ---
@@ -9568,7 +8009,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '2894dc93-0f11-49cc-8a81-3a684cebebf6_main_temperatureMeasurement_temperature_temperature',
+    'unique_id': '2894dc93-0f11-49cc-8a81-3a684cebebf6.temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -9618,7 +8059,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'a2a6018b-2663-4727-9d1d-8f56953b5116_main_battery_battery_battery',
+    'unique_id': 'a2a6018b-2663-4727-9d1d-8f56953b5116.battery',
     'unit_of_measurement': '%',
   })
 # ---
@@ -9667,7 +8108,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'a9f587c5-5d8b-4273-8907-e7f609af5158_main_battery_battery_battery',
+    'unique_id': 'a9f587c5-5d8b-4273-8907-e7f609af5158.battery',
     'unit_of_measurement': '%',
   })
 # ---

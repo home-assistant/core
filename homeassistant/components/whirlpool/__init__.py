@@ -24,6 +24,8 @@ type WhirlpoolConfigEntry = ConfigEntry[AppliancesManager]
 
 async def async_setup_entry(hass: HomeAssistant, entry: WhirlpoolConfigEntry) -> bool:
     """Set up Whirlpool Sixth Sense from a config entry."""
+    hass.data.setdefault(DOMAIN, {})
+
     session = async_get_clientsession(hass)
     region = CONF_REGIONS_MAP[entry.data.get(CONF_REGION, "EU")]
     brand = CONF_BRANDS_MAP[entry.data.get(CONF_BRAND, "Whirlpool")]

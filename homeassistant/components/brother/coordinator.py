@@ -26,7 +26,6 @@ class BrotherDataUpdateCoordinator(DataUpdateCoordinator[BrotherSensors]):
     ) -> None:
         """Initialize."""
         self.brother = brother
-        self.device_name = config_entry.title
 
         super().__init__(
             hass,
@@ -42,12 +41,5 @@ class BrotherDataUpdateCoordinator(DataUpdateCoordinator[BrotherSensors]):
             async with timeout(20):
                 data = await self.brother.async_update()
         except (ConnectionError, SnmpError, UnsupportedModelError) as error:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="update_error",
-                translation_placeholders={
-                    "device": self.device_name,
-                    "error": repr(error),
-                },
-            ) from error
+            raise UpdateFailed(error) from error
         return data

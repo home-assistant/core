@@ -162,7 +162,6 @@ SWITCH_ENTITIES = (
     ReolinkSwitchEntityDescription(
         key="manual_record",
         cmd_key="GetManualRec",
-        cmd_id=588,
         translation_key="manual_record",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "manual_record"),

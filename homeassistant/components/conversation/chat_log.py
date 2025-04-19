@@ -8,7 +8,7 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import asdict, dataclass, field, replace
 import logging
-from typing import Any, Literal, TypedDict
+from typing import Literal, TypedDict
 
 import voluptuous as vol
 
@@ -51,7 +51,8 @@ def async_get_chat_log(
             )
         if user_input is not None and (
             (content := chat_log.content[-1]).role != "user"
-            or content.content != user_input.text
+            # MyPy doesn't understand that content is a UserContent here
+            or content.content != user_input.text  # type: ignore[union-attr]
         ):
             chat_log.async_add_user_content(UserContent(content=user_input.text))
 
@@ -127,7 +128,7 @@ class ConverseError(HomeAssistantError):
 class SystemContent:
     """Base class for chat messages."""
 
-    role: Literal["system"] = field(init=False, default="system")
+    role: str = field(init=False, default="system")
     content: str
 
 
@@ -135,7 +136,7 @@ class SystemContent:
 class UserContent:
     """Assistant content."""
 
-    role: Literal["user"] = field(init=False, default="user")
+    role: str = field(init=False, default="user")
     content: str
 
 
@@ -143,7 +144,7 @@ class UserContent:
 class AssistantContent:
     """Assistant content."""
 
-    role: Literal["assistant"] = field(init=False, default="assistant")
+    role: str = field(init=False, default="assistant")
     agent_id: str
     content: str | None = None
     tool_calls: list[llm.ToolInput] | None = None
@@ -153,7 +154,7 @@ class AssistantContent:
 class ToolResultContent:
     """Tool result content."""
 
-    role: Literal["tool_result"] = field(init=False, default="tool_result")
+    role: str = field(init=False, default="tool_result")
     agent_id: str
     tool_call_id: str
     tool_name: str
@@ -192,8 +193,8 @@ class ChatLog:
 
         return (
             last_msg.role == "assistant"
-            and last_msg.content is not None
-            and last_msg.content.strip().endswith(
+            and last_msg.content is not None  # type: ignore[union-attr]
+            and last_msg.content.strip().endswith(  # type: ignore[union-attr]
                 (
                     "?",
                     ";",  # Greek question mark
@@ -354,40 +355,11 @@ class ChatLog:
                 if self.delta_listener:
                     self.delta_listener(self, asdict(tool_result))
 
-    async def _async_expand_prompt_template(
-        self,
-        llm_context: llm.LLMContext,
-        prompt: str,
-        language: str,
-        user_name: str | None = None,
-    ) -> str:
-        try:
-            return template.Template(prompt, self.hass).async_render(
-                {
-                    "ha_name": self.hass.config.location_name,
-                    "user_name": user_name,
-                    "llm_context": llm_context,
-                },
-                parse_result=False,
-            )
-        except TemplateError as err:
-            LOGGER.error("Error rendering prompt: %s", err)
-            intent_response = intent.IntentResponse(language=language)
-            intent_response.async_set_error(
-                intent.IntentResponseErrorCode.UNKNOWN,
-                "Sorry, I had a problem with my template",
-            )
-            raise ConverseError(
-                "Error rendering prompt",
-                conversation_id=self.conversation_id,
-                response=intent_response,
-            ) from err
-
     async def async_update_llm_data(
         self,
         conversing_domain: str,
         user_input: ConversationInput,
-        user_llm_hass_api: str | list[str] | None = None,
+        user_llm_hass_api: str | None = None,
         user_llm_prompt: str | None = None,
     ) -> None:
         """Set the LLM system prompt."""
@@ -438,27 +410,37 @@ class ChatLog:
         ):
             user_name = user.name
 
-        prompt_parts = []
-        prompt_parts.append(
-            await self._async_expand_prompt_template(
-                llm_context,
-                (user_llm_prompt or llm.DEFAULT_INSTRUCTIONS_PROMPT),
-                user_input.language,
-                user_name,
+        try:
+            prompt_parts = [
+                template.Template(
+                    llm.BASE_PROMPT
+                    + (user_llm_prompt or llm.DEFAULT_INSTRUCTIONS_PROMPT),
+                    self.hass,
+                ).async_render(
+                    {
+                        "ha_name": self.hass.config.location_name,
+                        "user_name": user_name,
+                        "llm_context": llm_context,
+                    },
+                    parse_result=False,
+                )
+            ]
+
+        except TemplateError as err:
+            LOGGER.error("Error rendering prompt: %s", err)
+            intent_response = intent.IntentResponse(language=user_input.language)
+            intent_response.async_set_error(
+                intent.IntentResponseErrorCode.UNKNOWN,
+                "Sorry, I had a problem with my template",
             )
-        )
+            raise ConverseError(
+                "Error rendering prompt",
+                conversation_id=self.conversation_id,
+                response=intent_response,
+            ) from err
 
         if llm_api:
             prompt_parts.append(llm_api.api_prompt)
-
-        prompt_parts.append(
-            await self._async_expand_prompt_template(
-                llm_context,
-                llm.BASE_PROMPT,
-                user_input.language,
-                user_name,
-            )
-        )
 
         if extra_system_prompt := (
             # Take new system prompt if one was given
@@ -475,16 +457,10 @@ class ChatLog:
         LOGGER.debug("Prompt: %s", self.content)
         LOGGER.debug("Tools: %s", self.llm_api.tools if self.llm_api else None)
 
-        self.async_trace(
+        trace.async_conversation_trace_append(
+            trace.ConversationTraceEventType.AGENT_DETAIL,
             {
                 "messages": self.content,
                 "tools": self.llm_api.tools if self.llm_api else None,
-            }
-        )
-
-    def async_trace(self, agent_details: dict[str, Any]) -> None:
-        """Append agent specific details to the conversation trace."""
-        trace.async_conversation_trace_append(
-            trace.ConversationTraceEventType.AGENT_DETAIL,
-            agent_details,
+            },
         )

@@ -28,10 +28,10 @@
       "name": "Thermostat",
       "state": {
         "off": "[%key:common::state::off%]",
-        "auto": "[%key:common::state::auto%]",
         "heat": "Heat",
         "cool": "Cool",
         "heat_cool": "Heat/Cool",
+        "auto": "Auto",
         "dry": "Dry",
         "fan_only": "Fan only"
       },
@@ -50,10 +50,10 @@
           "state": {
             "off": "[%key:common::state::off%]",
             "on": "[%key:common::state::on%]",
-            "auto": "[%key:common::state::auto%]",
-            "low": "[%key:common::state::low%]",
-            "medium": "[%key:common::state::medium%]",
-            "high": "[%key:common::state::high%]",
+            "auto": "Auto",
+            "low": "Low",
+            "medium": "Medium",
+            "high": "High",
             "top": "Top",
             "middle": "Middle",
             "focus": "Focus",
@@ -69,13 +69,13 @@
         "hvac_action": {
           "name": "Current action",
           "state": {
-            "off": "[%key:common::state::off%]",
-            "idle": "[%key:common::state::idle%]",
             "cooling": "Cooling",
             "defrosting": "Defrosting",
             "drying": "Drying",
             "fan": "Fan",
             "heating": "Heating",
+            "idle": "[%key:common::state::idle%]",
+            "off": "[%key:common::state::off%]",
             "preheating": "Preheating"
           }
         },
@@ -98,13 +98,13 @@
           "name": "Preset",
           "state": {
             "none": "None",
-            "home": "[%key:common::state::home%]",
-            "away": "[%key:common::state::not_home%]",
-            "activity": "Activity",
+            "eco": "Eco",
+            "away": "Away",
             "boost": "Boost",
             "comfort": "Comfort",
-            "eco": "Eco",
-            "sleep": "Sleep"
+            "home": "[%key:common::state::home%]",
+            "sleep": "Sleep",
+            "activity": "Activity"
           }
         },
         "preset_modes": {
@@ -257,8 +257,8 @@
   "selector": {
     "hvac_mode": {
       "options": {
-        "off": "[%key:common::state::off%]",
-        "auto": "[%key:common::state::auto%]",
+        "off": "Off",
+        "auto": "Auto",
         "cool": "Cool",
         "dry": "Dry",
         "fan_only": "Fan only",

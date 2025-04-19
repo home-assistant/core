@@ -61,8 +61,8 @@ def mock_api() -> Generator[AsyncMock]:
     ):
         api = mock_api.return_value
         api.authenticate.return_value = {
-            "loginEmailAddress": "TEST@EXAMPLE.COM",
-            "internalUserID": "test-username",
+            "email": "TEST@EXAMPLE.COM",
+            "cdp_internal_user_id": "test-username",
         }
         api.get_meters.return_value = {}
         yield api

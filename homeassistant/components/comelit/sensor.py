@@ -19,7 +19,6 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import ComelitConfigEntry, ComelitSerialBridge, ComelitVedoSystem
-from .entity import ComelitBridgeBaseEntity
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -96,9 +95,10 @@ async def async_setup_vedo_entry(
     async_add_entities(entities)
 
 
-class ComelitBridgeSensorEntity(ComelitBridgeBaseEntity, SensorEntity):
+class ComelitBridgeSensorEntity(CoordinatorEntity[ComelitSerialBridge], SensorEntity):
     """Sensor device."""
 
+    _attr_has_entity_name = True
     _attr_name = None
 
     def __init__(
@@ -109,7 +109,13 @@ class ComelitBridgeSensorEntity(ComelitBridgeBaseEntity, SensorEntity):
         description: SensorEntityDescription,
     ) -> None:
         """Init sensor entity."""
-        super().__init__(coordinator, device, config_entry_entry_id)
+        self._api = coordinator.api
+        self._device = device
+        super().__init__(coordinator)
+        # Use config_entry.entry_id as base for unique_id
+        # because no serial number or mac is available
+        self._attr_unique_id = f"{config_entry_entry_id}-{device.index}"
+        self._attr_device_info = coordinator.platform_device_info(device, device.type)
 
         self.entity_description = description
 
@@ -138,6 +144,7 @@ class ComelitVedoSensorEntity(CoordinatorEntity[ComelitVedoSystem], SensorEntity
         description: SensorEntityDescription,
     ) -> None:
         """Init sensor entity."""
+        self._api = coordinator.api
         self._zone_index = zone.index
         super().__init__(coordinator)
         # Use config_entry.entry_id as base for unique_id

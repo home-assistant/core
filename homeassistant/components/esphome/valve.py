@@ -22,8 +22,6 @@ from .entity import (
     platform_async_setup_entry,
 )
 
-PARALLEL_UPDATES = 0
-
 
 class EsphomeValve(EsphomeEntity[ValveInfo, ValveState], ValveEntity):
     """A valve implementation for ESPHome."""

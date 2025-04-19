@@ -28,7 +28,7 @@
         "locked": "[%key:common::state::locked%]",
         "locking": "Locking",
         "open": "[%key:common::state::open%]",
-        "opening": "[%key:common::state::opening%]",
+        "opening": "Opening",
         "unlocked": "[%key:common::state::unlocked%]",
         "unlocking": "Unlocking"
       },

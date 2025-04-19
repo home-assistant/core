@@ -98,8 +98,7 @@ class TemplateLock(TemplateEntity, LockEntity):
             (CONF_UNLOCK, 0),
             (CONF_OPEN, LockEntityFeature.OPEN),
         ):
-            # Scripts can be an empty list, therefore we need to check for None
-            if (action_config := config.get(action_id)) is not None:
+            if action_config := config.get(action_id):
                 self.add_script(action_id, action_config, name, DOMAIN)
                 self._attr_supported_features |= supported_feature
         self._code_format_template = config.get(CONF_CODE_FORMAT_TEMPLATE)

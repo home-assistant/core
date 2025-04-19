@@ -5,8 +5,8 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass
 
+from tesla_fleet_api import EnergySpecific, VehicleSpecific
 from tesla_fleet_api.const import Scope
-from tesla_fleet_api.tesla import EnergySite, VehicleFleet
 
 from homeassistant.helpers.device_registry import DeviceInfo
 
@@ -31,7 +31,7 @@ class TeslaFleetData:
 class TeslaFleetVehicleData:
     """Data for a vehicle in the TeslaFleet integration."""
 
-    api: VehicleFleet
+    api: VehicleSpecific
     coordinator: TeslaFleetVehicleDataCoordinator
     vin: str
     device: DeviceInfo
@@ -43,7 +43,7 @@ class TeslaFleetVehicleData:
 class TeslaFleetEnergyData:
     """Data for a vehicle in the TeslaFleet integration."""
 
-    api: EnergySite
+    api: EnergySpecific
     live_coordinator: TeslaFleetEnergySiteLiveCoordinator
     history_coordinator: TeslaFleetEnergySiteHistoryCoordinator
     info_coordinator: TeslaFleetEnergySiteInfoCoordinator

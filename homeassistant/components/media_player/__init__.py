@@ -68,12 +68,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.hass_dict import HassKey
 
-from .browse_media import (  # noqa: F401
-    BrowseMedia,
-    SearchMedia,
-    SearchMediaQuery,
-    async_process_play_media_url,
-)
+from .browse_media import BrowseMedia, async_process_play_media_url  # noqa: F401
 from .const import (  # noqa: F401
     _DEPRECATED_MEDIA_CLASS_DIRECTORY,
     _DEPRECATED_SUPPORT_BROWSE_MEDIA,
@@ -112,12 +107,10 @@ from .const import (  # noqa: F401
     ATTR_MEDIA_ENQUEUE,
     ATTR_MEDIA_EPISODE,
     ATTR_MEDIA_EXTRA,
-    ATTR_MEDIA_FILTER_CLASSES,
     ATTR_MEDIA_PLAYLIST,
     ATTR_MEDIA_POSITION,
     ATTR_MEDIA_POSITION_UPDATED_AT,
     ATTR_MEDIA_REPEAT,
-    ATTR_MEDIA_SEARCH_QUERY,
     ATTR_MEDIA_SEASON,
     ATTR_MEDIA_SEEK_POSITION,
     ATTR_MEDIA_SERIES_TITLE,
@@ -135,7 +128,6 @@ from .const import (  # noqa: F401
     SERVICE_CLEAR_PLAYLIST,
     SERVICE_JOIN,
     SERVICE_PLAY_MEDIA,
-    SERVICE_SEARCH_MEDIA,
     SERVICE_SELECT_SOUND_MODE,
     SERVICE_SELECT_SOURCE,
     SERVICE_UNJOIN,
@@ -145,7 +137,7 @@ from .const import (  # noqa: F401
     MediaType,
     RepeatMode,
 )
-from .errors import BrowseError, SearchError
+from .errors import BrowseError
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -299,7 +291,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     websocket_api.async_register_command(hass, websocket_browse_media)
-    websocket_api.async_register_command(hass, websocket_search_media)
     hass.http.register_view(MediaPlayerImageView(component))
 
     await component.async_setup(config)
@@ -455,22 +446,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         },
         "async_browse_media",
         supports_response=SupportsResponse.ONLY,
-    )
-    component.async_register_entity_service(
-        SERVICE_SEARCH_MEDIA,
-        {
-            vol.Optional(ATTR_MEDIA_CONTENT_TYPE): cv.string,
-            vol.Optional(ATTR_MEDIA_CONTENT_ID): cv.string,
-            vol.Required(ATTR_MEDIA_SEARCH_QUERY): cv.string,
-            vol.Optional(ATTR_MEDIA_FILTER_CLASSES): vol.All(
-                cv.ensure_list,
-                [vol.In([m.value for m in MediaClass])],
-                lambda x: {MediaClass(item) for item in x},
-            ),
-        },
-        "async_internal_search_media",
-        [MediaPlayerEntityFeature.SEARCH_MEDIA],
-        SupportsResponse.ONLY,
     )
     component.async_register_entity_service(
         SERVICE_SHUFFLE_SET,
@@ -1182,29 +1157,6 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """
         raise NotImplementedError
 
-    async def async_internal_search_media(
-        self,
-        search_query: str,
-        media_content_type: MediaType | str | None = None,
-        media_content_id: str | None = None,
-        media_filter_classes: list[MediaClass] | None = None,
-    ) -> SearchMedia:
-        return await self.async_search_media(
-            query=SearchMediaQuery(
-                search_query=search_query,
-                media_content_type=media_content_type,
-                media_content_id=media_content_id,
-                media_filter_classes=media_filter_classes,
-            )
-        )
-
-    async def async_search_media(
-        self,
-        query: SearchMediaQuery,
-    ) -> SearchMedia:
-        """Search the media player."""
-        raise NotImplementedError
-
     def join_players(self, group_members: list[str]) -> None:
         """Join `group_members` as a player group with the current player."""
         raise NotImplementedError
@@ -1405,75 +1357,6 @@ async def websocket_browse_media(
         result = payload  # type: ignore[unreachable]
         _LOGGER.warning("Browse Media should use new BrowseMedia class")
 
-    connection.send_result(msg["id"], result)
-
-
-@websocket_api.websocket_command(
-    {
-        vol.Required("type"): "media_player/search_media",
-        vol.Required("entity_id"): cv.entity_id,
-        vol.Inclusive(
-            ATTR_MEDIA_CONTENT_TYPE,
-            "media_ids",
-            "media_content_type and media_content_id must be provided together",
-        ): str,
-        vol.Inclusive(
-            ATTR_MEDIA_CONTENT_ID,
-            "media_ids",
-            "media_content_type and media_content_id must be provided together",
-        ): str,
-        vol.Required(ATTR_MEDIA_SEARCH_QUERY): str,
-        vol.Optional(ATTR_MEDIA_FILTER_CLASSES): vol.All(
-            cv.ensure_list,
-            [vol.In([m.value for m in MediaClass])],
-            lambda x: {MediaClass(item) for item in x},
-        ),
-    }
-)
-@websocket_api.async_response
-async def websocket_search_media(
-    hass: HomeAssistant,
-    connection: websocket_api.connection.ActiveConnection,
-    msg: dict[str, Any],
-) -> None:
-    """Search media available to the media_player entity.
-
-    To use, media_player integrations can implement
-    MediaPlayerEntity.async_search_media()
-    """
-    player = hass.data[DATA_COMPONENT].get_entity(msg["entity_id"])
-
-    if player is None:
-        connection.send_error(msg["id"], "entity_not_found", "Entity not found")
-        return
-
-    if MediaPlayerEntityFeature.SEARCH_MEDIA not in player.supported_features_compat:
-        connection.send_message(
-            websocket_api.error_message(
-                msg["id"], ERR_NOT_SUPPORTED, "Player does not support searching media"
-            )
-        )
-        return
-
-    media_content_type = msg.get(ATTR_MEDIA_CONTENT_TYPE)
-    media_content_id = msg.get(ATTR_MEDIA_CONTENT_ID)
-    query = str(msg.get(ATTR_MEDIA_SEARCH_QUERY))
-    media_filter_classes = msg.get(ATTR_MEDIA_FILTER_CLASSES, [])
-
-    try:
-        payload = await player.async_internal_search_media(
-            query,
-            media_content_type,
-            media_content_id,
-            media_filter_classes,
-        )
-    except SearchError as err:
-        connection.send_message(
-            websocket_api.error_message(msg["id"], ERR_UNKNOWN_ERROR, str(err))
-        )
-        return
-
-    result = payload.as_dict()
     connection.send_result(msg["id"], result)
 
 

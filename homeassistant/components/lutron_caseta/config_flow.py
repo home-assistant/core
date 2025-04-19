@@ -123,8 +123,7 @@ class LutronCasetaFlowHandler(ConfigFlow, domain=DOMAIN):
             assets = None
             try:
                 assets = await async_pair(self.data[CONF_HOST])
-            except (TimeoutError, OSError) as exc:
-                _LOGGER.debug("Pairing failed", exc_info=exc)
+            except (TimeoutError, OSError):
                 errors["base"] = "cannot_connect"
 
             if not errors:

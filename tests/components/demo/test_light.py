@@ -80,7 +80,7 @@ async def test_state_attributes(hass: HomeAssistant) -> None:
         SERVICE_TURN_ON,
         {
             ATTR_ENTITY_ID: ENTITY_LIGHT,
-            ATTR_EFFECT: "off",
+            ATTR_EFFECT: "none",
             ATTR_COLOR_TEMP_KELVIN: 2500,
         },
         blocking=True,
@@ -90,7 +90,7 @@ async def test_state_attributes(hass: HomeAssistant) -> None:
     assert state.attributes.get(ATTR_COLOR_TEMP_KELVIN) == 2500
     assert state.attributes.get(ATTR_MAX_COLOR_TEMP_KELVIN) == 6535
     assert state.attributes.get(ATTR_MIN_COLOR_TEMP_KELVIN) == 2000
-    assert state.attributes.get(ATTR_EFFECT) == "off"
+    assert state.attributes.get(ATTR_EFFECT) == "none"
 
     await hass.services.async_call(
         LIGHT_DOMAIN,

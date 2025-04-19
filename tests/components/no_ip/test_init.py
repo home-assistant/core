@@ -22,20 +22,22 @@ USERNAME = "abc@123.com"
 
 
 @pytest.fixture
-async def setup_no_ip(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
+def setup_no_ip(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     """Fixture that sets up NO-IP."""
     aioclient_mock.get(UPDATE_URL, params={"hostname": DOMAIN}, text="good 0.0.0.0")
 
-    await async_setup_component(
-        hass,
-        no_ip.DOMAIN,
-        {
-            no_ip.DOMAIN: {
-                "domain": DOMAIN,
-                "username": USERNAME,
-                "password": PASSWORD,
-            }
-        },
+    hass.loop.run_until_complete(
+        async_setup_component(
+            hass,
+            no_ip.DOMAIN,
+            {
+                no_ip.DOMAIN: {
+                    "domain": DOMAIN,
+                    "username": USERNAME,
+                    "password": PASSWORD,
+                }
+            },
+        )
     )
 
 

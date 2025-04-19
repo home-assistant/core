@@ -24,7 +24,7 @@
     'is_new': False,
     'labels': set({
     }),
-    'manufacturer': 'Ralph Irving & Adrian Smith',
+    'manufacturer': 'Ralph Irving',
     'model': 'SqueezeLite',
     'model_id': None,
     'name': 'Test Player',

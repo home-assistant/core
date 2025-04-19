@@ -65,19 +65,13 @@
         "name": "Mist level"
       }
     },
-    "switch": {
-      "display": {
-        "name": "Display"
-      }
-    },
     "select": {
       "night_light_level": {
         "name": "Night light level",
         "state": {
           "bright": "Bright",
           "dim": "Dim",
-          "off": "[%key:common::state::off%]",
-          "on": "[%key:common::state::on%]"
+          "off": "[%key:common::state::off%]"
         }
       }
     },
@@ -86,7 +80,7 @@
         "state_attributes": {
           "preset_mode": {
             "state": {
-              "auto": "[%key:common::state::auto%]",
+              "auto": "Auto",
               "sleep": "Sleep",
               "advanced_sleep": "Advanced sleep",
               "pet": "Pet",

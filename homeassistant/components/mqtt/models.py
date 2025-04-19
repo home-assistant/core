@@ -420,12 +420,6 @@ class MqttComponentConfig:
     discovery_payload: MQTTDiscoveryPayload
 
 
-class DeviceMqttOptions(TypedDict, total=False):
-    """Hold the shared MQTT specific options for an MQTT device."""
-
-    qos: int
-
-
 class MqttDeviceData(TypedDict, total=False):
     """Hold the data for an MQTT device."""
 
@@ -436,7 +430,6 @@ class MqttDeviceData(TypedDict, total=False):
     hw_version: str
     model: str
     model_id: str
-    mqtt_settings: DeviceMqttOptions
 
 
 class MqttAvailabilityData(TypedDict, total=False):

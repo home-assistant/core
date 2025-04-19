@@ -20,9 +20,6 @@ from .entity import FritzBoxBaseCoordinatorEntity, FritzEntityDescription
 
 _LOGGER = logging.getLogger(__name__)
 
-# Set a sane value to avoid too many updates
-PARALLEL_UPDATES = 5
-
 
 @dataclass(frozen=True, kw_only=True)
 class FritzUpdateEntityDescription(UpdateEntityDescription, FritzEntityDescription):

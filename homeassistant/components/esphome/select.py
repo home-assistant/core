@@ -25,8 +25,6 @@ from .entity import (
 )
 from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
 
-PARALLEL_UPDATES = 0
-
 
 async def async_setup_entry(
     hass: HomeAssistant,

@@ -14,7 +14,7 @@
           "personal_access_token": "Personal Access Token (PAT)"
         },
         "description": "Set up an Azure DevOps instance to access your project. A Personal Access Token is only required for a private project.",
-        "title": "Add Azure DevOps project"
+        "title": "Add Azure DevOps Project"
       },
       "reauth_confirm": {
         "data": {
@@ -32,7 +32,7 @@
   "entity": {
     "sensor": {
       "build_id": {
-        "name": "{definition_name} latest build ID"
+        "name": "{definition_name} latest build id"
       },
       "finish_time": {
         "name": "{definition_name} latest build finish time"
@@ -59,7 +59,7 @@
         "name": "{definition_name} latest build start time"
       },
       "url": {
-        "name": "{definition_name} latest build URL"
+        "name": "{definition_name} latest build url"
       },
       "work_item_count": {
         "name": "{item_type} {item_state} work items"
@@ -68,7 +68,7 @@
   },
   "exceptions": {
     "authentication_failed": {
-      "message": "Could not authorize with Azure DevOps for {title}. You will need to update your Personal Access Token."
+      "message": "Could not authorize with Azure DevOps for {title}. You will need to update your personal access token."
     }
   }
 }

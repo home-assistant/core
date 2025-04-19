@@ -539,14 +539,10 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                     return
 
             assert self._cur_temp is not None and self._target_temp is not None
-
-            min_temp = self._target_temp - self._cold_tolerance
-            max_temp = self._target_temp + self._hot_tolerance
-
+            too_cold = self._target_temp >= self._cur_temp + self._cold_tolerance
+            too_hot = self._cur_temp >= self._target_temp + self._hot_tolerance
             if self._is_device_active:
-                if (self.ac_mode and self._cur_temp <= min_temp) or (
-                    not self.ac_mode and self._cur_temp >= max_temp
-                ):
+                if (self.ac_mode and too_cold) or (not self.ac_mode and too_hot):
                     _LOGGER.debug("Turning off heater %s", self.heater_entity_id)
                     await self._async_heater_turn_off()
                 elif time is not None:
@@ -556,9 +552,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                         self.heater_entity_id,
                     )
                     await self._async_heater_turn_on()
-            elif (self.ac_mode and self._cur_temp > max_temp) or (
-                not self.ac_mode and self._cur_temp < min_temp
-            ):
+            elif (self.ac_mode and too_hot) or (not self.ac_mode and too_cold):
                 _LOGGER.debug("Turning on heater %s", self.heater_entity_id)
                 await self._async_heater_turn_on()
             elif time is not None:

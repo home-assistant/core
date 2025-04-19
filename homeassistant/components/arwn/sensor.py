@@ -6,11 +6,7 @@ import logging
 from typing import Any
 
 from homeassistant.components import mqtt
-from homeassistant.components.sensor import (
-    SensorDeviceClass,
-    SensorEntity,
-    SensorStateClass,
-)
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import DEGREE, UnitOfPrecipitationDepth, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -102,7 +98,6 @@ def discover_sensors(topic: str, payload: dict[str, Any]) -> list[ArwnSensor] | 
                 DEGREE,
                 "mdi:compass",
                 device_class=SensorDeviceClass.WIND_DIRECTION,
-                state_class=SensorStateClass.MEASUREMENT_ANGLE,
             ),
         ]
     return None
@@ -183,7 +178,6 @@ class ArwnSensor(SensorEntity):
         units: str,
         icon: str | None = None,
         device_class: SensorDeviceClass | None = None,
-        state_class: SensorStateClass | None = None,
     ) -> None:
         """Initialize the sensor."""
         self.entity_id = _slug(name)
@@ -194,7 +188,6 @@ class ArwnSensor(SensorEntity):
         self._attr_native_unit_of_measurement = units
         self._attr_icon = icon
         self._attr_device_class = device_class
-        self._attr_state_class = state_class
 
     def set_event(self, event: dict[str, Any]) -> None:
         """Update the sensor with the most recent event."""

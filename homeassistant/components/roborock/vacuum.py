@@ -1,14 +1,11 @@
 """Support for Roborock vacuum class."""
 
+from dataclasses import asdict
 from typing import Any
 
 from roborock.code_mappings import RoborockStateCode
 from roborock.roborock_message import RoborockDataProtocol
 from roborock.roborock_typing import RoborockCommand
-from vacuum_map_parser_base.config.color import ColorsPalette
-from vacuum_map_parser_base.config.image_config import ImageConfig
-from vacuum_map_parser_base.config.size import Sizes
-from vacuum_map_parser_roborock.map_data_parser import RoborockMapDataParser
 import voluptuous as vol
 
 from homeassistant.components.vacuum import (
@@ -29,6 +26,7 @@ from .const import (
 )
 from .coordinator import RoborockConfigEntry, RoborockDataUpdateCoordinator
 from .entity import RoborockCoordinatedEntityV1
+from .image import ColorsPalette, ImageConfig, RoborockMapDataParser, Sizes
 
 STATE_CODE_TO_STATE = {
     RoborockStateCode.starting: VacuumActivity.IDLE,  # "Starting"
@@ -55,8 +53,6 @@ STATE_CODE_TO_STATE = {
     RoborockStateCode.charging_complete: VacuumActivity.DOCKED,  # "Charging complete"
     RoborockStateCode.device_offline: VacuumActivity.ERROR,  # "Device offline"
 }
-
-PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -205,14 +201,7 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
         """Get map information such as map id and room ids."""
         return {
             "maps": [
-                {
-                    "flag": vacuum_map.flag,
-                    "name": vacuum_map.name,
-                    # JsonValueType does not accept a int as a key - was not a
-                    # issue with previous asdict() implementation.
-                    "rooms": vacuum_map.rooms,  # type: ignore[dict-item]
-                }
-                for vacuum_map in self.coordinator.maps.values()
+                asdict(vacuum_map) for vacuum_map in self.coordinator.maps.values()
             ]
         }
 
@@ -221,18 +210,13 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
 
         map_data = await self.coordinator.cloud_api.get_map_v1()
         if not isinstance(map_data, bytes):
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="map_failure",
-            )
+            raise HomeAssistantError("Failed to retrieve map data.")
         parser = RoborockMapDataParser(ColorsPalette(), Sizes(), [], ImageConfig(), [])
         parsed_map = parser.parse(map_data)
         robot_position = parsed_map.vacuum_position
 
         if robot_position is None:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN, translation_key="position_not_found"
-            )
+            raise HomeAssistantError("Robot position not found")
 
         return {
             "x": robot_position.x,

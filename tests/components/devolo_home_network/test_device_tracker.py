@@ -4,7 +4,6 @@ from unittest.mock import AsyncMock
 
 from devolo_plc_api.exceptions.device import DeviceUnavailable
 from freezegun.api import FrozenDateTimeFactory
-import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.device_tracker import DOMAIN as PLATFORM
@@ -26,7 +25,6 @@ STATION = CONNECTED_STATIONS[0]
 SERIAL = DISCOVERY_INFO.properties["SN"]
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_device_tracker(
     hass: HomeAssistant,
     mock_device: MockDevice,
@@ -44,6 +42,14 @@ async def test_device_tracker(
     freezer.tick(LONG_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
+
+    # Enable entity
+    entity_registry.async_update_entity(state_key, disabled_by=None)
+    await hass.async_block_till_done()
+    freezer.tick(LONG_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
     assert hass.states.get(state_key) == snapshot
 
     # Emulate state change

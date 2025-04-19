@@ -23,10 +23,14 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, INTEGRATION_SUPPORTED_COMMANDS, PLATFORMS
+from .const import (
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    INTEGRATION_SUPPORTED_COMMANDS,
+    PLATFORMS,
+)
 
 NUT_FAKE_SERIAL = ["unknown", "blank"]
 
@@ -64,10 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool:
     alias = config.get(CONF_ALIAS)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
-    if CONF_SCAN_INTERVAL in entry.options:
-        current_options = {**entry.options}
-        current_options.pop(CONF_SCAN_INTERVAL)
-        hass.config_entries.async_update_entry(entry, options=current_options)
+    scan_interval = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
     data = PyNUTData(host, port, alias, username, password)
 
@@ -78,21 +79,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool:
         try:
             return await data.async_update()
         except NUTLoginError as err:
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN,
-                translation_key="device_authentication",
-                translation_placeholders={
-                    "err": str(err),
-                },
-            ) from err
+            raise ConfigEntryAuthFailed from err
         except NUTError as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="data_fetch_error",
-                translation_placeholders={
-                    "err": str(err),
-                },
-            ) from err
+            raise UpdateFailed(f"Error fetching UPS state: {err}") from err
 
     coordinator = DataUpdateCoordinator(
         hass,
@@ -100,7 +89,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool:
         config_entry=entry,
         name="NUT resource status",
         update_method=async_update_data,
-        update_interval=timedelta(seconds=60),
+        update_interval=timedelta(seconds=scan_interval),
         always_update=False,
     )
 
@@ -114,58 +103,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool:
     )
     status = coordinator.data
 
-    _LOGGER.debug("NUT Sensors Available: %s", status if status else None)
+    _LOGGER.debug("NUT Sensors Available: %s", status)
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     unique_id = _unique_id_from_status(status)
     if unique_id is None:
         unique_id = entry.entry_id
 
-    elif entry.unique_id is None:
-        hass.config_entries.async_update_entry(entry, unique_id=unique_id)
-
     if username is not None and password is not None:
-        # Dynamically add outlet integration commands
-        additional_integration_commands = set()
-        if (num_outlets := status.get("outlet.count")) is not None:
-            for outlet_num in range(1, int(num_outlets) + 1):
-                outlet_num_str: str = str(outlet_num)
-                additional_integration_commands |= {
-                    f"outlet.{outlet_num_str}.load.cycle",
-                    f"outlet.{outlet_num_str}.load.on",
-                    f"outlet.{outlet_num_str}.load.off",
-                }
-
-        valid_integration_commands = (
-            INTEGRATION_SUPPORTED_COMMANDS | additional_integration_commands
-        )
-
         user_available_commands = {
-            device_command
-            for device_command in await data.async_list_commands() or {}
-            if device_command in valid_integration_commands
+            device_supported_command
+            for device_supported_command in await data.async_list_commands() or {}
+            if device_supported_command in INTEGRATION_SUPPORTED_COMMANDS
         }
     else:
         user_available_commands = set()
-
-    _LOGGER.debug(
-        "NUT Commands Available: %s",
-        user_available_commands if user_available_commands else None,
-    )
 
     entry.runtime_data = NutRuntimeData(
         coordinator, data, unique_id, user_available_commands
     )
 
-    connections: set[tuple[str, str]] | None = None
-    if data.device_info.mac_address is not None:
-        connections = {(CONNECTION_NETWORK_MAC, data.device_info.mac_address)}
-
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, unique_id)},
-        connections=connections,
         name=data.name.title(),
         manufacturer=data.device_info.manufacturer,
         model=data.device_info.model,
@@ -180,12 +141,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def _async_update_listener(hass: HomeAssistant, entry: NutConfigEntry) -> None:
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
 
@@ -253,7 +214,6 @@ class NUTDeviceInfo:
     model_id: str | None = None
     firmware: str | None = None
     serial: str | None = None
-    mac_address: str | None = None
     device_location: str | None = None
 
 
@@ -280,7 +240,6 @@ class PyNUTData:
 
         self._client = AIONUTClient(self._host, port, username, password, 5, persistent)
         self.ups_list: dict[str, str] | None = None
-        self.device_name: str | None = None
         self._status: dict[str, str] | None = None
         self._device_info: NUTDeviceInfo | None = None
 
@@ -291,7 +250,7 @@ class PyNUTData:
 
     @property
     def name(self) -> str:
-        """Return the name of the NUT device."""
+        """Return the name of the ups."""
         return self._alias or f"Nut-{self._host}"
 
     @property
@@ -317,18 +276,9 @@ class PyNUTData:
         model_id: str | None = self._status.get("device.part")
         firmware = _firmware_from_status(self._status)
         serial = _serial_from_status(self._status)
-        mac_address: str | None = self._status.get("device.macaddr")
-        if mac_address is not None:
-            mac_address = format_mac(mac_address.rstrip().replace(" ", ":"))
         device_location: str | None = self._status.get("device.location")
         return NUTDeviceInfo(
-            manufacturer,
-            model,
-            model_id,
-            firmware,
-            serial,
-            mac_address,
-            device_location,
+            manufacturer, model, model_id, firmware, serial, device_location
         )
 
     async def _async_get_status(self) -> dict[str, str]:
@@ -344,8 +294,6 @@ class PyNUTData:
         self._status = await self._async_get_status()
         if self._device_info is None:
             self._device_info = self._get_device_info()
-        if self.device_name is None:
-            self.device_name = self.name.title()
         return self._status
 
     async def async_run_command(self, command_name: str) -> None:
@@ -357,12 +305,7 @@ class PyNUTData:
             await self._client.run_command(self._alias, command_name)
         except NUTError as err:
             raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="nut_command_error",
-                translation_placeholders={
-                    "command_name": command_name,
-                    "err": str(err),
-                },
+                f"Error running command {command_name}, {err}"
             ) from err
 
     async def async_list_commands(self) -> set[str] | None:

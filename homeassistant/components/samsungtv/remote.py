@@ -13,9 +13,6 @@ from .const import LOGGER
 from .coordinator import SamsungTVConfigEntry
 from .entity import SamsungTVEntity
 
-# Coordinator is used to centralize the data updates
-PARALLEL_UPDATES = 0
-
 
 async def async_setup_entry(
     hass: HomeAssistant,

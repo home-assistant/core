@@ -15,7 +15,6 @@
   dict({
     'can_expand': False,
     'can_play': True,
-    'can_search': False,
     'children': None,
     'children_media_class': None,
     'domain': 'jellyfin',
@@ -32,7 +31,6 @@
   dict({
     'can_expand': True,
     'can_play': False,
-    'can_search': False,
     'children': None,
     'children_media_class': None,
     'domain': 'jellyfin',
@@ -49,7 +47,6 @@
   dict({
     'can_expand': True,
     'can_play': False,
-    'can_search': False,
     'children': None,
     'children_media_class': None,
     'domain': 'jellyfin',
@@ -66,7 +63,6 @@
   dict({
     'can_expand': False,
     'can_play': True,
-    'can_search': False,
     'children': None,
     'children_media_class': None,
     'domain': 'jellyfin',
@@ -89,7 +85,6 @@
   dict({
     'can_expand': True,
     'can_play': False,
-    'can_search': False,
     'children': None,
     'children_media_class': None,
     'domain': 'jellyfin',
@@ -106,7 +101,6 @@
   dict({
     'can_expand': True,
     'can_play': False,
-    'can_search': False,
     'children': None,
     'children_media_class': None,
     'domain': 'jellyfin',
@@ -123,7 +117,6 @@
   dict({
     'can_expand': True,
     'can_play': False,
-    'can_search': False,
     'children': None,
     'children_media_class': None,
     'domain': 'jellyfin',
@@ -140,7 +133,6 @@
   dict({
     'can_expand': False,
     'can_play': True,
-    'can_search': False,
     'children': None,
     'children_media_class': None,
     'domain': 'jellyfin',
