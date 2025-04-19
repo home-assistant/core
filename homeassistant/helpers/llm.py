@@ -71,6 +71,19 @@ NO_ENTITIES_PROMPT = (
     "to their voice assistant in Home Assistant."
 )
 
+DYNAMIC_CONTEXT_PROMPT = """You ARE equipped to answer questions about the current state of
+the home using the `GetLiveContext` tool. This is a primary function. Do not state you lack the
+functionality if the question requires live data.
+If the user asks about device existence/type (e.g., "Do I have lights in the bedroom?"): Answer
+from the static context below.
+If the user asks about the CURRENT state, value, or mode (e.g., "Is the lock locked?",
+"Is the fan on?", "What mode is the thermostat in?", "What is the temperature outside?"):
+    1.  Recognize this requires live data.
+    2.  You MUST call `GetLiveContext`. This tool will provide the needed real-time information (like temperature from the local weather, lock status, etc.).
+    3.  Use the tool's response** to answer the user accurately (e.g., "The temperature outside is [value from tool].").
+For general knowledge questions not about the home: Answer truthfully from internal knowledge.
+"""
+
 
 @callback
 def async_render_no_api_prompt(hass: HomeAssistant) -> str:
@@ -384,6 +397,8 @@ class AssistAPI(API):
         ):
             prompt.append("This device is not able to start timers.")
 
+        prompt.append(DYNAMIC_CONTEXT_PROMPT)
+
         return prompt
 
     @callback
@@ -395,7 +410,7 @@ class AssistAPI(API):
 
         if exposed_entities and exposed_entities["entities"]:
             prompt.append(
-                "An overview of the areas and the devices in this smart home:"
+                "Static Context: An overview of the areas and the devices in this smart home:"
             )
             prompt.append(yaml_util.dump(list(exposed_entities["entities"].values())))
 
@@ -457,7 +472,7 @@ class AssistAPI(API):
             )
 
         if exposed_domains:
-            tools.append(GetHomeStateTool())
+            tools.append(GetLiveContextTool())
 
         return tools
 
@@ -898,7 +913,7 @@ class CalendarGetEventsTool(Tool):
         return {"success": True, "result": events}
 
 
-class GetHomeStateTool(Tool):
+class GetLiveContextTool(Tool):
     """Tool for getting the current state of exposed entities.
 
     This returns state for all entities that have been exposed to
@@ -906,8 +921,13 @@ class GetHomeStateTool(Tool):
     returns state for entities based on intent parameters.
     """
 
-    name = "get_home_state"
-    description = "Get the current state of all devices in the home. "
+    name = "GetLiveContext"
+    description = (
+        "Use this tool when the user asks a question about the CURRENT state, "
+        "value, or mode of a specific device, sensor, entity, or area in the "
+        "smart home, and the answer can be improved with real-time data not "
+        "available in the static device overview list. "
+    )
 
     async def async_call(
         self,
@@ -925,7 +945,7 @@ class GetHomeStateTool(Tool):
         if not exposed_entities["entities"]:
             return {"success": False, "error": NO_ENTITIES_PROMPT}
         prompt = [
-            "An overview of the areas and the devices in this smart home:",
+            "Live Context: An overview of the areas and the devices in this smart home:",
             yaml_util.dump(list(exposed_entities["entities"].values())),
         ]
         return {
