@@ -21,7 +21,7 @@ async def test_climate_cloud(
         hass,
         entry_data=CLOUD_CONFIG,
     )
-    mock_adax_cloud.assert_called_once()
+    mock_adax_cloud.get_rooms.assert_called_once()
 
     assert len(hass.states.async_entity_ids(Platform.CLIMATE)) == 1
     entity_id = hass.states.async_entity_ids(Platform.CLIMATE)[0]
@@ -38,7 +38,7 @@ async def test_climate_cloud(
         == CLOUD_DEVICE_DATA[0]["temperature"]
     )
 
-    mock_adax_cloud.side_effect = Exception()
+    mock_adax_cloud.get_rooms.side_effect = Exception()
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -56,7 +56,7 @@ async def test_climate_local(
         hass,
         entry_data=LOCAL_CONFIG,
     )
-    mock_adax_local.assert_called_once()
+    mock_adax_local.get_status.assert_called_once()
 
     assert len(hass.states.async_entity_ids(Platform.CLIMATE)) == 1
     entity_id = hass.states.async_entity_ids(Platform.CLIMATE)[0]
@@ -74,7 +74,7 @@ async def test_climate_local(
         == (LOCAL_DEVICE_DATA["current_temperature"])
     )
 
-    mock_adax_local.side_effect = Exception()
+    mock_adax_local.get_status.side_effect = Exception()
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()

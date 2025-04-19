@@ -5,6 +5,8 @@ from unittest.mock import patch
 
 import pytest
 
+from tests.common import AsyncMock
+
 CLOUD_DEVICE_DATA: dict[str, Any] = [
     {
         "id": "1",
@@ -25,14 +27,23 @@ LOCAL_DEVICE_DATA: dict[str, Any] = {
 @pytest.fixture
 def mock_adax_cloud():
     """Mock climate data."""
-    with patch("adax.Adax.get_rooms") as mock_adax_get_rooms:
-        mock_adax_get_rooms.return_value = CLOUD_DEVICE_DATA
-        yield mock_adax_get_rooms
+    with patch("homeassistant.components.adax.coordinator.Adax") as mock_adax:
+        mock_adax_class = mock_adax.return_value
+
+        mock_adax_class.get_rooms = AsyncMock()
+        mock_adax_class.get_rooms.return_value = CLOUD_DEVICE_DATA
+
+        mock_adax_class.update = AsyncMock()
+        mock_adax_class.update.return_value = None
+        yield mock_adax_class
 
 
 @pytest.fixture
 def mock_adax_local():
     """Mock climate data."""
-    with patch("adax_local.Adax.get_status") as mock_adax_class_get_status:
-        mock_adax_class_get_status.return_value = LOCAL_DEVICE_DATA
-        yield mock_adax_class_get_status
+    with patch("homeassistant.components.adax.coordinator.AdaxLocal") as mock_adax:
+        mock_adax_class = mock_adax.return_value
+
+        mock_adax_class.get_status = AsyncMock()
+        mock_adax_class.get_status.return_value = LOCAL_DEVICE_DATA
+        yield mock_adax_class
