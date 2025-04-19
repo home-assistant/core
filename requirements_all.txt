@@ -781,7 +781,7 @@ devialet==1.5.7
 devolo-home-control-api==0.18.3
 
 # homeassistant.components.devolo_home_network
-devolo-plc-api==1.4.1
+devolo-plc-api==1.5.1
 
 # homeassistant.components.chacon_dio
 dio-chacon-wifi-api==1.2.1
@@ -871,7 +871,7 @@ enocean==0.50
 enturclient==0.2.4
 
 # homeassistant.components.environment_canada
-env-canada==0.8.0
+env-canada==0.10.1
 
 # homeassistant.components.season
 ephem==4.1.6
@@ -1154,7 +1154,7 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.69
+holidays==0.70
 
 # homeassistant.components.frontend
 home-assistant-frontend==20250411.0
@@ -2325,7 +2325,7 @@ pysmartthings==3.0.4
 pysmarty2==0.10.2
 
 # homeassistant.components.smhi
-pysmhi==1.0.1
+pysmhi==1.0.2
 
 # homeassistant.components.edl21
 pysml==0.0.12
@@ -2627,7 +2627,7 @@ renault-api==0.2.9
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.13.1
+reolink-aio==0.13.2
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
@@ -3152,7 +3152,7 @@ zeroconf==0.146.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.55
+zha==0.0.56
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.13
