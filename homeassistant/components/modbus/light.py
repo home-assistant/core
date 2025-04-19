@@ -113,8 +113,8 @@ class ModbusLight(BaseSwitch, LightEntity):
                 value=conv_brightness,
                 use_call=CALL_TYPE_WRITE_REGISTER,
             )
-
-            self._attr_brightness = brightness
+            if not self._verify_active:
+                self._attr_brightness = brightness
 
     async def async_set_color_temp(self, color_temp_kelvin: int) -> None:
         """Send Modbus command to set color temperature."""
@@ -128,7 +128,8 @@ class ModbusLight(BaseSwitch, LightEntity):
                 value=conv_color_temp_kelvin,
                 use_call=CALL_TYPE_WRITE_REGISTER,
             )
-            self._attr_color_temp_kelvin = color_temp_kelvin
+            if not self._verify_active:
+                self._attr_color_temp_kelvin = color_temp_kelvin
 
     async def _async_update(self) -> None:
         await super()._async_update()
