@@ -84,10 +84,10 @@ class WashingtonStateTransportSensor(SensorEntity):
 
     def __init__(self, name: str, access_code: str) -> None:
         """Initialize the sensor."""
-        self._data: dict[str, str | int | float | None] = {}
+        self._data: dict[str, str | int | None] = {}
         self._access_code = access_code
         self._name = name
-        self._state = None
+        self._state: int | None = None
 
     @property
     def name(self) -> str:
@@ -95,7 +95,7 @@ class WashingtonStateTransportSensor(SensorEntity):
         return self._name
 
     @property
-    def native_value(self) -> str | None:
+    def native_value(self) -> int | None:
         """Return the state of the sensor."""
         return self._state
 
@@ -123,13 +123,17 @@ class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
             _LOGGER.warning("Invalid response from WSDOT API")
         else:
             self._data = response.json()
-        self._state = self._data.get(ATTR_CURRENT_TIME)
+        _state = self._data.get(ATTR_CURRENT_TIME)
+        if not isinstance(_state, int):
+            self._state = None
+        else:
+            self._state = _state
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return other details about the sensor state."""
         if self._data is not None:
-            attrs = {}
+            attrs: dict[str, str | int | None | datetime] = {}
             for key in (
                 ATTR_AVG_TIME,
                 ATTR_NAME,
