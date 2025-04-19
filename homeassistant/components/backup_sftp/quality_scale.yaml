@@ -113,7 +113,7 @@ rules:
     comment: |
       This integration does not have entities.
   reconfiguration-flow: todo
-  repair-issues: done
+  repair-issues: todo
   stale-devices:
     status: exempt
     comment: |
