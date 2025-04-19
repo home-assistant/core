@@ -56,10 +56,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SFTPConfigEntry) -> bool
             if not isinstance(await client.list_backup_location(), list):
                 raise ConfigEntryError("Unexpected error while setting up integration.")
     except (BackupAgentAuthError, RuntimeError) as e:
-        LOGGER.error(
-            "Failure occurred during integration setup. Re-adding integration might be needed. %s",
-            str(e),
-        )
         raise ConfigEntryError from e
 
     # Notify backup listeners
