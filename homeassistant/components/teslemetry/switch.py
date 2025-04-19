@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from itertools import chain
 from typing import Any
 
-from tesla_fleet_api.const import Scope, Seat
+from tesla_fleet_api.const import AutoSeat, Scope
 from teslemetry_stream import TeslemetryStreamVehicle
 
 from homeassistant.components.switch import (
@@ -62,9 +62,11 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySwitchEntityDescription, ...] = (
     TeslemetrySwitchEntityDescription(
         key="climate_state_auto_seat_climate_left",
         streaming_listener=lambda x, y: x.listen_AutoSeatClimateLeft(y),
-        on_func=lambda api: api.remote_auto_seat_climate_request(Seat.FRONT_LEFT, True),
+        on_func=lambda api: api.remote_auto_seat_climate_request(
+            AutoSeat.FRONT_LEFT, True
+        ),
         off_func=lambda api: api.remote_auto_seat_climate_request(
-            Seat.FRONT_LEFT, False
+            AutoSeat.FRONT_LEFT, False
         ),
         scopes=[Scope.VEHICLE_CMDS],
     ),
@@ -72,10 +74,10 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySwitchEntityDescription, ...] = (
         key="climate_state_auto_seat_climate_right",
         streaming_listener=lambda x, y: x.listen_AutoSeatClimateRight(y),
         on_func=lambda api: api.remote_auto_seat_climate_request(
-            Seat.FRONT_RIGHT, True
+            AutoSeat.FRONT_RIGHT, True
         ),
         off_func=lambda api: api.remote_auto_seat_climate_request(
-            Seat.FRONT_RIGHT, False
+            AutoSeat.FRONT_RIGHT, False
         ),
         scopes=[Scope.VEHICLE_CMDS],
     ),

@@ -107,6 +107,17 @@ SENSORS = (
         value=lambda api, ch: BatteryEnum(api.battery_status(ch)).name,
         supported=lambda api, ch: api.supported(ch, "battery"),
     ),
+    ReolinkSensorEntityDescription(
+        key="day_night_state",
+        cmd_id=33,
+        cmd_key="296",
+        translation_key="day_night_state",
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        options=["day", "night", "led_day"],
+        value=lambda api, ch: api.baichuan.day_night_state(ch),
+        supported=lambda api, ch: api.supported(ch, "day_night_state"),
+    ),
 )
 
 HOST_SENSORS = (

@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/picnic",
   "iot_class": "cloud_polling",
   "loggers": ["python_picnic_api2"],
-  "requirements": ["python-picnic-api2==1.2.2"]
+  "requirements": ["python-picnic-api2==1.2.4"]
 }

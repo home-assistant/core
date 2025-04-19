@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from asyncio.exceptions import TimeoutError
 from collections.abc import Mapping
 from typing import Any
 
@@ -53,10 +54,18 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     try:
         await api.login()
-    except aiocomelit_exceptions.CannotConnect as err:
-        raise CannotConnect from err
+    except (aiocomelit_exceptions.CannotConnect, TimeoutError) as err:
+        raise CannotConnect(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={"error": repr(err)},
+        ) from err
     except aiocomelit_exceptions.CannotAuthenticate as err:
-        raise InvalidAuth from err
+        raise InvalidAuth(
+            translation_domain=DOMAIN,
+            translation_key="cannot_authenticate",
+            translation_placeholders={"error": repr(err)},
+        ) from err
     finally:
         await api.logout()
         await api.close()

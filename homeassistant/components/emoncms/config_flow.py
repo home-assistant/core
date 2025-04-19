@@ -17,7 +17,6 @@ from homeassistant.const import CONF_API_KEY, CONF_URL
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import selector
-from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_MESSAGE,
@@ -174,24 +173,6 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
-
-    async def async_step_import(self, import_info: ConfigType) -> ConfigFlowResult:
-        """Import config from yaml."""
-        url = import_info[CONF_URL]
-        api_key = import_info[CONF_API_KEY]
-        include_only_feeds = None
-        if import_info.get(CONF_ONLY_INCLUDE_FEEDID) is not None:
-            include_only_feeds = list(map(str, import_info[CONF_ONLY_INCLUDE_FEEDID]))
-        config = {
-            CONF_API_KEY: api_key,
-            CONF_ONLY_INCLUDE_FEEDID: include_only_feeds,
-            CONF_URL: url,
-        }
-        LOGGER.debug(config)
-        result = await self.async_step_user(config)
-        if errors := result.get("errors"):
-            return self.async_abort(reason=errors["base"])
-        return result
 
 
 class EmoncmsOptionsFlow(OptionsFlow):
