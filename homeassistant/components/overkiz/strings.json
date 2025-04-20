@@ -115,8 +115,8 @@
       },
       "operating_mode": {
         "state": {
-          "heating": "Heating",
-          "cooling": "Cooling"
+          "heating": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::heating%]",
+          "cooling": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::cooling%]"
         }
       }
     },
