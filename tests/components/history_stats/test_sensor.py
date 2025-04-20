@@ -969,6 +969,114 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_mul
     assert hass.states.get("sensor.sensor4").state == "87.5"
 
 
+async def test_async_start_from_history_and_switch_to_watching_state_changes_sliding_window(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+) -> None:
+    """Test we startup from history and switch to watching state changes, with a sliding window, and history_stats does not requery the recorder."""
+    await hass.config.async_set_time_zone("UTC")
+    utcnow = dt_util.utcnow()
+    start_time = utcnow.replace(hour=0, minute=0, second=0, microsecond=0)
+    time = start_time
+
+    def _fake_states(*args, **kwargs):
+        return {
+            "binary_sensor.state": [
+                ha.State(
+                    "binary_sensor.state",
+                    "off",
+                    last_changed=start_time - timedelta(hours=1),
+                    last_updated=start_time - timedelta(hours=1),
+                ),
+            ]
+        }
+
+    with (
+        patch(
+            "homeassistant.components.recorder.history.state_changes_during_period",
+            _fake_states,
+        ),
+        freeze_time(start_time),
+    ):
+        await async_setup_component(
+            hass,
+            "sensor",
+            {
+                "sensor": [
+                    {
+                        "platform": "history_stats",
+                        "entity_id": "binary_sensor.state",
+                        "name": "sensor1",
+                        "state": "on",
+                        "end": "{{ utcnow() }}",
+                        "duration": {"hours": 1},
+                        "type": "time",
+                    }
+                ]
+            },
+        )
+        await hass.async_block_till_done()
+
+        await async_update_entity(hass, "sensor.sensor1")
+        await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.sensor1").state == "0.0"
+
+    with freeze_time(time):
+        hass.states.async_set("binary_sensor.state", "on")
+        await hass.async_block_till_done()
+        async_fire_time_changed(hass, time)
+        await hass.async_block_till_done()
+
+    # After sensor has been on for 15 minutes, check state
+    time += timedelta(minutes=15)  # 00:15
+    with freeze_time(time):
+        async_fire_time_changed(hass, time)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.sensor1").state == "0.25"
+
+    with freeze_time(time):
+        hass.states.async_set("binary_sensor.state", "off")
+        await hass.async_block_till_done()
+        async_fire_time_changed(hass, time)
+        await hass.async_block_till_done()
+
+    time += timedelta(minutes=30)  # 00:45
+
+    with freeze_time(time):
+        async_fire_time_changed(hass, time)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.sensor1").state == "0.25"
+
+    time += timedelta(minutes=20)  # 01:05
+
+    with freeze_time(time):
+        async_fire_time_changed(hass, time)
+        await hass.async_block_till_done()
+
+    # Sliding window will have started to erase the initial on period, so now it will only be on for 10 minutes
+    assert hass.states.get("sensor.sensor1").state == "0.17"
+
+    time += timedelta(minutes=5)  # 01:10
+
+    with freeze_time(time):
+        async_fire_time_changed(hass, time)
+        await hass.async_block_till_done()
+
+    # Sliding window will continue to erase the initial on period, so now it will only be on for 5 minutes
+    assert hass.states.get("sensor.sensor1").state == "0.08"
+
+    time += timedelta(minutes=10)  # 01:20
+
+    with freeze_time(time):
+        async_fire_time_changed(hass, time)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.sensor1").state == "0.0"
+
+
 async def test_does_not_work_into_the_future(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
