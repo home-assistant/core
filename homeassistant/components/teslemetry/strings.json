@@ -677,7 +677,7 @@
       "message": "Departure time required to enable preconditioning"
     },
     "set_scheduled_departure_off_peak": {
-      "message": "To enable scheduled departure, end off peak time is required."
+      "message": "To enable scheduled departure, 'End off-peak time' is required."
     },
     "invalid_device": {
       "message": "Invalid device ID: {device_id}"
@@ -767,15 +767,15 @@
         },
         "end_off_peak_time": {
           "description": "Time to complete charging by.",
-          "name": "End off peak time"
+          "name": "End off-peak time"
         },
         "off_peak_charging_enabled": {
-          "description": "Enable off peak charging.",
-          "name": "Off peak charging enabled"
+          "description": "Enable off-peak charging.",
+          "name": "Off-peak charging enabled"
         },
         "off_peak_charging_weekdays_only": {
-          "description": "Enable off peak charging on weekdays only.",
-          "name": "Off peak charging weekdays only"
+          "description": "Enable off-peak charging on weekdays only.",
+          "name": "Off-peak charging weekdays only"
         },
         "preconditioning_enabled": {
           "description": "Enable preconditioning.",
