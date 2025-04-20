@@ -104,7 +104,6 @@ async def async_init_integration(
 def _test_sensor_and_attributes(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    model: str,
     unique_id: str,
     device_id: str,
     state_value: str,
