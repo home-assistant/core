@@ -149,6 +149,6 @@ class DeviceConnectivity(SurePetcareBinarySensor):
                 hub_rssi = state["signal"]["hub_rssi"]
                 self._attr_extra_state_attributes["hub_rssi"] = f"{hub_rssi:.2f}"
             except KeyError:
-                self._attr_extra_state_attributes["hub_rssi"] = "Unknown"
+                pass
         else:
             self._attr_extra_state_attributes = {}
