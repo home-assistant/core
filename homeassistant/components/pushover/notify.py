@@ -18,21 +18,22 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import (
-    ATTR_ATTACHMENT,
-    ATTR_CALLBACK_URL,
-    ATTR_EXPIRE,
-    ATTR_HTML,
-    ATTR_PRIORITY,
-    ATTR_RETRY,
-    ATTR_SOUND,
-    ATTR_TIMESTAMP,
-    ATTR_TTL,
-    ATTR_URL,
-    ATTR_URL_TITLE,
-    CONF_USER_KEY,
-    DOMAIN,
-)
+ from .const import (
+     ATTR_ATTACHMENT,
+     ATTR_URL,
+     ATTR_URL_TITLE,
+     ATTR_PRIORITY,
+     ATTR_RETRY,
+     ATTR_SOUND,
+     ATTR_HTML,
+     ATTR_CALLBACK_URL,
+     ATTR_EXPIRE,
+     ATTR_TTL,
+     ATTR_TIMESTAMP,
+     CONF_USER_KEY,
+     DOMAIN,
+ )
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,7 +76,6 @@ class PushoverNotificationService(BaseNotificationService):
         expire = data.get(ATTR_EXPIRE)
         callback_url = data.get(ATTR_CALLBACK_URL)
         timestamp = data.get(ATTR_TIMESTAMP)
-        ttl = data.get(ATTR_TTL)
         sound = data.get(ATTR_SOUND)
         html = 1 if data.get(ATTR_HTML, False) else 0
 
