@@ -3887,6 +3887,66 @@ async def test_device_id(
     assert info.rate_limit is None
 
 
+async def test_device_name(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test device_name function."""
+    config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
+
+    # Test non existing entity id
+    info = render_to_info(hass, "{{ device_name('sensor.fake') }}")
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    # Test non existing device id
+    info = render_to_info(hass, "{{ device_name('1234567890') }}")
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    # Test wrong value type
+    info = render_to_info(hass, "{{ device_name(56) }}")
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    # Test device with single entity
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        name="A light",
+    )
+    entity_entry = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+    )
+    info = render_to_info(hass, f"{{{{ device_name('{device_entry.id}') }}}}")
+    assert_result_info(info, device_entry.name)
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, f"{{{{ device_name('{entity_entry.entity_id}') }}}}")
+    assert_result_info(info, device_entry.name)
+    assert info.rate_limit is None
+
+    # Test device after renaming
+    device_entry = device_registry.async_update_device(
+        device_entry.id,
+        name_by_user="My light",
+    )
+
+    info = render_to_info(hass, f"{{{{ device_name('{device_entry.id}') }}}}")
+    assert_result_info(info, device_entry.name_by_user)
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, f"{{{{ device_name('{entity_entry.entity_id}') }}}}")
+    assert_result_info(info, device_entry.name_by_user)
+    assert info.rate_limit is None
+
+
 async def test_device_attr(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -6790,6 +6850,184 @@ def test_flatten(hass: HomeAssistant) -> None:
         template.Template("{{ flatten() }}", hass).async_render()
 
 
+def test_intersect(hass: HomeAssistant) -> None:
+    """Test the intersect function and filter."""
+    assert list(
+        template.Template(
+            "{{ intersect([1, 2, 5, 3, 4, 10], [1, 2, 3, 4, 5, 11, 99]) }}", hass
+        ).async_render()
+    ) == unordered([1, 2, 3, 4, 5])
+
+    assert list(
+        template.Template(
+            "{{ [1, 2, 5, 3, 4, 10] | intersect([1, 2, 3, 4, 5, 11, 99]) }}", hass
+        ).async_render()
+    ) == unordered([1, 2, 3, 4, 5])
+
+    assert list(
+        template.Template(
+            "{{ intersect(['a', 'b', 'c'], ['b', 'c', 'd']) }}", hass
+        ).async_render()
+    ) == unordered(["b", "c"])
+
+    assert list(
+        template.Template(
+            "{{ ['a', 'b', 'c'] | intersect(['b', 'c', 'd']) }}", hass
+        ).async_render()
+    ) == unordered(["b", "c"])
+
+    assert (
+        template.Template("{{ intersect([], [1, 2, 3]) }}", hass).async_render() == []
+    )
+
+    assert (
+        template.Template("{{ [] | intersect([1, 2, 3]) }}", hass).async_render() == []
+    )
+
+    with pytest.raises(TemplateError, match="intersect expected a list, got str"):
+        template.Template("{{ 'string' | intersect([1, 2, 3]) }}", hass).async_render()
+
+    with pytest.raises(TemplateError, match="intersect expected a list, got str"):
+        template.Template("{{ [1, 2, 3] | intersect('string') }}", hass).async_render()
+
+
+def test_difference(hass: HomeAssistant) -> None:
+    """Test the difference function and filter."""
+    assert list(
+        template.Template(
+            "{{ difference([1, 2, 5, 3, 4, 10], [1, 2, 3, 4, 5, 11, 99]) }}", hass
+        ).async_render()
+    ) == [10]
+
+    assert list(
+        template.Template(
+            "{{ [1, 2, 5, 3, 4, 10] | difference([1, 2, 3, 4, 5, 11, 99]) }}", hass
+        ).async_render()
+    ) == [10]
+
+    assert list(
+        template.Template(
+            "{{ difference(['a', 'b', 'c'], ['b', 'c', 'd']) }}", hass
+        ).async_render()
+    ) == ["a"]
+
+    assert list(
+        template.Template(
+            "{{ ['a', 'b', 'c'] | difference(['b', 'c', 'd']) }}", hass
+        ).async_render()
+    ) == ["a"]
+
+    assert (
+        template.Template("{{ difference([], [1, 2, 3]) }}", hass).async_render() == []
+    )
+
+    assert (
+        template.Template("{{ [] | difference([1, 2, 3]) }}", hass).async_render() == []
+    )
+
+    with pytest.raises(TemplateError, match="difference expected a list, got str"):
+        template.Template("{{ 'string' | difference([1, 2, 3]) }}", hass).async_render()
+
+    with pytest.raises(TemplateError, match="difference expected a list, got str"):
+        template.Template("{{ [1, 2, 3] | difference('string') }}", hass).async_render()
+
+
+def test_union(hass: HomeAssistant) -> None:
+    """Test the union function and filter."""
+    assert list(
+        template.Template(
+            "{{ union([1, 2, 5, 3, 4, 10], [1, 2, 3, 4, 5, 11, 99]) }}", hass
+        ).async_render()
+    ) == unordered([1, 2, 3, 4, 5, 10, 11, 99])
+
+    assert list(
+        template.Template(
+            "{{ [1, 2, 5, 3, 4, 10] | union([1, 2, 3, 4, 5, 11, 99]) }}", hass
+        ).async_render()
+    ) == unordered([1, 2, 3, 4, 5, 10, 11, 99])
+
+    assert list(
+        template.Template(
+            "{{ union(['a', 'b', 'c'], ['b', 'c', 'd']) }}", hass
+        ).async_render()
+    ) == unordered(["a", "b", "c", "d"])
+
+    assert list(
+        template.Template(
+            "{{ ['a', 'b', 'c'] | union(['b', 'c', 'd']) }}", hass
+        ).async_render()
+    ) == unordered(["a", "b", "c", "d"])
+
+    assert list(
+        template.Template("{{ union([], [1, 2, 3]) }}", hass).async_render()
+    ) == unordered([1, 2, 3])
+
+    assert list(
+        template.Template("{{ [] | union([1, 2, 3]) }}", hass).async_render()
+    ) == unordered([1, 2, 3])
+
+    with pytest.raises(TemplateError, match="union expected a list, got str"):
+        template.Template("{{ 'string' | union([1, 2, 3]) }}", hass).async_render()
+
+    with pytest.raises(TemplateError, match="union expected a list, got str"):
+        template.Template("{{ [1, 2, 3] | union('string') }}", hass).async_render()
+
+
+def test_symmetric_difference(hass: HomeAssistant) -> None:
+    """Test the symmetric_difference function and filter."""
+    assert list(
+        template.Template(
+            "{{ symmetric_difference([1, 2, 5, 3, 4, 10], [1, 2, 3, 4, 5, 11, 99]) }}",
+            hass,
+        ).async_render()
+    ) == unordered([10, 11, 99])
+
+    assert list(
+        template.Template(
+            "{{ [1, 2, 5, 3, 4, 10] | symmetric_difference([1, 2, 3, 4, 5, 11, 99]) }}",
+            hass,
+        ).async_render()
+    ) == unordered([10, 11, 99])
+
+    assert list(
+        template.Template(
+            "{{ symmetric_difference(['a', 'b', 'c'], ['b', 'c', 'd']) }}", hass
+        ).async_render()
+    ) == unordered(["a", "d"])
+
+    assert list(
+        template.Template(
+            "{{ ['a', 'b', 'c'] | symmetric_difference(['b', 'c', 'd']) }}", hass
+        ).async_render()
+    ) == unordered(["a", "d"])
+
+    assert list(
+        template.Template(
+            "{{ symmetric_difference([], [1, 2, 3]) }}", hass
+        ).async_render()
+    ) == unordered([1, 2, 3])
+
+    assert list(
+        template.Template(
+            "{{ [] | symmetric_difference([1, 2, 3]) }}", hass
+        ).async_render()
+    ) == unordered([1, 2, 3])
+
+    with pytest.raises(
+        TemplateError, match="symmetric_difference expected a list, got str"
+    ):
+        template.Template(
+            "{{ 'string' | symmetric_difference([1, 2, 3]) }}", hass
+        ).async_render()
+
+    with pytest.raises(
+        TemplateError, match="symmetric_difference expected a list, got str"
+    ):
+        template.Template(
+            "{{ [1, 2, 3] | symmetric_difference('string') }}", hass
+        ).async_render()
+
+
 def test_md5(hass: HomeAssistant) -> None:
     """Test the md5 function and filter."""
     assert (
@@ -6840,3 +7078,39 @@ def test_sha512(hass: HomeAssistant) -> None:
         template.Template("{{ 'Home Assistant' | sha512 }}", hass).async_render()
         == "9e3c2cdd1fbab0037378d37e1baf8a3a4bf92c54b56ad1d459deee30ccbb2acbebd7a3614552ea08992ad27dedeb7b4c5473525ba90cb73dbe8b9ec5f69295bb"
     )
+
+
+def test_combine(hass: HomeAssistant) -> None:
+    """Test combine filter and function."""
+    assert template.Template(
+        "{{ {'a': 1, 'b': 2} | combine({'b': 3, 'c': 4}) }}", hass
+    ).async_render() == {"a": 1, "b": 3, "c": 4}
+
+    assert template.Template(
+        "{{ combine({'a': 1, 'b': 2}, {'b': 3, 'c': 4}) }}", hass
+    ).async_render() == {"a": 1, "b": 3, "c": 4}
+
+    assert template.Template(
+        "{{ combine({'a': 1, 'b': {'x': 1}}, {'b': {'y': 2}, 'c': 4}, recursive=True) }}",
+        hass,
+    ).async_render() == {"a": 1, "b": {"x": 1, "y": 2}, "c": 4}
+
+    # Test that recursive=False does not merge nested dictionaries
+    assert template.Template(
+        "{{ combine({'a': 1, 'b': {'x': 1}}, {'b': {'y': 2}, 'c': 4}, recursive=False) }}",
+        hass,
+    ).async_render() == {"a": 1, "b": {"y": 2}, "c": 4}
+
+    # Test that None values are handled correctly in recursive merge
+    assert template.Template(
+        "{{ combine({'a': 1, 'b': none}, {'b': {'y': 2}, 'c': 4}, recursive=True) }}",
+        hass,
+    ).async_render() == {"a": 1, "b": {"y": 2}, "c": 4}
+
+    with pytest.raises(
+        TemplateError, match="combine expected at least 1 argument, got 0"
+    ):
+        template.Template("{{ combine() }}", hass).async_render()
+
+    with pytest.raises(TemplateError, match="combine expected a dict, got str"):
+        template.Template("{{ {'a': 1} | combine('not a dict') }}", hass).async_render()

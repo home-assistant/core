@@ -11,6 +11,7 @@ from aioshelly.exceptions import (
     CustomPortNotSupported,
     DeviceConnectionError,
     InvalidAuthError,
+    InvalidHostError,
 )
 import pytest
 
@@ -24,6 +25,7 @@ from homeassistant.components.shelly.const import (
     BLEScannerMode,
 )
 from homeassistant.components.shelly.coordinator import ENTRY_RELOAD_COOLDOWN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
     CONF_MODEL,
@@ -307,6 +309,7 @@ async def test_form_auth(
     ("exc", "base_error"),
     [
         (DeviceConnectionError, "cannot_connect"),
+        (InvalidHostError, "invalid_host"),
         (ValueError, "unknown"),
     ],
 )
@@ -744,6 +747,38 @@ async def test_zeroconf_sleeping_device_error(hass: HomeAssistant) -> None:
         assert result["reason"] == "cannot_connect"
 
 
+async def test_options_flow_abort_setup_retry(
+    hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test ble options abort if device is in setup retry."""
+    monkeypatch.setattr(
+        mock_rpc_device, "initialize", AsyncMock(side_effect=DeviceConnectionError)
+    )
+    entry = await init_integration(hass, 2)
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
+async def test_options_flow_abort_no_scripts_support(
+    hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test ble options abort if device does not support scripts."""
+    monkeypatch.setattr(
+        mock_rpc_device, "supports_scripts", AsyncMock(return_value=False)
+    )
+    entry = await init_integration(hass, 2)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_scripts_support"
+
+
 async def test_zeroconf_already_configured(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
@@ -1080,7 +1115,7 @@ async def test_options_flow_ble(hass: HomeAssistant, mock_rpc_device: Mock) -> N
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_BLE_SCANNER_MODE] == BLEScannerMode.DISABLED
+    assert result["data"][CONF_BLE_SCANNER_MODE] is BLEScannerMode.DISABLED
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
     assert result["type"] is FlowResultType.FORM
@@ -1096,7 +1131,7 @@ async def test_options_flow_ble(hass: HomeAssistant, mock_rpc_device: Mock) -> N
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_BLE_SCANNER_MODE] == BLEScannerMode.ACTIVE
+    assert result["data"][CONF_BLE_SCANNER_MODE] is BLEScannerMode.ACTIVE
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
     assert result["type"] is FlowResultType.FORM
@@ -1112,7 +1147,7 @@ async def test_options_flow_ble(hass: HomeAssistant, mock_rpc_device: Mock) -> N
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_BLE_SCANNER_MODE] == BLEScannerMode.PASSIVE
+    assert result["data"][CONF_BLE_SCANNER_MODE] is BLEScannerMode.PASSIVE
 
     await hass.config_entries.async_unload(entry.entry_id)
 

@@ -24,14 +24,14 @@
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
         },
-        "title": "Update TP-Link Omada Credentials",
+        "title": "Update TP-Link Omada credentials",
         "description": "The provided credentials have stopped working. Please update them."
       }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unsupported_controller": "Omada Controller version not supported.",
+      "unsupported_controller": "Omada controller version not supported.",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "no_sites_found": "No sites found which the user can manage."
     },
@@ -46,31 +46,31 @@
         "name": "Port {port_name} PoE"
       },
       "wan_connect_ipv4": {
-        "name": "Port {port_name} Internet Connected"
+        "name": "Port {port_name} Internet connected"
       },
       "wan_connect_ipv6": {
-        "name": "Port {port_name} Internet Connected (IPv6)"
+        "name": "Port {port_name} Internet connected (IPv6)"
       }
     },
     "binary_sensor": {
       "wan_link": {
-        "name": "Port {port_name} Internet Link"
+        "name": "Port {port_name} Internet link"
       },
       "online_detection": {
-        "name": "Port {port_name} Online Detection"
+        "name": "Port {port_name} online detection"
       },
       "lan_status": {
-        "name": "Port {port_name} LAN Status"
+        "name": "Port {port_name} LAN status"
       },
       "poe_delivery": {
-        "name": "Port {port_name} PoE Delivery"
+        "name": "Port {port_name} PoE delivery"
       }
     },
     "sensor": {
       "device_status": {
         "name": "Device status",
         "state": {
-          "error": "Error",
+          "error": "[%key:common::state::error%]",
           "disconnected": "[%key:common::state::disconnected%]",
           "connected": "[%key:common::state::connected%]",
           "pending": "Pending",
@@ -91,7 +91,7 @@
   "services": {
     "reconnect_client": {
       "name": "Reconnect wireless client",
-      "description": "Tries to get wireless client to reconnect to Omada Network.",
+      "description": "Tries to get wireless client to reconnect to Omada network.",
       "fields": {
         "mac": {
           "name": "MAC address",

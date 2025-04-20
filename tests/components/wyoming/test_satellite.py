@@ -35,6 +35,7 @@ from homeassistant.setup import async_setup_component
 from . import SATELLITE_INFO, WAKE_WORD_INFO, MockAsyncTcpClient
 
 from tests.common import MockConfigEntry
+from tests.components.tts.common import MockResultStream
 
 
 async def setup_config_entry(hass: HomeAssistant) -> MockConfigEntry:
@@ -259,10 +260,6 @@ async def test_satellite_pipeline(hass: HomeAssistant) -> None:
             "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
             async_pipeline_from_audio_stream,
         ),
-        patch(
-            "homeassistant.components.wyoming.assist_satellite.tts.async_get_media_source_audio",
-            return_value=("wav", get_test_wav()),
-        ),
         patch("homeassistant.components.wyoming.assist_satellite._PING_SEND_DELAY", 0),
     ):
         entry = await setup_config_entry(hass)
@@ -411,10 +408,11 @@ async def test_satellite_pipeline(hass: HomeAssistant) -> None:
         assert mock_client.synthesize.voice.name == "test voice"
 
         # Text-to-speech media
+        mock_tts_result_stream = MockResultStream(hass, "wav", get_test_wav())
         pipeline_event_callback(
             assist_pipeline.PipelineEvent(
                 assist_pipeline.PipelineEventType.TTS_END,
-                {"tts_output": {"media_id": "test media id"}},
+                {"tts_output": {"token": mock_tts_result_stream.token}},
             )
         )
         async with asyncio.timeout(1):
@@ -434,12 +432,6 @@ async def test_satellite_pipeline(hass: HomeAssistant) -> None:
             assist_pipeline.PipelineEvent(assist_pipeline.PipelineEventType.RUN_END)
         )
         assert not device.is_active
-
-        # The client should have received another ping by now
-        async with asyncio.timeout(1):
-            await mock_client.ping_event.wait()
-
-        assert mock_client.ping is not None
 
         # Pipeline should automatically restart
         async with asyncio.timeout(1):
@@ -747,10 +739,6 @@ async def test_tts_not_wav(hass: HomeAssistant) -> None:
             wraps=_async_pipeline_from_audio_stream,
         ) as mock_run_pipeline,
         patch(
-            "homeassistant.components.wyoming.assist_satellite.tts.async_get_media_source_audio",
-            return_value=("mp3", bytes(1)),
-        ),
-        patch(
             "homeassistant.components.wyoming.assist_satellite.WyomingAssistSatellite._stream_tts",
             _stream_tts,
         ),
@@ -779,10 +767,11 @@ async def test_tts_not_wav(hass: HomeAssistant) -> None:
             await mock_client.synthesize_event.wait()
 
         # Text-to-speech media
+        mock_tts_result_stream = MockResultStream(hass, "mp3", bytes(1))
         event_callback(
             assist_pipeline.PipelineEvent(
                 assist_pipeline.PipelineEventType.TTS_END,
-                {"tts_output": {"media_id": "test media id"}},
+                {"tts_output": {"token": mock_tts_result_stream.token}},
             )
         )
 
