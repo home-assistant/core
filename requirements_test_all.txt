@@ -995,6 +995,9 @@ home-assistant-intents==2025.3.28
 # homeassistant.components.homematicip_cloud
 homematicip==2.0.0
 
+# homeassistant.components.dreo
+hscloud==1.0.6
+
 # homeassistant.components.remember_the_milk
 httplib2==0.20.4
 
