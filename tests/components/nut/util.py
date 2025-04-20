@@ -43,7 +43,7 @@ async def async_init_integration(
     hass: HomeAssistant,
     ups_fixture: str | None = None,
     host: str = "mock",
-    port: str = "mock",
+    port: int = 1234,
     username: str = "mock",
     password: str = "mock",
     alias: str | None = None,
