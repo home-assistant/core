@@ -19,7 +19,7 @@ from .const import (
     ATTR_VALUE2,
     ATTR_VALUE3,
     DOMAIN,
-    SLEEP_AS_ANDROID_EVENT,
+    SLEEP_EVENT,
 )
 
 PLATFORMS: list[Platform] = [Platform.EVENT]
@@ -50,7 +50,7 @@ async def handle_webhook(
 
     async_dispatcher_send(
         hass,
-        SLEEP_AS_ANDROID_EVENT,
+        SLEEP_EVENT,
         webhook_id,
         data,
     )
