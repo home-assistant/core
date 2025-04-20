@@ -147,7 +147,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_encryption_removed_confirm",
-            description_placeholders={"name": self._name},
+            description_placeholders={"name": self._async_get_human_readable_name()},
         )
 
     async def async_step_reauth_confirm(
@@ -172,7 +172,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=vol.Schema({vol.Required(CONF_NOISE_PSK): str}),
             errors=errors,
-            description_placeholders={"name": self._name},
+            description_placeholders={"name": self._async_get_human_readable_name()},
         )
 
     async def async_step_reconfigure(
@@ -568,8 +568,29 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="encryption_key",
             data_schema=vol.Schema({vol.Required(CONF_NOISE_PSK): str}),
             errors=errors,
-            description_placeholders={"name": self._name},
+            description_placeholders={"name": self._async_get_human_readable_name()},
         )
+
+    @callback
+    def _async_get_human_readable_name(self) -> str:
+        """Return a human readable name for the entry."""
+        entry: ConfigEntry | None = None
+        if self.source == SOURCE_REAUTH:
+            entry = self._reauth_entry
+        elif self.source == SOURCE_RECONFIGURE:
+            entry = self._reconfig_entry
+        elif self._entry_with_name_conflict:
+            entry = self._entry_with_name_conflict
+        names: list[str] = []
+        for part in (
+            entry.title if entry else None,
+            self._device_name or (entry.data.get(CONF_DEVICE_NAME) if entry else None),
+            self._name,
+        ):
+            if not part or part in names:
+                continue
+            names.append(part)
+        return " - ".join(names)
 
     async def async_step_authenticate(
         self, user_input: dict[str, Any] | None = None, error: str | None = None
@@ -589,7 +610,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="authenticate",
             data_schema=vol.Schema({vol.Required("password"): str}),
-            description_placeholders={"name": self._name},
+            description_placeholders={"name": self._async_get_human_readable_name()},
             errors=errors,
         )
 
