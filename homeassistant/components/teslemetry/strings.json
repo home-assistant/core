@@ -378,7 +378,7 @@
         "name": "Charge limit"
       },
       "off_grid_vehicle_charging_reserve_percent": {
-        "name": "Off grid reserve"
+        "name": "Off-grid reserve"
       }
     },
     "cover": {
@@ -510,10 +510,10 @@
         "name": "Island status",
         "state": {
           "island_status_unknown": "Unknown",
-          "on_grid": "On grid",
-          "off_grid": "Off grid",
-          "off_grid_intentional": "Off grid intentional",
-          "off_grid_unintentional": "Off grid unintentional"
+          "on_grid": "On-grid",
+          "off_grid": "Off-grid",
+          "off_grid_intentional": "Off-grid intentional",
+          "off_grid_unintentional": "Off-grid unintentional"
         }
       },
       "load_power": {
