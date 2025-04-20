@@ -246,5 +246,5 @@ class HistoryStats:
             history_state.last_changed = start_timestamp
             if i > 0:
                 trim_count += 1
-        if trim_count: # Don't slice if no data was removed
+        if trim_count:  # Don't slice if no data was removed
             self._history_current_period = self._history_current_period[trim_count:]
