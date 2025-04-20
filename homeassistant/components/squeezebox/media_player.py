@@ -23,6 +23,8 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
     RepeatMode,
+    SearchMedia,
+    SearchMediaQuery,
     async_process_play_media_url,
 )
 from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY
@@ -203,6 +205,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         | MediaPlayerEntityFeature.GROUPING
         | MediaPlayerEntityFeature.MEDIA_ENQUEUE
         | MediaPlayerEntityFeature.MEDIA_ANNOUNCE
+        | MediaPlayerEntityFeature.SEARCH_MEDIA
     )
     _attr_has_entity_name = True
     _attr_name = None
@@ -531,6 +534,52 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         if index is not None:
             await self._player.async_index(index)
         await self.coordinator.async_refresh()
+
+    async def async_search_media(
+        self,
+        query: SearchMediaQuery,
+    ) -> SearchMedia:
+        """Search the media player."""
+
+        if not query.media_content_type or query.media_content_type not in (
+            str(key)
+            for key in self._browse_data.content_type_media_class
+            if key not in ["apps", "app", "radios", "radio"]
+        ):
+            _LOGGER.debug("Invalid Media Content Type: %s", query.media_content_type)
+
+            raise ServiceValidationError(
+                f"Media Content Type must be specified and must be one of {
+                    ', '.join(
+                        str(key)
+                        for key in self._browse_data.content_type_media_class
+                        if key not in ['apps', 'app', 'radios', 'radio']
+                    )
+                }"
+            )
+
+        payload = {
+            "search_type": query.media_content_type,
+            "search_id": query.media_content_id,
+            "search_query": query.search_query,
+        }
+
+        search_response: BrowseMedia = await build_item_response(
+            self,
+            self._player,
+            payload,
+            self.browse_limit,
+            self._browse_data,
+        )
+
+        if query.media_filter_classes and search_response.children:
+            search_response.children = [
+                child
+                for child in search_response.children
+                if child.media_content_type in query.media_filter_classes
+            ]
+
+        return SearchMedia(result=[search_response])
 
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set the repeat mode."""

@@ -170,6 +170,49 @@ async def test_async_browse_media_for_apps(
         assert "Fake Invalid Item 1" not in search
 
 
+@pytest.mark.parametrize(
+    ("category", "child_count"),
+    [
+        ("favorites", 1),
+        ("artists", 1),
+        ("albums", 1),
+        ("playlists", 1),
+        ("genres", 1),
+        ("new music", 1),
+        ("album artists", 1),
+    ],
+)
+async def test_async_search_media(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    hass_ws_client: WebSocketGenerator,
+    category: str,
+    child_count: int,
+) -> None:
+    """Test each category with subitems."""
+    with patch(
+        "homeassistant.components.squeezebox.browse_media.is_internal_request",
+        return_value=False,
+    ):
+        client = await hass_ws_client()
+        await client.send_json(
+            {
+                "id": 1,
+                "type": "media_player/search_media",
+                "entity_id": "media_player.test_player",
+                "media_content_id": "",
+                "media_content_type": category,
+                "search_query": "Fake Item 1",
+            }
+        )
+        response = await client.receive_json()
+        assert response["success"]
+        category_level = response["result"]["result"]
+        assert category_level[0]["title"] == MEDIA_TYPE_TO_SQUEEZEBOX[category]
+        assert category_level[0]["children"][0]["title"] == "Fake Item 1"
+        assert len(category_level[0]["children"]) == child_count
+
+
 async def test_generate_playlist_for_app(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
