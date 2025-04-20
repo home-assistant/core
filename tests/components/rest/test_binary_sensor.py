@@ -595,3 +595,44 @@ async def test_availability_in_config(hass: HomeAssistant) -> None:
 
     state = hass.states.get("binary_sensor.rest_binary_sensor")
     assert state.state == STATE_UNAVAILABLE
+
+
+@respx.mock
+async def test_availability_blocks_value_template(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test availability blocks value_template from rendering."""
+    respx.get("http://localhost").respond(
+        status_code=HTTPStatus.OK,
+        json={"heartbeatList": {"1": [{"status": 1, "ping": 21.4}]}},
+    )
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: [
+                {
+                    "resource": "http://localhost",
+                    "binary_sensor": [
+                        {
+                            "unique_id": "complex_json",
+                            "name": "complex_json",
+                            "value_template": "{{ x - 1 }}",
+                            "availability": "{{ x is defined }}",
+                        }
+                    ],
+                }
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert (
+        "Error parsing value for binary_sensor.complex_json: 'x' is undefined"
+        not in caplog.text
+    )
+
+    state = hass.states.get("binary_sensor.complex_json")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
