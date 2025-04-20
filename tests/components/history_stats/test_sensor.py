@@ -1633,13 +1633,10 @@ async def test_state_change_during_window_rollover(
 
     assert hass.states.get("sensor.sensor1").state == "11.98"
 
-    # One minute has passed and the time has now rolled over into a new day, resetting the recorder window. The sensor will then query the database for updates,
-    # and will see that the sensor is ON starting from midnight.
+    # One minute has passed and the time has now rolled over into a new day, resetting the recorder window.
+    # The sensor will be ON since midnight.
     t3 = t2 + timedelta(minutes=1)
-
-    with (
-        freeze_time(t3),
-    ):
+    with freeze_time(t3):
         # The sensor turns off around this time, before the sensor does its normal polled update.
         hass.states.async_set("binary_sensor.state", "off")
         await hass.async_block_till_done(wait_background_tasks=True)
