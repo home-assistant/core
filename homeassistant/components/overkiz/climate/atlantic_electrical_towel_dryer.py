@@ -66,9 +66,11 @@ class AtlanticElectricalTowelDryer(OverkizEntity, ClimateEntity):
         # Not all AtlanticElectricalTowelDryer models support temporary presets,
         # thus we check if the command is available and then extend the presets
         if self.executor.has_command(OverkizCommand.SET_TOWEL_DRYER_TEMPORARY_STATE):
-            self._attr_preset_modes = [
-                *self._attr_preset_modes,
-                *PRESET_MODE_TO_OVERKIZ,
+            # Extend preset modes with supported temporary presets, avoiding duplicates
+            self._attr_preset_modes += [
+                mode
+                for mode in PRESET_MODE_TO_OVERKIZ
+                if mode not in self._attr_preset_modes
             ]
 
     @property
@@ -148,6 +150,13 @@ class AtlanticElectricalTowelDryer(OverkizEntity, ClimateEntity):
         """Set new preset mode."""
         # If the preset mode is set to prog, we need to set the operating mode to internal
         if preset_mode == PRESET_PROG:
+            # If currently in a temporary preset (drying or boost), turn it off before turn on prog
+            if self.preset_mode in (PRESET_DRYING, PRESET_BOOST):
+                await self.executor.async_execute_command(
+                    OverkizCommand.SET_TOWEL_DRYER_TEMPORARY_STATE,
+                    OverkizCommandParam.PERMANENT_HEATING,
+                )
+
             await self.executor.async_execute_command(
                 OverkizCommand.SET_TOWEL_DRYER_OPERATING_MODE,
                 OverkizCommandParam.INTERNAL,
