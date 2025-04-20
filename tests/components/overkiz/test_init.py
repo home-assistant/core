@@ -3,7 +3,6 @@
 from homeassistant.components.overkiz.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
 
 from .test_config_flow import TEST_EMAIL, TEST_GATEWAY_ID, TEST_PASSWORD, TEST_SERVER
 
@@ -69,7 +68,7 @@ async def test_unique_id_migration(hass: HomeAssistant) -> None:
             ),
         },
     )
-    assert await async_setup_component(hass, DOMAIN, {})
+    assert await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
 
     ent_reg = er.async_get(hass)
