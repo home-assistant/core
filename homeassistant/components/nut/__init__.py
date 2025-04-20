@@ -191,7 +191,12 @@ async def async_remove_config_entry_device(
     device_entry: dr.DeviceEntry,
 ) -> bool:
     """Remove NUT config entry from a device."""
-    return True
+    return not any(
+        identifier
+        for identifier in device_entry.identifiers
+        if identifier[0] == DOMAIN
+        and identifier[1] in config_entry.runtime_data.unique_id
+    )
 
 
 async def _async_update_listener(hass: HomeAssistant, entry: NutConfigEntry) -> None:
